@@ -19,16 +19,8 @@
 
 package com.teammoeg.frostedheart;
 
-import static com.simibubi.create.foundation.data.ModelGen.customItemModel;
-import static com.teammoeg.frostedheart.util.FHProps.berryBushBlocks;
-import static com.teammoeg.frostedheart.util.FHProps.cropProps;
-import static com.teammoeg.frostedheart.util.FHProps.grassProps;
-import static com.teammoeg.frostedheart.util.FHProps.metalDecoProps;
-import static com.teammoeg.frostedheart.util.FHProps.ore_gravel;
-import static com.teammoeg.frostedheart.util.FHProps.redStoneProps;
-import static com.teammoeg.frostedheart.util.FHProps.stoneDecoProps;
-import static com.teammoeg.frostedheart.util.FHProps.stoneProps;
-import static com.teammoeg.frostedheart.util.FHProps.woodenProps;
+import static com.simibubi.create.foundation.data.ModelGen.*;
+import static com.teammoeg.frostedheart.util.FHProps.*;
 
 import java.util.function.Function;
 import java.util.function.Supplier;

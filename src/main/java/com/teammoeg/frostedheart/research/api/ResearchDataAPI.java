@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.research.api;
 
 import java.util.UUID;
 
+import com.teammoeg.frostedheart.research.SpecialDataTypes;
+import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
@@ -32,14 +34,14 @@ import net.minecraft.nbt.CompoundNBT;
 
 public class ResearchDataAPI {
 
-    public static TeamResearchData getData(PlayerEntity id) {
+    public static TeamDataHolder getData(PlayerEntity id) {
         if (id instanceof ServerPlayerEntity)
             return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id));
-        return TeamResearchData.getClientInstance();
-
+       // return TeamResearchData.getClientInstance();
+        return null;
     }
 
-    public static TeamResearchData getData(UUID id) {
+    public static TeamDataHolder getData(UUID id) {
         return FHResearchDataManager.INSTANCE.getData(id);
 
     }
@@ -68,13 +70,13 @@ public class ResearchDataAPI {
 
     public static CompoundNBT getVariants(PlayerEntity id) {
         if (id instanceof ServerPlayerEntity)
-            return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getVariants();
+            return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA).getVariants();
         return TeamResearchData.getClientInstance().getVariants();
 
     }
     
     public static CompoundNBT getVariants(UUID id) {
-        TeamResearchData trd= FHResearchDataManager.INSTANCE.getData(id);
+        TeamResearchData trd= FHResearchDataManager.INSTANCE.getData(id).getData(SpecialDataTypes.RESEARCH_DATA);
         if(trd!=null)
         	return trd.getVariants();
         return new CompoundNBT();
@@ -82,12 +84,12 @@ public class ResearchDataAPI {
     }
     public static void sendVariants(PlayerEntity id) {
         if (id instanceof ServerPlayerEntity)
-            FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).sendVariantPacket();
+            FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA).sendVariantPacket();
 
     }
     
     public static void sendVariants(UUID id) {
-        TeamResearchData trd=FHResearchDataManager.INSTANCE.getData(id);
+        TeamResearchData trd=FHResearchDataManager.INSTANCE.getData(id).getData(SpecialDataTypes.RESEARCH_DATA);
         if(trd!=null)
         	trd.sendVariantPacket();
 
@@ -96,7 +98,7 @@ public class ResearchDataAPI {
     
     public static boolean isResearchComplete(PlayerEntity id, String research) {
         if (id instanceof ServerPlayerEntity)
-            return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(research).isCompleted();
+            return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA).getData(research).isCompleted();
         return TeamResearchData.getClientInstance().getData(research).isCompleted();
     }
 

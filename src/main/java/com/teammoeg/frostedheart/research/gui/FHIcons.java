@@ -110,7 +110,7 @@ public class FHIcons {
         @Override
         public void write(PacketBuffer buffer) {
             super.write(buffer);
-            SerializeUtil.writeList(buffer, icons, FHIcon::write);
+            SerializeUtil.writeList(buffer, icons, FHIcons::write);
         }
     }
 
@@ -161,8 +161,8 @@ public class FHIcons {
         @Override
         public void write(PacketBuffer buffer) {
             super.write(buffer);
-            large.write(buffer);
-            small.write(buffer);
+            FHIcons.write(small, buffer);
+            FHIcons.write(small, buffer);
         }
     }
 
@@ -842,5 +842,7 @@ public class FHIcons {
     public static JsonElement save(FHIcon icon) {
     	return serializers.write(icon);
     }
-
+    public static void write(FHIcon icon,PacketBuffer pb) {
+    	serializers.write(pb,icon);
+    }
 }

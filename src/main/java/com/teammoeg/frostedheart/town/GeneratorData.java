@@ -24,9 +24,9 @@ import java.util.Random;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
 import com.teammoeg.frostedheart.research.SpecialDataHolder;
-import com.teammoeg.frostedheart.research.SpecialDataType;
+import com.teammoeg.frostedheart.research.SpecialDataTypes;
+import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
-import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.util.RegistryUtils;
@@ -46,8 +46,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 public class GeneratorData implements NBTSerializable{
-	public static final SpecialDataType<GeneratorData> CAPABILITY=new SpecialDataType<>("generator",GeneratorData::new);
-    public static final int INPUT_SLOT = 0;
+	public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
     public int process = 0;
     public int processMax = 0;
@@ -64,14 +63,14 @@ public class GeneratorData implements NBTSerializable{
     protected NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
 
     public ItemStack currentItem;
-    private SpecialDataHolder teamData;
+    private TeamDataHolder teamData;
     public BlockPos actualPos = BlockPos.ZERO;
     public HeatProviderEndPoint ep=new HeatProviderEndPoint(200);
     public LazyOptional<HeatProviderEndPoint> epcap=LazyOptional.of(()->ep);
     public RegistryKey<World> dimension;
 
     final float heatAddInterval = 20;
-    public GeneratorData(SpecialDataHolder teamResearchData) {
+    public GeneratorData(TeamDataHolder teamResearchData) {
         teamData = teamResearchData;
     }
 
@@ -102,7 +101,7 @@ public class GeneratorData implements NBTSerializable{
     }
 
     protected double getEfficiency() {
-        return teamData.getData(TeamResearchData.TYPE).getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
+        return teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
     }
 
     public NonNullList<ItemStack> getInventory() {
@@ -202,7 +201,7 @@ public class GeneratorData implements NBTSerializable{
     }
     protected double getHeatEfficiency() {
 
-        return 1+teamData.getData(TeamResearchData.TYPE).getVariantDouble(ResearchVariant.GENERATOR_HEAT);
+        return 1+teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_HEAT);
     }
 	public float getMaxTemperatureLevel() {
 		return 1+(isOverdrive?1:0)+steamLevel;

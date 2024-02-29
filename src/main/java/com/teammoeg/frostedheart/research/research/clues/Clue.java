@@ -26,6 +26,8 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.research.AutoIDItem;
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.SpecialDataTypes;
+import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
@@ -108,7 +110,7 @@ public abstract class Clue extends AutoIDItem implements Writeable{
     }
 
     private void deleteInTree() {
-        FHResearchDataManager.INSTANCE.getAllData().forEach(t -> t.getTeam().ifPresent(this::end));
+        FHResearchDataManager.INSTANCE.getAllData().forEach(this::end);
     }
 
     public void deleteSelf() {
@@ -123,7 +125,7 @@ public abstract class Clue extends AutoIDItem implements Writeable{
     /**
      * Stop detection when clue is completed
      */
-    public abstract void end(Team team);
+    public abstract void end(TeamDataHolder team);
 
     /**
      * Get brief string describe this clue for show in editor.
@@ -181,8 +183,8 @@ public abstract class Clue extends AutoIDItem implements Writeable{
     }
 
 
-    public boolean isCompleted(Team team) {
-        return FHResearchDataManager.INSTANCE.getData(team).isClueTriggered(this);
+    public boolean isCompleted(TeamDataHolder team) {
+        return team.getData(SpecialDataTypes.RESEARCH_DATA).isClueTriggered(this);
     }
 
     public boolean isCompleted(TeamResearchData data) {
@@ -197,10 +199,9 @@ public abstract class Clue extends AutoIDItem implements Writeable{
      * send progress packet to client
      * should not called manually
      */
-    public void sendProgressPacket(Team team) {
+    public void sendProgressPacket(TeamDataHolder team) {
         FHClueProgressSyncPacket packet = new FHClueProgressSyncPacket(team, this);
-        for (ServerPlayerEntity spe : team.getOnlineMembers())
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+        team.sendToOnline(packet);
     }
 
 	public JsonObject serialize() {
@@ -224,8 +225,8 @@ public abstract class Clue extends AutoIDItem implements Writeable{
         ;
     }
 
-    public void setCompleted(Team team, boolean trig) {
-        FHResearchDataManager.INSTANCE.getData(team).setClueTriggered(this, trig);
+    public void setCompleted(TeamDataHolder team, boolean trig) {
+    	team.getData(SpecialDataTypes.RESEARCH_DATA).setClueTriggered(this, trig);
         if (trig)
             end(team);
         else
@@ -235,13 +236,12 @@ public abstract class Clue extends AutoIDItem implements Writeable{
 
     public void setCompleted(TeamResearchData trd, boolean trig) {
         trd.setClueTriggered(this, trig);
-        trd.getTeam().ifPresent(team -> {
-            if (trig)
-                end(team);
-            else
-                start(team);
-            this.sendProgressPacket(team);
-        });
+
+        if (trig)
+            end(trd.getHolder());
+        else
+            start(trd.getHolder());
+        this.sendProgressPacket(trd.getHolder());
     }
 
     void setNewId(String id) {
@@ -262,7 +262,7 @@ public abstract class Clue extends AutoIDItem implements Writeable{
     /**
      * called when this clue's research has started
      */
-    public abstract void start(Team team);
+    public abstract void start(TeamDataHolder team);
 
     ;
 

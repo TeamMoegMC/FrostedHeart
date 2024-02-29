@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.research.research.clues;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 
 import dev.ftb.mods.ftbteams.data.Team;
@@ -50,15 +51,15 @@ public abstract class TickListenerClue extends ListenerClue {
     }
 
     @Override
-    public void initListener(Team t) {
-        ResearchListeners.getTickClues().add(this, t);
+    public void initListener(TeamDataHolder t) {
+        ResearchListeners.getTickClues().add(this, t.getId());
     }
 
     public abstract boolean isCompleted(TeamResearchData t, ServerPlayerEntity player);
 
     @Override
-    public void removeListener(Team t) {
-        ResearchListeners.getTickClues().remove(this, t);
+    public void removeListener(TeamDataHolder t) {
+        ResearchListeners.getTickClues().remove(this, t.getId());
     }
 
     public final void tick(TeamResearchData t, ServerPlayerEntity player) {

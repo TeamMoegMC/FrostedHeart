@@ -19,18 +19,8 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static net.minecraft.entity.EntityType.CHICKEN;
-import static net.minecraft.entity.EntityType.COW;
-import static net.minecraft.entity.EntityType.PIG;
-import static net.minecraft.entity.EntityType.SHEEP;
-import static net.minecraft.world.biome.Biome.Category.BEACH;
-import static net.minecraft.world.biome.Biome.Category.DESERT;
-import static net.minecraft.world.biome.Biome.Category.EXTREME_HILLS;
-import static net.minecraft.world.biome.Biome.Category.NETHER;
-import static net.minecraft.world.biome.Biome.Category.OCEAN;
-import static net.minecraft.world.biome.Biome.Category.RIVER;
-import static net.minecraft.world.biome.Biome.Category.TAIGA;
-import static net.minecraft.world.biome.Biome.Category.THEEND;
+import static net.minecraft.entity.EntityType.*;
+import static net.minecraft.world.biome.Biome.Category.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
@@ -76,18 +66,17 @@ import com.teammoeg.frostedheart.recipe.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.research.SpecialDataTypes;
+import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
-import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
-import com.teammoeg.frostedheart.town.GeneratorData;
-import com.teammoeg.frostedheart.town.TeamTownData;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
@@ -620,7 +609,7 @@ public class CommonEvents {
                     event.setCanceled(true);
                 }
             } else {
-                if (!ResearchDataAPI.getData((ServerPlayerEntity) event.getPlayer()).building.has(event.getMultiblock())) {
+                if (!ResearchDataAPI.getData((ServerPlayerEntity) event.getPlayer()).getData(SpecialDataTypes.RESEARCH_DATA).building.has(event.getMultiblock())) {
                     //event.getPlayer().sendStatusMessage(GuiUtils.translateMessage("research.multiblock.cannot_build"), true);
                     event.setCanceled(true);
                 }
@@ -674,11 +663,11 @@ public class CommonEvents {
                 ServerWorld serverWorld = (ServerWorld) world;
                 SchedulerQueue.tickAll(serverWorld);
                 int i = 0;
-                for (TeamResearchData trd : FHResearchDataManager.INSTANCE.getAllData()) {
-                    if (serverWorld.getDimensionKey().equals(trd.getData(GeneratorData.CAPABILITY).dimension)) {
+                for (TeamDataHolder trd : FHResearchDataManager.INSTANCE.getAllData()) {
+                    if (serverWorld.getDimensionKey().equals(trd.getData(SpecialDataTypes.GENERATOR_DATA).dimension)) {
                         if (serverWorld.getGameTime() % 20 == i % 20) {//Split town calculations to multiple seconds
                             if (trd.getTeam().map(t -> t.getOnlineMembers().size()).orElse(0) > 0) {
-                                trd.getData(TeamTownData.CAPABILITY).tick(serverWorld);
+                                trd.getData(SpecialDataTypes.TOWN_DATA).tick(serverWorld);
                             }
                         }
                     }
@@ -871,8 +860,7 @@ public class CommonEvents {
             PacketTarget currentPlayer=PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer());
             FHResearch.sendSyncPacket(currentPlayer);
             FHNetwork.send(currentPlayer,new FHDatapackSyncPacket());
-            FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(
-                            FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer())));
+            FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayerEntity) event.getEntity())));
             FHCapabilities.CLIMATE_DATA.getCapability(serverWorld).ifPresent((cap) -> {
                 FHNetwork.send(currentPlayer,new FHClimatePacket(cap));
             });

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_TEXTURE;
+import static net.minecraft.inventory.container.PlayerContainer.*;
 
 import java.util.Map;
 import java.util.function.Function;

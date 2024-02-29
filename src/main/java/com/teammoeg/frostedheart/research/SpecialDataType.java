@@ -1,28 +1,27 @@
 package com.teammoeg.frostedheart.research;
 
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
 
-import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.NBTSerializable;
 
-public class SpecialDataType<T extends NBTSerializable>{
-	public static final Set<SpecialDataType<?>> TYPE_REGISTRY=new HashSet<>();
+public class SpecialDataType<T extends NBTSerializable,U extends SpecialDataHolder<U>>{
 	String id;
-	Function<SpecialDataHolder,T> factory;
+	Function<U,T> factory;
 	
-	public SpecialDataType(String id, Function<SpecialDataHolder, T> factory) {
+	public SpecialDataType(String id, Function<U, T> factory) {
 		super();
 		this.id = id;
 		this.factory = factory;
-		TYPE_REGISTRY.add(this);
+		SpecialDataTypes.TYPE_REGISTRY.add(this);
 	}
-	public T create(SpecialDataHolder dat) {
+	public T create(U dat) {
 		return factory.apply(dat);
 	}
-	public T getOrCreate(SpecialDataHolder dat) {
+	public NBTSerializable createRaw(SpecialDataHolder dat) {
+		return factory.apply((U) dat);
+	}
+	public T getOrCreate(SpecialDataHolder<U> dat) {
 		return dat.getData(this);
 	}
 	public String getId() {
@@ -37,7 +36,7 @@ public class SpecialDataType<T extends NBTSerializable>{
 		if (this == obj) return true;
 		if (obj == null) return false;
 		if (getClass() != obj.getClass()) return false;
-		SpecialDataType<?> other = (SpecialDataType<?>) obj;
+		SpecialDataType<?,?> other = (SpecialDataType<?,?>) obj;
 		return Objects.equals(id, other.id);
 	};
 }

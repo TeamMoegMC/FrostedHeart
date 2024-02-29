@@ -27,6 +27,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.SpecialDataTypes;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.ResearchData;
@@ -61,14 +62,14 @@ public class ResearchCommand {
                         ct.getSource().sendErrorMessage(GuiUtils.str("Research not found").mergeStyle(TextFormatting.RED));
                         return Command.SINGLE_SUCCESS;
                     }
-                    ResearchData rd = ResearchDataAPI.getData(ct.getSource().asPlayer()).getData(rs);
+                    ResearchData rd = ResearchDataAPI.getData(ct.getSource().asPlayer()).getData(SpecialDataTypes.RESEARCH_DATA).getData(rs);
                     rd.setFinished(true);
                     rd.announceCompletion();
 
                     ct.getSource().sendFeedback(GuiUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("all").executes(ct -> {
-                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().asPlayer());
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().asPlayer()).getData(SpecialDataTypes.RESEARCH_DATA);
                     for (Research r : FHResearch.getAllResearch()) {
                         if (r.isInCompletable()) continue;
                         ResearchData rd = trd.getData(r);
@@ -142,10 +143,10 @@ public class ResearchCommand {
                     return s.buildFuture();
                 }).executes(ct -> {
                     String rsn = ct.getArgument("name", String.class).toString();
-                    ResearchDataAPI.getData(ct.getSource().asPlayer()).resetData(FHResearch.getResearch(rsn).get(), true);
+                    ResearchDataAPI.getData(ct.getSource().asPlayer()).getData(SpecialDataTypes.RESEARCH_DATA).resetData(FHResearch.getResearch(rsn).get(), true);
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("all").executes(ct -> {
-                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().asPlayer());
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().asPlayer()).getData(SpecialDataTypes.RESEARCH_DATA);
                     for (Research r : FHResearch.getAllResearch()) {
                         trd.resetData(r, true);
                     }

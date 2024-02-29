@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.research.research.clues;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.research.TeamDataHolder;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.network.PacketBuffer;
@@ -53,7 +54,7 @@ public abstract class ListenerClue extends Clue {
     }
 
     @Override
-    public void end(Team team) {
+    public void end(TeamDataHolder team) {
         if (!alwaysOn)
             removeListener(team);
     }
@@ -64,9 +65,9 @@ public abstract class ListenerClue extends Clue {
             initListener(null);
     }
 
-    public abstract void initListener(Team t);
+    public abstract void initListener(TeamDataHolder t);
 
-    public abstract void removeListener(Team t);
+    public abstract void removeListener(TeamDataHolder t);
 
     @Override
     public JsonObject serialize() {
@@ -76,7 +77,7 @@ public abstract class ListenerClue extends Clue {
     }
 
     @Override
-    public void start(Team team) {
+    public void start(TeamDataHolder team) {
         if (!alwaysOn)
             initListener(team);
 

@@ -174,7 +174,7 @@ public class ResearchData implements IEnvironment {
     public void announceCompletion() {
         sendProgressPacket();
 
-        parent.getTeam()
+        parent.getHolder().getTeam()
                 .ifPresent(e -> MinecraftForge.EVENT_BUS.post(new ResearchStatusEvent(getResearch(), e, finished)));
     }
 
@@ -361,7 +361,7 @@ public class ResearchData implements IEnvironment {
     }
 
     public void sendProgressPacket() {
-        parent.getTeam().ifPresent(t -> getResearch().sendProgressPacket(t, this));
+        getResearch().sendProgressPacket(parent.getHolder(), this);
     }
 
     public CompoundNBT serialize() {

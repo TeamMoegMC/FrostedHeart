@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.research.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.research.SpecialDataTypes;
+import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 
@@ -42,8 +44,8 @@ public class FHResearchAttributeSyncPacket {
         data = buffer.readCompoundTag();
     }
 
-    public FHResearchAttributeSyncPacket(Team team) {
-        this.data = FHResearchDataManager.INSTANCE.getData(team).getVariants().copy();
+    public FHResearchAttributeSyncPacket(TeamDataHolder team) {
+        this.data = team.getData(SpecialDataTypes.RESEARCH_DATA).getVariants().copy();
     }
 
     public void encode(PacketBuffer buffer) {

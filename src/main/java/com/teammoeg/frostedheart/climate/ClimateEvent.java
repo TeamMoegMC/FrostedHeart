@@ -19,17 +19,7 @@
 
 package com.teammoeg.frostedheart.climate;
 
-import static com.teammoeg.frostedheart.climate.WorldTemperature.BLIZZARD_WARM_PEAK;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T1;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T2;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T3;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T4;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T5;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T6;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T7;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T8;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_PEAK;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.WARM_PERIOD_PEAK;
+import static com.teammoeg.frostedheart.climate.WorldTemperature.*;
 
 import java.util.Random;
 

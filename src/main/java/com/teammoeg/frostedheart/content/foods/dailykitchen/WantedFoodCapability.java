@@ -42,7 +42,6 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 

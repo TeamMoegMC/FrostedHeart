@@ -27,8 +27,6 @@ import java.util.Map.Entry;
 import java.util.PriorityQueue;
 
 import com.teammoeg.frostedheart.research.SpecialDataHolder;
-import com.teammoeg.frostedheart.research.SpecialDataType;
-import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.NBTSerializable;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -45,8 +43,7 @@ import net.minecraftforge.common.util.Constants;
  * Town data for a whole team.
  */
 public class TeamTownData implements NBTSerializable{
-	public static final SpecialDataType<TeamTownData> CAPABILITY=new SpecialDataType<>("town",TeamTownData::new);
-    /**
+	/**
      * Resource generated from resident
      */
     Map<TownResourceType, Integer> resources = new EnumMap<>(TownResourceType.class);

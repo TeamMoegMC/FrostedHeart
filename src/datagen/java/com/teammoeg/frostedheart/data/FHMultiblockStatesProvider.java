@@ -18,7 +18,7 @@
 
 package com.teammoeg.frostedheart.data;
 
-import static blusunrize.immersiveengineering.ImmersiveEngineering.rl;
+import static blusunrize.immersiveengineering.ImmersiveEngineering.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;

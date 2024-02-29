@@ -31,6 +31,8 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.research.AutoIDItem;
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.SpecialDataTypes;
+import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
@@ -200,9 +202,10 @@ public abstract class Effect extends AutoIDItem implements Writeable{
     private void deleteInTree() {
         FHResearchDataManager.INSTANCE.getAllData().forEach(t -> {
             if (this.getRId() != 0) {
-                revoke(t);
+            	TeamResearchData trd=t.getData(SpecialDataTypes.RESEARCH_DATA);
+                revoke(trd);
 
-                t.setGrant(this, false);
+                trd.setGrant(this, false);
             }
         });
     }
@@ -364,10 +367,9 @@ public abstract class Effect extends AutoIDItem implements Writeable{
      *
      * @param team the team<br>
      */
-    public void sendProgressPacket(Team team) {
+    public void sendProgressPacket(TeamDataHolder team) {
         FHEffectProgressSyncPacket packet = new FHEffectProgressSyncPacket(team, this);
-        for (ServerPlayerEntity spe : team.getOnlineMembers())
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+        team.sendToOnline(packet);
     }
 
     /**
@@ -427,7 +429,7 @@ public abstract class Effect extends AutoIDItem implements Writeable{
     public void write(PacketBuffer buffer) {
         buffer.writeString(name);
         SerializeUtil.writeList2(buffer, tooltip, PacketBuffer::writeString);
-        SerializeUtil.writeOptional(buffer, icon, FHIcon::write);
+        SerializeUtil.writeOptional(buffer, icon, FHIcons::write);
         buffer.writeString(nonce);
         buffer.writeBoolean(isHidden());
     }

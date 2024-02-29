@@ -38,7 +38,7 @@ import com.teammoeg.frostedheart.research.ResearchListeners.CategoryUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.MultiblockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.RecipeUnlockList;
 import com.teammoeg.frostedheart.research.SpecialDataHolder;
-import com.teammoeg.frostedheart.research.SpecialDataType;
+import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchAttributeSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
@@ -56,9 +56,8 @@ import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.common.util.INBTSerializable;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 // TODO: Auto-generated Javadoc
@@ -72,11 +71,9 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * @author khjxiaogu
  * @date 2022/9/2
  */
-public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
-	public static SpecialDataType<TeamResearchData> TYPE=new SpecialDataType<>("research",TeamResearchData::new);
-    private static TeamResearchData INSTANCE = new TeamResearchData((Supplier<Team>)null);
-    UUID id;
-    String ownerName;
+public class TeamResearchData implements NBTSerializable{
+	private static TeamResearchData INSTANCE = new TeamResearchData(null);
+
     /**
      * The clue complete.<br>
      */
@@ -101,7 +98,7 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
      * The variants.<br>
      */
     CompoundNBT variants = new CompoundNBT();
-    private Supplier<Team> team;
+
     
 
     /**
@@ -138,7 +135,7 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
      * Reset client instance.
      */
     public static void resetClientInstance() {
-        INSTANCE = new TeamResearchData((Supplier<Team>)null);
+        INSTANCE = new TeamResearchData(null);
     }
 
     /**
@@ -151,18 +148,9 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
         INSTANCE.activeResearchId = id;
 
     }
-    public TeamResearchData(SpecialDataHolder team) {
-
-        this.id = UUID.randomUUID();
-    }
-    /**
-     * Instantiates a new TeamResearchData with a Supplier object.<br>
-     *
-     * @param team the team<br>
-     */
-    public TeamResearchData(Supplier<Team> team) {
-        this.team = team;
-        this.id = UUID.randomUUID();
+    TeamDataHolder holder;
+    public TeamResearchData(TeamDataHolder team) {
+    	holder=team;
     }
 
     /**
@@ -188,18 +176,13 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
         if (activeResearchId == 0) return;
         Research r = FHResearch.researches.getById(activeResearchId);
         if (r != null) {
-            getTeam().ifPresent(t -> {
-                for (Clue c : r.getClues())
-                    c.end(t);
-            });
+			for (Clue c : r.getClues())
+				c.end(getHolder());
         }
         activeResearchId = 0;
         if (sync) {
             FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket();
-            getTeam().ifPresent(t -> {
-                for (ServerPlayerEntity spe : t.getOnlineMembers())
-                    FHNetwork.send(PacketDistributor.PLAYER.with(() -> spe), packet);
-            });
+            getHolder().sendToOnline(packet);
         }
     }
 
@@ -216,16 +199,13 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
     public void clearData(Research r) {
         if (r.getRId() <= this.rdata.size()) {
             this.rdata.set(r.getRId() - 1, null);
-            Team t = this.getTeam().orElse(null);
             for (Clue c : r.getClues()) {
                 this.setClueTriggered(c, false);
-                if (t != null)
-                    c.sendProgressPacket(t);
+                c.sendProgressPacket(holder);
             }
             for (Effect e : r.getEffects()) {
                 this.setGrant(e, false);
-                if (t != null)
-                    e.sendProgressPacket(t);
+                e.sendProgressPacket(holder);
             }
         }
     }
@@ -325,30 +305,8 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
         return getData(FHResearch.researches.getByName(lid));
     }
 
-    /**
-     * Get id.
-     * Use this to identify research data as this may transfer across teams.
-     *
-     * @return team<br>
-     */
-    public UUID getId() {
-        return id;
-    }
 
-    public String getOwnerName() {
-        return ownerName;
-    }
 
-    /**
-     * Get owner of this storage.
-     *
-     * @return team<br>
-     */
-    public Optional<Team> getTeam() {
-        if (team == null)
-            return Optional.empty();
-        return Optional.ofNullable(team.get());
-    }
 
     public double getVariantDouble(ResearchVariant name) {
         return variants.getDouble(name.getToken());
@@ -385,14 +343,13 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
         if (id > 0)
             if (!grantedEffects.get(id - 1)) {
                 grantedEffects.set(id - 1, e.grant(this, player, false));
-                getTeam().ifPresent(t -> e.sendProgressPacket(t));
+                e.sendProgressPacket(holder);
             }
     }
 
     public void sendVariantPacket() {
     	FHResearchAttributeSyncPacket pack=new FHResearchAttributeSyncPacket(variants);
-    	for(ServerPlayerEntity spe:getTeam().map(Team::getOnlineMembers).orElseGet(()->Arrays.asList()))
-    		FHNetwork.send(PacketDistributor.PLAYER.with(()->spe), pack);
+    	holder.sendToOnline(pack);
     }
     public boolean hasVariant(ResearchVariant name) {
         return variants.contains(name.getToken());
@@ -482,30 +439,29 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
     public void resetData(Research r, boolean causeUpdate) {
         if (r.getRId() <= this.rdata.size()) {
             this.rdata.set(r.getRId() - 1, null);
-            Team t = this.getTeam().orElse(null);
             for (Clue c : r.getClues()) {
                 this.setClueTriggered(c, false);
-                if (t != null && causeUpdate)
-                    c.sendProgressPacket(t);
+                if (causeUpdate)
+                    c.sendProgressPacket(holder);
             }
             for (Effect e : r.getEffects()) {
                 this.setGrant(e, false);
                 e.revoke(this);
-                if (t != null && causeUpdate) {
-                    e.sendProgressPacket(t);
+                if (causeUpdate) {
+                    e.sendProgressPacket(holder);
                 }
             }
-            if (t != null && causeUpdate) {
+            if (causeUpdate) {
                 FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(r.getRId());
-                for (ServerPlayerEntity spe : t.getOnlineMembers())
-                    FHNetwork.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+                holder.sendToOnline(packet);
             }
         }
     }
 
     public void sendUpdate() {
         FHResearchDataSyncPacket packet = new FHResearchDataSyncPacket(this.serialize(true));
-        getTeam().ifPresent(t -> t.getOnlineMembers().forEach(p -> FHNetwork.send(PacketDistributor.PLAYER.with(() -> p), packet)));
+        holder.sendToOnline(packet);
+ 
     }
 
 
@@ -556,14 +512,10 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
                     clearCurrentResearch(false);
                 this.activeResearchId = r.getRId();
                 FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket(r);
-                getTeam().ifPresent(t -> {
-                    for (ServerPlayerEntity spe : t.getOnlineMembers())
-                        FHNetwork.send(PacketDistributor.PLAYER.with(() -> spe), packet);
-                });
-                getTeam().ifPresent(t -> {
-                    for (Clue c : r.getClues())
-                        c.start(t);
-                });
+                holder.sendToOnline(packet);
+                for (Clue c : r.getClues())
+                    c.start(holder);
+                
                 this.getData(r).checkComplete();
             }
         }
@@ -584,13 +536,7 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
 
     }
 
-    public void setOwnerName(String ownerName) {
-        this.ownerName = ownerName;
-    }
 
-    public void setTeam(Supplier<Team> team) {
-        this.team = team;
-    }
 
     /**
      * Trigger clue, similar to {@link #triggerClue(int)} but accept Clue.
@@ -622,28 +568,18 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
 	public void setVariants(CompoundNBT variants) {
 		this.variants = variants;
 	}
-	//Special data handler
-	Map<String,NBTSerializable> data=new HashMap<>();
-	@SuppressWarnings("unchecked")
-	public <T extends NBTSerializable> T getData(SpecialDataType<T> cap){
-		return (T) data.computeIfAbsent(cap.getId(),s->cap.create(this));
-	}
 
 	@Override
 	public void save(CompoundNBT nbt, boolean isPacket) {
         nbt.putLongArray("clues", clueComplete.toLongArray());
         nbt.putLongArray("effects", grantedEffects.toLongArray());
         nbt.put("vars", variants);
-        if (ownerName != null)
-            nbt.putString("owner", ownerName);
+
         ListNBT rs = new ListNBT();
         rdata.stream().map(e -> e != null ? e.serialize() : new CompoundNBT()).forEach(e -> rs.add(e));
         nbt.put("researches", rs);
         nbt.putInt("active", activeResearchId);
-        nbt.putUniqueId("uuid", id);
-        for(Entry<String, NBTSerializable> ent:data.entrySet()) {
-        	nbt.put(ent.getKey(), ent.getValue().serializeNBT());
-        }
+        
         
         //nbt.put("town", townData.serialize(updatePacket));
         //nbt.put("generator", generatorData.serialize(updatePacket));
@@ -684,19 +620,11 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
             if (grantedEffects.get(i))
                 FHResearch.effects.runIfPresent(i + 1, e -> e.grant(this, null, true));
         }
-        if (data.contains("owner"))
-            ownerName = data.getString("owner");
+
         setVariants(data.getCompound("vars"));
-        if (data.contains("uuid"))
-            id = data.getUniqueId("uuid");
+
         ListNBT li = data.getList("researches", Constants.NBT.TAG_COMPOUND);
         activeResearchId = data.getInt("active");
-        this.data.clear();
-        for(SpecialDataType<?> tc:SpecialDataType.TYPE_REGISTRY) {
-        	if(data.contains(tc.getId())) {
-        		this.getData(tc).deserializeNBT(data.getCompound(tc.getId()));
-        	}
-        }
         
         
         for (int i = 0; i < li.size(); i++) {
@@ -707,12 +635,16 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
         if (!updatePacket) {
             if (activeResearchId != 0) {
                 Research r = FHResearch.researches.getById(activeResearchId);
-                getTeam().ifPresent(t -> {
-                    for (Clue c : r.getClues())
-                        c.start(t);
-                });
+               
+                for (Clue c : r.getClues())
+                    c.start(holder);
+                
             }
         }
 		
+	}
+
+	public TeamDataHolder getHolder() {
+		return holder;
 	}
 }

@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.research.research.clues;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
@@ -81,8 +82,8 @@ public class KillClue extends ListenerClue {
     }
 
     @Override
-    public void initListener(Team t) {
-        ResearchListeners.getKillClues().add(this, t);
+    public void initListener(TeamDataHolder t) {
+        ResearchListeners.getKillClues().add(this, t.getId());
     }
 
     public boolean isCompleted(TeamResearchData trd, LivingEntity e) {
@@ -94,8 +95,8 @@ public class KillClue extends ListenerClue {
     }
 
     @Override
-    public void removeListener(Team t) {
-        ResearchListeners.getKillClues().remove(this, t);
+    public void removeListener(TeamDataHolder t) {
+        ResearchListeners.getKillClues().remove(this, t.getId());
     }
 
 

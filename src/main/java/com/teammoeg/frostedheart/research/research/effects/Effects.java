@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.research.research.effects;
 import java.util.function.Function;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.research.research.clues.Clue;
 import com.teammoeg.frostedheart.util.io.JsonSerializerRegistry;
 
 import net.minecraft.network.PacketBuffer;

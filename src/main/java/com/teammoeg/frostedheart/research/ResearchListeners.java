@@ -47,8 +47,6 @@ import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.LivingEntity;
@@ -107,9 +105,9 @@ public class ResearchListeners {
 
     private static class ListenerInfo<T extends Clue> {
         T listener;
-        List<Team> trigger;
+        List<UUID> trigger;
 
-        public ListenerInfo(T listener, Team first) {
+        public ListenerInfo(T listener, UUID first) {
             super();
             this.listener = listener;
             if (first != null) {
@@ -118,7 +116,7 @@ public class ResearchListeners {
             }
         }
 
-        public boolean add(Team t) {
+        public boolean add(UUID t) {
             if (trigger == null) return false;
             return trigger.add(t);
         }
@@ -127,14 +125,14 @@ public class ResearchListeners {
             return listener;
         }
 
-        public boolean remove(Team t) {
+        public boolean remove(UUID t) {
             if (trigger == null) return false;
             return trigger.remove(t);
         }
 
-        public boolean shouldCall(Team t2) {
+        public boolean shouldCall(UUID t2) {
             if (trigger == null) return true;
-            for (Team t : trigger)
+            for (UUID t : trigger)
                 if (t.equals(t2))
                     return true;
             return false;
@@ -148,7 +146,7 @@ public class ResearchListeners {
          */
         private static final long serialVersionUID = -5579427246923453321L;
 
-        public boolean add(T c, Team t) {
+        public boolean add(T c, UUID t) {
             if (t != null) {
                 for (ListenerInfo<T> cl : this) {
                     if (cl.getListener() == c)
@@ -159,14 +157,14 @@ public class ResearchListeners {
             return super.add(new ListenerInfo<T>(c, t));
         }
 
-        public void call(Team t, Consumer<T> c) {
+        public void call(UUID t, Consumer<T> c) {
             for (ListenerInfo<T> cl : this) {
                 if (cl.shouldCall(t))
                     c.accept(cl.getListener());
             }
         }
 
-        public boolean remove(T c, Team t) {
+        public boolean remove(T c, UUID t) {
             if (t != null)
                 for (ListenerInfo<T> cl : this) {
                     if (cl.getListener() == c)
@@ -247,7 +245,7 @@ public class ResearchListeners {
             if (player instanceof FakePlayer) return false;
             if (player.getEntityWorld().isRemote)
                 return ClientResearchDataAPI.getData().block.has(b);
-            return ResearchDataAPI.getData((ServerPlayerEntity) player).block.has(b);
+            return ResearchDataAPI.getData((ServerPlayerEntity) player).getData(SpecialDataTypes.RESEARCH_DATA).block.has(b);
         }
         return true;
 
@@ -267,7 +265,7 @@ public class ResearchListeners {
         if (recipe.has(r)) {
             if (s.getEntityWorld().isRemote)
                 return ClientResearchDataAPI.getData().crafting.has(r);
-            return ResearchDataAPI.getData((ServerPlayerEntity) s).crafting.has(r);
+            return ResearchDataAPI.getData((ServerPlayerEntity) s).getData(SpecialDataTypes.RESEARCH_DATA).crafting.has(r);
         }
         return true;
     }
@@ -275,14 +273,14 @@ public class ResearchListeners {
     public static boolean canUseRecipe(UUID team, IRecipe<?> r) {
         if (recipe.has(r)) {
             if (team == null) return false;
-            TeamResearchData trd=ResearchDataAPI.getData(team);
+            TeamResearchData trd=ResearchDataAPI.getData(team).getData(SpecialDataTypes.RESEARCH_DATA);
             return trd!=null&&trd.crafting.has(r);
         }
         return true;
     }
 
     public static boolean commitGameLevel(ServerPlayerEntity s, int lvl) {
-        TeamResearchData trd = ResearchDataAPI.getData(s);
+        TeamResearchData trd = ResearchDataAPI.getData(s).getData(SpecialDataTypes.RESEARCH_DATA);
         OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent()) {
             Research rs = cur.orElse(null);
@@ -320,7 +318,7 @@ public class ResearchListeners {
     }
 
     public static int fetchGameLevel(ServerPlayerEntity s) {
-        TeamResearchData trd = ResearchDataAPI.getData(s);
+        TeamResearchData trd = ResearchDataAPI.getData(s).getData(SpecialDataTypes.RESEARCH_DATA);
         OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent()) {
             Research rs = cur.orElse(null);
@@ -345,9 +343,8 @@ public class ResearchListeners {
     }
 
     public static void kill(ServerPlayerEntity s, LivingEntity e) {
-        Team t = FTBTeamsAPI.getPlayerTeam(s);
-        TeamResearchData trd = ResearchDataAPI.getData(s);
-        killClues.call(t, c -> c.isCompleted(trd, e));
+        TeamDataHolder trd = ResearchDataAPI.getData(s);
+        killClues.call(trd.getId(), c -> c.isCompleted(trd.getData(SpecialDataTypes.RESEARCH_DATA), e));
     }
 
     public static void reload() {
@@ -372,11 +369,11 @@ public class ResearchListeners {
         FHResearchDataManager.INSTANCE.save();
         FHResearchDataManager.INSTANCE.load();
         FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
-        FHResearchDataManager.INSTANCE.getAllData().forEach(t -> t.sendUpdate());
+        FHResearchDataManager.INSTANCE.getAllData().forEach(t -> t.getData(SpecialDataTypes.RESEARCH_DATA).sendUpdate());
     }
 
     public static ItemStack submitItem(ServerPlayerEntity s, ItemStack i) {
-        TeamResearchData trd = ResearchDataAPI.getData(s);
+        TeamResearchData trd = ResearchDataAPI.getData(s).getData(SpecialDataTypes.RESEARCH_DATA);
         OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent())
             for (Clue c : cur.orElse(null).getClues())
@@ -413,9 +410,8 @@ public class ResearchListeners {
     }
 
     public static void tick(ServerPlayerEntity s) {
-        Team t = FTBTeamsAPI.getPlayerTeam(s);
-        TeamResearchData trd = ResearchDataAPI.getData(s);
-        tickClues.call(t, e -> e.tick(trd, s));
+        TeamDataHolder trd = ResearchDataAPI.getData(s);
+        tickClues.call(trd.getId(), e -> e.tick(trd.getData(SpecialDataTypes.RESEARCH_DATA), s));
     }
 
     private ResearchListeners() {

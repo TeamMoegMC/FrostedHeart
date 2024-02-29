@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.research.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.SpecialDataTypes;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
@@ -63,7 +64,7 @@ public class FHResearchControlPacket {
         context.get().enqueueWork(() -> {
             Research r = FHResearch.researches.getById(researchID);
             ServerPlayerEntity spe = context.get().getSender();
-            TeamResearchData trd = ResearchDataAPI.getData(spe);
+            TeamResearchData trd = ResearchDataAPI.getData(spe).getData(SpecialDataTypes.RESEARCH_DATA);
             switch (status) {
                 case COMMIT_ITEM:
 

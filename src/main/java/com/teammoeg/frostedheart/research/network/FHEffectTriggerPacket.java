@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.research.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.SpecialDataTypes;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.research.Research;
@@ -50,11 +51,11 @@ public class FHEffectTriggerPacket {
 
         context.get().enqueueWork(() -> {
             Research r = FHResearch.researches.getById(researchID);
-            TeamResearchData trd = ResearchDataAPI.getData(context.get().getSender());
+            TeamResearchData trd = ResearchDataAPI.getData(context.get().getSender()).getData(SpecialDataTypes.RESEARCH_DATA);
             ServerPlayerEntity spe = context.get().getSender();
             if (trd.getData(r).isCompleted()) {
                 r.grantEffects(trd, spe);
-                r.sendProgressPacket(trd.getTeam().orElse(null));
+                r.sendProgressPacket(trd.getHolder());
             }
         });
         context.get().setPacketHandled(true);

@@ -83,6 +83,6 @@ public abstract class PolicyGroup implements Writeable {
 
     @Override
     public void write(PacketBuffer buffer) {
-        SerializeUtil.writeList(buffer, conditions, PolicyCondition::write);
+        SerializeUtil.writeList(buffer, conditions, Conditions::write);
     }
 }

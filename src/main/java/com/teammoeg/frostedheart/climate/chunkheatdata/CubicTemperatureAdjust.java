@@ -20,8 +20,6 @@
 package com.teammoeg.frostedheart.climate.chunkheatdata;
 
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBTType;
-import net.minecraft.nbt.NBTTypes;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.Constants;

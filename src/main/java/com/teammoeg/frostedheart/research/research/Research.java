@@ -36,7 +36,9 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.research.FHRegisteredItem;
 import com.teammoeg.frostedheart.research.FHRegistry;
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.SpecialDataTypes;
 import com.teammoeg.frostedheart.research.SpecialResearch;
+import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
@@ -285,7 +287,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         deleteInTree();
         this.effects.forEach(Effect::deleteSelf);
         this.clues.forEach(Clue::deleteSelf);
-        FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this, false));
+        FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
 
         FHResearch.delete(this);
     }
@@ -402,8 +404,8 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @param team the team<br>
      * @return data<br>
      */
-    public ResearchData getData(Team team) {
-        return FHResearchDataManager.INSTANCE.getData(team).getData(this);
+    public ResearchData getData(TeamDataHolder team) {
+        return team.getData(SpecialDataTypes.RESEARCH_DATA).getData(this);
     }
 
     /**
@@ -568,7 +570,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @param t the t<br>
      * @return if is completed,true.
      */
-    public boolean isCompleted(Team t) {
+    public boolean isCompleted(TeamDataHolder t) {
         return getData(t).isCompleted();
     }
 
@@ -639,7 +641,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @param t the t<br>
      * @return if is unlocked,true.
      */
-    public boolean isUnlocked(Team t) {
+    public boolean isUnlocked(TeamDataHolder t) {
         for (Research parent : this.getParents()) {
             if (!parent.getData(t).isCompleted()) {
                 return false;
@@ -748,7 +750,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      *
      * @param team the team<br>
      */
-    public void sendProgressPacket(Team team) {
+    public void sendProgressPacket(TeamDataHolder team) {
         sendProgressPacket(team, getData(team));
     }
 
@@ -758,11 +760,9 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @param team the team<br>
      * @param rd   the rd<br>
      */
-    public void sendProgressPacket(Team team, ResearchData rd) {
+    public void sendProgressPacket(TeamDataHolder team, ResearchData rd) {
         FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(rd);
-        if (team != null)
-            for (ServerPlayerEntity spe : team.getOnlineMembers())
-                FHNetwork.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+        team.sendToOnline(packet);
     }
 
     /**
@@ -836,7 +836,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      */
     public void setNewId(String nid) {
         if (!id.equals(nid)) {
-            FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this, false));
+            FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
             deleteInTree();//clear all reference, hope this could work
             FHResearch.delete(this);
             this.setId(nid);
@@ -891,7 +891,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         buffer.writeString(name);
         SerializeUtil.writeList2(buffer, desc, PacketBuffer::writeString);
         SerializeUtil.writeList2(buffer, fdesc, PacketBuffer::writeString);
-        icon.write(buffer);
+        FHIcons.write(icon, buffer);
         buffer.writeResourceLocation(category.getId());
         SerializeUtil.writeList2(buffer, parents, FHRegistry::writeSupplier);
         SerializeUtil.writeList2(buffer, clues, Clues::write);

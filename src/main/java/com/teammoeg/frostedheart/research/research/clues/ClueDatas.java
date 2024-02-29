@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.research.research.clues;
 
 import java.util.function.Function;
 
-import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.research.data.IClueData;
 import com.teammoeg.frostedheart.util.io.NBTSerializerRegistry;
 

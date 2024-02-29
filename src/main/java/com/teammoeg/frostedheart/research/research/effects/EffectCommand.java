@@ -106,7 +106,7 @@ public class EffectCommand extends Effect {
         overrides.put("y", pos.getY());
         overrides.put("z", pos.getZ());
 
-        overrides.put("t", team.getTeam().get().getStringID());
+        overrides.put("t", team.getHolder().getTeam().get().getStringID());
         Commands cmds = FHResearchDataManager.server.getCommandManager();
         CommandSource source = FHResearchDataManager.server.getCommandSource();
         for (String s : rewards) {

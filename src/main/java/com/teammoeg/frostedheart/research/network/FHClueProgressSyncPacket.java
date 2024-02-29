@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.research.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.SpecialDataTypes;
+import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.research.clues.Clue;
@@ -40,8 +42,8 @@ public class FHClueProgressSyncPacket {
         id = buffer.readVarInt();
     }
 
-    public FHClueProgressSyncPacket(Team team, Clue rs) {
-        TeamResearchData rd = FHResearchDataManager.INSTANCE.getData(team);
+    public FHClueProgressSyncPacket(TeamDataHolder team, Clue rs) {
+        TeamResearchData rd = team.getData(SpecialDataTypes.RESEARCH_DATA);
         this.data = rd.isClueTriggered(rs);
         this.id = rs.getRId();
     }

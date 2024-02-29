@@ -36,6 +36,8 @@ import javax.annotation.Nullable;
 import com.mojang.authlib.GameProfile;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.TeamDataHolder;
+import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.FileUtil;
 
@@ -47,6 +49,7 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.world.storage.FolderName;
+import net.minecraftforge.common.util.Lazy;
 
 public class FHResearchDataManager {
     public static MinecraftServer server;
@@ -54,8 +57,8 @@ public class FHResearchDataManager {
     public static FHResearchDataManager INSTANCE;
     Path local;
     File regfile;
-    private Map<UUID, TeamResearchData> data = new HashMap<>();
-    private Map<UUID, TeamResearchData> dataByResearchId = new HashMap<>();
+    private Map<UUID, UUID> dataByFTBId = new HashMap<>();
+    private Map<UUID, TeamDataHolder> dataByResearchId = new HashMap<>();
     
     public static RecipeManager getRecipeManager() {
         if (server != null)
@@ -68,46 +71,45 @@ public class FHResearchDataManager {
         INSTANCE = this;
     }
 
-    public Collection<TeamResearchData> getAllData() {
-        return data.values();
+    public Collection<TeamDataHolder> getAllData() {
+        return dataByResearchId.values();
     }
 
     /*
      * get Team data as well as check ownership.
      *
      * */
-    public TeamResearchData getData(Team team) {
-        TeamResearchData cn = data.get(team.getId());
+    public TeamDataHolder getData(Team team) {
+        UUID cn = dataByFTBId.get(team.getId());
         if (cn == null) {
             GameProfile owner = server.getPlayerProfileCache().getProfileByUUID(team.getOwner());
             
             if (owner != null)
-                for (Entry<UUID, TeamResearchData> dat : data.entrySet()) {
+                for (Entry<UUID, TeamDataHolder> dat : dataByResearchId.entrySet()) {
                     if (owner.getName().equals(dat.getValue().getOwnerName())) {
                         this.transfer(dat.getKey(), team);
                         break;
                     }
                 }
         }
-        cn = data.computeIfAbsent(team.getId(),
-                c -> new TeamResearchData(() -> team));
-        dataByResearchId.putIfAbsent(cn.getId(), cn);
-        if ((server.isSinglePlayer()||!server.isServerInOnlineMode())&&cn.getOwnerName() == null) {
+        cn = dataByFTBId.computeIfAbsent(team.getId(), t->UUID.randomUUID());
+        TeamDataHolder data=dataByResearchId.computeIfAbsent(cn, c -> new TeamDataHolder(c, OptionalLazy.of(()->team)));
+        if ((server.isSinglePlayer()||!server.isServerInOnlineMode())&&data.getOwnerName() == null) {
             PlayerProfileCache cache = server.getPlayerProfileCache();
             if (cache != null) {
                 GameProfile gp = cache.getProfileByUUID(team.getOwner());
                 if (gp != null) {
-                    cn.setOwnerName(gp.getName());
+                	data.setOwnerName(gp.getName());
                 }
             }
         }
-        return cn;
+        return data;
 
     }
     @Nullable
-    public TeamResearchData getData(UUID id) {
+    public TeamDataHolder getData(UUID id) {
 
-        TeamResearchData cn = dataByResearchId.get(id);
+    	TeamDataHolder cn = dataByResearchId.get(id);
         return cn;
 
     }
@@ -127,7 +129,7 @@ public class FHResearchDataManager {
 
             }
         }
-        data.clear();
+        dataByFTBId.clear();
         FHResearch.init();
         local.toFile().mkdirs();
         for (File f : local.toFile().listFiles((f) -> f.getName().endsWith(".nbt"))) {
@@ -139,11 +141,15 @@ public class FHResearchDataManager {
                     FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
                     continue;
                 }
+                
                 CompoundNBT nbt = CompressedStreamTools.readCompressed(f);
-                TeamResearchData trd = new TeamResearchData(() -> TeamManager.INSTANCE.getTeamByID(tud));
+                if(nbt.contains("teamId"))
+                	tud=nbt.getUniqueId("teamId");
+                final UUID ftbid=tud;
+                TeamDataHolder trd = new TeamDataHolder(nbt.getUniqueId("uuid"),OptionalLazy.of(() -> TeamManager.INSTANCE.getTeamByID(ftbid)));
 
                 trd.deserialize(nbt, false);
-                data.put(tud, trd);
+                dataByFTBId.put(ftbid, trd.getId());
                 dataByResearchId.put(trd.getId(), trd);
             } catch (IllegalArgumentException ex) {
                 ex.printStackTrace();
@@ -184,7 +190,7 @@ public class FHResearchDataManager {
             FHMain.LOGGER.fatal("CANNOT SAVE RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
         }
         Set<String> files = new HashSet<>(Arrays.asList(local.toFile().list((d, s) -> s.endsWith(".nbt"))));
-        for (Entry<UUID, TeamResearchData> entry : data.entrySet()) {
+        for (Entry<UUID, TeamDataHolder> entry : dataByResearchId.entrySet()) {
             String fn = entry.getKey().toString() + ".nbt";
             File f = local.resolve(fn).toFile();
             try {
@@ -202,11 +208,13 @@ public class FHResearchDataManager {
     }
 
     public void transfer(UUID orig, Team team) {
-        TeamResearchData odata = data.remove(orig);
+    	UUID rid=dataByFTBId.remove(orig);
+        TeamDataHolder odata = dataByResearchId.remove(rid);
         if (odata != null) {
-            odata.setTeam(() -> team);
-            data.put(team.getId(), odata);
+            odata.setTeam(OptionalLazy.of(()->team));
+            odata.setOwnerName(server.getPlayerProfileCache().getProfileByUUID(team.getOwner()).getName());
         }
+        dataByFTBId.put(team.getId(), rid);
 
     }
 }

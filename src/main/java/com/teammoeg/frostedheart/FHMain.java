@@ -37,6 +37,7 @@ import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
 import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
 import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
+import com.teammoeg.frostedheart.research.SpecialDataTypes;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.FHProps;
@@ -121,6 +122,7 @@ public class FHMain {
         FHConfig.register();
         TetraCompat.init();
         FHProps.init();
+        SpecialDataTypes.init();
         FHItems.registry.register(mod);
         FHBlocks.registry.register(mod);
         FHBlocks.init();

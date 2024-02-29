@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.research.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.SpecialDataTypes;
+import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.research.effects.Effect;
@@ -40,8 +42,8 @@ public class FHEffectProgressSyncPacket {
         id = buffer.readVarInt();
     }
 
-    public FHEffectProgressSyncPacket(Team team, Effect rs) {
-        TeamResearchData rd = FHResearchDataManager.INSTANCE.getData(team);
+    public FHEffectProgressSyncPacket(TeamDataHolder team, Effect rs) {
+        TeamResearchData rd = team.getData(SpecialDataTypes.RESEARCH_DATA);
         this.data = rd.isEffectGranted(rs);
         this.id = rs.getRId();
     }

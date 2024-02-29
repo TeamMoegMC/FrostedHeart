@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.research.research.clues;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 
@@ -57,7 +58,7 @@ public class ItemClue extends Clue {
     }
 
     @Override
-    public void end(Team team) {
+    public void end(TeamDataHolder team) {
     }
 
     @Override
@@ -106,7 +107,7 @@ public class ItemClue extends Clue {
     }
 
     @Override
-    public void start(Team team) {
+    public void start(TeamDataHolder team) {
     }
 
 

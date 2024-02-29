@@ -149,9 +149,9 @@ public abstract class BaseData implements Writeable {
         buffer.writeVarInt(maxstore);
         buffer.writeFloat(recover);
         buffer.writeVarInt(price);
-        SerializeUtil.writeList(buffer, actions, PolicyAction::write);
-        SerializeUtil.writeList(buffer, soldactions, PolicyAction::write);
-        SerializeUtil.writeList(buffer, restockconditions, PolicyCondition::write);
+        SerializeUtil.writeList(buffer, actions, Actions::write);
+        SerializeUtil.writeList(buffer, soldactions, Actions::write);
+        SerializeUtil.writeList(buffer, restockconditions, Conditions::write);
         buffer.writeBoolean(hideStockout);
     }
 }
