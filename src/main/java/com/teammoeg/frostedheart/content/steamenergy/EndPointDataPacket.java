@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.steamenergy;
 import java.util.Collection;
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.climate.network.FHMessage;
 import com.teammoeg.frostedheart.trade.ClientHeatHandler;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -29,7 +30,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when player join
-public class EndPointDataPacket {
+public class EndPointDataPacket implements FHMessage {
     private final Collection<EndPointData> data;
 
     public EndPointDataPacket(HeatEnergyNetwork ewn) {

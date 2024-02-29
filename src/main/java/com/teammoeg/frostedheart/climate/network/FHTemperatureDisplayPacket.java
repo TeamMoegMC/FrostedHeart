@@ -33,7 +33,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class FHTemperatureDisplayPacket {
+public class FHTemperatureDisplayPacket implements FHMessage {
     private final int[] temp;
     private final String langKey;
     private final boolean isStatus;

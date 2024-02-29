@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class FHClimatePacket {
+public class FHClimatePacket implements FHMessage {
     private final short[] data;
     private final long sec;
     private final ClimateType climate;

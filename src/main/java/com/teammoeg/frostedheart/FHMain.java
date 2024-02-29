@@ -214,7 +214,6 @@ public class FHMain {
 
     @SuppressWarnings("unused")
     private void serverStop(final FMLServerStoppedEvent event) {
-        SpecialDataManager.server = null;
         SpecialDataManager.INSTANCE = null;
     }
 

@@ -32,7 +32,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class FHBodyDataSyncPacket {
+public class FHBodyDataSyncPacket implements FHMessage {
     private final CompoundNBT data;
 
     public FHBodyDataSyncPacket(PacketBuffer buffer) {
@@ -43,11 +43,13 @@ public class FHBodyDataSyncPacket {
         this.data = PlayerTemperatureData.getCapability(pe).map(t->t.serializeNBT()).orElseGet(CompoundNBT::new);
     }
 
-    public void encode(PacketBuffer buffer) {
+	@Override
+	public void encode(PacketBuffer buffer) {
         buffer.writeCompoundTag(data);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> context) {
+	@Override
+	public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
             World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getWorld);

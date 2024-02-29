@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.trade.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.climate.network.FHMessage;
 import com.teammoeg.frostedheart.trade.RelationList;
 import com.teammoeg.frostedheart.trade.gui.TradeContainer;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -33,7 +34,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class TradeUpdatePacket {
+public class TradeUpdatePacket implements FHMessage {
     CompoundNBT data;
     CompoundNBT player;
     RelationList relations;

@@ -68,10 +68,10 @@ public class ScenarioVM implements IScenarioThread{
     }
 
 	public ServerPlayerEntity getPlayer() {
-        return SpecialDataManager.server.getPlayerList().getPlayerByUUID(player);
+        return SpecialDataManager.getServer().getPlayerList().getPlayerByUUID(player);
     }
 	public boolean isOfflined() {
-		return SpecialDataManager.server.getPlayerList().getPlayerByUUID(player)==null;
+		return SpecialDataManager.getServer().getPlayerList().getPlayerByUUID(player)==null;
 	}
 	@Override
     public String getLang() {

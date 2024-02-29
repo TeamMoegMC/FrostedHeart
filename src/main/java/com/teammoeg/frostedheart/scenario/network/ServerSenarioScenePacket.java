@@ -2,13 +2,14 @@ package com.teammoeg.frostedheart.scenario.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.climate.network.FHMessage;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.runner.RunStatus;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class ServerSenarioScenePacket {
+public class ServerSenarioScenePacket implements FHMessage {
     private final String text;
     private final boolean isReline;
     private final boolean isNowait;

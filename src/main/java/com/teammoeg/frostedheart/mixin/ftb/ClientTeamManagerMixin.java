@@ -69,7 +69,7 @@ public abstract class ClientTeamManagerMixin {
                 }
             }
         }
-        for (ServerPlayerEntity p : SpecialDataManager.server.getPlayerList().getPlayers()) {
+        for (ServerPlayerEntity p : SpecialDataManager.getServer().getPlayerList().getPlayers()) {
             KnownClientPlayer kcp = knownPlayers.get(p.getUniqueID());
             if (kcp != null)
                 tosendplayer.add(kcp);

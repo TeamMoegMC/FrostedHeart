@@ -354,7 +354,7 @@ public class FHResearch {
 	private static final FolderName dataFolder = new FolderName("fhdata");
     public static void load() {
         FHResearch.editor = false;
-        Path local = SpecialDataManager.server.func_240776_a_(dataFolder);
+        Path local = SpecialDataManager.getServer().func_240776_a_(dataFolder);
         File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
         FHResearch.clearAll();
         if (regfile.exists()) {
@@ -380,7 +380,7 @@ public class FHResearch {
     }
 
     public static void save() {
-    	Path local = SpecialDataManager.server.func_240776_a_(dataFolder);
+    	Path local = SpecialDataManager.getServer().func_240776_a_(dataFolder);
     	File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
         File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
         try {

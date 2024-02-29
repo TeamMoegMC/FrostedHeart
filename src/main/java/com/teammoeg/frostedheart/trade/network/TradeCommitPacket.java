@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.climate.network.FHMessage;
 import com.teammoeg.frostedheart.trade.gui.TradeContainer;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -30,7 +31,7 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class TradeCommitPacket {
+public class TradeCommitPacket implements FHMessage {
     private Map<String, Integer> offer;
 
     public TradeCommitPacket(Map<String, Integer> offer) {

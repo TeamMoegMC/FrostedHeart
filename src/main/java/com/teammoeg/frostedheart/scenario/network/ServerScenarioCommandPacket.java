@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.climate.network.FHMessage;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
@@ -30,7 +31,7 @@ import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class ServerScenarioCommandPacket {
+public class ServerScenarioCommandPacket implements FHMessage {
     private String commandName;
     Map<String, String> params;
 
@@ -39,6 +40,7 @@ public class ServerScenarioCommandPacket {
         params = SerializeUtil.readStringMap(buffer, new HashMap<>(), PacketBuffer::readString);
     }
 
+    
     public ServerScenarioCommandPacket(String commandName, Map<String, String> params) {
         super();
         this.commandName = commandName;

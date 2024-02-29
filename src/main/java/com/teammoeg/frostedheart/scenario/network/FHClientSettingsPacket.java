@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.scenario.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.climate.network.FHMessage;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioVariables;
 
@@ -28,7 +29,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class FHClientSettingsPacket {
+public class FHClientSettingsPacket implements FHMessage {
     double scale;
 
     public FHClientSettingsPacket(PacketBuffer buffer) {

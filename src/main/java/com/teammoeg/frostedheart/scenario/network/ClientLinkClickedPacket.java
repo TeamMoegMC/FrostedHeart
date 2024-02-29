@@ -21,12 +21,13 @@ package com.teammoeg.frostedheart.scenario.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.climate.network.FHMessage;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class ClientLinkClickedPacket {
+public class ClientLinkClickedPacket implements FHMessage {
     final String link;
     public ClientLinkClickedPacket(PacketBuffer buffer) {
     	link=buffer.readString();

@@ -10,6 +10,7 @@ import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.client.Point;
 
+import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
@@ -159,7 +160,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
                     CompoundNBT tag = new CompoundNBT();
                     tile.setWorking(!btn.getState());
                     tag.putBoolean("isWorking", tile.isWorking());
-                    FHNetwork.sendToServer(new MessageTileSync(tile.master(), tag));
+                    ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(tile.master(), tag));
                     fullInit();
                 }));
         this.addButton(new MasterGeneratorGuiButtonBoolean(guiLeft + 160, guiTop + 24, 11, 22, tile.isOverdrive(),450, 148,
@@ -167,7 +168,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
                     CompoundNBT tag = new CompoundNBT();
                     tile.setOverdrive(!btn.getState());
                     tag.putBoolean("isOverdrive", tile.isOverdrive());
-                    FHNetwork.sendToServer(new MessageTileSync(tile.master(), tag));
+                    ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(tile.master(), tag));
                     fullInit();
                 }));
         this.addButton(new MasterGeneratorGuiButtonUpgrade(guiLeft + 75, guiTop + 116, 26, 18, 0,424, 148,

@@ -54,13 +54,13 @@ public class MCCommands {
 		overrides.put("x", pos.getX());
 		overrides.put("y", pos.getY());
 		overrides.put("z", pos.getZ());
-		OpEntry opent=SpecialDataManager.server.getPlayerList().getOppedPlayers().getEntry(triggerPlayer.getGameProfile());
+		OpEntry opent=SpecialDataManager.getServer().getPlayerList().getOppedPlayers().getEntry(triggerPlayer.getGameProfile());
 		if(op>0)
 			if(opent==null){
-				SpecialDataManager.server.getPlayerList().addOp(triggerPlayer.getGameProfile());
+				SpecialDataManager.getServer().getPlayerList().addOp(triggerPlayer.getGameProfile());
 			}
-		Commands cmds = SpecialDataManager.server.getCommandManager();
-		CommandSource source = asp>0?triggerPlayer.getCommandSource():SpecialDataManager.server.getCommandSource();
+		Commands cmds = SpecialDataManager.getServer().getCommandManager();
+		CommandSource source = asp>0?triggerPlayer.getCommandSource():SpecialDataManager.getServer().getCommandSource();
 		for (Map.Entry<String, Object> entry : overrides.entrySet()) {
 			if (entry.getValue() != null) {
 				s = s.replace("@" + entry.getKey(), entry.getValue().toString());
@@ -69,7 +69,7 @@ public class MCCommands {
 		cmds.handleCommand(source, s);
 		if(op>0)
 			if(opent==null){
-				SpecialDataManager.server.getPlayerList().removeOp(triggerPlayer.getGameProfile());
+				SpecialDataManager.getServer().getPlayerList().removeOp(triggerPlayer.getGameProfile());
 			}
 	}
 }

@@ -54,7 +54,7 @@ import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.world.storage.FolderName;
 
 public class SpecialDataManager {
-    public static MinecraftServer server;
+    private final MinecraftServer server;
     static final FolderName dataFolder = new FolderName("fhdata");
     static final FolderName OlddataFolder = new FolderName("fhresearch");
     public static SpecialDataManager INSTANCE;
@@ -62,8 +62,8 @@ public class SpecialDataManager {
     private Map<UUID, TeamDataHolder> dataByResearchId = new HashMap<>();
     
     public static RecipeManager getRecipeManager() {
-        if (server != null)
-            return server.getRecipeManager();
+        if (getServer() != null)
+            return getServer().getRecipeManager();
         return ClientUtils.mc().world.getRecipeManager();
     }
 
@@ -95,9 +95,9 @@ public class SpecialDataManager {
     public TeamDataHolder getData(Team team) {
         UUID cn = dataByFTBId.get(team.getId());
         if (cn == null) {
-            GameProfile owner = server.getPlayerProfileCache().getProfileByUUID(team.getOwner());
+            GameProfile owner = getServer().getPlayerProfileCache().getProfileByUUID(team.getOwner());
             
-            if (owner != null&&(!server.isServerInOnlineMode()||server.isSinglePlayer()))
+            if (owner != null&&(!getServer().isServerInOnlineMode()||getServer().isSinglePlayer()))
                 for (Entry<UUID, TeamDataHolder> dat : dataByResearchId.entrySet()) {
                     if (owner.getName().equals(dat.getValue().getOwnerName())) {
                         this.transfer(dat.getKey(), team);
@@ -108,7 +108,7 @@ public class SpecialDataManager {
         cn = dataByFTBId.computeIfAbsent(team.getId(), t->UUID.randomUUID());
         TeamDataHolder data=dataByResearchId.computeIfAbsent(cn, c -> new TeamDataHolder(c, OptionalLazy.of(()->team)));
         if (data.getOwnerName() == null) {
-            PlayerProfileCache cache = server.getPlayerProfileCache();
+            PlayerProfileCache cache = getServer().getPlayerProfileCache();
             if (cache != null) {
                 GameProfile gp = cache.getProfileByUUID(team.getOwner());
                 if (gp != null) {
@@ -129,9 +129,9 @@ public class SpecialDataManager {
 
     public void load() {
         dataByFTBId.clear();
-        Path local=server.func_240776_a_(dataFolder);
+        Path local=getServer().func_240776_a_(dataFolder);
         local.toFile().mkdirs();
-        Path olocal=server.func_240776_a_(OlddataFolder);
+        Path olocal=getServer().func_240776_a_(OlddataFolder);
         Stream<File> strm1=null,strm2=null;
         if(local.toFile().exists())
         	strm1=Arrays.stream(local.toFile().listFiles((f) -> f.getName().endsWith(".nbt")));
@@ -176,7 +176,7 @@ public class SpecialDataManager {
     }
 
     public void save() {
-    	Path local=server.func_240776_a_(dataFolder);
+    	Path local=getServer().func_240776_a_(dataFolder);
         Set<String> files = new HashSet<>(Arrays.asList(local.toFile().list((d, s) -> s.endsWith(".nbt"))));
         for (Entry<UUID, TeamDataHolder> entry : dataByResearchId.entrySet()) {
             String fn = entry.getKey().toString() + ".nbt";
@@ -193,7 +193,7 @@ public class SpecialDataManager {
         for (String todel : files) {
             local.resolve(todel).toFile().delete();
         }
-        Path olocal=server.func_240776_a_(OlddataFolder);
+        Path olocal=getServer().func_240776_a_(OlddataFolder);
         if(olocal.toFile().exists()) {
         	try {
 				FileUtils.deleteDirectory(olocal.toFile());
@@ -209,10 +209,16 @@ public class SpecialDataManager {
         TeamDataHolder odata = dataByResearchId.remove(rid);
         if (odata != null) {
             odata.setTeam(OptionalLazy.of(()->team));
-            odata.setOwnerName(server.getPlayerProfileCache().getProfileByUUID(team.getOwner()).getName());
+            odata.setOwnerName(getServer().getPlayerProfileCache().getProfileByUUID(team.getOwner()).getName());
         }
         dataByFTBId.put(team.getId(), rid);
 
     }
+
+	public static MinecraftServer getServer() {
+		if(INSTANCE==null)
+			return null;
+		return INSTANCE.server;
+	}
 
 }

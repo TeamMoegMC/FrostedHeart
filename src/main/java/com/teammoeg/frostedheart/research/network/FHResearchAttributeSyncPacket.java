@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.research.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.climate.network.FHMessage;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.team.SpecialDataManager;
@@ -33,7 +34,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when player join
-public class FHResearchAttributeSyncPacket {
+public class FHResearchAttributeSyncPacket implements FHMessage {
     private final CompoundNBT data;
 
     public FHResearchAttributeSyncPacket(CompoundNBT data) {

@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class FHDatapackSyncPacket {
+public class FHDatapackSyncPacket implements FHMessage {
     DataEntry[] entries;
 
     public FHDatapackSyncPacket() {

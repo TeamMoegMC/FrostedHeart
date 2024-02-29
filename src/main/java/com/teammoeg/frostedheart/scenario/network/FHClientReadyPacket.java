@@ -21,12 +21,13 @@ package com.teammoeg.frostedheart.scenario.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.climate.network.FHMessage;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class FHClientReadyPacket {
+public class FHClientReadyPacket implements FHMessage {
     String lang;
 
     public FHClientReadyPacket(PacketBuffer buffer) {

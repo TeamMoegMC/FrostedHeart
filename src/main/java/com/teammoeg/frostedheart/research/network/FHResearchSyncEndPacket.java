@@ -21,13 +21,14 @@ package com.teammoeg.frostedheart.research.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.climate.network.FHMessage;
 import com.teammoeg.frostedheart.research.FHResearch;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when player join
-public class FHResearchSyncEndPacket {
+public class FHResearchSyncEndPacket implements FHMessage {
     public FHResearchSyncEndPacket() {
     }
 

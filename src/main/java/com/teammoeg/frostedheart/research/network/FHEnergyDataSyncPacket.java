@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.research.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.climate.network.FHMessage;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
@@ -31,7 +32,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class FHEnergyDataSyncPacket {
+public class FHEnergyDataSyncPacket implements FHMessage {
 	final CompoundNBT data;
 
     public FHEnergyDataSyncPacket(PlayerEntity pe) {

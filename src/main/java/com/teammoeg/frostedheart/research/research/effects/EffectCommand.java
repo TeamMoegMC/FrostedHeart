@@ -107,8 +107,8 @@ public class EffectCommand extends Effect {
         overrides.put("z", pos.getZ());
 
         overrides.put("t", team.getHolder().getTeam().get().getStringID());
-        Commands cmds = SpecialDataManager.server.getCommandManager();
-        CommandSource source = SpecialDataManager.server.getCommandSource();
+        Commands cmds = SpecialDataManager.getServer().getCommandManager();
+        CommandSource source = SpecialDataManager.getServer().getCommandSource();
         for (String s : rewards) {
 
             for (Map.Entry<String, Object> entry : overrides.entrySet()) {

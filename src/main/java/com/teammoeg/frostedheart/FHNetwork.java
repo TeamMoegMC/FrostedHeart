@@ -19,9 +19,15 @@
 
 package com.teammoeg.frostedheart;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.teammoeg.frostedheart.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.climate.network.FHDatapackSyncPacket;
+import com.teammoeg.frostedheart.climate.network.FHMessage;
 import com.teammoeg.frostedheart.climate.network.FHTemperatureDisplayPacket;
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
 import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
@@ -50,6 +56,8 @@ import com.teammoeg.frostedheart.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.trade.network.TradeUpdatePacket;
 
 import blusunrize.immersiveengineering.common.network.MessageTileSync;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -58,97 +66,85 @@ import net.minecraftforge.fml.network.simple.SimpleChannel;
 public class FHNetwork {
 
     private static SimpleChannel CHANNEL;
-
+    private static Map<Class<? extends FHMessage>,ResourceLocation> classesId=new HashMap<>();
     public static SimpleChannel get() {
         return CHANNEL;
     }
-
+    private static int iid=0;
+    public static synchronized <T extends FHMessage> void registerMessage(String name,Class<T> msg) {
+    	classesId.put(msg,FHMain.rl(name));
+		try {
+			Constructor<T> ctor = msg.getConstructor(PacketBuffer.class);
+	    	CHANNEL.registerMessage(++iid,msg,FHMessage::encode,pb->{
+	    		try {
+					return ctor.newInstance(new Object[] {pb});
+				} catch (IllegalAccessException|IllegalArgumentException|InstantiationException e) {
+					throw new RuntimeException(e);
+				} catch (InvocationTargetException e) {
+					throw new RuntimeException(e.getCause());
+				}
+	    	},FHMessage::handle);
+		} catch (NoSuchMethodException | SecurityException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+    }
+    public static ResourceLocation getId(Class<? extends FHMessage> cls) {
+    	return classesId.get(cls);
+    }
     public static void register() {
         String VERSION = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
         System.out.println("[TWR Version Check] FH Network Version: " + VERSION);
         CHANNEL = NetworkRegistry.newSimpleChannel(FHMain.rl("network"), () -> VERSION,
                 VERSION::equals, VERSION::equals);
-        int id = 0;
 
         // CHANNEL.registerMessage(id++, ChunkWatchPacket.class,
         // ChunkWatchPacket::encode, ChunkWatchPacket::new, ChunkWatchPacket::handle);
         // CHANNEL.registerMessage(id++, ChunkUnwatchPacket.class,
         // ChunkUnwatchPacket::encode, ChunkUnwatchPacket::new,
         // ChunkUnwatchPacket::handle);
-        CHANNEL.registerMessage(id++, MessageTileSync.class, MessageTileSync::toBytes, MessageTileSync::new,
-                (t, ctx) -> {
-                    t.process(ctx);
-                    ctx.get().setPacketHandled(true);
-                });
         // CHANNEL.registerMessage(id++, TemperatureChangePacket.class,
         // TemperatureChangePacket::encode, TemperatureChangePacket::new,
         // TemperatureChangePacket::handle);
         
         //Climate System
-        CHANNEL.registerMessage(id++, FHBodyDataSyncPacket.class, FHBodyDataSyncPacket::encode, FHBodyDataSyncPacket::new,
-                FHBodyDataSyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHDatapackSyncPacket.class, FHDatapackSyncPacket::encode,
-                FHDatapackSyncPacket::new, FHDatapackSyncPacket::handle);
+        registerMessage("body_data", FHBodyDataSyncPacket.class);
+        registerMessage("temperature_data", FHDatapackSyncPacket.class);
 
-        CHANNEL.registerMessage(id++, FHClimatePacket.class, FHClimatePacket::encode, FHClimatePacket::new,
-                FHClimatePacket::handle);
-        CHANNEL.registerMessage(id++, FHTemperatureDisplayPacket.class, FHTemperatureDisplayPacket::encode,
-                FHTemperatureDisplayPacket::new, FHTemperatureDisplayPacket::handle);
+        registerMessage("climate_data", FHClimatePacket.class);
+        registerMessage("temperature_display", FHTemperatureDisplayPacket.class);
         
         //Research System
-        CHANNEL.registerMessage(id++, FHResearchRegistrtySyncPacket.class, FHResearchRegistrtySyncPacket::encode,
-                FHResearchRegistrtySyncPacket::new, FHResearchRegistrtySyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHResearchSyncPacket.class, FHResearchSyncPacket::encode, 
-        	FHResearchSyncPacket::new, FHResearchSyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHResearchSyncEndPacket.class, FHResearchSyncEndPacket::encode, 
-        	FHResearchSyncEndPacket::new, FHResearchSyncEndPacket::handle);
-        CHANNEL.registerMessage(id++, FHResearchDataSyncPacket.class, FHResearchDataSyncPacket::encode,
-                FHResearchDataSyncPacket::new, FHResearchDataSyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHResearchDataUpdatePacket.class, FHResearchDataUpdatePacket::encode,
-                FHResearchDataUpdatePacket::new, FHResearchDataUpdatePacket::handle);
-        CHANNEL.registerMessage(id++, FHClueProgressSyncPacket.class, FHClueProgressSyncPacket::encode,
-                FHClueProgressSyncPacket::new, FHClueProgressSyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHResearchAttributeSyncPacket.class, FHResearchAttributeSyncPacket::encode,
-        		FHResearchAttributeSyncPacket::new, FHResearchAttributeSyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHEffectTriggerPacket.class, FHEffectTriggerPacket::encode,
-                FHEffectTriggerPacket::new, FHEffectTriggerPacket::handle);
-        CHANNEL.registerMessage(id++, FHResearchControlPacket.class, FHResearchControlPacket::encode,
-                FHResearchControlPacket::new, FHResearchControlPacket::handle);
-        CHANNEL.registerMessage(id++, FHChangeActiveResearchPacket.class, FHChangeActiveResearchPacket::encode,
-                FHChangeActiveResearchPacket::new, FHChangeActiveResearchPacket::handle);
-        CHANNEL.registerMessage(id++, FHDrawingDeskOperationPacket.class, FHDrawingDeskOperationPacket::encode,
-                FHDrawingDeskOperationPacket::new, FHDrawingDeskOperationPacket::handle);
-        CHANNEL.registerMessage(id++, FHEffectProgressSyncPacket.class, FHEffectProgressSyncPacket::encode,
-                FHEffectProgressSyncPacket::new, FHEffectProgressSyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHEnergyDataSyncPacket.class, FHEnergyDataSyncPacket::encode,
-                FHEnergyDataSyncPacket::new, FHEnergyDataSyncPacket::handle);
+        registerMessage("research_registry", FHResearchRegistrtySyncPacket.class);
+        registerMessage("research_sync", FHResearchSyncPacket.class);
+        registerMessage("research_sync_end", FHResearchSyncEndPacket.class);
+        registerMessage("research_data", FHResearchDataSyncPacket.class);
+        registerMessage("research_data_update", FHResearchDataUpdatePacket.class);
+        registerMessage("research_clue", FHClueProgressSyncPacket.class);
+        registerMessage("research_attribute", FHResearchAttributeSyncPacket.class);
+        registerMessage("effect_trigger", FHEffectTriggerPacket.class);
+        registerMessage("research_control", FHResearchControlPacket.class);
+        registerMessage("research_select", FHChangeActiveResearchPacket.class);
+        registerMessage("research_drawdesk", FHDrawingDeskOperationPacket.class);
+        registerMessage("research_effect", FHEffectProgressSyncPacket.class);
+        registerMessage("research_energy_data", FHEnergyDataSyncPacket.class);
         
         //Trade System
-        CHANNEL.registerMessage(id++, BargainRequestPacket.class, BargainRequestPacket::encode,
-                BargainRequestPacket::new, BargainRequestPacket::handle);
-        CHANNEL.registerMessage(id++, BargainResponse.class, BargainResponse::encode,
-                BargainResponse::new, BargainResponse::handle);
-        CHANNEL.registerMessage(id++, TradeCommitPacket.class, TradeCommitPacket::encode,
-                TradeCommitPacket::new, TradeCommitPacket::handle);
-        CHANNEL.registerMessage(id++, TradeUpdatePacket.class, TradeUpdatePacket::encode,
-                TradeUpdatePacket::new, TradeUpdatePacket::handle);
+        registerMessage("bargain_request", BargainRequestPacket.class);
+        registerMessage("bargain_response", BargainResponse.class);
+        registerMessage("trade_commit", TradeCommitPacket.class);
+        registerMessage("trade_update", TradeUpdatePacket.class);
         
         //Scenario System
-        CHANNEL.registerMessage(id++, ClientScenarioResponsePacket.class, ClientScenarioResponsePacket::encode,
-        	ClientScenarioResponsePacket::new, ClientScenarioResponsePacket::handle);
-        CHANNEL.registerMessage(id++, ServerScenarioCommandPacket.class, ServerScenarioCommandPacket::encode,
-        	ServerScenarioCommandPacket::new, ServerScenarioCommandPacket::handle);
-        CHANNEL.registerMessage(id++, ServerSenarioScenePacket.class, ServerSenarioScenePacket::encode,
-        	ServerSenarioScenePacket::new, ServerSenarioScenePacket::handle);
-        CHANNEL.registerMessage(id++, FHClientReadyPacket.class, FHClientReadyPacket::encode,
-        		FHClientReadyPacket::new, FHClientReadyPacket::handle);
-        CHANNEL.registerMessage(id++, ClientLinkClickedPacket.class, ClientLinkClickedPacket::encode, ClientLinkClickedPacket::new, 
-        		ClientLinkClickedPacket::handle);
-        CHANNEL.registerMessage(id++, ServerSenarioActPacket.class, ServerSenarioActPacket::encode, ServerSenarioActPacket::new, 
-        	ServerSenarioActPacket::handle);
-        CHANNEL.registerMessage(id++, FHClientSettingsPacket.class, FHClientSettingsPacket::encode, FHClientSettingsPacket::new, FHClientSettingsPacket::handle);
+        registerMessage("scenario_client_op", ClientScenarioResponsePacket.class);
+        registerMessage("scenario_server_command", ServerScenarioCommandPacket.class);
+        registerMessage("scenario_scene", ServerSenarioScenePacket.class);
+        registerMessage("scenario_ready", FHClientReadyPacket.class);
+        registerMessage("scenario_link", ClientLinkClickedPacket.class);
+        registerMessage("scenario_act", ServerSenarioActPacket.class);
+        registerMessage("scenario_settings", FHClientSettingsPacket.class);
         //
-        CHANNEL.registerMessage(id++, EndPointDataPacket.class, EndPointDataPacket::encode, EndPointDataPacket::new, EndPointDataPacket::handle);
+        registerMessage("heat_endpoint", EndPointDataPacket.class);
     }
 
     public static void send(PacketDistributor.PacketTarget target, Object message) {
