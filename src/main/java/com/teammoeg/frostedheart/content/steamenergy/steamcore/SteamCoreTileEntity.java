@@ -79,13 +79,13 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
     @Override
     protected void fromTag(BlockState state, CompoundNBT tag, boolean client) {
         super.fromTag(state, tag, client);
-        network.load(tag);
+        network.load(tag, client);
     }
 
     @Override
     protected void write(CompoundNBT tag, boolean client) {
         super.write(tag, client);
-        network.save(tag);
+        network.save(tag, client);
     }
 
     @Override

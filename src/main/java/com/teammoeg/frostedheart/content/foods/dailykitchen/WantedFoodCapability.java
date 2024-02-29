@@ -107,9 +107,13 @@ public class WantedFoodCapability implements NBTSerializable{
         return StringNBT.valueOf(Objects.requireNonNull(RegistryUtils.getRegistryName(item)).toString());
     }
 
-    @Override
-    public CompoundNBT serializeNBT() {
-        CompoundNBT nbt = new CompoundNBT();
+    private static Item turnStringNBTToItem(INBT nbt){
+        ResourceLocation itemResourceLocation = new ResourceLocation(nbt.getString());
+        return RegistryUtils.getItem(itemResourceLocation);
+    }
+
+	@Override
+	public void save(CompoundNBT nbt, boolean isPacket) {
         ListNBT list = new ListNBT();
         for(Item item: this.wantedFoods){
             list.add(turnItemToStringNBT(item));
@@ -118,17 +122,10 @@ public class WantedFoodCapability implements NBTSerializable{
         nbt.put(key_eatenFoodsAmount, IntNBT.valueOf(this.eatenFoodsAmount));
         nbt.put(key_eatenTimes, IntNBT.valueOf((this.eatenTimes)));
 
-        FHMain.LOGGER.info("WantedFoodCapability serialized!");
-        return nbt;
-    }
+	}
 
-    private static Item turnStringNBTToItem(INBT nbt){
-        ResourceLocation itemResourceLocation = new ResourceLocation(nbt.getString());
-        return RegistryUtils.getItem(itemResourceLocation);
-    }
-
-    @Override
-    public void deserializeNBT(CompoundNBT nbt) {
+	@Override
+	public void load(CompoundNBT nbt, boolean isPacket) {
         wantedFoods.clear();
         ListNBT list = nbt.getList(key_wantedFoods, Constants.NBT.TAG_STRING/*9*/);
         this.eatenFoodsAmount = nbt.getInt(key_eatenFoodsAmount);
@@ -136,6 +133,5 @@ public class WantedFoodCapability implements NBTSerializable{
         for(INBT itemNBT : list){
             wantedFoods.add(turnStringNBTToItem(itemNBT));
         }
-        FHMain.LOGGER.info("WantedFoodCapability deserialized!");
-    }
+	}
 }

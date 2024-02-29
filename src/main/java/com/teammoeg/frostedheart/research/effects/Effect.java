@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.research.network.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.util.Writeable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import dev.ftb.mods.ftbteams.data.Team;
@@ -62,7 +63,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * file: Effect.java
  * @date 2022年9月2日
  */
-public abstract class Effect extends AutoIDItem {
+public abstract class Effect extends AutoIDItem implements Writeable{
 
     /**
      * The name.<br>
@@ -374,14 +375,14 @@ public abstract class Effect extends AutoIDItem {
      *
      * @return returns serialize
      */
-    JsonObject serialize() {
+    public JsonObject serialize() {
         JsonObject jo = new JsonObject();
         if (!name.isEmpty())
             jo.addProperty("name", name);
         if (!tooltip.isEmpty())
             jo.add("tooltip", SerializeUtil.toJsonStringList(tooltip, e -> e));
         if (icon != null)
-            jo.add("icon", icon.serialize());
+            jo.add("icon", FHIcons.save(icon));
         jo.addProperty("id", nonce);
         if (isHidden())
             jo.addProperty("hidden", true);
@@ -424,7 +425,6 @@ public abstract class Effect extends AutoIDItem {
      * @param buffer the buffer<br>
      */
     public void write(PacketBuffer buffer) {
-        Effects.writeId(this, buffer);
         buffer.writeString(name);
         SerializeUtil.writeList2(buffer, tooltip, PacketBuffer::writeString);
         SerializeUtil.writeOptional(buffer, icon, FHIcon::write);

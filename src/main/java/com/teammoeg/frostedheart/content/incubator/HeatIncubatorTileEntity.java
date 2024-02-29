@@ -73,7 +73,7 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity{
     @Override
     public void readCustomNBT(CompoundNBT compound, boolean client) {
         super.readCustomNBT(compound, client);
-        network.load(compound);
+        network.load(compound,client);
     }
 
 
@@ -87,7 +87,7 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity{
     @Override
     public void writeCustomNBT(CompoundNBT compound, boolean client) {
         super.writeCustomNBT(compound, client);
-        network.save(compound);
+        network.save(compound,client);
     }
 
 

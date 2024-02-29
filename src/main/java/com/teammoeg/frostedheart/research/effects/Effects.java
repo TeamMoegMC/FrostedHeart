@@ -23,6 +23,7 @@ import java.util.function.Function;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.research.JsonSerializerRegistry;
+import com.teammoeg.frostedheart.research.clues.Clue;
 
 import net.minecraft.network.PacketBuffer;
 
@@ -48,7 +49,7 @@ public class Effects {
 		return registry.write(fromObj);
 	}
 
-	public static Effect deserialize(PacketBuffer data) {
+	public static Effect read(PacketBuffer data) {
         return registry.read(data);
     }
 
@@ -56,8 +57,12 @@ public class Effects {
         registry.register(cls, type, json, o, packet);
     }
 
-    public static void writeId(Effect e, PacketBuffer pb) {
-        registry.writeId(pb, e);
+    public static void write(Effect e, PacketBuffer pb) {
+        registry.write(pb, e);
+    }
+
+	public static Effect read(JsonObject jo) {
+        return registry.read(jo);
     }
 
     private Effects() {

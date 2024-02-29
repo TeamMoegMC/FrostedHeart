@@ -215,8 +215,8 @@ public class GeneratorData implements NBTSerializable{
     }
 
 	@Override
-	public CompoundNBT serializeNBT() {
-        CompoundNBT result = new CompoundNBT();
+	public void save(CompoundNBT result, boolean isPacket) {
+		// TODO Auto-generated method stub
         result.putInt("process", process);
         result.putInt("processMax", processMax);
         result.putInt("steamProcess", steamProcess);
@@ -239,12 +239,10 @@ public class GeneratorData implements NBTSerializable{
         result.putLong("actualPos", actualPos.toLong());
         if (dimension != null)
             result.putString("dim", dimension.getLocation().toString());
-        
-        return result;
 	}
 
 	@Override
-	public void deserializeNBT(CompoundNBT data) {
+	public void load(CompoundNBT data, boolean isPacket) {
         process = data.getInt("process");
         processMax = data.getInt("processMax");
         steamProcess=data.getInt("steamProcess");
@@ -271,6 +269,5 @@ public class GeneratorData implements NBTSerializable{
         if (data.contains("dim")) {
             dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(data.getString("dim")));
         }
-        
 	}
 }

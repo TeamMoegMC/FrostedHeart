@@ -22,10 +22,11 @@ package com.teammoeg.frostedheart.research;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Pair;
+import com.teammoeg.frostedheart.util.Writeable;
 
 import net.minecraft.nbt.CompoundNBT;
 
-public class NBTSerializerRegistry<U> extends PacketBufferSerializerRegistry<U, CompoundNBT> {
+public class NBTSerializerRegistry<U extends Writeable> extends PacketBufferSerializerRegistry<U, CompoundNBT> {
 
 
     public NBTSerializerRegistry() {
@@ -44,6 +45,7 @@ public class NBTSerializerRegistry<U> extends PacketBufferSerializerRegistry<U, 
             return def;
         return func.apply(je);
     }
+    
 	@Override
 	protected void writeType(Pair<Integer, String> type, CompoundNBT obj) {
 		obj.putString("type", type.getSecond());

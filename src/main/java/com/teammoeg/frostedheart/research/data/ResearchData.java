@@ -41,6 +41,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.Constants;
 
 public class ResearchData implements IEnvironment {
 
@@ -279,8 +280,8 @@ public class ResearchData implements IEnvironment {
         if (cn.contains("level"))
             level = cn.getInt("level");
         data.clear();
-        cn.getList("clues", 10).stream().map(t -> (CompoundNBT) t).forEach(e -> {
-            data.put(e.getInt("id"), ClueDatas.serializers.deserialize(e.getCompound("data")));
+        cn.getList("clues", Constants.NBT.TAG_COMPOUND).stream().map(t -> (CompoundNBT) t).forEach(e -> {
+            data.put(e.getInt("id"), ClueDatas.read(e.getCompound("data")));
         });
         // rs=FHResearch.getResearch(cn.getInt("research"));
     }
@@ -370,7 +371,7 @@ public class ResearchData implements IEnvironment {
         cnbt.putBoolean("finished", finished);
         if (level > 0)
             cnbt.putInt("level", level);
-        cnbt.put("clues", SerializeUtil.toNBTList(data.entrySet(), t -> CompoundBuilder.create().put("id", t.getKey()).put("data", t.getValue().serialize()).build()));
+        cnbt.put("clues", SerializeUtil.toNBTList(data.entrySet(), t -> CompoundBuilder.create().put("id", t.getKey()).put("data", ClueDatas.write(t.getValue())).build()));
         // cnbt.putInt("research",getResearch().getRId());
         return cnbt;
 

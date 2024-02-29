@@ -57,6 +57,7 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.fml.network.PacketDistributor;
 
@@ -229,70 +230,6 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
         }
     }
 
-    /**
-     * Deserialize.
-     *
-     * @param data         the data<br>
-     * @param updatePacket the update packet<br>
-     */
-    public void deserialize(CompoundNBT data, boolean updatePacket) {
-        clueComplete.clear();
-        rdata.clear();
-        crafting.clear();
-        building.clear();
-        block.clear();
-        categories.clear();
-        if (data.contains("clues", NBT.TAG_BYTE_ARRAY)) {
-            byte[] ba = data.getByteArray("clues");
-            ensureClue(ba.length);
-            for (int i = 0; i < ba.length; i++)
-                clueComplete.set(i, ba[i] != 0);
-        } else
-            clueComplete = BitSet.valueOf(data.getLongArray("clues"));
-        if (data.contains("effects", NBT.TAG_BYTE_ARRAY)) {
-            byte[] bd = data.getByteArray("effects");
-            ensureEffect(bd.length);
-            for (int i = 0; i < bd.length; i++) {
-                boolean state = bd[i] != 0;
-                grantedEffects.set(i, state);
-            }
-        } else
-            grantedEffects = BitSet.valueOf(data.getLongArray("effects"));
-
-        for (int i = 0; i < grantedEffects.length(); i++) {
-            if (grantedEffects.get(i))
-                FHResearch.effects.runIfPresent(i + 1, e -> e.grant(this, null, true));
-        }
-        if (data.contains("owner"))
-            ownerName = data.getString("owner");
-        setVariants(data.getCompound("vars"));
-        if (data.contains("uuid"))
-            id = data.getUniqueId("uuid");
-        ListNBT li = data.getList("researches", 10);
-        activeResearchId = data.getInt("active");
-        this.data.clear();
-        for(SpecialDataType<?> tc:SpecialDataType.TYPE_REGISTRY) {
-        	if(data.contains(tc.getId())) {
-        		this.getData(tc).deserializeNBT(data.getCompound(tc.getId()));
-        	}
-        }
-        
-        
-        for (int i = 0; i < li.size(); i++) {
-            INBT e = li.get(i);
-            rdata.add(new ResearchData(FHResearch.getResearch(i + 1), (CompoundNBT) e, this));
-        }
-
-        if (!updatePacket) {
-            if (activeResearchId != 0) {
-                Research r = FHResearch.researches.getById(activeResearchId);
-                getTeam().ifPresent(t -> {
-                    for (Clue c : r.getClues())
-                        c.start(t);
-                });
-            }
-        }
-    }
 
     /**
      * Commit research points to current research.<br>
@@ -530,8 +467,7 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
     public void reload() {
         crafting.reload();
         building.reload();
-        FHResearchDataSyncPacket packet = new FHResearchDataSyncPacket(this.serialize(true));
-        getTeam().ifPresent(t -> t.getOnlineMembers().forEach(p -> FHNetwork.send(PacketDistributor.PLAYER.with(() -> p), packet)));
+        sendUpdate();
     }
 
     public void removeVariant(ResearchVariant name) {
@@ -568,43 +504,10 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
     }
 
     public void sendUpdate() {
-
         FHResearchDataSyncPacket packet = new FHResearchDataSyncPacket(this.serialize(true));
         getTeam().ifPresent(t -> t.getOnlineMembers().forEach(p -> FHNetwork.send(PacketDistributor.PLAYER.with(() -> p), packet)));
     }
 
-    /**
-     * Serialize.<br>
-     *
-     * @param updatePacket the update packet<br>
-     * @return returns serialize
-     */
-    public CompoundNBT serialize(boolean updatePacket) {
-        CompoundNBT nbt = new CompoundNBT();
-        nbt.putLongArray("clues", clueComplete.toLongArray());
-        nbt.putLongArray("effects", grantedEffects.toLongArray());
-        nbt.put("vars", variants);
-        if (ownerName != null)
-            nbt.putString("owner", ownerName);
-        ListNBT rs = new ListNBT();
-        rdata.stream().map(e -> e != null ? e.serialize() : new CompoundNBT()).forEach(e -> rs.add(e));
-        nbt.put("researches", rs);
-        nbt.putInt("active", activeResearchId);
-        nbt.putUniqueId("uuid", id);
-        for(Entry<String, NBTSerializable> ent:data.entrySet()) {
-        	nbt.put(ent.getKey(), ent.getValue().serializeNBT());
-        }
-        
-        //nbt.put("town", townData.serialize(updatePacket));
-        //nbt.put("generator", generatorData.serialize(updatePacket));
-        // these data does not send to client
-        //if (!updatePacket) {
-        //nbt.put("crafting", crafting.serialize());
-        //nbt.put("building", building.serialize());
-        //nbt.put("block", block.serialize());
-        //}
-        return nbt;
-    }
 
     /**
      * Sets the clue triggered.
@@ -724,5 +627,92 @@ public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
 	@SuppressWarnings("unchecked")
 	public <T extends NBTSerializable> T getData(SpecialDataType<T> cap){
 		return (T) data.computeIfAbsent(cap.getId(),s->cap.create(this));
+	}
+
+	@Override
+	public void save(CompoundNBT nbt, boolean isPacket) {
+        nbt.putLongArray("clues", clueComplete.toLongArray());
+        nbt.putLongArray("effects", grantedEffects.toLongArray());
+        nbt.put("vars", variants);
+        if (ownerName != null)
+            nbt.putString("owner", ownerName);
+        ListNBT rs = new ListNBT();
+        rdata.stream().map(e -> e != null ? e.serialize() : new CompoundNBT()).forEach(e -> rs.add(e));
+        nbt.put("researches", rs);
+        nbt.putInt("active", activeResearchId);
+        nbt.putUniqueId("uuid", id);
+        for(Entry<String, NBTSerializable> ent:data.entrySet()) {
+        	nbt.put(ent.getKey(), ent.getValue().serializeNBT());
+        }
+        
+        //nbt.put("town", townData.serialize(updatePacket));
+        //nbt.put("generator", generatorData.serialize(updatePacket));
+        // these data does not send to client
+        //if (!updatePacket) {
+        //nbt.put("crafting", crafting.serialize());
+        //nbt.put("building", building.serialize());
+        //nbt.put("block", block.serialize());
+        //}
+	}
+
+	@Override
+	public void load(CompoundNBT data, boolean updatePacket) {
+	    clueComplete.clear();
+        rdata.clear();
+        crafting.clear();
+        building.clear();
+        block.clear();
+        categories.clear();
+        if (data.contains("clues", NBT.TAG_BYTE_ARRAY)) {
+            byte[] ba = data.getByteArray("clues");
+            ensureClue(ba.length);
+            for (int i = 0; i < ba.length; i++)
+                clueComplete.set(i, ba[i] != 0);
+        } else
+            clueComplete = BitSet.valueOf(data.getLongArray("clues"));
+        if (data.contains("effects", NBT.TAG_BYTE_ARRAY)) {
+            byte[] bd = data.getByteArray("effects");
+            ensureEffect(bd.length);
+            for (int i = 0; i < bd.length; i++) {
+                boolean state = bd[i] != 0;
+                grantedEffects.set(i, state);
+            }
+        } else
+            grantedEffects = BitSet.valueOf(data.getLongArray("effects"));
+
+        for (int i = 0; i < grantedEffects.length(); i++) {
+            if (grantedEffects.get(i))
+                FHResearch.effects.runIfPresent(i + 1, e -> e.grant(this, null, true));
+        }
+        if (data.contains("owner"))
+            ownerName = data.getString("owner");
+        setVariants(data.getCompound("vars"));
+        if (data.contains("uuid"))
+            id = data.getUniqueId("uuid");
+        ListNBT li = data.getList("researches", Constants.NBT.TAG_COMPOUND);
+        activeResearchId = data.getInt("active");
+        this.data.clear();
+        for(SpecialDataType<?> tc:SpecialDataType.TYPE_REGISTRY) {
+        	if(data.contains(tc.getId())) {
+        		this.getData(tc).deserializeNBT(data.getCompound(tc.getId()));
+        	}
+        }
+        
+        
+        for (int i = 0; i < li.size(); i++) {
+            INBT e = li.get(i);
+            rdata.add(new ResearchData(FHResearch.getResearch(i + 1), (CompoundNBT) e, this));
+        }
+
+        if (!updatePacket) {
+            if (activeResearchId != 0) {
+                Research r = FHResearch.researches.getById(activeResearchId);
+                getTeam().ifPresent(t -> {
+                    for (Clue c : r.getClues())
+                        c.start(t);
+                });
+            }
+        }
+		
 	}
 }

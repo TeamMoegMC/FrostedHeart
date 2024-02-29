@@ -55,7 +55,6 @@ public class SetFlagAction implements PolicyAction {
 
     @Override
     public void write(PacketBuffer buffer) {
-        Actions.writeId(this, buffer);
         buffer.writeString(name);
     }
 

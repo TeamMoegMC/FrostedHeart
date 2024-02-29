@@ -59,8 +59,8 @@ public class Conditions {
         registry.register(cls, type, json,PolicyCondition::serialize, packet);
     }
 
-    public static void writeId(PolicyCondition e, PacketBuffer pb) {
-        registry.writeId(pb, e);
+    public static void write(PolicyCondition e, PacketBuffer pb) {
+        registry.write(pb, e);
     }
 
     private Conditions() {

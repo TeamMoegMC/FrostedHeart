@@ -53,8 +53,8 @@ public class Actions {
         registry.register(cls, type, json,PolicyAction::serialize, packet);
     }
 
-    public static void writeId(PolicyAction e, PacketBuffer pb) {
-        registry.writeId(pb, e);
+    public static void write(PolicyAction e, PacketBuffer pb) {
+        registry.write(pb, e);
     }
 
 

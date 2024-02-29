@@ -37,7 +37,9 @@ public class Clues {
         register(MinigameClue.class, "game", MinigameClue::new,Clue::serialize, MinigameClue::new);
     }
 
-
+    public static void write(PacketBuffer pb,Clue fromObj) {
+		registry.write(pb, fromObj);
+	}
     public static JsonObject write(Clue fromObj) {
 		return registry.write(fromObj);
 	}
@@ -52,10 +54,6 @@ public class Clues {
 
     public static void register(Class<? extends Clue> cls, String id, Function<JsonObject, Clue> j, Function<Clue,JsonObject> o, Function<PacketBuffer, Clue> p) {
         registry.register(cls, id, j,o, p);
-    }
-
-    public static void writeId(Clue e, PacketBuffer pb) {
-        registry.writeId(pb, e);
     }
 
     private Clues() {

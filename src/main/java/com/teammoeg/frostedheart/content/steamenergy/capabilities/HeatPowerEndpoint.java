@@ -35,7 +35,7 @@ public abstract class HeatPowerEndpoint extends HeatEndpoint {
      *
      * @param nbt the nbt<br>
      */
-    public void load(CompoundNBT nbt) {
+    public void load(CompoundNBT nbt,boolean isPacket) {
         power = nbt.getFloat("net_power");
     }
 
@@ -44,7 +44,7 @@ public abstract class HeatPowerEndpoint extends HeatEndpoint {
      *
      * @param nbt the nbt<br>
      */
-    public void save(CompoundNBT nbt) {
+    public void save(CompoundNBT nbt,boolean isPacket) {
         nbt.putFloat("net_power", power);
     }
 
@@ -65,19 +65,5 @@ public abstract class HeatPowerEndpoint extends HeatEndpoint {
     public boolean canProvideHeat() {
     	return power>0;
     }
-
-	@Override
-	public CompoundNBT serializeNBT() {
-		CompoundNBT nbt=super.serializeNBT();
-		save(nbt);
-		return nbt;
-	}
-
-	@Override
-	public void deserializeNBT(CompoundNBT nbt) {
-		super.deserializeNBT(nbt);
-		load(nbt);
-	}
-
 
 }

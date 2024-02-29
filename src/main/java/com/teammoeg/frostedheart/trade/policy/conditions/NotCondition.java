@@ -56,7 +56,6 @@ public class NotCondition implements PolicyCondition {
 
     @Override
     public void write(PacketBuffer buffer) {
-        Conditions.writeId(this, buffer);
         nested.write(buffer);
     }
 

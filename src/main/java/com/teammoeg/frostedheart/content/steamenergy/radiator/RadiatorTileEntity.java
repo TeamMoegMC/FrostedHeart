@@ -134,7 +134,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
-        network.load(nbt);
+        network.load(nbt, descPacket);
     }
 
     @Override
@@ -171,7 +171,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
-        network.save(nbt);
+        network.save(nbt, descPacket);
     }
 
 

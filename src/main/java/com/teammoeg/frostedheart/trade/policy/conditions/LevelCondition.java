@@ -56,7 +56,6 @@ public class LevelCondition implements PolicyCondition {
 
     @Override
     public void write(PacketBuffer buffer) {
-        Conditions.writeId(this, buffer);
         buffer.writeVarInt(level);
     }
 

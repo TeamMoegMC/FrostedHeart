@@ -78,43 +78,6 @@ public class TeamTownData implements NBTSerializable{
     public void removeTownBlock(BlockPos pos) {
         blocks.remove(pos);
     }
-	@Override
-	public CompoundNBT serializeNBT() {
-        CompoundNBT nbt = new CompoundNBT();
-        ListNBT list = new ListNBT();
-        for (TownWorkerData v : blocks.values()) {
-            list.add(v.serialize());
-        }
-        nbt.put("blocks", list);
-        
-        CompoundNBT list2 = new CompoundNBT();
-        for (Entry<TownResourceType, Integer> v : resources.entrySet()) {
-            if (v.getValue() != null && v.getValue() != 0)
-                list2.putInt(v.getKey().getKey(), v.getValue());
-
-        }
-        nbt.put("resource", list2);
-        CompoundNBT list3 = new CompoundNBT();
-        for (Entry<TownResourceType, Integer> v : backupResources.entrySet()) {
-            if (v.getValue() != null && v.getValue() != 0)
-                list3.putInt(v.getKey().getKey(), v.getValue());
-        }
-        nbt.put("backupResource", list2);
-        return nbt;
-	}
-
-	@Override
-	public void deserializeNBT(CompoundNBT data) {
-        for (INBT i : data.getList("blocks", Constants.NBT.TAG_COMPOUND)) {
-            CompoundNBT nbt = (CompoundNBT) i;
-            TownWorkerData t = new TownWorkerData(nbt);
-            blocks.put(t.getPos(), t);
-        }
-        CompoundNBT rec = data.getCompound("resource");
-        for (String i : rec.keySet()) {
-            resources.put(TownResourceType.from(i), rec.getInt(i));
-        }
-	}
 
     /**
      * This tick only works per 20 tick.
@@ -159,6 +122,44 @@ public class TeamTownData implements NBTSerializable{
         }
         itt.finishWork();
     }
+
+
+	@Override
+	public void save(CompoundNBT nbt, boolean isPacket) {
+        ListNBT list = new ListNBT();
+        for (TownWorkerData v : blocks.values()) {
+            list.add(v.serialize());
+        }
+        nbt.put("blocks", list);
+        
+        CompoundNBT list2 = new CompoundNBT();
+        for (Entry<TownResourceType, Integer> v : resources.entrySet()) {
+            if (v.getValue() != null && v.getValue() != 0)
+                list2.putInt(v.getKey().getKey(), v.getValue());
+
+        }
+        nbt.put("resource", list2);
+        CompoundNBT list3 = new CompoundNBT();
+        for (Entry<TownResourceType, Integer> v : backupResources.entrySet()) {
+            if (v.getValue() != null && v.getValue() != 0)
+                list3.putInt(v.getKey().getKey(), v.getValue());
+        }
+        nbt.put("backupResource", list2);
+	}
+
+
+	@Override
+	public void load(CompoundNBT data, boolean isPacket) {
+        for (INBT i : data.getList("blocks", Constants.NBT.TAG_COMPOUND)) {
+            CompoundNBT nbt = (CompoundNBT) i;
+            TownWorkerData t = new TownWorkerData(nbt);
+            blocks.put(t.getPos(), t);
+        }
+        CompoundNBT rec = data.getCompound("resource");
+        for (String i : rec.keySet()) {
+            resources.put(TownResourceType.from(i), rec.getInt(i));
+        }
+	}
 
 
 }

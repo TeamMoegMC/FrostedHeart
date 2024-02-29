@@ -40,6 +40,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.chunk.IChunk;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class ChunkHeatData implements NBTSerializable {
@@ -343,16 +344,7 @@ public class ChunkHeatData implements NBTSerializable {
         reset();
     }
 
-    @Override
-    public void deserializeNBT(CompoundNBT nbt) {
-        if (nbt != null) {
-            // chunkMatrix.deserializeNBT(nbt.getCompound("temperature"));
-            ListNBT nl = nbt.getList("temperature", 10);
-            for (INBT nc : nl) {
-                adjusters.add(ITemperatureAdjust.valueOf((CompoundNBT) nc));
-            }
-        }
-    }
+
 
     /**
      * Get Temperature in a world at a location
@@ -411,19 +403,24 @@ public class ChunkHeatData implements NBTSerializable {
         adjusters.clear();
 
     }
+    public void setAdjusters(List<ITemperatureAdjust> adjusters) {
+        this.adjusters.addAll(adjusters);
+    }
 
-    @Override
-    public CompoundNBT serializeNBT() {
-        CompoundNBT nbt = new CompoundNBT();
+	@Override
+	public void save(CompoundNBT nbt, boolean isPacket) {
         ListNBT nl = new ListNBT();
         for (ITemperatureAdjust adj : adjusters)
             nl.add(adj.serializeNBT());
         nbt.put("temperature", nl);
-        return nbt;
-    }
+	}
 
-    public void setAdjusters(List<ITemperatureAdjust> adjusters) {
-        this.adjusters.addAll(adjusters);
-    }
+	@Override
+	public void load(CompoundNBT nbt, boolean isPacket) {
+        ListNBT nl = nbt.getList("temperature", Constants.NBT.TAG_COMPOUND);
+        for (INBT nc : nl) {
+            adjusters.add(ITemperatureAdjust.valueOf((CompoundNBT) nc));
+        }
+	}
 
 }

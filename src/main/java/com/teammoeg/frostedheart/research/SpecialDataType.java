@@ -22,6 +22,9 @@ public class SpecialDataType<T extends NBTSerializable>{
 	public T create(SpecialDataHolder dat) {
 		return factory.apply(dat);
 	}
+	public T getOrCreate(SpecialDataHolder dat) {
+		return dat.getData(this);
+	}
 	public String getId() {
 		return id;
 	}

@@ -42,8 +42,7 @@ public class PillarTemperatureAdjust extends CubicTemperatureAdjust {
     public PillarTemperatureAdjust(CompoundNBT nc) {
         super(nc);
         r2 = r * r;
-        this.upper = nc.getInt("upper");
-        this.lower = nc.getInt("lower");
+
     }
 
     public PillarTemperatureAdjust(int cx, int cy, int cz, int r, int upper, int lower, int value) {
@@ -81,13 +80,19 @@ public class PillarTemperatureAdjust extends CubicTemperatureAdjust {
         buffer.writeVarInt(lower);
     }
 
-    @Override
-    public CompoundNBT serializeNBT() {
-        CompoundNBT nbt = serializeNBTData();
-        nbt.putInt("type", 2);
+
+	@Override
+	public void save(CompoundNBT nbt, boolean isPacket) {
+		super.save(nbt, isPacket);
         nbt.putInt("upper", upper);
         nbt.putInt("lower", lower);
-        return nbt;
-    }
+	}
+
+	@Override
+	public void load(CompoundNBT nbt, boolean isPacket) {
+		super.load(nbt, isPacket);
+        this.upper = nbt.getInt("upper");
+        this.lower = nbt.getInt("lower");
+	}
 
 }

@@ -172,7 +172,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         power = nbt.getFloat("power");
-        network.load(nbt);
+        network.load(nbt,descPacket);
     }
 
     @Override
@@ -194,6 +194,6 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         nbt.putFloat("power", power);
-        network.save(nbt);
+        network.save(nbt,descPacket);
     }
 }

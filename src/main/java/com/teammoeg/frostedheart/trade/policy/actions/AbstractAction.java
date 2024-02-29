@@ -35,7 +35,6 @@ public abstract class AbstractAction implements PolicyAction {
 
     @Override
     public void write(PacketBuffer buffer) {
-        Actions.writeId(this, buffer);
     }
 
 

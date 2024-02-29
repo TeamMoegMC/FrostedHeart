@@ -19,13 +19,36 @@
 
 package com.teammoeg.frostedheart.research.clues;
 
+import java.util.function.Function;
+
+import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.research.NBTSerializerRegistry;
 import com.teammoeg.frostedheart.research.data.IClueData;
 
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
+
 public class ClueDatas {
-    public static NBTSerializerRegistry<IClueData> serializers = new NBTSerializerRegistry<>();
+    public static NBTSerializerRegistry<IClueData> registry = new NBTSerializerRegistry<>();
 
     public ClueDatas() {
     }
+    public static void write(PacketBuffer pb,IClueData fromObj) {
+		registry.write(pb, fromObj);
+	}
+    public static CompoundNBT write(IClueData fromObj) {
+		return registry.write(fromObj);
+	}
 
+	public static IClueData read(CompoundNBT jo) {
+        return registry.read(jo);
+    }
+
+    public static IClueData read(PacketBuffer pb) {
+        return registry.read(pb);
+    }
+
+    public static void register(Class<? extends IClueData> cls, String id, Function<CompoundNBT, IClueData> j, Function<IClueData,CompoundNBT> o, Function<PacketBuffer, IClueData> p) {
+        registry.register(cls, id, j,o, p);
+    }
 }

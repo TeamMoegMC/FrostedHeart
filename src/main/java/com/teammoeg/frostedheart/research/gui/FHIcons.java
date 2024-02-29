@@ -41,6 +41,7 @@ import com.teammoeg.frostedheart.research.gui.editor.NumberBox;
 import com.teammoeg.frostedheart.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.research.gui.editor.SelectDialog;
 import com.teammoeg.frostedheart.research.gui.editor.SelectItemStackDialog;
+import com.teammoeg.frostedheart.util.Writeable;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
@@ -206,7 +207,7 @@ public class FHIcons {
 		}
     }
 
-    public static abstract class FHIcon extends Icon implements Cloneable {
+    public static abstract class FHIcon extends Icon implements Cloneable,Writeable {
         public FHIcon() {
             super();
         }
@@ -217,7 +218,6 @@ public class FHIcons {
         }
         abstract JsonObject asObject();
         public void write(PacketBuffer buffer) {
-            serializers.writeId(buffer, this);
         }
     }
 
@@ -838,6 +838,9 @@ public class FHIcons {
 
     public static FHIcon readIcon(PacketBuffer elm) {
         return serializers.readOrDefault(elm, FHNopIcon.INSTANCE);
+    }
+    public static JsonElement save(FHIcon icon) {
+    	return serializers.write(icon);
     }
 
 }

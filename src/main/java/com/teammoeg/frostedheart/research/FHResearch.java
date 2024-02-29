@@ -51,6 +51,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.network.PacketDistributor.PacketTarget;
@@ -213,9 +214,9 @@ public class FHResearch {
     }
 
     public static void load(CompoundNBT cnbt) {
-        clues.deserialize(cnbt.getList("clues", 8));
-        researches.deserialize(cnbt.getList("researches", 8));
-        effects.deserialize(cnbt.getList("effects", 8));
+        clues.deserialize(cnbt.getList("clues", Constants.NBT.TAG_STRING));
+        researches.deserialize(cnbt.getList("researches", Constants.NBT.TAG_STRING));
+        effects.deserialize(cnbt.getList("effects", Constants.NBT.TAG_STRING));
     }
 
     public static Research load(Research r) {

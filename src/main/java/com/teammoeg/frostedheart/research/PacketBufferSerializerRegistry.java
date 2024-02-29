@@ -22,10 +22,11 @@ package com.teammoeg.frostedheart.research;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Pair;
+import com.teammoeg.frostedheart.util.PacketWritable;
 
 import net.minecraft.network.PacketBuffer;
 
-public abstract class PacketBufferSerializerRegistry<T, R>  extends SerializerRegistry<T, R> {
+public abstract class PacketBufferSerializerRegistry<T extends PacketWritable, R>  extends SerializerRegistry<T, R> {
 	PacketBufferSerializer<T> pbs=new PacketBufferSerializer<T>();
 	TypeRegistry<T> types=new TypeRegistry<T>();
 	public T read(PacketBuffer pb) {
@@ -40,10 +41,14 @@ public abstract class PacketBufferSerializerRegistry<T, R>  extends SerializerRe
 		if(res==null)return def;
 		return res;
 	}
-	public void writeId(PacketBuffer pb, T obj) {
+	
+	protected void writeId(PacketBuffer pb, T obj) {
 		pbs.writeId(pb, obj);
 	}
-
+	public void write(PacketBuffer pb, T obj) {
+		pbs.writeId(pb, obj);
+		obj.write(pb);
+	}
 	public int idOf(T obj) {
 		return types.idOf(obj);
 	}

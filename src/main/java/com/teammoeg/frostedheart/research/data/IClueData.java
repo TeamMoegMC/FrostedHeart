@@ -22,10 +22,9 @@ package com.teammoeg.frostedheart.research.data;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.clues.Clue;
+import com.teammoeg.frostedheart.util.Writeable;
 
-import net.minecraft.nbt.CompoundNBT;
-
-public abstract class IClueData {
+public abstract class IClueData implements Writeable{
     Supplier<Clue> clue;
 
     public IClueData(Supplier<Clue> clue) {
@@ -33,8 +32,5 @@ public abstract class IClueData {
         this.clue = clue;
     }
 
-    public abstract void deserialize(CompoundNBT nbt);
-
-    public abstract CompoundNBT serialize();
 
 }

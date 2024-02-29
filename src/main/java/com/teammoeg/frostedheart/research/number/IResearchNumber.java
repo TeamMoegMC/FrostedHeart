@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.research.number;
 
-import com.google.gson.JsonElement;
 import com.teammoeg.frostedheart.research.data.ResearchData;
+import com.teammoeg.frostedheart.util.Writeable;
 
-public interface IResearchNumber {
+public interface IResearchNumber extends Writeable{
     default int getInt(ResearchData rd) {
         return (int) getVal(rd);
     }
@@ -32,5 +32,4 @@ public interface IResearchNumber {
     }
 
     double getVal(ResearchData rd);
-    JsonElement serialize();
 }

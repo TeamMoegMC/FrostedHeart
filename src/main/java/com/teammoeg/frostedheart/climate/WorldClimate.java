@@ -452,26 +452,7 @@ public class WorldClimate implements NBTSerializable {
     }
 
 
-    @Override
-    public void deserializeNBT(CompoundNBT nbt) {
-        clockSource.deserialize(nbt);
-        ListNBT list1 = nbt.getList("tempEventStream", Constants.NBT.TAG_COMPOUND);
-        tempEventStream.clear();
-        for (int i = 0; i < list1.size(); i++) {
-            ClimateEvent event = new ClimateEvent();
-            event.deserialize(list1.getCompound(i));
-            tempEventStream.add(event);
-        }
 
-        ListNBT list2 = nbt.getList("hourlyTempStream", Constants.NBT.TAG_COMPOUND);
-        dailyTempData.clear();
-        for (int i = 0; i < list2.size(); i++) {
-            dailyTempData.add(DayTemperatureData.read(list2.getCompound(i)));
-        }
-
-        readCache();
-
-    }
 
     /**
      * Used to populate daily cache.
@@ -717,25 +698,6 @@ public class WorldClimate implements NBTSerializable {
         this.updateFrames();
     }
 
-    @Override
-    public CompoundNBT serializeNBT() {
-        CompoundNBT nbt = new CompoundNBT();
-        clockSource.serialize(nbt);
-
-        ListNBT list1 = new ListNBT();
-        for (ClimateEvent event : tempEventStream) {
-            list1.add(event.serialize(new CompoundNBT()));
-        }
-        nbt.put("tempEventStream", list1);
-
-        ListNBT list2 = new ListNBT();
-        for (DayTemperatureData temp : dailyTempData) {
-            list2.add(temp.serialize());
-        }
-        nbt.put("hourlyTempStream", list2);
-
-        return nbt;
-    }
 
     /**
      * Grows tempEventStream to contain temp events that cover the given point of time.
@@ -909,5 +871,40 @@ public class WorldClimate implements NBTSerializable {
         return true;
     }
 
+	@Override
+	public void save(CompoundNBT nbt, boolean isPacket) {
+        clockSource.serialize(nbt);
 
+        ListNBT list1 = new ListNBT();
+        for (ClimateEvent event : tempEventStream) {
+            list1.add(event.serialize(new CompoundNBT()));
+        }
+        nbt.put("tempEventStream", list1);
+
+        ListNBT list2 = new ListNBT();
+        for (DayTemperatureData temp : dailyTempData) {
+            list2.add(temp.serialize());
+        }
+        nbt.put("hourlyTempStream", list2);
+	}
+
+	@Override
+	public void load(CompoundNBT nbt, boolean isPacket) {
+        clockSource.deserialize(nbt);
+        ListNBT list1 = nbt.getList("tempEventStream", Constants.NBT.TAG_COMPOUND);
+        tempEventStream.clear();
+        for (int i = 0; i < list1.size(); i++) {
+            ClimateEvent event = new ClimateEvent();
+            event.deserialize(list1.getCompound(i));
+            tempEventStream.add(event);
+        }
+
+        ListNBT list2 = nbt.getList("hourlyTempStream", Constants.NBT.TAG_COMPOUND);
+        dailyTempData.clear();
+        for (int i = 0; i < list2.size(); i++) {
+            dailyTempData.add(DayTemperatureData.read(list2.getCompound(i)));
+        }
+
+        readCache();
+	}
 }

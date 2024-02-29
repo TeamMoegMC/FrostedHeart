@@ -35,7 +35,7 @@ public class Numbers {
         registry.register(ConstResearchNumber.class, "value", ConstResearchNumber::valueOf,Numbers::nopserializer, ConstResearchNumber::valueOf);
         registry.register(ExpResearchNumber.class, "exp", ExpResearchNumber::new,Numbers::nopserializer, ExpResearchNumber::new);
     }
-    public static JsonObject nopserializer(IResearchNumber obj) {
+    private static JsonObject nopserializer(IResearchNumber obj) {
     	JsonObject jo=new JsonObject();
     	jo.add("exp", obj.serialize());
     	return jo;
@@ -59,8 +59,8 @@ public class Numbers {
         registry.register(cls, type, json,obj, packet);
     }
 
-    public static void writeId(IResearchNumber e, PacketBuffer pb) {
-        registry.writeId(pb, e);
+    public static void write(IResearchNumber e, PacketBuffer pb) {
+        registry.write(pb, e);
     }
 
     private Numbers() {

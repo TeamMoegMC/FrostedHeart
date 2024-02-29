@@ -246,7 +246,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
         }
         this.inventory = NonNullList.withSize(1, ItemStack.EMPTY);
         ItemStackHelper.loadAllItems(nbt, this.inventory);
-        network.load(nbt);
+        network.load(nbt, descPacket);
     }
 
     @Override
@@ -362,6 +362,6 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
         }
         ItemStackHelper.saveAllItems(nbt, this.inventory);
         nbt.put("floor", floorNBT);
-        network.save(nbt);
+        network.save(nbt, descPacket);
     }
 }

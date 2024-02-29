@@ -216,25 +216,10 @@ public class EnergyCore implements NBTSerializable {
     	return FHCapabilities.ENERGY.getCapability(player);
     }
 
-	@Override
-	public CompoundNBT serializeNBT() {
-		CompoundNBT saved=new CompoundNBT();
-	    saved.putLong("energy", energy);
-	    saved.putLong("cenergy", cenergy);
-	    saved.putLong("penergy", penergy);
-	    saved.putLong("lastsleepdate", lastsleepdate);
-	    saved.putLong("lastsleep", lastsleep);
-	    saved.putDouble("utbody", utbody);
-		return saved;
-	}
+
 	@Override
 	public void deserializeNBT(CompoundNBT saved) {
-		energy=saved.getLong("energy");
-		cenergy=saved.getLong("cenergy");
-		penergy=saved.getLong("penergy");
-	    lastsleepdate=saved.getLong("lastsleepdate");
-	    lastsleep=saved.getLong("lastsleep");
-	    utbody=saved.getDouble("utbody");
+
 	}
 
 	public void onrespawn() {
@@ -246,5 +231,30 @@ public class EnergyCore implements NBTSerializable {
 	}
 	public void sendUpdate(ServerPlayerEntity player) {
 		FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(player));
+	}
+
+	@Override
+	public void save(CompoundNBT saved, boolean isPacket) {
+		// TODO Auto-generated method stub
+	    saved.putLong("energy", energy);
+	    saved.putLong("cenergy", cenergy);
+	    saved.putLong("penergy", penergy);
+	    if(!isPacket) {
+		    saved.putLong("lastsleepdate", lastsleepdate);
+		    saved.putLong("lastsleep", lastsleep);
+		    saved.putDouble("utbody", utbody);
+	    }
+	}
+
+	@Override
+	public void load(CompoundNBT saved, boolean isPacket) {
+		energy=saved.getLong("energy");
+		cenergy=saved.getLong("cenergy");
+		penergy=saved.getLong("penergy");
+		if(!isPacket) {
+		    lastsleepdate=saved.getLong("lastsleepdate");
+		    lastsleep=saved.getLong("lastsleep");
+		    utbody=saved.getDouble("utbody");
+		}
 	}
 }

@@ -34,7 +34,7 @@ public class PacketBufferSerializer<T> {
 	    return fromPacket.get(id).apply(pb);
 	}
 
-	public void writeId(PacketBuffer pb, T obj) {
+	protected void writeId(PacketBuffer pb, T obj) {
 		Integer dat=types.get(obj.getClass());
 		if(dat==null)dat=0;
 	    pb.writeByte(dat);

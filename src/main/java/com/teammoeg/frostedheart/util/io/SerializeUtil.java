@@ -38,6 +38,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.PacketWritable;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.Writeable;
 

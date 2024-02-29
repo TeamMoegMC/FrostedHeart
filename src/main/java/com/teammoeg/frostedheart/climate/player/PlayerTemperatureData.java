@@ -20,13 +20,13 @@ public class PlayerTemperatureData implements NBTSerializable  {
 	
 	public PlayerTemperatureData() {
 	}
-	public void load (CompoundNBT nbt) {
+	public void load (CompoundNBT nbt,boolean isPacket) {
 		previousTemp=nbt.getFloat("previous_body_temperature");
 		bodyTemp=nbt.getFloat("bodytemperature");
 		envTemp=nbt.getFloat("envtemperature");
 		feelTemp=nbt.getFloat("feeltemperature");
 	}
-	public void save(CompoundNBT nc) {
+	public void save(CompoundNBT nc,boolean isPacket) {
         nc.putFloat("previous_body_temperature",previousTemp);
         nc.putFloat("bodytemperature",bodyTemp);
         nc.putFloat("envtemperature",envTemp);
@@ -49,16 +49,6 @@ public class PlayerTemperatureData implements NBTSerializable  {
     public static LazyOptional<PlayerTemperatureData> getCapability(@Nullable PlayerEntity player) {
         return FHCapabilities.PLAYER_TEMP.getCapability(player);
     }
-	@Override
-	public CompoundNBT serializeNBT() {
-		CompoundNBT saved=new CompoundNBT();
-		save(saved);
-		return saved;
-	}
-	@Override
-	public void deserializeNBT(CompoundNBT nbt) {
-		load(nbt);
-	}
 	public float getPreviousTemp() {
 		return previousTemp;
 	}

@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.research.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.util.Writeable;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -45,7 +46,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * researches.6
  * Clue can be trigger if any research is researchable(finished item commit)
  */
-public abstract class Clue extends AutoIDItem{
+public abstract class Clue extends AutoIDItem implements Writeable{
     float contribution;// percentage, range (0,1]
     String name = "";
     String desc = "";
@@ -202,7 +203,7 @@ public abstract class Clue extends AutoIDItem{
             FHNetwork.send(PacketDistributor.PLAYER.with(() -> spe), packet);
     }
 
-	JsonObject serialize() {
+	public JsonObject serialize() {
         JsonObject jo = new JsonObject();
         if (!name.isEmpty())
             jo.addProperty("name", name);
@@ -266,7 +267,6 @@ public abstract class Clue extends AutoIDItem{
     ;
 
     public void write(PacketBuffer buffer) {
-        Clues.writeId(this, buffer);
         buffer.writeString(name);
         buffer.writeString(desc);
         buffer.writeString(hint);

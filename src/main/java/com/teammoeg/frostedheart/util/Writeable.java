@@ -21,13 +21,9 @@ package com.teammoeg.frostedheart.util;
 
 import com.google.gson.JsonElement;
 
-import net.minecraft.network.PacketBuffer;
-
 /**
  * Not an typo, just to avoid name conflict
  */
-public interface Writeable {
+public interface Writeable extends PacketWritable {
     public JsonElement serialize();
-
-    void write(PacketBuffer buffer);
 }

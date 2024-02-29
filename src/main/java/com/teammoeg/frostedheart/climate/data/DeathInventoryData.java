@@ -31,6 +31,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 
@@ -150,24 +151,7 @@ public class DeathInventoryData implements NBTSerializable {
 
     @Override
     public void deserializeNBT(CompoundNBT nbt) {
-        inv = null;
-        calledClone = nbt.getBoolean("cloned");
-        if (nbt.contains("data"))
-            nbt.getList("data", 10).stream().map(t -> (CompoundNBT) t).forEach(e -> {
-                inv = CopyInventory.deserializeNBT(e.getCompound("inv"));
-            });
-        else if (nbt.contains("inv"))
-            inv = CopyInventory.deserializeNBT(nbt.getCompound("inv"));
-    }
 
-
-    @Override
-    public CompoundNBT serializeNBT() {
-        CompoundNBT cnbt = new CompoundNBT();
-        if (inv != null)
-            cnbt.put("inv", inv.serializeNBT());
-        cnbt.putBoolean("cloned", calledClone);
-        return cnbt;
     }
 
     public void startClone() {
@@ -181,5 +165,26 @@ public class DeathInventoryData implements NBTSerializable {
             MinecraftForge.EVENT_BUS.post(new PlayerEvent.Clone(pe, pe, true));
         }
     }
+
+	@Override
+	public void save(CompoundNBT cnbt, boolean isPacket) {
+        if (inv != null)
+            cnbt.put("inv", inv.serializeNBT());
+        cnbt.putBoolean("cloned", calledClone);
+	}
+
+	@Override
+	public void load(CompoundNBT nbt, boolean isPacket) {
+        inv = null;
+        calledClone = nbt.getBoolean("cloned");
+        if (nbt.contains("data")) {
+            nbt.getList("data", Constants.NBT.TAG_COMPOUND).stream().map(t -> (CompoundNBT) t).findFirst().ifPresent(e->{
+            
+                inv = CopyInventory.deserializeNBT(e.getCompound("inv"));
+            });
+        } else if (nbt.contains("inv")) {
+            inv = CopyInventory.deserializeNBT(nbt.getCompound("inv"));
+        }
+	}
 
 }

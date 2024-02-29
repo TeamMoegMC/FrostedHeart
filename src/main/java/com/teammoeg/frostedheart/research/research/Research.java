@@ -172,7 +172,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 
         clues.addAll(SerializeUtil.readList(data, Clues::read));
         requiredItems = SerializeUtil.readList(data, IngredientWithSize::read);
-        effects = SerializeUtil.readList(data, Effects::deserialize);
+        effects = SerializeUtil.readList(data, Effects::read);
         points = data.readVarLong();
         boolean[] bools = SerializeUtil.readBooleans(data);
         showfdesc = bools[0];
@@ -779,7 +779,7 @@ public class Research extends FHRegisteredItem implements Writeable {
             jo.add("desc", SerializeUtil.toJsonStringList(desc, e -> e));
         if (!fdesc.isEmpty())
             jo.add("descAlt", SerializeUtil.toJsonStringList(fdesc, e -> e));
-        jo.add("icon", icon.serialize());
+        jo.add("icon", FHIcons.save(icon));
         jo.addProperty("category", category.getId().toString());
         if (!parents.isEmpty())
             jo.add("parents", SerializeUtil.toJsonStringList(parents, FHRegistry::serializeSupplier));
@@ -894,9 +894,9 @@ public class Research extends FHRegisteredItem implements Writeable {
         icon.write(buffer);
         buffer.writeResourceLocation(category.getId());
         SerializeUtil.writeList2(buffer, parents, FHRegistry::writeSupplier);
-        SerializeUtil.writeList(buffer, clues, Clue::write);
+        SerializeUtil.writeList2(buffer, clues, Clues::write);
         SerializeUtil.writeList(buffer, requiredItems, (e, p) -> e.write(p));
-        SerializeUtil.writeList(buffer, effects, (e, p) -> e.write(p));
+        SerializeUtil.writeList(buffer, effects, Effects::write);
         buffer.writeVarLong(points);
         SerializeUtil.writeBooleans(buffer, showfdesc, hideEffects, isHidden, inCompletable, alwaysShow, infinite);
     }

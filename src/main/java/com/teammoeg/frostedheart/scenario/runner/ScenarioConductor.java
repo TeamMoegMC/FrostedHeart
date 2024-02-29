@@ -58,37 +58,7 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
     private static final ActNamespace init=new ActNamespace(null,null);
     boolean inited=false;
 
-    public CompoundNBT save() {
-    	CompoundNBT data=new CompoundNBT();
-    	if(varData.snapshot==null)
-    		data.put("vars", varData.extraData);
-    	else
-    		data.put("vars", varData.snapshot);
-    	ListNBT lacts=new ListNBT();
-    	for(Act v:acts.values()) {
-    		if(v.name.isAct())
-    			lacts.add(v.save());
-    	}
-    	data.put("acts", lacts);
-    	if(getCurrentAct().name.isAct()) {
-    		data.putString("chapter", getCurrentAct().name.chapter);
-    		data.putString("act", getCurrentAct().name.act);
-    	}
-    	return data;
-    }
-    public void load(CompoundNBT data) {
-    	varData.extraData=data.getCompound("vars");
-    	varData.snapshot=varData.extraData;
-    	ListNBT lacts=data.getList("acts", Constants.NBT.TAG_COMPOUND);
-    	for(INBT v:lacts) {
-    		Act i=new Act(this,(CompoundNBT) v);
-    		acts.put(i.name, i);
-    	}
-    	lastQuest=new ActNamespace(data.getString("chapter"),data.getString("act"));
-    	//currentAct=acts.get();
-    	//if(currentAct==null)
-    	//currentAct=acts.get(empty);
-    }
+
     public void copy() {}
     public void enableActs() {
     	if(!isActsEnabled) {
@@ -128,14 +98,6 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 
 		
 	}
-    public ScenarioConductor(ServerPlayerEntity player,CompoundNBT data) {
-		super();
-		this.player = player.getUniqueID();
-		load(data);
-		setCurrentAct(new Act(this,init));
-		acts.put(init, getCurrentAct());
-	}
-
 
 
 
@@ -328,16 +290,40 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
     public static LazyOptional<ScenarioConductor> getCapability(@Nullable PlayerEntity player) {
     	return FHCapabilities.SCENARIO.getCapability(player);
     }
-	@Override
-	public CompoundNBT serializeNBT() {
-		return save();
-	}
-	@Override
-	public void deserializeNBT(CompoundNBT nbt) {
-		load(nbt);
-	}
+
 	public boolean isInited() {
 		return inited;
 	}
-
+	@Override
+	public void save(CompoundNBT data, boolean isPacket) {
+    	if(varData.snapshot==null)
+    		data.put("vars", varData.extraData);
+    	else
+    		data.put("vars", varData.snapshot);
+    	ListNBT lacts=new ListNBT();
+    	for(Act v:acts.values()) {
+    		if(v.name.isAct())
+    			lacts.add(v.save());
+    	}
+    	data.put("acts", lacts);
+    	if(getCurrentAct().name.isAct()) {
+    		data.putString("chapter", getCurrentAct().name.chapter);
+    		data.putString("act", getCurrentAct().name.act);
+    	}
+	}
+	@Override
+	public void load(CompoundNBT data, boolean isPacket) {
+		// TODO Auto-generated method stub
+		varData.extraData=data.getCompound("vars");
+    	varData.snapshot=varData.extraData;
+    	ListNBT lacts=data.getList("acts", Constants.NBT.TAG_COMPOUND);
+    	for(INBT v:lacts) {
+    		Act i=new Act(this,(CompoundNBT) v);
+    		acts.put(i.name, i);
+    	}
+    	lastQuest=new ActNamespace(data.getString("chapter"),data.getString("act"));
+    	//currentAct=acts.get();
+    	//if(currentAct==null)
+    	//currentAct=acts.get(empty);
+	}
 }
