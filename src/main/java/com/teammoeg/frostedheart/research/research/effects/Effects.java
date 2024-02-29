@@ -30,14 +30,14 @@ public class Effects {
     private static JsonSerializerRegistry<Effect> registry = new JsonSerializerRegistry<>();
 
     static {
-        registry.register(EffectBuilding.class, "multiblock", EffectBuilding::new,Effect::serialize, EffectBuilding::new);
-        registry.register(EffectCrafting.class, "recipe", EffectCrafting::new,Effect::serialize, EffectCrafting::new);
-        registry.register(EffectItemReward.class, "item", EffectItemReward::new,Effect::serialize, EffectItemReward::new);
-        registry.register(EffectStats.class, "stats", EffectStats::new,Effect::serialize, EffectStats::new);
-        registry.register(EffectUse.class, "use", EffectUse::new,Effect::serialize, EffectUse::new);
-        registry.register(EffectShowCategory.class, "category", EffectShowCategory::new,Effect::serialize, EffectShowCategory::new);
-        registry.register(EffectCommand.class, "command", EffectCommand::new,Effect::serialize, EffectCommand::new);
-        registry.register(EffectExperience.class, "experience", EffectExperience::new,Effect::serialize, EffectExperience::new);
+    	registerEffectType(EffectBuilding.class, "multiblock", EffectBuilding::new, EffectBuilding::new);
+        registerEffectType(EffectCrafting.class, "recipe", EffectCrafting::new, EffectCrafting::new);
+        registerEffectType(EffectItemReward.class, "item", EffectItemReward::new, EffectItemReward::new);
+        registerEffectType(EffectStats.class, "stats", EffectStats::new, EffectStats::new);
+        registerEffectType(EffectUse.class, "use", EffectUse::new, EffectUse::new);
+        registerEffectType(EffectShowCategory.class, "category", EffectShowCategory::new, EffectShowCategory::new);
+        registerEffectType(EffectCommand.class, "command", EffectCommand::new, EffectCommand::new);
+        registerEffectType(EffectExperience.class, "experience", EffectExperience::new, EffectExperience::new);
     }
 
     public static Effect deserialize(JsonObject jo) {
@@ -52,8 +52,8 @@ public class Effects {
         return registry.read(data);
     }
 
-    public static void registerEffectType(Class<? extends Effect> cls, String type, Function<JsonObject, Effect> json, Function<Effect,JsonObject> o, Function<PacketBuffer, Effect> packet) {
-        registry.register(cls, type, json, o, packet);
+    public static void registerEffectType(Class<? extends Effect> cls, String type, Function<JsonObject, Effect> json, Function<PacketBuffer, Effect> packet) {
+        registry.register(cls, type, json, Effect::serialize, packet);
     }
 
     public static void write(Effect e, PacketBuffer pb) {

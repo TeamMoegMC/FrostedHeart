@@ -3,8 +3,8 @@ package com.teammoeg.frostedheart.team;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.teammoeg.frostedheart.content.generator.GeneratorData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.town.GeneratorData;
 import com.teammoeg.frostedheart.town.TeamTownData;
 
 public class SpecialDataTypes {

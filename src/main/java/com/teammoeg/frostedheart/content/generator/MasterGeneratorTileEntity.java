@@ -27,7 +27,6 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.town.GeneratorData;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerChangeListener;
 

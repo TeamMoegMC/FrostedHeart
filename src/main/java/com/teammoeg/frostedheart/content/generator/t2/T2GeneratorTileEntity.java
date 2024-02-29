@@ -26,11 +26,11 @@ import java.util.function.Consumer;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.content.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
-import com.teammoeg.frostedheart.town.GeneratorData;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.nbt.CompoundNBT;

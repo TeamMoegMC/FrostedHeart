@@ -4,6 +4,6 @@ import net.minecraft.network.PacketBuffer;
 
 public interface PacketWritable {
 
-	void write(PacketBuffer buffer);
+	@Deprecated void write(PacketBuffer buffer);
 
 }

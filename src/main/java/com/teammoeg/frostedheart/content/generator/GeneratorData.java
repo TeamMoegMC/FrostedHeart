@@ -17,11 +17,10 @@
  *
  */
 
-package com.teammoeg.frostedheart.town;
+package com.teammoeg.frostedheart.content.generator;
 
 import java.util.Random;
 
-import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.team.SpecialDataHolder;
