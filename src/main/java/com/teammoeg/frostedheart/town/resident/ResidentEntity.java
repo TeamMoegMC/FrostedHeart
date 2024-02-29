@@ -17,18 +17,14 @@
  *
  */
 
-package com.teammoeg.frostedheart.town;
+package com.teammoeg.frostedheart.town.resident;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.world.World;
 
-public interface ITownBlockTE {
-    int getPriority();
-
-    TownWorkerType getWorker();
-
-    boolean isWorkValid();
-
-    CompoundNBT getWorkData();
-
-    void setWorkData(CompoundNBT data);
+public class ResidentEntity extends MobEntity {
+    protected ResidentEntity(EntityType<? extends MobEntity> entityType, World world) {
+        super(entityType, world);
+    }
 }

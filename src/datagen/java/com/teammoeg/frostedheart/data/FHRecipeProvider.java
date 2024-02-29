@@ -27,6 +27,7 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
+import blusunrize.immersiveengineering.api.IETags;
 import com.cannolicatfish.rankine.init.RankineItems;
 import com.cannolicatfish.rankine.init.RankineLists;
 import com.teammoeg.frostedheart.FHItems;
@@ -51,6 +52,14 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLPaths;
+
+import javax.annotation.Nonnull;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Scanner;
+import java.util.function.Consumer;
 
 public class FHRecipeProvider extends RecipeProvider {
 	private final HashMap<String, Integer> PATH_COUNT = new HashMap<>();

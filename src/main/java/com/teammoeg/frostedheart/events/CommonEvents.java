@@ -189,7 +189,7 @@ public class CommonEvents {
     @SubscribeEvent
     public static void insulationDataAttr(ItemAttributeModifierEvent event) {
         ArmorTempData data=FHDataManager.getArmor(event.getItemStack());
-        
+
         if(data!=null) {
         	UUID rnuuid=UUID.nameUUIDFromBytes((FHMain.MODID+event.getSlotType().toString()).getBytes(StandardCharsets.ISO_8859_1));
         	String amd=FHMain.MODID+":armor_data";
@@ -282,7 +282,8 @@ public class CommonEvents {
     @SubscribeEvent
     public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
         Block growBlock = event.getState().getBlock();
-
+        BlockPos belowPos=event.getPos().down();
+        Block belowGrowBlock=event.getWorld().getBlockState(belowPos).getBlock();
         float temp = ChunkHeatData.getTemperature(event.getWorld(), event.getPos());
         boolean bz = WorldClimate.isBlizzard(event.getWorld());
         if (bz) {
@@ -295,7 +296,7 @@ public class CommonEvents {
 	        		event.setResult(Event.Result.DENY);
 	        		return;
 	        	}
-	        		
+
         	}*/
             if (FHUtils.isBlizzardHarming(event.getWorld(), event.getPos())) {
             	FluidState curstate=event.getWorld().getFluidState(cur);
@@ -305,7 +306,7 @@ public class CommonEvents {
             		event.getWorld().setBlockState(cur, curstate.getBlockState(), 2);
             } else if (event.getWorld().getRandom().nextInt(3) == 0) {
             	//FluidState curstate=event.getWorld().getFluidState(cur);
-            	
+
                 event.getWorld().setBlockState(cur,growBlock.getDefaultState(), 2);
             }
             event.setResult(Event.Result.DENY);
@@ -325,8 +326,8 @@ public class CommonEvents {
                 }
                 event.setResult(Event.Result.DENY);
             }
-        } else {
-            if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE || bz) {
+        } else if(growBlock instanceof IGrowable){
+            if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE) {
                 // Set back to default state, might not be necessary
                 if ((bz || temp < 0) && event.getWorld().getRandom().nextInt(3) == 0) {
                     BlockState cbs = event.getWorld().getBlockState(event.getPos());
@@ -343,6 +344,9 @@ public class CommonEvents {
                 event.setResult(Event.Result.DENY);
             }
 
+        }else {
+        	if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE || bz)
+        		event.setResult(Event.Result.DENY);
         }
     }
 

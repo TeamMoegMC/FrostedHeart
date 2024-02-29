@@ -24,8 +24,7 @@ public class GraphicsImageContent extends GraphicLayerContent {
 		this.showingImage=showingImage;
 	}
 	public GraphicsImageContent(ResourceLocation showingImage,Rect r1,Rect r2) {
-		super(r1.getX(), r1.getY(), r1.getW(), r1.getH());
-		this.showingImage=showingImage;
+		this(showingImage,r1.getX(), r1.getY(), r1.getW(), r1.getH());
 		ix=r2.getX();
 		iy=r2.getY();
 		iw=r2.getW();
@@ -60,6 +59,7 @@ public class GraphicsImageContent extends GraphicLayerContent {
 					ih=image.getHeight();
 				Rect r=params.calculateRect(x, y, width, height);
 				params.getG2d().setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+				//System.out.println(r);
 				params.getG2d().drawImage(image,r.getX(),r.getY(),r.getW()+r.getX(),r.getH()+r.getY(), ix, iy, iw+ix, ih+iy, null);
 				params.getG2d().setComposite(AlphaComposite.SrcOver);
 				

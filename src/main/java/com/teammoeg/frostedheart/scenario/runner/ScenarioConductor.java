@@ -55,7 +55,8 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
     private transient boolean isActsEnabled;
     private transient ActNamespace lastQuest;
     private static final ActNamespace global=new ActNamespace();
-    private static final ActNamespace init=new ActNamespace(null,null);
+
+	private static final ActNamespace init=new ActNamespace(null,null);
     boolean inited=false;
 
 
@@ -89,6 +90,7 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
     	if(!isInited())inited=true;
 		this.player = player.getUniqueID();
 	}
+
     public ScenarioConductor(ServerPlayerEntity player) {
 		super();
 		this.player = player.getUniqueID();
@@ -141,6 +143,12 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 		//}else super.addTrigger(trig,targ);
 	}
     public void run(Scenario sp) {
+		if (sp == null) {
+			FHMain.LOGGER.error("[Scenario Conductor] Scenario to run is null");
+		} else {
+			FHMain.LOGGER.info("[Scenario Conductor] Running scenario "+sp.name);
+		}
+
 		this.setScenario(sp);
 		nodeNum=0;
 		varData.takeSnapshot();
@@ -215,9 +223,11 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 			pauseAct();
 			this.setCurrentAct(data);
 			data.prepareForRun();
-			this.sp=data.getScenario();
-			this.nodeNum=data.getNodeNum();
-			this.status=data.getStatus();
+			if(data.getScenario()!=null) {
+				this.sp=data.getScenario();
+				this.nodeNum=data.getNodeNum();
+				this.status=data.getStatus();
+			}
 			data.sendTitles(true, true);
 			if(getStatus().shouldRun) {
 				getScene().forcedClear(this);

@@ -19,19 +19,8 @@
 
 package com.teammoeg.frostedheart.util;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
-import java.util.function.ToIntFunction;
-
-import javax.annotation.Nullable;
-
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.capability.FHCapability;
@@ -39,16 +28,9 @@ import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.*;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
@@ -78,6 +60,12 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.crafting.NBTIngredient;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import javax.annotation.Nullable;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.function.ToIntFunction;
 
 public class FHUtils {
     private static class NBTIngredientAccess extends NBTIngredient {
@@ -337,4 +325,5 @@ public class FHUtils {
 	    } while (aClass != null);
 	    return fields;
 	}
+
 }
