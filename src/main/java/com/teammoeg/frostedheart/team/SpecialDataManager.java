@@ -97,7 +97,7 @@ public class SpecialDataManager {
         if (cn == null) {
             GameProfile owner = server.getPlayerProfileCache().getProfileByUUID(team.getOwner());
             
-            if (owner != null)
+            if (owner != null&&(!server.isServerInOnlineMode()||server.isSinglePlayer()))
                 for (Entry<UUID, TeamDataHolder> dat : dataByResearchId.entrySet()) {
                     if (owner.getName().equals(dat.getValue().getOwnerName())) {
                         this.transfer(dat.getKey(), team);
@@ -107,7 +107,7 @@ public class SpecialDataManager {
         }
         cn = dataByFTBId.computeIfAbsent(team.getId(), t->UUID.randomUUID());
         TeamDataHolder data=dataByResearchId.computeIfAbsent(cn, c -> new TeamDataHolder(c, OptionalLazy.of(()->team)));
-        if ((server.isSinglePlayer()||!server.isServerInOnlineMode())&&data.getOwnerName() == null) {
+        if (data.getOwnerName() == null) {
             PlayerProfileCache cache = server.getPlayerProfileCache();
             if (cache != null) {
                 GameProfile gp = cache.getProfileByUUID(team.getOwner());
@@ -132,35 +132,47 @@ public class SpecialDataManager {
         Path local=server.func_240776_a_(dataFolder);
         local.toFile().mkdirs();
         Path olocal=server.func_240776_a_(OlddataFolder);
-        Stream.concat(Arrays.stream(olocal.toFile().listFiles((f) -> f.getName().endsWith(".nbt"))),Arrays.stream(local.toFile().listFiles((f) -> f.getName().endsWith(".nbt"))))
-        .forEach(f->{
-            UUID tud;
-            try {
-                try {
-                    tud = UUID.fromString(f.getName().split("\\.")[0]);
-                } catch (IllegalArgumentException ex) {
-                    FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
-                    return;
-                }
-                
-                CompoundNBT nbt = CompressedStreamTools.readCompressed(f);
-                if(nbt.contains("teamId"))
-                	tud=nbt.getUniqueId("teamId");
-                final UUID ftbid=tud;
-                TeamDataHolder trd = new TeamDataHolder(nbt.getUniqueId("uuid"),OptionalLazy.of(() -> TeamManager.INSTANCE.getTeamByID(ftbid)));
-
-                trd.deserialize(nbt, false);
-                dataByFTBId.put(ftbid, trd.getId());
-                dataByResearchId.put(trd.getId(), trd);
-            } catch (IllegalArgumentException ex) {
-                ex.printStackTrace();
-                FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
-                return;
-            } catch (IOException e) {
-                e.printStackTrace();
-                FHMain.LOGGER.error("Unable to read data file " + f.getName() + ", ignoring...");
-            }
-        });
+        Stream<File> strm1=null,strm2=null;
+        if(local.toFile().exists())
+        	strm1=Arrays.stream(local.toFile().listFiles((f) -> f.getName().endsWith(".nbt")));
+        if(olocal.toFile().exists())
+        	strm2=Arrays.stream(olocal.toFile().listFiles((f) -> f.getName().endsWith(".nbt")));
+        if(strm1!=null) {
+        	if(strm2!=null)
+        		strm1=Stream.concat(strm1, strm2);
+        }else {
+        	if(strm2!=null)
+        		strm1=strm2;
+        }
+        if(strm1!=null)
+	        strm1.forEach(f->{
+	            UUID tud;
+	            try {
+	                try {
+	                    tud = UUID.fromString(f.getName().split("\\.")[0]);
+	                } catch (IllegalArgumentException ex) {
+	                    FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
+	                    return;
+	                }
+	                
+	                CompoundNBT nbt = CompressedStreamTools.readCompressed(f);
+	                if(nbt.contains("teamId"))
+	                	tud=nbt.getUniqueId("teamId");
+	                final UUID ftbid=tud;
+	                TeamDataHolder trd = new TeamDataHolder(nbt.getUniqueId("uuid"),OptionalLazy.of(() -> TeamManager.INSTANCE.getTeamByID(ftbid)));
+	
+	                trd.deserialize(nbt, false);
+	                dataByFTBId.put(ftbid, trd.getId());
+	                dataByResearchId.put(trd.getId(), trd);
+	            } catch (IllegalArgumentException ex) {
+	                ex.printStackTrace();
+	                FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
+	                return;
+	            } catch (IOException e) {
+	                e.printStackTrace();
+	                FHMain.LOGGER.error("Unable to read data file " + f.getName() + ", ignoring...");
+	            }
+	        });
     }
 
     public void save() {

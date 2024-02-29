@@ -352,7 +352,7 @@ public class FHResearch {
         FHNetwork.send(target,new FHResearchSyncEndPacket());
 	}
 	private static final FolderName dataFolder = new FolderName("fhdata");
-    public void load() {
+    public static void load() {
         FHResearch.editor = false;
         Path local = SpecialDataManager.server.func_240776_a_(dataFolder);
         File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
@@ -379,7 +379,7 @@ public class FHResearch {
         }
     }
 
-    public void save() {
+    public static void save() {
     	Path local = SpecialDataManager.server.func_240776_a_(dataFolder);
     	File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
         File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
