@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.scenario.commands.ActCommand;
@@ -233,9 +234,5 @@ public class FHScenario {
 	public static ScenarioConductor get(PlayerEntity playerEntity) {
 		//return runners.computeIfAbsent((ServerPlayerEntity) playerEntity, FHScenario::load);
 		return ScenarioConductor.getCapability(playerEntity).orElseThrow(()->new NoSuchElementException("conductor not present"));
-	}
-	public static ScenarioConductor getNullable(PlayerEntity playerEntity) {
-		//return runners.computeIfAbsent((ServerPlayerEntity) playerEntity, FHScenario::load);
-		return ScenarioConductor.getCapability(playerEntity).orElse(null);
 	}
 }
