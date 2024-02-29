@@ -25,6 +25,7 @@ import java.util.List;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FramedPanel;
@@ -179,7 +180,7 @@ public class ResearchInfoPanel extends Panel {
 
                     if (hasB)
                         offset += 24;
-                    TeamResearchData data = TeamResearchData.getClientInstance();
+                    TeamResearchData data = ClientResearchDataAPI.getData();
                     if (data.getData(detailPanel.research).isCompleted() && hasUnclaimed) {
                         Button claimRewards = new TechTextButton(fp, GuiUtils.translateGui("research.claim_rewards"),
                                 Icon.EMPTY) {

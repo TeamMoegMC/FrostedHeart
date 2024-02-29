@@ -21,9 +21,15 @@ package com.teammoeg.frostedheart.research;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.Map.Entry;
 import java.util.function.Supplier;
 
 import com.google.gson.Gson;
@@ -43,12 +49,18 @@ import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.research.research.clues.Clue;
 import com.teammoeg.frostedheart.research.research.effects.Effect;
+import com.teammoeg.frostedheart.team.ClientDataHolder;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.io.FileUtil;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
+import dev.ftb.mods.ftbteams.data.TeamManager;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.storage.FolderName;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.Constants;
@@ -165,7 +177,7 @@ public class FHResearch {
         ClientResearchData.last = null;
         ResearchListeners.reload();
         //No need to clear all as data manager would handle this.
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> TeamResearchData::resetClientInstance);
+
         //FHResearch.clearAll();
         prepareReload();
         MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
@@ -339,4 +351,53 @@ public class FHResearch {
         FHResearch.getAllResearch().forEach(t->FHNetwork.send(target, new FHResearchSyncPacket(t)));
         FHNetwork.send(target,new FHResearchSyncEndPacket());
 	}
+	private static final FolderName dataFolder = new FolderName("fhdata");
+    public void load() {
+        FHResearch.editor = false;
+        Path local = SpecialDataManager.server.func_240776_a_(dataFolder);
+        File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
+        FHResearch.clearAll();
+        if (regfile.exists()) {
+            try {
+                FHResearch.load(CompressedStreamTools.readCompressed(regfile));
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                FHMain.LOGGER.fatal("CANNOT READ RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
+
+            }
+        }else FHMain.LOGGER.error("NO REGISTRY FOUND");
+        FHResearch.init();
+        local.toFile().mkdirs();
+        try {
+            File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
+            if (dbg.exists() && FileUtil.readString(dbg).equals("true"))
+                FHResearch.editor = true;
+        } catch (IOException e2) {
+            // TODO Auto-generated catch block
+            e2.printStackTrace();
+        }
+    }
+
+    public void save() {
+    	Path local = SpecialDataManager.server.func_240776_a_(dataFolder);
+    	File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
+        File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
+        try {
+            if (FHResearch.isEditor())
+                FileUtil.transfer("true", dbg);
+            else if (dbg.exists())
+                FileUtil.transfer("false", dbg);
+        } catch (IOException e2) {
+            // TODO Auto-generated catch block
+            e2.printStackTrace();
+        }
+        try {
+            CompressedStreamTools.writeCompressed(FHResearch.save(new CompoundNBT()), regfile);
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+            FHMain.LOGGER.fatal("CANNOT SAVE RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
+        }
+    }
 }

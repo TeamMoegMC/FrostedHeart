@@ -66,17 +66,17 @@ import com.teammoeg.frostedheart.recipe.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchListeners;
-import com.teammoeg.frostedheart.research.SpecialDataTypes;
-import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
@@ -609,7 +609,7 @@ public class CommonEvents {
                     event.setCanceled(true);
                 }
             } else {
-                if (!ResearchDataAPI.getData((ServerPlayerEntity) event.getPlayer()).getData(SpecialDataTypes.RESEARCH_DATA).building.has(event.getMultiblock())) {
+                if (!ResearchDataAPI.getData((ServerPlayerEntity) event.getPlayer()).building.has(event.getMultiblock())) {
                     //event.getPlayer().sendStatusMessage(GuiUtils.translateMessage("research.multiblock.cannot_build"), true);
                     event.setCanceled(true);
                 }
@@ -663,7 +663,7 @@ public class CommonEvents {
                 ServerWorld serverWorld = (ServerWorld) world;
                 SchedulerQueue.tickAll(serverWorld);
                 int i = 0;
-                for (TeamDataHolder trd : FHResearchDataManager.INSTANCE.getAllData()) {
+                for (TeamDataHolder trd : SpecialDataManager.INSTANCE.getAllData()) {
                     if (serverWorld.getDimensionKey().equals(trd.getData(SpecialDataTypes.GENERATOR_DATA).dimension)) {
                         if (serverWorld.getGameTime() % 20 == i % 20) {//Split town calculations to multiple seconds
                             if (trd.getTeam().map(t -> t.getOnlineMembers().size()).orElse(0) > 0) {

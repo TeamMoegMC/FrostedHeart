@@ -65,6 +65,7 @@ import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
 import com.teammoeg.frostedheart.content.temperature.handstoves.FuelingRecipe;
 import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
@@ -207,7 +208,7 @@ public class JEICompat implements IModPlugin {
             //System.out.println(i.getType().toString()+":"+String.join(",",all.stream().map(Object::toString).collect(Collectors.toList())));
             ItemStack irs = i.getRecipeOutput();
             IRecipe<?> ovrd = overrides.get(i.getId());
-            if (!TeamResearchData.getClientInstance().crafting.has(i)) {
+            if (!ClientResearchDataAPI.getData().crafting.has(i)) {
                 for (ResourceLocation rl : all) {
                 	try {
                     man.hideRecipe(i, rl);
@@ -238,7 +239,7 @@ public class JEICompat implements IModPlugin {
             }
         }
         for (ResourceLocation rl : ResearchListeners.categories) {
-            if (!TeamResearchData.getClientInstance().categories.has(rl))
+            if (!ClientResearchDataAPI.getData().categories.has(rl))
                 man.hideRecipeCategory(rl);
             else
                 man.unhideRecipeCategory(rl);

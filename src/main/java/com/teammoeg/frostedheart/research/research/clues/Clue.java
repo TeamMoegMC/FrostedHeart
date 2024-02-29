@@ -26,13 +26,14 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.research.AutoIDItem;
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.SpecialDataTypes;
-import com.teammoeg.frostedheart.research.TeamDataHolder;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.research.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.Writeable;
 
 import dev.ftb.mods.ftbteams.data.Team;
@@ -110,7 +111,7 @@ public abstract class Clue extends AutoIDItem implements Writeable{
     }
 
     private void deleteInTree() {
-        FHResearchDataManager.INSTANCE.getAllData().forEach(this::end);
+        SpecialDataManager.INSTANCE.getAllData().forEach(this::end);
     }
 
     public void deleteSelf() {
@@ -179,7 +180,7 @@ public abstract class Clue extends AutoIDItem implements Writeable{
 
     @OnlyIn(Dist.CLIENT)
     public boolean isCompleted() {
-        return TeamResearchData.getClientInstance().isClueTriggered(this);
+        return ClientResearchDataAPI.getData().isClueTriggered(this);
     }
 
 
@@ -221,8 +222,7 @@ public abstract class Clue extends AutoIDItem implements Writeable{
 
     @OnlyIn(Dist.CLIENT)
     public void setCompleted(boolean trig) {
-        TeamResearchData.getClientInstance().setClueTriggered(this, trig);
-        ;
+    	ClientResearchDataAPI.getData().setClueTriggered(this, trig);
     }
 
     public void setCompleted(TeamDataHolder team, boolean trig) {

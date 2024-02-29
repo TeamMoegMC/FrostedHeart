@@ -30,7 +30,6 @@ import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.blocks.RubbingTool;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
@@ -40,6 +39,9 @@ import com.teammoeg.frostedheart.research.research.clues.ItemClue;
 import com.teammoeg.frostedheart.research.research.clues.KillClue;
 import com.teammoeg.frostedheart.research.research.clues.MinigameClue;
 import com.teammoeg.frostedheart.research.research.clues.TickListenerClue;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.RegistryUtils;
@@ -211,7 +213,7 @@ public class ResearchListeners {
 
         @Override
         public IRecipe<?> getObject(String s) {
-            return FHResearchDataManager.getRecipeManager().getRecipe(new ResourceLocation(s)).orElse(null);
+            return SpecialDataManager.getRecipeManager().getRecipe(new ResourceLocation(s)).orElse(null);
         }
 
         @Override
@@ -245,7 +247,7 @@ public class ResearchListeners {
             if (player instanceof FakePlayer) return false;
             if (player.getEntityWorld().isRemote)
                 return ClientResearchDataAPI.getData().block.has(b);
-            return ResearchDataAPI.getData((ServerPlayerEntity) player).getData(SpecialDataTypes.RESEARCH_DATA).block.has(b);
+            return ResearchDataAPI.getData((ServerPlayerEntity) player).block.has(b);
         }
         return true;
 
@@ -265,7 +267,7 @@ public class ResearchListeners {
         if (recipe.has(r)) {
             if (s.getEntityWorld().isRemote)
                 return ClientResearchDataAPI.getData().crafting.has(r);
-            return ResearchDataAPI.getData((ServerPlayerEntity) s).getData(SpecialDataTypes.RESEARCH_DATA).crafting.has(r);
+            return ResearchDataAPI.getData((ServerPlayerEntity) s).crafting.has(r);
         }
         return true;
     }
@@ -273,14 +275,14 @@ public class ResearchListeners {
     public static boolean canUseRecipe(UUID team, IRecipe<?> r) {
         if (recipe.has(r)) {
             if (team == null) return false;
-            TeamResearchData trd=ResearchDataAPI.getData(team).getData(SpecialDataTypes.RESEARCH_DATA);
+            TeamResearchData trd=ResearchDataAPI.getData(team);
             return trd!=null&&trd.crafting.has(r);
         }
         return true;
     }
 
     public static boolean commitGameLevel(ServerPlayerEntity s, int lvl) {
-        TeamResearchData trd = ResearchDataAPI.getData(s).getData(SpecialDataTypes.RESEARCH_DATA);
+        TeamResearchData trd = ResearchDataAPI.getData(s);
         OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent()) {
             Research rs = cur.orElse(null);
@@ -318,7 +320,7 @@ public class ResearchListeners {
     }
 
     public static int fetchGameLevel(ServerPlayerEntity s) {
-        TeamResearchData trd = ResearchDataAPI.getData(s).getData(SpecialDataTypes.RESEARCH_DATA);
+        TeamResearchData trd = ResearchDataAPI.getData(s);
         OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent()) {
             Research rs = cur.orElse(null);
@@ -343,8 +345,8 @@ public class ResearchListeners {
     }
 
     public static void kill(ServerPlayerEntity s, LivingEntity e) {
-        TeamDataHolder trd = ResearchDataAPI.getData(s);
-        killClues.call(trd.getId(), c -> c.isCompleted(trd.getData(SpecialDataTypes.RESEARCH_DATA), e));
+        TeamResearchData trd = ResearchDataAPI.getData(s);
+        killClues.call(trd.getId(), c -> c.isCompleted(trd, e));
     }
 
     public static void reload() {
@@ -364,16 +366,16 @@ public class ResearchListeners {
     }
 
     public static void ServerReload() {
-        if (FHResearchDataManager.INSTANCE == null) return;
+        if (SpecialDataManager.INSTANCE == null) return;
         FHMain.LOGGER.info("reloading research system");
-        FHResearchDataManager.INSTANCE.save();
-        FHResearchDataManager.INSTANCE.load();
+        SpecialDataManager.INSTANCE.save();
+        SpecialDataManager.INSTANCE.load();
         FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
-        FHResearchDataManager.INSTANCE.getAllData().forEach(t -> t.getData(SpecialDataTypes.RESEARCH_DATA).sendUpdate());
+        SpecialDataManager.INSTANCE.getAllData(SpecialDataTypes.RESEARCH_DATA).forEach(t -> t.sendUpdate());
     }
 
     public static ItemStack submitItem(ServerPlayerEntity s, ItemStack i) {
-        TeamResearchData trd = ResearchDataAPI.getData(s).getData(SpecialDataTypes.RESEARCH_DATA);
+        TeamResearchData trd = ResearchDataAPI.getData(s);
         OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent())
             for (Clue c : cur.orElse(null).getClues())
@@ -410,8 +412,8 @@ public class ResearchListeners {
     }
 
     public static void tick(ServerPlayerEntity s) {
-        TeamDataHolder trd = ResearchDataAPI.getData(s);
-        tickClues.call(trd.getId(), e -> e.tick(trd.getData(SpecialDataTypes.RESEARCH_DATA), s));
+        TeamResearchData trd = ResearchDataAPI.getData(s);
+        tickClues.call(trd.getId(), e -> e.tick(trd, s));
     }
 
     private ResearchListeners() {

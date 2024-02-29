@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.research;
+package com.teammoeg.frostedheart.team;
 
 import java.util.List;
 import java.util.Optional;

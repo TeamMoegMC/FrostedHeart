@@ -25,8 +25,8 @@ import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
 import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.research.SpecialDataTypes;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import net.minecraft.block.BlockState;
@@ -117,7 +117,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 
     public ActionResultType onClick(PlayerEntity pe) {
         if (!pe.world.isRemote) {
-            currentPoints = (int) ResearchDataAPI.getData((ServerPlayerEntity) pe).getData(SpecialDataTypes.RESEARCH_DATA).doResearch(currentPoints);
+            currentPoints = (int) ResearchDataAPI.getData((ServerPlayerEntity) pe).doResearch(currentPoints);
             updatePoints();
         }
         return ActionResultType.func_233537_a_(pe.world.isRemote);

@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.research.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -54,7 +56,7 @@ public class FHChangeActiveResearchPacket {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            TeamResearchData.setActiveResearch(id);
+            ClientResearchDataAPI.getData().setCurrentResearch(id);
             ClientUtils.refreshResearchGui();
         });
         context.get().setPacketHandled(true);

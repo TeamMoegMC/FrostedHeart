@@ -28,11 +28,11 @@ import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.recipes.DietGroupCodec;
-import com.teammoeg.frostedheart.research.SpecialDataTypes;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.network.FHEnergyDataSyncPacket;
+import com.teammoeg.frostedheart.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 
@@ -55,7 +55,7 @@ public class EnergyCore implements NBTSerializable {
     double utbody;
     
     public static void addEnergy(ServerPlayerEntity player, int val) {
-        TeamResearchData trd = ResearchDataAPI.getData(player).getData(SpecialDataTypes.RESEARCH_DATA);
+        TeamResearchData trd = ResearchDataAPI.getData(player);
         long M = (long) trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY.getToken()) + 30000;
         M *= (1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
         double n = trd.getHolder().getOnlineMembers().size();
@@ -126,7 +126,7 @@ public class EnergyCore implements NBTSerializable {
         boolean isBodyNotWell = player.getActivePotionEffect(FHEffects.HYPERTHERMIA.get()) != null || player.getActivePotionEffect(FHEffects.HYPOTHERMIA.get()) != null;
         if (!isBodyNotWell) {
             double m;
-            TeamResearchData trd = ResearchDataAPI.getData(player).getData(SpecialDataTypes.RESEARCH_DATA);
+            TeamResearchData trd = ResearchDataAPI.getData(player);
             long M = (long) trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY.getToken()) + 30000;
             M *= (1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
             double dietValue = 0;

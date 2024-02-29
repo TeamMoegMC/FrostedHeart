@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.PriorityQueue;
 
-import com.teammoeg.frostedheart.research.SpecialDataHolder;
+import com.teammoeg.frostedheart.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.util.NBTSerializable;
 
 import blusunrize.immersiveengineering.common.util.Utils;

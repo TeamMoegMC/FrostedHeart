@@ -10,7 +10,6 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
 import com.teammoeg.frostedheart.scenario.parser.Node;
@@ -19,6 +18,7 @@ import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.evaluator.Evaluator;
 
@@ -68,10 +68,10 @@ public class ScenarioVM implements IScenarioThread{
     }
 
 	public ServerPlayerEntity getPlayer() {
-        return FHResearchDataManager.server.getPlayerList().getPlayerByUUID(player);
+        return SpecialDataManager.server.getPlayerList().getPlayerByUUID(player);
     }
 	public boolean isOfflined() {
-		return FHResearchDataManager.server.getPlayerList().getPlayerByUUID(player)==null;
+		return SpecialDataManager.server.getPlayerList().getPlayerByUUID(player)==null;
 	}
 	@Override
     public String getLang() {

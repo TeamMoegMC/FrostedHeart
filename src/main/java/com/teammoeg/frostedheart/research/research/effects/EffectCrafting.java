@@ -32,10 +32,10 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.research.ResearchListeners;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
@@ -87,7 +87,7 @@ public class EffectCrafting extends Effect {
                 initStack();
             }
         } else if (jo.has("recipes")) {
-            unlocks = SerializeUtil.parseJsonElmList(jo.get("recipes"), e -> FHResearchDataManager.getRecipeManager().getRecipe(new ResourceLocation(e.getAsString())).orElse(null));
+            unlocks = SerializeUtil.parseJsonElmList(jo.get("recipes"), e -> SpecialDataManager.getRecipeManager().getRecipe(new ResourceLocation(e.getAsString())).orElse(null));
             unlocks.removeIf(Objects::isNull);
         }
     }
@@ -98,7 +98,7 @@ public class EffectCrafting extends Effect {
         if (item == null) {
             itemStack = SerializeUtil.readOptional(pb, PacketBuffer::readItemStack).orElse(null);
             if (itemStack == null) {
-                unlocks = SerializeUtil.readList(pb, p -> FHResearchDataManager.getRecipeManager().getRecipe(p.readResourceLocation()).orElse(null));
+                unlocks = SerializeUtil.readList(pb, p -> SpecialDataManager.getRecipeManager().getRecipe(p.readResourceLocation()).orElse(null));
                 unlocks.removeIf(Objects::isNull);
             } else initStack();
         } else initItem();
@@ -106,7 +106,7 @@ public class EffectCrafting extends Effect {
 
     public EffectCrafting(ResourceLocation recipe) {
         super("@gui." + FHMain.MODID + ".effect.crafting", new ArrayList<>());
-        Optional<? extends IRecipe<?>> r = FHResearchDataManager.getRecipeManager().getRecipe(recipe);
+        Optional<? extends IRecipe<?>> r = SpecialDataManager.getRecipeManager().getRecipe(recipe);
 
         if (r.isPresent()) {
             unlocks.add(r.get());
@@ -187,7 +187,7 @@ public class EffectCrafting extends Effect {
 
     private void initItem() {
         unlocks.clear();
-        for (IRecipe<?> r : FHResearchDataManager.getRecipeManager().getRecipes()) {
+        for (IRecipe<?> r : SpecialDataManager.getRecipeManager().getRecipes()) {
             if (r.getRecipeOutput().getItem().equals(this.item)) {
                 unlocks.add(r);
             }
@@ -197,7 +197,7 @@ public class EffectCrafting extends Effect {
 
     private void initStack() {
         unlocks.clear();
-        for (IRecipe<?> r : FHResearchDataManager.getRecipeManager().getRecipes()) {
+        for (IRecipe<?> r : SpecialDataManager.getRecipeManager().getRecipes()) {
             if (r.getRecipeOutput().equals(item)) {
                 unlocks.add(r);
             }
@@ -221,7 +221,7 @@ public class EffectCrafting extends Effect {
         } else if (itemStack != null) {
             initStack();
         } else {
-            unlocks.replaceAll(o -> FHResearchDataManager.getRecipeManager().getRecipe(o.getId()).orElse(null));
+            unlocks.replaceAll(o -> SpecialDataManager.getRecipeManager().getRecipe(o.getId()).orElse(null));
             unlocks.removeIf(o -> o == null);
         }
     }
@@ -248,7 +248,7 @@ public class EffectCrafting extends Effect {
     public void setList(Collection<String> ls) {
         unlocks.clear();
         for (String s : ls) {
-            Optional<? extends IRecipe<?>> r = FHResearchDataManager.getRecipeManager().getRecipe(new ResourceLocation(s));
+            Optional<? extends IRecipe<?>> r = SpecialDataManager.getRecipeManager().getRecipe(new ResourceLocation(s));
 
             if (r.isPresent()) {
                 unlocks.add(r.get());

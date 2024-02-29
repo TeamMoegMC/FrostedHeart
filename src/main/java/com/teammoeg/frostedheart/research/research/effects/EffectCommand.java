@@ -27,10 +27,10 @@ import java.util.Map;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -107,8 +107,8 @@ public class EffectCommand extends Effect {
         overrides.put("z", pos.getZ());
 
         overrides.put("t", team.getHolder().getTeam().get().getStringID());
-        Commands cmds = FHResearchDataManager.server.getCommandManager();
-        CommandSource source = FHResearchDataManager.server.getCommandSource();
+        Commands cmds = SpecialDataManager.server.getCommandManager();
+        CommandSource source = SpecialDataManager.server.getCommandSource();
         for (String s : rewards) {
 
             for (Map.Entry<String, Object> entry : overrides.entrySet()) {

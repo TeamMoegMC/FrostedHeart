@@ -21,11 +21,10 @@ package com.teammoeg.frostedheart.research.api;
 
 import java.util.UUID;
 
-import com.teammoeg.frostedheart.research.SpecialDataTypes;
-import com.teammoeg.frostedheart.research.TeamDataHolder;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.team.SpecialDataTypes;
 
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.entity.player.PlayerEntity;
@@ -34,22 +33,22 @@ import net.minecraft.nbt.CompoundNBT;
 
 public class ResearchDataAPI {
 
-    public static TeamDataHolder getData(PlayerEntity id) {
+    public static TeamResearchData getData(PlayerEntity id) {
         if (id instanceof ServerPlayerEntity)
-            return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id));
+            return SpecialDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA);
        // return TeamResearchData.getClientInstance();
-        return null;
+        return ClientResearchDataAPI.getData();
     }
 
-    public static TeamDataHolder getData(UUID id) {
-        return FHResearchDataManager.INSTANCE.getData(id);
+    public static TeamResearchData getData(UUID id) {
+        return SpecialDataManager.INSTANCE.getData(id).getData(SpecialDataTypes.RESEARCH_DATA);
 
     }
 
     public static double getVariantDouble(PlayerEntity id, ResearchVariant name) {
         if (id instanceof ServerPlayerEntity)
-            return getVariantDouble(ResearchDataAPI.getData(id).getId(), name);
-        return TeamResearchData.getClientInstance().getVariants().getDouble(name.getToken());
+            return getData(id).getVariantDouble(name);
+        return ClientResearchDataAPI.getData().getVariantDouble(name);
 
     }
 
@@ -59,8 +58,8 @@ public class ResearchDataAPI {
 
     public static long getVariantLong(PlayerEntity id, ResearchVariant name) {
         if (id instanceof ServerPlayerEntity)
-            return getVariantLong(ResearchDataAPI.getData(id).getId(), name);
-        return TeamResearchData.getClientInstance().getVariants().getLong(name.getToken());
+            return getData(id).getVariantLong(name);
+        return ClientResearchDataAPI.getData().getVariantLong(name);
 
     }
 
@@ -70,13 +69,13 @@ public class ResearchDataAPI {
 
     public static CompoundNBT getVariants(PlayerEntity id) {
         if (id instanceof ServerPlayerEntity)
-            return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA).getVariants();
-        return TeamResearchData.getClientInstance().getVariants();
+            return getData(id).getVariants();
+        return ClientResearchDataAPI.getData().getVariants();
 
     }
     
     public static CompoundNBT getVariants(UUID id) {
-        TeamResearchData trd= FHResearchDataManager.INSTANCE.getData(id).getData(SpecialDataTypes.RESEARCH_DATA);
+        TeamResearchData trd= getData(id);
         if(trd!=null)
         	return trd.getVariants();
         return new CompoundNBT();
@@ -84,12 +83,12 @@ public class ResearchDataAPI {
     }
     public static void sendVariants(PlayerEntity id) {
         if (id instanceof ServerPlayerEntity)
-            FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA).sendVariantPacket();
+        	getData(id).sendVariantPacket();
 
     }
     
     public static void sendVariants(UUID id) {
-        TeamResearchData trd=FHResearchDataManager.INSTANCE.getData(id).getData(SpecialDataTypes.RESEARCH_DATA);
+        TeamResearchData trd=getData(id);
         if(trd!=null)
         	trd.sendVariantPacket();
 
@@ -98,18 +97,21 @@ public class ResearchDataAPI {
     
     public static boolean isResearchComplete(PlayerEntity id, String research) {
         if (id instanceof ServerPlayerEntity)
-            return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA).getData(research).isCompleted();
-        return TeamResearchData.getClientInstance().getData(research).isCompleted();
+            return SpecialDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA).getData(research).isCompleted();
+        return ClientResearchDataAPI.getData().getData(research).isCompleted();
     }
 
     public static void putVariantDouble(ServerPlayerEntity id, ResearchVariant name, double val) {
-        putVariantDouble(ResearchDataAPI.getData(id).getId(), name, val);
+    	getData(id).putVariantDouble(name, val);
+    	sendVariants(id);
     }
     public static void putVariantDouble(ServerPlayerEntity id, String name, double val) {
-        putVariantDouble(ResearchDataAPI.getData(id).getId(), name, val);
+    	getVariants(id).putDouble(name, val);
+    	sendVariants(id);
     }
     public static void putVariantDouble(UUID id, ResearchVariant name, double val) {
-    	putVariantDouble(id,name.getToken(), val);
+    	getData(id).putVariantDouble(name, val);
+    	sendVariants(id);
     }
     public static void putVariantDouble(UUID id, String name, double val) {
         getVariants(id).putDouble(name, val);
@@ -118,13 +120,16 @@ public class ResearchDataAPI {
 
 
     public static void putVariantLong(ServerPlayerEntity id, ResearchVariant name, long val) {
-        putVariantLong(ResearchDataAPI.getData(id).getId(), name, val);
+    	getData(id).putVariantLong(name, val);
+    	sendVariants(id);
     }
     public static void putVariantLong(ServerPlayerEntity id, String name, long val) {
-        putVariantLong(ResearchDataAPI.getData(id).getId(), name, val);
+    	getVariants(id).putDouble(name, val);
+    	sendVariants(id);
     }
     public static void putVariantLong(UUID id, ResearchVariant name, long val) {
-    	putVariantLong(id,name.getToken(), val);
+    	getData(id).putVariantLong(name, val);
+    	sendVariants(id);
     }
     public static void putVariantLong(UUID id, String name, long val) {
         getVariants(id).putLong(name, val);

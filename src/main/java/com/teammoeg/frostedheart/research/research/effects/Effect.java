@@ -31,16 +31,16 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.research.AutoIDItem;
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.SpecialDataTypes;
-import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.research.network.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.Writeable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -200,7 +200,7 @@ public abstract class Effect extends AutoIDItem implements Writeable{
     }
 
     private void deleteInTree() {
-        FHResearchDataManager.INSTANCE.getAllData().forEach(t -> {
+        SpecialDataManager.INSTANCE.getAllData().forEach(t -> {
             if (this.getRId() != 0) {
             	TeamResearchData trd=t.getData(SpecialDataTypes.RESEARCH_DATA);
                 revoke(trd);

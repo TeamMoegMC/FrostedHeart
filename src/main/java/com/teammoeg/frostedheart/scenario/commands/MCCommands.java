@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
@@ -13,6 +12,7 @@ import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.OrTrigger;
 import com.teammoeg.frostedheart.scenario.runner.target.VariantTargetTrigger;
 import com.teammoeg.frostedheart.scenario.runner.target.trigger.MovementTrigger;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
@@ -54,13 +54,13 @@ public class MCCommands {
 		overrides.put("x", pos.getX());
 		overrides.put("y", pos.getY());
 		overrides.put("z", pos.getZ());
-		OpEntry opent=FHResearchDataManager.server.getPlayerList().getOppedPlayers().getEntry(triggerPlayer.getGameProfile());
+		OpEntry opent=SpecialDataManager.server.getPlayerList().getOppedPlayers().getEntry(triggerPlayer.getGameProfile());
 		if(op>0)
 			if(opent==null){
-				FHResearchDataManager.server.getPlayerList().addOp(triggerPlayer.getGameProfile());
+				SpecialDataManager.server.getPlayerList().addOp(triggerPlayer.getGameProfile());
 			}
-		Commands cmds = FHResearchDataManager.server.getCommandManager();
-		CommandSource source = asp>0?triggerPlayer.getCommandSource():FHResearchDataManager.server.getCommandSource();
+		Commands cmds = SpecialDataManager.server.getCommandManager();
+		CommandSource source = asp>0?triggerPlayer.getCommandSource():SpecialDataManager.server.getCommandSource();
 		for (Map.Entry<String, Object> entry : overrides.entrySet()) {
 			if (entry.getValue() != null) {
 				s = s.replace("@" + entry.getKey(), entry.getValue().toString());
@@ -69,7 +69,7 @@ public class MCCommands {
 		cmds.handleCommand(source, s);
 		if(op>0)
 			if(opent==null){
-				FHResearchDataManager.server.getPlayerList().removeOp(triggerPlayer.getGameProfile());
+				SpecialDataManager.server.getPlayerList().removeOp(triggerPlayer.getGameProfile());
 			}
 	}
 }

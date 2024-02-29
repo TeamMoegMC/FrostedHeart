@@ -22,11 +22,12 @@ package com.teammoeg.frostedheart.research.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.SpecialDataTypes;
-import com.teammoeg.frostedheart.research.TeamDataHolder;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.research.effects.Effect;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.team.TeamDataHolder;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.network.PacketBuffer;
@@ -58,9 +59,9 @@ public class FHEffectProgressSyncPacket {
         context.get().enqueueWork(() -> {
             Effect e = FHResearch.effects.getById(id);
             if (data)
-                e.grant(TeamResearchData.getClientInstance(), null, false);
+                e.grant(ClientResearchDataAPI.getData(), null, false);
             else
-                e.revoke(TeamResearchData.getClientInstance());
+                e.revoke(ClientResearchDataAPI.getData());
             e.setGranted(data);
         });
         context.get().setPacketHandled(true);

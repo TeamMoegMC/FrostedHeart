@@ -36,10 +36,8 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.research.FHRegisteredItem;
 import com.teammoeg.frostedheart.research.FHRegistry;
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.SpecialDataTypes;
 import com.teammoeg.frostedheart.research.SpecialResearch;
-import com.teammoeg.frostedheart.research.TeamDataHolder;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
@@ -51,6 +49,9 @@ import com.teammoeg.frostedheart.research.research.clues.Clue;
 import com.teammoeg.frostedheart.research.research.clues.Clues;
 import com.teammoeg.frostedheart.research.research.effects.Effect;
 import com.teammoeg.frostedheart.research.research.effects.Effects;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.Writeable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -287,7 +288,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         deleteInTree();
         this.effects.forEach(Effect::deleteSelf);
         this.clues.forEach(Clue::deleteSelf);
-        FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
+        SpecialDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
 
         FHResearch.delete(this);
     }
@@ -392,7 +393,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      */
     @OnlyIn(Dist.CLIENT)
     public ResearchData getData() {
-        ResearchData rd = TeamResearchData.getClientInstance().getData(this);
+        ResearchData rd = ClientResearchDataAPI.getData().getData(this);
         if (rd == null)
             return ResearchData.EMPTY;
         return rd;
@@ -742,7 +743,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      */
     @OnlyIn(Dist.CLIENT)
     public void resetData() {
-        TeamResearchData.getClientInstance().resetData(this, false);
+    	ClientResearchDataAPI.getData().resetData(this, false);
     }
 
     /**
@@ -836,7 +837,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      */
     public void setNewId(String nid) {
         if (!id.equals(nid)) {
-            FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
+            SpecialDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
             deleteInTree();//clear all reference, hope this could work
             FHResearch.delete(this);
             this.setId(nid);

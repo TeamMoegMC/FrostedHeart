@@ -1,8 +1,9 @@
-package com.teammoeg.frostedheart.research;
+package com.teammoeg.frostedheart.team;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import com.teammoeg.frostedheart.util.NBTSerializable;
 
@@ -36,5 +37,11 @@ public class BaseDataHolder<T extends BaseDataHolder<T>> implements SpecialDataH
 	}
 	public NBTSerializable getDataRaw(SpecialDataType<?,?> cap){
 		return data.computeIfAbsent(cap.getId(),s->cap.createRaw(this));
+	}
+
+	@Override
+	public <U extends NBTSerializable> Optional<U> getOptional(SpecialDataType<U, T> cap) {
+		
+		return Optional.ofNullable((U)data.get(cap.getId()));
 	}
 }

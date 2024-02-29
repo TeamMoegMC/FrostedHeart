@@ -21,10 +21,11 @@ package com.teammoeg.frostedheart.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.research.SpecialDataTypes;
-import com.teammoeg.frostedheart.research.TeamDataHolder;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.team.TeamDataHolder;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.nbt.CompoundNBT;
@@ -54,7 +55,7 @@ public class FHResearchAttributeSyncPacket {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            TeamResearchData.getClientInstance().setVariants(this.data);
+        	ClientResearchDataAPI.getData().setVariants(this.data);
         });
         context.get().setPacketHandled(true);
     }

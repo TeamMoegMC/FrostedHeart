@@ -23,10 +23,10 @@ import java.util.Random;
 
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
-import com.teammoeg.frostedheart.research.SpecialDataHolder;
-import com.teammoeg.frostedheart.research.SpecialDataTypes;
-import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
+import com.teammoeg.frostedheart.team.SpecialDataHolder;
+import com.teammoeg.frostedheart.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.util.RegistryUtils;

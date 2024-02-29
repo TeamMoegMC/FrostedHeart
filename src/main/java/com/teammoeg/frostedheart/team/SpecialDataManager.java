@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.data;
+package com.teammoeg.frostedheart.team;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,33 +30,34 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.io.FileUtils;
+
 import com.mojang.authlib.GameProfile;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.TeamDataHolder;
+import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.io.FileUtil;
-
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.world.storage.FolderName;
-import net.minecraftforge.common.util.Lazy;
 
-public class FHResearchDataManager {
+public class SpecialDataManager {
     public static MinecraftServer server;
-    static final FolderName dataFolder = new FolderName("fhresearch");
-    public static FHResearchDataManager INSTANCE;
-    Path local;
-    File regfile;
+    static final FolderName dataFolder = new FolderName("fhdata");
+    static final FolderName OlddataFolder = new FolderName("fhresearch");
+    public static SpecialDataManager INSTANCE;
     private Map<UUID, UUID> dataByFTBId = new HashMap<>();
     private Map<UUID, TeamDataHolder> dataByResearchId = new HashMap<>();
     
@@ -66,7 +67,7 @@ public class FHResearchDataManager {
         return ClientUtils.mc().world.getRecipeManager();
     }
 
-    public FHResearchDataManager(MinecraftServer s) {
+    public SpecialDataManager(MinecraftServer s) {
         server = s;
         INSTANCE = this;
     }
@@ -74,7 +75,19 @@ public class FHResearchDataManager {
     public Collection<TeamDataHolder> getAllData() {
         return dataByResearchId.values();
     }
+    public <T extends NBTSerializable> Stream<T> getAllData(SpecialDataType<T,TeamDataHolder> type) {
+        return dataByResearchId.values().stream().map(t->t.getOptional(type)).filter(t->t.isPresent()).map(t->t.get());
+    }
+    public static TeamDataHolder getDataByTeam(Team team) {
+    	return INSTANCE.getData(team);
+    }
+    public static TeamDataHolder getDataByRid(UUID id) {
+    	return INSTANCE.getData(id);
+    }
 
+	public static TeamDataHolder getData(PlayerEntity player) {
+		return INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)player));
+	}
     /*
      * get Team data as well as check ownership.
      *
@@ -115,31 +128,19 @@ public class FHResearchDataManager {
     }
 
     public void load() {
-        FHResearch.editor = false;
-        local = server.func_240776_a_(dataFolder);
-        regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
-        FHResearch.clearAll();
-        if (regfile.exists()) {
-            try {
-                FHResearch.load(CompressedStreamTools.readCompressed(regfile));
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-                FHMain.LOGGER.fatal("CANNOT READ RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
-
-            }
-        }
         dataByFTBId.clear();
-        FHResearch.init();
+        Path local=server.func_240776_a_(dataFolder);
         local.toFile().mkdirs();
-        for (File f : local.toFile().listFiles((f) -> f.getName().endsWith(".nbt"))) {
+        Path olocal=server.func_240776_a_(OlddataFolder);
+        Stream.concat(Arrays.stream(olocal.toFile().listFiles((f) -> f.getName().endsWith(".nbt"))),Arrays.stream(local.toFile().listFiles((f) -> f.getName().endsWith(".nbt"))))
+        .forEach(f->{
             UUID tud;
             try {
                 try {
                     tud = UUID.fromString(f.getName().split("\\.")[0]);
                 } catch (IllegalArgumentException ex) {
                     FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
-                    continue;
+                    return;
                 }
                 
                 CompoundNBT nbt = CompressedStreamTools.readCompressed(f);
@@ -154,41 +155,16 @@ public class FHResearchDataManager {
             } catch (IllegalArgumentException ex) {
                 ex.printStackTrace();
                 FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
-                continue;
+                return;
             } catch (IOException e) {
                 e.printStackTrace();
                 FHMain.LOGGER.error("Unable to read data file " + f.getName() + ", ignoring...");
             }
-        }
-
-        try {
-            File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
-            if (dbg.exists() && FileUtil.readString(dbg).equals("true"))
-                FHResearch.editor = true;
-        } catch (IOException e2) {
-            // TODO Auto-generated catch block
-            e2.printStackTrace();
-        }
+        });
     }
 
     public void save() {
-        File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
-        try {
-            if (FHResearch.isEditor())
-                FileUtil.transfer("true", dbg);
-            else if (dbg.exists())
-                FileUtil.transfer("false", dbg);
-        } catch (IOException e2) {
-            // TODO Auto-generated catch block
-            e2.printStackTrace();
-        }
-        try {
-            CompressedStreamTools.writeCompressed(FHResearch.save(new CompoundNBT()), regfile);
-        } catch (IOException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-            FHMain.LOGGER.fatal("CANNOT SAVE RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
-        }
+    	Path local=server.func_240776_a_(dataFolder);
         Set<String> files = new HashSet<>(Arrays.asList(local.toFile().list((d, s) -> s.endsWith(".nbt"))));
         for (Entry<UUID, TeamDataHolder> entry : dataByResearchId.entrySet()) {
             String fn = entry.getKey().toString() + ".nbt";
@@ -205,6 +181,15 @@ public class FHResearchDataManager {
         for (String todel : files) {
             local.resolve(todel).toFile().delete();
         }
+        Path olocal=server.func_240776_a_(OlddataFolder);
+        if(olocal.toFile().exists()) {
+        	try {
+				FileUtils.deleteDirectory(olocal.toFile());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
     }
 
     public void transfer(UUID orig, Team team) {
@@ -217,4 +202,5 @@ public class FHResearchDataManager {
         dataByFTBId.put(team.getId(), rid);
 
     }
+
 }

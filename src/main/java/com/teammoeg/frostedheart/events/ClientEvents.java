@@ -51,6 +51,7 @@ import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.scenario.network.ClientLinkClickedPacket;
+import com.teammoeg.frostedheart.team.ClientDataHolder;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -99,6 +100,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
@@ -371,6 +373,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void fireLogin(LoggedInEvent event) {
         FHScenarioClient.sendInitializePacket = true;
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ClientDataHolder.INSTANCE::reset);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)

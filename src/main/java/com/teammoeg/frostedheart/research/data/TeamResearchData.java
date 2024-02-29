@@ -37,8 +37,6 @@ import com.teammoeg.frostedheart.research.ResearchListeners.BlockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.CategoryUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.MultiblockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.RecipeUnlockList;
-import com.teammoeg.frostedheart.research.SpecialDataHolder;
-import com.teammoeg.frostedheart.research.TeamDataHolder;
 import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchAttributeSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
@@ -46,6 +44,8 @@ import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.research.research.clues.Clue;
 import com.teammoeg.frostedheart.research.research.effects.Effect;
+import com.teammoeg.frostedheart.team.SpecialDataHolder;
+import com.teammoeg.frostedheart.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 
@@ -72,8 +72,6 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * @date 2022/9/2
  */
 public class TeamResearchData implements NBTSerializable{
-	private static TeamResearchData INSTANCE = new TeamResearchData(null);
-
     /**
      * The clue complete.<br>
      */
@@ -121,33 +119,6 @@ public class TeamResearchData implements NBTSerializable{
      */
     public CategoryUnlockList categories = new CategoryUnlockList();
 
-    /**
-     * Get client instance.
-     *
-     * @return client instance<br>
-     */
-    @OnlyIn(Dist.CLIENT)
-    public static TeamResearchData getClientInstance() {
-        return INSTANCE;
-    }
-
-    /**
-     * Reset client instance.
-     */
-    public static void resetClientInstance() {
-        INSTANCE = new TeamResearchData(null);
-    }
-
-    /**
-     * set active research.
-     *
-     * @param id value to set active research to.
-     */
-    @OnlyIn(Dist.CLIENT)
-    public static void setActiveResearch(int id) {
-        INSTANCE.activeResearchId = id;
-
-    }
     TeamDataHolder holder;
     public TeamResearchData(TeamDataHolder team) {
     	holder=team;
@@ -498,7 +469,10 @@ public class TeamResearchData implements NBTSerializable{
     public void setClueTriggered(String lid, boolean trig) {
         setClueTriggered(FHResearch.clues.getByName(lid), trig);
     }
-
+    @OnlyIn(Dist.CLIENT)
+    public void setCurrentResearch(int id) {
+    	this.activeResearchId=id;
+    }
     /**
      * set current research.
      *
@@ -646,5 +620,8 @@ public class TeamResearchData implements NBTSerializable{
 
 	public TeamDataHolder getHolder() {
 		return holder;
+	}
+	public UUID getId() {
+		return holder.getId();
 	}
 }

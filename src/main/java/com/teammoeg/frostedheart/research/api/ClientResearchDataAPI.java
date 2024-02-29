@@ -20,6 +20,8 @@
 package com.teammoeg.frostedheart.research.api;
 
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.team.ClientDataHolder;
+import com.teammoeg.frostedheart.team.SpecialDataTypes;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.api.distmarker.Dist;
@@ -30,13 +32,13 @@ public class ClientResearchDataAPI {
 
     @OnlyIn(Dist.CLIENT)
     public static TeamResearchData getData() {
-        return TeamResearchData.getClientInstance();
+        return ClientDataHolder.INSTANCE.getInstance().getData(SpecialDataTypes.RESEARCH_DATA);
 
     }
 
     @OnlyIn(Dist.CLIENT)
     public static CompoundNBT getVariants() {
-        return TeamResearchData.getClientInstance().getVariants();
+        return getData().getVariants();
 
     }
 
