@@ -92,7 +92,7 @@ public class FHRecipeProvider extends RecipeProvider {
 						ResourceLocation item=new ResourceLocation(parts[0]);
 						Item it=RegistryUtils.getItem(item);
 						if(it==null||it==Items.AIR) {
-							FHMain.LOGGER.info("TWR Recipe: " + item + " not exist");
+							FHMain.LOGGER.warn("TWR Recipe: " + item + " not exist");
 							ps.println(item+","+parts[1]);
 						}else {
 							Food f=it.getFood();
