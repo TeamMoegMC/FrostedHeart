@@ -41,6 +41,9 @@ import net.minecraftforge.common.util.Constants;
 
 /**
  * Town data for a whole team.
+ *
+ * It maintains town resources, worker data, and holds a team data
+ * when initialized.
  */
 public class TeamTownData implements NBTSerializable{
 	/**
@@ -60,6 +63,11 @@ public class TeamTownData implements NBTSerializable{
     }
 
 
+    /**
+     * Get the work data of the town block. (Not the TownWorkerData)
+     * @param pos position of the block
+     * @return the work data
+     */
     public CompoundNBT getTownBlockData(BlockPos pos) {
         TownWorkerData twd = blocks.get(pos);
         if (twd == null)
@@ -67,17 +75,32 @@ public class TeamTownData implements NBTSerializable{
         return twd.getWorkData();
     }
 
-    public void registerTownBlock(BlockPos pos, ITownBlockTE tile) {
+    /**
+     * Initializes new TownWorkerData from the tile entity.
+     * Put the data into the map.
+     *
+     * @param pos position of the block
+     * @param tile the tile entity associated with the block
+     */
+    public void registerTownBlock(BlockPos pos, TownTileEntity tile) {
         TownWorkerData data = blocks.computeIfAbsent(pos, TownWorkerData::new);
         data.fromBlock(tile);
     }
 
+    /**
+     * Remove the town block from the map.
+     *
+     * @param pos position of the block
+     */
     public void removeTownBlock(BlockPos pos) {
         blocks.remove(pos);
     }
 
     /**
-     * This tick only works per 20 tick.
+     * Town logic update (every 20 ticks).
+     * This method first validates the town blocks, then sorts them by priority and calls the work methods.
+     *
+     * @param world server world instance
      */
     public void tick(ServerWorld world) {
         PriorityQueue<TownWorkerData> pq = new PriorityQueue<TownWorkerData>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
@@ -89,7 +112,7 @@ public class TeamTownData implements NBTSerializable{
                 BlockState bs = world.getBlockState(pos);
                 TileEntity te = Utils.getExistingTileEntity(world, pos);
                 TownWorkerType twt = v.getType();
-                if (twt.getBlock() != bs.getBlock() || te == null || !(te instanceof ITownBlockTE) || !((ITownBlockTE) te).isWorkValid()) {
+                if (twt.getBlock() != bs.getBlock() || te == null || !(te instanceof TownTileEntity) || !((TownTileEntity) te).isWorkValid()) {
                     return true;
                 }
             }

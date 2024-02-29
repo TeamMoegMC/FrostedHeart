@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.town.house;
 
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.town.ITownBlockTE;
+import com.teammoeg.frostedheart.town.TownTileEntity;
 import com.teammoeg.frostedheart.town.TownWorkerType;
 import com.teammoeg.frostedheart.town.resident.Resident;
 import com.teammoeg.frostedheart.util.BlockScanner;
@@ -31,15 +31,13 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.teammoeg.frostedheart.town.house.HouseBlockScanner.isHouseBlock;
 
 /**
  * A house in the town.
  */
-public class HouseTileEntity extends TileEntity implements ITownBlockTE {
+public class HouseTileEntity extends TileEntity implements TownTileEntity {
 
     public static final double COMFORTABLE_TEMP = 24;
     //public static final int OPTIMAL_VOLUME = 100;

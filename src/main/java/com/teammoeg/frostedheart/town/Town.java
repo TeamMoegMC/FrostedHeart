@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.town;
 import java.util.Optional;
 
 /**
- * Interface for accessing town data
+ * Interface for accessing town data.
  */
 public interface Town {
     /**
@@ -86,7 +86,6 @@ public interface Town {
     /**
      * Gets the team town data, may be null if not a player team.
      *
-     * @param name the resouce type
      * @return resource amount
      */
     Optional<TeamTownData> getTownData();

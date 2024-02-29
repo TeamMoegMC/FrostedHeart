@@ -24,7 +24,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
-
+/**
+ * The town for a player team.
+ */
 public class PlayerTown implements Town {
     Map<TownResourceType, Integer> storage;
     Map<TownResourceType, Integer> backupStorage;

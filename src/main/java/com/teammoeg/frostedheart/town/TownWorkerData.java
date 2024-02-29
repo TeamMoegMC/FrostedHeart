@@ -25,6 +25,18 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
 
+/**
+ * Data for a worker (town block) in the town.
+ *
+ * A TownWorkerData is the basic data component in a TeamTownData.
+ * It specifies the type of worker, the position of worker, the work data.
+ *
+ * The work data is especially important, as it stores additional data that
+ * should be synced with the entire town. It is an interface between the town
+ * and the worker.
+ *
+ * There can be multiple worker data with the same worker type.
+ */
 public class TownWorkerData {
     private TownWorkerType type;
     private BlockPos pos;
@@ -57,7 +69,7 @@ public class TownWorkerData {
         return type.getWorker().firstWork(resource, workData);
     }
 
-    public void fromBlock(ITownBlockTE te) {
+    public void fromBlock(TownTileEntity te) {
         type = te.getWorker();
         workData = te.getWorkData();
         priority = te.getPriority();
@@ -96,8 +108,8 @@ public class TownWorkerData {
     public void setData(ServerWorld w) {
         if (loaded) {
             TileEntity te = Utils.getExistingTileEntity(w, pos);
-            if (te instanceof ITownBlockTE) {
-                ((ITownBlockTE) te).setWorkData(workData);
+            if (te instanceof TownTileEntity) {
+                ((TownTileEntity) te).setWorkData(workData);
             }
         }
     }

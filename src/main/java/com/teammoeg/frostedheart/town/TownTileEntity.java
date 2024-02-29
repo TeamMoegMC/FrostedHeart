@@ -21,7 +21,12 @@ package com.teammoeg.frostedheart.town;
 
 import net.minecraft.nbt.CompoundNBT;
 
-public interface ITownBlockTE {
+/**
+ * A town block's tile entity.
+ *
+ * Should be implemented by tile entities that are associated with town blocks.
+ */
+public interface TownTileEntity {
     int getPriority();
 
     TownWorkerType getWorker();
