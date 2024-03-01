@@ -68,7 +68,7 @@ public class Resident {
         return data;
     }
 
-    public void deserialize(CompoundNBT data) {
+    public Resident deserialize(CompoundNBT data) {
         firstName = data.getString("firstName");
         lastName = data.getString("lastName");
         health = data.getInt("health");
@@ -78,6 +78,7 @@ public class Resident {
         trust = data.getInt("trust");
         culture = data.getInt("culture");
         educationLevel = data.getInt("educationLevel");
+        return null;
     }
 
 }

@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.town.TownWorkerType;
 import com.teammoeg.frostedheart.town.resident.Resident;
 import com.teammoeg.frostedheart.util.BlockScanner;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
@@ -105,9 +106,11 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
     @Override
     public CompoundNBT getWorkData() {
         CompoundNBT data = new CompoundNBT();
-        for (int i = 0; i < residents.size(); i++) {
-            data.put("resident" + i, residents.get(i).serialize());
+        ListNBT residentList = new ListNBT();
+        for (Resident resident : residents) {
+            residentList.add(resident.serialize());
         }
+        data.put("residents", residentList);
         data.putInt("size", size);
         data.putDouble("temperature", temperature);
         data.putInt("volume", volume);
@@ -120,10 +123,9 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
     @Override
     public void setWorkData(CompoundNBT data) {
         residents = new ArrayList<>();
-        for (int i = 0; i < size; i++) {
-            Resident resident = new Resident();
-            resident.deserialize(data.getCompound("resident" + i));
-            residents.add(resident);
+        ListNBT residentList = data.getList("residents", 10);
+        for (int i = 0; i < residentList.size(); i++) {
+            residents.add(new Resident().deserialize(residentList.getCompound(i)));
         }
         size = data.getInt("size");
         temperature = data.getDouble("temperature");
