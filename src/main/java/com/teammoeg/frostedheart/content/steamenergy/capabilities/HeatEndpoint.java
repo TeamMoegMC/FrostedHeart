@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.steamenergy.capabilities;
 
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
-import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;

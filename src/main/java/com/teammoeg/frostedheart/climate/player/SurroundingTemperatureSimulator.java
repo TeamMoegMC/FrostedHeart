@@ -230,7 +230,7 @@ public class SurroundingTemperatureSimulator {
                 bm.setZ((int) qz[i]);
                 BlockPos bp=bm.toImmutable();
                 heat += getHeat(bp)
-                        * MathHelper.lerp(MathHelper.clamp(vy[vid[i]], 0, 0.4) * 2.5, 1, 0.5); // add heat
+                        * MathHelper.lerp(MathHelper.clamp(-vy[vid[i]], 0, 0.4) * 2.5, 1, 0.5); // add heat
                 wind +=getAir(bp)?MathHelper.lerp((MathHelper.clamp(Math.abs(vy[vid[i]]), 0.2, 0.8)-0.2)/0.6, 2, 0.5):0;
             }
         }

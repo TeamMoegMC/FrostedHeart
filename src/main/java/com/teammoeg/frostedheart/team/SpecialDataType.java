@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.team;
 import java.util.Objects;
 import java.util.function.Function;
 
-import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 public class SpecialDataType<T extends NBTSerializable,U extends SpecialDataHolder<U>>{
 	String id;

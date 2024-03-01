@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.util.OptionalLazy;
@@ -34,6 +33,7 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 	@Override
 	public void load(CompoundNBT nbt, boolean isPacket) {
 		super.load(nbt, isPacket);
+		//Compatible migration from old data folder
 		if(nbt.contains("researches")) {
 			this.getData(SpecialDataTypes.RESEARCH_DATA).deserialize(nbt, isPacket);
 		}

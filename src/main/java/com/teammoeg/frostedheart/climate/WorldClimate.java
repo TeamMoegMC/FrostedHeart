@@ -40,7 +40,7 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.climate.DayTemperatureData.HourData;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.events.CommonEvents;
-import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;

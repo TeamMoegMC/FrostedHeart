@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;

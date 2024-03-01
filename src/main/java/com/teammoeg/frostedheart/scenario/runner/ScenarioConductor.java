@@ -33,7 +33,7 @@ import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
-import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;

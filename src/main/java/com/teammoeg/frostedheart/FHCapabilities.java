@@ -14,7 +14,7 @@ import com.teammoeg.frostedheart.content.foods.dailykitchen.WantedFoodCapability
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
-import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraftforge.common.util.NonNullSupplier;
 

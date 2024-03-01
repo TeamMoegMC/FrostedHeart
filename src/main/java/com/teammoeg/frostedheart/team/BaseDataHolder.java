@@ -3,9 +3,10 @@ package com.teammoeg.frostedheart.team;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 
-import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
+
+import java.util.Optional;
 
 import net.minecraft.nbt.CompoundNBT;
 

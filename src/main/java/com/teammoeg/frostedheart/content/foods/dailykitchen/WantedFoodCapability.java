@@ -42,8 +42,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraft.item.Item;
 import net.minecraft.nbt.CompoundNBT;

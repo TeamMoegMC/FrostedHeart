@@ -39,7 +39,6 @@ import com.google.gson.JsonPrimitive;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.Writeable;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.ByteArrayNBT;

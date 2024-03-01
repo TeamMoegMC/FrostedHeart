@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.climate.chunkheatdata;
 
-import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;

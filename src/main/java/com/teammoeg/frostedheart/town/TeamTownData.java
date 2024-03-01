@@ -24,7 +24,7 @@ import java.util.Map.Entry;
 
 import com.teammoeg.frostedheart.team.TeamDataHolder;
 import com.teammoeg.frostedheart.town.resident.Resident;
-import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import dev.ftb.mods.ftbteams.data.Team;
