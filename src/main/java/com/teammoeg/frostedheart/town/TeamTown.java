@@ -26,16 +26,25 @@ import java.util.Optional;
 
 /**
  * The town for a player team.
+ *
+ * The TeamTown is only an interface of the underlying TeamTownData.
+ * You may use this to access or modify town data.
  */
-public class PlayerTown implements Town {
+public class TeamTown implements Town {
+    /** Linked to town data resources. */
     Map<TownResourceType, Integer> storage;
+    /** Linked to town data backup resources. */
     Map<TownResourceType, Integer> backupStorage;
+    /** Service, only live in one tick cycle. */
     Map<TownResourceType, Integer> service = new EnumMap<>(TownResourceType.class);
+    /** Costed service, only live in one tick cycle. */
     Map<TownResourceType, Integer> costedService = new EnumMap<>(TownResourceType.class);
+    /** Max storage, only live in one tick cycle. */
     Map<TownResourceType, Integer> maxStorage = new EnumMap<>(TownResourceType.class);
+    /** The town data, actual data stored on disk. */
     TeamTownData town;
 
-    public PlayerTown(TeamTownData td) {
+    public TeamTown(TeamTownData td) {
         super();
         this.storage = td.resources;
         this.backupStorage = td.backupResources;

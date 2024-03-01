@@ -77,6 +77,7 @@ import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.town.TeamTownDataS2CPacket;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
@@ -85,7 +86,6 @@ import com.teammoeg.frostedheart.world.FHStructureFeatures;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -705,11 +705,11 @@ public class CommonEvents {
 
             // Scenario runner
             ScenarioConductor runner=FHScenario.getNullable(player);
-            if(runner != null && runner.isInited())
+            if (runner != null && runner.isInited())
             	runner.tick();
 
             // Heat network statistics update
-            if(player.openContainer instanceof HeatStatContainer) {
+            if (player.openContainer instanceof HeatStatContainer) {
             	((HeatStatContainer)player.openContainer).tick();
             }
 
@@ -724,6 +724,9 @@ public class CommonEvents {
                 else
                     player.sendStatusMessage(GuiUtils.translateMessage("energy.lack." + messageNum), false);
             }
+
+            // Town data sync (currently, every tick for debug)
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new TeamTownDataS2CPacket(player));
         }
     }
     @SubscribeEvent

@@ -121,7 +121,7 @@ public class TeamTownData implements NBTSerializable{
         for (TownWorkerData v : blocks.values()) {
             pq.add(v);
         }
-        PlayerTown itt = new PlayerTown(this);
+        TeamTown itt = new TeamTown(this);
         for (TownWorkerData t : pq) {
             t.firstWork(itt);
         }
