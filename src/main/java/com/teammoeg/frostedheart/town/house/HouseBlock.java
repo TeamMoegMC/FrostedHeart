@@ -19,13 +19,20 @@
 
 package com.teammoeg.frostedheart.town.house;
 
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.generator.GeneratorData;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.town.TeamTownData;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
@@ -39,6 +46,7 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Random;
 
 /**
@@ -87,5 +95,24 @@ public class HouseBlock extends FHBaseBlock {
             return ActionResultType.SUCCESS;
         }
         return ActionResultType.PASS;
+    }
+
+    @Override
+    public void onBlockPlacedBy(World world, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.onBlockPlacedBy(world, pos, state, entity, stack);
+        HouseTileEntity te = (HouseTileEntity) Utils.getExistingTileEntity(world, pos);
+        if (te != null) {
+            // register the house to the town
+            if (entity instanceof PlayerEntity) {
+                TeamTownData townData = SpecialDataManager.get((PlayerEntity) entity).getData(SpecialDataTypes.TOWN_DATA);
+                GeneratorData generatorData = SpecialDataManager.get((PlayerEntity) entity).getData(SpecialDataTypes.GENERATOR_DATA);
+                BlockPos generatorPos = generatorData.actualPos;
+                // check if the house is in generator range
+                float range = generatorData.RLevel;
+                if (generatorPos.distanceSq(pos) <= range * range) {
+                    townData.registerTownBlock(pos, te);
+                }
+            }
+        }
     }
 }
