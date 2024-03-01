@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.town;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.base.network.NBTMessage;
+import com.teammoeg.frostedheart.team.ClientDataHolder;
 import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -47,10 +48,7 @@ public class TeamTownDataS2CPacket extends NBTMessage {
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            PlayerEntity player = ClientUtils.getPlayer();
-            if (player != null) {
-                SpecialDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA).deserializeNBT(super.getTag());
-            }
+            ClientDataHolder.INSTANCE.getInstance().getData(SpecialDataTypes.TOWN_DATA).deserialize(getTag(), true);
         });
         context.get().setPacketHandled(true);
     }

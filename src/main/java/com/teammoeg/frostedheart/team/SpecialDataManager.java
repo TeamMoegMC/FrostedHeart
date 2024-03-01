@@ -45,6 +45,7 @@ import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.crafting.RecipeManager;
@@ -56,7 +57,7 @@ import net.minecraft.world.storage.FolderName;
 
 /**
  * The data manager for all team data.
- *
+ * use {@link ClientDataHolder} to get data in client
  * Normally, use
  * get(PlayerEntity player) to get the data for a player's team.
  * get(Team team) to get the data for FTB team.
@@ -118,12 +119,13 @@ public class SpecialDataManager {
     }
 
     /**
-     * Get the data for a player's team.
+     * Get the data for a player's team, should not call in client
      * @param player the player
      * @return the data
      */
 	public static TeamDataHolder get(PlayerEntity player) {
 		return INSTANCE.get(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)player));
+		
 	}
 
     /**

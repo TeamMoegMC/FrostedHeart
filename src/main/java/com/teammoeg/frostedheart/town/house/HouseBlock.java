@@ -35,6 +35,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
@@ -111,7 +112,7 @@ public class HouseBlock extends FHBaseBlock {
         HouseTileEntity te = (HouseTileEntity) Utils.getExistingTileEntity(world, pos);
         if (te != null) {
             // register the house to the town
-            if (entity instanceof PlayerEntity) {
+            if (entity instanceof ServerPlayerEntity) {
                 TeamTownData townData = SpecialDataManager.get((PlayerEntity) entity).getData(SpecialDataTypes.TOWN_DATA);
                 GeneratorData generatorData = SpecialDataManager.get((PlayerEntity) entity).getData(SpecialDataTypes.GENERATOR_DATA);
                 BlockPos generatorPos = generatorData.actualPos;
