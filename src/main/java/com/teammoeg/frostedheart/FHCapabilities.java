@@ -33,6 +33,10 @@ public class FHCapabilities {
 		for(FHCapability<?> cap:capabilities)
 			cap.setup();
 	}
+	/**
+	 * register capability with class, using no-arg constructor as default factory
+	 * 
+	 * */
 	public static <T extends NBTSerializable> FHCapability<T> register(Class<T> capClass){
 		Constructor<T> ctor;
 		try {
@@ -60,6 +64,7 @@ public class FHCapabilities {
 		capabilities.add(cap);
 		return cap;
 	}
+
 	public static <T extends NBTSerializable> FHCapability<T> register(Class<T> capClass,NonNullSupplier<T> sup){
 		FHCapability<T> cap=new FHCapability<>(capClass,sup);
 		capabilities.add(cap);
