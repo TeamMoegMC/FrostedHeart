@@ -24,12 +24,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.climate.network.FHTemperatureDisplayPacket;
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
-import com.teammoeg.frostedheart.network.FHMessage;
 import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.research.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHDrawingDeskOperationPacket;

@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.network;
+package com.teammoeg.frostedheart.base.network;
 
 import java.util.function.Supplier;
 

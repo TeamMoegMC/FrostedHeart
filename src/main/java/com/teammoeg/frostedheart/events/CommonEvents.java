@@ -58,8 +58,6 @@ import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
-import com.teammoeg.frostedheart.recipe.FHRecipeCachingReloadListener;
-import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;

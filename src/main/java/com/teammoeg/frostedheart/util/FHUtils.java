@@ -23,7 +23,7 @@ import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.capability.FHCapability;
+import com.teammoeg.frostedheart.base.capability.FHCapability;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;

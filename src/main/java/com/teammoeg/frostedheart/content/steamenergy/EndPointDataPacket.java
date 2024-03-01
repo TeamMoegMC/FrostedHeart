@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.steamenergy;
 import java.util.Collection;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.network.FHMessage;
+import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.trade.ClientHeatHandler;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 

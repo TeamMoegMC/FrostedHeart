@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.research.network;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.network.NBTMessage;
-import com.teammoeg.frostedheart.network.NullableNBTMessage;
+import com.teammoeg.frostedheart.base.network.NBTMessage;
+import com.teammoeg.frostedheart.base.network.NullableNBTMessage;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;

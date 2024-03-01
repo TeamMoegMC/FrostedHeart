@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.scenario.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.network.FHMessage;
+import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 
 import net.minecraft.network.PacketBuffer;

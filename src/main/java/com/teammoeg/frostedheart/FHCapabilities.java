@@ -5,7 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.teammoeg.frostedheart.capability.FHCapability;
+import com.teammoeg.frostedheart.base.capability.FHCapability;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;

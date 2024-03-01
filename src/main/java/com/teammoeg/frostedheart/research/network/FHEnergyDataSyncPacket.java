@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.network.NBTMessage;
+import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 

@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.capability;
+package com.teammoeg.frostedheart.base.capability;
 
 import com.teammoeg.frostedheart.util.NBTSerializable;
 

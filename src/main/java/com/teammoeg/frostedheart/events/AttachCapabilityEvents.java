@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.capability.CurioCapabilityProvider;
+import com.teammoeg.frostedheart.base.capability.CurioCapabilityProvider;
 import com.teammoeg.frostedheart.climate.ArmorTempCurios;
 import com.teammoeg.frostedheart.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;

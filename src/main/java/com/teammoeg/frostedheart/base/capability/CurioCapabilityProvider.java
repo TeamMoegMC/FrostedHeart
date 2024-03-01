@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.capability;
+package com.teammoeg.frostedheart.base.capability;
 
 import net.minecraft.util.Direction;
 import net.minecraftforge.common.capabilities.Capability;
