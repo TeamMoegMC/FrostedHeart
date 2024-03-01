@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.town.house;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
@@ -109,6 +110,7 @@ public class HouseBlock extends FHBaseBlock {
                 BlockPos generatorPos = generatorData.actualPos;
                 // check if the house is in generator range
                 float range = generatorData.RLevel;
+                FHMain.LOGGER.debug("Generator range: " + range);
                 if (generatorPos.distanceSq(pos) <= range * range) {
                     townData.registerTownBlock(pos, te);
                 }
