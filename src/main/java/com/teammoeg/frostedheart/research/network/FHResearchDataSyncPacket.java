@@ -21,15 +21,10 @@ package com.teammoeg.frostedheart.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.climate.network.FHMessage;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
+import com.teammoeg.frostedheart.network.NBTMessage;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.team.TeamDataHolder;
-
-import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.api.distmarker.Dist;
@@ -37,29 +32,24 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when player join
-public class FHResearchDataSyncPacket implements FHMessage {
-    private final CompoundNBT data;
+public class FHResearchDataSyncPacket extends NBTMessage {
 
     public FHResearchDataSyncPacket(CompoundNBT data) {
-        super();
-        this.data = data;
+        super(data);
     }
 
     public FHResearchDataSyncPacket(PacketBuffer buffer) {
-        data = buffer.readCompoundTag();
+        super(buffer);
     }
 
     public FHResearchDataSyncPacket(TeamResearchData team) {
-        this.data = team.serialize(true);
+        super(team.serialize(true));
     }
 
-    public void encode(PacketBuffer buffer) {
-        buffer.writeCompoundTag(data);
-    }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            ClientResearchDataAPI.getData().deserialize(data, true);
+            ClientResearchDataAPI.getData().deserialize(this.getTag(), true);
             DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::syncJEI);
         });
         context.get().setPacketHandled(true);

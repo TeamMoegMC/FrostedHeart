@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.climate.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.network.NBTMessage;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.entity.player.PlayerEntity;
@@ -32,21 +33,16 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class FHBodyDataSyncPacket implements FHMessage {
-    private final CompoundNBT data;
-
-    public FHBodyDataSyncPacket(PacketBuffer buffer) {
-        data = buffer.readCompoundTag();
-    }
-
+public class FHBodyDataSyncPacket extends NBTMessage {
     public FHBodyDataSyncPacket(PlayerEntity pe) {
-        this.data = PlayerTemperatureData.getCapability(pe).map(t->t.serializeNBT()).orElseGet(CompoundNBT::new);
+        super(PlayerTemperatureData.getCapability(pe).map(t->t.serializeNBT()).orElseGet(CompoundNBT::new));
     }
 
-	@Override
-	public void encode(PacketBuffer buffer) {
-        buffer.writeCompoundTag(data);
-    }
+
+	public FHBodyDataSyncPacket(PacketBuffer buffer) {
+		super(buffer);
+	}
+
 
 	@Override
 	public void handle(Supplier<NetworkEvent.Context> context) {
@@ -55,7 +51,7 @@ public class FHBodyDataSyncPacket implements FHMessage {
             World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getWorld);
             PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
             if (world != null) {
-            	PlayerTemperatureData.getCapability(player).ifPresent(t->t.deserializeNBT(data));
+            	PlayerTemperatureData.getCapability(player).ifPresent(t->t.deserializeNBT(super.getTag()));
             }
         });
         context.get().setPacketHandled(true);

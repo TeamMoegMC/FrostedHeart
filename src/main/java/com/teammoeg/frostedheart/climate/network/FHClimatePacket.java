@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.client.ClientClimateData;
 import com.teammoeg.frostedheart.climate.ClimateType;
 import com.teammoeg.frostedheart.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.network.FHMessage;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.network.PacketBuffer;

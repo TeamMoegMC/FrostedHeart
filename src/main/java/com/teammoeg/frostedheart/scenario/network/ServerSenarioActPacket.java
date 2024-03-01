@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.scenario.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.climate.network.FHMessage;
+import com.teammoeg.frostedheart.network.FHMessage;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 

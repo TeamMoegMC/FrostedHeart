@@ -27,9 +27,9 @@ import java.util.Map;
 import com.teammoeg.frostedheart.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.climate.network.FHDatapackSyncPacket;
-import com.teammoeg.frostedheart.climate.network.FHMessage;
 import com.teammoeg.frostedheart.climate.network.FHTemperatureDisplayPacket;
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
+import com.teammoeg.frostedheart.network.FHMessage;
 import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.research.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHDrawingDeskOperationPacket;
@@ -71,6 +71,9 @@ public class FHNetwork {
         return CHANNEL;
     }
     private static int iid=0;
+    /**
+     * Register Message Type, would automatically use method in FHMessage as serializer and <init>(PacketBuffer) as deserializer
+     * */
     public static synchronized <T extends FHMessage> void registerMessage(String name,Class<T> msg) {
     	classesId.put(msg,FHMain.rl(name));
 		try {

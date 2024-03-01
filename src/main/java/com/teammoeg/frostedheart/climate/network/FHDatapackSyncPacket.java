@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.climate.data.DataEntry;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.network.FHMessage;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;

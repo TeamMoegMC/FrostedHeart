@@ -19,39 +19,37 @@
 
 package com.teammoeg.frostedheart.town;
 
-import com.teammoeg.frostedheart.climate.network.FHMessage;
+import java.util.function.Supplier;
+
+import com.teammoeg.frostedheart.network.NBTMessage;
 import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
+
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-import java.util.function.Supplier;
+public class TeamTownDataS2CPacket extends NBTMessage {
 
-public class TeamTownDataS2CPacket implements FHMessage {
-
-    CompoundNBT townData = new CompoundNBT();
 
     public TeamTownDataS2CPacket(PlayerEntity player) {
-        SpecialDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA).save(townData, true);
+        super(SpecialDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA).serialize(true));
     }
 
-    public TeamTownDataS2CPacket(TeamTownData townData) {
-        townData.save(this.townData, true);
-    }
-    @Override
-    public void encode(PacketBuffer buffer) {
-        buffer.writeCompoundTag(townData);
-    }
+	public TeamTownDataS2CPacket(PacketBuffer buffer) {
+		super(buffer);
+	}
 
+	public TeamTownDataS2CPacket(TeamTownData townData) {
+		super(townData.serialize(true));
+    }
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             PlayerEntity player = ClientUtils.getPlayer();
             if (player != null) {
-                SpecialDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA).deserializeNBT(townData);
+                SpecialDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA).deserializeNBT(super.getTag());
             }
         });
         context.get().setPacketHandled(true);
