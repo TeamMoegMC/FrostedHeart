@@ -74,7 +74,7 @@ public class FTBTeamsEvents {
     public static void syncDataWhenTeamTransfer(PlayerTransferredTeamOwnershipEvent event) {
         if (FTBTeamsAPI.isManagerLoaded()) {
 
-            SpecialDataManager.INSTANCE.getData(event.getTeam()).setOwnerName(event.getFrom().getGameProfile().getName());
+            SpecialDataManager.INSTANCE.get(event.getTeam()).setOwnerName(event.getFrom().getGameProfile().getName());
         }
 
     }

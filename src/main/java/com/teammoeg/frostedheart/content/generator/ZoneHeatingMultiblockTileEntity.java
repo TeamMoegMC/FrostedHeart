@@ -25,8 +25,6 @@ import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
@@ -34,8 +32,6 @@ import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.Utils;
-import dev.ftb.mods.ftbteams.data.Team;
-import dev.ftb.mods.ftbteams.data.TeamManager;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
@@ -114,7 +110,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     protected Optional<TeamDataHolder> getTeamData() {
         UUID owner = getOwner();
         if (owner != null)
-            return Optional.ofNullable(SpecialDataManager.getDataByRid(owner));
+            return Optional.ofNullable(SpecialDataManager.getDataByResearchID(owner));
         return Optional.empty();
     }
 

@@ -35,7 +35,7 @@ public class TeamTownDataS2CPacket implements FHMessage {
     CompoundNBT townData = new CompoundNBT();
 
     public TeamTownDataS2CPacket(PlayerEntity player) {
-        SpecialDataManager.getData(player).getData(SpecialDataTypes.TOWN_DATA).save(townData, true);
+        SpecialDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA).save(townData, true);
     }
 
     public TeamTownDataS2CPacket(TeamTownData townData) {
@@ -51,7 +51,7 @@ public class TeamTownDataS2CPacket implements FHMessage {
         context.get().enqueueWork(() -> {
             PlayerEntity player = ClientUtils.getPlayer();
             if (player != null) {
-                SpecialDataManager.getData(player).getData(SpecialDataTypes.TOWN_DATA).deserializeNBT(townData);
+                SpecialDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA).deserializeNBT(townData);
             }
         });
         context.get().setPacketHandled(true);
