@@ -23,6 +23,8 @@ import java.util.Optional;
 
 /**
  * Interface for accessing town data.
+ *
+ * This is an abstract town, it may be a (player) team town, or a npc town.
  */
 public interface Town {
     /**

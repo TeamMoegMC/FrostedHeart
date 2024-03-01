@@ -21,11 +21,16 @@ package com.teammoeg.frostedheart.town.house;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.state.BooleanProperty;
+import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
@@ -34,14 +39,17 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
+import java.util.Random;
 
 /**
  * A house in the town.
  */
 public class HouseBlock extends FHBaseBlock {
+    public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
-    public HouseBlock( Properties blockProps) {
+    public HouseBlock(Properties blockProps) {
         super(blockProps);
+        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
 
     @Override
@@ -54,19 +62,30 @@ public class HouseBlock extends FHBaseBlock {
         return true;
     }
 
+    @Override
+    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+        super.animateTick(stateIn, worldIn, pos, rand);
+        if (stateIn.get(LIT)) {
+            ClientUtils.spawnSteamParticles(worldIn, pos);
+        }
+    }
+
     //test
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         if (!worldIn.isRemote && handIn == Hand.MAIN_HAND) {
-            HouseTileEntity houseTileEntity = (HouseTileEntity) worldIn.getTileEntity(pos);
-            player.sendStatusMessage(new StringTextComponent("isRoomValid:" + (houseTileEntity.isWorkValid() ? "true" : "false")), false);
-            player.sendStatusMessage(new StringTextComponent("volume" + (houseTileEntity.volume)), false);
-            player.sendStatusMessage(new StringTextComponent("area" + (houseTileEntity.area)), false);
-            player.sendStatusMessage(new StringTextComponent("score" + houseTileEntity.getRating()), false);
-            //player.sendStatusMessage(new StringTextComponent("deco score" + houseTileEntity.score_deco), false);
-            //player.sendStatusMessage(new StringTextComponent("space score" + houseTileEntity.score_space), false);
-            //player.sendStatusMessage(new StringTextComponent("avg temperature" + houseTileEntity.temperature), false);
-            //player.sendStatusMessage(new StringTextComponent("real temperature" + ChunkHeatData.getTemperature(worldIn, pos)), false);
+            HouseTileEntity te = (HouseTileEntity) worldIn.getTileEntity(pos);
+            if (te == null) {
+                return ActionResultType.FAIL;
+            }
+            player.sendStatusMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            player.sendStatusMessage(new StringTextComponent(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
+            player.sendStatusMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.sendStatusMessage(new StringTextComponent("Temperature: " + te.temperature), false);
+            player.sendStatusMessage(new StringTextComponent("Volume: " + (te.volume)), false);
+            player.sendStatusMessage(new StringTextComponent("Area: " + (te.area)), false);
+            player.sendStatusMessage(new StringTextComponent("Score: " + te.rating), false);
+            return ActionResultType.SUCCESS;
         }
-        return ActionResultType.SUCCESS;
+        return ActionResultType.PASS;
     }
 }

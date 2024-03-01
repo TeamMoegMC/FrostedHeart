@@ -19,39 +19,60 @@
 
 package com.teammoeg.frostedheart.town.house;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
+import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.town.TownTileEntity;
 import com.teammoeg.frostedheart.town.TownWorkerType;
 import com.teammoeg.frostedheart.town.resident.Resident;
 import com.teammoeg.frostedheart.util.BlockScanner;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 
 import static com.teammoeg.frostedheart.town.house.HouseBlockScanner.isHouseBlock;
 
 /**
  * A house in the town.
+ *
+ * Functionality:
+ * - Provide a place for residents to live
+ * - (Optional) Consume heat to add temperature based on the heat level
+ * - Consume resources to maintain the house
+ * - Check if the house structure is valid
+ * - Compute comfort rating based on the house structure
  */
-public class HouseTileEntity extends TileEntity implements TownTileEntity {
+public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity, ITickableTileEntity,
+        FHBlockInterfaces.IActiveState {
 
-    public static final double COMFORTABLE_TEMP = 24;
-    //public static final int OPTIMAL_VOLUME = 100;
-    //public static final int BEST_DECORATION = 100;
+    /** The temperature at which the house is comfortable. */
+    private static final double COMFORTABLE_TEMP_HOUSE = 24;
+    public static final int MAX_TEMP_HOUSE = 50;
+    public static final int MIN_TEMP_HOUSE = 0;
 
+    /** Work data, stored in town. */
     public int size; // how many resident can live here
-    public int maxResidents;
     public List<Resident> residents;
-    public double temperature;
     public int volume;
     public int decoration;
     public int area;
-    private Map<String, Integer> decorations;
+    public double temperature;
+    public Map<String, Integer> decorations;
+    public double rating;
     public Set<AbstractMap.SimpleEntry<Integer, Integer>> occupiedArea;
+    public double temperatureModifier;
+
+    /** Tile data, stored in tile entity. */
+    HeatConsumerEndpoint endpoint = new HeatConsumerEndpoint(10,1);
 
     public HouseTileEntity() {
         super(FHTileTypes.HOUSE.get());
@@ -78,10 +99,7 @@ public class HouseTileEntity extends TileEntity implements TownTileEntity {
      */
     @Override
     public boolean isWorkValid() {
-        BlockPos pos = this.getPos();
-        boolean roomValid = isStructureValid(pos);
-        boolean tempConstraint = temperature >= 0 && temperature <= 50;
-        return roomValid && tempConstraint;
+        return isStructureValid() && isTemperatureValid();
     }
 
     @Override
@@ -94,6 +112,8 @@ public class HouseTileEntity extends TileEntity implements TownTileEntity {
         data.putDouble("temperature", temperature);
         data.putInt("volume", volume);
         data.putInt("decoration", decoration);
+        data.putDouble("rating", rating);
+        data.putDouble("temperatureModifier", temperatureModifier);
         return data;
     }
 
@@ -109,6 +129,8 @@ public class HouseTileEntity extends TileEntity implements TownTileEntity {
         temperature = data.getDouble("temperature");
         volume = data.getInt("volume");
         decoration = data.getInt("decoration");
+        rating = data.getDouble("rating");
+        temperatureModifier = data.getDouble("temperatureModifier");
     }
 
     /**
@@ -119,10 +141,10 @@ public class HouseTileEntity extends TileEntity implements TownTileEntity {
      * Check within generator range (or just check steam connection instead?)
      * <p>
      *
-     * @param housePos the House block
      * @return whether the house structure is valid
      */
-    private boolean isStructureValid(BlockPos housePos) {
+    public boolean isStructureValid() {
+        BlockPos housePos = this.getPos();
         Set<BlockPos> doorPosSet = BlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(world).getBlockState(pos).isIn(BlockTags.DOORS));
         if (doorPosSet.isEmpty()) return false;
         for (BlockPos doorPos : doorPosSet) {
@@ -147,13 +169,24 @@ public class HouseTileEntity extends TileEntity implements TownTileEntity {
                     this.decorations = scanner.getDecorations();
                     this.temperature = scanner.getTemperature();
                     this.occupiedArea = scanner.getOccupiedArea();
-                    //FHMain.LOGGER.debug("HouseScanner:\n volume: " + volume + " area: " + area + " decorations: ");
-                    //for(String s : decorations.keySet()) FHMain.LOGGER.debug("HouseScanner.decoration: " + s);
+                    this.rating = computeRating();
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    /**
+     * Determine whether the house temperature is valid for work.
+     *
+     * If connected to heat network, this always returns true.
+     *
+     * @return whether the temperature is valid
+     */
+    public boolean isTemperatureValid() {
+        double effective = temperature + temperatureModifier;
+        return effective >= MIN_TEMP_HOUSE && effective <= MAX_TEMP_HOUSE;
     }
 
     /**
@@ -163,14 +196,14 @@ public class HouseTileEntity extends TileEntity implements TownTileEntity {
      *
      * @return a rating in range of zero to one
      */
-    public double getRating() {
+    private double computeRating() {
         return (calculateDecorationRating(this.decorations, this.area)
                 + calculateSpaceRating(this.volume, this.area)
-                + calculateTemperatureRating(this.temperature)) / 3;
+                + calculateTemperatureRating(this.temperature + this.temperatureModifier)) / 3;
     }
 
     private static double calculateTemperatureRating(double temperature) {
-        double tempDiff = Math.abs(COMFORTABLE_TEMP - temperature);
+        double tempDiff = Math.abs(COMFORTABLE_TEMP_HOUSE - temperature);
         return 0.017 + 1 / (1 + Math.exp(0.4 * (tempDiff - 10)));
     }
 
@@ -188,20 +221,39 @@ public class HouseTileEntity extends TileEntity implements TownTileEntity {
         double score = area * (1.55 + Math.log(height - 1.6) * 0.6);
         return 1 - Math.exp(-0.024 * Math.pow(score, 1.11));
     }
-}
 
-
-/*
-            for(BlockPos scanningBlock : scanningBlocks){
-                AbstractMap.SimpleEntry<Integer, Boolean> floorBlockInformation = countBlocksAbove(possibleBlock, (pos)->{
-                    boolean stopAt = this.isHouseBlock(pos);
-                    addDecoration(pos);
-                    if(!stopAt) {
-                        temperature+= ChunkHeatData.getTemperature(world, pos);
-                    }
-                    return stopAt;//判断方块是否是天花板，在此过程中顺便帮忙计算一下平均温度和装饰物
-                });
-                scanningBlocksNew.addAll(nextScanningBlocks.apply(this, scanningBlock));
-                scannedBlocks.add(scanningBlock.toLong());
+    @Override
+    public void tick() {
+        if (!world.isRemote) {
+            if (endpoint.tryDrainHeat(1)) {
+                temperatureModifier = Math.max(endpoint.getTemperatureLevel() * 10, COMFORTABLE_TEMP_HOUSE);
+                if (setActive(true)) {
+                    markDirty();
+                }
+            } else {
+                if (setActive(false)) {
+                    markDirty();
+                }
             }
- */
+        }
+    }
+
+    @Override
+    public void readCustomNBT(CompoundNBT compoundNBT, boolean isPacket) {
+        endpoint.load(compoundNBT, isPacket);
+    }
+
+    @Override
+    public void writeCustomNBT(CompoundNBT compoundNBT, boolean isPacket) {
+        endpoint.save(compoundNBT, isPacket);
+    }
+
+    LazyOptional<HeatConsumerEndpoint> endpointCap = LazyOptional.of(()-> endpoint);
+    @Nonnull
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
+        if(capability== FHCapabilities.HEAT_EP.capability()) {
+            return endpointCap.cast();
+        }
+        return super.getCapability(capability, facing);
+    }
+}

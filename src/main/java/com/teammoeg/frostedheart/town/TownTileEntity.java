@@ -27,13 +27,42 @@ import net.minecraft.nbt.CompoundNBT;
  * Should be implemented by tile entities that are associated with town blocks.
  */
 public interface TownTileEntity {
+    /**
+     * Get the priority of the worker.
+     *
+     * @return the priority
+     */
     int getPriority();
 
+    /**
+     * Get the worker type.
+     *
+     * @return the worker type
+     */
     TownWorkerType getWorker();
 
+    /**
+     * Check if the work is valid.
+     *
+     * @return true if the work is valid, false otherwise
+     */
     boolean isWorkValid();
 
+    /**
+     * Get work data here.
+     *
+     * Data is updated every 20 ticks.
+     *
+     * @return the work data
+     */
     CompoundNBT getWorkData();
 
+    /**
+     * Set work data here.
+     *
+     * Data is saved every 20 ticks.
+     *
+     * @param data the work data
+     */
     void setWorkData(CompoundNBT data);
 }

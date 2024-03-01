@@ -35,6 +35,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static net.minecraft.block.PlantBlockHelper.isAir;
 
 class HouseBlockScanner extends BlockScanner {
+    public static final int MAX_SCANNING_TIMES_VOLUME = 4096;
+    public static final int MINIMUM_VOLUME = 6;
+    public static final int MINIMUM_AREA = 3;
+    public static final int MAX_SCANNING_TIMES_FLOOR = 512;
     private int area = 0;
     private int volume = 0;
     private final Map<String/*block.getName()*/, Integer> decorations = new HashMap<>();
@@ -221,19 +225,19 @@ class HouseBlockScanner extends BlockScanner {
      */
     public boolean check() {
         //第一次扫描，确定地板的位置，并判断是否有露天的地板
-        this.scan(512, (pos) -> {
+        this.scan(MAX_SCANNING_TIMES_FLOOR, (pos) -> {
             this.area++;
             this.occupiedArea.add(new AbstractMap.SimpleEntry<>(pos.getX(), pos.getZ()));
             //FHMain.LOGGER.debug("HouseScanner: scanning floor pos " + pos);
         }, this::nextScanningBlocks, (pos) -> !this.isValid);
         //FHMain.LOGGER.debug("HouseScanner: first scan area: " + area);
-        if (this.area < 3) this.isValid = false;
+        if (this.area < MINIMUM_AREA) this.isValid = false;
         if (!this.isValid) return false;
         //FHMain.LOGGER.debug("HouseScanner: first scan completed");
 
         //第二次扫描，判断房间是否密闭
         BlockScanner airScanner = new BlockScanner(world, startPos.up());
-        airScanner.scan(4096, (pos) -> {//对每一个空气方块执行的操作：统计温度、统计体积、统计温度
+        airScanner.scan(MAX_SCANNING_TIMES_VOLUME, (pos) -> {//对每一个空气方块执行的操作：统计温度、统计体积、统计温度
                     this.temperature += ChunkHeatData.getTemperature(world, pos);
                     this.volume++;
                 }, (pos) -> {//接下来是找到下一批需要扫描的方块的内容
@@ -271,7 +275,7 @@ class HouseBlockScanner extends BlockScanner {
                 },//nextScanningBlocks end
                 (useless) -> !this.isValid && !airScanner.isValid);
         temperature /= volume;
-        if (this.volume < 6) this.isValid = false;
+        if (this.volume < MINIMUM_VOLUME) this.isValid = false;
 
         return this.isValid;
     }
