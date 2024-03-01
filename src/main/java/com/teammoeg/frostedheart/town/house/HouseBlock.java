@@ -58,7 +58,7 @@ public class HouseBlock extends FHBaseBlock {
 
     public HouseBlock(Properties blockProps) {
         super(blockProps);
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
+        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING, Direction.SOUTH));
     }
 
     @Override
