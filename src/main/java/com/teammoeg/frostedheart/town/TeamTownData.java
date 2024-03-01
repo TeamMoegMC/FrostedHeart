@@ -19,14 +19,11 @@
 
 package com.teammoeg.frostedheart.town;
 
-import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.PriorityQueue;
 
 import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.town.resident.Resident;
 import com.teammoeg.frostedheart.util.NBTSerializable;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -56,7 +53,7 @@ public class TeamTownData implements NBTSerializable{
     /**
      * The town residents.
      */
-
+    Map<UUID, Resident> residents = new LinkedHashMap<>();
 	/**
      * Resource generated from resident
      */
@@ -97,6 +94,34 @@ public class TeamTownData implements NBTSerializable{
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    /**
+     * Get the residents of the town.
+     */
+    public Map<UUID, Resident> getResidents() {
+        return residents;
+    }
+
+    /**
+     * Get the blocks and their worker data.
+     */
+    public Map<BlockPos, TownWorkerData> getBlocks() {
+        return blocks;
+    }
+
+    /**
+     * Add a resident to the town.
+     */
+    public void addResident(Resident resident) {
+        residents.put(UUID.randomUUID(), resident);
+    }
+
+    /**
+     * Remove a resident from the town.
+     */
+    public void removeResident(UUID id) {
+        residents.remove(id);
     }
 
     /**

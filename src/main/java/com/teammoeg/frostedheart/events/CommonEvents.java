@@ -48,11 +48,7 @@ import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.command.AddTempCommand;
-import com.teammoeg.frostedheart.command.ClimateCommand;
-import com.teammoeg.frostedheart.command.DebugCommand;
-import com.teammoeg.frostedheart.command.ResearchCommand;
-import com.teammoeg.frostedheart.command.ScenarioCommand;
+import com.teammoeg.frostedheart.command.*;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
@@ -657,6 +653,7 @@ public class CommonEvents {
         ClimateCommand.register(dispatcher);
         DebugCommand.register(dispatcher);
         ScenarioCommand.register(dispatcher);
+        TownCommand.register(dispatcher);
     }
 
     @SubscribeEvent

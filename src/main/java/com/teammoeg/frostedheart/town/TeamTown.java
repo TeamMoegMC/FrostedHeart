@@ -19,10 +19,13 @@
 
 package com.teammoeg.frostedheart.town;
 
+import com.teammoeg.frostedheart.town.resident.Resident;
+
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * The town for a player team.

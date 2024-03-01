@@ -29,22 +29,28 @@ import net.minecraft.nbt.CompoundNBT;
  */
 public class Resident {
 
-    private String firstName;
-    private String lastName;
+    private String firstName = "Steve";
+    private String lastName = "Alexander";
+    /** Stats range from 0 to 100 */
     // physical
-    private int health;
+    private int health = 0;
     // psychological
-    private int happiness;
+    private int happiness = 0;
     // social
-    private int social;
+    private int social = 0;
     // economic
-    private int wealth;
+    private int wealth = 0;
     // political
-    private int trust;
+    private int trust = 0;
     // cultural
-    private int culture;
+    private int culture = 0;
     // educational
-    private int educationLevel;
+    private int educationLevel = 0;
+
+    public Resident(String firstName, String lastName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
 
     public Resident() {
     }
@@ -81,4 +87,8 @@ public class Resident {
         return null;
     }
 
+    @Override
+    public String toString() {
+        return firstName + " " + lastName;
+    }
 }
