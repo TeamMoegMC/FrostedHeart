@@ -54,8 +54,10 @@ public class GuiUtils {
         for (V v : collection) {
             sb.append(v.toString()).append("\n");
         }
-        // remove the last newline
-        sb.deleteCharAt(sb.length() - 1);
+        // remove the last newline if the string is not empty
+        if (sb.length() > 0) {
+            sb.setLength(sb.length() - 1);
+        }
         return new StringTextComponent(sb.toString());
     }
 
