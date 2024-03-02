@@ -38,7 +38,7 @@ public class FTBQProvider extends StringScenarioProvider {
 		if(!t.startsWith("quest:"))
 			return null;
 		String qid=t.substring("quest:".length());
-		System.out.println("loading quest "+qid);
+		//System.out.println("loading quest "+qid);
 		Quest quest=ServerQuestFile.INSTANCE.getQuest(QuestFile.parseCodeString(qid));
 		if(quest==null)return null;
 		StringBuilder b=new StringBuilder();

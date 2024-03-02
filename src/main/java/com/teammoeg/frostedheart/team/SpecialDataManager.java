@@ -136,17 +136,19 @@ public class SpecialDataManager {
     public TeamDataHolder get(Team team) {
         UUID cn = dataByFTBId.get(team.getId());
         if (cn == null) {
+            cn=UUID.randomUUID();
+            dataByFTBId.put(team.getId(), cn);
             GameProfile owner = getServer().getPlayerProfileCache().getProfileByUUID(team.getOwner());
             
             if (owner != null&&(!getServer().isServerInOnlineMode()||getServer().isSinglePlayer()))
                 for (Entry<UUID, TeamDataHolder> dat : dataByFhId.entrySet()) {
                     if (owner.getName().equals(dat.getValue().getOwnerName())) {
-                        this.transfer(dat.getKey(), team);
+                        this.transferByRid(dat.getKey(), team);
+                        cn=dat.getKey();
                         break;
                     }
                 }
         }
-        cn = dataByFTBId.computeIfAbsent(team.getId(), t->UUID.randomUUID());
         TeamDataHolder data=dataByFhId.computeIfAbsent(cn, c -> new TeamDataHolder(c, OptionalLazy.of(()->team)));
         if (data.getOwnerName() == null) {
             PlayerProfileCache cache = getServer().getPlayerProfileCache();
@@ -176,7 +178,7 @@ public class SpecialDataManager {
      * Load all data from disk.
      */
     public void load() {
-        dataByFTBId.clear();
+        
         Path local=getServer().func_240776_a_(dataFolder);
         local.toFile().mkdirs();
         Path olocal=getServer().func_240776_a_(oldDataFolder);
@@ -193,7 +195,9 @@ public class SpecialDataManager {
         	if(strm2!=null)
         		strm1=strm2;
         }
-        if(strm1!=null)
+        if(strm1!=null) {
+        	dataByFTBId.clear();
+        	dataByFhId.clear();
 	        strm1.forEach(f->{
 	            UUID tud;
 	            try {
@@ -222,6 +226,7 @@ public class SpecialDataManager {
 	                FHMain.LOGGER.error("Unable to read data file " + f.getName() + ", ignoring...");
 	            }
 	        });
+        }
     }
 
     /**
@@ -268,11 +273,21 @@ public class SpecialDataManager {
         if (odata != null) {
             odata.setTeam(OptionalLazy.of(()->team));
             odata.setOwnerName(getServer().getPlayerProfileCache().getProfileByUUID(team.getOwner()).getName());
+            dataByFTBId.put(team.getId(), rid);
+        }else {
+        	this.get(team);
         }
-        dataByFTBId.put(team.getId(), rid);
+
 
     }
-
+    public void transferByRid(UUID rid, Team team) {
+        TeamDataHolder odata = dataByFhId.get(rid);
+        if (odata != null) {
+            odata.setTeam(OptionalLazy.of(()->team));
+            odata.setOwnerName(getServer().getPlayerProfileCache().getProfileByUUID(team.getOwner()).getName());
+            dataByFTBId.put(team.getId(), rid);
+        }
+    }
     /**
      * Get the server instance.
      * @return the server instance

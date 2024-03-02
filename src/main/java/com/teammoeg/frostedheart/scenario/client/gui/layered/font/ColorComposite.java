@@ -17,7 +17,6 @@ public final class ColorComposite implements Composite {
 		super();
 		this.color = color;
 		this.orig = orig;
-		System.out.println("Composit created");
 		if(orig==null)
 			orig=AlphaComposite.SrcOver;
 	}

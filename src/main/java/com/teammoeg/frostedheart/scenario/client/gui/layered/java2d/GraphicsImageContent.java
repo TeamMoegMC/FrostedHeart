@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderableContent;
 import com.teammoeg.frostedheart.util.client.Rect;
@@ -65,10 +66,10 @@ public class GraphicsImageContent extends GraphicLayerContent {
 				
 			} catch (IOException e) {
 				e.printStackTrace();
-				System.out.println(showingImage+" load error");
+				FHMain.LOGGER.fatal(showingImage+" load error");
 			}
 		}else {
-			System.out.println(showingImage+" not found");
+			FHMain.LOGGER.error(showingImage+" not found");
 		}
 
 	}

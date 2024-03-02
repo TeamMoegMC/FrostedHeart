@@ -176,7 +176,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     @Override
 	public <X> LazyOptional<X> getCapability(Capability<X> capability, Direction facing) {
     	if(capability==FHCapabilities.HEAT_EP.capability()&&facing == this.getFacing().getOpposite() && this.posInMultiblock.equals(networkTile)) {
-    		LazyOptional<HeatProviderEndPoint> cep=master().getData().map(t->t.epcap).orElseGet(LazyOptional::empty);
+    		LazyOptional<HeatProviderEndPoint> cep=getData().map(t->t.epcap).orElseGet(LazyOptional::empty);
     		
     		if(ep!=cep) {
     			if(ep!=null)

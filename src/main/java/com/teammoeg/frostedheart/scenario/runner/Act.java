@@ -183,7 +183,7 @@ public class Act implements IScenarioThread{
 		FHNetwork.send(PacketDistributor.PLAYER.with(()->parent.getPlayer()), new ServerSenarioActPacket(updateT?title:null,updateSt?subtitle:null));
 	}
 	public void setTitles(String t,String st) {
-		System.out.println(t+","+st);
+		//System.out.println(t+","+st);
 		boolean b1 = false,b2 = false;
 		if(t!=null&&!title.equals(t)) {
 			this.title=t;
