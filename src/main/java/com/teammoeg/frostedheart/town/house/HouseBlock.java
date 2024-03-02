@@ -94,7 +94,8 @@ public class HouseBlock extends FHBaseBlock {
             player.sendStatusMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
             player.sendStatusMessage(new StringTextComponent(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
             player.sendStatusMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.sendStatusMessage(new StringTextComponent("Temperature: " + te.getEffectiveTemperature()), false);
+            player.sendStatusMessage(new StringTextComponent("Effective Temperature: " + BigDecimal.valueOf(te.getEffectiveTemperature())
+                    .setScale(2, RoundingMode.HALF_UP).doubleValue()), false);
             player.sendStatusMessage(new StringTextComponent("Volume: " + (te.volume)), false);
             player.sendStatusMessage(new StringTextComponent("Area: " + (te.area)), false);
             player.sendStatusMessage(new StringTextComponent("Score: " + BigDecimal.valueOf(te.rating)

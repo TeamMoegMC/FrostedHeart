@@ -61,16 +61,16 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
     public static final int MIN_TEMP_HOUSE = 0;
 
     /** Work data, stored in town. */
-    public int size; // how many resident can live here
-    public List<Resident> residents;
-    public int volume;
-    public int decoration;
-    public int area;
-    public double temperature;
-    public Map<String, Integer> decorations;
-    public double rating;
+    public int size = 0; // how many resident can live here
+    public List<Resident> residents = new ArrayList<>();
+    public int volume = 0;
+    public int decoration = 0;
+    public int area = 0;
+    public double temperature = 0;
+    public Map<String, Integer> decorations = new HashMap<>();
+    public double rating = 0;
     public Set<AbstractMap.SimpleEntry<Integer, Integer>> occupiedArea;
-    public double temperatureModifier;
+    public double temperatureModifier = 0;
 
     /** Tile data, stored in tile entity. */
     HeatConsumerEndpoint endpoint = new HeatConsumerEndpoint(10,1);
@@ -216,11 +216,17 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
     private static double calculateDecorationRating(Map<?, Integer> decorations, int area) {
         double score = 0;
         for (Integer num : decorations.values()) {
-            score += Math.log(num + 0.32) * 1.75 + 0.9;
-            //log(x+0.72)*1.5+0.5, sqrt(x*0.8)*1.5
+            if (num + 0.32 > 0) { // Ensure the argument for log is positive
+                score += Math.log(num + 0.32) * 1.75 + 0.9;
+            } else {
+                // Handle the case where num + 0.32 <= 0
+                // For example, you could add a minimal score or skip adding to the score.
+                score += 0; // Or some other handling logic
+            }
         }
         return Math.min(1, score / (6 + area / 16.0f));
     }
+
 
     private static double calculateSpaceRating(int volume, int area) {
         double height = volume / (float) area;
@@ -237,6 +243,7 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
                     markDirty();
                 }
             } else {
+                temperatureModifier = 0;
                 if (setActive(false)) {
                     markDirty();
                 }
