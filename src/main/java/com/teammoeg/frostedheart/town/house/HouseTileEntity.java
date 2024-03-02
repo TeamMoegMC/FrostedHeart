@@ -40,7 +40,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import javax.annotation.Nonnull;
 import java.util.*;
 
-import static com.teammoeg.frostedheart.town.house.HouseBlockScanner.isHouseBlock;
+import static com.teammoeg.frostedheart.town.house.FloorBlockScanner.isHouseBlock;
 
 /**
  * A house in the town.
@@ -164,7 +164,7 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
                     //FHMain.LOGGER.debug("HouseScanner: start pos 2" + startPos);
                 }
                 HouseBlockScanner scanner = new HouseBlockScanner(this.world, startPos);
-                if (scanner.check()) {
+                if (scanner.scan()) {
                     //FHMain.LOGGER.debug("HouseScanner: scan successful");
                     this.volume = scanner.getVolume();
                     this.area = scanner.getArea();

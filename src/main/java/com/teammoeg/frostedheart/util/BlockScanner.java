@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.util;
 
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
@@ -61,6 +62,14 @@ public class BlockScanner {
 
     public void setScanningBlocks(Set<BlockPos> scanningBlocks){
         this.scanningBlocks = scanningBlocks;
+    }
+
+    protected BlockState getBlockState(BlockPos pos) {
+        return world.getBlockState(pos);
+    }
+
+    public boolean isValid(){
+        return this.isValid;
     }
 
 
@@ -217,6 +226,15 @@ public class BlockScanner {
         return getPossibleFloor(world, pos);
     }
 
+    public HashSet<BlockPos> getPossibleFloorNearLadder(BlockPos pos){
+        HashSet<BlockPos> blocks = new HashSet<>();
+        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos));
+        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.up()));
+        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.down()));
+        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.down(2)));
+        return blocks;
+    }
+
     /**
      * Find valid floor block near the block
      * @param isValidFloor determine if a block is valid floor
@@ -281,12 +299,19 @@ public class BlockScanner {
      * 获取接下来要被扫描的方块。这个方法应在子类中重写，而非直接使用。
      * @return 接下来要被扫描的方块。这个Set不应包含scannedBlocks中已记录的内容及scanningBlocks中的内容。
      */
-    public HashSet<BlockPos> nextScanningBlocks(BlockPos startPos){
+    protected HashSet<BlockPos> nextScanningBlocks(BlockPos startPos){
         return new HashSet<>();
     }
 
     /**
      * 对每个scanningBlocks的方块执行operation操作，并按照nextScanningBlocks方法的规则获取新的scanningBlocks。
+     * scan方法的工作模式：
+     * 初始状态：在类创建完成后，scanningBlocks里会有一个blockPos，即startPos
+     * 工作时，将scanningBlocks以long的形式放入scannedBlock，创建scanningBlocksNew集合，遍历scanningBlocks中的所有blockPos，然后对blockPos进行以下操作：
+     * 1 如果满足stopAt，则直接退出扫描并返回false
+     * 2 对blockPos执行operation操作
+     * 3 对blockPos执行nextScanningBlocks方法，获取下一轮扫描的方块（这个方法应自己写，写的时候应注意排除scannedBlocks以及避免重复），然后存入scanningBlocksNew中
+     * 在一轮scanningBlocks扫描结束后，把scanningBlocks换成scanningBlocksNew
      * @param operation 对于每个扫描的方块，都会执行这里的操作。由于输入了BlockScanner，也可以对BlockScanner类及其子类里面的变量进行操作。
      * @param nextScanningBlocks 用于获取接下来要被扫描的方块。
      * @param stopAt 如果扫描的方块满足了stopAt的条件，则会停止扫描并返回false
@@ -304,14 +329,14 @@ public class BlockScanner {
             scannedBlocks.addAll(toLongSet(scanningBlocks));
             HashSet<BlockPos> scanningBlocksNew = new HashSet<>();
             for(BlockPos scanningBlock : scanningBlocks){
-                if(stopAt.test(scanningBlock)) return false;
+                if(stopAt.test(scanningBlock) || !this.isValid) return false;
                 operation.accept(scanningBlock);
                 scanningBlocksNew.addAll(nextScanningBlocks.apply(scanningBlock));
             }
             scanningBlocks = scanningBlocksNew;
             scanTimes++;
         }
-        return true;
+        return this.isValid;
     }
 
     public boolean scan(int maxScanningTimes,
