@@ -206,7 +206,7 @@ public class SpecialDataManager {
 
     public void transfer(UUID orig, Team team) {
     	UUID rid=dataByFTBId.remove(orig);
-        TeamDataHolder odata = dataByResearchId.remove(rid);
+        TeamDataHolder odata = dataByResearchId.get(rid);
         if (odata != null) {
             odata.setTeam(OptionalLazy.of(()->team));
             odata.setOwnerName(getServer().getPlayerProfileCache().getProfileByUUID(team.getOwner()).getName());
