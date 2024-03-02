@@ -277,6 +277,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
     public void regist() {
+        // TODO: seems to be an issue here. getData is empty
     	getData().ifPresent(t -> {
         	if(!master().pos.equals(t.actualPos))
         		t.onPosChange();

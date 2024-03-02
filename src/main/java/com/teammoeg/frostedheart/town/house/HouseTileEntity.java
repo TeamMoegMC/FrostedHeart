@@ -191,6 +191,10 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
         return effective >= MIN_TEMP_HOUSE && effective <= MAX_TEMP_HOUSE;
     }
 
+    public double getEffectiveTemperature() {
+        return temperature + temperatureModifier;
+    }
+
     /**
      * Get a comfort rating based on how the house is built.
      * <p>

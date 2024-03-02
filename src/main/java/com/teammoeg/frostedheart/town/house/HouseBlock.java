@@ -20,15 +20,10 @@
 package com.teammoeg.frostedheart.town.house;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.content.generator.GeneratorData;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.town.TeamTownData;
+import com.teammoeg.frostedheart.town.TeamTown;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.block.Block;
@@ -52,6 +47,8 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Random;
 
 /**
@@ -97,10 +94,11 @@ public class HouseBlock extends FHBaseBlock {
             player.sendStatusMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
             player.sendStatusMessage(new StringTextComponent(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
             player.sendStatusMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.sendStatusMessage(new StringTextComponent("Temperature: " + te.temperature), false);
+            player.sendStatusMessage(new StringTextComponent("Temperature: " + te.getEffectiveTemperature()), false);
             player.sendStatusMessage(new StringTextComponent("Volume: " + (te.volume)), false);
             player.sendStatusMessage(new StringTextComponent("Area: " + (te.area)), false);
-            player.sendStatusMessage(new StringTextComponent("Score: " + te.rating), false);
+            player.sendStatusMessage(new StringTextComponent("Score: " + BigDecimal.valueOf(te.rating)
+                    .setScale(2, RoundingMode.HALF_UP).doubleValue()), false);
             return ActionResultType.SUCCESS;
         }
         return ActionResultType.PASS;
@@ -113,14 +111,8 @@ public class HouseBlock extends FHBaseBlock {
         if (te != null) {
             // register the house to the town
             if (entity instanceof ServerPlayerEntity) {
-                TeamTownData townData = SpecialDataManager.get((PlayerEntity) entity).getData(SpecialDataTypes.TOWN_DATA);
-                GeneratorData generatorData = SpecialDataManager.get((PlayerEntity) entity).getData(SpecialDataTypes.GENERATOR_DATA);
-                BlockPos generatorPos = generatorData.actualPos;
-                // check if the house is in generator range
-                float range = generatorData.RLevel;
-                FHMain.LOGGER.debug("Generator range: " + range);
-                if (generatorPos.distanceSq(pos) <= range * range) {
-                    townData.registerTownBlock(pos, te);
+                if (ChunkHeatData.hasAdjust(world, pos)) {
+                    TeamTown.from((PlayerEntity) entity).addTownBlock(pos, te);
                 }
             }
         }

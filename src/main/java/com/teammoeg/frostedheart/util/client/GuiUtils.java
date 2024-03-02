@@ -26,6 +26,9 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
+import java.util.Collection;
+import java.util.Map;
+
 public class GuiUtils {
 
     public static ResourceLocation makeTextureLocation(String name) {
@@ -36,7 +39,46 @@ public class GuiUtils {
         return new StringTextComponent(s);
     }
 
-    public static ITextComponent translate(String string, Object... args) {
+    /**
+     * Convert a collection to a string text component
+     * <p></p>
+     * Lists all elements in the collection, separated by new lines
+     * Uses the toString method of each element
+     * @param collection the collection
+     * @return the string text component
+     * @param <V> the type of the collection
+     */
+    public static <V> StringTextComponent str(Collection<V> collection) {
+
+        StringBuilder sb = new StringBuilder();
+        for (V v : collection) {
+            sb.append(v.toString()).append("\n");
+        }
+        // remove the last newline
+        sb.deleteCharAt(sb.length() - 1);
+        return new StringTextComponent(sb.toString());
+    }
+
+    /**
+     * Convert a Map to a string text component
+     * <p></p>
+     * Lists all elements in the map, separated by new lines
+     * For each entry, use the toString method of the key and value,
+     * separated by a colon and a space
+     * @param map the map
+     * @return the string text component
+     * @param <K> the type of the keys
+     * @param <V> the type of the values
+     */
+    public static <K, V> StringTextComponent str(Map<K, V> map) {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<K, V> entry : map.entrySet()) {
+            sb.append(entry.getKey().toString()).append(": ").append(entry.getValue().toString()).append("\n");
+        }
+        return new StringTextComponent(sb.toString());
+    }
+
+    public static TranslationTextComponent translate(String string, Object... args) {
         return new TranslationTextComponent(string, args);
     }
 
