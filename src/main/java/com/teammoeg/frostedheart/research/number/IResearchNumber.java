@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.research.number;
 
 import com.teammoeg.frostedheart.research.data.ResearchData;
-import com.teammoeg.frostedheart.util.Writeable;
+import com.teammoeg.frostedheart.util.io.Writeable;
 
 public interface IResearchNumber extends Writeable{
     default int getInt(ResearchData rd) {

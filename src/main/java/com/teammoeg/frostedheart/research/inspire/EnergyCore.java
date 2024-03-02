@@ -33,8 +33,8 @@ import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.network.FHEnergyDataSyncPacket;
 import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;

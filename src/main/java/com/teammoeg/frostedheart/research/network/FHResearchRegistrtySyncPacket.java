@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.climate.network.FHMessage;
+import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.research.FHResearch;
 
 import net.minecraft.nbt.CompoundNBT;
@@ -29,25 +29,20 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when player join
-public class FHResearchRegistrtySyncPacket implements FHMessage {
-    private final CompoundNBT data;
+public class FHResearchRegistrtySyncPacket extends NBTMessage {
 
     public FHResearchRegistrtySyncPacket() {
-        this.data = FHResearch.save(new CompoundNBT());
+        super(FHResearch.save(new CompoundNBT()));
 
     }
 
     public FHResearchRegistrtySyncPacket(PacketBuffer buffer) {
-        data = buffer.readCompoundTag();
-    }
-
-    public void encode(PacketBuffer buffer) {
-        buffer.writeCompoundTag(data);
+        super(buffer);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            FHResearch.initFromRegistry(data);
+            FHResearch.initFromRegistry(this.getTag());
         });
         context.get().setPacketHandled(true);
     }

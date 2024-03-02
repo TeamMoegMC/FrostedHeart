@@ -48,11 +48,7 @@ import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.command.AddTempCommand;
-import com.teammoeg.frostedheart.command.ClimateCommand;
-import com.teammoeg.frostedheart.command.DebugCommand;
-import com.teammoeg.frostedheart.command.ResearchCommand;
-import com.teammoeg.frostedheart.command.ScenarioCommand;
+import com.teammoeg.frostedheart.command.*;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
@@ -62,8 +58,6 @@ import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
-import com.teammoeg.frostedheart.recipe.FHRecipeCachingReloadListener;
-import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
@@ -77,6 +71,7 @@ import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.town.TeamTownDataS2CPacket;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
@@ -85,7 +80,6 @@ import com.teammoeg.frostedheart.world.FHStructureFeatures;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -189,7 +183,7 @@ public class CommonEvents {
     @SubscribeEvent
     public static void insulationDataAttr(ItemAttributeModifierEvent event) {
         ArmorTempData data=FHDataManager.getArmor(event.getItemStack());
-        
+
         if(data!=null) {
         	UUID rnuuid=UUID.nameUUIDFromBytes((FHMain.MODID+event.getSlotType().toString()).getBytes(StandardCharsets.ISO_8859_1));
         	String amd=FHMain.MODID+":armor_data";
@@ -282,7 +276,8 @@ public class CommonEvents {
     @SubscribeEvent
     public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
         Block growBlock = event.getState().getBlock();
-
+        BlockPos belowPos=event.getPos().down();
+        Block belowGrowBlock=event.getWorld().getBlockState(belowPos).getBlock();
         float temp = ChunkHeatData.getTemperature(event.getWorld(), event.getPos());
         boolean bz = WorldClimate.isBlizzard(event.getWorld());
         if (bz) {
@@ -295,7 +290,7 @@ public class CommonEvents {
 	        		event.setResult(Event.Result.DENY);
 	        		return;
 	        	}
-	        		
+
         	}*/
             if (FHUtils.isBlizzardHarming(event.getWorld(), event.getPos())) {
             	FluidState curstate=event.getWorld().getFluidState(cur);
@@ -305,7 +300,7 @@ public class CommonEvents {
             		event.getWorld().setBlockState(cur, curstate.getBlockState(), 2);
             } else if (event.getWorld().getRandom().nextInt(3) == 0) {
             	//FluidState curstate=event.getWorld().getFluidState(cur);
-            	
+
                 event.getWorld().setBlockState(cur,growBlock.getDefaultState(), 2);
             }
             event.setResult(Event.Result.DENY);
@@ -325,8 +320,8 @@ public class CommonEvents {
                 }
                 event.setResult(Event.Result.DENY);
             }
-        } else {
-            if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE || bz) {
+        } else if(growBlock instanceof IGrowable){
+            if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE) {
                 // Set back to default state, might not be necessary
                 if ((bz || temp < 0) && event.getWorld().getRandom().nextInt(3) == 0) {
                     BlockState cbs = event.getWorld().getBlockState(event.getPos());
@@ -343,6 +338,9 @@ public class CommonEvents {
                 event.setResult(Event.Result.DENY);
             }
 
+        }else {
+        	if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE || bz)
+        		event.setResult(Event.Result.DENY);
         }
     }
 
@@ -653,6 +651,7 @@ public class CommonEvents {
         ClimateCommand.register(dispatcher);
         DebugCommand.register(dispatcher);
         ScenarioCommand.register(dispatcher);
+        TownCommand.register(dispatcher);
     }
 
     @SubscribeEvent
@@ -661,7 +660,11 @@ public class CommonEvents {
             World world = event.world;
             if (!world.isRemote && world instanceof ServerWorld) {
                 ServerWorld serverWorld = (ServerWorld) world;
+
+                // Scheduled checks (e.g. town structures)
                 SchedulerQueue.tickAll(serverWorld);
+
+                // Town logic tick
                 int i = 0;
                 for (TeamDataHolder trd : SpecialDataManager.INSTANCE.getAllData()) {
                     if (serverWorld.getDimensionKey().equals(trd.getData(SpecialDataTypes.GENERATOR_DATA).dimension)) {
@@ -684,20 +687,6 @@ public class CommonEvents {
                     }
 
                 }
-                if (world.getDayTime() % 24000 == 40) {
-                    for (PlayerEntity spe : world.getPlayers()) {
-                        if (spe instanceof ServerPlayerEntity && !(spe instanceof FakePlayer)) {
-                            ServerPlayerEntity serverPlayer = (ServerPlayerEntity) spe;
-                            long energy = EnergyCore.getEnergy(spe);
-                            if (energy > 10000)
-                                serverPlayer.sendStatusMessage(GuiUtils.translateMessage("energy.full"), false);
-                            else if (energy >= 5000)
-                                serverPlayer.sendStatusMessage(GuiUtils.translateMessage("energy.suit"), false);
-                            else
-                                serverPlayer.sendStatusMessage(GuiUtils.translateMessage("energy.lack"), false);
-                        }
-                    }
-                }
             }
 
         }
@@ -708,13 +697,31 @@ public class CommonEvents {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
+
+            // Scenario runner
             ScenarioConductor runner=FHScenario.getNullable(player);
-            if(runner!=null&&runner.isInited())
+            if (runner != null && runner.isInited())
             	runner.tick();
-            if(player.openContainer instanceof HeatStatContainer) {
+
+            // Heat network statistics update
+            if (player.openContainer instanceof HeatStatContainer) {
             	((HeatStatContainer)player.openContainer).tick();
             }
-           // System.out.println(runner.save());
+
+            // Research energy display
+            if (player.getServerWorld().getDayTime() % 24000 == 40) {
+                long energy = EnergyCore.getEnergy(player);
+                int messageNum = player.getRNG().nextInt(3);
+                if (energy > 10000)
+                    player.sendStatusMessage(GuiUtils.translateMessage("energy.full." + messageNum), false);
+                else if (energy >= 5000)
+                    player.sendStatusMessage(GuiUtils.translateMessage("energy.suit." + messageNum), false);
+                else
+                    player.sendStatusMessage(GuiUtils.translateMessage("energy.lack." + messageNum), false);
+            }
+
+            // Town data sync (currently, every tick for debug)
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new TeamTownDataS2CPacket(player));
         }
     }
     @SubscribeEvent

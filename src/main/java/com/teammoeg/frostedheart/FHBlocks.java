@@ -178,6 +178,13 @@ public class FHBlocks {
             .harvestTool(ToolType.PICKAXE)
             .hardnessAndResistance(2, 10)
             .notSolid()));
+    public static RegistryObject<Block> house = register("house",()->new HouseBlock( Block.Properties
+            .create(Material.WOOD)
+            .sound(SoundType.WOOD)
+            .setRequiresTool()
+            .harvestTool(ToolType.AXE)
+            .hardnessAndResistance(2, 6)
+            .notSolid()));
     public static final BlockEntry<SteamCoreBlock> steam_core = REGISTRATE.block("steam_core", SteamCoreBlock::new)
         .initialProperties(Material.IRON)
         .properties(t->t
@@ -190,13 +197,6 @@ public class FHBlocks {
         .item()
         .transform(customItemModel())
         .register();
-    public static RegistryObject<Block> house = register("house",()->new HouseBlock( Block.Properties
-            .create(Material.WOOD)
-            .sound(SoundType.WOOD)
-            .setRequiresTool()
-            .harvestTool(ToolType.AXE)
-            .hardnessAndResistance(2, 6)
-            .notSolid()));
     public static void init() {
     	Create.registrate().addToSection(steam_core, AllSections.KINETICS);
     }

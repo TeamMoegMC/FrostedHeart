@@ -40,11 +40,11 @@ import com.teammoeg.frostedheart.research.gui.editor.NumberBox;
 import com.teammoeg.frostedheart.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.research.gui.editor.SelectDialog;
 import com.teammoeg.frostedheart.research.gui.editor.SelectItemStackDialog;
-import com.teammoeg.frostedheart.util.Writeable;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.io.JsonSerializerRegistry;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.Writeable;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftblibrary.icon.Icon;

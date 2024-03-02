@@ -44,6 +44,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.potion.Effects;
+import net.minecraft.stats.ServerStatisticsManager;
 import net.minecraft.stats.StatisticsManager;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.ActionResultType;
@@ -64,7 +65,7 @@ public class FHVillagerData implements INamedContainerProvider {
     private int tradelevel;
     public VillagerEntity parent;
 
-    private static StatisticsManager getStats(PlayerEntity pe) {
+    private static ServerStatisticsManager getStats(PlayerEntity pe) {
         if (pe instanceof ServerPlayerEntity)
             return ((ServerPlayerEntity) pe).getStats();
         return null;
@@ -153,8 +154,9 @@ public class FHVillagerData implements INamedContainerProvider {
             list.put(RelationModifier.UNKNOWN_LANGUAGE, -30);
         list.put(RelationModifier.CHARM, (int) ResearchDataAPI.getVariantDouble(pe, ResearchVariant.VILLAGER_RELATION));
         int killed=0;
+        
         if(getStats(pe)!=null)
-        	killed = getStats(pe).getValue(Stats.ENTITY_KILLED, EntityType.VILLAGER);
+        	killed = getStats(pe).getValue(Stats.ENTITY_KILLED.get(EntityType.VILLAGER));
         int kdc = (int) Math.min(killed, ResearchDataAPI.getVariantDouble(pe, ResearchVariant.VILLAGER_FORGIVENESS));
         list.put(RelationModifier.KILLED_HISTORY, (killed - kdc) * -5);
         if (parent.getGossip().getReputation(pe.getUniqueID(), e -> e == GossipType.MINOR_NEGATIVE) > 0)

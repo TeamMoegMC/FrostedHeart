@@ -23,10 +23,15 @@ import com.teammoeg.frostedheart.FHBlocks;
 
 import net.minecraft.block.Block;
 
-// TODO: Auto-generated Javadoc
-
 /**
- * The Enum TownWorkerType.
+ * The second-lowest level town processing function.
+ *
+ * Each TownWorkerType associates a block with a TownWorker.
+ *
+ * For example, a HouseBlock is associated with a TownWorker functions
+ * that cost food and add service.
+ *
+ * Normally, you should add a new TownWorkerType for each new block type.
  */
 public enum TownWorkerType {
 
@@ -34,9 +39,9 @@ public enum TownWorkerType {
      * The dummy.
      */
     DUMMY(null, null, -1),
-    HOUSE(FHBlocks.house.get(), (resource, workData) -> {
+    HOUSE(FHBlocks.house.get(), (town, workData) -> {
         double cost = 1;
-        double actualCost = resource.cost(TownResourceType.PREP_FOOD, cost, false);
+        double actualCost = town.cost(TownResourceType.PREP_FOOD, cost, false);
         return cost == actualCost;
     }, 0);
 

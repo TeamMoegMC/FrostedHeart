@@ -23,7 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.climate.network.FHMessage;
+import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.trade.gui.TradeContainer;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 

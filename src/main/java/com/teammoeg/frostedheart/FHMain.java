@@ -33,10 +33,10 @@ import com.teammoeg.frostedheart.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
+import com.teammoeg.frostedheart.events.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
 import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
-import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.team.SpecialDataTypes;
@@ -109,7 +109,7 @@ public class FHMain {
         remote = new FHRemote();
         if (local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal().contains("pre"))
             pre = new FHRemote.FHPreRemote();
-        System.out.println(local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
+        FHMain.LOGGER.info("TWR Version: " + local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
         CreateCompat.init();
 
         IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();

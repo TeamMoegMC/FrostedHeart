@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.scenario.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.climate.network.FHMessage;
+import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioVariables;
 

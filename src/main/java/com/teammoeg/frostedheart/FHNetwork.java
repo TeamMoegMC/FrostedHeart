@@ -24,10 +24,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.climate.network.FHDatapackSyncPacket;
-import com.teammoeg.frostedheart.climate.network.FHMessage;
 import com.teammoeg.frostedheart.climate.network.FHTemperatureDisplayPacket;
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
 import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
@@ -50,12 +50,12 @@ import com.teammoeg.frostedheart.scenario.network.FHClientSettingsPacket;
 import com.teammoeg.frostedheart.scenario.network.ServerScenarioCommandPacket;
 import com.teammoeg.frostedheart.scenario.network.ServerSenarioActPacket;
 import com.teammoeg.frostedheart.scenario.network.ServerSenarioScenePacket;
+import com.teammoeg.frostedheart.town.TeamTownDataS2CPacket;
 import com.teammoeg.frostedheart.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.trade.network.BargainResponse;
 import com.teammoeg.frostedheart.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.trade.network.TradeUpdatePacket;
 
-import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.ModList;
@@ -71,6 +71,9 @@ public class FHNetwork {
         return CHANNEL;
     }
     private static int iid=0;
+    /**
+     * Register Message Type, would automatically use method in FHMessage as serializer and <init>(PacketBuffer) as deserializer
+     * */
     public static synchronized <T extends FHMessage> void registerMessage(String name,Class<T> msg) {
     	classesId.put(msg,FHMain.rl(name));
 		try {
@@ -94,7 +97,7 @@ public class FHNetwork {
     }
     public static void register() {
         String VERSION = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
-        System.out.println("[TWR Version Check] FH Network Version: " + VERSION);
+        FHMain.LOGGER.info("FH Network Version: " + VERSION);
         CHANNEL = NetworkRegistry.newSimpleChannel(FHMain.rl("network"), () -> VERSION,
                 VERSION::equals, VERSION::equals);
 
@@ -143,8 +146,12 @@ public class FHNetwork {
         registerMessage("scenario_link", ClientLinkClickedPacket.class);
         registerMessage("scenario_act", ServerSenarioActPacket.class);
         registerMessage("scenario_settings", FHClientSettingsPacket.class);
-        //
+
+        // Heat network system
         registerMessage("heat_endpoint", EndPointDataPacket.class);
+
+        // Town system
+        registerMessage("team_town_data_s2c", TeamTownDataS2CPacket.class);
     }
 
     public static void send(PacketDistributor.PacketTarget target, Object message) {

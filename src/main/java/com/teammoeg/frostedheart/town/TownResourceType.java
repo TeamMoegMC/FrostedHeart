@@ -55,21 +55,21 @@ public enum TownResourceType {
      *
      * @param maxStorage provider for max storage calculations. Must be null for services
      */
-    private TownResourceType(Function<Town, Double> maxStorage) {
+    TownResourceType(Function<Town, Double> maxStorage) {
         this.maxStorage = maxStorage;
     }
 
-    public int getIntMaxStorage(Town rc) {
+    public int getIntMaxStorage(Town town) {
         if (maxStorage == null) return 0;
-        return (int) (maxStorage.apply(rc) * 1000);
+        return (int) (maxStorage.apply(town) * 1000);
     }
 
     public String getKey() {
         return this.name().toLowerCase();
     }
 
-    public double getMaxStorage(Town rc) {
+    public double getMaxStorage(Town town) {
         if (maxStorage == null) return 0;
-        return maxStorage.apply(rc);
+        return maxStorage.apply(town);
     }
 }

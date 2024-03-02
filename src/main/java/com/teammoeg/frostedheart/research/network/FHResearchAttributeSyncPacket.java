@@ -21,7 +21,8 @@ package com.teammoeg.frostedheart.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.climate.network.FHMessage;
+import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.team.SpecialDataManager;
@@ -34,29 +35,23 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when player join
-public class FHResearchAttributeSyncPacket implements FHMessage {
-    private final CompoundNBT data;
+public class FHResearchAttributeSyncPacket extends NBTMessage {
 
     public FHResearchAttributeSyncPacket(CompoundNBT data) {
-        super();
-        this.data = data.copy();
+        super(data.copy());
     }
 
     public FHResearchAttributeSyncPacket(PacketBuffer buffer) {
-        data = buffer.readCompoundTag();
+        super(buffer);
     }
 
     public FHResearchAttributeSyncPacket(TeamDataHolder team) {
-        this.data = team.getData(SpecialDataTypes.RESEARCH_DATA).getVariants().copy();
-    }
-
-    public void encode(PacketBuffer buffer) {
-        buffer.writeCompoundTag(data);
+        super(team.getData(SpecialDataTypes.RESEARCH_DATA).getVariants().copy());
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	ClientResearchDataAPI.getData().setVariants(this.data);
+        	ClientResearchDataAPI.getData().setVariants(this.getTag());
         });
         context.get().setPacketHandled(true);
     }

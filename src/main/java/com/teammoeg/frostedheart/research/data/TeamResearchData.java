@@ -46,8 +46,8 @@ import com.teammoeg.frostedheart.research.research.clues.Clue;
 import com.teammoeg.frostedheart.research.research.effects.Effect;
 import com.teammoeg.frostedheart.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.team.TeamDataHolder;
-import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.util.OptionalLazy;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;

@@ -33,8 +33,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.ZipFile;
 import com.teammoeg.frostedheart.util.io.FileUtil;
+import com.teammoeg.frostedheart.util.io.ZipFile;
 import com.teammoeg.frostedheart.util.version.FHVersion;
 
 import net.minecraft.server.MinecraftServer;

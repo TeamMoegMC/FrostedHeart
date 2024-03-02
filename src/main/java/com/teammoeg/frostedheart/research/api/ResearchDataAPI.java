@@ -35,13 +35,13 @@ public class ResearchDataAPI {
 
     public static TeamResearchData getData(PlayerEntity id) {
         if (id instanceof ServerPlayerEntity)
-            return SpecialDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA);
+            return SpecialDataManager.INSTANCE.get(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA);
        // return TeamResearchData.getClientInstance();
         return ClientResearchDataAPI.getData();
     }
 
     public static TeamResearchData getData(UUID id) {
-        return SpecialDataManager.INSTANCE.getData(id).getData(SpecialDataTypes.RESEARCH_DATA);
+        return SpecialDataManager.INSTANCE.get(id).getData(SpecialDataTypes.RESEARCH_DATA);
 
     }
 
@@ -97,7 +97,7 @@ public class ResearchDataAPI {
     
     public static boolean isResearchComplete(PlayerEntity id, String research) {
         if (id instanceof ServerPlayerEntity)
-            return SpecialDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA).getData(research).isCompleted();
+            return SpecialDataManager.INSTANCE.get(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA).getData(research).isCompleted();
         return ClientResearchDataAPI.getData().getData(research).isCompleted();
     }
 

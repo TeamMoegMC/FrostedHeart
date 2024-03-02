@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.util.io;
 
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.frostedheart.util.Writeable;
 
 public class JsonSerializerRegistry<U extends Writeable> extends PacketBufferSerializerRegistry<U, JsonObject> {
 

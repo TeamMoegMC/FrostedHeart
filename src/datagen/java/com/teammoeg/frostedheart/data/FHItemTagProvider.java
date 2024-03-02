@@ -19,27 +19,27 @@
 
 package com.teammoeg.frostedheart.data;
 
-import java.nio.file.Path;
-
 import com.cannolicatfish.rankine.init.RankineTags;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
+import net.minecraft.data.BlockTagsProvider;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.TagsProvider;
+import net.minecraft.data.ItemTagsProvider;
 import net.minecraft.item.Item;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
 import net.minecraftforge.common.Tags.IOptionalNamedTag;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.fml.RegistryObject;
 
-public class FHItemTagProvider extends TagsProvider<Item> {
+import java.nio.file.Path;
 
-	public FHItemTagProvider(DataGenerator dataGenerator, ExistingFileHelper existingFileHelper) {
-		super(dataGenerator, Registry.ITEM,FHMain.MODID, existingFileHelper);
+public class FHItemTagProvider extends ItemTagsProvider {
+
+	public FHItemTagProvider(DataGenerator dataGenerator, BlockTagsProvider blockTagsProvider, ExistingFileHelper existingFileHelper) {
+		super(dataGenerator, blockTagsProvider, FHMain.MODID, existingFileHelper);
 	}
 
 

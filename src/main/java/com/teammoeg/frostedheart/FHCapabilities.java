@@ -5,7 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.teammoeg.frostedheart.capability.FHCapability;
+import com.teammoeg.frostedheart.base.capability.FHCapability;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
@@ -14,7 +14,7 @@ import com.teammoeg.frostedheart.content.foods.dailykitchen.WantedFoodCapability
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
-import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraftforge.common.util.NonNullSupplier;
 
@@ -33,6 +33,10 @@ public class FHCapabilities {
 		for(FHCapability<?> cap:capabilities)
 			cap.setup();
 	}
+	/**
+	 * register capability with class, using no-arg constructor as default factory
+	 * 
+	 * */
 	public static <T extends NBTSerializable> FHCapability<T> register(Class<T> capClass){
 		Constructor<T> ctor;
 		try {
@@ -60,6 +64,7 @@ public class FHCapabilities {
 		capabilities.add(cap);
 		return cap;
 	}
+
 	public static <T extends NBTSerializable> FHCapability<T> register(Class<T> capClass,NonNullSupplier<T> sup){
 		FHCapability<T> cap=new FHCapability<>(capClass,sup);
 		capabilities.add(cap);

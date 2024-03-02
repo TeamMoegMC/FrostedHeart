@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.io;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -28,8 +28,6 @@ import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipOutputStream;
-
-import com.teammoeg.frostedheart.util.io.FileUtil;
 
 public class ZipFile implements AutoCloseable {
     Path fd;

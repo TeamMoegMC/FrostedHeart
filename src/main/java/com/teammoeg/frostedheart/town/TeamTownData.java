@@ -19,17 +19,15 @@
 
 package com.teammoeg.frostedheart.town;
 
-import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.PriorityQueue;
 
-import com.teammoeg.frostedheart.team.SpecialDataHolder;
-import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.town.resident.Resident;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -41,8 +39,21 @@ import net.minecraftforge.common.util.Constants;
 
 /**
  * Town data for a whole team.
+ *
+ * It maintains town resources, worker data, and holds a team data
+ * when initialized.
+ *
+ * Everything permanent should be saved in this class.
  */
 public class TeamTownData implements NBTSerializable{
+    /**
+     * The town name.
+     */
+    String name;
+    /**
+     * The town residents.
+     */
+    Map<UUID, Resident> residents = new LinkedHashMap<>();
 	/**
      * Resource generated from resident
      */
@@ -51,33 +62,30 @@ public class TeamTownData implements NBTSerializable{
      * Resource provided by player
      */
     Map<TownResourceType, Integer> backupResources = new EnumMap<>(TownResourceType.class);
+    /**
+     * Town blocks and their worker data
+     */
     Map<BlockPos, TownWorkerData> blocks = new LinkedHashMap<>();
-    SpecialDataHolder team;
+    /**
+     * The team data pointer
+     */
+    TeamDataHolder teamData;
 
-    public TeamTownData(SpecialDataHolder team) {
+    public TeamTownData(TeamDataHolder teamData) {
         super();
-        this.team = team;
-    }
-
-
-    public CompoundNBT getTownBlockData(BlockPos pos) {
-        TownWorkerData twd = blocks.get(pos);
-        if (twd == null)
-            return null;
-        return twd.getWorkData();
-    }
-
-    public void registerTownBlock(BlockPos pos, ITownBlockTE tile) {
-        TownWorkerData data = blocks.computeIfAbsent(pos, TownWorkerData::new);
-        data.fromBlock(tile);
-    }
-
-    public void removeTownBlock(BlockPos pos) {
-        blocks.remove(pos);
+        this.teamData = teamData;
+        if (teamData.getTeam().isPresent()) {
+            this.name = teamData.getTeam().get().getDisplayName() + "'s Town";
+        } else {
+            this.name = teamData.getOwnerName() + "'s Town";
+        }
     }
 
     /**
-     * This tick only works per 20 tick.
+     * Town logic update (every 20 ticks).
+     * This method first validates the town blocks, then sorts them by priority and calls the work methods.
+     *
+     * @param world server world instance
      */
     public void tick(ServerWorld world) {
         PriorityQueue<TownWorkerData> pq = new PriorityQueue<TownWorkerData>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
@@ -89,7 +97,7 @@ public class TeamTownData implements NBTSerializable{
                 BlockState bs = world.getBlockState(pos);
                 TileEntity te = Utils.getExistingTileEntity(world, pos);
                 TownWorkerType twt = v.getType();
-                if (twt.getBlock() != bs.getBlock() || te == null || !(te instanceof ITownBlockTE) || !((ITownBlockTE) te).isWorkValid()) {
+                if (twt.getBlock() != bs.getBlock() || te == null || !(te instanceof TownTileEntity) || !((TownTileEntity) te).isWorkValid()) {
                     return true;
                 }
             }
@@ -98,7 +106,7 @@ public class TeamTownData implements NBTSerializable{
         for (TownWorkerData v : blocks.values()) {
             pq.add(v);
         }
-        PlayerTown itt = new PlayerTown(this);
+        TeamTown itt = new TeamTown(this);
         for (TownWorkerData t : pq) {
             t.firstWork(itt);
         }
@@ -141,7 +149,8 @@ public class TeamTownData implements NBTSerializable{
             if (v.getValue() != null && v.getValue() != 0)
                 list3.putInt(v.getKey().getKey(), v.getValue());
         }
-        nbt.put("backupResource", list2);
+        nbt.put("backupResource", list3);
+        nbt.putString("name", name);
 	}
 
 
@@ -156,6 +165,11 @@ public class TeamTownData implements NBTSerializable{
         for (String i : rec.keySet()) {
             resources.put(TownResourceType.from(i), rec.getInt(i));
         }
+        CompoundNBT rec2 = data.getCompound("backupResource");
+        for (String i : rec2.keySet()) {
+            backupResources.put(TownResourceType.from(i), rec2.getInt(i));
+        }
+        name = data.getString("name");
 	}
 
 

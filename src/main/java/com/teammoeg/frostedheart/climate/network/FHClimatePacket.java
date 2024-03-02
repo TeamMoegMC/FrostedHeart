@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.climate.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.client.ClientClimateData;
 import com.teammoeg.frostedheart.climate.ClimateType;
 import com.teammoeg.frostedheart.climate.TemperatureFrame;

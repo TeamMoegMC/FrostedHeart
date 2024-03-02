@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -219,6 +219,13 @@ public class ChunkHeatData implements NBTSerializable {
         ArrayList<ITemperatureAdjust> al = new ArrayList<>(get(world, new ChunkPos(pos)).map(t->t.getAdjusters()).orElseGet(Arrays::asList));
         al.removeIf(adj -> !adj.isEffective(pos));
         return al;
+    }
+
+    /**
+     * If there is any adjust at the position.
+     */
+    public static boolean hasAdjust(IWorldReader world, BlockPos pos) {
+        return !getAdjust(world, pos).isEmpty();
     }
 
     /**

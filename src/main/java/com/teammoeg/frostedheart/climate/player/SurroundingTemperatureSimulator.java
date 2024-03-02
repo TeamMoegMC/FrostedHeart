@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.climate.player;
 
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.nio.LongBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -26,6 +29,7 @@ import java.util.Random;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.util.MersenneTwister;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -148,7 +152,11 @@ public class SurroundingTemperatureSimulator {
                 }
                 i += 2;
             }
-        rnd = new Random(player.getPosition().toLong());
+        ByteBuffer bb=ByteBuffer.allocate(16);
+        LongBuffer lb=bb.asLongBuffer();
+        lb.put(player.getPosition().toLong());
+        lb.put(player.getServerWorld().getGameTime());
+        rnd = new MersenneTwister(bb.array());
     }
 
     /**
@@ -230,7 +238,7 @@ public class SurroundingTemperatureSimulator {
                 bm.setZ((int) qz[i]);
                 BlockPos bp=bm.toImmutable();
                 heat += getHeat(bp)
-                        * MathHelper.lerp(MathHelper.clamp(vy[vid[i]], 0, 0.4) * 2.5, 1, 0.5); // add heat
+                        * MathHelper.lerp(MathHelper.clamp(-vy[vid[i]], 0, 0.4) * 2.5, 1, 0.5); // add heat
                 wind +=getAir(bp)?MathHelper.lerp((MathHelper.clamp(Math.abs(vy[vid[i]]), 0.2, 0.8)-0.2)/0.6, 2, 0.5):0;
             }
         }

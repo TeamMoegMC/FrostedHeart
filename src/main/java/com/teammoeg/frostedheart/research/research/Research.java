@@ -52,8 +52,8 @@ import com.teammoeg.frostedheart.research.research.effects.Effects;
 import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.team.TeamDataHolder;
-import com.teammoeg.frostedheart.util.Writeable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.Writeable;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftbteams.data.Team;

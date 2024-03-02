@@ -41,8 +41,8 @@ import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.team.TeamDataHolder;
-import com.teammoeg.frostedheart.util.Writeable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.Writeable;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.PlayerEntity;

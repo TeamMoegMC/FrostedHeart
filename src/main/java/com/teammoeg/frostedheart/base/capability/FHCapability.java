@@ -1,6 +1,6 @@
-package com.teammoeg.frostedheart.capability;
+package com.teammoeg.frostedheart.base.capability;
 
-import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;

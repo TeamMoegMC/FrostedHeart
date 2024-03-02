@@ -27,8 +27,8 @@ import com.teammoeg.frostedheart.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.fluid.Fluid;

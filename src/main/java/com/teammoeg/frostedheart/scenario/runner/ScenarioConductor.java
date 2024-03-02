@@ -25,6 +25,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
@@ -32,7 +33,7 @@ import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
-import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -55,7 +56,8 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
     private transient boolean isActsEnabled;
     private transient ActNamespace lastQuest;
     private static final ActNamespace global=new ActNamespace();
-    private static final ActNamespace init=new ActNamespace(null,null);
+
+	private static final ActNamespace init=new ActNamespace(null,null);
     boolean inited=false;
 
 
@@ -89,6 +91,7 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
     	if(!isInited())inited=true;
 		this.player = player.getUniqueID();
 	}
+
     public ScenarioConductor(ServerPlayerEntity player) {
 		super();
 		this.player = player.getUniqueID();
@@ -141,6 +144,12 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 		//}else super.addTrigger(trig,targ);
 	}
     public void run(Scenario sp) {
+		if (sp == null) {
+			FHMain.LOGGER.error("[Scenario Conductor] Scenario to run is null");
+		} else {
+			FHMain.LOGGER.info("[Scenario Conductor] Running scenario "+sp.name);
+		}
+
 		this.setScenario(sp);
 		nodeNum=0;
 		varData.takeSnapshot();
@@ -215,9 +224,11 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 			pauseAct();
 			this.setCurrentAct(data);
 			data.prepareForRun();
-			this.sp=data.getScenario();
-			this.nodeNum=data.getNodeNum();
-			this.status=data.getStatus();
+			if(data.getScenario()!=null) {
+				this.sp=data.getScenario();
+				this.nodeNum=data.getNodeNum();
+				this.status=data.getStatus();
+			}
 			data.sendTitles(true, true);
 			if(getStatus().shouldRun) {
 				getScene().forcedClear(this);

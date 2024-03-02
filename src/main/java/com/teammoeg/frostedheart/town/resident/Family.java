@@ -17,18 +17,20 @@
  *
  */
 
-package com.teammoeg.frostedheart.town;
+package com.teammoeg.frostedheart.town.resident;
 
-import net.minecraft.nbt.CompoundNBT;
+/**
+ * A family of residents.
+ * */
+public class Family {
+    private String lastName;
+    private Resident[] residents;
 
-public interface ITownBlockTE {
-    int getPriority();
+    public Family(Resident[] residents) {
+        this.residents = residents;
+    }
 
-    CompoundNBT getWorkData();
-
-    TownWorkerType getWorker();
-
-    boolean isWorkValid();
-
-    void setWorkData(CompoundNBT data);
+    public Resident[] getResidents() {
+        return residents;
+    }
 }

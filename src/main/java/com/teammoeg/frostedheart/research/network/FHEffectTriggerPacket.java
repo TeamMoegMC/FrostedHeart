@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.climate.network.FHMessage;
+import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
@@ -55,6 +55,7 @@ public class FHEffectTriggerPacket implements FHMessage {
             TeamResearchData trd = ResearchDataAPI.getData(context.get().getSender());
             ServerPlayerEntity spe = context.get().getSender();
             if (trd.getData(r).isCompleted()) {
+            	
                 r.grantEffects(trd, spe);
                 r.sendProgressPacket(trd.getHolder());
             }

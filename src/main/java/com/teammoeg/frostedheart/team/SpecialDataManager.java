@@ -38,12 +38,14 @@ import org.apache.commons.io.FileUtils;
 
 import com.mojang.authlib.GameProfile;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
+
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.crafting.RecipeManager;
@@ -53,13 +55,21 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.world.storage.FolderName;
 
+/**
+ * The data manager for all team data.
+ * use {@link ClientDataHolder} to get data in client
+ * Normally, use
+ * get(PlayerEntity player) to get the data for a player's team.
+ * get(Team team) to get the data for FTB team.
+ */
 public class SpecialDataManager {
+
+    public static SpecialDataManager INSTANCE;
     private final MinecraftServer server;
     static final FolderName dataFolder = new FolderName("fhdata");
-    static final FolderName OlddataFolder = new FolderName("fhresearch");
-    public static SpecialDataManager INSTANCE;
+    static final FolderName oldDataFolder = new FolderName("fhresearch");
     private Map<UUID, UUID> dataByFTBId = new HashMap<>();
-    private Map<UUID, TeamDataHolder> dataByResearchId = new HashMap<>();
+    private Map<UUID, TeamDataHolder> dataByFhId = new HashMap<>();
     
     public static RecipeManager getRecipeManager() {
         if (getServer() != null)
@@ -72,33 +82,64 @@ public class SpecialDataManager {
         INSTANCE = this;
     }
 
+    /**
+     * Get all data of all teams.
+     * @return the data collection
+     */
     public Collection<TeamDataHolder> getAllData() {
-        return dataByResearchId.values();
-    }
-    public <T extends NBTSerializable> Stream<T> getAllData(SpecialDataType<T,TeamDataHolder> type) {
-        return dataByResearchId.values().stream().map(t->t.getOptional(type)).filter(t->t.isPresent()).map(t->t.get());
-    }
-    public static TeamDataHolder getDataByTeam(Team team) {
-    	return INSTANCE.getData(team);
-    }
-    public static TeamDataHolder getDataByRid(UUID id) {
-    	return INSTANCE.getData(id);
+        return dataByFhId.values();
     }
 
-	public static TeamDataHolder getData(PlayerEntity player) {
-		return INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)player));
+    /**
+     * Get all data of all teams of a specific type.
+     * @param type the type
+     * @param <T> the type
+     * @return the data stream
+     */
+    public <T extends NBTSerializable> Stream<T> getAllData(SpecialDataType<T,TeamDataHolder> type) {
+        return dataByFhId.values().stream().map(t->t.getOptional(type)).filter(t->t.isPresent()).map(t->t.get());
+    }
+
+    /**
+     * Helper method to get the data from a team.
+     * @param team the team
+     * @return data
+     */
+    public static TeamDataHolder getDataByTeam(Team team) {
+    	return INSTANCE.get(team);
+    }
+
+    /**
+     * Helper method to get the data from frostedheart team id.
+     * @param id the research team id
+     * @return data
+     */
+    public static TeamDataHolder getDataByResearchID(UUID id) {
+    	return INSTANCE.get(id);
+    }
+
+    /**
+     * Get the data for a player's team, should not call in client
+     * @param player the player
+     * @return the data
+     */
+	public static TeamDataHolder get(PlayerEntity player) {
+		return INSTANCE.get(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)player));
+		
 	}
-    /*
-     * get Team data as well as check ownership.
-     *
-     * */
-    public TeamDataHolder getData(Team team) {
+
+    /**
+     * Get the data for a team, as well as check ownership and transfer if necessary.
+     * @param team the team
+     * @return the data
+     */
+    public TeamDataHolder get(Team team) {
         UUID cn = dataByFTBId.get(team.getId());
         if (cn == null) {
             GameProfile owner = getServer().getPlayerProfileCache().getProfileByUUID(team.getOwner());
             
             if (owner != null&&(!getServer().isServerInOnlineMode()||getServer().isSinglePlayer()))
-                for (Entry<UUID, TeamDataHolder> dat : dataByResearchId.entrySet()) {
+                for (Entry<UUID, TeamDataHolder> dat : dataByFhId.entrySet()) {
                     if (owner.getName().equals(dat.getValue().getOwnerName())) {
                         this.transfer(dat.getKey(), team);
                         break;
@@ -106,7 +147,7 @@ public class SpecialDataManager {
                 }
         }
         cn = dataByFTBId.computeIfAbsent(team.getId(), t->UUID.randomUUID());
-        TeamDataHolder data=dataByResearchId.computeIfAbsent(cn, c -> new TeamDataHolder(c, OptionalLazy.of(()->team)));
+        TeamDataHolder data=dataByFhId.computeIfAbsent(cn, c -> new TeamDataHolder(c, OptionalLazy.of(()->team)));
         if (data.getOwnerName() == null) {
             PlayerProfileCache cache = getServer().getPlayerProfileCache();
             if (cache != null) {
@@ -119,20 +160,28 @@ public class SpecialDataManager {
         return data;
 
     }
+
+    /**
+     * Get the data for a team from the frostedheart team id.
+     *
+     * @param id the frostedheart team id
+     * @return the data
+     */
     @Nullable
-    public TeamDataHolder getData(UUID id) {
-
-    	TeamDataHolder cn = dataByResearchId.get(id);
-        return cn;
-
+    public TeamDataHolder get(UUID id) {
+        return dataByFhId.get(id);
     }
 
+    /**
+     * Load all data from disk.
+     */
     public void load() {
         dataByFTBId.clear();
         Path local=getServer().func_240776_a_(dataFolder);
         local.toFile().mkdirs();
-        Path olocal=getServer().func_240776_a_(OlddataFolder);
+        Path olocal=getServer().func_240776_a_(oldDataFolder);
         Stream<File> strm1=null,strm2=null;
+        //Compatible migration from old data folder
         if(local.toFile().exists())
         	strm1=Arrays.stream(local.toFile().listFiles((f) -> f.getName().endsWith(".nbt")));
         if(olocal.toFile().exists())
@@ -163,7 +212,7 @@ public class SpecialDataManager {
 	
 	                trd.deserialize(nbt, false);
 	                dataByFTBId.put(ftbid, trd.getId());
-	                dataByResearchId.put(trd.getId(), trd);
+	                dataByFhId.put(trd.getId(), trd);
 	            } catch (IllegalArgumentException ex) {
 	                ex.printStackTrace();
 	                FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
@@ -175,10 +224,13 @@ public class SpecialDataManager {
 	        });
     }
 
+    /**
+     * Save all data to disk.
+     */
     public void save() {
     	Path local=getServer().func_240776_a_(dataFolder);
         Set<String> files = new HashSet<>(Arrays.asList(local.toFile().list((d, s) -> s.endsWith(".nbt"))));
-        for (Entry<UUID, TeamDataHolder> entry : dataByResearchId.entrySet()) {
+        for (Entry<UUID, TeamDataHolder> entry : dataByFhId.entrySet()) {
             String fn = entry.getKey().toString() + ".nbt";
             File f = local.resolve(fn).toFile();
             try {
@@ -193,7 +245,7 @@ public class SpecialDataManager {
         for (String todel : files) {
             local.resolve(todel).toFile().delete();
         }
-        Path olocal=getServer().func_240776_a_(OlddataFolder);
+        Path olocal=getServer().func_240776_a_(oldDataFolder);
         if(olocal.toFile().exists()) {
         	try {
 				FileUtils.deleteDirectory(olocal.toFile());
@@ -204,9 +256,15 @@ public class SpecialDataManager {
         }
     }
 
+    /**
+     * Transfer data from one team to another.
+     *
+     * @param orig the original team id
+     * @param team the new team
+     */
     public void transfer(UUID orig, Team team) {
     	UUID rid=dataByFTBId.remove(orig);
-        TeamDataHolder odata = dataByResearchId.get(rid);
+        TeamDataHolder odata = dataByFhId.get(rid);
         if (odata != null) {
             odata.setTeam(OptionalLazy.of(()->team));
             odata.setOwnerName(getServer().getPlayerProfileCache().getProfileByUUID(team.getOwner()).getName());
@@ -215,6 +273,10 @@ public class SpecialDataManager {
 
     }
 
+    /**
+     * Get the server instance.
+     * @return the server instance
+     */
 	public static MinecraftServer getServer() {
 		if(INSTANCE==null)
 			return null;

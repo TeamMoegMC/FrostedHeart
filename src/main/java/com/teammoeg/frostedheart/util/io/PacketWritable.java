@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.io;
 
 import net.minecraft.network.PacketBuffer;
 

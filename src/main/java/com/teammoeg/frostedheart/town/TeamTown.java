@@ -19,25 +19,79 @@
 
 package com.teammoeg.frostedheart.town;
 
+import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.town.resident.Resident;
+import dev.ftb.mods.ftbteams.data.Team;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.math.BlockPos;
+
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.UUID;
 
-
-public class PlayerTown implements Town {
+/**
+ * The town for a player team.
+ *
+ * The TeamTown is only an interface of the underlying TeamTownData.
+ * You may use this to access or modify town data.
+ */
+public class TeamTown implements Town {
+    /** Linked to town data resources. */
     Map<TownResourceType, Integer> storage;
+    /** Linked to town data backup resources. */
     Map<TownResourceType, Integer> backupStorage;
+    /** Service, only live in one tick cycle. */
     Map<TownResourceType, Integer> service = new EnumMap<>(TownResourceType.class);
+    /** Costed service, only live in one tick cycle. */
     Map<TownResourceType, Integer> costedService = new EnumMap<>(TownResourceType.class);
+    /** Max storage, only live in one tick cycle. */
     Map<TownResourceType, Integer> maxStorage = new EnumMap<>(TownResourceType.class);
-    TeamTownData town;
+    /** The town data, actual data stored on disk. */
+    TeamTownData data;
 
-    public PlayerTown(TeamTownData td) {
+    /**
+     * Create a new town based on data.
+     * @param data can be taken from a player, team, etc.
+     *             can also be experimental data.
+     * @return the town
+     */
+    public static TeamTown create(TeamTownData data) {
+        return new TeamTown(data);
+    }
+
+    /**
+     * Get the town for a player.
+     * @param player the player
+     * @return the town
+     */
+    public static TeamTown from(PlayerEntity player) {
+        TeamTownData data = SpecialDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA);
+        return new TeamTown(data);
+    }
+
+    /**
+     * Get the town for a team.
+     * @param team the team
+     * @return the town
+     */
+    public static TeamTown from(Team team) {
+        TeamTownData data = SpecialDataManager.getDataByTeam(team).getData(SpecialDataTypes.TOWN_DATA);
+        return new TeamTown(data);
+    }
+
+    /**
+     * Default constructor links storage to the town data.
+     * @param td the town data
+     */
+    public TeamTown(TeamTownData td) {
         super();
         this.storage = td.resources;
         this.backupStorage = td.backupResources;
-        this.town = td;
+        this.data = td;
     }
 
     @Override
@@ -189,12 +243,111 @@ public class PlayerTown implements Town {
         return val / 1000d;
     }
 
+    public Map<TownResourceType, Double> getResources() {
+        Map<TownResourceType, Double> ret = new EnumMap<>(TownResourceType.class);
+        for (Entry<TownResourceType, Integer> ent : storage.entrySet()) {
+            int val = ent.getValue();
+            val += backupStorage.getOrDefault(ent.getKey(), 0);
+            val += service.getOrDefault(ent.getKey(), 0);
+            ret.put(ent.getKey(), val / 1000d);
+        }
+        return ret;
+    }
+
+    /**
+     * Get the blocks and their worker data.
+     */
+    public Map<BlockPos, TownWorkerData> getTownBlocks() {
+        return data.blocks;
+    }
+
+    /**
+     * Get the work data of the town block. (Not the TownWorkerData)
+     * @param pos position of the block
+     * @return the work data
+     */
+    public CompoundNBT getTownBlockData(BlockPos pos) {
+        TownWorkerData twd = data.blocks.get(pos);
+        if (twd == null)
+            return null;
+        return twd.getWorkData();
+    }
+
+    /**
+     * Initializes new TownWorkerData from the tile entity.
+     * Put the data into the map.
+     *
+     * @param pos position of the block
+     * @param tile the tile entity associated with the block
+     */
+    public void addTownBlock(BlockPos pos, TownTileEntity tile) {
+        TownWorkerData workerData = data.blocks.computeIfAbsent(pos, TownWorkerData::new);
+        workerData.fromBlock(tile);
+    }
+
+    /**
+     * Remove the town block from the map.
+     *
+     * @param pos position of the block
+     */
+    public void removeTownBlock(BlockPos pos) {
+        data.blocks.remove(pos);
+    }
+
+    public Map<UUID, Resident> getResidents() {
+        return data.residents;
+    }
+
+    public void addResident(Resident resident) {
+        data.residents.put(UUID.randomUUID(), resident);
+    }
+
+    public void addResident(String firstName, String lastName) {
+        addResident(new Resident(firstName, lastName));
+    }
+
+    public void removeResident(UUID id) {
+        data.residents.remove(id);
+    }
+
+    /**
+     * Remove all resident matching the first and last name.
+     * @param firstName the first name
+     * @param lastName the last name
+     * @return true if the resident was removed
+     */
+    public boolean removeResident(String firstName, String lastName) {
+        boolean removed = false;
+        for (Entry<UUID, Resident> entry : getResidents().entrySet()) {
+            if (entry.getValue().getFirstName().equals(firstName) && entry.getValue().getLastName().equals(lastName)) {
+                getResidents().remove(entry.getKey());
+                removed = true;
+            }
+        }
+        return removed;
+    }
+
+    /**
+     * Get the town name.
+     */
+    public String getName() {
+        return data.name;
+    }
+
+    /**
+     * Set the town name.
+     * @param name the new name
+     */
+    public void setName(String name) {
+        this.data.name = name;
+    }
+
     private int getIntMaxStorage(TownResourceType name) {
         return maxStorage.computeIfAbsent(name, t -> t.getIntMaxStorage(this));
     }
 
     @Override
     public Optional<TeamTownData> getTownData() {
-        return Optional.of(town);
+        return Optional.of(data);
     }
 }

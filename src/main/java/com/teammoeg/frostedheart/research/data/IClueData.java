@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.research.data;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.research.clues.Clue;
-import com.teammoeg.frostedheart.util.Writeable;
+import com.teammoeg.frostedheart.util.io.Writeable;
 
 public abstract class IClueData implements Writeable{
     Supplier<Clue> clue;
