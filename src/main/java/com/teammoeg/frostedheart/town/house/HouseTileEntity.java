@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.town.TownTileEntity;
 import com.teammoeg.frostedheart.town.TownWorkerType;
 import com.teammoeg.frostedheart.town.resident.Resident;
 import com.teammoeg.frostedheart.util.BlockScanner;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.tags.BlockTags;
@@ -248,6 +249,8 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
                     markDirty();
                 }
             }
+        } else if (getIsActive()) {
+            ClientUtils.spawnSteamParticles(world, pos);
         }
     }
 
@@ -264,7 +267,7 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
     LazyOptional<HeatConsumerEndpoint> endpointCap = LazyOptional.of(()-> endpoint);
     @Nonnull
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
-        if(capability== FHCapabilities.HEAT_EP.capability()) {
+        if(capability== FHCapabilities.HEAT_EP.capability() && facing == Direction.NORTH) {
             return endpointCap.cast();
         }
         return super.getCapability(capability, facing);

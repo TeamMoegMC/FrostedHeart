@@ -1,3 +1,4 @@
 {
-  "parent": "frostedheart:block/house"
+  "parent": "frostedheart:block/house",
+  "flip-v": true
 }
