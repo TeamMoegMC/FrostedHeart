@@ -115,11 +115,10 @@ public class GasParticle extends SpriteTexturedParticle {
         }
 
         // Spread hitting a ceiling or other obstacle
-//        if (posY == prevPosY) {
-//            double spreadFactor = Math.max(1.1, Math.min(2.0, Math.abs(motionY)));
-//            motionX *= spreadFactor;
-//            motionZ *= spreadFactor;
-//        }
+        if (posY == prevPosY) {
+            motionX += motionY;
+            motionZ += motionY;
+        }
     }
 
 }
