@@ -21,37 +21,89 @@ package com.teammoeg.frostedheart.content.steamenergy;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import moze_intel.projecte.network.commands.RemoveEmcCMD;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.INamedContainerProvider;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 
 /**
  * Class HeatProviderManager.
  * <p>
  * Integrated manager for heat providers
  */
-public class HeatEnergyNetwork  implements INamedContainerProvider{
-    private int interval = 0;
-    private Consumer<BiConsumer<BlockPos, Direction>> onConnect;
-    World world;
-    TileEntity cur;
+public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializable{
+    private transient int interval = 0;
+    private transient Consumer<BiConsumer<BlockPos, Direction>> onConnect;
+    transient World world;
+    transient TileEntity cur;
+
+    transient PriorityQueue<HeatEndpoint> endpoints=new PriorityQueue<>(Comparator.comparingInt(HeatEndpoint::getDistance));
+    public Map<HeatEndpoint,EndPointData> data=new HashMap<>();
+    public Set<EndPointData> epdataset=new HashSet<>();
+    Map<BlockPos,Integer> propagated=new HashMap<>();
+    boolean dataModified=true;
+	private boolean isValid = true;
+	@Override
+	public void save(CompoundNBT nbt, boolean isPacket) {
+		nbt.put("pipes",
+		SerializeUtil.toNBTList(propagated.entrySet(),k->{
+			 CompoundNBT cnbt=new CompoundNBT();
+			 cnbt.putLong("pos",k.getKey().toLong());
+			 cnbt.putInt("len", k.getValue());
+			return cnbt;
+		}));
+		nbt.put("endpoints",
+		SerializeUtil.toNBTList(data.entrySet(),k->{
+			 CompoundNBT cnbt=new CompoundNBT();
+			 cnbt.putLong("pos",k.getValue().pos.toLong());
+			 cnbt.putString("blk", RegistryUtils.getRegistryName(k.getValue().blk).toString());
+			return cnbt;
+		}));
+	}
+
+	@Override
+	public void load(CompoundNBT nbt, boolean isPacket) {
+		propagated.clear();
+		ListNBT cn=nbt.getList("pipes", Constants.NBT.TAG_COMPOUND);
+		for(INBT ccn:cn) {
+			CompoundNBT ccnbt=((CompoundNBT)ccn);
+			propagated.put(BlockPos.fromLong(ccnbt.getLong("pos")), ccnbt.getInt("len"));
+		}
+		epdataset.clear();
+		ListNBT cn2=nbt.getList("endpoints", Constants.NBT.TAG_COMPOUND);
+		for(INBT ccn:cn2) {
+			CompoundNBT ccnbt=((CompoundNBT)ccn);
+			epdataset.add(new EndPointData(RegistryUtils.getBlock(new ResourceLocation(ccnbt.getString("blk"))),
+					BlockPos.fromLong(ccnbt.getLong("pos"))));
+		}
+	}
     private BiConsumer<BlockPos, Direction> connect = (pos, d) -> {
     	if(getWorld()!=null) {
 	        TileEntity te = Utils.getExistingTileEntity(getWorld(), pos);
@@ -70,11 +122,7 @@ public class HeatEnergyNetwork  implements INamedContainerProvider{
 	public String toString() {
 		return "HeatEnergyNetwork [endpoints=" + endpoints + "]";
 	}
-	private boolean isValid = true;
-    PriorityQueue<HeatEndpoint> endpoints=new PriorityQueue<>(Comparator.comparingInt(HeatEndpoint::getDistance));
-    public Map<HeatEndpoint,EndPointData> data=new HashMap<>();
-    boolean dataModified=true;
-    Map<BlockPos,Integer> propagated=new HashMap<>();
+
     public boolean shouldPropagate(BlockPos pos,int dist) {
     	int odist=propagated.getOrDefault(pos,-1);
     	if(odist>dist||odist==-1) {
@@ -98,7 +146,7 @@ public class HeatEnergyNetwork  implements INamedContainerProvider{
     		}
     	}else {
     		heatEndpoint.connect(this, dist);
-    		data.put(heatEndpoint, new EndPointData(getWorld().getBlockState(pos).getBlock()));
+    		data.put(heatEndpoint, new EndPointData(getWorld().getBlockState(pos).getBlock(),pos));
     		dataModified=true;
     		return true;
     	}
@@ -216,4 +264,6 @@ public class HeatEnergyNetwork  implements INamedContainerProvider{
 	public ITextComponent getDisplayName() {
 		return GuiUtils.translateGui("heat_stat");
 	}
+
+
 }
