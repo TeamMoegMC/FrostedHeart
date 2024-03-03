@@ -2,13 +2,16 @@ package com.teammoeg.frostedheart.content.steamenergy;
 
 import net.minecraft.block.Block;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class EndPointData {
 	Block blk;
-	public EndPointData(Block blk) {
+	BlockPos pos;
+	public EndPointData(Block blk,BlockPos pos) {
 		super();
 		this.blk = blk;
+		this.pos = pos;
 	}
 	float intake=-1;
 	float output=-1;
@@ -32,12 +35,13 @@ public class EndPointData {
 	}
 	public void writeNetwork(PacketBuffer pb) {
 		pb.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS,blk);
+		pb.writeBlockPos(pos);
 		pb.writeFloat(avgIntake);
 		pb.writeFloat(avgOutput);
 		pb.writeBoolean(canCostMore);
 	}
 	public static EndPointData readNetwork(PacketBuffer pb) {
-		EndPointData dat=new EndPointData(pb.readRegistryIdUnsafe(ForgeRegistries.BLOCKS));
+		EndPointData dat=new EndPointData(pb.readRegistryIdUnsafe(ForgeRegistries.BLOCKS),pb.readBlockPos());
 		dat.avgIntake=pb.readFloat();
 		dat.avgOutput=pb.readFloat();
 		dat.canCostMore=pb.readBoolean();

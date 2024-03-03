@@ -19,10 +19,12 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
+import com.simibubi.create.content.contraptions.fluids.pipes.FluidPipeBlock;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.PipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
@@ -30,6 +32,7 @@ import net.minecraft.util.math.BlockPos;
 
 public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileEntity,EnergyNetworkProvider, INetworkConsumer {
 	HeatEnergyNetwork ntwk;
+	int cnt=1;
     public HeatPipeTileEntity() {
         super(FHTileTypes.HEATPIPE.get());
     }
@@ -71,6 +74,17 @@ public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileE
     @Override
     public void tick() {
         super.tick();
+        if(cnt>0) {
+        	cnt--;
+        }else {
+        	cnt=10;
+        	BlockState bs=this.getBlockState();
+        	for(Direction dir:Direction.values()) {
+        		if(bs.get(FluidPipeBlock.FACING_TO_PROPERTY_MAP.get(dir))) {
+        			onFaceChange(dir,true);
+        		}
+        	}
+        }
     }
 
     @Override
