@@ -30,7 +30,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.particles.IParticleData;
-import net.minecraft.particles.ParticleType;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -97,27 +96,24 @@ public class ClientUtils {
         worldIn.addParticle(particle, pos.getX() + posX, pos.getY() + posY, pos.getZ() + posZ, velX, velY, velZ);
     }
 
-    public static void spawnInvertedConeSmoke(World worldIn, BlockPos generatorTopPos, Vector3d windVelocity) {
+    public static void spawnInvertedConeSteam(World worldIn, BlockPos generatorTopPos, Vector3d windVelocity) {
         Random random = worldIn.getRandom();
-        int particleCount = 3 + random.nextInt(3); // Random number of particles
-        double vYMean = 0.03; // Mean speed of the particles upwards
+        double vYMean = 0.02; // Mean speed of the particles upwards
         double speedVar = 0.01; // Variance in speed of the particles
 
-        for (int i = 0; i < particleCount; i++) {
-            // To ensure the particle spawn at the center of the block and introduce a bit of randomness
-            double x = 0.5 + random.nextGaussian() * 0.1;
-            double y = 0.5 + random.nextGaussian() * 0.1; // to prevent particles from being stuck in the tower
-            double z = 0.5 + random.nextGaussian() * 0.1;
+        // To ensure the particle spawn at the center of the block and introduce a bit of randomness
+        double x = 0.5 + random.nextGaussian() * 0.1 * 2;
+        double y = 0.5 + random.nextGaussian() * 0.1; // to prevent particles from being stuck in the tower
+        double z = 0.5 + random.nextGaussian() * 0.1 * 2;
 
-            // Incorporating wind effect in particle velocity
-            double vX = windVelocity.x + random.nextGaussian() * speedVar;
-            double vY = windVelocity.y + random.nextGaussian() * speedVar + vYMean; // Ensure upward movement with variability
-            double vZ = windVelocity.z + random.nextGaussian() * speedVar;
+        // Incorporating wind effect in particle velocity
+        double vX = windVelocity.x + random.nextGaussian() * speedVar;
+        double vY = windVelocity.y + random.nextGaussian() * speedVar + vYMean; // Ensure upward movement with variability
+        double vZ = windVelocity.z + random.nextGaussian() * speedVar;
 
-            // Spawn the smoke particles with wind effect
-            spawnCustomParticles(worldIn, generatorTopPos, ParticleTypes.SMOKE,
-                    x, y, z, vX, vY, vZ);
-        }
+        // Spawn the smoke particles with wind effect
+        spawnCustomParticles(worldIn, generatorTopPos, FHParticleTypes.STEAM.get(),
+                x, y, z, vX, vY, vZ);
     }
 
 

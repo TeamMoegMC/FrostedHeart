@@ -144,20 +144,14 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
         if (isActive) {
             BlockPos blockpos = this.getPos().offset(Direction.UP, 5);
             Random random = world.rand;
-            float particleProbability = 0.5F;
-            if (isOverdrive()) {
-                particleProbability = 1.0F;
-            }
-
-            if (random.nextFloat() < particleProbability) {
+            if (random.nextFloat() < (isOverdrive() ? 0.8F : 0.5F)) {
                 // for (int i = 0; i < random.nextInt(2)+1; ++i) {
-                if (this.liquidtick != 0 && random.nextFloat() < 0.06F) {
+//                if (this.liquidtick != 0 && random.nextFloat() < 0.06F) {
 //                    ClientUtils.spawnSteamParticles(world, blockpos);
-                }
+//                }
                 ClientUtils.spawnT2FireParticles(world, blockpos);
                 Vector3d wind = new Vector3d(0, 0, 0);
-                ClientUtils.spawnInvertedConeSmoke(world, blockpos.offset(Direction.UP, 2), wind);
-                // }
+                ClientUtils.spawnInvertedConeSteam(world, blockpos, wind);
             }
             /*
             if (this.isWorking() && this.getHeated() == getMaxHeated() && this.tickUntilStopBoom > 0) {
