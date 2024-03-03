@@ -1,8 +1,9 @@
 {
-	"credit": "Made with Blockbench",
+	"parent": "minecraft:block/block",
 	"texture_size": [64, 64],
 	"textures": {
-		"7": "frostedheart:block/house"
+		"7": "frostedheart:block/house",
+		"particle": "frostedheart:block/house"
 	},
 	"elements": [
 		{
