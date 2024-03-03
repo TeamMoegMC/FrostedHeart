@@ -75,8 +75,7 @@ public class SteamCoreBlock extends DirectionalKineticBlock {
 
     @Override
     public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
-        ActionResultType superResult = super.onBlockActivated(state, world, pos, player, hand, hit);
-        return superResult;
+        return super.onBlockActivated(state, world, pos, player, hand, hit);
     }
 
 	@Override
