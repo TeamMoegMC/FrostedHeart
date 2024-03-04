@@ -275,9 +275,12 @@ public class BlockScanner {
         return countBlocksAbove(pos, blockPos -> !isAir(world.getBlockState(blockPos))).getValue();
     }
 
+    /**
+     * 判断一个方块是否是空气/无碰撞箱方块/梯子
+     */
     public static boolean isAirOrLadder(World world, BlockPos pos) {
         BlockState state = world.getBlockState(pos);
-        return isAir(state) || state.isIn(BlockTags.CLIMBABLE) || state.getShape(world, pos).isEmpty();
+        return isAir(state) || state.isIn(BlockTags.CLIMBABLE) || state.getCollisionShape(world, pos).isEmpty();
     }
 
     /**
