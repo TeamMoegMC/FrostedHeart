@@ -46,6 +46,7 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEntity;
 import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
 
+import com.teammoeg.frostedheart.content.town.warehouse.WarehouseTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
@@ -117,6 +118,9 @@ public class FHTileTypes {
     );
     public static final RegistryObject<TileEntityType<HouseTileEntity>> HOUSE = REGISTER.register(
             "house", makeType(HouseTileEntity::new, FHBlocks.house)
+    );
+    public static final RegistryObject<TileEntityType<WarehouseTileEntity>> WAREHOUSE = REGISTER.register(
+            "warehouse", makeType(WarehouseTileEntity::new, FHBlocks.warehouse)
     );
 
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {

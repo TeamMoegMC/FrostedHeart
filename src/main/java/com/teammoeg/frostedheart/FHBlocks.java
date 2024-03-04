@@ -61,6 +61,7 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
 import com.teammoeg.frostedheart.content.town.house.HouseBlock;
 
+import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -179,6 +180,13 @@ public class FHBlocks {
             .hardnessAndResistance(2, 10)
             .notSolid()));
     public static RegistryObject<Block> house = register("house",()->new HouseBlock( Block.Properties
+            .create(Material.WOOD)
+            .sound(SoundType.WOOD)
+            .setRequiresTool()
+            .harvestTool(ToolType.AXE)
+            .hardnessAndResistance(2, 6)
+            .notSolid()));
+    public static RegistryObject<Block> warehouse = register("warehouse",()->new WarehouseBlock( Block.Properties
             .create(Material.WOOD)
             .sound(SoundType.WOOD)
             .setRequiresTool()

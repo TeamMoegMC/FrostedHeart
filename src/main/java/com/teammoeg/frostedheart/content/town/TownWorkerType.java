@@ -43,7 +43,8 @@ public enum TownWorkerType {
         double cost = 1;
         double actualCost = town.cost(TownResourceType.PREP_FOOD, cost, false);
         return cost == actualCost;
-    }, 0);
+    }, 0),
+    WAREHOUSE(FHBlocks.warehouse.get(), null, 0);
 
     /**
      * Town block.

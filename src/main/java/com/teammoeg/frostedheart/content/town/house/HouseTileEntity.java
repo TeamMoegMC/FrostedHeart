@@ -40,11 +40,11 @@ import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nonnull;
 
-import static com.teammoeg.frostedheart.content.town.house.HouseBlockScanner.*;
 
 import java.util.*;
 
-import static com.teammoeg.frostedheart.town.house.FloorBlockScanner.isHouseBlock;
+import static com.teammoeg.frostedheart.util.BlockScanner.FloorBlockScanner.isHouseBlock;
+
 
 /**
  * A house in the town.
@@ -240,6 +240,7 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
 
     @Override
     public void tick() {
+        assert world != null;
         if (!world.isRemote) {
             if (endpoint.tryDrainHeat(1)) {
                 temperatureModifier = Math.max(endpoint.getTemperatureLevel() * 10, COMFORTABLE_TEMP_HOUSE);
