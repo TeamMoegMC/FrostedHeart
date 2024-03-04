@@ -184,9 +184,11 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
             return master.getCurrentProcessesStep();
         return new int[]{getData().map(t -> t.processMax - t.process).orElse(0)};
     }
-
+    public final Optional<GeneratorData> getDataNoCheck() {
+        return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA));
+    }
     public final Optional<GeneratorData> getData() {
-        return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA)).filter(t -> master().pos.equals(t.actualPos));
+        return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA)).filter(t -> master().pos.equals(t.actualPos)||t.actualPos.equals(BlockPos.ZERO));
     }
 
     @Nullable
@@ -277,7 +279,9 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
     public void regist() {
-    	getData().ifPresent(t -> {
+    	//System.out.println("Regist");
+        // TODO: seems to be an issue here. getData is empty
+    	getDataNoCheck().ifPresent(t -> {
         	if(!master().pos.equals(t.actualPos))
         		t.onPosChange();
         	this.setWorking(t.isWorking);

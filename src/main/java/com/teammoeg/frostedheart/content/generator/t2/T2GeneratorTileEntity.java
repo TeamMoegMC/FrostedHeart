@@ -38,6 +38,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidAttributes;
@@ -143,19 +144,14 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
         if (isActive) {
             BlockPos blockpos = this.getPos().offset(Direction.UP, 5);
             Random random = world.rand;
-            float particleProbability = 0.3F;
-            if (isOverdrive()) {
-                particleProbability = 0.6F;
-            }
-
-            if (random.nextFloat() < particleProbability) {
+            if (random.nextFloat() < (isOverdrive() ? 0.8F : 0.5F)) {
                 // for (int i = 0; i < random.nextInt(2)+1; ++i) {
-                if (this.liquidtick != 0 && random.nextFloat() < 0.06F) {
-                    ClientUtils.spawnSteamParticles(world, blockpos);
-                }
+//                if (this.liquidtick != 0 && random.nextFloat() < 0.06F) {
+//                    ClientUtils.spawnSteamParticles(world, blockpos);
+//                }
                 ClientUtils.spawnT2FireParticles(world, blockpos);
-                ClientUtils.spawnSmokeParticles(world, blockpos);
-                // }
+                Vector3d wind = new Vector3d(0, 0, 0);
+                ClientUtils.spawnInvertedConeSteam(world, blockpos, wind);
             }
             /*
             if (this.isWorking() && this.getHeated() == getMaxHeated() && this.tickUntilStopBoom > 0) {
@@ -176,7 +172,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     @Override
 	public <X> LazyOptional<X> getCapability(Capability<X> capability, Direction facing) {
     	if(capability==FHCapabilities.HEAT_EP.capability()&&facing == this.getFacing().getOpposite() && this.posInMultiblock.equals(networkTile)) {
-    		LazyOptional<HeatProviderEndPoint> cep=master().getData().map(t->t.epcap).orElseGet(LazyOptional::empty);
+    		LazyOptional<HeatProviderEndPoint> cep=getData().map(t->t.epcap).orElseGet(LazyOptional::empty);
     		if(ep!=cep) {
     			ep=cep;
     		}

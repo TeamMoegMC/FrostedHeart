@@ -222,6 +222,13 @@ public class ChunkHeatData implements NBTSerializable {
     }
 
     /**
+     * If there is any adjust at the position.
+     */
+    public static boolean hasAdjust(IWorldReader world, BlockPos pos) {
+        return !getAdjust(world, pos).isEmpty();
+    }
+
+    /**
      * Helper method, since lazy optionals and instanceof checks together are ugly
      */
     public static LazyOptional<ChunkHeatData> getCapability(@Nullable IChunk chunk) {

@@ -23,6 +23,7 @@ import java.util.Random;
 
 import com.teammoeg.frostedheart.base.block.FHStoneMultiblockBlock;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -67,12 +68,16 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
                                              Hand hand, BlockRayTraceResult hit) {
         if (!world.isRemote) {
             TileEntity te = Utils.getExistingTileEntity(world, pos);
-            if (te instanceof ZoneHeatingMultiblockTileEntity && !(player instanceof FakePlayer)) {
-            	ZoneHeatingMultiblockTileEntity<?> zte=(ZoneHeatingMultiblockTileEntity<?>) te;
+            if (te instanceof MasterGeneratorTileEntity && !(player instanceof FakePlayer)) {
+            	MasterGeneratorTileEntity<?> zte=(MasterGeneratorTileEntity<?>) te;
                 if (zte.getOwner() == null) {
                 	zte = zte.master();
-                	zte.setOwner(ResearchDataAPI.getData(player).getId());
+                	
+                	zte.setOwner(SpecialDataManager.get(player).getId());
+                    zte.regist();
                 }
+                
+                
 
             }
         }

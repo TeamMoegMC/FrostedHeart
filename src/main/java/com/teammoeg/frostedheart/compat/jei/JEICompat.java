@@ -223,9 +223,13 @@ public class JEICompat implements IModPlugin {
                     locked.add(irs.getItem());
             } else {
                 for (ResourceLocation rl : all) {
-                    man.unhideRecipe(i, rl);
+                	try {
+                		man.unhideRecipe(i, rl);
+                	}catch(Exception ex) {}//IDK How JEI And IE conflict, so just catch all.
                     if (ovrd != null)
-                        man.unhideRecipe(ovrd, rl);
+                    	try {
+                    		man.unhideRecipe(ovrd, rl);
+                    	}catch(Exception ex) {}//IDK How JEI And IE conflict, so just catch all.
                 }
                 if (!irs.isEmpty())
                     unlocked.add(irs.getItem());

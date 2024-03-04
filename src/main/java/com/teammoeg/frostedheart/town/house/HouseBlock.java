@@ -20,22 +20,18 @@
 package com.teammoeg.frostedheart.town.house;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.content.generator.GeneratorData;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.town.TeamTownData;
+import com.teammoeg.frostedheart.town.TeamTown;
+import com.teammoeg.frostedheart.util.MathUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
@@ -87,7 +83,7 @@ public class HouseBlock extends FHBaseBlock {
         }
     }
 
-    //test
+    @Override
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         if (!worldIn.isRemote && handIn == Hand.MAIN_HAND) {
             HouseTileEntity te = (HouseTileEntity) worldIn.getTileEntity(pos);
@@ -97,10 +93,16 @@ public class HouseBlock extends FHBaseBlock {
             player.sendStatusMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
             player.sendStatusMessage(new StringTextComponent(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
             player.sendStatusMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.sendStatusMessage(new StringTextComponent("Temperature: " + te.temperature), false);
+            player.sendStatusMessage(new StringTextComponent("Raw temperature: " +
+                    MathUtils.round(te.temperature, 2)), false);
+            player.sendStatusMessage(new StringTextComponent("Temperature modifier: " +
+                    MathUtils.round(te.temperatureModifier, 2)), false);
+            player.sendStatusMessage(new StringTextComponent("Effective temperature: " +
+                    MathUtils.round(te.getEffectiveTemperature(), 2)), false);
             player.sendStatusMessage(new StringTextComponent("Volume: " + (te.volume)), false);
             player.sendStatusMessage(new StringTextComponent("Area: " + (te.area)), false);
-            player.sendStatusMessage(new StringTextComponent("Score: " + te.rating), false);
+            player.sendStatusMessage(new StringTextComponent("Rating: " +
+                    MathUtils.round(te.rating, 2)), false);
             return ActionResultType.SUCCESS;
         }
         return ActionResultType.PASS;
@@ -113,16 +115,16 @@ public class HouseBlock extends FHBaseBlock {
         if (te != null) {
             // register the house to the town
             if (entity instanceof ServerPlayerEntity) {
-                TeamTownData townData = SpecialDataManager.get((PlayerEntity) entity).getData(SpecialDataTypes.TOWN_DATA);
-                GeneratorData generatorData = SpecialDataManager.get((PlayerEntity) entity).getData(SpecialDataTypes.GENERATOR_DATA);
-                BlockPos generatorPos = generatorData.actualPos;
-                // check if the house is in generator range
-                float range = generatorData.RLevel;
-                FHMain.LOGGER.debug("Generator range: " + range);
-                if (generatorPos.distanceSq(pos) <= range * range) {
-                    townData.registerTownBlock(pos, te);
+                if (ChunkHeatData.hasAdjust(world, pos)) {
+                    TeamTown.from((PlayerEntity) entity).addTownBlock(pos, te);
                 }
             }
         }
+    }
+
+    @Nullable
+    @Override
+    public BlockState getStateForPlacement(BlockItemUseContext context) {
+        return this.getDefaultState().with(BlockStateProperties.FACING, context.getFace().getOpposite());
     }
 }

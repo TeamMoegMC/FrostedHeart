@@ -29,7 +29,7 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.particles.BasicParticleType;
 import net.minecraft.util.math.MathHelper;
 
-public class BreathParticle extends FHParticle {
+public class BreathParticle extends GasParticle {
 
     public static class Factory implements IParticleFactory<BasicParticleType> {
         private final IAnimatedSprite spriteSet;
@@ -50,11 +50,18 @@ public class BreathParticle extends FHParticle {
         super(world, x, y, z, motionX, motionY, motionZ);
         this.particleGravity = 0.0F;
         this.particleRed = this.particleGreen = this.particleBlue = (float) (Math.random() * 0.2) + 0.8f;
-        this.originalScale = 0.05F;
+        this.initialScale = 0.05F;
         this.maxAge = (int) (40.0D / (Math.random() * 0.2D + 0.8D));
+        // physical properties of breath
+        this.density = 0.6;
+        this.temperature = 373;
+        this.airResistance = 0.02;
+        // breadth initial velocity is slow
         this.motionX *= 0.1;
         this.motionY *= 0.1;
         this.motionZ *= 0.1;
+        // must call this after setting the physical properties
+        this.particleGravity = getEffectiveGravity();
     }
 
     @Override
@@ -63,7 +70,7 @@ public class BreathParticle extends FHParticle {
         age = MathHelper.clamp(age, 0.0F, 1.0F);
         float alpha = 0.3F * (1 - (this.age + pt) / maxAge);
         super.particleAlpha = MathHelper.clamp(alpha, 0.0F, 0.3F);
-        super.particleScale = originalScale * (age + this.age * 0.0375F) * 0.5F;
+        super.particleScale = initialScale * (age + this.age * 0.0375F) * 0.5F;
         super.renderParticle(worldRendererIn, entityIn, pt);
     }
 }

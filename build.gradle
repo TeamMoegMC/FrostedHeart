@@ -210,7 +210,7 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    // compile fileTree(include: ['*.jar'], dir: 'libs')
+//    implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     implementation fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
     implementation fg.deobf("me.shedaniel:architectury-forge:${rootProject.architectury_version}")

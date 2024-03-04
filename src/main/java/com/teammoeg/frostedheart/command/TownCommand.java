@@ -21,47 +21,107 @@ package com.teammoeg.frostedheart.command;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.town.TeamTown;
-import com.teammoeg.frostedheart.town.TeamTownData;
 import com.teammoeg.frostedheart.town.TownResourceType;
 import com.teammoeg.frostedheart.town.resident.Resident;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
+import net.minecraft.nbt.CompoundNBT;
+
+import java.util.Arrays;
 
 public class TownCommand {
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
 
-        LiteralArgumentBuilder<CommandSource> add = Commands.literal("town")
-            .then(Commands.literal("name").executes(ct -> {
-                TeamTownData data = SpecialDataManager.get(ct.getSource().asPlayer()).getData(SpecialDataTypes.TOWN_DATA);
-                TeamTown town = new TeamTown(data);
-                ct.getSource().sendFeedback(GuiUtils.str(data.getName()), true);
-                return Command.SINGLE_SUCCESS;
-            })).then(Commands.literal("resources").then(Commands.literal("prep_food")).executes(ct -> {
-                TeamTownData data = SpecialDataManager.get(ct.getSource().asPlayer()).getData(SpecialDataTypes.TOWN_DATA);
-                TeamTown town = new TeamTown(data);
-                ct.getSource().sendFeedback(GuiUtils.str(String.valueOf(town.get(TownResourceType.PREP_FOOD))), true);
-                return Command.SINGLE_SUCCESS;
-            }).then(Commands.argument("add", IntegerArgumentType.integer()).executes(ct -> {
-                TeamTownData data = SpecialDataManager.get(ct.getSource().asPlayer()).getData(SpecialDataTypes.TOWN_DATA);
-                TeamTown town = new TeamTown(data);
-                town.add(TownResourceType.PREP_FOOD, 100, false);
-                return Command.SINGLE_SUCCESS;
-            })).then(Commands.literal("residents").then(Commands.literal("list")).executes(ct -> {
-                TeamTownData data = SpecialDataManager.get(ct.getSource().asPlayer()).getData(SpecialDataTypes.TOWN_DATA);
-                TeamTown town = new TeamTown(data);
-                ct.getSource().sendFeedback(GuiUtils.str(data.getResidents().values().toString()), true);
-                return Command.SINGLE_SUCCESS;
-            }).then(Commands.argument("add", IntegerArgumentType.integer()).executes(ct -> {
-                TeamTownData data = SpecialDataManager.get(ct.getSource().asPlayer()).getData(SpecialDataTypes.TOWN_DATA);
-                TeamTown town = new TeamTown(data);
-                data.addResident(new Resident("Duck", "Egg"));
-                return Command.SINGLE_SUCCESS;
-            }))));
+        LiteralArgumentBuilder<CommandSource> name =
+                Commands.literal("name")
+                        .executes(ct -> {
+                            TeamTown town = TeamTown.from(ct.getSource().asPlayer());
+                            ct.getSource().sendFeedback(GuiUtils.str(town.getName()), true);
+                            return Command.SINGLE_SUCCESS;
+                        });
+
+        LiteralArgumentBuilder<CommandSource> listResources =
+                Commands.literal("list")
+                        .executes(ct -> {
+                            TeamTown town = TeamTown.from(ct.getSource().asPlayer());
+                            ct.getSource().sendFeedback(GuiUtils.str(town.getResources()), true);
+                            return Command.SINGLE_SUCCESS;
+                        });
+
+        LiteralArgumentBuilder<CommandSource> addResources =
+                Commands.literal("add")
+                        .then(Commands.argument("type", StringArgumentType.string())
+                                .suggests((ct, s) -> {
+                                    // Get all TownResourceType enum values
+                                    Arrays.stream(TownResourceType.values()).forEach(t -> s.suggest(t.getKey()));
+                                    return s.buildFuture();
+                                })
+                                .then(Commands.argument("amount", DoubleArgumentType.doubleArg())
+                                        .executes(ct -> {
+                                            double amount = DoubleArgumentType.getDouble(ct, "amount");
+                                            String type = StringArgumentType.getString(ct, "type");
+                                            TeamTown town = TeamTown.from(ct.getSource().asPlayer());
+                                            town.add(TownResourceType.from(type), amount, false);
+                                            ct.getSource().sendFeedback(GuiUtils.str("Resource added"), true);
+                                            return Command.SINGLE_SUCCESS;
+                                        })
+                                )
+                        );
+
+        LiteralArgumentBuilder<CommandSource> listResidents =
+                Commands.literal("list").executes(ct -> {
+                    TeamTown town = TeamTown.from(ct.getSource().asPlayer());
+                            int size = town.getResidents().values().size();
+                            ct.getSource().sendFeedback(GuiUtils.str("Total residents: " + size), true);
+                            ct.getSource().sendFeedback(GuiUtils.str(town.getResidents().values()), true);
+                            return Command.SINGLE_SUCCESS;
+                        });
+
+        LiteralArgumentBuilder<CommandSource> addResident =
+                Commands.literal("add")
+                        .then(Commands.argument("first_name", StringArgumentType.string())
+                                .then(Commands.argument("last_name", StringArgumentType.string()).executes(ct -> {
+                                    TeamTown town = TeamTown.from(ct.getSource().asPlayer());
+                                    town.addResident(new Resident(StringArgumentType.getString(ct, "first_name"), StringArgumentType.getString(ct, "last_name")));
+                                    ct.getSource().sendFeedback(GuiUtils.str("Resident added"), true);
+                                    return Command.SINGLE_SUCCESS;
+                                }))
+                        );
+
+        LiteralArgumentBuilder<CommandSource> listBlocks =
+                Commands.literal("list").executes(ct -> {
+                    TeamTown town = TeamTown.from(ct.getSource().asPlayer());
+                    ct.getSource().sendFeedback(GuiUtils.str("Total blocks: " + town.getTownBlocks().size()), true);
+                    town.getTownBlocks().forEach((k, v) -> {
+                        String blockName = v.getType().getBlock().getTranslationKey();
+                        ct.getSource().sendFeedback(GuiUtils.translate(blockName).appendSibling(GuiUtils.str(" at " + k)), true);
+                    });
+                    return Command.SINGLE_SUCCESS;
+                });
+
+        dispatcher.register(Commands.literal(FHMain.MODID)
+                .requires(s -> s.hasPermissionLevel(2))
+                .then(Commands.literal("town")
+                        .then(name)
+                        .then(Commands.literal("resources")
+                                .then(listResources)
+                                .then(addResources)
+                        )
+                        .then(Commands.literal("residents")
+                                .then(listResidents)
+                                .then(addResident)
+                        )
+                        .then(Commands.literal("blocks")
+                                .then(listBlocks)
+                        )
+                )
+        );
     }
 }

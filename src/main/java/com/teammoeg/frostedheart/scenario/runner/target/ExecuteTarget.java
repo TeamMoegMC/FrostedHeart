@@ -44,7 +44,7 @@ public class ExecuteTarget extends ScenarioTarget{
 			if(ps!=null) {
 				runner.setNodeNum(ps);
 			}else {
-				System.out.println("Invalid label "+label );
+				FHMain.LOGGER.error ("Invalid label "+label );
 			}
 		}
 	}

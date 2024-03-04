@@ -33,17 +33,17 @@ public class Resident {
     private String lastName = "Alexander";
     /** Stats range from 0 to 100 */
     // physical
-    private int health = 0;
+    private int health = 50;
     // psychological
-    private int happiness = 0;
+    private int mental = 50;
     // social
-    private int social = 0;
+    private int social = 50;
     // economic
-    private int wealth = 0;
+    private int wealth = 50;
     // political
-    private int trust = 0;
+    private int trust = 50;
     // cultural
-    private int culture = 0;
+    private int culture = 50;
     // educational
     private int educationLevel = 0;
 
@@ -55,8 +55,30 @@ public class Resident {
     public Resident() {
     }
 
-    public float getProductivityMultiplier() {
-        return 1.0f;
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    /**
+     * Compute the productivity multiplier of the resident.
+     * A linear map from [0,100] to [0.0,2.0].
+     * The input is average of every stat.
+     * @return the productivity multiplier
+     */
+    public double getProductivityMultiplier() {
+        return (health + mental + social + wealth + trust + culture) / 300.0;
     }
 
     // serialization
@@ -65,7 +87,7 @@ public class Resident {
         data.putString("firstName", firstName);
         data.putString("lastName", lastName);
         data.putInt("health", health);
-        data.putInt("happiness", happiness);
+        data.putInt("happiness", mental);
         data.putInt("social", social);
         data.putInt("wealth", wealth);
         data.putInt("trust", trust);
@@ -78,7 +100,7 @@ public class Resident {
         firstName = data.getString("firstName");
         lastName = data.getString("lastName");
         health = data.getInt("health");
-        happiness = data.getInt("happiness");
+        mental = data.getInt("happiness");
         social = data.getInt("social");
         wealth = data.getInt("wealth");
         trust = data.getInt("trust");

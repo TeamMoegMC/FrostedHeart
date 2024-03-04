@@ -29,6 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.simibubi.create.content.contraptions.components.crafter.MechanicalCrafterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.IETileProviderBlock;
@@ -67,7 +68,7 @@ public class BlockMixin extends Block {
             if (te instanceof MultiblockPartTileEntity) {
                 te = ((MultiblockPartTileEntity) te).master();
             }
-            IOwnerTile.trySetOwner(te, ResearchDataAPI.getData(player).getId());
+            IOwnerTile.trySetOwner(te, SpecialDataManager.get(player).getId());
         }
     }
 
@@ -77,6 +78,6 @@ public class BlockMixin extends Block {
         super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
 
         if (placer != null && placer instanceof ServerPlayerEntity && !(placer instanceof FakePlayer))
-            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(worldIn, pos),ResearchDataAPI.getData((PlayerEntity) placer).getId());
+            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(worldIn, pos),SpecialDataManager.get((PlayerEntity) placer).getId());
     }
 }
