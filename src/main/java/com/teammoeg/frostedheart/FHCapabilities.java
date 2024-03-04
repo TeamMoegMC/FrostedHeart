@@ -31,7 +31,7 @@ public class FHCapabilities {
 	
 	public static void setup() {
 		for(FHCapability<?> cap:capabilities)
-			cap.setup();
+			cap.register();
 	}
 	/**
 	 * register capability with class, using no-arg constructor as default factory
