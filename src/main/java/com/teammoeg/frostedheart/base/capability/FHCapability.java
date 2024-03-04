@@ -37,7 +37,7 @@ public class FHCapability<C extends NBTSerializable> {
         }, ()->factory.get());
         capability=(Capability<C>) CapabilityManager.INSTANCE.providers.get(capClass.getName().intern());
     }
-	public ICapabilityProvider create() {
+	public ICapabilityProvider provider() {
 		return new FHCapabilityProvider<C>(this);
 	}
 	LazyOptional<C> createCapability(){
