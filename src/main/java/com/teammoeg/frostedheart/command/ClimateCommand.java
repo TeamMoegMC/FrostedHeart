@@ -23,8 +23,8 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.ClimateEvent;
-import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.climate.ClimateEvent;
+import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import net.minecraft.command.CommandSource;

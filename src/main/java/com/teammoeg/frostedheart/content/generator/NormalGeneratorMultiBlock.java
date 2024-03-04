@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.generator;
 import java.util.Random;
 
 import com.teammoeg.frostedheart.base.block.FHStoneMultiblockBlock;
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.team.SpecialDataManager;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;

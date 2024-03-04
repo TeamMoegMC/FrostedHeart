@@ -100,8 +100,7 @@ public class OptionalLazy<T> {
         return value != null && predicate.test(value) ? Optional.of(value) : Optional.empty();
     }
 
-    private @Nullable
-    T getValue() {
+    private @Nullable T getValue() {
         if (!isValid || supplier == null)
             return null;
         if (!isResolved) {

@@ -28,8 +28,8 @@ import javax.annotation.Nullable;
 
 import com.simibubi.create.content.contraptions.fluids.potion.PotionFluidHandler;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.data.FHDataManager;
-import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
+import com.teammoeg.frostedheart.content.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 

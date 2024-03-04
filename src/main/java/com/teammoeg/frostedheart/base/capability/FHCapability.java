@@ -25,7 +25,7 @@ public class FHCapability<C extends NBTSerializable> {
 		
 	}
 	@SuppressWarnings("unchecked")
-	public void setup() {
+	public void register() {
         CapabilityManager.INSTANCE.register(capClass, new Capability.IStorage<C>() {
             public void readNBT(Capability<C> capability, C instance, Direction side, INBT nbt) {
                 instance.deserializeNBT((CompoundNBT) nbt);
@@ -37,7 +37,7 @@ public class FHCapability<C extends NBTSerializable> {
         }, ()->factory.get());
         capability=(Capability<C>) CapabilityManager.INSTANCE.providers.get(capClass.getName().intern());
     }
-	public ICapabilityProvider create() {
+	public ICapabilityProvider provider() {
 		return new FHCapabilityProvider<C>(this);
 	}
 	LazyOptional<C> createCapability(){

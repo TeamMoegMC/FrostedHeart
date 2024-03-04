@@ -22,9 +22,9 @@ package com.teammoeg.frostedheart.events;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.capability.CurioCapabilityProvider;
-import com.teammoeg.frostedheart.climate.ArmorTempCurios;
-import com.teammoeg.frostedheart.climate.data.ArmorTempData;
-import com.teammoeg.frostedheart.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.content.climate.ArmorTempCurios;
+import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
+import com.teammoeg.frostedheart.content.climate.data.FHDataManager;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -45,7 +45,7 @@ public class AttachCapabilityEvents {
         if (!event.getObject().isEmpty()) {
             World world = event.getObject().getWorld();
             if (!world.isRemote) {
-                event.addCapability(new ResourceLocation(FHMain.MODID, "chunk_data"), FHCapabilities.CHUNK_HEAT.create());
+                event.addCapability(new ResourceLocation(FHMain.MODID, "chunk_data"), FHCapabilities.CHUNK_HEAT.provider());
             }
         }
     }
@@ -55,14 +55,14 @@ public class AttachCapabilityEvents {
         if (event.getObject() instanceof ServerPlayerEntity) {//server-side only capabilities
             ServerPlayerEntity player = (ServerPlayerEntity) event.getObject();
             if (!(player instanceof FakePlayer)) {
-                event.addCapability(new ResourceLocation(FHMain.MODID, "death_inventory"), FHCapabilities.DEATH_INV.create());
-                event.addCapability(new ResourceLocation(FHMain.MODID, "scenario"       ), FHCapabilities.SCENARIO.create());
-                event.addCapability(new ResourceLocation(FHMain.MODID, "wanted_food"    ), FHCapabilities.WANTED_FOOD.create());
+                event.addCapability(new ResourceLocation(FHMain.MODID, "death_inventory"), FHCapabilities.DEATH_INV.provider());
+                event.addCapability(new ResourceLocation(FHMain.MODID, "scenario"       ), FHCapabilities.SCENARIO.provider());
+                event.addCapability(new ResourceLocation(FHMain.MODID, "wanted_food"    ), FHCapabilities.WANTED_FOOD.provider());
             }
         }
         //Common capabilities
-        event.addCapability(new ResourceLocation(FHMain.MODID, "temperature"), FHCapabilities.PLAYER_TEMP.create());
-        event.addCapability(new ResourceLocation(FHMain.MODID, "rsenergy"   ), FHCapabilities.ENERGY.create());
+        event.addCapability(new ResourceLocation(FHMain.MODID, "temperature"), FHCapabilities.PLAYER_TEMP.provider());
+        event.addCapability(new ResourceLocation(FHMain.MODID, "rsenergy"   ), FHCapabilities.ENERGY.provider());
 
     }
     @SubscribeEvent
@@ -77,7 +77,7 @@ public class AttachCapabilityEvents {
     public static void attachToWorld(AttachCapabilitiesEvent<World> event) {
         // only attach to dimension with skylight (i.e. overworld)
         if (!event.getObject().getDimensionType().doesFixedTimeExist()) {
-            event.addCapability(new ResourceLocation(FHMain.MODID, "climate_data"),FHCapabilities.CLIMATE_DATA.create());
+            event.addCapability(new ResourceLocation(FHMain.MODID, "climate_data"),FHCapabilities.CLIMATE_DATA.provider());
         }
     }
 

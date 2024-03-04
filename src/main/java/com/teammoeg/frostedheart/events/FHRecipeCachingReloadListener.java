@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.events;
 
 import javax.annotation.Nonnull;
 
-import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.ResearchListeners;
 
 import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.resources.IResourceManager;

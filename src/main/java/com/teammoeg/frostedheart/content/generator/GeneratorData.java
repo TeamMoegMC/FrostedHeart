@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.generator;
 
 import java.util.Random;
 
+import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
-import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.team.TeamDataHolder;

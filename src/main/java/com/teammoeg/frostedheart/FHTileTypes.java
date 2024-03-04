@@ -19,8 +19,10 @@
 
 package com.teammoeg.frostedheart;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.contraptions.base.HalfShaftInstance;
@@ -34,15 +36,15 @@ import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
+import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
+import com.teammoeg.frostedheart.content.research.blocks.MechCalcTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEntity;
-import com.teammoeg.frostedheart.research.blocks.DrawingDeskTileEntity;
-import com.teammoeg.frostedheart.research.blocks.MechCalcTileEntity;
-import com.teammoeg.frostedheart.town.house.HouseTileEntity;
+import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
 
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
@@ -120,7 +122,9 @@ public class FHTileTypes {
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }
-
+    private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block>... valid) {
+        return makeTypeMultipleBlocks(create, () -> Arrays.stream(valid).map(t->t.get()).collect(Collectors.toList()));
+    }
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeTypeMultipleBlocks(Supplier<T> create, Supplier<Collection<Block>> valid) {
         return () -> new TileEntityType<>(create, ImmutableSet.copyOf(valid.get()), null);
     }

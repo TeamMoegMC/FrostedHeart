@@ -5,10 +5,10 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.scenario.FHScenario;
-import com.teammoeg.frostedheart.scenario.runner.ActNamespace;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
-import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
+import com.teammoeg.frostedheart.content.scenario.FHScenario;
+import com.teammoeg.frostedheart.content.scenario.runner.ActNamespace;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;

@@ -23,7 +23,7 @@ import java.util.Collection;
 
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.climate.network.FHTemperatureDisplayPacket;
+import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraftforge.fml.network.PacketDistributor;

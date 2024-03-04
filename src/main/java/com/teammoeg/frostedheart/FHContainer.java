@@ -29,12 +29,12 @@ import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Container;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Container;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
+import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
+import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
-import com.teammoeg.frostedheart.research.blocks.DrawingDeskTileEntity;
-import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskContainer;
-import com.teammoeg.frostedheart.trade.gui.TradeContainer;
+import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
 
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import net.minecraft.inventory.container.ContainerType;

@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.temperature;
 import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 

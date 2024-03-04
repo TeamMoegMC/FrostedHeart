@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.mixin.minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.chunkheatdata.ChunkHeatData;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.FlowingFluidBlock;

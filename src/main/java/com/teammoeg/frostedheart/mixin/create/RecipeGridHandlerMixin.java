@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.simibubi.create.content.contraptions.components.crafter.MechanicalCrafterTileEntity;
 import com.simibubi.create.content.contraptions.components.crafter.RecipeGridHandler;
 import com.simibubi.create.content.contraptions.components.crafter.RecipeGridHandler.GroupedItems;
-import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import net.minecraft.inventory.CraftingInventory;
