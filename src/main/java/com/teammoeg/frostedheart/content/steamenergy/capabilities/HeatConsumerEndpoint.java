@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.capabilities;
 
+// TODO: Auto-generated Javadoc
 /**
  * Class SteamNetworkConsumer.
  * <p>
@@ -27,14 +28,14 @@ package com.teammoeg.frostedheart.content.steamenergy.capabilities;
  */
 public class HeatConsumerEndpoint extends HeatPowerEndpoint{
     /**
-     * The max intake.<br>
+     * The max intake value.<br>
      */
     public final float maxIntake;
     /**
      * Instantiates a new SteamNetworkConsumer.<br>
      *
      * @param maxPower  the max power to store<br>
-     * @param maxIntake the heat requested from network<br>
+     * @param maxIntake the max heat requested from network<br>
      */
     public HeatConsumerEndpoint(float maxPower, float maxIntake) {
         super(maxPower<=maxIntake?maxIntake:maxPower);
@@ -42,13 +43,20 @@ public class HeatConsumerEndpoint extends HeatPowerEndpoint{
     }
     /**
      * Instantiates a new SteamNetworkConsumer with recommended cache value.<br>
-     *
-     * @param maxIntake the heat requested from network<br>
+     * MaxIntake defaults 4 times maxIntake. <br>
+     * @param maxIntake the max heat requested from network<br>
      */
     public HeatConsumerEndpoint(float maxIntake) {
         super(maxIntake*4);
         this.maxIntake = maxIntake;
     }
+    
+    /**
+     * Drain heat from this endpoint.
+     *
+     * @param val the heat value to drain
+     * @return the heat actually drain
+     */
     public float drainHeat(float val) {
         float drained = Math.min(power, val);
         power -= drained;
@@ -72,6 +80,12 @@ public class HeatConsumerEndpoint extends HeatPowerEndpoint{
 
 
 
+    /**
+     * Try drain heat from this endpoint.
+     *
+     * @param val the heat value to drain
+     * @return true, if the heat value can all drained
+     */
     public boolean tryDrainHeat(float val) {
         if (power >= val) {
             power -= val;

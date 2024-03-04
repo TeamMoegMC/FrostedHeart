@@ -20,10 +20,10 @@
 package com.teammoeg.frostedheart.content.steamenergy.capabilities;
 
 /**
- * Class SteamNetworkConsumer.
+ * Class HeatProviderEndPoint.
  * <p>
- * Integrated power cache manager for power devices
- * A device should properly "request" power from the network
+ * Integrated power cache manager for power generating devices
+ * A device should properly "gives" power from the network
  */
 public class HeatProviderEndPoint extends HeatPowerEndpoint{
 
@@ -39,10 +39,10 @@ public class HeatProviderEndPoint extends HeatPowerEndpoint{
 
 
     /**
-     * Instantiates .<br>
+     * Instantiates HeatProviderEndPoint.<br>
      *
      * @param maxPower  the max power to store<br>
-     * @param maxGenerate the heat put to network<br>
+     * @param maxGenerate the max heat put to network<br>
      */
     public HeatProviderEndPoint(float maxPower, float maxGenerate) {
         super(maxPower<=maxGenerate?maxGenerate:maxPower);
@@ -50,9 +50,9 @@ public class HeatProviderEndPoint extends HeatPowerEndpoint{
 
     }
     /**
-     * Instantiates  with recommended cache value.<br>
+     * Instantiates HeatProviderEndPoint with recommended cache value.<br>
      *
-     * @param maxIntake the heat requested from network<br>
+     * @param maxGenerate the max heat put to network<br>
      */
     public HeatProviderEndPoint(float maxGenerate) {
         super(maxGenerate*4);
@@ -65,6 +65,10 @@ public class HeatProviderEndPoint extends HeatPowerEndpoint{
 	public float sendHeat(float filled, int level) {
 		return filled;
 	}
+	/**
+	 * Adds heat to the endpoint, if cache exceed, tbe remaining would be disposed.
+	 * The heat actually added to the endpoint still depends on the max generation
+	 * */
 	public void addHeat(float np) {
 		power=Math.min(maxPower, power+np);
 	}
