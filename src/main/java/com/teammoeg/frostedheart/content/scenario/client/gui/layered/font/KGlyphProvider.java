@@ -16,8 +16,10 @@ import com.teammoeg.frostedheart.util.io.FileUtil;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.ReloadListener;
 import net.minecraft.profiler.IProfiler;
+import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 
@@ -167,5 +169,9 @@ public class KGlyphProvider extends ReloadListener<Object>{
 	protected void apply(Object objectIn, IResourceManager resourceManagerIn, IProfiler profilerIn) {
 		// TODO Auto-generated method stub
 		
+	}
+	public static void addListener() {
+		if(Minecraft.getInstance()!=null&&Minecraft.getInstance().getResourceManager()!=null)
+			((IReloadableResourceManager)Minecraft.getInstance().getResourceManager()).addReloadListener(INSTANCE);
 	}
 }

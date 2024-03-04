@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.research.FHResearch;
+import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.events.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
@@ -118,7 +119,7 @@ public class FHMain {
         mod.addListener(this::processIMC);
         mod.addListener(this::enqueueIMC);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> DynamicModelSetup::setup);
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> DynamicModelSetup::addListener);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> KGlyphProvider::addListener);
         mod.addListener(this::modification);
         FHConfig.register();
         TetraCompat.init();
