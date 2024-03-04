@@ -4,8 +4,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.teammoeg.frostedheart.content.generator.GeneratorData;
-import com.teammoeg.frostedheart.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.town.TeamTownData;
+import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.content.town.TeamTownData;
 
 public class SpecialDataTypes {
 

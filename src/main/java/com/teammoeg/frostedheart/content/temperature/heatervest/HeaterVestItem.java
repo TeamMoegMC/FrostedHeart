@@ -25,8 +25,8 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.climate.player.EquipmentCuriosSlotType;
-import com.teammoeg.frostedheart.climate.player.IHeatingEquipment;
+import com.teammoeg.frostedheart.content.climate.player.EquipmentCuriosSlotType;
+import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 

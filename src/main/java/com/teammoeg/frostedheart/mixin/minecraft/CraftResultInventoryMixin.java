@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.mixin.minecraft;
 
 import org.spongepowered.asm.mixin.Mixin;
 
-import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.ResearchListeners;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.CraftResultInventory;

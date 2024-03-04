@@ -45,12 +45,12 @@ import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorRenderer;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
+import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
+import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskScreen;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatScreen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
-import com.teammoeg.frostedheart.research.blocks.MechCalcRenderer;
-import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
-import com.teammoeg.frostedheart.trade.gui.TradeScreen;
+import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.ManualHelper;

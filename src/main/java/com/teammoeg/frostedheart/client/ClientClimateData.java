@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.client;
 
-import com.teammoeg.frostedheart.climate.ClimateType;
-import com.teammoeg.frostedheart.climate.TemperatureFrame;
+import com.teammoeg.frostedheart.content.climate.ClimateType;
+import com.teammoeg.frostedheart.content.climate.TemperatureFrame;
 
 public class ClientClimateData {
     public static final TemperatureFrame[] forecastData = new TemperatureFrame[40];

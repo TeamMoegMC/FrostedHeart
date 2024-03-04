@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.metal.AssemblerTileEntity;

@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import com.alcatrazescapee.primalwinter.Config;
 import com.alcatrazescapee.primalwinter.util.WeatherData;
-import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.climate.WorldClimate;
 
 import net.minecraft.world.GameRules;
 import net.minecraft.world.server.ServerWorld;

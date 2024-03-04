@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.util.client;
 import java.util.Random;
 
 import com.teammoeg.frostedheart.FHParticleTypes;
-import com.teammoeg.frostedheart.research.gui.ResearchGui;
+import com.teammoeg.frostedheart.content.research.gui.ResearchGui;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.IScreenWrapper;

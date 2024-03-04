@@ -22,10 +22,10 @@ package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.foods.dailykitchen.DailyKitchen;
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;

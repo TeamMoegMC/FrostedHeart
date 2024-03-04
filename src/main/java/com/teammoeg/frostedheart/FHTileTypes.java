@@ -34,15 +34,15 @@ import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
+import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
+import com.teammoeg.frostedheart.content.research.blocks.MechCalcTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEntity;
-import com.teammoeg.frostedheart.research.blocks.DrawingDeskTileEntity;
-import com.teammoeg.frostedheart.research.blocks.MechCalcTileEntity;
-import com.teammoeg.frostedheart.town.house.HouseTileEntity;
+import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
 
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;

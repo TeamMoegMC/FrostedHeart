@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.trade.ClientHeatHandler;
+import com.teammoeg.frostedheart.content.trade.ClientHeatHandler;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.network.PacketBuffer;

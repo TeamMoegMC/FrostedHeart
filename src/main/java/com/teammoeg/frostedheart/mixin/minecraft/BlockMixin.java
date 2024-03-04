@@ -27,8 +27,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.contraptions.components.crafter.MechanicalCrafterBlock;
+import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 

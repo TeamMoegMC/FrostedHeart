@@ -24,7 +24,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;

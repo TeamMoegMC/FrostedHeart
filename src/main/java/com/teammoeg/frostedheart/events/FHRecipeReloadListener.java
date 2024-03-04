@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.DietValueRecipe;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
-import com.teammoeg.frostedheart.trade.policy.TradePolicy;
+import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
 
 import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.utils.TagUtils;

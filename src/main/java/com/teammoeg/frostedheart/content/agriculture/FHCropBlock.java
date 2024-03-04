@@ -21,9 +21,9 @@ package com.teammoeg.frostedheart.content.agriculture;
 
 import java.util.Random;
 
-import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.chunkheatdata.ChunkHeatData;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CropsBlock;

@@ -28,8 +28,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.teammoeg.frostedheart.trade.FHVillagerData;
-import com.teammoeg.frostedheart.trade.TradeHandler;
+import com.teammoeg.frostedheart.content.trade.FHVillagerData;
+import com.teammoeg.frostedheart.content.trade.TradeHandler;
 import com.teammoeg.frostedheart.util.mixin.VillagerDataHolder;
 
 import net.minecraft.entity.EntityType;
