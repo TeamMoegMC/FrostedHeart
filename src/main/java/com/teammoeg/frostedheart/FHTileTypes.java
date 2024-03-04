@@ -19,8 +19,10 @@
 
 package com.teammoeg.frostedheart;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.contraptions.base.HalfShaftInstance;
@@ -120,7 +122,9 @@ public class FHTileTypes {
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }
-
+    private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block>... valid) {
+        return makeTypeMultipleBlocks(create, () -> Arrays.stream(valid).map(t->t.get()).collect(Collectors.toList()));
+    }
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeTypeMultipleBlocks(Supplier<T> create, Supplier<Collection<Block>> valid) {
         return () -> new TileEntityType<>(create, ImmutableSet.copyOf(valid.get()), null);
     }
