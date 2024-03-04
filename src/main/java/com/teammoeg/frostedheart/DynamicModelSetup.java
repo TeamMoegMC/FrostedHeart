@@ -22,12 +22,9 @@ package com.teammoeg.frostedheart;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorRenderer;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
-import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 
 import blusunrize.immersiveengineering.client.render.tile.DynamicModel;
 import blusunrize.immersiveengineering.client.render.tile.DynamicModel.ModelType;
-import net.minecraft.client.Minecraft;
-import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 
 public class DynamicModelSetup {
@@ -44,9 +41,5 @@ public class DynamicModelSetup {
                 new ResourceLocation(FHMain.MODID, "block/mechanical_calculator_movable.obj"),
                 "mechanical_calculator_movable", ModelType.IE_OBJ
         );
-    }
-    public static void addListener() {
-    	if(Minecraft.getInstance()!=null&&Minecraft.getInstance().getResourceManager()!=null)
-    		((IReloadableResourceManager)Minecraft.getInstance().getResourceManager()).addReloadListener(KGlyphProvider.INSTANCE);
     }
 }
