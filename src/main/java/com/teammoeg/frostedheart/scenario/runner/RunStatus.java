@@ -2,11 +2,11 @@ package com.teammoeg.frostedheart.scenario.runner;
 
 public enum RunStatus {
 	RUNNING(false,true),
-	WAITCLIENT(false,true),
-	WAITACTION(false,false),
-	WAITTIMER,
-	WAITTRIGGER(true,false,true),
-	STOPPED(true,false,true);
+	WAITCLIENT(false,true),//waiting for client response
+	WAITACTION(false,false),//waiting for player action
+	WAITTIMER,//waiting for timer
+	WAITTRIGGER(true,false,true),//waiting for async trigger
+	STOPPED(true,false,true);//stopped
 	public final boolean doPersist;
 	public final boolean shouldRun;
 	public final boolean shouldPause;

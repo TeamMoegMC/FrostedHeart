@@ -6,26 +6,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.scenario.network.ServerSenarioScenePacket;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
 import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.fml.network.PacketDistributor;
 
-/**
- * A scene is a place to present content to client You should NOT store this
- * object, always get it from {@link ScenarioConductor#getScene()}
- */
-public class Scene {
-	private transient final Map<String, ExecuteTarget> links = new HashMap<>();
+public abstract class Scene {
+
+	private final transient Map<String, ExecuteTarget> links = new HashMap<>();
 	private transient StringBuilder currentLiteral;
 	public transient boolean isNowait;
 	private boolean isSaveNowait;
@@ -35,7 +28,12 @@ public class Scene {
 	private transient List<TriggerTarget> triggers = new ArrayList<>();
 	List<String> savedLog = new ArrayList<>();
 	private transient boolean requireClear;
-	public boolean isClick=true;
+	public boolean isClick = true;
+
+	public Scene() {
+		super();
+	}
+
 	public CompoundNBT save() {
 		CompoundNBT nbt = new CompoundNBT();
 		nbt.putBoolean("nowait", isSaveNowait);
@@ -71,10 +69,6 @@ public class Scene {
 		log.add(new StringBuilder());
 	}
 
-	public Scene() {
-		super();
-	}
-
 	public void clear(IScenarioThread parent) {
 		if (requireClear)
 			forcedClear(parent);
@@ -87,7 +81,7 @@ public class Scene {
 			log.pollLast();
 		for (StringBuilder sb : log)
 			savedLog.add(sb.toString());
-
+	
 		log.clear();
 		triggers.clear();
 	}
@@ -111,11 +105,6 @@ public class Scene {
 		}
 	}
 
-	private void sendScene(IScenarioThread parent,String text, boolean wrap, boolean reset) {
-	
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> ((ServerPlayerEntity)parent.getPlayer())), new ServerSenarioScenePacket(text, wrap, isNowait, reset,parent.getStatus(),isClick));
-		isClick=true;
-	}
 	/**
 	 * sync all remaining cached text and send a 'clear current dialog' message to client
 	 * Also sync current state, so call this after all status operation
@@ -130,6 +119,7 @@ public class Scene {
 			sendScene(parent,tosend, false, true);
 		currentLiteral = null;
 	}
+
 	/**
 	 * Send all current message and start a new line after that
 	 * Also sync current state, so call this after all status operation
@@ -144,6 +134,7 @@ public class Scene {
 			sendScene(parent,tosend, true, false);
 		currentLiteral = null;
 	}
+
 	/**
 	 * Send all current message
 	 * Also sync current state, so call this after all status operation
@@ -154,7 +145,7 @@ public class Scene {
 			if (!isSlient())
 				sendScene(parent,currentLiteral.toString(), false, false);
 		}
-
+	
 		currentLiteral = null;
 	}
 
@@ -171,14 +162,14 @@ public class Scene {
 			parent.setStatus(RunStatus.WAITCLIENT);
 	}
 
-	public void waitClient(IScenarioThread parent,boolean isClick) {
+	public void waitClient(IScenarioThread parent, boolean isClick) {
 		if (!isSlient) {
 			parent.setStatus(RunStatus.WAITCLIENT);
 			this.isClick=isClick;
 		}
 	}
 
-	public void addWait(IScenarioThread parent,int time) {
+	public void addWait(IScenarioThread parent, int time) {
 		waiting += time;
 		parent.setStatus(RunStatus.WAITTIMER);
 	}
@@ -186,7 +177,7 @@ public class Scene {
 	public boolean tickWait() {
 		if (waiting > 0) {
 			waiting--;
-
+	
 			if (waiting <= 0)
 				return true;
 		}
@@ -218,12 +209,15 @@ public class Scene {
 	public void clearLink() {
 		getLinks().clear();
 	}
+
 	public void markChatboxDirty() {
 		requireClear=true;
 	}
-	public void addTrigger(IScenarioTrigger trig,IScenarioTarget targ) {
+
+	public void addTrigger(IScenarioTrigger trig, IScenarioTarget targ) {
 		triggers.add(new TriggerTarget(trig,targ));
 	}
+
 	public void stopWait(IScenarioThread parent) {
 		if(parent.getStatus()==RunStatus.WAITTIMER) {
 			waiting=0;
@@ -235,4 +229,7 @@ public class Scene {
 		return links;
 	}
 
+	public abstract void sendTitles(IScenarioThread parent, String title, String subtitle);
+
+	protected abstract void sendScene(IScenarioThread parent, String text, boolean wrap, boolean reset);
 }

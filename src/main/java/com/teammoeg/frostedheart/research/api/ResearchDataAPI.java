@@ -101,9 +101,9 @@ public class ResearchDataAPI {
         return ClientResearchDataAPI.getData().getData(research).isCompleted();
     }
 
-    public static void putVariantDouble(ServerPlayerEntity id, ResearchVariant name, double val) {
-    	getData(id).putVariantDouble(name, val);
-    	sendVariants(id);
+    public static void putVariantDouble(PlayerEntity playerEntity, String key, double val) {
+    	getData(playerEntity).putVariantDouble(key, val);
+    	sendVariants(playerEntity);
     }
     public static void putVariantDouble(ServerPlayerEntity id, String name, double val) {
     	getVariants(id).putDouble(name, val);

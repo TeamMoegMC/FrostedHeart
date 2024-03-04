@@ -18,7 +18,7 @@ public class EventTriggerType {
 		return Objects.equals(name, other.name);
 	}
 
-	String name;
+	private String name;
 
 	public EventTriggerType(String name) {
 		super();

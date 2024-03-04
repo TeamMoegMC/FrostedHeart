@@ -624,4 +624,12 @@ public class TeamResearchData implements NBTSerializable{
 	public UUID getId() {
 		return holder.getId();
 	}
+
+    public void putVariantDouble(String name, double val) {
+        variants.putDouble(name, val);
+    }
+
+    public void putVariantLong(String name, long val) {
+        variants.putLong(name, val);
+    }
 }

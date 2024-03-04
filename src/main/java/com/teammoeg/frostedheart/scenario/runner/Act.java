@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
 
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -52,16 +53,16 @@ public class Act implements IScenarioThread{
     private String subtitle="";
 
 	private LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
-    private final ScenarioConductor parent;
+    private final ScenarioVM parent;
     public Act(ScenarioConductor paraData,ActNamespace name) {
 		super();
-		this.scene=new Scene();
+		this.scene=new ServerScene();
 		parent=paraData;
 		this.name=name;
 	}
     public Act(ScenarioConductor paraData,CompoundNBT data) {
 		super();
-		this.scene=new Scene();
+		this.scene=new ServerScene();
 		parent=paraData;
 		load(data);
 	}
@@ -144,7 +145,7 @@ public class Act implements IScenarioThread{
 	public void queue(IScenarioTarget target) {
 		parent.addToQueue(new ActTarget(name,target));
 	}
-	public ServerPlayerEntity getPlayer() {
+	public PlayerEntity getPlayer() {
 		return parent.getPlayer();
 	}
 
@@ -180,7 +181,8 @@ public class Act implements IScenarioThread{
 		return subtitle;
 	}
 	public void sendTitles(boolean updateT,boolean updateSt) {
-		FHNetwork.send(PacketDistributor.PLAYER.with(()->parent.getPlayer()), new ServerSenarioActPacket(updateT?title:null,updateSt?subtitle:null));
+		this.scene.sendTitles(parent, updateT?title:null, updateSt?subtitle:null);
+		//FHNetwork.send(PacketDistributor.PLAYER.with(()->parent.getPlayer()), new ServerSenarioActPacket(updateT?title:null,updateSt?subtitle:null));
 	}
 	public void setTitles(String t,String st) {
 		//System.out.println(t+","+st);

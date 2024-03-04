@@ -47,7 +47,7 @@ public class MCCommands {
 
 	public void gameCommand(ScenarioVM runner,@Param("op")int op,@Param("asPlayer")int asp, @Param("cmd") @Param("command") String s) {
 		Map<String, Object> overrides = new HashMap<>();
-		ServerPlayerEntity triggerPlayer = runner.getPlayer();
+		ServerPlayerEntity triggerPlayer = (ServerPlayerEntity) runner.getPlayer();
 		overrides.put("p", triggerPlayer.getGameProfile().getName());
 
 		BlockPos pos = triggerPlayer.getPosition();

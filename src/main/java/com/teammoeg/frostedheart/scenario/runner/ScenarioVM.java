@@ -41,10 +41,11 @@ import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.evaluator.Evaluator;
 
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 
-public class ScenarioVM implements IScenarioThread{
+public abstract class ScenarioVM implements IScenarioThread{
 	protected Scenario sp;//current scenario
 	protected int nodeNum=0;//Program register
 	protected ScenarioVariables varData=new ScenarioVariables();
@@ -86,20 +87,8 @@ public class ScenarioVM implements IScenarioThread{
         return nodeNum;
     }
 
-	public ServerPlayerEntity getPlayer() {
-        return SpecialDataManager.getServer().getPlayerList().getPlayerByUUID(player);
-    }
-	public boolean isOfflined() {
-		return SpecialDataManager.getServer().getPlayerList().getPlayerByUUID(player)==null;
-	}
-	@Override
-    public String getLang() {
-    	return getPlayer().getLanguage();
-    }
-	@Override
-	public void sendMessage(String s) {
-		getPlayer().sendStatusMessage(GuiUtils.str(s), false);
-	}
+	public abstract PlayerEntity getPlayer() ;
+
 	public void jump(String scenario,String label) {
 		if(scenario==null)
 			jump(new ExecuteTarget(this,scenario,label));
@@ -247,7 +236,7 @@ public class ScenarioVM implements IScenarioThread{
 	}
 	public Scene getScene() {
 		if(scene==null)
-			scene=new Scene();
+			scene=new ServerScene();
     	return scene;
     }
 	public void newLine() {
