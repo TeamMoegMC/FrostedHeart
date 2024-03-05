@@ -31,9 +31,8 @@ public class RealBox extends LabeledTextBox {
         try {
             return Double.parseDouble(getText());
         } catch (NumberFormatException ex) {
-            throw new RuntimeException(ex);
+            return Double.parseDouble(orig);
         }
-        return Double.parseDouble(orig);
     }
 
     public void setNum(double number) {
