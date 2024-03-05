@@ -60,7 +60,7 @@ public class DayTemperatureData {
         }
 
         public ClimateType getType() {
-            return type == null ? ClimateType.NONE : type;//IDK why this happen, but this would fix
+            return type == null ? ClimateType.NONE : type;//IDK why this happens, but this would fix
         }
 
 

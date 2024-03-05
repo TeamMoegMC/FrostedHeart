@@ -180,9 +180,9 @@ public class ChunkHeatData implements NBTSerializable {
 
     /**
      * Called to get chunk data when a world context is available.
-     * If on client, will query capability, falling back to cache, and send request
+     * On client, will query capability, falling back to cache, and send request
      * packets if necessary
-     * If on server, will either query capability falling back to cache, or query
+     * On server, will either query capability falling back to cache, or query
      * provider to generate the data.
      */
     @SuppressWarnings("deprecation")

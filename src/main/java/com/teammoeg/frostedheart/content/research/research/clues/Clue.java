@@ -194,7 +194,7 @@ public abstract class Clue extends AutoIDItem implements Writeable{
 
     /**
      * send progress packet to client
-     * should not called manually
+     * should not call manually
      */
     public void sendProgressPacket(TeamDataHolder team) {
         FHClueProgressSyncPacket packet = new FHClueProgressSyncPacket(team, this);

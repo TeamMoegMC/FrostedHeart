@@ -55,7 +55,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 // TODO: Auto-generated Javadoc
 
 /**
- * "Effect" of an research: how would it becomes when a research is completed ?.
+ * "Effect" of research: how would it become when research is completed ?.
  *
  * @author khjxiaogu
  * file: Effect.java
