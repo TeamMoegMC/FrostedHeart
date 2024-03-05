@@ -57,7 +57,7 @@ public abstract class AbstractTopPlantBlockMixin extends AbstractPlantBlock {
      * @reason fix forge event bug
      * @author khjxiaogu
      */
-    @Inject(at = @At("HEAD"), method = "randomTick", cancellable = true, remap = true)
+    @Inject(at = @At("HEAD"), method = "randomTick", cancellable = true)
 
     public void fh$randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random, CallbackInfo cbi) {
         if (state.get(AbstractTopPlantBlock.AGE) < 25 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn,

@@ -44,7 +44,7 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
     public int lifeTime = 0;
 
     public CampfireTileEntityMixin(TileEntityType<?> tileEntityTypeIn) {
-        super(tileEntityTypeIn.CAMPFIRE);
+        super(TileEntityType.CAMPFIRE);
     }
 
     @Override

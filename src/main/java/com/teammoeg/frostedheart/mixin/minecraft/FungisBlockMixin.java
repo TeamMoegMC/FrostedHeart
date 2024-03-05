@@ -36,7 +36,7 @@ import net.minecraft.world.IBlockReader;
  * */
 @Mixin(FungusBlock.class)
 public class FungisBlockMixin {
-    @Inject(at = @At("HEAD"), method = "canGrow", remap = true, cancellable = true)
+    @Inject(at = @At("HEAD"), method = "canGrow", cancellable = true)
     public void canGrow(IBlockReader worldIn, BlockPos pos, BlockState state, boolean isClient,
                         CallbackInfoReturnable<Boolean> cbi) {
         if (!FHUtils.canNetherTreeGrow(worldIn, pos)) {

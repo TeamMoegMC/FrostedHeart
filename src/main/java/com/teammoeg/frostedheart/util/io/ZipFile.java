@@ -33,7 +33,7 @@ public class ZipFile implements AutoCloseable {
     Path fd;
     ZipOutputStream bkf;
 
-    public ZipFile(File output, Path indir) throws ZipException, IOException {
+    public ZipFile(File output, Path indir) throws IOException {
         fd = indir.toAbsolutePath();
         bkf = new ZipOutputStream(new FileOutputStream(output));
     }

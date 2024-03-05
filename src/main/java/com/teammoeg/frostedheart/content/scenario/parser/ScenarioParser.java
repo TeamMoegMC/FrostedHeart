@@ -92,13 +92,13 @@ public class ScenarioParser {
         return new CommandNode(command, params);
 
     }
-    public Scenario parseString(String name,List<String> code) throws IOException {
+    public Scenario parseString(String name,List<String> code) {
         return process(name,parseLine(new StringListStringSource(name,code)));
     }
     public Scenario parseString(String name,String code){
         return process(name,parseLine(new StringLineSource(name,code)));
     }
-    public Scenario parseFile(String name,File file) throws IOException {
+    public Scenario parseFile(String name,File file) {
         try (FileInputStream fis = new FileInputStream(file);InputStreamReader isr = new InputStreamReader(fis,StandardCharsets.UTF_8)) {
         	return process(name,parseLine(new ReaderLineSource(name,isr)));
 
@@ -159,7 +159,7 @@ public class ScenarioParser {
     
 
 
-    private Node parseAtCommand(StringParseReader reader) throws IOException {
+    private Node parseAtCommand(StringParseReader reader) {
         Map<String, String> params = new HashMap<>();
         
         String command = parseLiteralOrString(reader, -1);
@@ -184,7 +184,7 @@ public class ScenarioParser {
 
     }
 
-    private Node parseBarackCommand(StringParseReader reader) throws IOException {
+    private Node parseBarackCommand(StringParseReader reader) {
         Map<String, String> params = new HashMap<>();
         String command = parseLiteralOrString(reader, ']');
         reader.skipWhitespace();
@@ -235,7 +235,7 @@ public class ScenarioParser {
         return nodes;
     }
 
-    private String parseLiteral(StringParseReader reader) throws IOException {
+    private String parseLiteral(StringParseReader reader) {
         StringBuilder all = new StringBuilder();
         boolean isEscaping = false;
         while (reader.has()) {
@@ -260,7 +260,7 @@ public class ScenarioParser {
         return all.toString();
     }
 
-    private String parseLiteralOrString(StringParseReader reader, int ch) throws IOException {
+    private String parseLiteralOrString(StringParseReader reader, int ch) {
         StringBuilder all = new StringBuilder();
         boolean isEscaping = false;
         boolean hasQuote = false;

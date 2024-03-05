@@ -329,7 +329,7 @@ public class ScenarioExecutor<T> {
 
     	}
     }
-    public static void main(String[] args) throws NoSuchMethodException, SecurityException {
+    public static void main(String[] args) throws SecurityException {
     	ScenarioExecutor<Object> exc=new ScenarioExecutor<Object>(Object.class);
     	exc.registerInst(new Test());
     	Map<String,String> mp=new HashMap<>();

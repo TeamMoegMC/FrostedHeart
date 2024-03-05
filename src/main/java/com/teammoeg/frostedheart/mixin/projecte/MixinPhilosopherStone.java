@@ -46,7 +46,7 @@ import net.minecraft.world.server.ServerWorld;
 
 @Mixin(PhilosophersStone.class)
 public class MixinPhilosopherStone {
-    @Inject(method = "onItemUse", at = @At(value = "HEAD"), remap = true, cancellable = true)
+    @Inject(method = "onItemUse", at = @At(value = "HEAD"), cancellable = true)
     public void hibernation(ItemUseContext ctx, CallbackInfoReturnable<ActionResultType> cir) {
         World world = ctx.getWorld();
         PlayerEntity player = ctx.getPlayer();
