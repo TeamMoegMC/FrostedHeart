@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.town;
 
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.base.team.TeamDataManager;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 
 import dev.ftb.mods.ftbteams.data.Team;
@@ -70,7 +70,7 @@ public class TeamTown implements Town {
      * @return the town
      */
     public static TeamTown from(PlayerEntity player) {
-        TeamTownData data = TeamDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA);
+        TeamTownData data = FHTeamDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA);
         return new TeamTown(data);
     }
 
@@ -80,7 +80,7 @@ public class TeamTown implements Town {
      * @return the town
      */
     public static TeamTown from(Team team) {
-        TeamTownData data = TeamDataManager.getDataByTeam(team).getData(SpecialDataTypes.TOWN_DATA);
+        TeamTownData data = FHTeamDataManager.getDataByTeam(team).getData(SpecialDataTypes.TOWN_DATA);
         return new TeamTown(data);
     }
 

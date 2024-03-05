@@ -25,7 +25,7 @@ import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.content.climate.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.base.team.TeamDataManager;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
@@ -110,7 +110,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     protected Optional<TeamDataHolder> getTeamData() {
         UUID owner = getOwner();
         if (owner != null)
-            return Optional.ofNullable(TeamDataManager.getDataByResearchID(owner));
+            return Optional.ofNullable(FHTeamDataManager.getDataByResearchID(owner));
         return Optional.empty();
     }
 

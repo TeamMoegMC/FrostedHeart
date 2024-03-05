@@ -23,7 +23,7 @@ import java.util.UUID;
 
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.base.team.TeamDataManager;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
@@ -35,13 +35,13 @@ public class ResearchDataAPI {
 
     public static TeamResearchData getData(PlayerEntity id) {
         if (id instanceof ServerPlayerEntity)
-            return TeamDataManager.INSTANCE.get(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA);
+            return FHTeamDataManager.INSTANCE.get(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA);
        // return TeamResearchData.getClientInstance();
         return ClientResearchDataAPI.getData();
     }
 
     public static TeamResearchData getData(UUID id) {
-        return TeamDataManager.INSTANCE.get(id).getData(SpecialDataTypes.RESEARCH_DATA);
+        return FHTeamDataManager.INSTANCE.get(id).getData(SpecialDataTypes.RESEARCH_DATA);
 
     }
 
@@ -97,7 +97,7 @@ public class ResearchDataAPI {
     
     public static boolean isResearchComplete(PlayerEntity id, String research) {
         if (id instanceof ServerPlayerEntity)
-            return TeamDataManager.INSTANCE.get(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA).getData(research).isCompleted();
+            return FHTeamDataManager.INSTANCE.get(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(SpecialDataTypes.RESEARCH_DATA).getData(research).isCompleted();
         return ClientResearchDataAPI.getData().getData(research).isCompleted();
     }
 

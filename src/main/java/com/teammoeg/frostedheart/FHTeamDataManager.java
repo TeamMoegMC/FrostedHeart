@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.base.team;
+package com.teammoeg.frostedheart;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,10 +28,11 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.base.team.SpecialDataType;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import org.apache.commons.io.FileUtils;
 
 import com.mojang.authlib.GameProfile;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
@@ -50,14 +51,14 @@ import net.minecraft.world.storage.FolderName;
 
 /**
  * The data manager for all team data.
- * use {@link ClientTeamDataManager} to get data in client
+ * use {@link FHClientTeamDataManager} to get data in client
  * Normally, use
  * get(PlayerEntity player) to get the data for a player's team.
  * get(Team team) to get the data for FTB team.
  */
-public class TeamDataManager {
+public class FHTeamDataManager {
 
-    public static TeamDataManager INSTANCE;
+    public static FHTeamDataManager INSTANCE;
     private final MinecraftServer server;
     static final FolderName dataFolder = new FolderName("fhdata");
     static final FolderName oldDataFolder = new FolderName("fhresearch");
@@ -70,7 +71,7 @@ public class TeamDataManager {
         return ClientUtils.mc().world.getRecipeManager();
     }
 
-    public TeamDataManager(MinecraftServer s) {
+    public FHTeamDataManager(MinecraftServer s) {
         server = s;
         INSTANCE = this;
     }

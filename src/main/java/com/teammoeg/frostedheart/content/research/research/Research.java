@@ -41,7 +41,7 @@ import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.clues.Clues;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.frostedheart.content.research.research.effects.Effects;
-import com.teammoeg.frostedheart.base.team.TeamDataManager;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
@@ -274,7 +274,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         deleteInTree();
         this.effects.forEach(Effect::deleteSelf);
         this.clues.forEach(Clue::deleteSelf);
-        TeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
+        FHTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
 
         FHResearch.delete(this);
     }
@@ -822,7 +822,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      */
     public void setNewId(String nid) {
         if (!id.equals(nid)) {
-            TeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
+            FHTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
             deleteInTree();//clear all reference, hope this could work
             FHResearch.delete(this);
             this.setId(nid);

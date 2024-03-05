@@ -37,7 +37,7 @@ import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.content.research.network.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.base.team.TeamDataManager;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
@@ -196,7 +196,7 @@ public abstract class Effect extends AutoIDItem implements Writeable{
     }
 
     private void deleteInTree() {
-        TeamDataManager.INSTANCE.getAllData().forEach(t -> {
+        FHTeamDataManager.INSTANCE.getAllData().forEach(t -> {
             if (this.getRId() != 0) {
             	TeamResearchData trd=t.getData(SpecialDataTypes.RESEARCH_DATA);
                 revoke(trd);

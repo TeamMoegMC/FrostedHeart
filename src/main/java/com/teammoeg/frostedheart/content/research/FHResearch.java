@@ -43,7 +43,7 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.frostedheart.base.team.TeamDataManager;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.io.FileUtil;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
@@ -349,7 +349,7 @@ public class FHResearch {
 	private static final FolderName dataFolder = new FolderName("fhdata");
     public static void load() {
         FHResearch.editor = false;
-        Path local = TeamDataManager.getServer().func_240776_a_(dataFolder);
+        Path local = FHTeamDataManager.getServer().func_240776_a_(dataFolder);
         File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
         FHResearch.clearAll();
         if (regfile.exists()) {
@@ -375,7 +375,7 @@ public class FHResearch {
     }
 
     public static void save() {
-    	Path local = TeamDataManager.getServer().func_240776_a_(dataFolder);
+    	Path local = FHTeamDataManager.getServer().func_240776_a_(dataFolder);
     	File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
         File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
         try {

@@ -39,7 +39,6 @@ import com.teammoeg.frostedheart.events.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
 import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
-import com.teammoeg.frostedheart.base.team.TeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.FHProps;
@@ -199,23 +198,23 @@ public class FHMain {
 
     @SuppressWarnings("unused")
     private void serverSave(final WorldEvent.Save event) {
-        if (TeamDataManager.INSTANCE != null) {
+        if (FHTeamDataManager.INSTANCE != null) {
         	FHResearch.save();
-            TeamDataManager.INSTANCE.save();
+            FHTeamDataManager.INSTANCE.save();
             //FHScenario.save();
         }
     }
 
     private void serverStart(final FMLServerAboutToStartEvent event) {
-        new TeamDataManager(event.getServer());
+        new FHTeamDataManager(event.getServer());
         FHResearch.load();
-        TeamDataManager.INSTANCE.load();
+        FHTeamDataManager.INSTANCE.load();
 
     }
 
     @SuppressWarnings("unused")
     private void serverStop(final FMLServerStoppedEvent event) {
-        TeamDataManager.INSTANCE = null;
+        FHTeamDataManager.INSTANCE = null;
     }
 
     @SuppressWarnings("unused")

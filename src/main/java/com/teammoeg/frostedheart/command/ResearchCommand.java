@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.base.team.TeamDataManager;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
@@ -81,7 +81,7 @@ public class ResearchCommand {
                 .then(Commands.literal("transfer").then(Commands.argument("from", UUIDArgument.func_239194_a_())
                         .then(Commands.argument("to", UUIDArgument.func_239194_a_())).executes(ct -> {
                             Team team = FTBTeamsAPI.getManager().getTeamByID(UUIDArgument.func_239195_a_(ct, "to"));
-                            TeamDataManager.INSTANCE.transfer(UUIDArgument.func_239195_a_(ct, "from"), team);
+                            FHTeamDataManager.INSTANCE.transfer(UUIDArgument.func_239195_a_(ct, "from"), team);
                             ct.getSource().sendFeedback(GuiUtils.str("Transfered to " + team.getDisplayName()).mergeStyle(TextFormatting.GREEN), false);
                             return Command.SINGLE_SUCCESS;
                         })))

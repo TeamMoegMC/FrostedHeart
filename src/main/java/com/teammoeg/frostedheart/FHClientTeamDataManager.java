@@ -17,22 +17,23 @@
  *
  */
 
-package com.teammoeg.frostedheart.base.team;
+package com.teammoeg.frostedheart;
 
 import java.util.UUID;
 
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 
 /**
  * Synced client data manager.
  */
-public class ClientTeamDataManager {
+public class FHClientTeamDataManager {
 	
 	/** The instance. */
-	public static ClientTeamDataManager INSTANCE=new ClientTeamDataManager();
+	public static FHClientTeamDataManager INSTANCE=new FHClientTeamDataManager();
 	
 	private TeamDataHolder holder=new TeamDataHolder(UUID.randomUUID(),OptionalLazy.empty());
-	private ClientTeamDataManager() {
+	private FHClientTeamDataManager() {
 	}
 	
 	/**
@@ -43,9 +44,9 @@ public class ClientTeamDataManager {
 	}
 	
 	/**
-	 * Gets the single instance of ClientTeamDataManager.
+	 * Gets the single instance of FHClientTeamDataManager.
 	 *
-	 * @return single instance of ClientTeamDataManager
+	 * @return single instance of FHClientTeamDataManager
 	 */
 	public TeamDataHolder getInstance() {
 		return holder;

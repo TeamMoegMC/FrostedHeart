@@ -24,7 +24,7 @@ import java.util.UUID;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
-import com.teammoeg.frostedheart.base.team.TeamDataManager;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.PlayerTeam;
@@ -47,7 +47,7 @@ public class FTBTeamsEvents {
         if (FTBTeamsAPI.isManagerLoaded()) {
             PlayerTeam orig = FTBTeamsAPI.getManager().getInternalPlayerTeam(event.getCreator().getUniqueID());
 
-            TeamDataManager.INSTANCE.transfer(orig.getId(), event.getTeam());
+            FHTeamDataManager.INSTANCE.transfer(orig.getId(), event.getTeam());
             for(ServerPlayerEntity p:event.getTeam().getOnlineMembers()) {
 	            FHNetwork.send(PacketDistributor.PLAYER.with(()->p),
 	                    new FHResearchDataSyncPacket(ResearchDataAPI.getData(p)));
@@ -61,7 +61,7 @@ public class FTBTeamsEvents {
             UUID owner = event.getTeam().getOwner();
             PlayerTeam orig = FTBTeamsAPI.getManager().getInternalPlayerTeam(owner);
 
-            TeamDataManager.INSTANCE.transfer(event.getTeam().getId(), orig);
+            FHTeamDataManager.INSTANCE.transfer(event.getTeam().getId(), orig);
             for(ServerPlayerEntity p:event.getTeam().getOnlineMembers()) {
 	            FHNetwork.send(PacketDistributor.PLAYER.with(()->p),
 	                    new FHResearchDataSyncPacket(ResearchDataAPI.getData(p)));
@@ -74,7 +74,7 @@ public class FTBTeamsEvents {
     public static void syncDataWhenTeamTransfer(PlayerTransferredTeamOwnershipEvent event) {
         if (FTBTeamsAPI.isManagerLoaded()) {
 
-            TeamDataManager.INSTANCE.get(event.getTeam()).setOwnerName(event.getFrom().getGameProfile().getName());
+            FHTeamDataManager.INSTANCE.get(event.getTeam()).setOwnerName(event.getFrom().getGameProfile().getName());
         }
 
     }
