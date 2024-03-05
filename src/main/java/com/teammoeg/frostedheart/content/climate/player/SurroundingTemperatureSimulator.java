@@ -274,13 +274,13 @@ public class SurroundingTemperatureSimulator {
             qz[i] = qz0;
             vid[i] = i;
         }
-        System.out.println("=========start=========");
+        /*System.out.println("=========start=========");
         for(int i=-1;i<=1;i++) {
         	StringBuilder sb=new StringBuilder();
         	 for(int j=-1;j<=1;j++)
         		 sb.append(getInfo(new BlockPos((int)(qx0+i),(int)(qy0-2),(int)(qz0+j))).bs.getBlock().getRegistryName()).append(" , ");
         	 System.out.println(sb.toString());
-        }
+        }*/
         float heat = 0;
         BlockPos.Mutable bm=new BlockPos.Mutable();
         for (int round = 0; round < num_rounds; ++round) // time-to-live for each particle is `num_rounds`
