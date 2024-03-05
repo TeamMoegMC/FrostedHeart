@@ -19,7 +19,16 @@
 
 package com.teammoeg.frostedheart.scheduler;
 
+/**
+ * Interface for TileEntities that can have scheduled tasks.
+ */
 public interface ScheduledTaskTileEntity {
+    /**
+     * Execute the task.
+     * The task here would be put in a global queue, which may be executed asynchronously.
+     * Therefore, the task should be some expensive but not tick-wise critical operations.
+     * For example, checking whether the structure of a house is valid.
+     */
     void executeTask();
 
     boolean isStillValid();
