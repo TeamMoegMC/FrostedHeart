@@ -183,11 +183,11 @@ public class SurroundingTemperatureSimulator {
                 }
                 i += 2;
             }
-        /*ByteBuffer bb=ByteBuffer.allocate(16);
+        ByteBuffer bb=ByteBuffer.allocate(16);
         LongBuffer lb=bb.asLongBuffer();
         lb.put(player.getPosition().toLong());
-        lb.put(player.getServerWorld().getGameTime());*/
-        rnd = new Random(player.getServerWorld().getGameTime()^player.getPosition().toLong());
+        lb.put(player.getServerWorld().getGameTime());
+        rnd = new MersenneTwister(bb.array());
         //rrnd=new RandomSequence(n,rnd);
     }
 
