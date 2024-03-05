@@ -12,7 +12,7 @@ import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.OrTrigger;
 import com.teammoeg.frostedheart.content.scenario.runner.target.VariantTargetTrigger;
 import com.teammoeg.frostedheart.content.scenario.runner.target.trigger.MovementTrigger;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.base.team.TeamDataManager;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
@@ -54,13 +54,13 @@ public class MCCommands {
 		overrides.put("x", pos.getX());
 		overrides.put("y", pos.getY());
 		overrides.put("z", pos.getZ());
-		OpEntry opent=SpecialDataManager.getServer().getPlayerList().getOppedPlayers().getEntry(triggerPlayer.getGameProfile());
+		OpEntry opent= TeamDataManager.getServer().getPlayerList().getOppedPlayers().getEntry(triggerPlayer.getGameProfile());
 		if(op>0)
 			if(opent==null){
-				SpecialDataManager.getServer().getPlayerList().addOp(triggerPlayer.getGameProfile());
+				TeamDataManager.getServer().getPlayerList().addOp(triggerPlayer.getGameProfile());
 			}
-		Commands cmds = SpecialDataManager.getServer().getCommandManager();
-		CommandSource source = asp>0?triggerPlayer.getCommandSource():SpecialDataManager.getServer().getCommandSource();
+		Commands cmds = TeamDataManager.getServer().getCommandManager();
+		CommandSource source = asp>0?triggerPlayer.getCommandSource(): TeamDataManager.getServer().getCommandSource();
 		for (Map.Entry<String, Object> entry : overrides.entrySet()) {
 			if (entry.getValue() != null) {
 				s = s.replace("@" + entry.getKey(), entry.getValue().toString());
@@ -69,7 +69,7 @@ public class MCCommands {
 		cmds.handleCommand(source, s);
 		if(op>0)
 			if(opent==null){
-				SpecialDataManager.getServer().getPlayerList().removeOp(triggerPlayer.getGameProfile());
+				TeamDataManager.getServer().getPlayerList().removeOp(triggerPlayer.getGameProfile());
 			}
 	}
 }

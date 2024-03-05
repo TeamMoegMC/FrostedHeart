@@ -39,8 +39,8 @@ import com.teammoeg.frostedheart.content.research.research.clues.ItemClue;
 import com.teammoeg.frostedheart.content.research.research.clues.KillClue;
 import com.teammoeg.frostedheart.content.research.research.clues.MinigameClue;
 import com.teammoeg.frostedheart.content.research.research.clues.TickListenerClue;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.base.team.TeamDataManager;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.RegistryUtils;
@@ -212,7 +212,7 @@ public class ResearchListeners {
 
         @Override
         public IRecipe<?> getObject(String s) {
-            return SpecialDataManager.getRecipeManager().getRecipe(new ResourceLocation(s)).orElse(null);
+            return TeamDataManager.getRecipeManager().getRecipe(new ResourceLocation(s)).orElse(null);
         }
 
         @Override
@@ -364,12 +364,12 @@ public class ResearchListeners {
     }
 
     public static void ServerReload() {
-        if (SpecialDataManager.INSTANCE == null) return;
+        if (TeamDataManager.INSTANCE == null) return;
         FHMain.LOGGER.info("reloading research system");
-        SpecialDataManager.INSTANCE.save();
-        SpecialDataManager.INSTANCE.load();
+        TeamDataManager.INSTANCE.save();
+        TeamDataManager.INSTANCE.load();
         FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
-        SpecialDataManager.INSTANCE.getAllData(SpecialDataTypes.RESEARCH_DATA).forEach(TeamResearchData::sendUpdate);
+        TeamDataManager.INSTANCE.getAllData(SpecialDataTypes.RESEARCH_DATA).forEach(TeamResearchData::sendUpdate);
     }
 
     public static ItemStack submitItem(ServerPlayerEntity s, ItemStack i) {

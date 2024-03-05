@@ -69,9 +69,9 @@ import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.content.town.TeamTownDataS2CPacket;
 import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.base.team.TeamDataManager;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
@@ -663,7 +663,7 @@ public class CommonEvents {
 
                 // Town logic tick
                 int i = 0;
-                for (TeamDataHolder trd : SpecialDataManager.INSTANCE.getAllData()) {
+                for (TeamDataHolder trd : TeamDataManager.INSTANCE.getAllData()) {
                     if (serverWorld.getDimensionKey().equals(trd.getData(SpecialDataTypes.GENERATOR_DATA).dimension)) {
                         if (serverWorld.getGameTime() % 20 == i % 20) {//Split town calculations to multiple seconds
                             if (trd.getTeam().map(t -> t.getOnlineMembers().size()).orElse(0) > 0) {

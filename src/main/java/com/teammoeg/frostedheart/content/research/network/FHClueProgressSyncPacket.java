@@ -25,8 +25,8 @@ import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;

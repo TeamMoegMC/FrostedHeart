@@ -25,8 +25,8 @@ import com.teammoeg.frostedheart.content.climate.data.FHDataManager.FHDataType;
 import net.minecraft.network.PacketBuffer;
 
 public class DataEntry {
-    FHDataType type;
-    String data;
+    public FHDataType type;
+    public String data;
 
     public DataEntry(FHDataType type, JsonObject data) {
         this.type = type;

@@ -27,7 +27,7 @@ import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.base.team.TeamDataManager;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -101,8 +101,8 @@ public class EffectCommand extends Effect {
         overrides.put("z", pos.getZ());
 
         overrides.put("t", team.getHolder().getTeam().get().getStringID());
-        Commands cmds = SpecialDataManager.getServer().getCommandManager();
-        CommandSource source = SpecialDataManager.getServer().getCommandSource();
+        Commands cmds = TeamDataManager.getServer().getCommandManager();
+        CommandSource source = TeamDataManager.getServer().getCommandSource();
         for (String s : rewards) {
 
             for (Map.Entry<String, Object> entry : overrides.entrySet()) {

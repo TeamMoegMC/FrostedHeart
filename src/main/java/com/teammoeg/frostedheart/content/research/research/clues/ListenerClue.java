@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.research.research.clues;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 
 import net.minecraft.network.PacketBuffer;
 

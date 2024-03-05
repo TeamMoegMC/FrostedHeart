@@ -33,7 +33,7 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.base.team.TeamDataManager;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
@@ -178,7 +178,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
         }
         UUID owner = IOwnerTile.getOwner(this);
         if (owner == null) return;
-        UUID t = SpecialDataManager.get(p).getId();
+        UUID t = TeamDataManager.get(p).getId();
         if (t == null || !t.equals(owner)) return;
         // add wet effect
         if (world.getGameTime() % 200L == 0L) {

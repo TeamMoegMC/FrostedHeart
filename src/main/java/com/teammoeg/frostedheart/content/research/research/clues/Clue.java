@@ -30,9 +30,9 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.content.research.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.base.team.TeamDataManager;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.io.Writeable;
 
 import net.minecraft.network.PacketBuffer;
@@ -107,7 +107,7 @@ public abstract class Clue extends AutoIDItem implements Writeable{
     }
 
     private void deleteInTree() {
-        SpecialDataManager.INSTANCE.getAllData().forEach(this::end);
+        TeamDataManager.INSTANCE.getAllData().forEach(this::end);
     }
 
     public void deleteSelf() {

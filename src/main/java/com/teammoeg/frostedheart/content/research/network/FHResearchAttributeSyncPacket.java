@@ -23,8 +23,8 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;

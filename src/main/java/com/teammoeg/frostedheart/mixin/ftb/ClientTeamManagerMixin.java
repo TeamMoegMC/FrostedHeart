@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.base.team.TeamDataManager;
 import com.teammoeg.frostedheart.util.mixin.FTBFixUtils;
 
 import dev.ftb.mods.ftbteams.data.ClientTeam;
@@ -70,7 +70,7 @@ public abstract class ClientTeamManagerMixin {
                 }
             }
         }
-        for (ServerPlayerEntity p : SpecialDataManager.getServer().getPlayerList().getPlayers()) {
+        for (ServerPlayerEntity p : TeamDataManager.getServer().getPlayerList().getPlayers()) {
             KnownClientPlayer kcp = knownPlayers.get(p.getUniqueID());
             if (kcp != null)
                 tosendplayer.add(kcp);

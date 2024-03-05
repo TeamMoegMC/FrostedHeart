@@ -23,7 +23,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import blusunrize.immersiveengineering.common.util.Utils;

@@ -23,6 +23,7 @@ import static net.minecraft.util.text.TextFormatting.*;
 
 import java.util.List;
 
+import com.teammoeg.frostedheart.base.team.ClientTeamDataManager;
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -51,7 +52,6 @@ import com.teammoeg.frostedheart.content.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacket;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
-import com.teammoeg.frostedheart.team.ClientDataHolder;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -371,7 +371,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void fireLogin(LoggedInEvent event) {
         FHScenarioClient.sendInitializePacket = true;
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ClientDataHolder.INSTANCE::reset);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ClientTeamDataManager.INSTANCE::reset);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)

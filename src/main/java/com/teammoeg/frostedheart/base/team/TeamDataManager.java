@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.team;
+package com.teammoeg.frostedheart.base.team;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,14 +50,14 @@ import net.minecraft.world.storage.FolderName;
 
 /**
  * The data manager for all team data.
- * use {@link ClientDataHolder} to get data in client
+ * use {@link ClientTeamDataManager} to get data in client
  * Normally, use
  * get(PlayerEntity player) to get the data for a player's team.
  * get(Team team) to get the data for FTB team.
  */
-public class SpecialDataManager {
+public class TeamDataManager {
 
-    public static SpecialDataManager INSTANCE;
+    public static TeamDataManager INSTANCE;
     private final MinecraftServer server;
     static final FolderName dataFolder = new FolderName("fhdata");
     static final FolderName oldDataFolder = new FolderName("fhresearch");
@@ -70,7 +70,7 @@ public class SpecialDataManager {
         return ClientUtils.mc().world.getRecipeManager();
     }
 
-    public SpecialDataManager(MinecraftServer s) {
+    public TeamDataManager(MinecraftServer s) {
         server = s;
         INSTANCE = this;
     }
