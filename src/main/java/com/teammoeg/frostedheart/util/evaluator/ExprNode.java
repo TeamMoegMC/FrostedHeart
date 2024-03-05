@@ -122,22 +122,12 @@ class ExprNode implements Node {
 		}
 		System.out.println("xe");*/
         if (!positive.isEmpty()) {
-            x = String.join("+", new Iterable<String>() {
-                @Override
-                public Iterator<String> iterator() {
-                    return positive.stream().map(n -> n.toString()).iterator();
-                }
-            });
+            x = String.join("+", (Iterable<String>) () -> positive.stream().map(n -> n.toString()).iterator());
         } else if (!negative.isEmpty())
             x = "0";
         if (!negative.isEmpty()) {
             x += "-";
-            x += String.join("-", new Iterable<String>() {
-                @Override
-                public Iterator<String> iterator() {
-                    return negative.stream().map(n -> n.toString()).iterator();
-                }
-            });
+            x += String.join("-", (Iterable<String>) () -> negative.stream().map(n -> n.toString()).iterator());
         }
         return x;
     }

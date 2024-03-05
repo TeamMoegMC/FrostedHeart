@@ -183,31 +183,25 @@ public class WorldClimate implements NBTSerializable {
             data.populateDays();
         }
         if (ddate < 0 || dhours < 0 || ddate >= DAY_CACHE_LENGTH) return ImmutableList.of();
-        return new Iterable<Pair<Float, ClimateType>>() {
+        return () -> new Iterator<Pair<Float, ClimateType>>() {
+            int curddate = (int) ddate;
+            int curdhours = (int) (dhours - 1);
+
             @Override
-            public Iterator<Pair<Float, ClimateType>> iterator() {
-                return new Iterator<Pair<Float, ClimateType>>() {
-                    int curddate = (int) ddate;
-                    int curdhours = (int) (dhours - 1);
+            public boolean hasNext() {
+                return curddate < DAY_CACHE_LENGTH;
+            }
 
-                    @Override
-                    public boolean hasNext() {
-                        return curddate < DAY_CACHE_LENGTH;
-                    }
+            @Override
+            public Pair<Float, ClimateType> next() {
+                if (!hasNext()) return null;
+                curdhours++;
+                if (curdhours >= 24) {
+                    curdhours = 0;
+                    curddate++;
+                }
 
-                    @Override
-                    public Pair<Float, ClimateType> next() {
-                        if (!hasNext()) return null;
-                        curdhours++;
-                        if (curdhours >= 24) {
-                            curdhours = 0;
-                            curddate++;
-                        }
-
-                        return Pair.of(data.dailyTempData.get(curddate).getTemp(curdhours), data.dailyTempData.get(curddate).getType(curdhours));
-                    }
-
-                };
+                return Pair.of(data.dailyTempData.get(curddate).getTemp(curdhours), data.dailyTempData.get(curddate).getType(curdhours));
             }
 
         };
@@ -281,31 +275,25 @@ public class WorldClimate implements NBTSerializable {
             data.populateDays();
         }
         if (ddate < 0 || dhours < 0 || ddate >= DAY_CACHE_LENGTH) return ImmutableList.of();
-        return new Iterable<Float>() {
+        return () -> new Iterator<Float>() {
+            int curddate = (int) ddate;
+            int curdhours = (int) (dhours - 1);
+
             @Override
-            public Iterator<Float> iterator() {
-                return new Iterator<Float>() {
-                    int curddate = (int) ddate;
-                    int curdhours = (int) (dhours - 1);
+            public boolean hasNext() {
+                return curddate < DAY_CACHE_LENGTH;
+            }
 
-                    @Override
-                    public boolean hasNext() {
-                        return curddate < DAY_CACHE_LENGTH;
-                    }
+            @Override
+            public Float next() {
+                if (!hasNext()) return null;
+                curdhours++;
+                if (curdhours >= 24) {
+                    curdhours = 0;
+                    curddate++;
+                }
 
-                    @Override
-                    public Float next() {
-                        if (!hasNext()) return null;
-                        curdhours++;
-                        if (curdhours >= 24) {
-                            curdhours = 0;
-                            curddate++;
-                        }
-
-                        return data.dailyTempData.get(curddate).getTemp(curdhours);
-                    }
-
-                };
+                return data.dailyTempData.get(curddate).getTemp(curdhours);
             }
 
         };

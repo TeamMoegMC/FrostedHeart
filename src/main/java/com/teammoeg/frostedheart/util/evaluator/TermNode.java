@@ -158,22 +158,12 @@ class TermNode implements Node {
 		}
 		System.out.println("te");*/
         if (!positive.isEmpty()) {
-            x = String.join("*", new Iterable<String>() {
-                @Override
-                public Iterator<String> iterator() {
-                    return positive.stream().map(n -> "(" + n + ")").iterator();
-                }
-            });
+            x = String.join("*", (Iterable<String>) () -> positive.stream().map(n -> "(" + n + ")").iterator());
         } else if (!negative.isEmpty())
             x = "1";
         if (!negative.isEmpty()) {
             x += "/";
-            x += String.join("/", new Iterable<String>() {
-                @Override
-                public Iterator<String> iterator() {
-                    return negative.stream().map(n -> "(" + n + ")").iterator();
-                }
-            });
+            x += String.join("/", (Iterable<String>) () -> negative.stream().map(n -> "(" + n + ")").iterator());
         }
         return x;
     }
