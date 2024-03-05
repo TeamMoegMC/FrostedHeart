@@ -22,7 +22,9 @@ package com.teammoeg.frostedheart.content.climate.player;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -83,8 +85,11 @@ public class SurroundingTemperatureSimulator {
     private static final VoxelShape FULL = VoxelShapes.fullCube();
     private static float[] vx = new float[n], vy = new float[n], vz = new float[n];// Vp, speed vector list, this list is constant and considered a distributed ball mesh.
     private static final int num_rounds = 20;
+    private static int[][] vps=new int[6][];//xp, xm, yp, ym, zp, zm
     static {// generate speed vector list
-        int o = 0;
+        //int[] os = new int[11];
+    	Map<Integer,List<Integer>> lis=new HashMap<>();
+    	int o=0;
         for (int i = -rdiff; i <= rdiff; ++i)
             for (int j = -rdiff; j <= rdiff; ++j)
                 for (int k = -rdiff; k <= rdiff; ++k) {
@@ -97,8 +102,28 @@ public class SurroundingTemperatureSimulator {
                     vx[o] = x / r * v0; // normalized x
                     vy[o] = y / r * v0; // normalized y
                     vz[o] = z / r * v0; // normalized z
+                    if(x>0) 
+                    	lis.computeIfAbsent(0,ti->new ArrayList<>()).add(o);
+                    if(x<0) 
+                    	lis.computeIfAbsent(1,ti->new ArrayList<>()).add(o);
+                    if(y>0) 
+                    	lis.computeIfAbsent(2,ti->new ArrayList<>()).add(o);
+                    if(y<0) 
+                    	lis.computeIfAbsent(3,ti->new ArrayList<>()).add(o);
+                    if(z>0) 
+                    	lis.computeIfAbsent(4,ti->new ArrayList<>()).add(o);
+                    if(z<0) 
+                    	lis.computeIfAbsent(5,ti->new ArrayList<>()).add(o);
                     o++;
                 }
+        for(int i=0;i<6;i++) {
+        	vps[i]=lis.get(i).stream().mapToInt(t->t).toArray();
+        	//System.out.println(vps[i].length);
+        }
+       
+    }
+    public static void main(String[] args) {
+    	
     }
     public ChunkSection[] sections = new ChunkSection[8];// sectors(xz): - -/- +/+ -/+ + and y -/+
     public Heightmap[] maps=new Heightmap[4]; // sectors(xz): - -/- +/+ -/+ +
@@ -211,6 +236,9 @@ public class SurroundingTemperatureSimulator {
         }
         return maps[i].getHeight(x, z);
     }
+    /*public int getReflecting(double ox, double oy, double oz) {
+    	
+    }*/
     public Pair<Float,Float> getBlockTemperatureAndWind(double qx0, double qy0, double qz0) {
     	float wind=0;
         for (int i = 0; i < n; ++i) // initialize position as the player's position and the speed (index)
