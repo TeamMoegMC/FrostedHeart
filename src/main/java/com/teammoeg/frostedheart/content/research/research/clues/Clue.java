@@ -23,7 +23,6 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.AutoIDItem;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
@@ -31,18 +30,15 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.content.research.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.io.Writeable;
 
-import dev.ftb.mods.ftbteams.data.Team;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.network.PacketDistributor;
 
 /**
  * "Clue" for researches, contributes completion percentage for some
@@ -111,7 +107,7 @@ public abstract class Clue extends AutoIDItem implements Writeable{
     }
 
     private void deleteInTree() {
-        SpecialDataManager.INSTANCE.getAllData().forEach(this::end);
+        FHTeamDataManager.INSTANCE.getAllData().forEach(this::end);
     }
 
     public void deleteSelf() {
@@ -198,7 +194,7 @@ public abstract class Clue extends AutoIDItem implements Writeable{
 
     /**
      * send progress packet to client
-     * should not called manually
+     * should not call manually
      */
     public void sendProgressPacket(TeamDataHolder team) {
         FHClueProgressSyncPacket packet = new FHClueProgressSyncPacket(team, this);
@@ -216,7 +212,7 @@ public abstract class Clue extends AutoIDItem implements Writeable{
         jo.addProperty("value", contribution);
         jo.addProperty("id", nonce);
         if (required)
-            jo.addProperty("required", required);
+            jo.addProperty("required", true);
         return jo;
     }
 
@@ -263,8 +259,6 @@ public abstract class Clue extends AutoIDItem implements Writeable{
      * called when this clue's research has started
      */
     public abstract void start(TeamDataHolder team);
-
-    ;
 
     public void write(PacketBuffer buffer) {
         buffer.writeString(name);

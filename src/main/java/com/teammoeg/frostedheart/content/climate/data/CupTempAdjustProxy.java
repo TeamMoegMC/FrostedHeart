@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
+import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 
 import net.minecraft.item.ItemStack;

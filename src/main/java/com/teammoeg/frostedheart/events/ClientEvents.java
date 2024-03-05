@@ -23,20 +23,14 @@ import static net.minecraft.util.text.TextFormatting.*;
 
 import java.util.List;
 
+import com.teammoeg.frostedheart.*;
+import com.teammoeg.frostedheart.FHClientTeamDataManager;
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.FHItems;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.FHParticleTypes;
-import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
-import com.teammoeg.frostedheart.content.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -51,7 +45,6 @@ import com.teammoeg.frostedheart.content.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacket;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
-import com.teammoeg.frostedheart.team.ClientDataHolder;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -109,8 +102,6 @@ import net.minecraftforge.fml.server.ServerLifecycleHooks;
 public class ClientEvents {
     /**
      * Simulate breath particles when the player is in a cold environment
-     *
-     * @param event
      */
     @SubscribeEvent
     public static void addBreathParticles(TickEvent.PlayerTickEvent event) {
@@ -233,7 +224,7 @@ public class ClientEvents {
         }
         if (itf != null) {
             float temp = itf.getHeat(stack,
-                    event.getPlayer() == null ? 37 :PlayerTemperatureData.getCapability(event.getPlayer()).map(t->t.getEnvTemp()).orElse(0f)) * tspeed;
+                    event.getPlayer() == null ? 37 :PlayerTemperatureData.getCapability(event.getPlayer()).map(PlayerTemperatureData::getEnvTemp).orElse(0f)) * tspeed;
             temp = (Math.round(temp * 1000)) / 1000.0F;// round
             if (temp != 0)
                 if (temp > 0) 
@@ -286,7 +277,7 @@ public class ClientEvents {
         }
     }
 
-    @SuppressWarnings({"unchecked", "resource"})
+    @SuppressWarnings({"unchecked"})
     @SubscribeEvent
     public static void drawUpdateReminder(GuiScreenEvent.DrawScreenEvent.Post event) {
         Screen gui = event.getGui();
@@ -373,7 +364,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void fireLogin(LoggedInEvent event) {
         FHScenarioClient.sendInitializePacket = true;
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ClientDataHolder.INSTANCE::reset);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClientTeamDataManager.INSTANCE::reset);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -390,7 +381,6 @@ public class ClientEvents {
         int anchorX = event.getWindow().getScaledWidth() / 2;
         int anchorY = event.getWindow().getScaledHeight();
         float partialTicks = event.getPartialTicks();
-        ;
 
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
         if (FHConfig.CLIENT.enableUI.get()) {
@@ -553,9 +543,6 @@ public class ClientEvents {
         ClientUtils.applyspg = false;
     }
 
-    /**
-     * @param event
-     */
     @SuppressWarnings({"resource", "unchecked", "rawtypes"})
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {

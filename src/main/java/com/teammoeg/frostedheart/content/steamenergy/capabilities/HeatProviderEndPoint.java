@@ -45,7 +45,7 @@ public class HeatProviderEndPoint extends HeatPowerEndpoint{
      * @param maxGenerate the max heat put to network<br>
      */
     public HeatProviderEndPoint(float maxPower, float maxGenerate) {
-        super(maxPower<=maxGenerate?maxGenerate:maxPower);
+        super(Math.max(maxPower, maxGenerate));
         this.maxGenerate = maxGenerate;
 
     }

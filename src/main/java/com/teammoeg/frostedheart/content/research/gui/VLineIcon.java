@@ -53,8 +53,7 @@ public class VLineIcon extends IconWithParent {
 
     @Override
     public VLineIcon copy() {
-        VLineIcon icon = new VLineIcon(parent.copy(), x, y, w, h, side1, side2, tw, th);
-        return icon;
+        return new VLineIcon(parent.copy(), x, y, w, h, side1, side2, tw, th);
     }
 
     @Override

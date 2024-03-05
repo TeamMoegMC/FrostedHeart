@@ -63,7 +63,7 @@ public class GeneratorUpgraderI extends FHBaseItem {
             System.out.println(t1te);
             if (t1te.isDummy()) return false;
             Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, brtr.getFace().getOpposite());
-            ((MultiBlockAccess) (Object) ietm).callForm(worldIn, brtr.getPos().offset(Direction.DOWN).offset(brtr.getFace().rotateY()).offset(brtr.getFace().getOpposite(), 2), rot, Mirror.NONE, brtr.getFace());
+            ((MultiBlockAccess) ietm).callForm(worldIn, brtr.getPos().offset(Direction.DOWN).offset(brtr.getFace().rotateY()).offset(brtr.getFace().getOpposite(), 2), rot, Mirror.NONE, brtr.getFace());
             return true;
         }
         return true;

@@ -40,7 +40,7 @@ public class CommandNode implements Node {
 
     @Override
     public String getText() {
-        return "@" + command + " " + params.entrySet().stream().map(e -> e.getKey() + "=\"" + e.getValue().replaceAll("\"", "\\\"") + "\"").reduce("", (a, b) -> a + b + " ");
+        return "@" + command + " " + params.entrySet().stream().map(e -> e.getKey() + "=\"" + e.getValue().replaceAll("\"", "\"") + "\"").reduce("", (a, b) -> a + b + " ");
     }
 
     @Override

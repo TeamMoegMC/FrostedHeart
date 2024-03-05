@@ -51,7 +51,7 @@ public class AddTempCommand {
         LiteralArgumentBuilder<CommandSource> get = Commands.literal("get")
                 .executes((ct) -> {
                     Collection<ITemperatureAdjust> adjs = ChunkHeatData.getAdjust(ct.getSource().getWorld(), ct.getSource().asPlayer().getPosition());
-                    if (adjs.size() == 0) {
+                    if (adjs.isEmpty()) {
                         ct.getSource().sendFeedback(GuiUtils.str("No Active Adjust!"), true);
                     } else {
                         ct.getSource().sendFeedback(GuiUtils.str("Active Adjusts:"), true);
@@ -64,7 +64,7 @@ public class AddTempCommand {
                 .then(Commands.argument("position", BlockPosArgument.blockPos())
                         .executes((ct) -> {
                             Collection<ITemperatureAdjust> adjs = ChunkHeatData.getAdjust(ct.getSource().getWorld(), BlockPosArgument.getBlockPos(ct, "position"));
-                            if (adjs.size() == 0) {
+                            if (adjs.isEmpty()) {
                                 ct.getSource().sendFeedback(GuiUtils.str("No Active Adjust!"), true);
                             } else {
                                 ct.getSource().sendFeedback(GuiUtils.str("Active Adjusts:"), true);

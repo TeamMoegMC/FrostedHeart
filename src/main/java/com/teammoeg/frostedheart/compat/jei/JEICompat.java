@@ -19,15 +19,8 @@
 
 package com.teammoeg.frostedheart.compat.jei;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -63,7 +56,6 @@ import com.teammoeg.frostedheart.content.recipes.ModifyDamageRecipe;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
-import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
 import com.teammoeg.frostedheart.content.temperature.handstoves.FuelingRecipe;
@@ -171,11 +163,11 @@ public class JEICompat implements IModPlugin {
 
     public static void scheduleSyncJEI() {
         //cachedInfoAdd=true;
-        Minecraft.getInstance().runImmediately(() -> syncJEI());
+        Minecraft.getInstance().runImmediately(JEICompat::syncJEI);
     }
 
     public static void showJEICategory(ResourceLocation rl) {
-        jei.getRecipesGui().showCategories(Arrays.asList(rl));
+        jei.getRecipesGui().showCategories(Collections.singletonList(rl));
     }
 
     public static void showJEIFor(ItemStack stack) {
@@ -212,11 +204,15 @@ public class JEICompat implements IModPlugin {
                 for (ResourceLocation rl : all) {
                 	try {
                     man.hideRecipe(i, rl);
-                	}catch(Exception ex) {}//IDK How JEI And IE conflict, so just catch all.
+                	}catch(Exception ex) {
+                        FHMain.LOGGER.error("Error hiding recipe",ex);
+                    }//IDK How JEI And IE conflict, so just catch all.
                     if (ovrd != null)
                     	try {
                     		man.hideRecipe(ovrd, rl);
-                    	}catch(Exception ex) {}//IDK How JEI And IE conflict, so just catch all.
+                    	}catch(Exception ex) {
+                            FHMain.LOGGER.error("Error hiding recipe",ex);
+                        }//IDK How JEI And IE conflict, so just catch all.
                     //System.out.println("hiding "+i.getId()+" for "+rl);
                 }
                 if (!irs.isEmpty())
@@ -225,11 +221,15 @@ public class JEICompat implements IModPlugin {
                 for (ResourceLocation rl : all) {
                 	try {
                 		man.unhideRecipe(i, rl);
-                	}catch(Exception ex) {}//IDK How JEI And IE conflict, so just catch all.
+                	}catch(Exception ex) {
+                        FHMain.LOGGER.error("Error un-hiding recipe",ex);
+                    }//IDK How JEI And IE conflict, so just catch all.
                     if (ovrd != null)
                     	try {
                     		man.unhideRecipe(ovrd, rl);
-                    	}catch(Exception ex) {}//IDK How JEI And IE conflict, so just catch all.
+                    	}catch(Exception ex) {
+                            FHMain.LOGGER.error("Error un-hiding recipe",ex);
+                        }//IDK How JEI And IE conflict, so just catch all.
                 }
                 if (!irs.isEmpty())
                     unlocked.add(irs.getItem());

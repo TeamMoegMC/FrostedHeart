@@ -17,27 +17,22 @@
  *
  */
 
-package com.teammoeg.frostedheart.team;
+package com.teammoeg.frostedheart;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.base.team.SpecialDataType;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import org.apache.commons.io.FileUtils;
 
 import com.mojang.authlib.GameProfile;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
@@ -45,7 +40,6 @@ import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.crafting.RecipeManager;
@@ -57,14 +51,14 @@ import net.minecraft.world.storage.FolderName;
 
 /**
  * The data manager for all team data.
- * use {@link ClientDataHolder} to get data in client
+ * use {@link FHClientTeamDataManager} to get data in client
  * Normally, use
  * get(PlayerEntity player) to get the data for a player's team.
  * get(Team team) to get the data for FTB team.
  */
-public class SpecialDataManager {
+public class FHTeamDataManager {
 
-    public static SpecialDataManager INSTANCE;
+    public static FHTeamDataManager INSTANCE;
     private final MinecraftServer server;
     static final FolderName dataFolder = new FolderName("fhdata");
     static final FolderName oldDataFolder = new FolderName("fhresearch");
@@ -77,7 +71,7 @@ public class SpecialDataManager {
         return ClientUtils.mc().world.getRecipeManager();
     }
 
-    public SpecialDataManager(MinecraftServer s) {
+    public FHTeamDataManager(MinecraftServer s) {
         server = s;
         INSTANCE = this;
     }
@@ -97,7 +91,7 @@ public class SpecialDataManager {
      * @return the data stream
      */
     public <T extends NBTSerializable> Stream<T> getAllData(SpecialDataType<T,TeamDataHolder> type) {
-        return dataByFhId.values().stream().map(t->t.getOptional(type)).filter(t->t.isPresent()).map(t->t.get());
+        return dataByFhId.values().stream().map(t->t.getOptional(type)).filter(Optional::isPresent).map(Optional::get);
     }
 
     /**
@@ -220,8 +214,7 @@ public class SpecialDataManager {
 	            } catch (IllegalArgumentException ex) {
 	                ex.printStackTrace();
 	                FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
-	                return;
-	            } catch (IOException e) {
+                } catch (IOException e) {
 	                e.printStackTrace();
 	                FHMain.LOGGER.error("Unable to read data file " + f.getName() + ", ignoring...");
 	            }

@@ -37,14 +37,14 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 /**
  * Add time limit for campfire
- * 
+ * <p>
  * */
 @Mixin(CampfireTileEntity.class)
 public abstract class CampfireTileEntityMixin extends TileEntity implements ICampfireExtra {
     public int lifeTime = 0;
 
     public CampfireTileEntityMixin(TileEntityType<?> tileEntityTypeIn) {
-        super(tileEntityTypeIn.CAMPFIRE);
+        super(TileEntityType.CAMPFIRE);
     }
 
     @Override

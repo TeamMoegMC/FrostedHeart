@@ -80,7 +80,7 @@ public class ProspectorPick extends FHLeveledTool {
                             }
 
                     if (!founded.isEmpty()) {
-                        int cnt = founded.values().stream().reduce(0, (a, b) -> a + b);
+                        int cnt = founded.values().stream().reduce(0, Integer::sum);
                         rseed = rnd.nextInt(cnt);
                         String ore_name = null;
                         int count = 0;
@@ -136,7 +136,6 @@ public class ProspectorPick extends FHLeveledTool {
         super(lvl, properties);
     }
 
-    @SuppressWarnings("resource")
     @Override
     public ActionResultType onItemUse(ItemUseContext context) {
         return doProspect(context.getPlayer(), context.getWorld(), context.getPos(), context.getItem(), context.getHand());

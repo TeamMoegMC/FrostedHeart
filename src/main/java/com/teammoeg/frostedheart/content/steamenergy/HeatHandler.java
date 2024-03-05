@@ -7,9 +7,6 @@ import net.minecraftforge.fml.network.NetworkHooks;
 
 public class HeatHandler {
     public static void openHeatScreen(ServerPlayerEntity spe, HeatEnergyNetwork vd) {
-        NetworkHooks.openGui(spe, vd, e -> {
-        	SerializeUtil.writeList(e, vd.data.values(), EndPointData::writeNetwork);
-           
-        });
+        NetworkHooks.openGui(spe, vd, e -> SerializeUtil.writeList(e, vd.data.values(), EndPointData::writeNetwork));
     }
 }

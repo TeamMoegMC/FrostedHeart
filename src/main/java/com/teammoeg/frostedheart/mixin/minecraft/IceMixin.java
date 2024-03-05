@@ -36,7 +36,7 @@ import net.minecraft.world.server.ServerWorld;
 
 /**
  * Add generator effect for ice (melt)
- * 
+ * <p>
  * */
 @Mixin(IceBlock.class)
 public abstract class IceMixin {

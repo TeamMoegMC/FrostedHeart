@@ -19,20 +19,12 @@
 
 package com.teammoeg.frostedheart.content.research.research;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.FHRegisteredItem;
 import com.teammoeg.frostedheart.content.research.FHRegistry;
 import com.teammoeg.frostedheart.content.research.FHResearch;
@@ -49,14 +41,13 @@ import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.clues.Clues;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.frostedheart.content.research.research.effects.Effects;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.io.Writeable;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -67,7 +58,6 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.network.PacketDistributor;
 
 /**
  * Only Definition of research.
@@ -265,9 +255,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @param effs the effs<br>
      */
     public void attachEffect(Effect... effs) {
-        for (Effect effect : effs) {
-            effects.add(effect);
-        }
+        effects.addAll(Arrays.asList(effs));
     }
 
     /**
@@ -276,9 +264,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @param ingredients the ingredients<br>
      */
     public void attachRequiredItem(IngredientWithSize... ingredients) {
-        for (IngredientWithSize ingredient : ingredients) {
-            requiredItems.add(ingredient);
-        }
+        requiredItems.addAll(Arrays.asList(ingredients));
     }
 
     /**
@@ -288,7 +274,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         deleteInTree();
         this.effects.forEach(Effect::deleteSelf);
         this.clues.forEach(Clue::deleteSelf);
-        SpecialDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
+        FHTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
 
         FHResearch.delete(this);
     }
@@ -310,8 +296,8 @@ public class Research extends FHRegisteredItem implements Writeable {
                 rx.populateChild(objthis);
         }
         int i = 0;
-        effects.removeIf(e -> e == null);
-        clues.removeIf(c -> c == null);
+        effects.removeIf(Objects::isNull);
+        clues.removeIf(Objects::isNull);
         for (Effect e : effects) {
             e.addID(this.getLId(), i);
             e.parent = getSupplier();
@@ -358,7 +344,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @return children<br>
      */
     public Set<Research> getChildren() {
-        return children.stream().map(r -> r.get()).filter(e -> e != null).collect(Collectors.toSet());
+        return children.stream().map(Supplier::get).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     /*
@@ -481,7 +467,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @return parents<br>
      */
     public Set<Research> getParents() {
-        return parents.stream().filter(e -> e != null).map(r -> r.get()).filter(e -> e != null).collect(Collectors.toSet());
+        return parents.stream().filter(Objects::nonNull).map(Supplier::get).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     /**
@@ -712,7 +698,6 @@ public class Research extends FHRegisteredItem implements Writeable {
         setCategory(ResearchCategory.ALL.get(categoryRL));
         parents.clear();
         parentIds.stream().map(FHResearch.researches::get).forEach(parents::add);
-        ;
     }
 
     /**
@@ -774,7 +759,7 @@ public class Research extends FHRegisteredItem implements Writeable {
     @Override
     public JsonElement serialize() {
         JsonObject jo = new JsonObject();
-        if (name.length() > 0)
+        if (!name.isEmpty())
             jo.addProperty("name", name);
         if (!desc.isEmpty())
             jo.add("desc", SerializeUtil.toJsonStringList(desc, e -> e));
@@ -837,7 +822,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      */
     public void setNewId(String nid) {
         if (!id.equals(nid)) {
-            SpecialDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
+            FHTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
             deleteInTree();//clear all reference, hope this could work
             FHResearch.delete(this);
             this.setId(nid);
@@ -896,7 +881,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         buffer.writeResourceLocation(category.getId());
         SerializeUtil.writeList2(buffer, parents, FHRegistry::writeSupplier);
         SerializeUtil.writeList2(buffer, clues, Clues::write);
-        SerializeUtil.writeList(buffer, requiredItems, (e, p) -> e.write(p));
+        SerializeUtil.writeList(buffer, requiredItems, IngredientWithSize::write);
         SerializeUtil.writeList(buffer, effects, Effects::write);
         buffer.writeVarLong(points);
         SerializeUtil.writeBooleans(buffer, showfdesc, hideEffects, isHidden, inCompletable, alwaysShow, infinite);

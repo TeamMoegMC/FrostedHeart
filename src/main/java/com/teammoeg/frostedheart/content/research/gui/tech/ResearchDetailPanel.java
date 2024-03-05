@@ -190,7 +190,6 @@ public class ResearchDetailPanel extends Panel {
         this.research = r;
         this.refreshWidgets();
         researchScreen.setModal(this);
-        ;
         //researchScreen.refreshWidgets();
 
     }

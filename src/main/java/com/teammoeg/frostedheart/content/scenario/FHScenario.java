@@ -122,8 +122,8 @@ public class FHScenario {
 			}
 			File f=new File(scenarioPath, caller.getLang()+"/"+paths[0] + ".ks");
 			if(!f.exists()) {
-				f=new File(scenarioPath, paths[0] + ".ks");;
-			}
+				f=new File(scenarioPath, paths[0] + ".ks");
+            }
 			if(f.exists()) {
 				FHMain.LOGGER.info("Loading scenario from "+f.getAbsolutePath());
 				return parser.parseFile(name, f);
@@ -164,9 +164,7 @@ public class FHScenario {
 		for (Method met : cls.getMethods()) {
 			if (Modifier.isPublic(met.getModifiers())) {
 				final String name = met.getName();
-				registerCommand(name, (r, p) -> {
-					callClientCommand(name, r, p);
-				});
+				registerCommand(name, (r, p) -> callClientCommand(name, r, p));
 			}
 		}
 	}

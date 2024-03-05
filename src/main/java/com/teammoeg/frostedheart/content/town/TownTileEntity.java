@@ -23,7 +23,7 @@ import net.minecraft.nbt.CompoundNBT;
 
 /**
  * A town block's tile entity.
- *
+ * <p>
  * Should be implemented by tile entities that are associated with town blocks.
  */
 public interface TownTileEntity {
@@ -50,7 +50,7 @@ public interface TownTileEntity {
 
     /**
      * Get work data here.
-     *
+     * <p>
      * Data is updated every 20 ticks.
      *
      * @return the work data
@@ -59,7 +59,7 @@ public interface TownTileEntity {
 
     /**
      * Set work data here.
-     *
+     * <p>
      * Data is saved every 20 ticks.
      *
      * @param data the work data

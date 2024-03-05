@@ -38,7 +38,7 @@ public class HeatConsumerEndpoint extends HeatPowerEndpoint{
      * @param maxIntake the max heat requested from network<br>
      */
     public HeatConsumerEndpoint(float maxPower, float maxIntake) {
-        super(maxPower<=maxIntake?maxIntake:maxPower);
+        super(Math.max(maxPower, maxIntake));
         this.maxIntake = maxIntake;
     }
     /**

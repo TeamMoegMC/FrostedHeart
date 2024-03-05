@@ -51,7 +51,7 @@ import net.minecraft.world.server.ServerWorld;
 @Mixin(TransmutationStone.class)
 public class MixinTransmutationStone {
 
-    @Inject(method = "onBlockActivated", at = @At(value = "HEAD"), remap = true, cancellable = true)
+    @Inject(method = "onBlockActivated", at = @At(value = "HEAD"), cancellable = true)
     public void hibernation(@Nonnull BlockState state, World world, @Nonnull BlockPos pos, @Nonnull PlayerEntity player, @Nonnull Hand hand,
                             @Nonnull BlockRayTraceResult rtr, CallbackInfoReturnable<ActionResultType> cir) {
         if (!world.isRemote) {

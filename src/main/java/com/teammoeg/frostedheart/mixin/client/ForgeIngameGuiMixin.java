@@ -48,8 +48,7 @@ public class ForgeIngameGuiMixin extends IngameGui {
         PlayerEntity player = FrostedHud.getRenderViewPlayer();
         if (player == null) return;
         int x = width / 2;
-        int y = height;
-        FrostedHud.renderAirBar(stack, x, y, mc, player);
+        FrostedHud.renderAirBar(stack, x, height, mc, player);
     }
 
     /**
@@ -66,13 +65,13 @@ public class ForgeIngameGuiMixin extends IngameGui {
 
             if (opacity > 8) {
                 RenderSystem.pushMatrix();
-                RenderSystem.translatef(width / 2, height - 68, 0.0F);
+                RenderSystem.translatef((float) width / 2, height - 68, 0.0F);
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
                 int color = (animateOverlayMessageColor ? MathHelper.hsvToRGB(hue / 50.0F, 0.7F, 0.6F) & 0xFFFFFF : 0xFFFFFF);
                 // original: Minecraft.getInstance().fontRenderer.func_238422_b_(mStack, overlayMessage.func_241878_f(), -Minecraft.getInstance().fontRenderer.getStringPropertyWidth(overlayMessage) / 2, -4, color | (opacity << 24));
                 // new:
-                Minecraft.getInstance().fontRenderer.func_238422_b_(mStack, overlayMessage.func_241878_f(), -Minecraft.getInstance().fontRenderer.getStringPropertyWidth(overlayMessage) / 2, -15, color | (opacity << 24));
+                Minecraft.getInstance().fontRenderer.func_238422_b_(mStack, overlayMessage.func_241878_f(), (float) -Minecraft.getInstance().fontRenderer.getStringPropertyWidth(overlayMessage) / 2, -15, color | (opacity << 24));
                 renderChatBackground(mStack, Minecraft.getInstance().fontRenderer, -4, Minecraft.getInstance().fontRenderer.getStringPropertyWidth(overlayMessage), 16777215 | (opacity << 24));
                 RenderSystem.disableBlend();
                 RenderSystem.popMatrix();

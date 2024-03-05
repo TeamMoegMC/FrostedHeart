@@ -69,7 +69,7 @@ public class CoreSpade extends FHLeveledTool {
             if (!world.isRemote) {
                 Random rnd = new Random(BlockPos.pack(x, y, z) ^ 0x9a6dc5270b92313dL);// randomize
                 // This is predictable, but not any big problem. Cheaters can use x-ray or other
-                // things rather then hacking in this.
+                // things rather than hacking in this.
 
                 Predicate<Set<ResourceLocation>> tagdet;
                 float corr = getCorrectness(is);
@@ -150,7 +150,6 @@ public class CoreSpade extends FHLeveledTool {
         tooltip.add(GuiUtils.translateTooltip("meme.core_spade").mergeStyle(TextFormatting.GRAY));
     }
 
-    @SuppressWarnings("resource")
     @Override
     public ActionResultType onItemUse(ItemUseContext context) {
         return doProspect(context.getPlayer(), context.getWorld(), context.getPos(), context.getItem(), context.getHand());

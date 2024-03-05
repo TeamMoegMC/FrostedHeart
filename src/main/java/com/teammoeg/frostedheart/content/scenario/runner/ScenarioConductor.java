@@ -33,7 +33,7 @@ import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.IScenarioTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
@@ -340,7 +340,7 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
     	//currentAct=acts.get(empty);
 	}
 	public ServerPlayerEntity getPlayer() {
-        return SpecialDataManager.getServer().getPlayerList().getPlayerByUUID(player);
+        return FHTeamDataManager.getServer().getPlayerList().getPlayerByUUID(player);
     }
     public String getLang() {
     	return getPlayer().getLanguage();

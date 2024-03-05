@@ -26,7 +26,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerChangeListener;
 
@@ -200,7 +200,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     @Override
     public NonNullList<ItemStack> getInventory() {
         T master = master();
-        return Optional.ofNullable(master).flatMap(t -> t.getData()).map(t -> t.getInventory()).orElseGet(() -> master != null ? master.linventory : this.linventory);
+        return Optional.ofNullable(master).flatMap(MasterGeneratorTileEntity::getData).map(GeneratorData::getInventory).orElseGet(() -> master != null ? master.linventory : this.linventory);
     }
 
     @Override
@@ -210,7 +210,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     public boolean isDataPresent() {
         T master = master();
-        return Optional.ofNullable(master).flatMap(t -> t.getData()).isPresent();
+        return Optional.ofNullable(master).flatMap(MasterGeneratorTileEntity::getData).isPresent();
     }
 
     @Override
@@ -221,8 +221,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
             return findRecipe(stack) != null;
         return false;
     }
-    @SuppressWarnings("resource")
-	public GeneratorRecipe findRecipe(ItemStack input) {
+    public GeneratorRecipe findRecipe(ItemStack input) {
         for (GeneratorRecipe recipe : FHUtils.filterRecipes(this.getWorld().getRecipeManager(), GeneratorRecipe.TYPE))
             if (recipe.input.test(input))
                 return recipe;
@@ -353,14 +352,12 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     @Override
     public int getLowerBound() {
-        int extra = MathHelper.ceil(getRangeLevel()*2+1);
-        return extra;
+        return MathHelper.ceil(getRangeLevel()*2+1);
     }
 
     @Override
     public int getUpperBound() {
-        int rLevel = MathHelper.ceil(getRangeLevel() * 4+1);
-        return rLevel;
+        return MathHelper.ceil(getRangeLevel() * 4+1);
     }
 	@Override
 	protected void callBlockConsumerWithTypeCheck(Consumer<T> consumer, TileEntity te) {

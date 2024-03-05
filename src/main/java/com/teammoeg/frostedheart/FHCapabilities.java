@@ -35,7 +35,7 @@ public class FHCapabilities {
 	}
 	/**
 	 * register capability with class, using no-arg constructor as default factory
-	 * 
+	 * <p>
 	 * */
 	public static <T extends NBTSerializable> FHCapability<T> register(Class<T> capClass){
 		Constructor<T> ctor;
@@ -50,7 +50,7 @@ public class FHCapabilities {
 				}
 			}
 		}catch(SecurityException ex) {
-			throw new RuntimeException(ex);
+			throw new RuntimeException("Can not access capability "+capClass.getSimpleName());
 		}
 		ctor.setAccessible(true);
 		final Constructor<T> fctor=ctor;
@@ -58,7 +58,7 @@ public class FHCapabilities {
 			try {
 				return fctor.newInstance();
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-				throw new RuntimeException("Can not create capability "+capClass.getSimpleName());
+				throw new RuntimeException("Can not create capability "+capClass.getSimpleName(), e);
 			}
 		});
 		capabilities.add(cap);

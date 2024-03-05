@@ -41,9 +41,9 @@ public class DietGroupCodec {
         codecs.clear();
         Set<IDietGroup> idgs = DietGroups.get();
         outer:
-        for (int i = 0; i < groups.length; i++) {
+        for (String group : groups) {
             for (IDietGroup idg : idgs)
-                if (idg.getName().equalsIgnoreCase(groups[i])) {
+                if (idg.getName().equalsIgnoreCase(group)) {
                     codecs.add(idg);
                     continue outer;
                 }
@@ -91,9 +91,9 @@ public class DietGroupCodec {
     public static void write(PacketBuffer pb, Map<String, Float> f) {
         pb.writeVarInt(f.size());
         if (!f.isEmpty())
-            f.entrySet().forEach(e -> {
-                pb.writeVarInt(getId(e.getKey()));
-                pb.writeFloat(e.getValue());
+            f.forEach((key, value) -> {
+                pb.writeVarInt(getId(key));
+                pb.writeFloat(value);
             });
     }
 

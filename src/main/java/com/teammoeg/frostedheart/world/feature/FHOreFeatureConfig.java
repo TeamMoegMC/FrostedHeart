@@ -49,15 +49,7 @@ public class FHOreFeatureConfig implements IFeatureConfig {
         public static final FHRuleTest anthracite = new FHRuleTest(new Block[]{RankineBlocks.WHITE_MARBLE.get(), RankineBlocks.SLATE.get()});
         public static final FHRuleTest graphite = new FHRuleTest(new Block[]{RankineBlocks.BLACK_MARBLE.get(), RankineBlocks.MICA_SCHIST.get(), RankineBlocks.SLATE.get(), RankineBlocks.SKARN.get(), RankineBlocks.PEGMATITE.get(), RankineBlocks.GNEISS.get()});
     }
-    public static final Codec<FHOreFeatureConfig> CODEC = RecordCodecBuilder.create((p_236568_0_) -> {
-        return p_236568_0_.group(RuleTest.CODEC.fieldOf("target").forGetter((config) -> {
-            return config.target;
-        }), BlockState.CODEC.fieldOf("state").forGetter((config) -> {
-            return config.state;
-        }), Codec.intRange(0, 64).fieldOf("size").forGetter((config) -> {
-            return config.size;
-        })).apply(p_236568_0_, FHOreFeatureConfig::new);
-    });
+    public static final Codec<FHOreFeatureConfig> CODEC = RecordCodecBuilder.create((p_236568_0_) -> p_236568_0_.group(RuleTest.CODEC.fieldOf("target").forGetter((config) -> config.target), BlockState.CODEC.fieldOf("state").forGetter((config) -> config.state), Codec.intRange(0, 64).fieldOf("size").forGetter((config) -> config.size)).apply(p_236568_0_, FHOreFeatureConfig::new));
     public final RuleTest target;
     public final int size;
 

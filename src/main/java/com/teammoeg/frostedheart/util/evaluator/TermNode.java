@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.util.evaluator;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 class TermNode implements Node {
@@ -61,7 +60,7 @@ class TermNode implements Node {
     @Override
     public Node simplify() {
         primaries = 1;
-        positive.replaceAll(n -> n.simplify());
+        positive.replaceAll(Node::simplify);
         List<Node> pcopy = new ArrayList<>(positive);
         for (Node n : pcopy) {//combine
             if (n instanceof TermNode) {
@@ -70,7 +69,7 @@ class TermNode implements Node {
                 negative.addAll(((TermNode) n).negative);
             }
         }
-        negative.replaceAll(n -> n.simplify());
+        negative.replaceAll(Node::simplify);
         List<Node> ncopy = new ArrayList<>(negative);
         for (Node n : ncopy) {
             if (n instanceof TermNode) {
@@ -158,22 +157,12 @@ class TermNode implements Node {
 		}
 		System.out.println("te");*/
         if (!positive.isEmpty()) {
-            x = String.join("*", new Iterable<String>() {
-                @Override
-                public Iterator<String> iterator() {
-                    return positive.stream().map(n -> "(" + n + ")").iterator();
-                }
-            });
+            x = String.join("*", (Iterable<String>) () -> positive.stream().map(n -> "(" + n + ")").iterator());
         } else if (!negative.isEmpty())
             x = "1";
         if (!negative.isEmpty()) {
             x += "/";
-            x += String.join("/", new Iterable<String>() {
-                @Override
-                public Iterator<String> iterator() {
-                    return negative.stream().map(n -> "(" + n + ")").iterator();
-                }
-            });
+            x += String.join("/", (Iterable<String>) () -> negative.stream().map(n -> "(" + n + ")").iterator());
         }
         return x;
     }

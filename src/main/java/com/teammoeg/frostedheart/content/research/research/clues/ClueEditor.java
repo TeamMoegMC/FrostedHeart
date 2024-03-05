@@ -54,10 +54,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         @Override
         public void addWidgets() {
             super.addWidgets();
-            add(new LabeledOpenEditorButton<>(this, e.advancement.toString(), "Select Advancement", SelectDialog.EDITOR_ADVANCEMENT, e.advancement, c -> {
-
-                e.advancement = c;
-            }));
+            add(new LabeledOpenEditorButton<>(this, e.advancement.toString(), "Select Advancement", SelectDialog.EDITOR_ADVANCEMENT, e.advancement, c -> e.advancement = c));
             add(LabeledSelection.createCriterion(this, "Select Criterion", e.advancement, e.criterion, c -> e.criterion = c));
 
         }
@@ -174,21 +171,11 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
 
 
     }
-    public static final Editor<ItemClue> ITEM = (p, l, v, c) -> {
-        new Item(p, l, v, c).open();
-    };
-    public static final Editor<CustomClue> CUSTOM = (p, l, v, c) -> {
-        new Custom(p, l, v, c).open();
-    };
-    public static final Editor<AdvancementClue> ADVA = (p, l, v, c) -> {
-        new Advancement(p, l, v, c).open();
-    };
-    public static final Editor<KillClue> KILL = (p, l, v, c) -> {
-        new Kill(p, l, v, c).open();
-    };
-    public static final Editor<MinigameClue> GAME = (p, l, v, c) -> {
-        new Minigame(p, l, v, c).open();
-    };
+    public static final Editor<ItemClue> ITEM = (p, l, v, c) -> new Item(p, l, v, c).open();
+    public static final Editor<CustomClue> CUSTOM = (p, l, v, c) -> new Custom(p, l, v, c).open();
+    public static final Editor<AdvancementClue> ADVA = (p, l, v, c) -> new Advancement(p, l, v, c).open();
+    public static final Editor<KillClue> KILL = (p, l, v, c) -> new Kill(p, l, v, c).open();
+    public static final Editor<MinigameClue> GAME = (p, l, v, c) -> new Minigame(p, l, v, c).open();
     public static final Editor<Research> RESEARCH_GAME = (p, l, v, c) -> {
         MinigameClue ex = null;
         List<Clue> clues = v.getClues();
@@ -215,19 +202,17 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
                     .open();
 
         } else if (v instanceof ItemClue)
-            ITEM.open(p, l, (ItemClue) v, e -> c.accept(e));
+            ITEM.open(p, l, (ItemClue) v, c::accept);
         else if (v instanceof MinigameClue)
-            GAME.open(p, l, (MinigameClue) v, e -> c.accept(e));
+            GAME.open(p, l, (MinigameClue) v, c::accept);
         else if (v instanceof AdvancementClue)
-            ADVA.open(p, l, (AdvancementClue) v, e -> c.accept(e));
+            ADVA.open(p, l, (AdvancementClue) v, c::accept);
         else if (v instanceof KillClue)
-            KILL.open(p, l, (KillClue) v, e -> c.accept(e));
+            KILL.open(p, l, (KillClue) v, c::accept);
         else
-            CUSTOM.open(p, l, (CustomClue) v, e -> c.accept(e));
+            CUSTOM.open(p, l, (CustomClue) v, c::accept);
     };
-    public static final Editor<Collection<Clue>> EDITOR_LIST = (p, l, v, c) -> {
-        new EditListDialog<>(p, l, v, EDITOR, e -> e.getBrief() + e.getBriefDesc(), c).open();
-    };
+    public static final Editor<Collection<Clue>> EDITOR_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, EDITOR, e -> e.getBrief() + e.getBriefDesc(), c).open();
     String lbl;
     T e;
     Consumer<T> cb;

@@ -1,11 +1,14 @@
 package com.teammoeg.frostedheart.util;
 
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHTags;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+import net.minecraftforge.common.Tags;
 
 import java.util.AbstractMap;
 import java.util.Collection;
@@ -33,16 +36,17 @@ public class BlockScanner {
 
     public BlockScanner (World world, BlockPos startPos){
         this.startPos = startPos;
-        scanningBlocks = new HashSet<>();
-        scanningBlocks.add(startPos);
+        this.scanningBlocks = new HashSet<>();
+        this.scanningBlocks.add(startPos);
         //FHMain.LOGGER.debug("HouseScanner: scanningBlocks: " + scanningBlocks);
         this.world = world;
-        scannedBlocks = new HashSet<>();
+        this.scannedBlocks = new HashSet<>();
     }
 
-    public BlockScanner (World world, BlockPos startPos, Set<Long> scannedBlocks){
+    public BlockScanner(World world, BlockPos startPos, Set<Long> scannedBlocks){
         this.startPos = startPos;
-        scanningBlocks.add(startPos);
+        this.scanningBlocks = new HashSet<>();
+        this.scanningBlocks.add(startPos);
         this.world = world;
         this.scannedBlocks = scannedBlocks;
     }
@@ -61,6 +65,14 @@ public class BlockScanner {
 
     public void setScanningBlocks(Set<BlockPos> scanningBlocks){
         this.scanningBlocks = scanningBlocks;
+    }
+
+    protected BlockState getBlockState(BlockPos pos) {
+        return world.getBlockState(pos);
+    }
+
+    public boolean isValid(){
+        return this.isValid;
     }
 
 
@@ -133,6 +145,18 @@ public class BlockScanner {
             }
         }
         return blocks;
+    }
+
+    /**
+     * 找到与startPos相邻的一个门方块。若有多个门，则只返回其中一个的坐标。
+     */
+    public static BlockPos getDoorAdjacent(World world, BlockPos startPos){
+        for(Direction direction : Direction.values()){
+            if(world.getBlockState(startPos.offset(direction)).isIn(BlockTags.DOORS)){
+                return startPos.offset(direction);
+            }
+        }
+        return null;
     }
 
     public static HashSet<BlockPos> getBlocksAbove(Predicate<BlockPos> target, BlockPos startPos, Predicate<BlockPos> stopAt){
@@ -217,6 +241,15 @@ public class BlockScanner {
         return getPossibleFloor(world, pos);
     }
 
+    public HashSet<BlockPos> getPossibleFloorNearLadder(BlockPos pos){
+        HashSet<BlockPos> blocks = new HashSet<>();
+        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos));
+        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.up()));
+        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.down()));
+        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.down(2)));
+        return blocks;
+    }
+
     /**
      * Find valid floor block near the block
      * @param isValidFloor determine if a block is valid floor
@@ -239,6 +272,14 @@ public class BlockScanner {
 
     public boolean isOpenAir(BlockPos pos){
         return countBlocksAbove(pos, blockPos -> !isAir(world.getBlockState(blockPos))).getValue();
+    }
+
+    /**
+     * 判断一个方块是否是空气/无碰撞箱方块/梯子
+     */
+    public static boolean isAirOrLadder(World world, BlockPos pos) {
+        BlockState state = world.getBlockState(pos);
+        return isAir(state) || state.isIn(BlockTags.CLIMBABLE) || state.getCollisionShape(world, pos).isEmpty();
     }
 
     /**
@@ -271,22 +312,25 @@ public class BlockScanner {
         }
         return posSet;
     }
-    //md，blockPos没重写hashCode和equals方法，我还得把Set再去重一遍
-    public static HashSet<BlockPos> deDuplication(Collection<BlockPos> collection){
-        return toPosSet(toLongSet(collection));
-    }
 
 
     /**
      * 获取接下来要被扫描的方块。这个方法应在子类中重写，而非直接使用。
      * @return 接下来要被扫描的方块。这个Set不应包含scannedBlocks中已记录的内容及scanningBlocks中的内容。
      */
-    public HashSet<BlockPos> nextScanningBlocks(BlockPos startPos){
+    protected HashSet<BlockPos> nextScanningBlocks(BlockPos startPos){
         return new HashSet<>();
     }
 
     /**
      * 对每个scanningBlocks的方块执行operation操作，并按照nextScanningBlocks方法的规则获取新的scanningBlocks。
+     * scan方法的工作模式：
+     * 初始状态：在类创建完成后，scanningBlocks里会有一个blockPos，即startPos
+     * 工作时，将scanningBlocks以long的形式放入scannedBlock，创建scanningBlocksNew集合，遍历scanningBlocks中的所有blockPos，然后对blockPos进行以下操作：
+     * 1 如果满足stopAt，则直接退出扫描并返回false
+     * 2 对blockPos执行operation操作
+     * 3 对blockPos执行nextScanningBlocks方法，获取下一轮扫描的方块（这个方法应自己写，写的时候应注意排除scannedBlocks以及避免重复），然后存入scanningBlocksNew中
+     * 在一轮scanningBlocks扫描结束后，把scanningBlocks换成scanningBlocksNew
      * @param operation 对于每个扫描的方块，都会执行这里的操作。由于输入了BlockScanner，也可以对BlockScanner类及其子类里面的变量进行操作。
      * @param nextScanningBlocks 用于获取接下来要被扫描的方块。
      * @param stopAt 如果扫描的方块满足了stopAt的条件，则会停止扫描并返回false
@@ -304,19 +348,207 @@ public class BlockScanner {
             scannedBlocks.addAll(toLongSet(scanningBlocks));
             HashSet<BlockPos> scanningBlocksNew = new HashSet<>();
             for(BlockPos scanningBlock : scanningBlocks){
-                if(stopAt.test(scanningBlock)) return false;
+                if(stopAt.test(scanningBlock) || !this.isValid) return false;
                 operation.accept(scanningBlock);
                 scanningBlocksNew.addAll(nextScanningBlocks.apply(scanningBlock));
             }
             scanningBlocks = scanningBlocksNew;
             scanTimes++;
         }
-        return true;
+        return this.isValid;
     }
 
     public boolean scan(int maxScanningTimes,
                         Consumer<BlockPos> operation,
                         Predicate<BlockPos> stopAt){
         return scan(maxScanningTimes, operation, this::nextScanningBlocks, stopAt);
+    }
+
+
+    /**
+     * scan valid floor
+     */
+    public static class FloorBlockScanner extends BlockScanner{
+        public final boolean canUseLadder;
+
+        public FloorBlockScanner(World world, BlockPos startPos) {
+            super(world, startPos);
+            this.canUseLadder = true;
+        }
+
+        public FloorBlockScanner(World world, BlockPos startPos, boolean canUseLadder) {
+            super(world, startPos);
+            this.canUseLadder = canUseLadder;
+        }
+
+        protected boolean isFloorBlock(BlockPos pos) {
+            BlockState blockState = getBlockState(pos);
+            return (blockState.isNormalCube(world, pos) || blockState.isIn(BlockTags.STAIRS) || blockState.isIn(BlockTags.SLABS));
+        }
+
+        public static boolean isFloorBlock(World world, BlockPos pos) {
+            BlockState blockState = world.getBlockState(pos);
+            return (blockState.isNormalCube(world, pos) || blockState.isIn(BlockTags.STAIRS) || blockState.isIn(BlockTags.SLABS));
+        }
+
+        public static boolean isWallBlock(World world, BlockPos pos) {
+            BlockState blockState = world.getBlockState(pos);
+            return (blockState.isNormalCube(world, pos) || blockState.isIn(FHTags.Blocks.WALL_BLOCKS) || blockState.isIn(BlockTags.DOORS) || blockState.isIn(BlockTags.WALLS) || blockState.isIn(Tags.Blocks.GLASS_PANES) || blockState.isIn(Tags.Blocks.FENCE_GATES) || blockState.isIn(Tags.Blocks.FENCES));
+        }
+        boolean isWallBlock(BlockPos pos) {
+            return isWallBlock(this.world, pos);
+        }
+
+        boolean isHouseBlock(BlockPos pos) {
+            return isFloorBlock(pos) || isWallBlock(pos);
+        }
+
+        public static boolean isHouseBlock(World world, BlockPos pos){
+            return isFloorBlock(world, pos) || isWallBlock(world, pos);
+        }
+
+        public static boolean isValidFloorOrLadder(World world, BlockPos pos) {
+            // Determine whether the block satisfies type requirements
+            if (!FloorBlockScanner.isFloorBlock(world, pos) && !world.getBlockState(pos).isIn(BlockTags.CLIMBABLE)) return false;
+            AbstractMap.SimpleEntry<Integer, Boolean> information = countBlocksAbove(pos, (pos1)->FloorBlockScanner.isHouseBlock(world, pos1));
+            // Determine whether the block has open air above it
+            if (!information.getValue()) {
+                return false;
+            } else {
+                // Determine whether the block has at least 2 blocks above it
+                return information.getKey() >= 2;
+            }
+        }
+
+
+        /**
+         * Determine whether a block is a valid floor block.
+         * A valid floor block is a block that is a normal cube, a stair, or a slab.
+         * A valid floor block must have at least 2 blocks above it.
+         * A valid floor block must not have any open air above it.
+         * 【Override it if you need】
+         * @param pos the position of the block
+         * @return whether the block is a valid floor block
+         */
+        public boolean isValidFloor(BlockPos pos) {
+            // Determine whether the block satisfies type requirements
+            if (!isFloorBlock(pos)) return false;
+            AbstractMap.SimpleEntry<Integer, Boolean> information = countBlocksAbove(pos, this::isHouseBlock);
+            // Determine whether the block has open air above it
+            if (!information.getValue()) {
+                this.isValid = false;
+                //FHMain.LOGGER.debug("HouseScanner: found block open air!");
+                return false;
+            } else {
+                // Determine whether the block has at least 2 blocks above it
+                return information.getKey() >= 2;
+            }
+        }
+
+        protected boolean isValidLadder(BlockPos pos){
+            return world.getBlockState(pos).isIn(BlockTags.CLIMBABLE) && isAirOrLadder(world, pos.up()) && isAirOrLadder(world, pos.up(2));
+        }
+
+        /**
+         * Given a floor block, find all possible floor blocks that are adjacent to it.
+         *
+         * @param startPos the position of the floor block
+         * @return a set of possible floor blocks
+         */
+        protected HashSet<BlockPos> nextScanningBlocks(BlockPos startPos) {
+            HashSet<BlockPos> possibleFloors = getPossibleFloor(startPos);
+            if(canUseLadder) {
+                HashSet<BlockPos> possibleFloorsNearLadder = new HashSet<>();
+                if (getBlockState(startPos.up()).isIn(BlockTags.CLIMBABLE) || getBlockState(startPos.up(2)).isIn(BlockTags.CLIMBABLE)) {
+                    for (BlockPos ladder : getBlocksAboveAndBelow(startPos.up(), (pos) -> !(getBlockState(pos).isIn(BlockTags.CLIMBABLE)))) {
+                        if (isValidLadder(ladder))
+                            possibleFloorsNearLadder.addAll(getPossibleFloor(ladder));
+                    }
+                }
+                for (BlockPos blockPos : possibleFloors) {
+                    if (getBlockState(blockPos).isIn(BlockTags.CLIMBABLE) || getBlockState(blockPos.up()).isIn(BlockTags.CLIMBABLE)) {
+                        for (BlockPos ladder : getBlocksAboveAndBelow(blockPos, (pos) -> !(getBlockState(pos).isIn(BlockTags.CLIMBABLE)))) {
+                            if (isValidLadder(ladder))
+                                possibleFloorsNearLadder.addAll(getPossibleFloorNearLadder(ladder));
+                        }
+                    }
+                }
+                possibleFloors.addAll(possibleFloorsNearLadder);
+            }
+            HashSet<BlockPos> nextScanningBlocks = new HashSet<>();
+            for (BlockPos possibleBlock : possibleFloors) {
+                if (scannedBlocks.contains(possibleBlock.toLong())) {
+                    continue;
+                }
+                if (!isValidFloor(possibleBlock)) {
+                    scannedBlocks.add(possibleBlock.toLong());
+                    continue;
+                }
+                nextScanningBlocks.add(possibleBlock);
+            }
+            return nextScanningBlocks;
+        }
+
+        //暂时不需要覆写scan，BlockScanner的scan够用了
+    }
+    /**
+     * scan air
+     */
+    public static class ConfinedSpaceScanner extends BlockScanner {
+
+        public ConfinedSpaceScanner(World world, BlockPos startPos){
+            super(world, startPos);
+        }
+
+        /**
+         * @param pos scanning block
+         * @param operation 对于满足nextScanningBlocks的位置条件（此处是相邻的方块），但是方块种类不满足的，执行此操作。在此处，就是对围住密闭空间的方块执行此操作
+         */
+        private HashSet<BlockPos> nextScanningBlocks(BlockPos pos, Consumer<BlockPos> operation){//接下来是找到下一批需要扫描的方块的内容
+            HashSet<BlockPos> nextScanningBlocks = new HashSet<>();//这个HashSet暂存下一批的ScanningBlock
+            for(Direction direction : Direction.values()){
+                BlockPos pos1 = pos.offset(direction);// pos1: 用于存储与pos相邻的方块
+                if (this.getScannedBlocks().contains(pos1.toLong())) continue;
+                if (!BlockScanner.isAirOrLadder(world, pos1)) {
+                    operation.accept(pos1);
+                    continue;
+                }
+                nextScanningBlocks.add(pos1);
+                AbstractMap.SimpleEntry<HashSet<BlockPos>, Boolean> airsAbove = getAirsAbove(pos1);
+                if(!airsAbove.getValue()){
+                    this.isValid = false;
+                    return null;
+                }
+                else nextScanningBlocks.addAll(airsAbove.getKey());
+            }
+            return nextScanningBlocks;
+        }
+
+        //基本上和getBlocksAbove是相同的，为了减少lambda的使用单列一个方法
+        private AbstractMap.SimpleEntry<HashSet<BlockPos>, Boolean> getAirsAbove(BlockPos startPos){
+            BlockPos scanningBlock;
+            scanningBlock = startPos.up();
+            HashSet<BlockPos> blocks = new HashSet<>();
+            while(scanningBlock.getY() < 256){
+                if( scannedBlocks.contains(scanningBlock.toLong()) || !isAirOrLadder(world, scanningBlock) ){
+                    return new AbstractMap.SimpleEntry<>(blocks, true);
+                }
+                blocks.add(scanningBlock);
+                scanningBlock = scanningBlock.up();
+            }
+            return new AbstractMap.SimpleEntry<>(blocks, false);
+        }
+
+        /**
+         * 专用于判断密闭空间的扫描方法。
+         * @param maxScanningTimes 最大扫描次数
+         * @param operation1 对所有空气方块，都会进行operation1
+         * @param operation2 对所有非空气方块，都会进行operation2
+         * @param stopAt 如果扫描的方块满足了stopAt的条件，则会停止扫描并返回false
+         * @return 扫描成功与否
+         */
+        public boolean scan(int maxScanningTimes, Consumer<BlockPos> operation1, Consumer<BlockPos> operation2, Predicate<BlockPos> stopAt){
+            return this.scan(maxScanningTimes, operation1, (pos)-> {return nextScanningBlocks(pos, operation2);}, stopAt);
+        }
     }
 }

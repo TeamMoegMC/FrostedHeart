@@ -27,7 +27,7 @@ public class FHCapabilityProvider<C extends NBTSerializable> implements ICapabil
 
 	@Override
 	public CompoundNBT serializeNBT() {
-		return lazyCap.map(c->c.serializeNBT()).orElseGet(CompoundNBT::new);
+		return lazyCap.map(NBTSerializable::serializeNBT).orElseGet(CompoundNBT::new);
 	}
 
 	@Override

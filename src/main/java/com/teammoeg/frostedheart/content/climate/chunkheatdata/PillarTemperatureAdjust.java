@@ -34,27 +34,27 @@ public class PillarTemperatureAdjust extends CubicTemperatureAdjust {
 
     public PillarTemperatureAdjust(BlockPos heatPos, int range, int u, int d, int tempMod) {
         super(heatPos, range, tempMod);
-        r2 = r * r;
+        r2 = (long) r * r;
         this.upper = u;
         this.lower = d;
     }
 
     public PillarTemperatureAdjust(CompoundNBT nc) {
         super(nc);
-        r2 = r * r;
+        r2 = (long) r * r;
 
     }
 
     public PillarTemperatureAdjust(int cx, int cy, int cz, int r, int upper, int lower, int value) {
         super(cx, cy, cz, r, value);
-        r2 = r * r;
+        r2 = (long) r * r;
         this.upper = upper;
         this.lower = lower;
     }
 
     public PillarTemperatureAdjust(PacketBuffer buffer) {
         super(buffer);
-        r2 = r * r;
+        r2 = (long) r * r;
         this.upper = buffer.readVarInt();
         this.lower = buffer.readVarInt();
     }

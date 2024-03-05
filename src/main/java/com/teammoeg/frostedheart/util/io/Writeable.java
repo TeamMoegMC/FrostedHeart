@@ -26,7 +26,7 @@ import com.google.gson.JsonElement;
  */
 public interface Writeable extends PacketWritable {
 	/**
-	 * @Deprecated should not call this method to serialize things
+	 * Deprecated: should not call this method to serialize things
 	 * */
 	@Deprecated JsonElement serialize();
 	

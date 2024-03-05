@@ -11,18 +11,18 @@ public enum RunStatus {
 	public final boolean shouldRun;
 	public final boolean shouldPause;
 
-	private RunStatus(boolean doPersist, boolean shouldRun, boolean shouldPause) {
+	RunStatus(boolean doPersist, boolean shouldRun, boolean shouldPause) {
 		this.doPersist = doPersist;
 		this.shouldRun = shouldRun;
 		this.shouldPause = shouldPause;
 	}
-	private RunStatus(boolean doPersist, boolean shouldRun) {
+	RunStatus(boolean doPersist, boolean shouldRun) {
 		this.doPersist = doPersist;
 		this.shouldRun = shouldRun;
 		this.shouldPause = false;
 	}
 
-	private RunStatus() {
+	RunStatus() {
 		this.doPersist = false;
 		this.shouldRun = false;
 		this.shouldPause=false;

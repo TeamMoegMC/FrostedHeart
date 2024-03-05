@@ -85,7 +85,7 @@ public class GraphicGlyphRenderer implements ICharacterConsumer{
 			g2d.drawLine(x-1, cy, x+advance+2, cy);
 		}
 		if(p_accept_2_.getUnderlined()) {
-			int cy=(int) (y+size+3);
+			int cy= y+size+3;
 			g2d.setStroke(new BasicStroke(3));
 			g2d.drawLine(x-1, cy, x+advance+2, cy);
 		}

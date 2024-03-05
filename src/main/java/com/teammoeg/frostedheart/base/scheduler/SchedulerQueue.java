@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.scheduler;
+package com.teammoeg.frostedheart.base.scheduler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,8 +53,8 @@ public class SchedulerQueue {
     }
 
     public void add(BlockPos pos) {
-        for (int i = 0; i < tasks.size(); i++) {
-            if (tasks.get(i).pos.equals(pos)) {
+        for (ScheduledData task : tasks) {
+            if (task.pos.equals(pos)) {
                 return;
             }
         }
@@ -86,8 +86,8 @@ public class SchedulerQueue {
         while (taskNum > 0) {
             ScheduledData data = tasks.get(curpos);
             TileEntity te = Utils.getExistingTileEntity(world, data.pos);
-            if ((te instanceof IScheduledTaskTE)) {
-                ((IScheduledTaskTE) te).executeTask();
+            if ((te instanceof ScheduledTaskTileEntity)) {
+                ((ScheduledTaskTileEntity) te).executeTask();
             } else {
                 data.forRemoval = true;
             }

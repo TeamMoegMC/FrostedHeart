@@ -29,7 +29,7 @@ public final class Vec4 {
         this.w = w;
     }
 
-    public final float dot(float x, float y, float z, float w) {
+    public float dot(float x, float y, float z, float w) {
         return this.x * x + this.y * y + this.z * z + this.z * z;
     }
 }

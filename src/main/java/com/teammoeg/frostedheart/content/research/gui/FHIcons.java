@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.research.gui;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
@@ -72,8 +73,7 @@ public class FHIcons {
 
         public FHAnimatedIcon(FHIcon[] icons2) {
             this();
-            for (FHIcon i : icons2)
-                icons.add(i);
+            icons.addAll(Arrays.asList(icons2));
         }
 
         public FHAnimatedIcon(JsonElement elm) {
@@ -91,7 +91,7 @@ public class FHIcons {
 
         @Override
         public void draw(MatrixStack ms, int x, int y, int w, int h) {
-            if (icons.size() > 0) {
+            if (!icons.isEmpty()) {
                 GuiHelper.setupDrawing();
                 icons.get((int) ((System.currentTimeMillis() / 1000) % icons.size())).draw(ms, x, y, w, h);
             }
@@ -213,11 +213,19 @@ public class FHIcons {
         }
 
         public JsonElement serialize() {
-            JsonObject jo = new JsonObject();
-            return jo;
+            return new JsonObject();
         }
         abstract JsonObject asObject();
         public void write(PacketBuffer buffer) {
+        }
+
+        @Override
+        public FHIcon clone() {
+            try {
+                return (FHIcon) super.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new AssertionError();
+            }
         }
     }
 
@@ -346,16 +354,10 @@ public class FHIcons {
     private static class FHNopIcon extends FHIcon {
         public static final FHNopIcon INSTANCE = new FHNopIcon();
 
-        /**
-         * @param e
-         */
         public static FHNopIcon get(JsonElement e) {
             return INSTANCE;
         }
 
-        /**
-         * @param e
-         */
         public static FHNopIcon get(PacketBuffer e) {
             return INSTANCE;
         }
@@ -654,66 +656,44 @@ public class FHIcons {
         };
         public static final Editor<FHIcon> CHANGE_EDITOR = (p, l, v, c) -> {
             if (v instanceof FHItemIcon) {
-                IconEditor.ITEM_EDITOR.open(p, l, (FHItemIcon) v, e -> c.accept(e));
+                IconEditor.ITEM_EDITOR.open(p, l, (FHItemIcon) v, c::accept);
             } else if (v instanceof FHCombinedIcon) {
-                IconEditor.COMBINED_EDITOR.open(p, l, (FHCombinedIcon) v, e -> c.accept(e));
+                IconEditor.COMBINED_EDITOR.open(p, l, (FHCombinedIcon) v, c::accept);
             } else if (v instanceof FHIngredientIcon) {
-                IconEditor.INGREDIENT_EDITOR.open(p, l, (FHIngredientIcon) v, e -> c.accept(e));
+                IconEditor.INGREDIENT_EDITOR.open(p, l, (FHIngredientIcon) v, c::accept);
             } else if (v instanceof FHAnimatedIcon) {
-                IconEditor.ANIMATED_EDITOR.open(p, l, (FHAnimatedIcon) v, e -> c.accept(e));
+                IconEditor.ANIMATED_EDITOR.open(p, l, (FHAnimatedIcon) v, c::accept);
             } else if (v instanceof FHTextureIcon) {
-                IconEditor.TEXTURE_EDITOR.open(p, l, (FHTextureIcon) v, e -> c.accept(e));
+                IconEditor.TEXTURE_EDITOR.open(p, l, (FHTextureIcon) v, c::accept);
             } else if (v instanceof FHTextureUVIcon) {
                 IconEditor.UV_EDITOR.open(p, l, (FHTextureUVIcon) v, e -> c.accept(v));
             } else if (v instanceof FHTextIcon) {
-                IconEditor.TEXT_EDITOR.open(p, l, (FHTextIcon) v, e -> c.accept(e));
+                IconEditor.TEXT_EDITOR.open(p, l, (FHTextIcon) v, c::accept);
             } else if (v instanceof FHDelegateIcon) {
-                IconEditor.INTERNAL_EDITOR.open(p, l, (FHDelegateIcon) v, e -> c.accept(e));
+                IconEditor.INTERNAL_EDITOR.open(p, l, (FHDelegateIcon) v, c::accept);
             } else
                 IconEditor.NOP_CHANGE_EDITOR.open(p, l, v, c);
         };
-        public static final Editor<FHItemIcon> ITEM_EDITOR = (p, l, v, c) -> {
-            SelectItemStackDialog.EDITOR.open(p, l, v == null ? null : v.stack, e -> c.accept(new FHItemIcon(e)));
-        };
-        public static final Editor<FHTextureIcon> TEXTURE_EDITOR = (p, l, v, c) -> {
-            EditPrompt.TEXT_EDITOR.open(p, l, v == null ? "" : (v.rl == null ? "" : v.rl.toString()),
-                    e -> c.accept(new FHTextureIcon(new ResourceLocation(e))));
-        };
-        public static final Editor<FHIngredientIcon> INGREDIENT_EDITOR = (p, l, v, c) -> {
-            IngredientEditor.EDITOR_INGREDIENT_EXTERN.open(p, l, v == null ? null : v.igd,
-                    e -> c.accept(new FHIngredientIcon(e)));
-        };
+        public static final Editor<FHItemIcon> ITEM_EDITOR = (p, l, v, c) -> SelectItemStackDialog.EDITOR.open(p, l, v == null ? null : v.stack, e -> c.accept(new FHItemIcon(e)));
+        public static final Editor<FHTextureIcon> TEXTURE_EDITOR = (p, l, v, c) -> EditPrompt.TEXT_EDITOR.open(p, l, v == null ? "" : (v.rl == null ? "" : v.rl.toString()),
+                e -> c.accept(new FHTextureIcon(new ResourceLocation(e))));
+        public static final Editor<FHIngredientIcon> INGREDIENT_EDITOR = (p, l, v, c) -> IngredientEditor.EDITOR_INGREDIENT_EXTERN.open(p, l, v == null ? null : v.igd,
+                e -> c.accept(new FHIngredientIcon(e)));
 
-        public static final Editor<FHIcon> INGREDIENT_SIZE_EDITOR = (p, l, v, c) -> {
-            IngredientEditor.EDITOR.open(p, l, null, e -> c.accept(FHIcons.getIcon(e)));
-        };
-        public static final Editor<FHTextIcon> TEXT_EDITOR = (p, l, v, c) -> {
-            EditPrompt.TEXT_EDITOR.open(p, l, v == null ? null : v.text, e -> c.accept(new FHTextIcon(e)));
-        };
+        public static final Editor<FHIcon> INGREDIENT_SIZE_EDITOR = (p, l, v, c) -> IngredientEditor.EDITOR.open(p, l, null, e -> c.accept(FHIcons.getIcon(e)));
+        public static final Editor<FHTextIcon> TEXT_EDITOR = (p, l, v, c) -> EditPrompt.TEXT_EDITOR.open(p, l, v == null ? null : v.text, e -> c.accept(new FHTextIcon(e)));
         public static final Editor<FHIcon> NOP_EDITOR = (p, l, v, c) -> {
             c.accept(FHNopIcon.INSTANCE);
             p.getGui().refreshWidgets();
         };
-        public static final Editor<FHIcon> NOP_CHANGE_EDITOR = (p, l, v, c) -> {
-            EDITOR.open(p, l, null, c);
-        };
-        public static final Editor<FHAnimatedIcon> ANIMATED_EDITOR = (p, l, v, c) -> {
-            new EditListDialog<>(p, l, v == null ? null : v.icons, null, EDITOR, e -> e.getClass().getSimpleName(),
-                    e -> e, e -> c.accept(new FHAnimatedIcon(e.toArray(new FHIcon[0])))).open();
-        };
-        public static final Editor<FHCombinedIcon> COMBINED_EDITOR = (p, l, v, c) -> {
-            new Combined(p, l, v, c).open();
-        };
+        public static final Editor<FHIcon> NOP_CHANGE_EDITOR = (p, l, v, c) -> EDITOR.open(p, l, null, c);
+        public static final Editor<FHAnimatedIcon> ANIMATED_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v == null ? null : v.icons, null, EDITOR, e -> e.getClass().getSimpleName(),
+                e -> e, e -> c.accept(new FHAnimatedIcon(e.toArray(new FHIcon[0])))).open();
+        public static final Editor<FHCombinedIcon> COMBINED_EDITOR = (p, l, v, c) -> new Combined(p, l, v, c).open();
 
-        public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> {
-            new SelectDialog<String>(p, l, v == null ? null : v.name, o -> {
-                c.accept(new FHDelegateIcon(o));
-            }, TechIcons.internals::keySet, GuiUtils::str, e -> new String[]{e}, TechIcons.internals::get).open();
-        };
+        public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> new SelectDialog<>(p, l, v == null ? null : v.name, o -> c.accept(new FHDelegateIcon(o)), TechIcons.internals::keySet, GuiUtils::str, e -> new String[]{e}, TechIcons.internals::get).open();
 
-        public static final Editor<FHTextureUVIcon> UV_EDITOR = (p, l, v, c) -> {
-            new UV(p, l, v, c).open();
-        };
+        public static final Editor<FHTextureUVIcon> UV_EDITOR = (p, l, v, c) -> new UV(p, l, v, c).open();
 
         T v;
 
@@ -780,7 +760,7 @@ public class FHIcons {
         if (i.getCount() == 1)
             return getIcon(i.getBaseIngredient());
         if (i.getCount() < 10)
-            return getIcon(getIcon(i.getBaseIngredient()), getIcon(" " + String.valueOf(i.getCount())));
+            return getIcon(getIcon(i.getBaseIngredient()), getIcon(" " + i.getCount()));
         return getIcon(getIcon(i.getBaseIngredient()), getIcon(String.valueOf(i.getCount())));
     }
 

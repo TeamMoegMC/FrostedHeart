@@ -38,6 +38,7 @@ import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.utils.TagUtils;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.StaticTemplateManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.item.crafting.AbstractCookingRecipe;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.RecipeManager;
@@ -65,27 +66,27 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
 
     public static void buildRecipeLists(RecipeManager recipeManager) {
         Collection<IRecipe<?>> recipes = recipeManager.getRecipes();
-        if (recipes.size() == 0)
+        if (recipes.isEmpty())
             return;
         //filterRecipes(recipes, GeneratorRecipe.class, GeneratorRecipe.TYPE);
         GeneratorSteamRecipe.recipeList = filterRecipes(recipes, GeneratorSteamRecipe.class, GeneratorSteamRecipe.TYPE);
         InstallInnerRecipe.recipeList = recipes.stream()
                 .filter(iRecipe -> iRecipe.getClass() == InstallInnerRecipe.class)
                 .map(e -> (InstallInnerRecipe) e)
-                .collect(Collectors.<InstallInnerRecipe, ResourceLocation, InstallInnerRecipe>toMap(recipe -> recipe.getBuffType(), recipe -> recipe));
+                .collect(Collectors.<InstallInnerRecipe, ResourceLocation, InstallInnerRecipe>toMap(InstallInnerRecipe::getBuffType, recipe -> recipe));
         CampfireDefrostRecipe.recipeList = recipes.stream()
                 .filter(iRecipe -> iRecipe.getClass() == CampfireDefrostRecipe.class)
                 .map(e -> (CampfireDefrostRecipe) e)
-                .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
+                .collect(Collectors.toMap(AbstractCookingRecipe::getId, recipe -> recipe));
         DietValueRecipe.recipeList = filterRecipes(recipes,DietValueRecipe.class,DietValueRecipe.TYPE).values().stream()
                 .filter(iRecipe -> iRecipe.getClass() == DietValueRecipe.class)
-                .map(e -> (DietValueRecipe) e)
+                .map(e -> e)
                 .collect(Collectors.toMap(recipe -> recipe.item, recipe -> recipe));
        // InspireRecipe.recipes = filterRecipes(recipes, InspireRecipe.class, InspireRecipe.TYPE).values().stream().collect(Collectors.toList());
         //ResearchPaperRecipe.recipes = filterRecipes(recipes, ResearchPaperRecipe.class, ResearchPaperRecipe.TYPE).values().stream().collect(Collectors.toList());
        // SaunaRecipe.recipeList = filterRecipes(recipes, SaunaRecipe.class, SaunaRecipe.TYPE);
         //IncubateRecipe.recipeList = filterRecipes(recipes, IncubateRecipe.class, IncubateRecipe.TYPE);
-        TradePolicy.policies = filterRecipes(recipes, TradePolicy.class, TradePolicy.TYPE).values().stream().collect(Collectors.toMap(t -> t.getName(), t -> t));
+        TradePolicy.policies = filterRecipes(recipes, TradePolicy.class, TradePolicy.TYPE).values().stream().collect(Collectors.toMap(TradePolicy::getName, t -> t));
         //System.out.println(TradePolicy.policies.size());
         TradePolicy.items = TradePolicy.policies.values().stream().map(TradePolicy::asWeight).filter(Objects::nonNull).collect(Collectors.toList());
         //System.out.println(TradePolicy.items.size());

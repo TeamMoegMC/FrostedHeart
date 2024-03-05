@@ -46,7 +46,7 @@ public abstract class SaplingBlockMixin extends BushBlock implements IGrowable {
         super(properties);
     }
 
-    @Inject(at = @At("HEAD"), method = "randomTick", remap = true, cancellable = true)
+    @Inject(at = @At("HEAD"), method = "randomTick", cancellable = true)
     public void fh$randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random, CallbackInfo cbi) {
         if (FHUtils.isBlizzardHarming(worldIn, pos)) {
             worldIn.setBlockState(pos, Blocks.AIR.getDefaultState(), 2);

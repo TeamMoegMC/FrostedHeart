@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
@@ -70,7 +70,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
     static final VoxelShape shape2 = Block.makeCuboidShape(0, 0, 0, 16, 12, 16);
 
     private static Direction getNeighbourDirection(boolean b, Direction directionIn) {
-        return b == false ? directionIn : directionIn.getOpposite();
+        return !b ? directionIn : directionIn.getOpposite();
     }
 
     public static void setBlockhasbook(World worldIn, BlockPos pos, BlockState state, boolean hasBook) {
@@ -156,14 +156,14 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
         if (!worldIn.isRemote && handIn == Hand.MAIN_HAND && !player.isSneaking()) {
             if (!player.isCreative() && worldIn.getLight(pos) < 8) {
                 player.sendStatusMessage(GuiUtils.translateMessage("research.too_dark"), true);
-            } else if (!player.isCreative() && PlayerTemperatureData.getCapability(player).map(t->t.getBodyTemp()).orElse(0f) < -0.2) {
+            } else if (!player.isCreative() && PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getBodyTemp).orElse(0f) < -0.2) {
                 player.sendStatusMessage(GuiUtils.translateMessage("research.too_cold"), true);
             } else {
                 if (state.get(IS_NOT_MAIN)) {
                     pos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
                 }
                 TileEntity ii = Utils.getExistingTileEntity(worldIn, pos);
-                UUID crid = SpecialDataManager.get(player).getId();
+                UUID crid = FHTeamDataManager.get(player).getId();
                 IOwnerTile.trySetOwner(ii, crid);
                 if (crid != null && crid.equals(IOwnerTile.getOwner(ii)))
                     NetworkHooks.openGui((ServerPlayerEntity) player, (IInteractionObjectIE) ii, ii.getPos());
@@ -178,10 +178,10 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
     public void onBlockHarvested(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
         if (!worldIn.isRemote && player.isCreative()) {
             boolean block = state.get(IS_NOT_MAIN);
-            if (block == false) {
+            if (!block) {
                 BlockPos blockpos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
                 BlockState blockstate = worldIn.getBlockState(blockpos);
-                if (blockstate.getBlock() == this && blockstate.get(IS_NOT_MAIN) == true) {
+                if (blockstate.getBlock() == this && blockstate.get(IS_NOT_MAIN)) {
                     worldIn.setBlockState(blockpos, Blocks.AIR.getDefaultState(), 35);
                 }
             }

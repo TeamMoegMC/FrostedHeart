@@ -38,8 +38,6 @@ public interface ITemperatureAdjust extends NBTSerializable {
      */
     static ITemperatureAdjust valueOf(CompoundNBT nc) {
         switch (nc.getInt("type")) {
-            case 1:
-                return new CubicTemperatureAdjust(nc);
             case 2:
                 return new PillarTemperatureAdjust(nc);
             default:
@@ -53,19 +51,15 @@ public interface ITemperatureAdjust extends NBTSerializable {
      * @param buffer the buffer<br>
      * @return returns adjust
      */
-    public static ITemperatureAdjust valueOf(PacketBuffer buffer) {
+    static ITemperatureAdjust valueOf(PacketBuffer buffer) {
         int packetId = buffer.readByte();
         switch (packetId) {
-            case 1:
-                return new CubicTemperatureAdjust(buffer);
             case 2:
                 return new PillarTemperatureAdjust(buffer);
             default:
                 return new CubicTemperatureAdjust(buffer);
         }
     }
-
-    ;
 
     /**
      * Deserialize.
@@ -128,7 +122,7 @@ public interface ITemperatureAdjust extends NBTSerializable {
     /**
      * Checks if location is in range(or, this adjust is effective for this location).<br>
      *
-     * @param bp the location<br>
+     * @param pos the location<br>
      * @return if this adjust is effective for location, true.
      */
     default boolean isEffective(BlockPos pos) {

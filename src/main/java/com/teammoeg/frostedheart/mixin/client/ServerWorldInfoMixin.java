@@ -32,7 +32,7 @@ import net.minecraft.world.storage.ServerWorldInfo;
 public class ServerWorldInfoMixin {
 
     /**
-     * Reference: https://github.com/CorgiTaco/ShutupExperimentalSettings/blob/master/src/main/java/corgitaco/shutupexperimentalsettings/mixin/client/MixinServerWorldInfo.java
+     * Reference: <a href="https://github.com/CorgiTaco/ShutupExperimentalSettings/blob/master/src/main/java/corgitaco/shutupexperimentalsettings/mixin/client/MixinServerWorldInfo.java">...</a>
      *
      * @reason Shut up experimental settings
      */

@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.climate;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.teammoeg.frostedheart.content.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.FHDataManager;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
@@ -89,12 +89,10 @@ public class WorldTemperature {
      * The temperature when snow can reach the ground.
      */
     public static final float SNOW_TEMPERATURE = -13;
-
-    public static final float BLIZZARD_TEMPERATURE = -30;
     /**
      * The temperature when snow becomes blizzard.
      */
-    //public static final float BLIZZARD_TEMPERATURE = -18;
+    public static final float BLIZZARD_TEMPERATURE = -30;
     /**
      * The temperature when cold plant can grow.
      */

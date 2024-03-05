@@ -22,8 +22,7 @@ package com.teammoeg.frostedheart.content.generator;
 import java.util.Random;
 
 import com.teammoeg.frostedheart.base.block.FHStoneMultiblockBlock;
-import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -73,7 +72,7 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
                 if (zte.getOwner() == null) {
                 	zte = zte.master();
                 	
-                	zte.setOwner(SpecialDataManager.get(player).getId());
+                	zte.setOwner(FHTeamDataManager.get(player).getId());
                     zte.regist();
                 }
                 

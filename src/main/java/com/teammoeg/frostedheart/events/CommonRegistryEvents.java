@@ -52,9 +52,7 @@ import net.minecraftforge.registries.IForgeRegistry;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class CommonRegistryEvents {
-    /**
-     * @param event
-     */
+
     @SuppressWarnings("rawtypes")
     @SubscribeEvent
     public static void onDimensionRegistry(RegistryEvent.Register event) {

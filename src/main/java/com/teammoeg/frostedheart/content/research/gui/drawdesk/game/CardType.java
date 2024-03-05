@@ -29,7 +29,7 @@ public enum CardType {
     final BiFunction<Integer, Integer, Boolean> matcher;
     final boolean mustInPair;
 
-    private CardType(BiFunction<Integer, Integer, Boolean> matcher, boolean mustInPair) {
+    CardType(BiFunction<Integer, Integer, Boolean> matcher, boolean mustInPair) {
         this.matcher = matcher;
         this.mustInPair = mustInPair;
     }

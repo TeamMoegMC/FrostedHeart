@@ -76,7 +76,6 @@ public class LazyTickWorker {
     public CompoundNBT write(CompoundNBT cnbt) {
         if (!isStaticMax)
             cnbt.putInt("max", tMax);
-        ;
         cnbt.putInt("cur", tCur);
         return cnbt;
     }

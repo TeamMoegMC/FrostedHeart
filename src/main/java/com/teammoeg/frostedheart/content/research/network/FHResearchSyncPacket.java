@@ -45,9 +45,7 @@ public class FHResearchSyncPacket implements FHMessage {
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> {
-            FHResearch.readOne(r);
-        });
+        context.get().enqueueWork(() -> FHResearch.readOne(r));
         context.get().setPacketHandled(true);
     }
 }

@@ -26,9 +26,7 @@ public class RelationList {
     Integer sum;
 
     public void copy(RelationList rel) {
-        for (int i = 0; i < relations.length; i++) {
-            relations[i] = rel.relations[i];
-        }
+        System.arraycopy(rel.relations, 0, relations, 0, relations.length);
         sum = rel.sum;
     }
 
@@ -44,16 +42,14 @@ public class RelationList {
     public void read(PacketBuffer pb) {
         int[] arr = pb.readVarIntArray();
         int minl = Math.min(arr.length, relations.length);
-        for (int i = 0; i < minl; i++) {
-            relations[i] = arr[i];
-        }
+        System.arraycopy(arr, 0, relations, 0, minl);
     }
 
     public int sum() {
         if (sum == null) {
             sum = 0;
-            for (int i = 0; i < relations.length; i++) {
-                sum += relations[i];
+            for (int relation : relations) {
+                sum += relation;
             }
         }
         return sum;

@@ -38,18 +38,10 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.ModList;
 
 public enum FHArmorMaterial implements IArmorMaterial {
-    HIDE("hide", 6, new int[]{1, 2, 3, 1}, 5, SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> {
-        return Ingredient.fromItems(FHItems.raw_hide.get());
-    }),
-    HAY("hay", 4, new int[]{1, 1, 1, 1}, 5, SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> {
-        return Ingredient.fromItems(ModList.get().isLoaded("charcoal_pit") ? RegistryUtils.getItem(new ResourceLocation("charcoal_pit", "straw")) : Items.WHEAT);
-    }),
-    WOOL("wool", 6, new int[]{1, 2, 3, 1}, 5, SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> {
-        return Ingredient.fromItems(Items.WHITE_WOOL);
-    }),
-    WEATHER("weather", 15, new int[]{2, 5, 6, 2}, 9, SoundEvents.ITEM_ARMOR_EQUIP_IRON, 0.0F, 0.0F, () -> {
-        return Ingredient.fromItems(Items.IRON_INGOT);
-    });
+    HIDE("hide", 6, new int[]{1, 2, 3, 1}, 5, SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.fromItems(FHItems.raw_hide.get())),
+    HAY("hay", 4, new int[]{1, 1, 1, 1}, 5, SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.fromItems(ModList.get().isLoaded("charcoal_pit") ? RegistryUtils.getItem(new ResourceLocation("charcoal_pit", "straw")) : Items.WHEAT)),
+    WOOL("wool", 6, new int[]{1, 2, 3, 1}, 5, SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.fromItems(Items.WHITE_WOOL)),
+    WEATHER("weather", 15, new int[]{2, 5, 6, 2}, 9, SoundEvents.ITEM_ARMOR_EQUIP_IRON, 0.0F, 0.0F, () -> Ingredient.fromItems(Items.IRON_INGOT));
 
     private static final int[] MAX_DAMAGE_ARRAY = new int[]{13, 15, 16, 11};
     private final String name;

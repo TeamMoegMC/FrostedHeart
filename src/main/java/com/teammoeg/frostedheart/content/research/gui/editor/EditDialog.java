@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskScreen;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
@@ -46,9 +47,8 @@ public abstract class EditDialog extends Panel {
         try {
             onClose();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            FHMain.LOGGER.error("Error closing dialog",ex);
         }
-        ;
         try {
             if (previous != null) {
                 sc.closeDialog(false);
@@ -60,12 +60,11 @@ public abstract class EditDialog extends Panel {
             ClientUtils.getPlayer().sendMessage(GuiUtils.str("Fatal error on switching dialog! see log for details").mergeStyle(TextFormatting.RED), null);
             sc.closeGui();
         }
-        ;
         try {
             onClosed();
         } catch (Exception ex) {
+            throw new RuntimeException("Error on dialog close", ex);
         }
-        ;
     }
 
     @Override

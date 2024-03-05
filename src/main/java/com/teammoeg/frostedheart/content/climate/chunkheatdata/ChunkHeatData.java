@@ -167,7 +167,7 @@ public class ChunkHeatData implements NBTSerializable {
      * @param heatPos the position of the heating block, at the center of the cube
      * @param range   the distance from the heatPos to the boundary
      * @param tempMod the temperature added
-     * @deprecated use {@link addCubicTempAdjust}
+     * @deprecated use {@link ChunkHeatData#addCubicTempAdjust}
      */
     @Deprecated
     public static void addTempToCube(IWorld world, BlockPos heatPos, int range, byte tempMod) {
@@ -180,9 +180,9 @@ public class ChunkHeatData implements NBTSerializable {
 
     /**
      * Called to get chunk data when a world context is available.
-     * If on client, will query capability, falling back to cache, and send request
+     * On client, will query capability, falling back to cache, and send request
      * packets if necessary
-     * If on server, will either query capability falling back to cache, or query
+     * On server, will either query capability falling back to cache, or query
      * provider to generate the data.
      */
     @SuppressWarnings("deprecation")
@@ -216,7 +216,7 @@ public class ChunkHeatData implements NBTSerializable {
      * This method directly get temperature adjusts at any positions.
      */
     public static Collection<ITemperatureAdjust> getAdjust(IWorldReader world, BlockPos pos) {
-        ArrayList<ITemperatureAdjust> al = new ArrayList<>(get(world, new ChunkPos(pos)).map(t->t.getAdjusters()).orElseGet(Arrays::asList));
+        ArrayList<ITemperatureAdjust> al = new ArrayList<>(get(world, new ChunkPos(pos)).map(ChunkHeatData::getAdjusters).orElseGet(Arrays::asList));
         al.removeIf(adj -> !adj.isEffective(pos));
         return al;
     }
@@ -260,6 +260,7 @@ public class ChunkHeatData implements NBTSerializable {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
             ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
+            // TODO: should use isPresent some how
             if (data != null)
                 data.adjusters.removeIf(adj -> adj.getCenterX() == src.getX() && adj.getCenterY() == src.getY()
                         && adj.getCenterZ() == src.getZ());
@@ -340,7 +341,7 @@ public class ChunkHeatData implements NBTSerializable {
      *
      * @param world   must be server side
      * @param heatPos the position of the heating block, at the center of the cube
-     * @deprecated use {@link removeTempAdjust}
+     * @deprecated use {@link ChunkHeatData#removeTempAdjust}
      */
     @Deprecated
     public static void resetTempToCube(IWorld world, BlockPos heatPos) {

@@ -26,7 +26,6 @@ import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
 import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import net.minecraft.block.BlockState;
@@ -117,7 +116,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 
     public ActionResultType onClick(PlayerEntity pe) {
         if (!pe.world.isRemote) {
-            currentPoints = (int) ResearchDataAPI.getData((ServerPlayerEntity) pe).doResearch(currentPoints);
+            currentPoints = (int) ResearchDataAPI.getData(pe).doResearch(currentPoints);
             updatePoints();
         }
         return ActionResultType.func_233537_a_(pe.world.isRemote);
@@ -145,7 +144,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
             float spd = MathHelper.abs(super.getSpeed());
 
             if (spd > 0 && spd <= 64 && currentPoints <= maxPoints - 20) {
-                process += spd;
+                process += (int) spd;
                 int curact = process / 1067;
                 if (lastact != curact) {
                     lastact = curact;

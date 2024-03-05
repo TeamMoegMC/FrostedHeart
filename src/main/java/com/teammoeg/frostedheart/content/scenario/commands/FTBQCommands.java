@@ -37,17 +37,13 @@ public class FTBQCommands {
 	public void waitquestComplete(ScenarioVM runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
-		runner.addTrigger(new SingleExecuteTargetTrigger(r->{
-			return quest.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()));
-		}),new ExecuteTarget(runner,s,l));
+		runner.addTrigger(new SingleExecuteTargetTrigger(r-> quest.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()))),new ExecuteTarget(runner,s,l));
 	}
 	public void waittaskComplete(ScenarioVM runner,@Param("s")String s,@Param("l")String l,@Param("q")String q,@Param("t")int t) {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		Task tsk=quest.tasks.get(t);
-		runner.addTrigger(new SingleExecuteTargetTrigger(r->{
-			return tsk.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()));
-		}),new ExecuteTarget(runner,s,l));
+		runner.addTrigger(new SingleExecuteTargetTrigger(r-> tsk.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()))),new ExecuteTarget(runner,s,l));
 	}
 	public void waittaskCompleteShow(ScenarioVM runner,@Param("s")String s,@Param("l")String l,@Param("q")String q,@Param("t")int t) {
 		//System.out.println("wtcs");
@@ -57,17 +53,14 @@ public class FTBQCommands {
 		FHScenario.callClientCommand("showTask", runner, "q",q,"t",""+t);
 		runner.addTrigger(new SingleExecuteTargetTrigger(r->{
 			TeamData td=ServerQuestFile.INSTANCE.getData(r.getPlayer());
-			boolean rx=td.isCompleted(tsk);
-			return rx;
+            return td.isCompleted(tsk);
 		}),new ExecuteTarget(runner,s,l));
 		
 	}
 	public void waitquestStart(ScenarioVM runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
-		runner.addTrigger(new SingleExecuteTargetTrigger(r->{
-			return qf.getData(r.getPlayer()).canStartTasks(quest);
-		}),new ExecuteTarget(runner,s,l));
+		runner.addTrigger(new SingleExecuteTargetTrigger(r-> qf.getData(r.getPlayer()).canStartTasks(quest)),new ExecuteTarget(runner,s,l));
 	}
 	public void completequest(ScenarioVM runner,@Param("q")String q) {
 		Quest quest=ServerQuestFile.INSTANCE.getQuest(QuestFile.parseCodeString(q));

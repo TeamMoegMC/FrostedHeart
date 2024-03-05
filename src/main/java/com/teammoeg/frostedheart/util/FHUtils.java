@@ -55,7 +55,6 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.Heightmap.Type;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.Capability;
@@ -112,9 +111,7 @@ public class FHUtils {
         float temp = ChunkHeatData.getTemperature((IWorld) w, p);
         if (temp <= 300)
             return false;
-        if (temp > 300 + WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
-            return false;
-        return true;
+        return !(temp > 300 + WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX);
     }
 
     public static boolean canTreeGenerate(World w, BlockPos p, Random r, int chance) {
@@ -142,7 +139,8 @@ public class FHUtils {
     	if(type.isInstance(te))
     		return (T) te;
     	return null;
-    };
+    }
+
     public static <T> T getCapability(IWorld w,BlockPos pos,Direction d,Capability<T> cap){
     	TileEntity te=getExistingTileEntity(w,pos);
     	if(te!=null)
@@ -198,9 +196,7 @@ public class FHUtils {
     }
 
     public static ToIntFunction<BlockState> getLightValueLit(int lightValue) {
-        return (state) -> {
-            return state.get(BlockStateProperties.LIT) ? lightValue : 0;
-        };
+        return (state) -> state.get(BlockStateProperties.LIT) ? lightValue : 0;
     }
 
     public static void giveItem(PlayerEntity pe, ItemStack is) {
@@ -209,10 +205,7 @@ public class FHUtils {
     }
 
     public static boolean isBlizzardHarming(IWorld iWorld, BlockPos p) {
-        if (WorldClimate.isBlizzard(iWorld) && iWorld.getHeight(Type.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) <= p.getY()) {
-            return true;
-        }
-        return false;
+        return WorldClimate.isBlizzard(iWorld) && iWorld.getHeight(Type.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) <= p.getY();
     }
 
     public static boolean isRainingAt(BlockPos pos, World world) {
@@ -221,11 +214,7 @@ public class FHUtils {
             return false;
         } else if (!world.canSeeSky(pos)) {
             return false;
-        } else if (world.getHeight(Heightmap.Type.MOTION_BLOCKING, pos).getY() > pos.getY()) {
-            return false;
-        } else {
-            return true;
-        }
+        } else return world.getHeight(Type.MOTION_BLOCKING, pos).getY() <= pos.getY();
     }
 
     public static EffectInstance noHeal(EffectInstance ei) {
@@ -251,10 +240,9 @@ public class FHUtils {
             });
             if (entity != null) {
                 if (entity instanceof MobEntity) {
-                    ((MobEntity) entity).onInitialSpawn(world, world.getDifficultyForLocation(entity.getPosition()), SpawnReason.NATURAL, (ILivingEntityData) null, (CompoundNBT) null);
+                    ((MobEntity) entity).onInitialSpawn(world, world.getDifficultyForLocation(entity.getPosition()), SpawnReason.NATURAL, null, null);
                 }
                 if (!world.addEntityAndUniquePassengers(entity)) {
-                    return;
                 }
             }
         }
@@ -319,7 +307,7 @@ public class FHUtils {
        }
    }
 
-	public static List<Field> getAllModelFields(Class aClass) {
+	public static List<Field> getAllModelFields(Class<?> aClass) {
 	    List<Field> fields = new ArrayList<>();
 	    do {
 	        Collections.addAll(fields, aClass.getDeclaredFields());

@@ -111,7 +111,6 @@ public class FHRegistry<T extends FHRegisteredItem> {
             }
         }
         pb.writeVarInt(0);
-        return;
     }
 
     /**
@@ -129,7 +128,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
      */
     public List<T> all() {
         List<T> r = new ArrayList<>(items);
-        r.removeIf(e -> e == null);
+        r.removeIf(Objects::isNull);
         return r;
     }
 
@@ -297,11 +296,10 @@ public class FHRegistry<T extends FHRegisteredItem> {
                 in.accept(t);
             return;
         }
-        return;
     }
 
     public void runIfPresent(String id, Consumer<T> in) {
-        lazyGet(id).ifPresent(t -> in.accept(t));
+        lazyGet(id).ifPresent(in::accept);
     }
 
     /**
@@ -311,7 +309,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
      */
     public ListNBT serialize() {
         ListNBT cn = new ListNBT();
-        rnamesl.stream().map(StringNBT::valueOf).forEach(e -> cn.add(e));
+        rnamesl.stream().map(StringNBT::valueOf).forEach(cn::add);
         return cn;
     }
 

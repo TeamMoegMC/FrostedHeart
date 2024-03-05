@@ -66,7 +66,6 @@ public class ChunkEventsMixin {
             if (total >= newData.maxClaimChunks) {
                 chunk.unclaim(sourceStack, false);
                 chunksToUnclaim.computeIfAbsent(chunk.pos.dimension, s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, null));
-                chunks++;
             } else {
                 oldData.manager.claimedChunks.remove(chunk.pos);
                 oldData.save();
@@ -74,8 +73,8 @@ public class ChunkEventsMixin {
                 newData.manager.claimedChunks.put(chunk.pos, chunk);
                 newData.save();
                 chunksToSend.computeIfAbsent(chunk.pos.dimension, s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, chunk));
-                chunks++;
             }
+            chunks++;
 
             total++;
         }

@@ -95,7 +95,7 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
      * @author khjxiaogu
      * @reason force reset contraptions for mod propose
      */
-    @Inject(at = @At("TAIL"), method = "tick", remap = true)
+    @Inject(at = @At("TAIL"), method = "tick")
     protected void tick(CallbackInfo cbi) {
         if (!world.isRemote)
             if (this.shoulddisb)

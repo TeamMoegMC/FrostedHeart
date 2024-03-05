@@ -27,7 +27,6 @@ import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
@@ -37,7 +36,7 @@ public class FHResearchControlPacket implements FHMessage {
     public enum Operator {
         COMMIT_ITEM,
         START,
-        PAUSE;
+        PAUSE
     }
 
     public final Operator status;
@@ -80,7 +79,6 @@ public class FHResearchControlPacket implements FHMessage {
                     return;
                 case PAUSE:
                     trd.clearCurrentResearch(r);
-                    return;
             }
         });
         context.get().setPacketHandled(true);

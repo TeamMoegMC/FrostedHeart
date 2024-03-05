@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.climate.data;
+package com.teammoeg.frostedheart;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.EnumMap;
@@ -27,6 +27,7 @@ import java.util.Map.Entry;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.teammoeg.frostedheart.content.climate.data.*;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
@@ -38,7 +39,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fluids.FluidStack;
 
 public class FHDataManager {
-    public static enum FHDataType {
+    public enum FHDataType {
         Armor(new DataType<>(ArmorTempData.class, "temperature", "armor")),
         Biome(new DataType<>(BiomeTempData.class, "temperature", "biome")),
         Food(new DataType<>(FoodTempData.class, "temperature", "food")),
@@ -47,7 +48,7 @@ public class FHDataManager {
         Cup(new DataType<>(CupData.class, "temperature", "cup")),
         World(new DataType<>(WorldTempData.class, "temperature", "world"));
 
-        static class DataType<T extends JsonDataHolder> {
+        public static class DataType<T extends JsonDataHolder> {
             final Class<T> dataCls;
             final String location;
             final String domain;
@@ -63,8 +64,7 @@ public class FHDataManager {
                     return dataCls.getConstructor(JsonObject.class).newInstance(jo);
                 } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                          | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-                    // TODO Auto-generated catch block
-                    throw new RuntimeException(e);
+                    throw new RuntimeException("Can not create instance of " + dataCls.getSimpleName() + " from json", e);
                 }
             }
 
@@ -75,7 +75,7 @@ public class FHDataManager {
 
         public final DataType<? extends JsonDataHolder> type;
 
-        private FHDataType(DataType<? extends JsonDataHolder> type) {
+        FHDataType(DataType<? extends JsonDataHolder> type) {
             this.type = type;
         }
 
@@ -116,7 +116,7 @@ public class FHDataManager {
     }
 
     @SuppressWarnings("unchecked")
-    public static final <T extends JsonDataHolder> ResourceMap<T> get(FHDataType dt) {
+    public static <T extends JsonDataHolder> ResourceMap<T> get(FHDataType dt) {
         return ALL_DATA.get(dt);
 
     }
@@ -171,7 +171,7 @@ public class FHDataManager {
     }
 
     @SuppressWarnings("unchecked")
-    public static final void load(DataEntry[] entries) {
+    public static void load(DataEntry[] entries) {
         reset();
         for (DataEntry de : entries) {
             JsonDataHolder jdh = de.type.type.create(parser.parse(de.data).getAsJsonObject());
@@ -181,21 +181,21 @@ public class FHDataManager {
     }
 
     @SuppressWarnings("unchecked")
-    public static final void register(FHDataType dt, JsonObject data) {
+    public static void register(FHDataType dt, JsonObject data) {
         JsonDataHolder jdh = dt.type.create(data);
         //System.out.println("registering "+dt.type.location+": "+jdh.getId());
         ALL_DATA.get(dt).put(jdh.getId(), jdh);
         synched = false;
     }
 
-    public static final void reset() {
+    public static void reset() {
         synched = false;
         for (ResourceMap<?> rm : ALL_DATA.values())
             rm.clear();
     }
 
     @SuppressWarnings("rawtypes")
-    public static final DataEntry[] save() {
+    public static DataEntry[] save() {
         int tsize = 0;
         for (ResourceMap map : ALL_DATA.values()) {
             tsize += map.size();

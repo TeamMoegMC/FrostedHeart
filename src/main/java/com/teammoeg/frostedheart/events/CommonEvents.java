@@ -46,8 +46,8 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.data.DeathInventoryData;
-import com.teammoeg.frostedheart.content.climate.data.FHDataManager;
-import com.teammoeg.frostedheart.content.climate.data.FHDataReloadManager;
+import com.teammoeg.frostedheart.FHDataManager;
+import com.teammoeg.frostedheart.FHDataReloadManager;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
@@ -68,10 +68,10 @@ import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.content.town.TeamTownDataS2CPacket;
-import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
+import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
@@ -305,10 +305,9 @@ public class CommonEvents {
             }
             event.setResult(Event.Result.DENY);
         } else if (growBlock instanceof FHCropBlock) {
-            return;
         } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
             if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE) {
-                if (temp < -6 && event.getWorld().getRandom().nextInt(3) == 0) {
+                if (event.getWorld().getRandom().nextInt(3) == 0) {
                     event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
@@ -323,7 +322,7 @@ public class CommonEvents {
         } else if(growBlock instanceof IGrowable){
             if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE) {
                 // Set back to default state, might not be necessary
-                if ((bz || temp < 0) && event.getWorld().getRandom().nextInt(3) == 0) {
+                if (event.getWorld().getRandom().nextInt(3) == 0) {
                     BlockState cbs = event.getWorld().getBlockState(event.getPos());
                     if (cbs.matchesBlock(growBlock) && cbs != growBlock.getDefaultState())
                         event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
@@ -339,7 +338,7 @@ public class CommonEvents {
             }
 
         }else {
-        	if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE || bz)
+        	if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE)
         		event.setResult(Event.Result.DENY);
         }
     }
@@ -431,10 +430,10 @@ public class CommonEvents {
                 adj = FHDataManager.getFood(is);
             }
             if (adj != null) {
-                float current = PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(t->t.getBodyTemp()).orElse(0f);
+                float current = PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
-                float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(t->t.getEnvTemp()).orElse(0f));
+                float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(PlayerTemperatureData::getEnvTemp).orElse(0f));
                 if (heat > 1) {
                     event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
                 } else if (heat < -1)
@@ -442,13 +441,13 @@ public class CommonEvents {
                 if (heat > 0) {
                     if (current >= max)
                         return;
-                    current += heat * tspeed;
+                    current += (float) (heat * tspeed);
                     if (current > max)
                         current = max;
                 } else {
                     if (current <= min)
                         return;
-                    current += heat * tspeed;
+                    current += (float) (heat * tspeed);
                     if (current <= min)
                         return;
                 }
@@ -505,7 +504,7 @@ public class CommonEvents {
                     int i = FHUtils.getEnchantmentLevel(Enchantments.UNBREAKING, cnbt);
                     int j = 0;
                     if (i > 0)
-                        for (int k = 0; i > 0 && k < amount; ++k) {
+                        for (int k = 0; k < amount; ++k) {
                             if (UnbreakingEnchantment.negateDamage(itemstack, i, player.getRNG())) {
                                 ++j;
                             }
@@ -594,7 +593,6 @@ public class CommonEvents {
             event.setAmount(event.getAmount() * (0.2f / (ei.getAmplifier() + 1)));
     }
 
-    @SuppressWarnings("resource")
     @SubscribeEvent
     public static void onIEMultiBlockForm(MultiblockFormEvent event) {
         if (event.getPlayer() instanceof FakePlayer) {
@@ -607,7 +605,7 @@ public class CommonEvents {
                     event.setCanceled(true);
                 }
             } else {
-                if (!ResearchDataAPI.getData((ServerPlayerEntity) event.getPlayer()).building.has(event.getMultiblock())) {
+                if (!ResearchDataAPI.getData(event.getPlayer()).building.has(event.getMultiblock())) {
                     //event.getPlayer().sendStatusMessage(GuiUtils.translateMessage("research.multiblock.cannot_build"), true);
                     event.setCanceled(true);
                 }
@@ -624,12 +622,11 @@ public class CommonEvents {
         }
     }
 
-    @SuppressWarnings("resource")
     @SubscribeEvent
     public static void onPlayerKill(LivingDeathEvent event) {
         Entity ent = event.getSource().getTrueSource();
 
-        if (ent == null || !(ent instanceof PlayerEntity) || ent instanceof FakePlayer) return;
+        if (!(ent instanceof PlayerEntity) || ent instanceof FakePlayer) return;
         if (ent.getEntityWorld().isRemote) return;
         ServerPlayerEntity p = (ServerPlayerEntity) ent;
 
@@ -666,7 +663,7 @@ public class CommonEvents {
 
                 // Town logic tick
                 int i = 0;
-                for (TeamDataHolder trd : SpecialDataManager.INSTANCE.getAllData()) {
+                for (TeamDataHolder trd : FHTeamDataManager.INSTANCE.getAllData()) {
                     if (serverWorld.getDimensionKey().equals(trd.getData(SpecialDataTypes.GENERATOR_DATA).dimension)) {
                         if (serverWorld.getGameTime() % 20 == i % 20) {//Split town calculations to multiple seconds
                             if (trd.getTeam().map(t -> t.getOnlineMembers().size()).orElse(0) > 0) {
@@ -806,7 +803,6 @@ public class CommonEvents {
         }
     }
 
-    @SuppressWarnings("resource")
     @SubscribeEvent
     public static void removeSpawnVillage(WorldEvent.CreateSpawnPosition event) {
         if (event.getWorld() instanceof ServerWorld) {
@@ -815,12 +811,12 @@ public class CommonEvents {
                 serverWorld.getChunkProvider().generator.func_235957_b_().func_236195_a_().keySet()
                         .remove(Structure.VILLAGE);
             } catch (UnsupportedOperationException e) {
+                FHMain.LOGGER.error("Failed to remove vanilla village structures", e);
             }
         }
     }
 
 
-    @SuppressWarnings("resource")
     @SubscribeEvent
     public static void removeVanillaVillages(WorldEvent.Load event) {
         if (event.getWorld() instanceof ServerWorld) {
@@ -829,6 +825,7 @@ public class CommonEvents {
                 serverWorld.getChunkProvider().generator.func_235957_b_().func_236195_a_().keySet()
                         .remove(Structure.VILLAGE);
             } catch (UnsupportedOperationException e) {
+                FHMain.LOGGER.error("Failed to remove vanilla village structures", e);
             }
         }
     }
@@ -846,7 +843,7 @@ public class CommonEvents {
             FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHClimatePacket(WorldClimate.get(serverWorld)));
             EnergyCore.getCapability(event.getPlayer()).ifPresent(t->{t.onrespawn();t.sendUpdate((ServerPlayerEntity) event.getPlayer());});
-            PlayerTemperatureData.getCapability(event.getPlayer()).ifPresent(t->t.reset());
+            PlayerTemperatureData.getCapability(event.getPlayer()).ifPresent(PlayerTemperatureData::reset);
             
         }
     }
@@ -868,9 +865,7 @@ public class CommonEvents {
             FHResearch.sendSyncPacket(currentPlayer);
             FHNetwork.send(currentPlayer,new FHDatapackSyncPacket());
             FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayerEntity) event.getEntity())));
-            FHCapabilities.CLIMATE_DATA.getCapability(serverWorld).ifPresent((cap) -> {
-                FHNetwork.send(currentPlayer,new FHClimatePacket(cap));
-            });
+            FHCapabilities.CLIMATE_DATA.getCapability(serverWorld).ifPresent((cap) -> FHNetwork.send(currentPlayer,new FHClimatePacket(cap)));
             //System.out.println("=x-x=");
             //System.out.println(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS.getValue(new ResourceLocation(FHMain.MODID,"add_loot")));
         }

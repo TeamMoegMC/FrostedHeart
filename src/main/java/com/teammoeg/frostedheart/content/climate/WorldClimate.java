@@ -19,13 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -183,31 +177,25 @@ public class WorldClimate implements NBTSerializable {
             data.populateDays();
         }
         if (ddate < 0 || dhours < 0 || ddate >= DAY_CACHE_LENGTH) return ImmutableList.of();
-        return new Iterable<Pair<Float, ClimateType>>() {
+        return () -> new Iterator<Pair<Float, ClimateType>>() {
+            int curddate = (int) ddate;
+            int curdhours = (int) (dhours - 1);
+
             @Override
-            public Iterator<Pair<Float, ClimateType>> iterator() {
-                return new Iterator<Pair<Float, ClimateType>>() {
-                    int curddate = (int) ddate;
-                    int curdhours = (int) (dhours - 1);
+            public boolean hasNext() {
+                return curddate < DAY_CACHE_LENGTH;
+            }
 
-                    @Override
-                    public boolean hasNext() {
-                        return curddate < DAY_CACHE_LENGTH;
-                    }
+            @Override
+            public Pair<Float, ClimateType> next() {
+                if (!hasNext()) return null;
+                curdhours++;
+                if (curdhours >= 24) {
+                    curdhours = 0;
+                    curddate++;
+                }
 
-                    @Override
-                    public Pair<Float, ClimateType> next() {
-                        if (!hasNext()) return null;
-                        curdhours++;
-                        if (curdhours >= 24) {
-                            curdhours = 0;
-                            curddate++;
-                        }
-
-                        return Pair.of(data.dailyTempData.get(curddate).getTemp(curdhours), data.dailyTempData.get(curddate).getType(curdhours));
-                    }
-
-                };
+                return Pair.of(data.dailyTempData.get(curddate).getTemp(curdhours), data.dailyTempData.get(curddate).getType(curdhours));
             }
 
         };
@@ -273,7 +261,7 @@ public class WorldClimate implements NBTSerializable {
      * @return Iterable of temperature
      */
     public static Iterable<Float> getFutureTempIterator(WorldClimate data, int deltaHours) {
-    	if(data==null)return Arrays.asList();
+    	if(data==null)return Collections.emptyList();
         long thours = data.clockSource.getHours() + deltaHours;
         long ddate = thours / 24 - data.clockSource.getDate() + 1;
         long dhours = thours % 24;
@@ -281,31 +269,25 @@ public class WorldClimate implements NBTSerializable {
             data.populateDays();
         }
         if (ddate < 0 || dhours < 0 || ddate >= DAY_CACHE_LENGTH) return ImmutableList.of();
-        return new Iterable<Float>() {
+        return () -> new Iterator<Float>() {
+            int curddate = (int) ddate;
+            int curdhours = (int) (dhours - 1);
+
             @Override
-            public Iterator<Float> iterator() {
-                return new Iterator<Float>() {
-                    int curddate = (int) ddate;
-                    int curdhours = (int) (dhours - 1);
+            public boolean hasNext() {
+                return curddate < DAY_CACHE_LENGTH;
+            }
 
-                    @Override
-                    public boolean hasNext() {
-                        return curddate < DAY_CACHE_LENGTH;
-                    }
+            @Override
+            public Float next() {
+                if (!hasNext()) return null;
+                curdhours++;
+                if (curdhours >= 24) {
+                    curdhours = 0;
+                    curddate++;
+                }
 
-                    @Override
-                    public Float next() {
-                        if (!hasNext()) return null;
-                        curdhours++;
-                        if (curdhours >= 24) {
-                            curdhours = 0;
-                            curddate++;
-                        }
-
-                        return data.dailyTempData.get(curddate).getTemp(curdhours);
-                    }
-
-                };
+                return data.dailyTempData.get(curddate).getTemp(curdhours);
             }
 
         };
@@ -411,10 +393,10 @@ public class WorldClimate implements NBTSerializable {
         //model : 8->0 : 0->-30 : -30->-50= 1 : 2 : 2
         int f12cptime = 12 * 50;//1/2 storm period time
         long warmpeak = s + 56 * 50;//warm period time-1/4 storm period time
-        long coldpeak = (long) (warmpeak + 3 * f12cptime);
-        long coldend = (long) (coldpeak + 1 * f12cptime);
+        long coldpeak = warmpeak + 3 * f12cptime;
+        long coldend = coldpeak + f12cptime;
         //this.tempEventStream.add(new TempEvent(s-2*50,s+12*50,0,s+24*50,0,s+36*50,s+42*50,true,true));
-        this.tempEventStream.add(new ClimateEvent(s + 0 * 50, warmpeak, 8, coldpeak, -50, coldend, coldend + 72 * 50, true, true));
+        this.tempEventStream.add(new ClimateEvent(s, warmpeak, 8, coldpeak, -50, coldend, coldend + 72 * 50, true, true));
         lasthour = -1;
         lastday = -1;
         this.updateCache(w);
@@ -566,7 +548,7 @@ public class WorldClimate implements NBTSerializable {
                         lastLevel = 1;
                         frames.add(TemperatureFrame.increase(i, 1));
                     }
-                } else if (f >= 0 - 2) {
+                } else if (f >= -2) {
                     if (lastLevel < 0) {
                         lastLevel = 0;
                         frames.add(TemperatureFrame.calm(i, 0));
@@ -620,7 +602,7 @@ public class WorldClimate implements NBTSerializable {
             return 2;
         } else if (temp >= WorldTemperature.WARM_PERIOD_LOWER_PEAK - 3) {
             return 1;
-        } else if (temp <= 0 - 2) {
+        } else if (temp <= -2) {
             for (int j = WorldTemperature.BOTTOMS.length - 1; j >= 0; j--) {//check out its level
                 float b = WorldTemperature.BOTTOMS[j];
                 if (temp < b) {//just acrosss a level
@@ -741,8 +723,8 @@ public class WorldClimate implements NBTSerializable {
 
     @Override
     public String toString() {
-        return "{tempEventStream=\n" + String.join(",", tempEventStream.stream().map(Object::toString).collect(Collectors.toList())) + ",\n clockSource=" + clockSource
-                + ",\n daycache=" + dailyTempData.stream().flatMap(t -> Arrays.stream(t.hourData)).map(t -> t.getTemp()).map(Object::toString).reduce("", (a, b) -> a + b + ",") + ",\n frames=" + String.join(",", IntStream.range(0, frames.length).mapToObj(i -> frames[i]).map(TemperatureFrame::unpack).map(String::valueOf).collect(Collectors.toList())) + "}";
+        return "{tempEventStream=\n" + tempEventStream.stream().map(Object::toString).collect(Collectors.joining(",")) + ",\n clockSource=" + clockSource
+                + ",\n daycache=" + dailyTempData.stream().flatMap(t -> Arrays.stream(t.hourData)).map(HourData::getTemp).map(Object::toString).reduce("", (a, b) -> a + b + ",") + ",\n frames=" + IntStream.range(0, frames.length).mapToObj(i -> frames[i]).map(TemperatureFrame::unpack).map(String::valueOf).collect(Collectors.joining(",")) + "}";
     }
 
     /**

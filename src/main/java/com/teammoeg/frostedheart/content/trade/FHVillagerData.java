@@ -45,7 +45,6 @@ import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.potion.Effects;
 import net.minecraft.stats.ServerStatisticsManager;
-import net.minecraft.stats.StatisticsManager;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.ResourceLocation;
@@ -242,7 +241,6 @@ public class FHVillagerData implements INamedContainerProvider {
         initLegacy(parent);
         long day = WorldClimate.getWorldDay(w);
         FHUtils.ofMap(relations, trigger.getUniqueID()).ifPresent(t -> t.update(day));
-        ;
         if (lastUpdated == -1) {
             lastUpdated = day - 1;
         }

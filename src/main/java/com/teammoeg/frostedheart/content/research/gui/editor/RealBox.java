@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
+import com.teammoeg.frostedheart.FHMain;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 
 public class RealBox extends LabeledTextBox {
@@ -31,16 +32,13 @@ public class RealBox extends LabeledTextBox {
         try {
             return Double.parseDouble(getText());
         } catch (NumberFormatException ex) {
-
+            FHMain.LOGGER.error("Error parsing number", ex);
+            return Double.parseDouble(orig);
         }
-        return Double.parseDouble(orig);
     }
-
-    ;
 
     public void setNum(double number) {
         super.setText(String.valueOf(number));
     }
 
-    ;
 }

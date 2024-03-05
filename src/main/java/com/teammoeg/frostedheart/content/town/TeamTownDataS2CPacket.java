@@ -22,10 +22,9 @@ package com.teammoeg.frostedheart.content.town;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.base.network.NBTMessage;
-import com.teammoeg.frostedheart.team.ClientDataHolder;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.FHClientTeamDataManager;
+import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
@@ -35,7 +34,7 @@ public class TeamTownDataS2CPacket extends NBTMessage {
 
 
     public TeamTownDataS2CPacket(PlayerEntity player) {
-        super(SpecialDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA).serialize(true));
+        super(FHTeamDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA).serialize(true));
     }
 
 	public TeamTownDataS2CPacket(PacketBuffer buffer) {
@@ -47,9 +46,7 @@ public class TeamTownDataS2CPacket extends NBTMessage {
     }
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> {
-            ClientDataHolder.INSTANCE.getInstance().getData(SpecialDataTypes.TOWN_DATA).deserialize(getTag(), true);
-        });
+        context.get().enqueueWork(() -> FHClientTeamDataManager.INSTANCE.getInstance().getData(SpecialDataTypes.TOWN_DATA).deserialize(getTag(), true));
         context.get().setPacketHandled(true);
     }
 }

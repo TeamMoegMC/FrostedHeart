@@ -58,7 +58,7 @@ public class MechCalcRenderer extends TileEntityRenderer<MechCalcTileEntity> {
             return;
         matrixStack.push();
         Direction rd = te.getDirection().rotateY();
-        double forward = (te.process / 1067) / 16d;
+        double forward = ((double) te.process / 1067) / 16d;
         matrixStack.translate(rd.getXOffset() * forward, 0, rd.getZOffset() * forward);
         List<BakedQuad> quads = MODEL.getNullQuads(te.getDirection(), state, new SinglePropertyModelData<>(register, Model.IE_OBJ_STATE));
         RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.getSolid()), matrixStack, combinedLightIn, combinedOverlayIn);

@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.content.town;
 
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.PlayerEntity;
@@ -36,7 +36,7 @@ import java.util.UUID;
 
 /**
  * The town for a player team.
- *
+ * <p>
  * The TeamTown is only an interface of the underlying TeamTownData.
  * You may use this to access or modify town data.
  */
@@ -70,7 +70,7 @@ public class TeamTown implements Town {
      * @return the town
      */
     public static TeamTown from(PlayerEntity player) {
-        TeamTownData data = SpecialDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA);
+        TeamTownData data = FHTeamDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA);
         return new TeamTown(data);
     }
 
@@ -80,7 +80,7 @@ public class TeamTown implements Town {
      * @return the town
      */
     public static TeamTown from(Team team) {
-        TeamTownData data = SpecialDataManager.getDataByTeam(team).getData(SpecialDataTypes.TOWN_DATA);
+        TeamTownData data = FHTeamDataManager.getDataByTeam(team).getData(SpecialDataTypes.TOWN_DATA);
         return new TeamTown(data);
     }
 
@@ -98,7 +98,7 @@ public class TeamTown implements Town {
     @Override
     public double add(TownResourceType name, double val, boolean simulate) {
         int newVal = storage.getOrDefault(name, 0);
-        newVal += val * 1000;
+        newVal += (int) (val * 1000);
         int max = getIntMaxStorage(name) - backupStorage.getOrDefault(name, 0);
         int remain = 0;
         if (newVal > max) {
@@ -122,7 +122,7 @@ public class TeamTown implements Town {
         int curVal = storage.getOrDefault(name, 0);
         int buVal = backupStorage.getOrDefault(name, 0);
         int remain = 0;
-        servVal -= val * 1000;
+        servVal -= (int) (val * 1000);
         if (servVal < 0) {
             curVal += servVal;
             servVal = 0;
@@ -226,7 +226,7 @@ public class TeamTown implements Town {
     }
 
     public void finishWork() {
-        costedService.forEach((k, v) -> storage.put(k, v));
+        storage.putAll(costedService);
         for (Entry<TownResourceType, Integer> ent : storage.entrySet()) {
             int max = getIntMaxStorage(ent.getKey());
             if (ent.getValue() > max) {

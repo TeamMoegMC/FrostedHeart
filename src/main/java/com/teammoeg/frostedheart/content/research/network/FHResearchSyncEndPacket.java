@@ -32,22 +32,14 @@ public class FHResearchSyncEndPacket implements FHMessage {
     public FHResearchSyncEndPacket() {
     }
 
-    /**
-	 * @param buffer  
-	 */
     public FHResearchSyncEndPacket(PacketBuffer buffer) {
     }
 
-    /**
-	 * @param buffer  
-	 */
     public void encode(PacketBuffer buffer) {
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> {
-            FHResearch.endPacketInit();
-        });
+        context.get().enqueueWork(FHResearch::endPacketInit);
         context.get().setPacketHandled(true);
     }
 }

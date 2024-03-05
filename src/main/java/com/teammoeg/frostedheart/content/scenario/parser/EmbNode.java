@@ -47,7 +47,7 @@ public class EmbNode implements Node {
 
     @Override
     public String getText() {
-        return "@emb exp=\"" + exp.replaceAll("\"", "\\\"") + "\"";
+        return "@emb exp=\"" + exp.replaceAll("\"", "\"") + "\"";
     }
 
     @Override

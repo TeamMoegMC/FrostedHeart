@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.trade.gui;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
@@ -290,8 +291,7 @@ public class TradeScreen extends BaseScreen {
     public void updateOffers() {
         for (FakeSlot fs : slots)
             fs.clear();
-        for (int i = 0; i < sds.length; i++)
-            sds[i] = null;
+        Arrays.fill(sds, null);
         if (tab.getState()) {
             int start = 0;
             int end = Math.min(cx.policy.getBuys().size(), start + 27);

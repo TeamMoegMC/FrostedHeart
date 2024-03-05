@@ -19,10 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.research.effects;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -30,7 +27,7 @@ import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -64,9 +61,7 @@ public class EffectCommand extends Effect {
         super();
         rewards = new ArrayList<>();
 
-        for (String stack : cmds) {
-            rewards.add(stack);
-        }
+        rewards.addAll(Arrays.asList(cmds));
     }
 
     @Override
@@ -89,8 +84,7 @@ public class EffectCommand extends Effect {
 
     @Override
     public List<ITextComponent> getDefaultTooltip() {
-        List<ITextComponent> tooltip = new ArrayList<>();
-        return tooltip;
+        return new ArrayList<>();
     }
 
     @Override
@@ -107,8 +101,8 @@ public class EffectCommand extends Effect {
         overrides.put("z", pos.getZ());
 
         overrides.put("t", team.getHolder().getTeam().get().getStringID());
-        Commands cmds = SpecialDataManager.getServer().getCommandManager();
-        CommandSource source = SpecialDataManager.getServer().getCommandSource();
+        Commands cmds = FHTeamDataManager.getServer().getCommandManager();
+        CommandSource source = FHTeamDataManager.getServer().getCommandSource();
         for (String s : rewards) {
 
             for (Map.Entry<String, Object> entry : overrides.entrySet()) {

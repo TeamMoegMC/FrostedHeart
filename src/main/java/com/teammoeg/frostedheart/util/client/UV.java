@@ -58,7 +58,7 @@ public class UV extends Rect {
 
     //blit with width transition and  custom texture size
     public void blit(AbstractGui gui, MatrixStack s, int lx, int ly, int w, int textureW, int textureH) {
-        gui.blit(s, lx, ly, x, y, w, h, textureW, textureH);
+        AbstractGui.blit(s, lx, ly, x, y, w, h, textureW, textureH);
     }
 
     //normal blit add point

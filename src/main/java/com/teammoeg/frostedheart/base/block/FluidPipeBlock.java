@@ -140,7 +140,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 			.getFluidState(context.getPos());
 		return updateBlockState(getDefaultState(), context.getNearestLookingDirection(), null, context.getWorld(),
 			context.getPos()).with(BlockStateProperties.WATERLOGGED,
-				Boolean.valueOf(FluidState.getFluid() == Fluids.WATER));
+                FluidState.getFluid() == Fluids.WATER);
 	}
 
 	@Override

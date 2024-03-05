@@ -72,8 +72,6 @@ public abstract class PolicyGroup implements Writeable {
 
     public abstract void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve);
 
-    ;
-
     @Override
     public JsonElement serialize() {
         JsonObject jo = new JsonObject();

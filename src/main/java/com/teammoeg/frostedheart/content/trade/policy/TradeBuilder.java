@@ -171,8 +171,7 @@ public class TradeBuilder implements IFinishedRecipe {
         /**
          * Require condition.<br>
          *
-         * @param flag flag name
-         * @param val  the value
+         * @param pc the condition<br>
          * @return returns self
          */
         public ConditionBuilder<T> condition(PolicyCondition pc) {
@@ -398,7 +397,7 @@ public class TradeBuilder implements IFinishedRecipe {
          * Extends a policy and add to policy.<br>
          * This will omit stock settings.
          *
-         * @param name the policy builder<br>
+         * @param b the policy builder<br>
          * @return returns self
          */
         public GroupBuilder extend(TradeBuilder b) {

@@ -114,9 +114,7 @@ public class ClientRegistryEvents {
     }
 	public static KeyBinding key_skipDialog = new KeyBinding("key.frostedheart.skip_dialog", 
 		GLFW.GLFW_KEY_Z, "key.categories.frostedheart");
-    /**
-     * @param event
-     */
+
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
         // Register screens
@@ -222,10 +220,7 @@ public class ClientRegistryEvents {
                     // 9 is the length of "textures/" & 4 is the length of ".png"
 
                     .map(rl -> new ResourceLocation(rl.getNamespace(), rl.getPath().substring(9, rl.getPath().length() - 4)))
-                    .map(rl -> {
-                        FHMain.LOGGER.info("stitching texture" + rl.toString());
-                        return rl;
-                    })
+                    .peek(rl -> FHMain.LOGGER.info("stitching texture" + rl))
                     .forEach(event::addSprite);
         }
     }
@@ -242,10 +237,6 @@ public class ClientRegistryEvents {
         ScreenManager.registerFactory(type, factory);
     }
 
-    /**
-     * @param event
-     */
-    @SuppressWarnings("resource")
     @SubscribeEvent
     public static void registerParticleFactories(ParticleFactoryRegisterEvent event) {
         Minecraft.getInstance().particles.registerFactory(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);

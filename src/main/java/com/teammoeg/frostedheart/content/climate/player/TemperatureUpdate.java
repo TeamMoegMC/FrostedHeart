@@ -68,7 +68,7 @@ public class TemperatureUpdate {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-            double calculatedTarget = PlayerTemperatureData.getCapability(event.player).map(t->t.getBodyTemp()).orElse(0f);
+            double calculatedTarget = PlayerTemperatureData.getCapability(event.player).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
             if (!(player.isCreative() || player.isSpectator())) {
                 if (calculatedTarget > 1 || calculatedTarget < -1) {
                     if (!player.isPotionActive(FHEffects.HYPERTHERMIA.get())
@@ -149,7 +149,7 @@ public class TemperatureUpdate {
                         player.addPotionEffect(new EffectInstance(FHEffects.WET.get(), 100, 0));
                 }
                 //load current data
-                float current = PlayerTemperatureData.getCapability(event.player).map(t->t.getBodyTemp()).orElse(0f);
+                float current = PlayerTemperatureData.getCapability(event.player).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
                 double tspeed = FHConfig.SERVER.tempSpeed.get();
                 if (current < 0) {
                     float delt = (float) (FHConfig.SERVER.tdiffculty.get().self_heat.apply(player) * tspeed);
@@ -173,7 +173,7 @@ public class TemperatureUpdate {
                 //Day-night temperature
                 float skyLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(pos);
                 float gameTime = world.getDayTime() % 24000L;
-                gameTime = gameTime / (200 / 3);
+                gameTime = gameTime / ((float) 200 / 3);
                 gameTime = MathHelper.sin((float) Math.toRadians(gameTime));
                 envtemp += bt;
                 envtemp += skyLight > 5.0F ?
@@ -233,7 +233,7 @@ public class TemperatureUpdate {
                     player.attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (dheat) * 10);
                 else if (dheat < -0.1)
                     player.attackEntityFrom(FHDamageSources.HYPOTHERMIA_INSTANT, (-dheat) * 10);
-                current += dheat * tspeed;
+                current += (float) (dheat * tspeed);
                 if (current < -10)
                     current = -10;
                 else if (current > 10)

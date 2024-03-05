@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
+import com.teammoeg.frostedheart.FHMain;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 
 public class NumberBox extends LabeledTextBox {
@@ -31,16 +32,14 @@ public class NumberBox extends LabeledTextBox {
         try {
             return Long.parseLong(getText());
         } catch (NumberFormatException ex) {
-
+            FHMain.LOGGER.error("Error parsing number", ex);
+            return Long.parseLong(orig);
         }
-        return Long.parseLong(orig);
-    }
 
-    ;
+    }
 
     public void setNum(long number) {
         super.setText(String.valueOf(number));
     }
 
-    ;
 }

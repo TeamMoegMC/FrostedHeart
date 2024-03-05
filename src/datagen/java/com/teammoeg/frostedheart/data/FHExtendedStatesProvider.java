@@ -269,7 +269,7 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
             return (String)f.get(state);
         } catch(Exception e)
         {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to get name of RenderState instance", e);
         }
     }
 }

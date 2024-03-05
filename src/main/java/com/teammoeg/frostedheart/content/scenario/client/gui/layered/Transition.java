@@ -5,9 +5,7 @@ public enum Transition implements TransitionFunction{
 		o.opacity=o.opacity*(1-t);
 		n.opacity=n.opacity*t;
 	}),
-	fadein((o,n,t)->{
-		n.opacity=n.opacity*t;
-	}),
+	fadein((o,n,t)-> n.opacity=n.opacity*t),
 	fadeout((o,n,t)->{
 		o.opacity=o.opacity*(1-t);
 		o.setForceFirst(true);
@@ -28,18 +26,10 @@ public enum Transition implements TransitionFunction{
 		o.x=(int) (o.x+t*o.getScreenWidth());
 		n.x=(int) (n.x-(1-t)*o.getScreenWidth());
 	}),
-	nup((o,n,t)->{
-		n.y=(int) (n.y+(1-t)*o.getScreenHeight());
-	}),
-	ndown((o,n,t)->{
-		n.y=(int) (n.y-(1-t)*o.getScreenHeight());
-	}),
-	nright((o,n,t)->{
-		n.x=(int) (n.x+(1-t)*o.getScreenWidth());
-	}),
-	nleft((o,n,t)->{
-		n.x=(int) (n.x-(1-t)*o.getScreenWidth());
-	}),
+	nup((o,n,t)-> n.y=(int) (n.y+(1-t)*o.getScreenHeight())),
+	ndown((o,n,t)-> n.y=(int) (n.y-(1-t)*o.getScreenHeight())),
+	nright((o,n,t)-> n.x=(int) (n.x+(1-t)*o.getScreenWidth())),
+	nleft((o,n,t)-> n.x=(int) (n.x-(1-t)*o.getScreenWidth())),
 	overup((o,n,t)->{
 		//n.setY((int) ((1-t)*n.height))
 		int oldy=n.y;
@@ -49,12 +39,8 @@ public enum Transition implements TransitionFunction{
 		//n.setContentY((int) ((1-t)*n.height));
 
 	}),
-	overdown((o,n,t)->{
-		n.height=(int) (t*n.height);
-	}),
-	overright((o,n,t)->{
-		n.width=(int) (t*n.width);
-	}),
+	overdown((o,n,t)-> n.height=(int) (t*n.height)),
+	overright((o,n,t)-> n.width=(int) (t*n.width)),
 	overleft((o,n,t)->{
 		int oldx=n.x;
 		n.x=(int) ((1-t)*n.width);
@@ -63,8 +49,8 @@ public enum Transition implements TransitionFunction{
 	})
 	;
 
-	TransitionFunction func;
-	private Transition(TransitionFunction func) {
+	final TransitionFunction func;
+	Transition(TransitionFunction func) {
 		this.func = func;
 	}
 	@Override

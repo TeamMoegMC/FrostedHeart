@@ -27,14 +27,14 @@ import net.minecraft.world.server.ServerWorld;
 
 /**
  * Data for a worker (town block) in the town.
- *
+ * <p>
  * A TownWorkerData is the basic data component in a TeamTownData.
  * It specifies the type of worker, the position of worker, the work data.
- *
+ * <p>
  * The work data is especially important, as it stores additional data that
  * should be synced with the entire town. It is an interface between the town
  * and the worker.
- *
+ * <p>
  * There can be multiple worker data with the same worker type.
  */
 public class TownWorkerData {
@@ -80,8 +80,7 @@ public class TownWorkerData {
     }
 
     public long getPriority() {
-        long prio = (priority & 0xFFFFFFFF) << 32 + (type.getPriority() & 0xFFFFFFFF);
-        return prio;
+        return (long) (priority) << 32 + (type.getPriority());
     }
 
     public TownWorkerType getType() {

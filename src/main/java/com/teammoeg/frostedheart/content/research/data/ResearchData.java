@@ -280,9 +280,7 @@ public class ResearchData implements IEnvironment {
         if (cn.contains("level"))
             level = cn.getInt("level");
         data.clear();
-        cn.getList("clues", Constants.NBT.TAG_COMPOUND).stream().map(t -> (CompoundNBT) t).forEach(e -> {
-            data.put(e.getInt("id"), ClueDatas.read(e.getCompound("data")));
-        });
+        cn.getList("clues", Constants.NBT.TAG_COMPOUND).stream().map(t -> (CompoundNBT) t).forEach(e -> data.put(e.getInt("id"), ClueDatas.read(e.getCompound("data"))));
         // rs=FHResearch.getResearch(cn.getInt("research"));
     }
 
@@ -324,7 +322,7 @@ public class ResearchData implements IEnvironment {
                 contribution += ac.getResearchContribution();
         if (contribution >= 0.999)
             return r.getRequiredPoints();
-        currentProgress += contribution * r.getRequiredPoints();
+        currentProgress += (long) (contribution * r.getRequiredPoints());
         return Math.min(currentProgress, r.getRequiredPoints());
     }
 
@@ -420,7 +418,7 @@ public class ResearchData implements IEnvironment {
 	@Override
 	public double get(String key) {
 		if (key.equals("level"))
-            return (double) level;
+            return level;
 		return 0;
 	}
 

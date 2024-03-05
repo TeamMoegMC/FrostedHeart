@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.scheduler;
+package com.teammoeg.frostedheart.base.scheduler;
 
 import net.minecraft.util.math.BlockPos;
 

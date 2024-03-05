@@ -98,5 +98,4 @@ public abstract class DeployerActorInstanceMixin extends ActorInstance {
         transformModel(msr, pole, hand, yRot, zRot, zRotPole);
     }
 
-    ;
 }

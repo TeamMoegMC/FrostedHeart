@@ -63,10 +63,7 @@ public class TextInfo {
 
 		public void checkIsFinished() {
 			origin.accept((i, s, c) -> {
-				isFinished = true;
-				if (i >= limit) {
-					isFinished = false;
-				}
+                isFinished = i < limit;
 				return true;
 			});
 		}
@@ -120,7 +117,7 @@ public class TextInfo {
 	}
 
 	public boolean hasText() {
-		return (text instanceof SizedReorderingProcessor) ? ((SizedReorderingProcessor) text).hasText() : true;
+		return !(text instanceof SizedReorderingProcessor) || ((SizedReorderingProcessor) text).hasText();
 	}
 
 	public IReorderingProcessor getFinished() {

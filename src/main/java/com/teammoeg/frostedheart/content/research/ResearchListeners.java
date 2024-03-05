@@ -39,9 +39,8 @@ import com.teammoeg.frostedheart.content.research.research.clues.ItemClue;
 import com.teammoeg.frostedheart.content.research.research.clues.KillClue;
 import com.teammoeg.frostedheart.content.research.research.clues.MinigameClue;
 import com.teammoeg.frostedheart.content.research.research.clues.TickListenerClue;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.RegistryUtils;
@@ -156,7 +155,7 @@ public class ResearchListeners {
                 }
             } else
                 this.removeIf(cl -> cl.getListener() == c);
-            return super.add(new ListenerInfo<T>(c, t));
+            return super.add(new ListenerInfo<>(c, t));
         }
 
         public void call(UUID t, Consumer<T> c) {
@@ -213,7 +212,7 @@ public class ResearchListeners {
 
         @Override
         public IRecipe<?> getObject(String s) {
-            return SpecialDataManager.getRecipeManager().getRecipe(new ResourceLocation(s)).orElse(null);
+            return FHTeamDataManager.getRecipeManager().getRecipe(new ResourceLocation(s)).orElse(null);
         }
 
         @Override
@@ -247,7 +246,7 @@ public class ResearchListeners {
             if (player instanceof FakePlayer) return false;
             if (player.getEntityWorld().isRemote)
                 return ClientResearchDataAPI.getData().block.has(b);
-            return ResearchDataAPI.getData((ServerPlayerEntity) player).block.has(b);
+            return ResearchDataAPI.getData(player).block.has(b);
         }
         return true;
 
@@ -260,14 +259,13 @@ public class ResearchListeners {
         return true;
     }
 
-    @SuppressWarnings("resource")
     public static boolean canUseRecipe(PlayerEntity s, IRecipe<?> r) {
         if (s == null)
             return canUseRecipe(r);
         if (recipe.has(r)) {
             if (s.getEntityWorld().isRemote)
                 return ClientResearchDataAPI.getData().crafting.has(r);
-            return ResearchDataAPI.getData((ServerPlayerEntity) s).crafting.has(r);
+            return ResearchDataAPI.getData(s).crafting.has(r);
         }
         return true;
     }
@@ -366,12 +364,12 @@ public class ResearchListeners {
     }
 
     public static void ServerReload() {
-        if (SpecialDataManager.INSTANCE == null) return;
+        if (FHTeamDataManager.INSTANCE == null) return;
         FHMain.LOGGER.info("reloading research system");
-        SpecialDataManager.INSTANCE.save();
-        SpecialDataManager.INSTANCE.load();
+        FHTeamDataManager.INSTANCE.save();
+        FHTeamDataManager.INSTANCE.load();
         FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
-        SpecialDataManager.INSTANCE.getAllData(SpecialDataTypes.RESEARCH_DATA).forEach(t -> t.sendUpdate());
+        FHTeamDataManager.INSTANCE.getAllData(SpecialDataTypes.RESEARCH_DATA).forEach(TeamResearchData::sendUpdate);
     }
 
     public static ItemStack submitItem(ServerPlayerEntity s, ItemStack i) {

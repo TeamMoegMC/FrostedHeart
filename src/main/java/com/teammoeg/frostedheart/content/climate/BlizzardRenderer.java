@@ -43,9 +43,9 @@ import net.minecraft.world.gen.Heightmap;
  * with appropriate context after confirming that a blizzard is present in the world.
  * <p>
  * We want to thank BetterWeather's author CorgiTaco, who wrote the code we adapted from.
- * Original Code: https://github.com/CorgiTaco/Better-Weather
+ * Original Code: <a href="https://github.com/CorgiTaco/Better-Weather">...</a>
  * This file is licensed under the same license LGPL 3.0
- * Original License: https://github.com/CorgiTaco/Better-Weather/blob/Forge-1.16.X/LICENSE.txt
+ * Original License: <a href="https://github.com/CorgiTaco/Better-Weather/blob/Forge-1.16.X/LICENSE.txt">...</a>
  */
 public class BlizzardRenderer {
     private final static float[] rainSizeXMemento = new float[1024];
@@ -88,8 +88,8 @@ public class BlizzardRenderer {
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         BlockPos.Mutable blockPos = new BlockPos.Mutable();
         Random random = new Random(
-                cameraBlockPosX * cameraBlockPosX * 3121
-                        + cameraBlockPosZ * 45238971 ^ cameraBlockPosZ * cameraBlockPosZ * 418711
+                (long) cameraBlockPosX * cameraBlockPosX * 3121
+                        + cameraBlockPosZ * 45238971L ^ (long) cameraBlockPosZ * cameraBlockPosZ * 418711
                         + (int) (ticksAndPartialTicks * 13761)
         );
         for (int currentlyRenderingZ = cameraBlockPosZ - renderRadius;
@@ -118,9 +118,6 @@ public class BlizzardRenderer {
                     blockPos.setPos(currentlyRenderingX, renderingYLowerBound, currentlyRenderingZ);
 
                     if (i1 != 1) {
-                        if (i1 >= 0) {
-                            tessellator.draw();
-                        }
 
                         i1 = 1;
                         mc.getTextureManager()

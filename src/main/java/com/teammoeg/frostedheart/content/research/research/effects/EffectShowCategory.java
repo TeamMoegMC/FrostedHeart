@@ -84,8 +84,7 @@ public class EffectShowCategory extends Effect {
 
     @Override
     public List<ITextComponent> getDefaultTooltip() {
-        List<ITextComponent> tooltip = new ArrayList<>();
-        return tooltip;
+        return new ArrayList<>();
     }
 
     @Override

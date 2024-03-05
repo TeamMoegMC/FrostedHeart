@@ -15,11 +15,13 @@ public abstract class SerializerRegistry<T, R> {
 
 	protected void putSerializer(String type, Function<R, T> s) {
 		from.put(type, s);
-	};
-	protected void putDeserializer(String type, Function<T, R> s) {
+	}
+
+    protected void putDeserializer(String type, Function<T, R> s) {
 		to.put(type, s);
-	};
-	protected abstract void writeType(Pair<Integer, String> type,R obj);
+	}
+
+    protected abstract void writeType(Pair<Integer, String> type,R obj);
 	protected abstract String readType(R obj);
 	public T read(R fromObj) {
 		String type=readType(fromObj);

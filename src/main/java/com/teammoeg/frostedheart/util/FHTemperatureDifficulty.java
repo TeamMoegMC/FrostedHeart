@@ -31,7 +31,7 @@ public enum FHTemperatureDifficulty {
 
     public final Function<ServerPlayerEntity, Float> self_heat;
 
-    private FHTemperatureDifficulty(Function<ServerPlayerEntity, Float> self_heat) {
+    FHTemperatureDifficulty(Function<ServerPlayerEntity, Float> self_heat) {
         this.self_heat = self_heat;
 
     }

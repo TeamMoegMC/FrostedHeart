@@ -47,9 +47,7 @@ public class EndPointDataPacket implements FHMessage {
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> {
-        	ClientHeatHandler.loadEndPoint(data);
-        });
+        context.get().enqueueWork(() -> ClientHeatHandler.loadEndPoint(data));
         context.get().setPacketHandled(true);
     }
 }

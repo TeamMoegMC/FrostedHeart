@@ -34,7 +34,7 @@ import net.minecraft.world.gen.feature.template.Template;
 import net.minecraft.world.gen.feature.template.TemplateManager;
 /**
  * Automatically remove specific blocks from structures
- * 
+ * <p>
  * */
 @Mixin(TemplateManager.class)
 public abstract class TemplateManagerMixin {

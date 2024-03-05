@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.util.evaluator;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 class ExprNode implements Node {
@@ -62,8 +61,8 @@ class ExprNode implements Node {
     public Node simplify() {
 
         primaries = 0;
-        positive.replaceAll(n -> n.simplify());
-        negative.replaceAll(n -> n.simplify());
+        positive.replaceAll(Node::simplify);
+        negative.replaceAll(Node::simplify);
         //System.out.println("f:"+this.toString());
         List<Node> pcopy = new ArrayList<>(positive);
         for (Node n : pcopy) {//combine
@@ -122,22 +121,12 @@ class ExprNode implements Node {
 		}
 		System.out.println("xe");*/
         if (!positive.isEmpty()) {
-            x = String.join("+", new Iterable<String>() {
-                @Override
-                public Iterator<String> iterator() {
-                    return positive.stream().map(n -> n.toString()).iterator();
-                }
-            });
+            x = String.join("+", (Iterable<String>) () -> positive.stream().map(Object::toString).iterator());
         } else if (!negative.isEmpty())
             x = "0";
         if (!negative.isEmpty()) {
             x += "-";
-            x += String.join("-", new Iterable<String>() {
-                @Override
-                public Iterator<String> iterator() {
-                    return negative.stream().map(n -> n.toString()).iterator();
-                }
-            });
+            x += String.join("-", (Iterable<String>) () -> negative.stream().map(Object::toString).iterator());
         }
         return x;
     }

@@ -26,14 +26,14 @@ import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
 import net.minecraft.tileentity.TileEntity;
 
 public interface IOwnerTile {
-    public static UUID getOwner(TileEntity te) {
+    static UUID getOwner(TileEntity te) {
         if (te instanceof IOwnerTile) {
             return ((IOwnerTile) te).getStoredOwner();
         }
         return null;
     }
 
-    public static void setOwner(TileEntity te, UUID id) {
+    static void setOwner(TileEntity te, UUID id) {
         if (te instanceof IOwnerTile) {
             ((IOwnerTile) te).setStoredOwner(id);
             if(te instanceof IOwnerChangeListener) {
@@ -42,7 +42,7 @@ public interface IOwnerTile {
         }
     }
 
-    public static void trySetOwner(TileEntity te, UUID id) {
+    static void trySetOwner(TileEntity te, UUID id) {
         if (te instanceof IOwnerTile && !(te instanceof ManagedOwnerTile)) {
             if (((IOwnerTile) te).getStoredOwner() == null) {
                 ((IOwnerTile) te).setStoredOwner(id);
@@ -53,7 +53,7 @@ public interface IOwnerTile {
         }
     }
 
-    public UUID getStoredOwner();
+    UUID getStoredOwner();
 
-    public void setStoredOwner(UUID id) ;
+    void setStoredOwner(UUID id) ;
 }

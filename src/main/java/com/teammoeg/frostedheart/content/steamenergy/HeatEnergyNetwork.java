@@ -37,7 +37,6 @@ import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import moze_intel.projecte.network.commands.RemoveEmcCMD;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Container;
@@ -241,7 +240,7 @@ public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializab
 	    	}
 	    	if(value<=0)break;
     	}
-    	data.values().forEach(t->t.pushData());
+    	data.values().forEach(EndPointData::pushData);
     }
 
     public void invalidate() {

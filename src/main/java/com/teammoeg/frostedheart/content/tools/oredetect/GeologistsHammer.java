@@ -132,7 +132,6 @@ public class GeologistsHammer extends FHLeveledTool {
 
     }
 
-    @SuppressWarnings("resource")
     @Override
     public ActionResultType onItemUse(ItemUseContext context) {
         return doProspect(context.getPlayer(), context.getWorld(), context.getPos(), context.getItem(), context.getHand());

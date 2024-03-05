@@ -32,8 +32,8 @@ public enum ResearchLevel {
     DIFFERENTIAL_ENGINE("differential_engine"),
     COMPUTING_MATRIX("computing_matrix");
 
-    ResourceLocation icon;
-    TranslationTextComponent name;
+    final ResourceLocation icon;
+    final TranslationTextComponent name;
 
     ResearchLevel(String levelName) {
         icon = FHMain.rl("textures/gui/research/level/" + levelName);

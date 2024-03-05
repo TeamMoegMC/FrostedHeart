@@ -31,7 +31,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 /**
  * Cause bee stay inside hive when cold, prevents them from dying
- * 
+ * <p>
  * */
 @Mixin(BeehiveTileEntity.class)
 public class BeeHiveMixin extends TileEntity {

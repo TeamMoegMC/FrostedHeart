@@ -150,9 +150,7 @@ public class EditListDialog<T> extends EditDialog {
         }
     }
 
-    public static final Editor<Collection<String>> STRING_LIST = (p, l, v, c) -> {
-        new EditListDialog<>(p, l, v, "", EditPrompt.TEXT_EDITOR, e -> e, c).open();
-    };
+    public static final Editor<Collection<String>> STRING_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, "", EditPrompt.TEXT_EDITOR, e -> e, c).open();
 
     private final Consumer<Collection<T>> callback;
 

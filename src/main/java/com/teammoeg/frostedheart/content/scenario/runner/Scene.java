@@ -177,9 +177,8 @@ public abstract class Scene {
 	public boolean tickWait() {
 		if (waiting > 0) {
 			waiting--;
-	
-			if (waiting <= 0)
-				return true;
+
+            return waiting <= 0;
 		}
 		return false;
 	}

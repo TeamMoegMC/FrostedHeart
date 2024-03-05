@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.climate.player;
 
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,7 +29,7 @@ import java.util.Random;
 
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
-import com.teammoeg.frostedheart.content.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.util.MersenneTwister;
 
 import net.minecraft.block.BlockState;
@@ -265,9 +264,9 @@ public class SurroundingTemperatureSimulator {
                 bm.setY((int) qy[i]);
                 bm.setZ((int) qz[i]);
                 BlockPos bp=bm.toImmutable();
-                heat += getHeat(bp)
-                        * MathHelper.lerp(MathHelper.clamp(-vy[vid[i]], 0, 0.4) * 2.5, 1, 0.5); // add heat
-                wind +=getAir(bp)?MathHelper.lerp((MathHelper.clamp(Math.abs(vy[vid[i]]), 0.2, 0.8)-0.2)/0.6, 2, 0.5):0;
+                heat += (float) (getHeat(bp)
+                                        * MathHelper.lerp(MathHelper.clamp(-vy[vid[i]], 0, 0.4) * 2.5, 1, 0.5)); // add heat
+                wind += getAir(bp)? (float) MathHelper.lerp((MathHelper.clamp(Math.abs(vy[vid[i]]), 0.2, 0.8) - 0.2) / 0.6, 2, 0.5) :0;
             }
         }
         return Pair.of(heat / n, wind/n);
@@ -308,22 +307,20 @@ public class SurroundingTemperatureSimulator {
 
         float cblocktemp = 0;
         if (b.isLit()) {
-            boolean litOrActive = false;
-            if (bs.hasProperty(BlockStateProperties.LIT) && bs.get(BlockStateProperties.LIT))
-                litOrActive = true;
+            boolean litOrActive = bs.hasProperty(BlockStateProperties.LIT) && bs.get(BlockStateProperties.LIT);
             if (litOrActive)
                 cblocktemp += b.getTemp();
         } else
             cblocktemp += b.getTemp();
         if (b.isLevel()) {
             if (bs.hasProperty(BlockStateProperties.LEVEL_0_15)) {
-                cblocktemp *= (bs.get(BlockStateProperties.LEVEL_0_15) + 1) / 16;
+                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_0_15) + 1) / 16;
             } else if (bs.hasProperty(BlockStateProperties.LEVEL_0_8)) {
-                cblocktemp *= (bs.get(BlockStateProperties.LEVEL_0_8) + 1) / 9;
+                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_0_8) + 1) / 9;
             } else if (bs.hasProperty(BlockStateProperties.LEVEL_1_8)) {
-                cblocktemp *= (bs.get(BlockStateProperties.LEVEL_1_8)) / 8;
+                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_1_8)) / 8;
             } else if (bs.hasProperty(BlockStateProperties.LEVEL_0_3)) {
-                cblocktemp *= (bs.get(BlockStateProperties.LEVEL_0_3) + 1) / 4;
+                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_0_3) + 1) / 4;
             }
         }
         return new CachedBlockInfo(bs.getCollisionShape(world, pos), cblocktemp,isExpose);
@@ -334,7 +331,7 @@ public class SurroundingTemperatureSimulator {
      * cache in normal fetch
      */
     private CachedBlockInfo getInfoCached(BlockPos pos) {
-        return posinfo.computeIfAbsent(pos, p -> getInfo(p));
+        return posinfo.computeIfAbsent(pos, this::getInfo);
     }
 
     /**

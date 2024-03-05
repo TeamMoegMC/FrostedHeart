@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.research.research.effects;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.gson.JsonObject;
@@ -47,9 +48,7 @@ public class EffectItemReward extends Effect {
         super();
         rewards = new ArrayList<>();
 
-        for (ItemStack stack : stacks) {
-            rewards.add(stack);
-        }
+        rewards.addAll(Arrays.asList(stacks));
     }
 
     public EffectItemReward(JsonObject jo) {
@@ -72,7 +71,7 @@ public class EffectItemReward extends Effect {
 
     @Override
     public FHIcon getDefaultIcon() {
-        if (rewards.size() != 0) {
+        if (!rewards.isEmpty()) {
             return FHIcons.getStackIcons(rewards);
         }
         return FHIcons.nop();

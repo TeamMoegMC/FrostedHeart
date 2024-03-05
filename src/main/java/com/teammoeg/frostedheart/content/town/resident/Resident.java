@@ -23,7 +23,7 @@ import net.minecraft.nbt.CompoundNBT;
 
 /**
  * A resident of the town.
- *
+ * <p>
  * This is an abstract data type used in the town simulation.
  * For the actual entity, see {@link ResidentEntity}.
  */

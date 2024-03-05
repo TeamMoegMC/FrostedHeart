@@ -178,10 +178,7 @@ public class DeathInventoryData implements NBTSerializable {
         inv = null;
         calledClone = nbt.getBoolean("cloned");
         if (nbt.contains("data")) {
-            nbt.getList("data", Constants.NBT.TAG_COMPOUND).stream().map(t -> (CompoundNBT) t).findFirst().ifPresent(e->{
-            
-                inv = CopyInventory.deserializeNBT(e.getCompound("inv"));
-            });
+            nbt.getList("data", Constants.NBT.TAG_COMPOUND).stream().map(t -> (CompoundNBT) t).findFirst().ifPresent(e-> inv = CopyInventory.deserializeNBT(e.getCompound("inv")));
         } else if (nbt.contains("inv")) {
             inv = CopyInventory.deserializeNBT(nbt.getCompound("inv"));
         }

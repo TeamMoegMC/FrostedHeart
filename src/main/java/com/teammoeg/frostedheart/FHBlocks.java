@@ -61,6 +61,7 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
 import com.teammoeg.frostedheart.content.town.house.HouseBlock;
 
+import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -103,7 +104,7 @@ public class FHBlocks {
     public static RegistryObject<Block> wolfberry_bush_block = register("wolfberry_bush_block",()->new WolfBerryBushBlock( WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, berryBushBlocks, 2),"wolfberries",t->new FoodBlockItem(t, FHItems.createProps(), FHFoods.WOLFBERRIES));
     public static RegistryObject<Block> white_turnip_block = register("white_turnip_block",()->new WhiteTurnipBlock( WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, cropProps),(block) -> new FoodBlockItem(block, new Item.Properties().group(FHMain.itemGroup), FHFoods.WHITE_TURNIP));
     public static RegistryObject<Block> copper_gravel = register("copper_gravel",()->new FHBaseBlock( ore_gravel));
-    public static RegistryObject<Block> relic_chest = register("relic_chest",()->new RelicChestBlock());
+    public static RegistryObject<Block> relic_chest = register("relic_chest", RelicChestBlock::new);
     public static RegistryObject<Block> incubator1 = register("incubator",()->new IncubatorBlock( stoneDecoProps, FHTileTypes.INCUBATOR));
     public static RegistryObject<Block> incubator2 = register("heat_incubator",()->new HeatIncubatorBlock( metalDecoProps, FHTileTypes.INCUBATOR2));
   //public static RegistryObject<Block> access_control = register("access_control",()->new AccessControlBlock());
@@ -179,6 +180,13 @@ public class FHBlocks {
             .hardnessAndResistance(2, 10)
             .notSolid()));
     public static RegistryObject<Block> house = register("house",()->new HouseBlock( Block.Properties
+            .create(Material.WOOD)
+            .sound(SoundType.WOOD)
+            .setRequiresTool()
+            .harvestTool(ToolType.AXE)
+            .hardnessAndResistance(2, 6)
+            .notSolid()));
+    public static RegistryObject<Block> warehouse = register("warehouse",()->new WarehouseBlock( Block.Properties
             .create(Material.WOOD)
             .sound(SoundType.WOOD)
             .setRequiresTool()

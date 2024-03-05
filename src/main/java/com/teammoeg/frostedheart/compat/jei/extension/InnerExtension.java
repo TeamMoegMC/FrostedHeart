@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.compat.jei.extension;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
@@ -49,7 +50,7 @@ public class InnerExtension implements ICraftingCategoryExtension {
     public void setIngredients(IIngredients ingredients) {
         List<ItemStack> armors = new ArrayList<>();
         ArrayList<ItemStack> armorsout = new ArrayList<>();
-        RegistryUtils.getItems().stream().map(ItemStack::new).filter(i -> inner.matches(i)).forEach(e -> armors.add(e));
+        RegistryUtils.getItems().stream().map(ItemStack::new).filter(i -> inner.matches(i)).forEach(armors::add);
         armorsout.ensureCapacity(armors.size());
         armors.forEach(e -> {
             ItemStack n = e.copy();
@@ -58,7 +59,7 @@ public class InnerExtension implements ICraftingCategoryExtension {
         });
         ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(armors, Arrays.asList(inner.getIngredient().getMatchingStacks())));
 
-        ingredients.setOutputLists(VanillaTypes.ITEM, Arrays.asList(armorsout));
+        ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(armorsout));
     }
 
 }

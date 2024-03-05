@@ -129,9 +129,9 @@ public class TemperatureFrame {
      */
     public short packNoHour() {
         short ret = 0;
-        ret |= type.ordinal();
+        ret |= (short) type.ordinal();
         ret |= 0x80;//exist flag
-        ret |= toState << 8;
+        ret |= (short) (toState << 8);
         return ret;
     }
 

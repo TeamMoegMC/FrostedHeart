@@ -159,9 +159,6 @@ public class GenerateInfo {
         return this;
     }
 
-    /**
-	 * @param rnd  
-	 */
     public Collection<CardCombo> getExtraCombo(Random rnd) {
         return Collections.EMPTY_LIST;
 

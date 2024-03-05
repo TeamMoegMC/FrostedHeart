@@ -76,15 +76,8 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 
 
     @Override
-    protected boolean canDrainTankFrom(int iTank, Direction side) {
-        return false;
-    }
-
-    @Override
     protected boolean canFillTankFrom(int iTank, Direction side, FluidStack resource) {
-        if (side == this.getFacing() && this.posInMultiblock.equals(fluidIn))
-            return true;
-        return false;
+        return side == this.getFacing() && this.posInMultiblock.equals(fluidIn);
     }
 
 
@@ -218,7 +211,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 
         int liquidtick = data.map(t -> t.steamProcess).orElse(0);
         if (liquidtick >= rt) {
-            data.ifPresent(t -> t.steamProcess -= rt);
+            data.ifPresent(t -> t.steamProcess -= (int) rt);
             return;
         }
         GeneratorSteamRecipe sgr = GeneratorSteamRecipe.findRecipe(this.tank.getFluid());

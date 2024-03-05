@@ -154,20 +154,10 @@ public class CuriosCompat {
         }
     }
     public static Iterable<ItemStack> getAllCuriosIfVisible(LivingEntity el) {
-        return new Iterable<ItemStack>() {
-            @Override
-            public Iterator<ItemStack> iterator() {
-                return CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(h ->(Iterator<ItemStack>)new CuriosIterator(h.getCurios().values().iterator())).orElse(new EmptyIterator<>());
-            }
-        };
+        return () -> CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(h ->(Iterator<ItemStack>)new CuriosIterator(h.getCurios().values().iterator())).orElse(new EmptyIterator<>());
     }
     public static Iterable<Pair<String, ItemStack>> getAllCuriosAndSlotsIfVisible(LivingEntity el) {
-        return new Iterable<Pair<String, ItemStack>>() {
-            @Override
-            public Iterator<Pair<String, ItemStack>> iterator() {
-                return CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(h ->(Iterator<Pair<String,ItemStack>>)new SlottyCuriosIterator(h.getCurios().entrySet().iterator())).orElse(new EmptyIterator<>());
-            }
-        };
+        return () -> CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(h ->(Iterator<Pair<String,ItemStack>>)new SlottyCuriosIterator(h.getCurios().entrySet().iterator())).orElse(new EmptyIterator<>());
     }
 
     public static ItemStack getCuriosIfVisible(LivingEntity living, SlotTypePreset slot, Predicate<ItemStack> predicate) {

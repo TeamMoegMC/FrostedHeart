@@ -115,7 +115,7 @@ public class FHDrawingDeskOperationPacket implements FHMessage {
                 }
                 if (flag) {
                     ((DrawingDeskTileEntity) tile).updateGame(context.get().getSender());
-                    ((DrawingDeskTileEntity) tile).markDirty();
+                    tile.markDirty();
                     ((DrawingDeskTileEntity) tile).markContainingBlockForUpdate(null);
                 }
             }

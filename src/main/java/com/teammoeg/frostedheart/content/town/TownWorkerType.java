@@ -25,12 +25,12 @@ import net.minecraft.block.Block;
 
 /**
  * The second-lowest level town processing function.
- *
+ * <p>
  * Each TownWorkerType associates a block with a TownWorker.
- *
+ * <p>
  * For example, a HouseBlock is associated with a TownWorker functions
  * that cost food and add service.
- *
+ * <p>
  * Normally, you should add a new TownWorkerType for each new block type.
  */
 public enum TownWorkerType {
@@ -43,22 +43,23 @@ public enum TownWorkerType {
         double cost = 1;
         double actualCost = town.cost(TownResourceType.PREP_FOOD, cost, false);
         return cost == actualCost;
-    }, 0);
+    }, 0),
+    WAREHOUSE(FHBlocks.warehouse.get(), null, 0);
 
     /**
      * Town block.
      */
-    private Block block;
+    private final Block block;
 
     /**
      * The worker.
      */
-    private TownWorker worker;
+    private final TownWorker worker;
 
     /**
      * The priority.
      */
-    private int priority;
+    private final int priority;
 
     /**
      * Instantiates a new town worker type.
@@ -67,7 +68,7 @@ public enum TownWorkerType {
      * @param worker           the worker
      * @param internalPriority the internal priority
      */
-    private TownWorkerType(Block workerBlock, TownWorker worker, int internalPriority) {
+    TownWorkerType(Block workerBlock, TownWorker worker, int internalPriority) {
         this.block = workerBlock;
         this.worker = worker;
         this.priority = internalPriority;

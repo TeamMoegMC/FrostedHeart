@@ -53,7 +53,7 @@ public class DietValueRecipe extends IESerializableRecipe {
 
         @Override
         public DietValueRecipe readFromJson(ResourceLocation id, JsonObject json) {
-            Map<String, Float> m = json.get("groups").getAsJsonObject().entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getAsFloat()));
+            Map<String, Float> m = json.get("groups").getAsJsonObject().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getAsFloat()));
             Item i = RegistryUtils.getItem(new ResourceLocation(json.get("item").getAsString()));
             if (i == null || i == Items.AIR)
                 return null;
@@ -98,7 +98,7 @@ public class DietValueRecipe extends IESerializableRecipe {
 
     public Map<IDietGroup, Float> getValues() {
         if (cache == null)
-            cache = groups.entrySet().stream().collect(Collectors.toMap(e -> DietGroupCodec.getGroup(e.getKey()), e -> e.getValue()));
+            cache = groups.entrySet().stream().collect(Collectors.toMap(e -> DietGroupCodec.getGroup(e.getKey()), Map.Entry::getValue));
         return cache;
     }
 

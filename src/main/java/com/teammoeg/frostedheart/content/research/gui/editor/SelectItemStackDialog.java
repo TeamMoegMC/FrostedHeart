@@ -110,10 +110,7 @@ public class SelectItemStackDialog extends EditDialog {
         @Override
         public void onClicked(MouseButton button) {
             playClickSound();
-            EditPrompt.open(this, "count", String.valueOf(current.getCount()), val -> {
-                current.setCount(Integer.parseInt(val));
-
-            });
+            EditPrompt.open(this, "count", String.valueOf(current.getCount()), val -> current.setCount(Integer.parseInt(val)));
         }
     }
 
@@ -264,17 +261,13 @@ public class SelectItemStackDialog extends EditDialog {
         }
     }
 
-    public static Editor<ItemStack> EDITOR = (p, l, v, c) -> {
-        new SelectItemStackDialog(p, l, v, c).open();
-    };
+    public static Editor<ItemStack> EDITOR = (p, l, v, c) -> new SelectItemStackDialog(p, l, v, c).open();
 
-    public static Editor<Block> EDITOR_BLOCK = (p, l, v, c) -> {
-        new SelectItemStackDialog(p, l + " (Blocks only)", new ItemStack(v), e -> {
-            Block b = Block.getBlockFromItem(e.getItem());
-            if (b != Blocks.AIR)
-                c.accept(b);
-        }).open();
-    };
+    public static Editor<Block> EDITOR_BLOCK = (p, l, v, c) -> new SelectItemStackDialog(p, l + " (Blocks only)", new ItemStack(v), e -> {
+        Block b = Block.getBlockFromItem(e.getItem());
+        if (b != Blocks.AIR)
+            c.accept(b);
+    }).open();
 
     public static final ExecutorService ITEM_SEARCH = Executors.newSingleThreadExecutor(task -> {
         Thread thread = new Thread(task, "FH-ItemSearch");
@@ -308,13 +301,9 @@ public class SelectItemStackDialog extends EditDialog {
 
     private static ItemSearchMode activeMode = null;
 
-    public static final Editor<Collection<ItemStack>> STACK_LIST = (p, l, v, c) -> {
-        new EditListDialog<>(p, l, v, new ItemStack(Items.AIR), EDITOR, SelectItemStackDialog::fromItemStack, ItemIcon::getItemIcon, c).open();
-    };
+    public static final Editor<Collection<ItemStack>> STACK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, new ItemStack(Items.AIR), EDITOR, SelectItemStackDialog::fromItemStack, ItemIcon::getItemIcon, c).open();
 
-    public static final Editor<Collection<Block>> BLOCK_LIST = (p, l, v, c) -> {
-        new EditListDialog<>(p, l, v, Blocks.AIR, EDITOR_BLOCK, e -> e.getTranslatedName().getString(), e -> ItemIcon.getItemIcon(e.asItem()), c).open();
-    };
+    public static final Editor<Collection<Block>> BLOCK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, Blocks.AIR, EDITOR_BLOCK, e -> e.getTranslatedName().getString(), e -> ItemIcon.getItemIcon(e.asItem()), c).open();
 
     private final Consumer<ItemStack> callback;
     private ItemStack current;
@@ -328,7 +317,7 @@ public class SelectItemStackDialog extends EditDialog {
     private static String fromItemStack(ItemStack s) {
         return s.getDisplayName().getString() + " x " + s.getCount();
     }
-    private static final String fromNBT(INBT nbt) {
+    private static String fromNBT(INBT nbt) {
         if (nbt == null)
             return "";
         return nbt.toString();
@@ -496,12 +485,6 @@ public class SelectItemStackDialog extends EditDialog {
 
     @Override
     public void onClose() {
-    }
-
-    @Override
-    public void onClosed() {
-
-
     }
 
     private void updateItemWidgets(List<Widget> items) {

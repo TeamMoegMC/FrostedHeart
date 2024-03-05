@@ -19,26 +19,16 @@
 
 package com.teammoeg.frostedheart.content.town.house;
 
-import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.content.climate.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.content.town.TeamTown;
+import com.teammoeg.frostedheart.content.town.FHTownBuildingCoreBlock;
 import com.teammoeg.frostedheart.util.MathUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
@@ -53,32 +43,20 @@ import java.util.Random;
 /**
  * A house in the town.
  */
-public class HouseBlock extends FHBaseBlock {
-    public static final BooleanProperty LIT = BlockStateProperties.LIT;
-
+public class HouseBlock extends FHTownBuildingCoreBlock {
     public HouseBlock(Properties blockProps) {
         super(blockProps);
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING, Direction.SOUTH));
     }
-    @Override
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
-        builder.add(LIT,BlockStateProperties.FACING);
-    }
+
     @Override
     public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
         return FHTileTypes.HOUSE.get().create();
     }
 
     @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
-    }
-
-    @Override
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
-        if (stateIn.get(LIT)) {
+        if (stateIn.get(FHTownBuildingCoreBlock.LIT)) {
             ClientUtils.spawnSteamParticles(worldIn, pos);
         }
     }
@@ -106,20 +84,6 @@ public class HouseBlock extends FHBaseBlock {
             return ActionResultType.SUCCESS;
         }
         return ActionResultType.PASS;
-    }
-
-    @Override
-    public void onBlockPlacedBy(World world, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
-        super.onBlockPlacedBy(world, pos, state, entity, stack);
-        HouseTileEntity te = (HouseTileEntity) Utils.getExistingTileEntity(world, pos);
-        if (te != null) {
-            // register the house to the town
-            if (entity instanceof ServerPlayerEntity) {
-                if (ChunkHeatData.hasAdjust(world, pos)) {
-                    TeamTown.from((PlayerEntity) entity).addTownBlock(pos, te);
-                }
-            }
-        }
     }
 
     @Nullable

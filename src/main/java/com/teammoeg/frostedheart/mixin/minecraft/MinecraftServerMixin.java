@@ -33,7 +33,7 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.IServerWorldInfo;
 /**
  * Generates aircraft on start
- * 
+ * <p>
  * */
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {

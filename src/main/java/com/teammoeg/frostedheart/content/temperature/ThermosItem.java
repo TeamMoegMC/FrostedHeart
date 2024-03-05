@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 
 import com.simibubi.create.content.contraptions.fluids.potion.PotionFluidHandler;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
@@ -138,9 +138,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
             for (Fluid fluid : tag.getAllElements()) {
                 if (fluid.getTags().contains(hidden)) continue;
                 ItemStack itemStack = new ItemStack(this);
-                itemStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
-                    data.fill(new FluidStack(fluid, data.getTankCapacity(0)), IFluidHandler.FluidAction.EXECUTE);
-                });
+                itemStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> data.fill(new FluidStack(fluid, data.getTankCapacity(0)), FluidAction.EXECUTE));
                 items.add(itemStack);
             }
         }
@@ -175,7 +173,6 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
                 return FHDataManager.getDrinkHeat(fs);
             }
         }
-        ;
         return 0;
     }
 
@@ -248,20 +245,18 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     }
 
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-        RayTraceResult raytraceresult = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.SOURCE_ONLY);
+        BlockRayTraceResult raytraceresult = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.SOURCE_ONLY);
         ItemStack itemstack = playerIn.getHeldItem(handIn);
         if (raytraceresult.getType() == RayTraceResult.Type.MISS) {
             playerIn.setActiveHand(handIn);
             return canDrink(playerIn.getHeldItem(handIn)) ? ActionResult.resultSuccess(playerIn.getHeldItem(handIn)) : ActionResult.resultFail(playerIn.getHeldItem(handIn));
         }
         if (raytraceresult.getType() == RayTraceResult.Type.BLOCK) {
-            BlockPos blockpos = ((BlockRayTraceResult) raytraceresult).getPos();
+            BlockPos blockpos = raytraceresult.getPos();
             if (worldIn.getFluidState(blockpos).isTagged(FluidTags.WATER)) {
                 if (canFill(itemstack, Fluids.WATER)) {
                     worldIn.playSound(playerIn, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ(), SoundEvents.ITEM_BOTTLE_FILL, SoundCategory.NEUTRAL, 1.0F, 1.0F);
-                    itemstack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
-                        data.fill(new FluidStack(Fluids.WATER, data.getTankCapacity(0)), IFluidHandler.FluidAction.EXECUTE);
-                    });
+                    itemstack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> data.fill(new FluidStack(Fluids.WATER, data.getTankCapacity(0)), FluidAction.EXECUTE));
 
                     return ActionResult.resultSuccess(itemstack);
                 }
@@ -296,7 +291,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
 
     public void updateDamage(ItemStack stack) {
         stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
-            int i = this.capacity - data.getFluidInTank(0).getAmount() >= 0 ? this.capacity - data.getFluidInTank(0).getAmount() : 0;
+            int i = Math.max(this.capacity - data.getFluidInTank(0).getAmount(), 0);
             stack.setDamage(i);
         });
     }

@@ -129,35 +129,25 @@ public class SelectDialog<T> extends EditDialog {
         }
 
     }
-    public static final Editor<Research> EDITOR_RESEARCH = (p, l, v, c) -> {
-        new SelectDialog<>(p, l, v, c, FHResearch::getAllResearch,
-                Research::getName, e -> new String[]{e.getId(), e.getName().getString()},
-                Research::getIcon
-        ).open();
-    };
-    public static final Editor<IMultiblock> EDITOR_MULTIBLOCK = (p, l, v, c) -> {
-        new SelectDialog<>(p, l, v, c, MultiblockHandler::getMultiblocks,
-                wrap(IMultiblock::getUniqueName)
-        ).open();
-    };
+    public static final Editor<Research> EDITOR_RESEARCH = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, FHResearch::getAllResearch,
+            Research::getName, e -> new String[]{e.getId(), e.getName().getString()},
+            Research::getIcon
+    ).open();
+    public static final Editor<IMultiblock> EDITOR_MULTIBLOCK = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, MultiblockHandler::getMultiblocks,
+            wrap(IMultiblock::getUniqueName)
+    ).open();
     public static final Editor<ResourceLocation> EDITOR_ADVANCEMENT = (p, l, v, c) -> {
         ClientAdvancementManager cam = ClientUtils.mc().player.connection.getAdvancementManager();
         Advancement adv = cam.getAdvancementList().getAdvancement(v);
 
-        new SelectDialog<Advancement>(p, l, adv, e -> c.accept(e.getId()), () -> cam.getAdvancementList().getAll(),
+        new SelectDialog<>(p, l, adv, e -> c.accept(e.getId()), () -> cam.getAdvancementList().getAll(),
                 Advancement::getDisplayText, advx -> new String[]{advx.getDisplayText().getString(), advx.getId().toString()},
                 advx -> FHIcons.getIcon(advx.getDisplay().getIcon())
         ).open();
     };
-    public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> {
-        new SelectDialog<>(p, l, v, c, RegistryUtils::getEntities, EntityType::getName, e -> new String[]{e.getName().getString(), RegistryUtils.getRegistryName(e).toString()}
-        ).open();
-    };
-    public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> {
-
-
-        new SelectDialog<>(p, l, v, c, () -> Minecraft.getInstance().world.getTags().getItemTags().getRegisteredTags().stream().map(ResourceLocation::toString).collect(Collectors.toSet())).open();
-    };
+    public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, RegistryUtils::getEntities, EntityType::getName, e -> new String[]{e.getName().getString(), RegistryUtils.getRegistryName(e).toString()}
+    ).open();
+    public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, () -> Minecraft.getInstance().world.getTags().getItemTags().getRegisteredTags().stream().map(ResourceLocation::toString).collect(Collectors.toSet())).open();
     String lbl;
     T val;
     Consumer<T> cb;

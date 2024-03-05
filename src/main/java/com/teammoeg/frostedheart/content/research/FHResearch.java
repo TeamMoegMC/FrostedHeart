@@ -23,13 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.Map.Entry;
 import java.util.function.Supplier;
 
 import com.google.gson.Gson;
@@ -40,7 +35,6 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.data.ClientResearchData;
-import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.events.ResearchLoadEvent;
 import com.teammoeg.frostedheart.content.research.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.content.research.network.FHResearchSyncEndPacket;
@@ -49,14 +43,11 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.frostedheart.team.ClientDataHolder;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
-import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.io.FileUtil;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import dev.ftb.mods.ftbteams.data.TeamManager;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.network.PacketBuffer;
@@ -72,9 +63,9 @@ import net.minecraftforge.fml.network.PacketDistributor.PacketTarget;
  * Main Research System.
  */
 public class FHResearch {
-    public static FHRegistry<Research> researches = new FHRegistry<Research>();
-    public static FHRegistry<Clue> clues = new FHRegistry<Clue>();
-    public static FHRegistry<Effect> effects = new FHRegistry<Effect>();
+    public static FHRegistry<Research> researches = new FHRegistry<>();
+    public static FHRegistry<Clue> clues = new FHRegistry<>();
+    public static FHRegistry<Effect> effects = new FHRegistry<>();
     private static OptionalLazy<List<Research>> allResearches = OptionalLazy.of(() -> researches.all());
     public static boolean editor = false;
 
@@ -243,6 +234,7 @@ public class FHResearch {
                 r.load(je.getAsJsonObject());
             }
         } catch (IOException e) {
+            FHMain.LOGGER.error("Cannot load research " + f.getName() + ": " + e.getMessage());
         }
         return researches.getById(iid);
     }
@@ -324,6 +316,8 @@ public class FHResearch {
         try {
             FileUtil.transfer(gs.toJson(r.serialize()), out);
         } catch (IOException e) {
+
+            throw new RuntimeException("Cannot save research " + r.getId() + ": " + e.getMessage());
         }
     }
 
@@ -337,6 +331,7 @@ public class FHResearch {
             try {
                 FileUtil.transfer(gs.toJson(r.serialize()), out);
             } catch (IOException e) {
+                throw new RuntimeException("Cannot save research " + r.getId() + ": " + e.getMessage());
             }
 
         }
@@ -354,7 +349,7 @@ public class FHResearch {
 	private static final FolderName dataFolder = new FolderName("fhdata");
     public static void load() {
         FHResearch.editor = false;
-        Path local = SpecialDataManager.getServer().func_240776_a_(dataFolder);
+        Path local = FHTeamDataManager.getServer().func_240776_a_(dataFolder);
         File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
         FHResearch.clearAll();
         if (regfile.exists()) {
@@ -380,7 +375,7 @@ public class FHResearch {
     }
 
     public static void save() {
-    	Path local = SpecialDataManager.getServer().func_240776_a_(dataFolder);
+    	Path local = FHTeamDataManager.getServer().func_240776_a_(dataFolder);
     	File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
         File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
         try {

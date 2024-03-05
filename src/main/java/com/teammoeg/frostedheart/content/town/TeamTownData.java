@@ -23,11 +23,10 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.team.TeamDataHolder;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -39,10 +38,10 @@ import net.minecraftforge.common.util.Constants;
 
 /**
  * Town data for a whole team.
- *
+ * <p>
  * It maintains town resources, worker data, and holds a team data
  * when initialized.
- *
+ * <p>
  * Everything permanent should be saved in this class.
  */
 public class TeamTownData implements NBTSerializable{
@@ -88,7 +87,7 @@ public class TeamTownData implements NBTSerializable{
      * @param world server world instance
      */
     public void tick(ServerWorld world) {
-        PriorityQueue<TownWorkerData> pq = new PriorityQueue<TownWorkerData>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
+        PriorityQueue<TownWorkerData> pq = new PriorityQueue<>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
         blocks.values().removeIf(v -> {
             BlockPos pos = v.getPos();
             v.loaded = false;
@@ -97,15 +96,11 @@ public class TeamTownData implements NBTSerializable{
                 BlockState bs = world.getBlockState(pos);
                 TileEntity te = Utils.getExistingTileEntity(world, pos);
                 TownWorkerType twt = v.getType();
-                if (twt.getBlock() != bs.getBlock() || te == null || !(te instanceof TownTileEntity) || !((TownTileEntity) te).isWorkValid()) {
-                    return true;
-                }
+                return twt.getBlock() != bs.getBlock() || !(te instanceof TownTileEntity) || !((TownTileEntity) te).isWorkValid();
             }
             return false;
         });
-        for (TownWorkerData v : blocks.values()) {
-            pq.add(v);
-        }
+        pq.addAll(blocks.values());
         TeamTown itt = new TeamTown(this);
         for (TownWorkerData t : pq) {
             t.firstWork(itt);

@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.compat.jei.category;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.cannolicatfish.rankine.init.RankineItems;
@@ -78,9 +79,9 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 
         String burnTime;
         if (recipe.time < 1000 || recipe.time % 60 != 0)
-            burnTime = String.valueOf(recipe.time) + " s";
+            burnTime = recipe.time + " s";
         else
-            burnTime = String.valueOf(recipe.time / 60) + " m";
+            burnTime = recipe.time / 60 + " m";
         int width = ClientUtils.mc().fontRenderer.getStringWidth(burnTime);
         ClientUtils.mc().fontRenderer.drawString(transform, burnTime, 162 - width, 62, 0xFFFFFF);
     }
@@ -107,8 +108,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 
     @Override
     public List<ITextComponent> getTooltipStrings(IncubateRecipe recipe, double mouseX, double mouseY) {
-        List<ITextComponent> tooltip = new ArrayList<>();
-        return tooltip;
+        return new ArrayList<>();
     }
 
     @Override
@@ -123,12 +123,12 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 
     @Override
     public void setIngredients(IncubateRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.FLUID, Arrays.asList(Arrays.asList(new FluidStack(Fluids.WATER, recipe.water))));
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(new ItemStack(RankineItems.QUICKLIME.get())), Arrays.asList(recipe.catalyst.getMatchingStacks()), Arrays.asList(recipe.input.getMatchingStacks())));
+        ingredients.setInputLists(VanillaTypes.FLUID, Collections.singletonList(Collections.singletonList(new FluidStack(Fluids.WATER, recipe.water))));
+        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Collections.singletonList(new ItemStack(RankineItems.QUICKLIME.get())), Arrays.asList(recipe.catalyst.getMatchingStacks()), Arrays.asList(recipe.input.getMatchingStacks())));
         if (!recipe.output.isEmpty())
-            ingredients.setOutputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.output)));
+            ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(Collections.singletonList(recipe.output)));
         if (!recipe.output_fluid.isEmpty())
-            ingredients.setOutputLists(VanillaTypes.FLUID, Arrays.asList(Arrays.asList(recipe.output_fluid)));
+            ingredients.setOutputLists(VanillaTypes.FLUID, Collections.singletonList(Collections.singletonList(recipe.output_fluid)));
     }
 
 

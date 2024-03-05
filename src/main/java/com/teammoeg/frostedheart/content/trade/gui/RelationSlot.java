@@ -60,7 +60,7 @@ public class RelationSlot extends Widget {
         if (val == 0) return;
         val = Math.min(Math.max(-1000, val), 1000);
         int show = (int) Math.ceil(Math.abs(val / 10f));
-        String str = (val < 0 ? "-" : "") + String.valueOf(show);
+        String str = (val < 0 ? "-" : "") + show;
 
         int dx;
         switch (str.length()) {

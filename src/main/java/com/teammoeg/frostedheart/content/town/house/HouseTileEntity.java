@@ -40,13 +40,15 @@ import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nonnull;
 
-import static com.teammoeg.frostedheart.content.town.house.HouseBlockScanner.*;
 
 import java.util.*;
 
+import static com.teammoeg.frostedheart.util.BlockScanner.FloorBlockScanner.isHouseBlock;
+
+
 /**
  * A house in the town.
- *
+ * <p>
  * Functionality:
  * - Provide a place for residents to live
  * - (Optional) Consume heat to add temperature based on the heat level
@@ -166,7 +168,7 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
                     //FHMain.LOGGER.debug("HouseScanner: start pos 2" + startPos);
                 }
                 HouseBlockScanner scanner = new HouseBlockScanner(this.world, startPos);
-                if (scanner.check()) {
+                if (scanner.scan()) {
                     //FHMain.LOGGER.debug("HouseScanner: scan successful");
                     this.volume = scanner.getVolume();
                     this.area = scanner.getArea();
@@ -183,7 +185,7 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
 
     /**
      * Determine whether the house temperature is valid for work.
-     *
+     * <p>
      * If connected to heat network, this always returns true.
      *
      * @return whether the temperature is valid
@@ -238,6 +240,7 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
 
     @Override
     public void tick() {
+        assert world != null;
         if (!world.isRemote) {
             if (endpoint.tryDrainHeat(1)) {
                 temperatureModifier = Math.max(endpoint.getTemperatureLevel() * 10, COMFORTABLE_TEMP_HOUSE);

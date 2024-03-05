@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.research.research.effects;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.gson.JsonObject;
@@ -54,9 +55,7 @@ public class EffectUse extends Effect {
     public EffectUse(Block... blocks) {
         super();
         this.blocks = new ArrayList<>();
-        for (Block b : blocks) {
-            this.blocks.add(b);
-        }
+        this.blocks.addAll(Arrays.asList(blocks));
     }
 
     public EffectUse(JsonObject jo) {

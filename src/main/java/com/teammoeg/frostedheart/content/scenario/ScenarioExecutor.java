@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.FHMain;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -284,10 +285,9 @@ public class ScenarioExecutor<T> {
             registerInst(ctor.newInstance());
         } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException |
                  IllegalArgumentException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            FHMain.LOGGER.error("Error registering scenario class",e);
         } catch (InvocationTargetException e) {
-            throw new RuntimeException(e.getTargetException());
+            throw new RuntimeException("Error registering scenario class" + e.getTargetException());
         }
 
     }
@@ -301,7 +301,7 @@ public class ScenarioExecutor<T> {
             if (Modifier.isPublic(met.getModifiers())) {
                 try {
                 	if(met.getParameterCount()>0&&met.getParameters()[0].getType().isAssignableFrom(objcls))
-                		registerCommand(met.getName(), new MethodInfo<T>(Modifier.isStatic(met.getModifiers()) ? null :clazz,  met,this));
+                		registerCommand(met.getName(), new MethodInfo<>(Modifier.isStatic(met.getModifiers()) ? null : clazz, met, this));
                 } catch (ScenarioExecutionException ex) {
                     ex.printStackTrace();
                     LOGGER.warn(ex.getMessage());
@@ -329,8 +329,8 @@ public class ScenarioExecutor<T> {
 
     	}
     }
-    public static void main(String[] args) throws NoSuchMethodException, SecurityException {
-    	ScenarioExecutor<Object> exc=new ScenarioExecutor<Object>(Object.class);
+    public static void main(String[] args) throws SecurityException {
+    	ScenarioExecutor<Object> exc= new ScenarioExecutor<>(Object.class);
     	exc.registerInst(new Test());
     	Map<String,String> mp=new HashMap<>();
     	mp.put("s", "twr_scenario:twr_logo_title.png");

@@ -48,7 +48,7 @@ public abstract class CreateJEIMixin {
     @Shadow(remap = false)
     private CreateRecipeCategory category;
 
-    private static final IRecipe<?> fh$convert(ShapelessRecipe r) {
+    private static IRecipe<?> fh$convert(ShapelessRecipe r) {
         NonNullList<Ingredient> i = r.getIngredients();
         NonNullList<Ingredient> outcopy = NonNullList.create();
         outcopy.addAll(i);
