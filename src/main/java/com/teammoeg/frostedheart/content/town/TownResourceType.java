@@ -44,7 +44,7 @@ public enum TownResourceType {
     TOOL(t -> 250D + 100 * t.get(STORAGE)),
     RAW_FOOD(t -> 250D + 100 * t.get(STORAGE)),
     PREP_FOOD(t -> 250D + 100 * t.get(STORAGE));
-    Function<Town, Double> maxStorage;
+    final Function<Town, Double> maxStorage;
 
     public static TownResourceType from(String t) {
         return TownResourceType.valueOf(t.toUpperCase());

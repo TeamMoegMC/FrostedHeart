@@ -49,17 +49,17 @@ public enum TownWorkerType {
     /**
      * Town block.
      */
-    private Block block;
+    private final Block block;
 
     /**
      * The worker.
      */
-    private TownWorker worker;
+    private final TownWorker worker;
 
     /**
      * The priority.
      */
-    private int priority;
+    private final int priority;
 
     /**
      * Instantiates a new town worker type.

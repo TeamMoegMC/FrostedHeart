@@ -317,7 +317,7 @@ public class SelectItemStackDialog extends EditDialog {
     private static String fromItemStack(ItemStack s) {
         return s.getDisplayName().getString() + " x " + s.getCount();
     }
-    private static final String fromNBT(INBT nbt) {
+    private static String fromNBT(INBT nbt) {
         if (nbt == null)
             return "";
         return nbt.toString();

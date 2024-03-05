@@ -35,16 +35,16 @@ public enum ResearchCategory {
     PRODUCTION("production"),
     ARS("ars"),
     EXPLORATION("exploration");
-    public static Map<ResourceLocation, ResearchCategory> ALL = new HashMap<>();
+    public static final Map<ResourceLocation, ResearchCategory> ALL = new HashMap<>();
     static {
         for (ResearchCategory rc : ResearchCategory.values())
             ResearchCategory.ALL.put(rc.id, rc);
     }
-    private ResourceLocation id;
-    private TranslationTextComponent name;
-    private TranslationTextComponent desc;
+    private final ResourceLocation id;
+    private final TranslationTextComponent name;
+    private final TranslationTextComponent desc;
 
-    private ResourceLocation icon;
+    private final ResourceLocation icon;
 
     ResearchCategory(String id) {
         this.id = FHMain.rl(id);

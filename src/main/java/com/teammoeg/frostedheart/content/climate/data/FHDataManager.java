@@ -116,7 +116,7 @@ public class FHDataManager {
     }
 
     @SuppressWarnings("unchecked")
-    public static final <T extends JsonDataHolder> ResourceMap<T> get(FHDataType dt) {
+    public static <T extends JsonDataHolder> ResourceMap<T> get(FHDataType dt) {
         return ALL_DATA.get(dt);
 
     }
@@ -171,7 +171,7 @@ public class FHDataManager {
     }
 
     @SuppressWarnings("unchecked")
-    public static final void load(DataEntry[] entries) {
+    public static void load(DataEntry[] entries) {
         reset();
         for (DataEntry de : entries) {
             JsonDataHolder jdh = de.type.type.create(parser.parse(de.data).getAsJsonObject());
@@ -181,21 +181,21 @@ public class FHDataManager {
     }
 
     @SuppressWarnings("unchecked")
-    public static final void register(FHDataType dt, JsonObject data) {
+    public static void register(FHDataType dt, JsonObject data) {
         JsonDataHolder jdh = dt.type.create(data);
         //System.out.println("registering "+dt.type.location+": "+jdh.getId());
         ALL_DATA.get(dt).put(jdh.getId(), jdh);
         synched = false;
     }
 
-    public static final void reset() {
+    public static void reset() {
         synched = false;
         for (ResourceMap<?> rm : ALL_DATA.values())
             rm.clear();
     }
 
     @SuppressWarnings("rawtypes")
-    public static final DataEntry[] save() {
+    public static DataEntry[] save() {
         int tsize = 0;
         for (ResourceMap map : ALL_DATA.values()) {
             tsize += map.size();
