@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.climate.data;
+package com.teammoeg.frostedheart;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.EnumMap;
@@ -27,6 +27,7 @@ import java.util.Map.Entry;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.teammoeg.frostedheart.content.climate.data.*;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
@@ -47,7 +48,7 @@ public class FHDataManager {
         Cup(new DataType<>(CupData.class, "temperature", "cup")),
         World(new DataType<>(WorldTempData.class, "temperature", "world"));
 
-        static class DataType<T extends JsonDataHolder> {
+        public static class DataType<T extends JsonDataHolder> {
             final Class<T> dataCls;
             final String location;
             final String domain;

@@ -27,7 +27,7 @@ import java.util.Random;
 
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
-import com.teammoeg.frostedheart.content.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.util.MersenneTwister;
 
 import net.minecraft.block.BlockState;

@@ -37,7 +37,7 @@ import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
-import com.teammoeg.frostedheart.content.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;

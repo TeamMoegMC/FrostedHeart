@@ -24,7 +24,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.capability.CurioCapabilityProvider;
 import com.teammoeg.frostedheart.content.climate.ArmorTempCurios;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
-import com.teammoeg.frostedheart.content.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.FHDataManager;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;

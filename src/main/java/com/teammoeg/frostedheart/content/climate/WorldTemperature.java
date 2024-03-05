@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.climate;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.teammoeg.frostedheart.content.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.FHDataManager;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
