@@ -33,7 +33,7 @@ public class FHRuleTest extends RuleTest {
     public final List<RuleTest> list;
 
     public FHRuleTest(Block[] blocks) {
-        this.list = new ArrayList();
+        this.list = new ArrayList<>();
         for (Block block : blocks) {
             RuleTest b = new BlockMatchRuleTest(block);
             list.add(b);

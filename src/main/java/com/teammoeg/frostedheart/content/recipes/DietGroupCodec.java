@@ -41,9 +41,9 @@ public class DietGroupCodec {
         codecs.clear();
         Set<IDietGroup> idgs = DietGroups.get();
         outer:
-        for (int i = 0; i < groups.length; i++) {
+        for (String group : groups) {
             for (IDietGroup idg : idgs)
-                if (idg.getName().equalsIgnoreCase(groups[i])) {
+                if (idg.getName().equalsIgnoreCase(group)) {
                     codecs.add(idg);
                     continue outer;
                 }

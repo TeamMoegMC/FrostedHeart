@@ -52,8 +52,8 @@ public class RelationList {
     public int sum() {
         if (sum == null) {
             sum = 0;
-            for (int i = 0; i < relations.length; i++) {
-                sum += relations[i];
+            for (int relation : relations) {
+                sum += relation;
             }
         }
         return sum;

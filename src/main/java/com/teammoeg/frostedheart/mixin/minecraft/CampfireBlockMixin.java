@@ -97,7 +97,7 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
                             if (itemstack.getItem() == Items.FLINT && player.getHeldItemOffhand().getItem() == Items.FLINT) {
                                 player.swingArm(Hand.MAIN_HAND);
                                 if (rand.nextFloat() < 0.33) {
-                                    worldIn.setBlockState(pos, state.with(BlockStateProperties.LIT, Boolean.valueOf(true)), 3);
+                                    worldIn.setBlockState(pos, state.with(BlockStateProperties.LIT, Boolean.TRUE), 3);
                                 }
 
                                 worldIn.playSound(null, pos, SoundEvents.BLOCK_STONE_STEP, SoundCategory.BLOCKS, 1.0F, 2F + rand.nextFloat() * 0.4F);

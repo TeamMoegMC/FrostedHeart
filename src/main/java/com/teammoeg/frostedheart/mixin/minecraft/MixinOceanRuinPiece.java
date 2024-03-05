@@ -70,7 +70,7 @@ public abstract class MixinOceanRuinPiece extends TemplateStructurePiece {
         if ("chest".equals(function)) {
             BlockState chest = StructureUtils.getChest().getDefaultState();
             if (chest.hasProperty(BlockStateProperties.WATERLOGGED))
-                chest = chest.with(BlockStateProperties.WATERLOGGED, Boolean.valueOf(worldIn.getFluidState(pos).isTagged(FluidTags.WATER)));
+                chest = chest.with(BlockStateProperties.WATERLOGGED, worldIn.getFluidState(pos).isTagged(FluidTags.WATER));
             worldIn.setBlockState(pos, chest, 2);
             TileEntity tileentity = worldIn.getTileEntity(pos);
             if (tileentity instanceof LockableLootTileEntity) {

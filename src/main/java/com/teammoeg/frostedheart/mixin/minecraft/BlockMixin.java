@@ -65,7 +65,7 @@ public class BlockMixin extends Block {
         if (!worldIn.isRemote && !(player instanceof FakePlayer)) {
             TileEntity te = Utils.getExistingTileEntity(worldIn, pos);
             if (te instanceof MultiblockPartTileEntity) {
-                te = ((MultiblockPartTileEntity) te).master();
+                te = ((MultiblockPartTileEntity<?>) te).master();
             }
             IOwnerTile.trySetOwner(te, SpecialDataManager.get(player).getId());
         }

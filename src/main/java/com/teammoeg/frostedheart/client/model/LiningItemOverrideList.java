@@ -46,14 +46,19 @@ public class LiningItemOverrideList extends ItemOverrideList {
         if (s.length() > 0 && slotType != null) {
             String liningType = new ResourceLocation(s).getPath();
             String slotName = "feet";
-            if (slotType.getName().equals("feet")) {
-                slotName = "feet";
-            } else if (slotType.getName().equals("legs")) {
-                slotName = "legs";
-            } else if (slotType.getName().equals("chest")) {
-                slotName = "torso";
-            } else if (slotType.getName().equals("head")) {
-                slotName = "helmet";
+            switch (slotType.getName()) {
+                case "feet":
+                    slotName = "feet";
+                    break;
+                case "legs":
+                    slotName = "legs";
+                    break;
+                case "chest":
+                    slotName = "torso";
+                    break;
+                case "head":
+                    slotName = "helmet";
+                    break;
             }
             ResourceLocation textureLocation = FHMain.rl("item/lining_overlay/" + liningType + "_" + slotName);
             return new LiningFinalizedModel(originalModel, textureLocation);

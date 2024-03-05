@@ -53,8 +53,8 @@ public class SchedulerQueue {
     }
 
     public void add(BlockPos pos) {
-        for (int i = 0; i < tasks.size(); i++) {
-            if (tasks.get(i).pos.equals(pos)) {
+        for (ScheduledData task : tasks) {
+            if (task.pos.equals(pos)) {
                 return;
             }
         }

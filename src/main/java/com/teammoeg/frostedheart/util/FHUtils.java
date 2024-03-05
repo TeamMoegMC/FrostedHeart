@@ -319,7 +319,7 @@ public class FHUtils {
        }
    }
 
-	public static List<Field> getAllModelFields(Class aClass) {
+	public static List<Field> getAllModelFields(Class<?> aClass) {
 	    List<Field> fields = new ArrayList<>();
 	    do {
 	        Collections.addAll(fields, aClass.getDeclaredFields());
