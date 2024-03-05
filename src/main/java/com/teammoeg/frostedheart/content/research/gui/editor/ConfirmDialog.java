@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import java.util.function.Consumer;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -83,9 +84,9 @@ public class ConfirmDialog extends BaseEditDialog {
     public void onClosed() {
         if (!selected)
             try {
-                fin.accept(selected);
+                fin.accept(false);
             } catch (Exception ex) {
-                ex.printStackTrace();
+                FHMain.LOGGER.error("Error in ConfirmDialog", ex);
             }
     }
 

@@ -118,9 +118,6 @@ public class BlizzardRenderer {
                     blockPos.setPos(currentlyRenderingX, renderingYLowerBound, currentlyRenderingZ);
 
                     if (i1 != 1) {
-                        if (i1 >= 0) {
-                            tessellator.draw();
-                        }
 
                         i1 = 1;
                         mc.getTextureManager()

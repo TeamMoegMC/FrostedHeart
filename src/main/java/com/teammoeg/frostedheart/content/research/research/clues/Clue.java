@@ -212,7 +212,7 @@ public abstract class Clue extends AutoIDItem implements Writeable{
         jo.addProperty("value", contribution);
         jo.addProperty("id", nonce);
         if (required)
-            jo.addProperty("required", required);
+            jo.addProperty("required", true);
         return jo;
     }
 

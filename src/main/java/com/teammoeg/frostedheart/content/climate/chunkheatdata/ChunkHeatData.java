@@ -260,6 +260,7 @@ public class ChunkHeatData implements NBTSerializable {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
             ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
+            // TODO: should use isPresent some how
             if (data != null)
                 data.adjusters.removeIf(adj -> adj.getCenterX() == src.getX() && adj.getCenterY() == src.getY()
                         && adj.getCenterZ() == src.getZ());

@@ -36,17 +36,17 @@ public class BlockScanner {
 
     public BlockScanner (World world, BlockPos startPos){
         this.startPos = startPos;
-        scanningBlocks = new HashSet<>();
-        scanningBlocks.add(startPos);
+        this.scanningBlocks = new HashSet<>();
+        this.scanningBlocks.add(startPos);
         //FHMain.LOGGER.debug("HouseScanner: scanningBlocks: " + scanningBlocks);
         this.world = world;
-        scannedBlocks = new HashSet<>();
+        this.scannedBlocks = new HashSet<>();
     }
 
-    public BlockScanner (World world, BlockPos startPos, Set<Long> scannedBlocks){
+    public BlockScanner(World world, BlockPos startPos, Set<Long> scannedBlocks){
         this.startPos = startPos;
-        assert scanningBlocks != null;
-        scanningBlocks.add(startPos);
+        this.scanningBlocks = new HashSet<>();
+        this.scanningBlocks.add(startPos);
         this.world = world;
         this.scannedBlocks = scannedBlocks;
     }

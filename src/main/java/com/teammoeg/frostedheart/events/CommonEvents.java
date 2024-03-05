@@ -307,7 +307,7 @@ public class CommonEvents {
         } else if (growBlock instanceof FHCropBlock) {
         } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
             if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE) {
-                if (temp < -6 && event.getWorld().getRandom().nextInt(3) == 0) {
+                if (event.getWorld().getRandom().nextInt(3) == 0) {
                     event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
@@ -322,7 +322,7 @@ public class CommonEvents {
         } else if(growBlock instanceof IGrowable){
             if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE) {
                 // Set back to default state, might not be necessary
-                if ((bz || temp < 0) && event.getWorld().getRandom().nextInt(3) == 0) {
+                if (event.getWorld().getRandom().nextInt(3) == 0) {
                     BlockState cbs = event.getWorld().getBlockState(event.getPos());
                     if (cbs.matchesBlock(growBlock) && cbs != growBlock.getDefaultState())
                         event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
@@ -338,7 +338,7 @@ public class CommonEvents {
             }
 
         }else {
-        	if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE || bz)
+        	if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE)
         		event.setResult(Event.Result.DENY);
         }
     }
@@ -504,7 +504,7 @@ public class CommonEvents {
                     int i = FHUtils.getEnchantmentLevel(Enchantments.UNBREAKING, cnbt);
                     int j = 0;
                     if (i > 0)
-                        for (int k = 0; i > 0 && k < amount; ++k) {
+                        for (int k = 0; k < amount; ++k) {
                             if (UnbreakingEnchantment.negateDamage(itemstack, i, player.getRNG())) {
                                 ++j;
                             }
