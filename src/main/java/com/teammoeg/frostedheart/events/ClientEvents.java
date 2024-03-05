@@ -109,8 +109,6 @@ import net.minecraftforge.fml.server.ServerLifecycleHooks;
 public class ClientEvents {
     /**
      * Simulate breath particles when the player is in a cold environment
-     *
-     * @param event
      */
     @SubscribeEvent
     public static void addBreathParticles(TickEvent.PlayerTickEvent event) {
@@ -553,9 +551,6 @@ public class ClientEvents {
         ClientUtils.applyspg = false;
     }
 
-    /**
-     * @param event
-     */
     @SuppressWarnings({"resource", "unchecked", "rawtypes"})
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {

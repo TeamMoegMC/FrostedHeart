@@ -34,7 +34,7 @@ import net.minecraft.world.LightType;
 import net.minecraft.world.biome.Biome;
 /**
  * Freeze water when cold
- * 
+ * <p>
  * */
 @Mixin(Biome.class)
 public abstract class BiomeMixin {

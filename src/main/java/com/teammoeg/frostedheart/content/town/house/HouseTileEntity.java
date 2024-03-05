@@ -48,7 +48,7 @@ import static com.teammoeg.frostedheart.util.BlockScanner.FloorBlockScanner.isHo
 
 /**
  * A house in the town.
- *
+ * <p>
  * Functionality:
  * - Provide a place for residents to live
  * - (Optional) Consume heat to add temperature based on the heat level
@@ -185,7 +185,7 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
 
     /**
      * Determine whether the house temperature is valid for work.
-     *
+     * <p>
      * If connected to heat network, this always returns true.
      *
      * @return whether the temperature is valid

@@ -29,7 +29,7 @@ import net.minecraft.item.ItemStack;
  *
  * @author khjxiaogu
  * file: IHeatingEquipment.java
- * @date 2021年9月14日
+ * Date: 2021/9/14
  */
 public interface IHeatingEquipment {
 

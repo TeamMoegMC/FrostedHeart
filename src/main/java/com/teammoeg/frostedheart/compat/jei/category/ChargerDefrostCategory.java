@@ -50,9 +50,6 @@ public class ChargerDefrostCategory implements IRecipeCategory<CampfireDefrostRe
     private IDrawable ICON;
     private StaticBlock charger = new StaticBlock(FHBlocks.charger.get().getDefaultState().with(BlockStateProperties.FACING, Direction.EAST));
 
-    /**
-     * @param guiHelper
-     */
     public ChargerDefrostCategory(IGuiHelper guiHelper) {
         this.ICON = new DoubleItemIcon(() -> new ItemStack(FHBlocks.charger.get()), () -> new ItemStack(FHItems.frozen_seeds.get()));
         this.BACKGROUND = new EmptyBackground(177, 70);

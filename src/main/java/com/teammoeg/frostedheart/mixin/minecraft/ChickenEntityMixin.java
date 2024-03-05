@@ -107,7 +107,7 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
 
     /**
      * @author khjxiaogu
-     * @reason change to our own milk logic
+     * change to our own milk logic
      */
     @Override
     public ActionResultType getEntityInteractionResult(PlayerEntity playerIn, Hand hand) {

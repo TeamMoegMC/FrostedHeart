@@ -37,7 +37,7 @@ import net.minecraft.world.server.ServerWorld;
 /**
  * To fix an issue that forge event is not properly fired which causes our event mechanic breaks.
  * e.g. kelp breaking everything/growing even when cold
- * 
+ * <p>
  * */
 @Mixin(AbstractTopPlantBlock.class)
 public abstract class AbstractTopPlantBlockMixin extends AbstractPlantBlock {

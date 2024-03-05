@@ -346,16 +346,10 @@ public class FHIcons {
     private static class FHNopIcon extends FHIcon {
         public static final FHNopIcon INSTANCE = new FHNopIcon();
 
-        /**
-         * @param e
-         */
         public static FHNopIcon get(JsonElement e) {
             return INSTANCE;
         }
 
-        /**
-         * @param e
-         */
         public static FHNopIcon get(PacketBuffer e) {
             return INSTANCE;
         }

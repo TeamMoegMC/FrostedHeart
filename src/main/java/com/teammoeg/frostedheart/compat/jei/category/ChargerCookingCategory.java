@@ -50,9 +50,6 @@ public class ChargerCookingCategory implements IRecipeCategory<SmokingRecipe> {
     private IDrawable ICON;
     private StaticBlock charger = new StaticBlock(FHBlocks.charger.get().getDefaultState().with(BlockStateProperties.FACING, Direction.EAST));
 
-    /**
-     * @param guiHelper
-     */
     public ChargerCookingCategory(IGuiHelper guiHelper) {
         this.ICON = new DoubleItemIcon(() -> new ItemStack(FHBlocks.charger.get()), () -> new ItemStack(Items.COOKED_BEEF));
         this.BACKGROUND = new EmptyBackground(177, 70);

@@ -25,12 +25,12 @@ import net.minecraft.block.Block;
 
 /**
  * The second-lowest level town processing function.
- *
+ * <p>
  * Each TownWorkerType associates a block with a TownWorker.
- *
+ * <p>
  * For example, a HouseBlock is associated with a TownWorker functions
  * that cost food and add service.
- *
+ * <p>
  * Normally, you should add a new TownWorkerType for each new block type.
  */
 public enum TownWorkerType {

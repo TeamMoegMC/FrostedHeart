@@ -14,7 +14,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IServerWorld;
 /**
  * Remove natural generation for advanced animal
- * 
+ * <p>
  * */
 @Mixin(EntitySpawnPlacementRegistry.class)
 public class EntitySpawbPlacementRegistryMixin {

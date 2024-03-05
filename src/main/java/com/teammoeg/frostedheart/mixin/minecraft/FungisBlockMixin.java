@@ -32,7 +32,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
 /**
  * Make nether plants only grow in nether
- * 
+ * <p>
  * */
 @Mixin(FungusBlock.class)
 public class FungisBlockMixin {

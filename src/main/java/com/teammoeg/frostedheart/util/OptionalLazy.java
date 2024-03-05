@@ -28,9 +28,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.NonNullConsumer;
-import net.minecraftforge.common.util.NonNullFunction;
-import net.minecraftforge.common.util.NonNullPredicate;
+import net.minecraftforge.common.util.*;
 
 /**
  * An modified version for LazyOptional by forge, compatibilities for null return
@@ -69,7 +67,7 @@ public class OptionalLazy<T> {
     /**
      * This method hides an unchecked cast to the inferred type. Only use this if
      * you are sure the type should match. For capabilities, generally
-     * {@link Capability#orEmpty(Capability, OptionalLazy)} should be used.
+     * {@link Capability#orEmpty(Capability, LazyOptional)} should be used.
      *
      * @return This {@link OptionalLazy}, cast to the inferred generic type
      */

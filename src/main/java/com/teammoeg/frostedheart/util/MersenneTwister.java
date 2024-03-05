@@ -152,10 +152,6 @@ public class MersenneTwister extends Random {
 	// Initializes mt[N] with a simple integer seed. This method is
 	// required as part of the Mersenne Twister algorithm but need
 	// not be made public.
-	/**
-	 * @param seed
-	 * 
-	 */
 	private void setSeed(int seed) {
 
 		// Annoying runtime check for initialisation of internal data

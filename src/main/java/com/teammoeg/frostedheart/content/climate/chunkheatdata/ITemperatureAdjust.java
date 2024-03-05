@@ -128,7 +128,7 @@ public interface ITemperatureAdjust extends NBTSerializable {
     /**
      * Checks if location is in range(or, this adjust is effective for this location).<br>
      *
-     * @param bp the location<br>
+     * @param pos the location<br>
      * @return if this adjust is effective for location, true.
      */
     default boolean isEffective(BlockPos pos) {

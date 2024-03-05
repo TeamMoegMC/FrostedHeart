@@ -61,7 +61,7 @@ import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.items.ItemHandlerHelper;
 /**
  * Add time limit for campfire
- * 
+ * <p>
  * */
 @Mixin(CampfireBlock.class)
 public abstract class CampfireBlockMixin extends ContainerBlock {

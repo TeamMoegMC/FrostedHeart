@@ -31,7 +31,7 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.world.World;
 /**
  * Limit crafting for unresearched item
- * 
+ * <p>
  * */
 @Mixin(CraftResultInventory.class)
 public abstract class CraftResultInventoryMixin implements IRecipeHolder, IInventory {

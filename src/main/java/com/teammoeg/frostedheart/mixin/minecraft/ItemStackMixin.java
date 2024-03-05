@@ -34,7 +34,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 /**
  * Gives lining when cloth destroyed
- * 
+ * <p>
  * */
 @Mixin(ItemStack.class)
 public class ItemStackMixin {

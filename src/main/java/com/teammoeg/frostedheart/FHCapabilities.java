@@ -35,7 +35,7 @@ public class FHCapabilities {
 	}
 	/**
 	 * register capability with class, using no-arg constructor as default factory
-	 * 
+	 * <p>
 	 * */
 	public static <T extends NBTSerializable> FHCapability<T> register(Class<T> capClass){
 		Constructor<T> ctor;

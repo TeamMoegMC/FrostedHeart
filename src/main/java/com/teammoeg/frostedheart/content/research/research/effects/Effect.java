@@ -63,7 +63,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  *
  * @author khjxiaogu
  * file: Effect.java
- * @date 2022年9月2日
+ * @date 2022/09/02
  */
 public abstract class Effect extends AutoIDItem implements Writeable{
 

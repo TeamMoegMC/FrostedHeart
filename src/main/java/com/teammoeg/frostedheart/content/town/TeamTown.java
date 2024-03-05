@@ -36,7 +36,7 @@ import java.util.UUID;
 
 /**
  * The town for a player team.
- *
+ * <p>
  * The TeamTown is only an interface of the underlying TeamTownData.
  * You may use this to access or modify town data.
  */

@@ -55,7 +55,7 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
             for (int y = yLow; y < yHigh; ++y)
                 for (int z = zLow; z <= zHigh; ++z) {
                     BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
-                    /** Enum a seamless NoUpandDown hollow cube */
+                    // Enum a seamless NoUpandDown hollow cube
                     if ( ( (z>zLow && z<zHigh) && ((x==xLow) || (x==xHigh)) ) || ((z==zLow || z==zHigh) && (x>xLow && x<xHigh)) ) {
                         TileEntity te = Utils.getExistingTileEntity(world, actualPos);
                         if (te instanceof BlastFurnaceTileEntity) {

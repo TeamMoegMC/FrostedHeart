@@ -89,12 +89,10 @@ public class WorldTemperature {
      * The temperature when snow can reach the ground.
      */
     public static final float SNOW_TEMPERATURE = -13;
-
-    public static final float BLIZZARD_TEMPERATURE = -30;
     /**
      * The temperature when snow becomes blizzard.
      */
-    //public static final float BLIZZARD_TEMPERATURE = -18;
+    public static final float BLIZZARD_TEMPERATURE = -30;
     /**
      * The temperature when cold plant can grow.
      */

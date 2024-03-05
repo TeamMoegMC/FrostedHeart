@@ -32,15 +32,9 @@ public class FHResearchSyncEndPacket implements FHMessage {
     public FHResearchSyncEndPacket() {
     }
 
-    /**
-	 * @param buffer  
-	 */
     public FHResearchSyncEndPacket(PacketBuffer buffer) {
     }
 
-    /**
-	 * @param buffer  
-	 */
     public void encode(PacketBuffer buffer) {
     }
 

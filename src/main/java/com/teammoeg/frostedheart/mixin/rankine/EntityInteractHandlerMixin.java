@@ -29,7 +29,6 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 @Mixin(EntityInteractHandler.class)
 public class EntityInteractHandlerMixin {
     /**
-     * @param event
      * @author khjxiaogu
      * @reason cancel rankine breed
      */

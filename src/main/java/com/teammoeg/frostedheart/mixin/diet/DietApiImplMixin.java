@@ -43,10 +43,6 @@ public class DietApiImplMixin extends DietApi {
         }
     }
 
-    /**
-     * @param heal
-     * @param sat
-     */
     @Inject(at = @At("HEAD"), require = 1, method = "get(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;IF)Ltop/theillusivec4/diet/api/IDietResult;", cancellable = true, remap = false)
     public void get(PlayerEntity player, ItemStack input, int heal, float sat,
                     CallbackInfoReturnable<IDietResult> result) {

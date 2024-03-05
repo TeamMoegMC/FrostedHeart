@@ -29,7 +29,7 @@ import net.minecraft.util.math.MathHelper;
 
 /**
  * A particle that simulates the behavior of a gas.
- *
+ * <p>
  * For example, steam, smoke, or any other gas-like particle.
  */
 public class GasParticle extends SpriteTexturedParticle {

@@ -39,10 +39,10 @@ import net.minecraftforge.common.util.Constants;
 
 /**
  * Town data for a whole team.
- *
+ * <p>
  * It maintains town resources, worker data, and holds a team data
  * when initialized.
- *
+ * <p>
  * Everything permanent should be saved in this class.
  */
 public class TeamTownData implements NBTSerializable{

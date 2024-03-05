@@ -43,9 +43,9 @@ import net.minecraft.world.gen.Heightmap;
  * with appropriate context after confirming that a blizzard is present in the world.
  * <p>
  * We want to thank BetterWeather's author CorgiTaco, who wrote the code we adapted from.
- * Original Code: https://github.com/CorgiTaco/Better-Weather
+ * Original Code: <a href="https://github.com/CorgiTaco/Better-Weather">...</a>
  * This file is licensed under the same license LGPL 3.0
- * Original License: https://github.com/CorgiTaco/Better-Weather/blob/Forge-1.16.X/LICENSE.txt
+ * Original License: <a href="https://github.com/CorgiTaco/Better-Weather/blob/Forge-1.16.X/LICENSE.txt">...</a>
  */
 public class BlizzardRenderer {
     private final static float[] rainSizeXMemento = new float[1024];

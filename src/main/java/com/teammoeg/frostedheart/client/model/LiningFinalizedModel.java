@@ -131,9 +131,9 @@ public class LiningFinalizedModel implements IBakedModel {
      * //   - for example, for an EAST face, a value of 0.00 lies directly on the EAST face of the cube.  a value of 0.01 lies
      * //     slightly to the east of the EAST face (at x=1.01).  a value of -0.01 lies slightly to the west of the EAST face (at x=0.99).
      * // The orientation of the faces is as per the diagram on this page
-     * //   http://greyminecraftcoder.blogspot.com.au/2014/12/block-models-texturing-quads-faces.html
+     * //   <a href="http://greyminecraftcoder.blogspot.com.au/2014/12/block-models-texturing-quads-faces.html">...</a>
      * // Read this page to learn more about how to draw a textured quad
-     * //   http://greyminecraftcoder.blogspot.co.at/2014/12/the-tessellator-and-worldrenderer-18.html
+     * //   <a href="http://greyminecraftcoder.blogspot.co.at/2014/12/the-tessellator-and-worldrenderer-18.html">...</a>
      *
      * @param centreLR            the centre point of the face left-right
      * @param width               width of the face
@@ -143,7 +143,7 @@ public class LiningFinalizedModel implements IBakedModel {
      * @param itemRenderLayer     which item layer the quad is on
      * @param texture             the texture to use for the quad
      * @param face                the face to draw this quad on
-     * @return
+     * @return baked quad
      */
     private BakedQuad createBakedQuadForFace(float centreLR, float width, float centreUD, float height, float forwardDisplacement,
                                              int itemRenderLayer,
@@ -260,10 +260,10 @@ public class LiningFinalizedModel implements IBakedModel {
      * We do this by getting the list of quads for the base model (the chessboard itself), then adding an extra quad for
      * every piece on the chessboard.  The number of pieces was provided to the constructor of the finalised model.
      *
-     * @param state
+     * @param state block state
      * @param side  which side: north, east, south, west, up, down, or null.  NULL is a different kind to the others
-     *              see here for more information: http://minecraft.gamepedia.com/Block_models#Item_models
-     * @param rand
+     *              see here for more information: <a href="http://minecraft.gamepedia.com/Block_models#Item_models">...</a>
+     * @param rand random
      * @return the list of quads to be rendered
      */
 
@@ -306,9 +306,9 @@ public class LiningFinalizedModel implements IBakedModel {
      * @param u             u-coordinate of the texture (0 - 16) corresponding to [x,y,z]
      * @param v             v-coordinate of the texture (0 - 16) corresponding to [x,y,z]
      * @param lightmapvalue the blocklight+skylight packed light map value (generally: set this to maximum for items)
-     *                      http://greyminecraftcoder.blogspot.com/2020/04/lighting-1144.html
+     *                      <a href="http://greyminecraftcoder.blogspot.com/2020/04/lighting-1144.html">...</a>
      * @param normal        the packed representation of the normal vector, see calculatePackedNormal().  Used for lighting item.
-     * @return
+     * @return int array
      */
     private int[] vertexToInts(float x, float y, float z, int color, TextureAtlasSprite texture, float u, float v, int lightmapvalue, int normal) {
         // based on FaceBakery::storeVertexData and FaceBakery::fillVertexData

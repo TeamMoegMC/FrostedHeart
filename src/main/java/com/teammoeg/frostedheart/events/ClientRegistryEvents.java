@@ -114,9 +114,7 @@ public class ClientRegistryEvents {
     }
 	public static KeyBinding key_skipDialog = new KeyBinding("key.frostedheart.skip_dialog", 
 		GLFW.GLFW_KEY_Z, "key.categories.frostedheart");
-    /**
-     * @param event
-     */
+
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
         // Register screens
@@ -242,9 +240,6 @@ public class ClientRegistryEvents {
         ScreenManager.registerFactory(type, factory);
     }
 
-    /**
-     * @param event
-     */
     @SuppressWarnings("resource")
     @SubscribeEvent
     public static void registerParticleFactories(ParticleFactoryRegisterEvent event) {

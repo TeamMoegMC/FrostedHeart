@@ -167,7 +167,7 @@ public class ChunkHeatData implements NBTSerializable {
      * @param heatPos the position of the heating block, at the center of the cube
      * @param range   the distance from the heatPos to the boundary
      * @param tempMod the temperature added
-     * @deprecated use {@link addCubicTempAdjust}
+     * @deprecated use {@link ChunkHeatData#addCubicTempAdjust}
      */
     @Deprecated
     public static void addTempToCube(IWorld world, BlockPos heatPos, int range, byte tempMod) {
@@ -340,7 +340,7 @@ public class ChunkHeatData implements NBTSerializable {
      *
      * @param world   must be server side
      * @param heatPos the position of the heating block, at the center of the cube
-     * @deprecated use {@link removeTempAdjust}
+     * @deprecated use {@link ChunkHeatData#removeTempAdjust}
      */
     @Deprecated
     public static void resetTempToCube(IWorld world, BlockPos heatPos) {

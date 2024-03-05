@@ -50,7 +50,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 /**
  * Mark machine owner for research
- * 
+ * <p>
  * */
 @SuppressWarnings("unused")
 @Mixin({IETileProviderBlock.class, MechanicalCrafterBlock.class, SaunaBlock.class})
