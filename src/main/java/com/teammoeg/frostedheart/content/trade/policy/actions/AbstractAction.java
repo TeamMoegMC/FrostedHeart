@@ -27,11 +27,6 @@ import net.minecraft.network.PacketBuffer;
 public abstract class AbstractAction implements PolicyAction {
 
     @Override
-    public JsonObject serialize() {
-        return new JsonObject();
-    }
-
-    @Override
     public void write(PacketBuffer buffer) {
     }
 

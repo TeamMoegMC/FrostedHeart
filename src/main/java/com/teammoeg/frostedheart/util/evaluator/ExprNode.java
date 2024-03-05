@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.util.evaluator;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 class ExprNode implements Node {
@@ -122,12 +121,12 @@ class ExprNode implements Node {
 		}
 		System.out.println("xe");*/
         if (!positive.isEmpty()) {
-            x = String.join("+", (Iterable<String>) () -> positive.stream().map(n -> n.toString()).iterator());
+            x = String.join("+", (Iterable<String>) () -> positive.stream().map(Object::toString).iterator());
         } else if (!negative.isEmpty())
             x = "0";
         if (!negative.isEmpty()) {
             x += "-";
-            x += String.join("-", (Iterable<String>) () -> negative.stream().map(n -> n.toString()).iterator());
+            x += String.join("-", (Iterable<String>) () -> negative.stream().map(Object::toString).iterator());
         }
         return x;
     }

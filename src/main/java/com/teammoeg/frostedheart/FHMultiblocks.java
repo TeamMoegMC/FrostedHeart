@@ -24,7 +24,6 @@ import com.teammoeg.frostedheart.content.generator.NormalGeneratorMultiBlock;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorMultiblock;
-import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorTileEntity;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;

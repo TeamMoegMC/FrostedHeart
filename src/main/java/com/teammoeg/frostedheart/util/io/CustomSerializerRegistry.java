@@ -53,8 +53,7 @@ public class CustomSerializerRegistry<T, U> {
 
     public U getDeserializer(JsonElement je) {
         JsonObject jo = je.getAsJsonObject();
-        U func = fromJson.get(jo.get("type").getAsString());
-        return func;
+        return fromJson.get(jo.get("type").getAsString());
     }
 
     public int idOf(T obj) {

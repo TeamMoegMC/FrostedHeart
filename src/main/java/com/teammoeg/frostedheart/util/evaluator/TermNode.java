@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.util.evaluator;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 class TermNode implements Node {

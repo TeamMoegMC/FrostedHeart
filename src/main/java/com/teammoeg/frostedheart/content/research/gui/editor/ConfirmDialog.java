@@ -32,9 +32,7 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 public class ConfirmDialog extends BaseEditDialog {
-    public static Editor<Boolean> EDITOR = (p, l, v, c) -> {
-        new ConfirmDialog(p, l, v, c).open();
-    };
+    public static Editor<Boolean> EDITOR = (p, l, v, c) -> new ConfirmDialog(p, l, v, c).open();
     TextField tf;
     Button cancel;
     Button ok;
