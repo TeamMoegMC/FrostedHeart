@@ -594,7 +594,6 @@ public class CommonEvents {
             event.setAmount(event.getAmount() * (0.2f / (ei.getAmplifier() + 1)));
     }
 
-    @SuppressWarnings("resource")
     @SubscribeEvent
     public static void onIEMultiBlockForm(MultiblockFormEvent event) {
         if (event.getPlayer() instanceof FakePlayer) {
@@ -624,7 +623,6 @@ public class CommonEvents {
         }
     }
 
-    @SuppressWarnings("resource")
     @SubscribeEvent
     public static void onPlayerKill(LivingDeathEvent event) {
         Entity ent = event.getSource().getTrueSource();
@@ -806,7 +804,6 @@ public class CommonEvents {
         }
     }
 
-    @SuppressWarnings("resource")
     @SubscribeEvent
     public static void removeSpawnVillage(WorldEvent.CreateSpawnPosition event) {
         if (event.getWorld() instanceof ServerWorld) {
@@ -820,7 +817,6 @@ public class CommonEvents {
     }
 
 
-    @SuppressWarnings("resource")
     @SubscribeEvent
     public static void removeVanillaVillages(WorldEvent.Load event) {
         if (event.getWorld() instanceof ServerWorld) {

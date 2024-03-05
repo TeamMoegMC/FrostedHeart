@@ -85,8 +85,7 @@ public class ClimateCommand {
             ct.getSource().sendFeedback(GuiUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
             return Command.SINGLE_SUCCESS;
         });
-        @SuppressWarnings("resource")
-		LiteralArgumentBuilder<CommandSource> reset = Commands.literal("resetVanilla")
+        LiteralArgumentBuilder<CommandSource> reset = Commands.literal("resetVanilla")
                 .executes((ct) -> {
                     IServerWorldInfo serverWorldInfo=ct.getSource().getWorld().serverWorldInfo;
                     serverWorldInfo.setThunderTime(0);

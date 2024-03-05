@@ -221,8 +221,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
             return findRecipe(stack) != null;
         return false;
     }
-    @SuppressWarnings("resource")
-	public GeneratorRecipe findRecipe(ItemStack input) {
+    public GeneratorRecipe findRecipe(ItemStack input) {
         for (GeneratorRecipe recipe : FHUtils.filterRecipes(this.getWorld().getRecipeManager(), GeneratorRecipe.TYPE))
             if (recipe.input.test(input))
                 return recipe;

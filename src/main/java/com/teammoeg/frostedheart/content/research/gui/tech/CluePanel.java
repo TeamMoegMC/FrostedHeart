@@ -35,9 +35,9 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.text.ITextComponent;
 
 public class CluePanel extends Panel {
-    public static final String sq = "\u2610";
-    public static final String sq_v = "\u2611";
-    public static final String sq_x = "\u2612";
+    public static final String sq = "☐";
+    public static final String sq_v = "☑";
+    public static final String sq_x = "☒";
     Clue c;
     Research r;
     ITextComponent hover;

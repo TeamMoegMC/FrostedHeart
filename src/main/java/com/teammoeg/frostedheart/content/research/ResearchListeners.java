@@ -260,7 +260,6 @@ public class ResearchListeners {
         return true;
     }
 
-    @SuppressWarnings("resource")
     public static boolean canUseRecipe(PlayerEntity s, IRecipe<?> r) {
         if (s == null)
             return canUseRecipe(r);

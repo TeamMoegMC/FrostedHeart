@@ -84,7 +84,6 @@ public class TemperatureLootCondition implements ILootCondition {
         return TYPE;
     }
 
-    @SuppressWarnings("resource")
     @Override
     public boolean test(LootContext t) {
         if (t.has(LootParameters.ORIGIN)) {

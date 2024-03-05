@@ -284,7 +284,7 @@ public class ClientEvents {
         }
     }
 
-    @SuppressWarnings({"unchecked", "resource"})
+    @SuppressWarnings({"unchecked"})
     @SubscribeEvent
     public static void drawUpdateReminder(GuiScreenEvent.DrawScreenEvent.Post event) {
         Screen gui = event.getGui();

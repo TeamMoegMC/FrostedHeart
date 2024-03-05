@@ -150,7 +150,6 @@ public class CoreSpade extends FHLeveledTool {
         tooltip.add(GuiUtils.translateTooltip("meme.core_spade").mergeStyle(TextFormatting.GRAY));
     }
 
-    @SuppressWarnings("resource")
     @Override
     public ActionResultType onItemUse(ItemUseContext context) {
         return doProspect(context.getPlayer(), context.getWorld(), context.getPos(), context.getItem(), context.getHand());

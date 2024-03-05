@@ -89,6 +89,7 @@
   "tetra.module.double/basic_pro_pick.material_name": "%s Prospector Pick",
   "tetra.variant.basic_pro_pick.item_name":"Prospector Pick",
   "tetra.module.double/basic_pro_pick.prefix": "%s",
+  "tetra.module.single/basic_shovel.prefix": "%s",
   
   "tetra/schematic/single/head/geo_hammer/basic_geo_hammer.name": "Geologists Hammer Head",
   

@@ -53,7 +53,6 @@ import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class PlayerEvents {
-    @SuppressWarnings("resource")
     public static void onRC(PlayerInteractEvent.RightClickItem rci) {
         if (!rci.getWorld().isRemote
                 && RegistryUtils.getRegistryName(rci.getItemStack().getItem()).getNamespace().equals("projecte")) {

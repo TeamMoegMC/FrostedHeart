@@ -50,7 +50,6 @@ public abstract class WorldRendererMixin {
     @Shadow
     private int ticks;
 
-    @SuppressWarnings({"deprecation"})
     @Inject(method = "renderRainSnow", at = @At("HEAD"), cancellable = true)
     public void inject$renderWeather(LightTexture manager, float partialTicks, double x, double y, double z, CallbackInfo ci) {
         if (this.mc != null && this.mc.gameRenderer != null) {

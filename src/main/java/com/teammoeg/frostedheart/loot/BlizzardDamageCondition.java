@@ -57,7 +57,6 @@ public class BlizzardDamageCondition implements ILootCondition {
         return TYPE;
     }
 
-    @SuppressWarnings("resource")
     @Override
     public boolean test(LootContext t) {
         if (t.getLootTable(t.getQueriedLootTableId()).getParameterSet() == LootParameterSets.ENTITY) {

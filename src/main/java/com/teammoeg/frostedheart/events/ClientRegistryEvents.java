@@ -240,7 +240,6 @@ public class ClientRegistryEvents {
         ScreenManager.registerFactory(type, factory);
     }
 
-    @SuppressWarnings("resource")
     @SubscribeEvent
     public static void registerParticleFactories(ParticleFactoryRegisterEvent event) {
         Minecraft.getInstance().particles.registerFactory(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);

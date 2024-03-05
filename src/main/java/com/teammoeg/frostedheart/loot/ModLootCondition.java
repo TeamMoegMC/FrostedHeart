@@ -76,7 +76,6 @@ public class ModLootCondition implements ILootCondition {
         return TYPE;
     }
 
-    @SuppressWarnings("resource")
     @Override
     public boolean test(LootContext t) {
         return mods.contains(t.getQueriedLootTableId().getNamespace());
