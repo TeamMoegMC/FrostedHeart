@@ -13,6 +13,7 @@ public abstract class NullableNBTMessage extends NBTMessage {
 		this(SerializeUtil.readOptional(buffer, PacketBuffer::readCompoundTag));
 	}
 
+	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 	public NullableNBTMessage(Optional<CompoundNBT> tag) {
 		super(tag.orElse(null));
 	}

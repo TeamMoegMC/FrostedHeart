@@ -281,6 +281,7 @@ public class SerializeUtil {
         });
     }
 
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public static <T> void writeOptional(PacketBuffer buffer, Optional<T> data, BiConsumer<T, PacketBuffer> func) {
         if (data.isPresent()) {
             buffer.writeBoolean(true);
