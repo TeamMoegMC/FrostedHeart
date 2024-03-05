@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.compat.jei.category;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -127,7 +128,7 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
 
     @Override
     public void setIngredients(GeneratorSteamRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.FLUID, Arrays.asList(recipe.input.getMatchingFluidStacks()));
+        ingredients.setInputLists(VanillaTypes.FLUID, Collections.singletonList(recipe.input.getMatchingFluidStacks()));
     }
 
 

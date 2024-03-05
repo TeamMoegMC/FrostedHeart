@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.research.gui;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
@@ -72,8 +73,7 @@ public class FHIcons {
 
         public FHAnimatedIcon(FHIcon[] icons2) {
             this();
-            for (FHIcon i : icons2)
-                icons.add(i);
+            icons.addAll(Arrays.asList(icons2));
         }
 
         public FHAnimatedIcon(JsonElement elm) {

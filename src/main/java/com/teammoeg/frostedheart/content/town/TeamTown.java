@@ -226,7 +226,7 @@ public class TeamTown implements Town {
     }
 
     public void finishWork() {
-        costedService.forEach((k, v) -> storage.put(k, v));
+        storage.putAll(costedService);
         for (Entry<TownResourceType, Integer> ent : storage.entrySet()) {
             int max = getIntMaxStorage(ent.getKey());
             if (ent.getValue() > max) {

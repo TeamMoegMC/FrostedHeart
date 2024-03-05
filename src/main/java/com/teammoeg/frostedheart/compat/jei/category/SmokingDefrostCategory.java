@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.compat.jei.category;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -131,8 +132,8 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
 
     @Override
     public void setIngredients(SmokingDefrostRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.getIngredient().getMatchingStacks())));
-        ingredients.setOutputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.getIss())));
+        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.getIngredient().getMatchingStacks())));
+        ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.getIss())));
     }
 
 

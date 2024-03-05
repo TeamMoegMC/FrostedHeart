@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.compat.jei.category;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.DoubleItemIcon;
@@ -95,7 +96,7 @@ public class ChargerCookingCategory implements IRecipeCategory<SmokingRecipe> {
 
     @Override
     public void setIngredients(SmokingRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.getIngredients().get(0).getMatchingStacks())));
+        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.getIngredients().get(0).getMatchingStacks())));
         ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
     }
 

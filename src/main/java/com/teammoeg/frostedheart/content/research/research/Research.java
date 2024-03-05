@@ -255,9 +255,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @param effs the effs<br>
      */
     public void attachEffect(Effect... effs) {
-        for (Effect effect : effs) {
-            effects.add(effect);
-        }
+        effects.addAll(Arrays.asList(effs));
     }
 
     /**
@@ -266,9 +264,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @param ingredients the ingredients<br>
      */
     public void attachRequiredItem(IngredientWithSize... ingredients) {
-        for (IngredientWithSize ingredient : ingredients) {
-            requiredItems.add(ingredient);
-        }
+        requiredItems.addAll(Arrays.asList(ingredients));
     }
 
     /**

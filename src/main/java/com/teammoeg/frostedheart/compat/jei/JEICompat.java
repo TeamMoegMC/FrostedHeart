@@ -19,15 +19,8 @@
 
 package com.teammoeg.frostedheart.compat.jei;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -174,7 +167,7 @@ public class JEICompat implements IModPlugin {
     }
 
     public static void showJEICategory(ResourceLocation rl) {
-        jei.getRecipesGui().showCategories(Arrays.asList(rl));
+        jei.getRecipesGui().showCategories(Collections.singletonList(rl));
     }
 
     public static void showJEIFor(ItemStack stack) {

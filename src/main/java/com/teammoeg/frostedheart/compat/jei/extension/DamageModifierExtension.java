@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.compat.jei.extension;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import com.teammoeg.frostedheart.content.recipes.ModifyDamageRecipe;
 
@@ -58,7 +59,7 @@ public class DamageModifierExtension implements ICraftingCategoryExtension {
             }
         }
         ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(copy), Arrays.asList(fuel.repair.getMatchingStacks())));
-        ingredients.setOutputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(out)));
+        ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(out)));
     }
 
 }

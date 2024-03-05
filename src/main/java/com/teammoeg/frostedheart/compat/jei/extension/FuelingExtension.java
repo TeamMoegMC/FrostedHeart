@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.compat.jei.extension;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.content.temperature.handstoves.CoalHandStove;
@@ -45,7 +46,7 @@ public class FuelingExtension implements ICraftingCategoryExtension {
 
     @Override
     public void setIngredients(IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(new ItemStack(FHItems.hand_stove.get())), Arrays.asList(fuel.getIngredient().getMatchingStacks())));
+        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Collections.singletonList(new ItemStack(FHItems.hand_stove.get())), Arrays.asList(fuel.getIngredient().getMatchingStacks())));
         ItemStack out = new ItemStack(FHItems.hand_stove.get());
         CoalHandStove.setFuelAmount(out, fuel.getFuel());
         ingredients.setOutput(VanillaTypes.ITEM, out);

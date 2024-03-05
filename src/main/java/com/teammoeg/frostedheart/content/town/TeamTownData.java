@@ -100,9 +100,7 @@ public class TeamTownData implements NBTSerializable{
             }
             return false;
         });
-        for (TownWorkerData v : blocks.values()) {
-            pq.add(v);
-        }
+        pq.addAll(blocks.values());
         TeamTown itt = new TeamTown(this);
         for (TownWorkerData t : pq) {
             t.firstWork(itt);

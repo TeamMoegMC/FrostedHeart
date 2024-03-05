@@ -19,10 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.research.effects;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -64,9 +61,7 @@ public class EffectCommand extends Effect {
         super();
         rewards = new ArrayList<>();
 
-        for (String stack : cmds) {
-            rewards.add(stack);
-        }
+        rewards.addAll(Arrays.asList(cmds));
     }
 
     @Override

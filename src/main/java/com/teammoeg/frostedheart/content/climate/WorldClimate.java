@@ -19,13 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -267,7 +261,7 @@ public class WorldClimate implements NBTSerializable {
      * @return Iterable of temperature
      */
     public static Iterable<Float> getFutureTempIterator(WorldClimate data, int deltaHours) {
-    	if(data==null)return Arrays.asList();
+    	if(data==null)return Collections.emptyList();
         long thours = data.clockSource.getHours() + deltaHours;
         long ddate = thours / 24 - data.clockSource.getDate() + 1;
         long dhours = thours % 24;

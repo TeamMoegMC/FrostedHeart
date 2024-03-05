@@ -42,14 +42,14 @@ public class BoneBlock extends FHBaseBlock {
     @Override
     public void onBlockHarvested(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
         super.onBlockHarvested(worldIn, pos, state, player);
-        Integer count = Math.abs(RANDOM.nextInt()) % 5 + 1;
+        int count = Math.abs(RANDOM.nextInt()) % 5 + 1;
         spawnAsEntity(worldIn, pos, new ItemStack(Items.BONE, count));
     }
 
     @Override
     public void onExplosionDestroy(World worldIn, BlockPos pos, Explosion explosionIn) {
         super.onExplosionDestroy(worldIn, pos, explosionIn);
-        Integer count = Math.abs(RANDOM.nextInt()) % 2 + 1;
+        int count = Math.abs(RANDOM.nextInt()) % 2 + 1;
         spawnAsEntity(worldIn, pos, new ItemStack(Items.BONE, count));
     }
 
