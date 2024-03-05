@@ -46,7 +46,7 @@ public abstract class EditDialog extends Panel {
         try {
             onClose();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            throw new RuntimeException(ex);
         }
         try {
             if (previous != null) {
@@ -62,6 +62,7 @@ public abstract class EditDialog extends Panel {
         try {
             onClosed();
         } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
     }
 

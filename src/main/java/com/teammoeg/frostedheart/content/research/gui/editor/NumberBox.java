@@ -31,7 +31,7 @@ public class NumberBox extends LabeledTextBox {
         try {
             return Long.parseLong(getText());
         } catch (NumberFormatException ex) {
-
+            throw new RuntimeException(ex);
         }
         return Long.parseLong(orig);
     }

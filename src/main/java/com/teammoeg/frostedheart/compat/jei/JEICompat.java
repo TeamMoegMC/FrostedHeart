@@ -211,11 +211,15 @@ public class JEICompat implements IModPlugin {
                 for (ResourceLocation rl : all) {
                 	try {
                     man.hideRecipe(i, rl);
-                	}catch(Exception ex) {}//IDK How JEI And IE conflict, so just catch all.
+                	}catch(Exception ex) {
+                        throw new RuntimeException(ex);
+                    }//IDK How JEI And IE conflict, so just catch all.
                     if (ovrd != null)
                     	try {
                     		man.hideRecipe(ovrd, rl);
-                    	}catch(Exception ex) {}//IDK How JEI And IE conflict, so just catch all.
+                    	}catch(Exception ex) {
+                            throw new RuntimeException(ex);
+                        }//IDK How JEI And IE conflict, so just catch all.
                     //System.out.println("hiding "+i.getId()+" for "+rl);
                 }
                 if (!irs.isEmpty())
@@ -224,11 +228,15 @@ public class JEICompat implements IModPlugin {
                 for (ResourceLocation rl : all) {
                 	try {
                 		man.unhideRecipe(i, rl);
-                	}catch(Exception ex) {}//IDK How JEI And IE conflict, so just catch all.
+                	}catch(Exception ex) {
+                        throw new RuntimeException(ex);
+                    }//IDK How JEI And IE conflict, so just catch all.
                     if (ovrd != null)
                     	try {
                     		man.unhideRecipe(ovrd, rl);
-                    	}catch(Exception ex) {}//IDK How JEI And IE conflict, so just catch all.
+                    	}catch(Exception ex) {
+                            throw new RuntimeException(ex);
+                        }//IDK How JEI And IE conflict, so just catch all.
                 }
                 if (!irs.isEmpty())
                     unlocked.add(irs.getItem());

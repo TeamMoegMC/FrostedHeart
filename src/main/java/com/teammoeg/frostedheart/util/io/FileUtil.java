@@ -45,8 +45,7 @@ public class FileUtil {
                 ba.write(data, 0, nRead);
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            throw e;
+            throw new RuntimeException(e);
         }
 
         return ba.toByteArray();
@@ -93,8 +92,7 @@ public class FileUtil {
                 os.write(data, 0, nRead);
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            throw e;
+            throw new RuntimeException(e);
         }
     }
 

@@ -234,6 +234,7 @@ public class FHResearch {
                 r.load(je.getAsJsonObject());
             }
         } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         return researches.getById(iid);
     }
@@ -315,6 +316,7 @@ public class FHResearch {
         try {
             FileUtil.transfer(gs.toJson(r.serialize()), out);
         } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -328,6 +330,7 @@ public class FHResearch {
             try {
                 FileUtil.transfer(gs.toJson(r.serialize()), out);
             } catch (IOException e) {
+                throw new RuntimeException(e);
             }
 
         }

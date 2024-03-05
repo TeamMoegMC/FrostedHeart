@@ -60,6 +60,7 @@ public class IngredientEditor extends BaseEditDialog {
             try {
                 vx = TagCollectionManager.getManager().getItemTags().getValidatedIdFromTag(tag).toString();
             } catch (Exception ex) {
+                throw new RuntimeException(ex);
             }
         }
         EditBtnDialog.EDITOR_ITEM_TAGS.open(p, l, vx, s -> c.accept(new TagList(TagCollectionManager.getManager().getItemTags().getTagByID(new ResourceLocation(s)))));

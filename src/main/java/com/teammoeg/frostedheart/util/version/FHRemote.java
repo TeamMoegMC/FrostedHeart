@@ -66,6 +66,7 @@ public class FHRemote {
                         this.stableVersion = parser.parse(fr).getAsJsonObject().get("version").getAsString();
                     }
                 } catch (Throwable e) {
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -75,6 +76,7 @@ public class FHRemote {
                 String versionWithMC = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
                 this.stableVersion = versionWithMC.substring(versionWithMC.indexOf('-') + 1);
             } catch (Throwable e) {
+                throw new RuntimeException(e);
             }
         }
 
@@ -84,6 +86,7 @@ public class FHRemote {
                 try {
                     this.stableVersion = FileUtil.readString(vers);
                 } catch (Throwable e) {
+                    throw new RuntimeException(e);
                 }
             }
         }
