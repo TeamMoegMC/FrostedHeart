@@ -26,7 +26,6 @@ import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
 import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import net.minecraft.block.BlockState;

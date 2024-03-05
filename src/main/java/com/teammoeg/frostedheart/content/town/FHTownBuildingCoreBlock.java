@@ -1,10 +1,8 @@
 package com.teammoeg.frostedheart.content.town;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.content.climate.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;

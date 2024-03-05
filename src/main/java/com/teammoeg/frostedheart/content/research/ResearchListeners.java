@@ -41,7 +41,6 @@ import com.teammoeg.frostedheart.content.research.research.clues.MinigameClue;
 import com.teammoeg.frostedheart.content.research.research.clues.TickListenerClue;
 import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.RegistryUtils;

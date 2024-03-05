@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.FHRegisteredItem;
 import com.teammoeg.frostedheart.content.research.FHRegistry;
 import com.teammoeg.frostedheart.content.research.FHResearch;
@@ -56,7 +55,6 @@ import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.io.Writeable;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -67,7 +65,6 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.network.PacketDistributor;
 
 /**
  * Only Definition of research.

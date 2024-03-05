@@ -37,12 +37,9 @@ import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElem
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.IScenarioTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.TriggerTarget;
-import com.teammoeg.frostedheart.team.SpecialDataManager;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.evaluator.Evaluator;
 
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 
 public abstract class ScenarioVM implements IScenarioThread{

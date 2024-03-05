@@ -23,7 +23,6 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.AutoIDItem;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
@@ -36,13 +35,10 @@ import com.teammoeg.frostedheart.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.io.Writeable;
 
-import dev.ftb.mods.ftbteams.data.Team;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.network.PacketDistributor;
 
 /**
  * "Clue" for researches, contributes completion percentage for some

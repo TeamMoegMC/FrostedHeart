@@ -27,7 +27,6 @@ import com.teammoeg.frostedheart.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;

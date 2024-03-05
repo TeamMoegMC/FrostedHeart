@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.util;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTags;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;

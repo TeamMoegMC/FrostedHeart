@@ -28,12 +28,9 @@ import net.minecraft.block.BlockState;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.common.Tags;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import static net.minecraft.block.PlantBlockHelper.isAir;
 //严格来讲这不是一个正常的BlockScanner，而是一个用于将FloorBlockScanner和ConfinedSpaceScanner结合起来的类
 public class HouseBlockScanner extends BlockScanner {
     public static final int MAX_SCANNING_TIMES_VOLUME = 4096;

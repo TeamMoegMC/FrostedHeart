@@ -25,7 +25,6 @@ import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.team.ClientDataHolder;
 import com.teammoeg.frostedheart.team.SpecialDataManager;
 import com.teammoeg.frostedheart.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;

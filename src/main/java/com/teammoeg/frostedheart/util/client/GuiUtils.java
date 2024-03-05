@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.util.client;
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 

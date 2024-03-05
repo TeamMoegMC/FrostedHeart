@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.climate.player;
 
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 import java.util.HashMap;
 import java.util.Map;

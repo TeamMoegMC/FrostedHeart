@@ -26,7 +26,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 import java.util.zip.ZipOutputStream;
 
 public class ZipFile implements AutoCloseable {
