@@ -253,13 +253,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
             return false;
         return true;
     }
-    @Override
-    public void markBlockForUpdate(BlockPos pos, BlockState newState) {
-        BlockState state = world.getBlockState(pos);
-        if (newState == null)
-            newState = state;
-        world.notifyBlockUpdate(pos, state, newState, 3);
-    }
+
     @Override
     public void readCustomNBT(CompoundNBT compound, boolean client) {
         process = compound.getInt("process");

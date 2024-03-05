@@ -498,12 +498,6 @@ public class SelectItemStackDialog extends EditDialog {
     public void onClose() {
     }
 
-    @Override
-    public void onClosed() {
-
-
-    }
-
     private void updateItemWidgets(List<Widget> items) {
         panelStacks.widgets.clear();
         panelStacks.addAll(items);
