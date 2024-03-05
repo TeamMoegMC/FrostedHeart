@@ -36,7 +36,7 @@ public enum RelationModifier {
     FOREIGNER("foreigner");
     public final String tkey;
 
-    private RelationModifier(String tkey) {
+    RelationModifier(String tkey) {
         this.tkey = tkey;
     }
 

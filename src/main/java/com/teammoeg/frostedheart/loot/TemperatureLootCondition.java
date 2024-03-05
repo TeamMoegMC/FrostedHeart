@@ -45,7 +45,7 @@ public class TemperatureLootCondition implements ILootCondition {
         gt((a, b) -> a > b);
         final BiPredicate<Float, Float> comp;
 
-        private Comp(BiPredicate<Float, Float> comp) {
+        Comp(BiPredicate<Float, Float> comp) {
             this.comp = comp;
         }
 

@@ -194,7 +194,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         @Override
         public void addWidgets() {
             super.addWidgets();
-            add(new LabeledOpenEditorButton<>(this, e.rewards.size() > 0 ? fromItemStack(e.rewards.get(0)) : "", "Edit Rewards", SelectItemStackDialog.STACK_LIST, e.rewards, s -> e.rewards = new ArrayList<>(s)));
+            add(new LabeledOpenEditorButton<>(this, !e.rewards.isEmpty() ? fromItemStack(e.rewards.get(0)) : "", "Edit Rewards", SelectItemStackDialog.STACK_LIST, e.rewards, s -> e.rewards = new ArrayList<>(s)));
 
         }
 

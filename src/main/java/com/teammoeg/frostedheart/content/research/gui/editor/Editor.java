@@ -35,5 +35,4 @@ public interface Editor<T> {
 
     void open(Widget w, String lab, T val, Consumer<T> onCommit);
 
-    ;
 }

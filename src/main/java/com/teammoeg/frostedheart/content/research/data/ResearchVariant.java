@@ -31,7 +31,7 @@ public enum ResearchVariant {
 
     private final String token;
 
-    private ResearchVariant(String token) {
+    ResearchVariant(String token) {
         this.token = token;
     }
 

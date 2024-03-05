@@ -173,7 +173,6 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
                 return FHDataManager.getDrinkHeat(fs);
             }
         }
-        ;
         return 0;
     }
 

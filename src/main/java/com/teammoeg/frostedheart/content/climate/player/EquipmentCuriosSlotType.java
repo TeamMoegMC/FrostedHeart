@@ -25,7 +25,7 @@ public enum EquipmentCuriosSlotType {
 	   CURIOS_GENERIC(true),
 	   UNKNOWN(false);
 	private final boolean isCurios;
-	private EquipmentCuriosSlotType(boolean isCurios) {
+	EquipmentCuriosSlotType(boolean isCurios) {
 		this.isCurios = isCurios;
 	}
 	public boolean isHand() {

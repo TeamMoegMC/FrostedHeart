@@ -39,8 +39,6 @@ public interface ITempAdjustFood {
      */
     float getHeat(ItemStack is, float env);
 
-    ;
-
     /**
      * Get max temperature this item can get.
      *
@@ -50,8 +48,6 @@ public interface ITempAdjustFood {
     default float getMaxTemp(ItemStack is) {
         return 15;
     }
-
-    ;
 
     /**
      * Get min temperature this item can get.

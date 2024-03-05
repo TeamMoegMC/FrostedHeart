@@ -36,7 +36,7 @@ public class FHResearchControlPacket implements FHMessage {
     public enum Operator {
         COMMIT_ITEM,
         START,
-        PAUSE;
+        PAUSE
     }
 
     public final Operator status;

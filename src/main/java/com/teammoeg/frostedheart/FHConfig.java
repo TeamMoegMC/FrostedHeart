@@ -153,7 +153,7 @@ public class FHConfig {
     }
 
     public enum TempOrbPos {
-        MIDDLE, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT;
+        MIDDLE, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
     }
 
     public static final ForgeConfigSpec CLIENT_CONFIG;

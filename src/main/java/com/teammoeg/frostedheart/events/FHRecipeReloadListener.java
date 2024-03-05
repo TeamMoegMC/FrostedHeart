@@ -66,7 +66,7 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
 
     public static void buildRecipeLists(RecipeManager recipeManager) {
         Collection<IRecipe<?>> recipes = recipeManager.getRecipes();
-        if (recipes.size() == 0)
+        if (recipes.isEmpty())
             return;
         //filterRecipes(recipes, GeneratorRecipe.class, GeneratorRecipe.TYPE);
         GeneratorSteamRecipe.recipeList = filterRecipes(recipes, GeneratorSteamRecipe.class, GeneratorSteamRecipe.TYPE);

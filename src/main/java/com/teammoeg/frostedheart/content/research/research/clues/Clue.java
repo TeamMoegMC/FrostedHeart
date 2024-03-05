@@ -260,8 +260,6 @@ public abstract class Clue extends AutoIDItem implements Writeable{
      */
     public abstract void start(TeamDataHolder team);
 
-    ;
-
     public void write(PacketBuffer buffer) {
         buffer.writeString(name);
         buffer.writeString(desc);

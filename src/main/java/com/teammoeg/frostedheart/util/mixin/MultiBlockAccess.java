@@ -26,6 +26,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public interface MultiBlockAccess {
-    public abstract void callForm(World world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit);
+    void callForm(World world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit);
 }
 

@@ -72,7 +72,7 @@ public class EffectItemReward extends Effect {
 
     @Override
     public FHIcon getDefaultIcon() {
-        if (rewards.size() != 0) {
+        if (!rewards.isEmpty()) {
             return FHIcons.getStackIcons(rewards);
         }
         return FHIcons.nop();

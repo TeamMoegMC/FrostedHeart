@@ -48,5 +48,4 @@ public abstract class MixinAbstractFurnaceTileEntity extends LockableTileEntity 
         cbi.cancel();
     }
 
-    ;
 }

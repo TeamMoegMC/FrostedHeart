@@ -37,7 +37,7 @@ public class FHVersion {
             return eq;
         }
 
-        private EqualState(boolean isValid, boolean isLater) {
+        EqualState(boolean isValid, boolean isLater) {
             this.isValid = isValid;
             this.isLater = isLater;
         }
@@ -234,6 +234,6 @@ public class FHVersion {
 
     @Override
     public String toString() {
-        return "ver " + String.valueOf(majors) + Arrays.toString(minors);
+        return "ver " + majors + Arrays.toString(minors);
     }
 }

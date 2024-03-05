@@ -43,7 +43,7 @@ public class LiningItemOverrideList extends ItemOverrideList {
     public IBakedModel getOverrideModel(IBakedModel originalModel, ItemStack stack, @Nullable ClientWorld world, @Nullable LivingEntity entity) {
         String s = ItemNBTHelper.getString(stack, "inner_cover");
         EquipmentSlotType slotType = ((ArmorItem) stack.getItem()).getEquipmentSlot();
-        if (s.length() > 0 && slotType != null) {
+        if (!s.isEmpty() && slotType != null) {
             String liningType = new ResourceLocation(s).getPath();
             String slotName = "feet";
             switch (slotType.getName()) {

@@ -75,5 +75,5 @@ public class SpecialDataType<T extends NBTSerializable,U extends SpecialDataHold
 		if (getClass() != obj.getClass()) return false;
 		SpecialDataType<?,?> other = (SpecialDataType<?,?>) obj;
 		return Objects.equals(id, other.id);
-	};
+	}
 }

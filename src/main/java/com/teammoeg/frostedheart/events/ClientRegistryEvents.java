@@ -221,7 +221,7 @@ public class ClientRegistryEvents {
 
                     .map(rl -> new ResourceLocation(rl.getNamespace(), rl.getPath().substring(9, rl.getPath().length() - 4)))
                     .map(rl -> {
-                        FHMain.LOGGER.info("stitching texture" + rl.toString());
+                        FHMain.LOGGER.info("stitching texture" + rl);
                         return rl;
                     })
                     .forEach(event::addSprite);

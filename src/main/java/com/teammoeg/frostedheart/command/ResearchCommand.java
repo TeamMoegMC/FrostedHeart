@@ -87,7 +87,7 @@ public class ResearchCommand {
                         })))
                 .then(Commands.literal("edit").then(Commands.argument("enable", BoolArgumentType.bool()).executes(ct -> {
                     FHResearch.editor = ct.getArgument("enable", Boolean.class);
-                    ct.getSource().sendFeedback(GuiUtils.str("Editing mode set " + String.valueOf(FHResearch.editor)).mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendFeedback(GuiUtils.str("Editing mode set " + FHResearch.editor).mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
                 .then(Commands.literal("default").executes(ct -> Command.SINGLE_SUCCESS))

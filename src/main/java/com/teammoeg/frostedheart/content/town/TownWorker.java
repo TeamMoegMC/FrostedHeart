@@ -57,8 +57,6 @@ public interface TownWorker {
         return true;
     }
 
-    ;
-
     /**
      * Work during tick
      * It's recommended that most of the jobs are done during this.
@@ -68,8 +66,6 @@ public interface TownWorker {
      * @return true, if work done successfully
      */
     boolean work(Town town, CompoundNBT workData);
-
-    ;
 
     /**
      * Work with lower priority;
@@ -83,8 +79,6 @@ public interface TownWorker {
         return true;
     }
 
-    ;
-
     /**
      * Work with lowest priority
      * It's recommended that this job recycles services
@@ -97,5 +91,4 @@ public interface TownWorker {
         return true;
     }
 
-    ;
 }

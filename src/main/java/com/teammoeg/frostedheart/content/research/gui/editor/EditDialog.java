@@ -48,7 +48,6 @@ public abstract class EditDialog extends Panel {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        ;
         try {
             if (previous != null) {
                 sc.closeDialog(false);
@@ -60,12 +59,10 @@ public abstract class EditDialog extends Panel {
             ClientUtils.getPlayer().sendMessage(GuiUtils.str("Fatal error on switching dialog! see log for details").mergeStyle(TextFormatting.RED), null);
             sc.closeGui();
         }
-        ;
         try {
             onClosed();
         } catch (Exception ex) {
         }
-        ;
     }
 
     @Override

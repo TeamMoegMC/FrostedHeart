@@ -142,7 +142,8 @@ public class FHUtils {
     	if(type.isInstance(te))
     		return (T) te;
     	return null;
-    };
+    }
+
     public static <T> T getCapability(IWorld w,BlockPos pos,Direction d,Capability<T> cap){
     	TileEntity te=getExistingTileEntity(w,pos);
     	if(te!=null)

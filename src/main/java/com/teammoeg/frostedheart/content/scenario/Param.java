@@ -11,5 +11,5 @@ import java.lang.annotation.Target;
 @Target(PARAMETER)
 @Repeatable(Params.class)
 public @interface Param {
-    public String value();
+    String value();
 }

@@ -36,11 +36,8 @@ public class NumberBox extends LabeledTextBox {
         return Long.parseLong(orig);
     }
 
-    ;
-
     public void setNum(long number) {
         super.setText(String.valueOf(number));
     }
 
-    ;
 }

@@ -702,7 +702,6 @@ public class Research extends FHRegisteredItem implements Writeable {
         setCategory(ResearchCategory.ALL.get(categoryRL));
         parents.clear();
         parentIds.stream().map(FHResearch.researches::get).forEach(parents::add);
-        ;
     }
 
     /**
@@ -764,7 +763,7 @@ public class Research extends FHRegisteredItem implements Writeable {
     @Override
     public JsonElement serialize() {
         JsonObject jo = new JsonObject();
-        if (name.length() > 0)
+        if (!name.isEmpty())
             jo.addProperty("name", name);
         if (!desc.isEmpty())
             jo.add("desc", SerializeUtil.toJsonStringList(desc, e -> e));

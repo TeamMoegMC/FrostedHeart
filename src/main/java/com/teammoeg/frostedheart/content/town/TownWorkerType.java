@@ -68,7 +68,7 @@ public enum TownWorkerType {
      * @param worker           the worker
      * @param internalPriority the internal priority
      */
-    private TownWorkerType(Block workerBlock, TownWorker worker, int internalPriority) {
+    TownWorkerType(Block workerBlock, TownWorker worker, int internalPriority) {
         this.block = workerBlock;
         this.worker = worker;
         this.priority = internalPriority;

@@ -388,7 +388,6 @@ public class ClientEvents {
         int anchorX = event.getWindow().getScaledWidth() / 2;
         int anchorY = event.getWindow().getScaledHeight();
         float partialTicks = event.getPartialTicks();
-        ;
 
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
         if (FHConfig.CLIENT.enableUI.get()) {

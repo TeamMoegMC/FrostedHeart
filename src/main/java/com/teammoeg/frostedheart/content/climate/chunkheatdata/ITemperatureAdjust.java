@@ -53,7 +53,7 @@ public interface ITemperatureAdjust extends NBTSerializable {
      * @param buffer the buffer<br>
      * @return returns adjust
      */
-    public static ITemperatureAdjust valueOf(PacketBuffer buffer) {
+    static ITemperatureAdjust valueOf(PacketBuffer buffer) {
         int packetId = buffer.readByte();
         switch (packetId) {
             case 1:
@@ -64,8 +64,6 @@ public interface ITemperatureAdjust extends NBTSerializable {
                 return new CubicTemperatureAdjust(buffer);
         }
     }
-
-    ;
 
     /**
      * Deserialize.

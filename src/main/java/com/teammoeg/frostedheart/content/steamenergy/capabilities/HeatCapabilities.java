@@ -22,7 +22,7 @@ public class HeatCapabilities {
     public static boolean canConnectAt(IWorld world,BlockPos pos,Direction to) {
     	return FHUtils.getExistingTileEntity(world, pos,INetworkConsumer.class)!=null||FHUtils.getCapability(world, pos, to, FHCapabilities.HEAT_EP.capability())!=null;
     	
-    };
+    }
 
 
     /**

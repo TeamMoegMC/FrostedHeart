@@ -35,7 +35,6 @@ public class EditUtils {
             FHResearch.load(r);
         }
         new ResearchEditorDialog(p, r, r.getCategory()).open();
-        ;
     }
 
     public static TextField getTitle(Panel p, String title) {

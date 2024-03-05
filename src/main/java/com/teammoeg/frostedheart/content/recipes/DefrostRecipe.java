@@ -38,7 +38,7 @@ import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 
 public interface DefrostRecipe extends IRecipe<IInventory> {
-    public static class Serializer<T extends DefrostRecipe> extends IERecipeSerializer<T> {
+    class Serializer<T extends DefrostRecipe> extends IERecipeSerializer<T> {
         @FunctionalInterface
         public interface DRFactory<T extends DefrostRecipe> {
             T create(ResourceLocation p_i50030_1_, String p_i50030_2_, Ingredient p_i50030_3_, ItemStack[] results, float p_i50030_5_, int p_i50030_6_);

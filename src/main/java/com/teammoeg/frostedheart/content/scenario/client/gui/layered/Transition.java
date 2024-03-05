@@ -50,7 +50,7 @@ public enum Transition implements TransitionFunction{
 	;
 
 	final TransitionFunction func;
-	private Transition(TransitionFunction func) {
+	Transition(TransitionFunction func) {
 		this.func = func;
 	}
 	@Override

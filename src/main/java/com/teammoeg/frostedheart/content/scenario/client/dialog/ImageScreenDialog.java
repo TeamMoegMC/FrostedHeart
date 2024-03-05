@@ -119,8 +119,9 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 			 }
 		}
 		return super.mouseClicked(mouseX, mouseY, button);
-	};
-	@Override
+	}
+
+    @Override
 	public int getDialogWidth() {
 		return ClientScene.fromRelativeXW(dialogW);
 	}

@@ -171,7 +171,7 @@ public class IngredientEditor extends BaseEditDialog {
     private static String getText(IItemList li) {
         if (li instanceof TagList) {
             try {
-                return "Tag:" + TagCollectionManager.getManager().getItemTags().getValidatedIdFromTag(((TagList) li).tag).toString();
+                return "Tag:" + TagCollectionManager.getManager().getItemTags().getValidatedIdFromTag(((TagList) li).tag);
             } catch (Exception ex) {
                 return "Unknown tag list";
             }

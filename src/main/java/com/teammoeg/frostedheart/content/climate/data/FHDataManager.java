@@ -38,7 +38,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fluids.FluidStack;
 
 public class FHDataManager {
-    public static enum FHDataType {
+    public enum FHDataType {
         Armor(new DataType<>(ArmorTempData.class, "temperature", "armor")),
         Biome(new DataType<>(BiomeTempData.class, "temperature", "biome")),
         Food(new DataType<>(FoodTempData.class, "temperature", "food")),
@@ -75,7 +75,7 @@ public class FHDataManager {
 
         public final DataType<? extends JsonDataHolder> type;
 
-        private FHDataType(DataType<? extends JsonDataHolder> type) {
+        FHDataType(DataType<? extends JsonDataHolder> type) {
             this.type = type;
         }
 

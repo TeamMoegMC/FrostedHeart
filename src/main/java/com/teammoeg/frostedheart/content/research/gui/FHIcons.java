@@ -91,7 +91,7 @@ public class FHIcons {
 
         @Override
         public void draw(MatrixStack ms, int x, int y, int w, int h) {
-            if (icons.size() > 0) {
+            if (!icons.isEmpty()) {
                 GuiHelper.setupDrawing();
                 icons.get((int) ((System.currentTimeMillis() / 1000) % icons.size())).draw(ms, x, y, w, h);
             }
@@ -761,7 +761,7 @@ public class FHIcons {
         if (i.getCount() == 1)
             return getIcon(i.getBaseIngredient());
         if (i.getCount() < 10)
-            return getIcon(getIcon(i.getBaseIngredient()), getIcon(" " + String.valueOf(i.getCount())));
+            return getIcon(getIcon(i.getBaseIngredient()), getIcon(" " + i.getCount()));
         return getIcon(getIcon(i.getBaseIngredient()), getIcon(String.valueOf(i.getCount())));
     }
 

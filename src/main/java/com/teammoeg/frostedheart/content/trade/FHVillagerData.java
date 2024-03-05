@@ -241,7 +241,6 @@ public class FHVillagerData implements INamedContainerProvider {
         initLegacy(parent);
         long day = WorldClimate.getWorldDay(w);
         FHUtils.ofMap(relations, trigger.getUniqueID()).ifPresent(t -> t.update(day));
-        ;
         if (lastUpdated == -1) {
             lastUpdated = day - 1;
         }

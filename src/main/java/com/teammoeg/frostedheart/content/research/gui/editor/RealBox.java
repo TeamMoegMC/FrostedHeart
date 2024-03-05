@@ -36,11 +36,8 @@ public class RealBox extends LabeledTextBox {
         return Double.parseDouble(orig);
     }
 
-    ;
-
     public void setNum(double number) {
         super.setText(String.valueOf(number));
     }
 
-    ;
 }

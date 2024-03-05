@@ -60,7 +60,7 @@ public class FHTextUtil {
 
     @Nonnull
     public static ITextComponent get(String orig, String type, Supplier<String> pid) {
-        if (orig == null || orig.length() == 0)
+        if (orig == null || orig.isEmpty())
             return ClientTextComponentUtils.parse("{" + type + "." + FHMain.MODID + "." + pid.get() + "}");
         if (orig.startsWith("@")) {
             if (orig.length() == 1)
@@ -73,7 +73,7 @@ public class FHTextUtil {
 
     @Nullable
     public static ITextComponent getOptional(String orig, String type, Supplier<String> pid) {
-        if (orig == null || orig.length() == 0) {
+        if (orig == null || orig.isEmpty()) {
             String key = type + "." + FHMain.MODID + "." + pid.get();
             if (I18n.hasKey(key))
                 return ClientTextComponentUtils.parse("{" + key + "}");

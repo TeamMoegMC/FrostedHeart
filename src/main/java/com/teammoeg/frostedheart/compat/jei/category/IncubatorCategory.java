@@ -78,9 +78,9 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 
         String burnTime;
         if (recipe.time < 1000 || recipe.time % 60 != 0)
-            burnTime = String.valueOf(recipe.time) + " s";
+            burnTime = recipe.time + " s";
         else
-            burnTime = String.valueOf(recipe.time / 60) + " m";
+            burnTime = recipe.time / 60 + " m";
         int width = ClientUtils.mc().fontRenderer.getStringWidth(burnTime);
         ClientUtils.mc().fontRenderer.drawString(transform, burnTime, 162 - width, 62, 0xFFFFFF);
     }
