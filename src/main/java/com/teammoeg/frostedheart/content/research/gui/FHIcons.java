@@ -219,6 +219,15 @@ public class FHIcons {
         abstract JsonObject asObject();
         public void write(PacketBuffer buffer) {
         }
+
+        @Override
+        public FHIcon clone() {
+            try {
+                return (FHIcon) super.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new AssertionError();
+            }
+        }
     }
 
     private static class FHIngredientIcon extends FHAnimatedIcon {
