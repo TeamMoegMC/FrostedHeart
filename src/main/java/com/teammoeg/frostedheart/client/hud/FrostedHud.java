@@ -563,7 +563,7 @@ public class FrostedHud {
         // markers (moving across window by hour)
         IngameGui.blit(stack, windowX + 2, 0, firstDayU, markerV, firstDayW, markerH, 512, 256);
 
-        HUDElements.forecast_marker.blit(mc.ingameGUI, stack, windowX - markerMovingOffset + markerLength * 1, 0, 512,
+        HUDElements.forecast_marker.blit(mc.ingameGUI, stack, windowX - markerMovingOffset + markerLength, 0, 512,
                 256);
         HUDElements.forecast_marker.blit(mc.ingameGUI, stack, windowX - markerMovingOffset + markerLength * 2, 0, 512,
                 256);

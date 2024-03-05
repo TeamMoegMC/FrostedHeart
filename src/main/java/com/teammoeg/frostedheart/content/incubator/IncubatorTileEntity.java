@@ -301,7 +301,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                     }
                     if ((process / 20 != lprocess) && (d || e)) {
                         if (fluid[0].drain(water, FluidAction.SIMULATE).getAmount() == water) {
-                            efficiency += 0.005;
+                            efficiency += 0.005F;
                             efficiency = Math.min(efficiency, getMaxEfficiency());
                             fluid[0].drain(water, FluidAction.EXECUTE);
                             lprocess = process / 20;
@@ -310,7 +310,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                                 efficiency = 0.2f;
                                 return;
                             } else
-                                efficiency -= 0.005;
+                                efficiency -= 0.005F;
                             this.setActive(false);
                             this.markDirty();
                             this.markContainingBlockForUpdate(null);
@@ -327,7 +327,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                         efficiency = 0.2f;
                         return;
                     } else
-                        efficiency -= 0.0005;
+                        efficiency -= 0.0005F;
                     this.setActive(false);
                 }
 
@@ -412,7 +412,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                 }
                 boolean changed = false;
                 if (efficiency > 0) {
-                    efficiency -= 0.0005;
+                    efficiency -= 0.0005F;
                     changed = true;
                 }
                 if (efficiency < 0.005) {

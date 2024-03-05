@@ -98,7 +98,7 @@ public class TeamTown implements Town {
     @Override
     public double add(TownResourceType name, double val, boolean simulate) {
         int newVal = storage.getOrDefault(name, 0);
-        newVal += val * 1000;
+        newVal += (int) (val * 1000);
         int max = getIntMaxStorage(name) - backupStorage.getOrDefault(name, 0);
         int remain = 0;
         if (newVal > max) {
@@ -122,7 +122,7 @@ public class TeamTown implements Town {
         int curVal = storage.getOrDefault(name, 0);
         int buVal = backupStorage.getOrDefault(name, 0);
         int remain = 0;
-        servVal -= val * 1000;
+        servVal -= (int) (val * 1000);
         if (servVal < 0) {
             curVal += servVal;
             servVal = 0;

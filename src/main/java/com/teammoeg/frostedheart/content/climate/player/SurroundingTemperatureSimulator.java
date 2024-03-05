@@ -236,9 +236,9 @@ public class SurroundingTemperatureSimulator {
                 bm.setY((int) qy[i]);
                 bm.setZ((int) qz[i]);
                 BlockPos bp=bm.toImmutable();
-                heat += getHeat(bp)
-                        * MathHelper.lerp(MathHelper.clamp(-vy[vid[i]], 0, 0.4) * 2.5, 1, 0.5); // add heat
-                wind +=getAir(bp)?MathHelper.lerp((MathHelper.clamp(Math.abs(vy[vid[i]]), 0.2, 0.8)-0.2)/0.6, 2, 0.5):0;
+                heat += (float) (getHeat(bp)
+                                        * MathHelper.lerp(MathHelper.clamp(-vy[vid[i]], 0, 0.4) * 2.5, 1, 0.5)); // add heat
+                wind += getAir(bp)? (float) MathHelper.lerp((MathHelper.clamp(Math.abs(vy[vid[i]]), 0.2, 0.8) - 0.2) / 0.6, 2, 0.5) :0;
             }
         }
         return Pair.of(heat / n, wind/n);
@@ -286,13 +286,13 @@ public class SurroundingTemperatureSimulator {
             cblocktemp += b.getTemp();
         if (b.isLevel()) {
             if (bs.hasProperty(BlockStateProperties.LEVEL_0_15)) {
-                cblocktemp *= (bs.get(BlockStateProperties.LEVEL_0_15) + 1) / 16;
+                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_0_15) + 1) / 16;
             } else if (bs.hasProperty(BlockStateProperties.LEVEL_0_8)) {
-                cblocktemp *= (bs.get(BlockStateProperties.LEVEL_0_8) + 1) / 9;
+                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_0_8) + 1) / 9;
             } else if (bs.hasProperty(BlockStateProperties.LEVEL_1_8)) {
-                cblocktemp *= (bs.get(BlockStateProperties.LEVEL_1_8)) / 8;
+                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_1_8)) / 8;
             } else if (bs.hasProperty(BlockStateProperties.LEVEL_0_3)) {
-                cblocktemp *= (bs.get(BlockStateProperties.LEVEL_0_3) + 1) / 4;
+                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_0_3) + 1) / 4;
             }
         }
         return new CachedBlockInfo(bs.getCollisionShape(world, pos), cblocktemp,isExpose);

@@ -144,7 +144,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
             float spd = MathHelper.abs(super.getSpeed());
 
             if (spd > 0 && spd <= 64 && currentPoints <= maxPoints - 20) {
-                process += spd;
+                process += (int) spd;
                 int curact = process / 1067;
                 if (lastact != curact) {
                     lastact = curact;

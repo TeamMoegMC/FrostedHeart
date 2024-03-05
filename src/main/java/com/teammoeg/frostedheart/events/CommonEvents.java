@@ -442,13 +442,13 @@ public class CommonEvents {
                 if (heat > 0) {
                     if (current >= max)
                         return;
-                    current += heat * tspeed;
+                    current += (float) (heat * tspeed);
                     if (current > max)
                         current = max;
                 } else {
                     if (current <= min)
                         return;
-                    current += heat * tspeed;
+                    current += (float) (heat * tspeed);
                     if (current <= min)
                         return;
                 }

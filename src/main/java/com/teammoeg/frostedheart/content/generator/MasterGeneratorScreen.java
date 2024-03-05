@@ -137,7 +137,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		matrixStack.pop();
 	}
 	private void drawCenterText(MatrixStack matrixStack,int x,int y,String s,int clr) {
-		this.font.drawText(matrixStack,GuiUtils.str(s),x-this.font.getStringWidth(s)/2, y-4, clr);
+		this.font.drawText(matrixStack,GuiUtils.str(s),x- (float) this.font.getStringWidth(s) /2, y-4, clr);
 	}
 	protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int x, int y) {
 		//titles

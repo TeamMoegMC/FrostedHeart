@@ -56,7 +56,7 @@ public class EnergyCore implements NBTSerializable {
     public static void addEnergy(ServerPlayerEntity player, int val) {
         TeamResearchData trd = ResearchDataAPI.getData(player);
         long M = (long) trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY.getToken()) + 30000;
-        M *= (1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
+        M *= (long) (1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
         double n = trd.getHolder().getOnlineMembers().size();
         n = 1 + 0.8 * (n - 1);
         EnergyCore data=getCapability(player).orElse(null);
@@ -108,7 +108,7 @@ public class EnergyCore implements NBTSerializable {
         }
 
         if (data.penergy + data.energy >= val) {
-            val -= data.energy;
+            val -= (int) data.energy;
             data.penergy -= val;
             FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(player));
             return true;
@@ -126,7 +126,7 @@ public class EnergyCore implements NBTSerializable {
             double m;
             TeamResearchData trd = ResearchDataAPI.getData(player);
             long M = (long) trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY.getToken()) + 30000;
-            M *= (1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
+            M *= (long) (1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
             double dietValue = 0;
             IDietTracker idt = DietCapability.get(player).orElse(null);
             if (idt != null) {
@@ -162,7 +162,7 @@ public class EnergyCore implements NBTSerializable {
             double dtenergy = nenergy / n;
 
             if (dtenergy > 0 || tenergy > 15000) {
-            	data.energy += dtenergy;
+            	data.energy += (long) dtenergy;
                 double frac = MathHelper.frac(dtenergy);
                 if (frac > 0 && Math.random() < frac)
                 	data.energy++;

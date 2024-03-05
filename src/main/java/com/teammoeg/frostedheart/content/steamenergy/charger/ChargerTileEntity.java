@@ -134,7 +134,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
                 for (SmokingRecipe sr : irs) {
                     if (sr.getIngredients().iterator().next().test(is)) {
                         if (!world.isRemote) {
-                            power -= sr.getCookTime() / 20;
+                            power -= (float) sr.getCookTime() / 20;
                             splitAndSpawnExperience(pe.getEntityWorld(), pe.getPosition(), sr.getExperience());
                             is.setCount(is.getCount() - 1);
                             ItemStack gain = sr.getCraftingResult(null).copy();
@@ -152,7 +152,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
                 for (CampfireDefrostRecipe sr : irs) {
                     if (sr.getIngredient().test(is)) {
                         if (!world.isRemote) {
-                            power -= sr.getCookTime() / 80;
+                            power -= (float) sr.getCookTime() / 80;
                             splitAndSpawnExperience(pe.getEntityWorld(), pe.getPosition(), sr.getExperience());
                             is.setCount(is.getCount() - 1);
                             ItemStack gain = sr.getCraftingResult(null).copy();
@@ -180,7 +180,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
         if (!world.isRemote) {
             float actual = network.drainHeat(Math.min(200, (getMaxPower() - power) / 0.8F));
             if (actual > 0) {
-                power += actual * 0.8;
+                power += (float) (actual * 0.8);
                 this.setActive(true);
                 markDirty();
                 this.markContainingBlockForUpdate(null);

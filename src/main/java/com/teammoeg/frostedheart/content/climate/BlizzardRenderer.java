@@ -88,8 +88,8 @@ public class BlizzardRenderer {
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         BlockPos.Mutable blockPos = new BlockPos.Mutable();
         Random random = new Random(
-                cameraBlockPosX * cameraBlockPosX * 3121
-                        + cameraBlockPosZ * 45238971 ^ cameraBlockPosZ * cameraBlockPosZ * 418711
+                (long) cameraBlockPosX * cameraBlockPosX * 3121
+                        + cameraBlockPosZ * 45238971L ^ (long) cameraBlockPosZ * cameraBlockPosZ * 418711
                         + (int) (ticksAndPartialTicks * 13761)
         );
         for (int currentlyRenderingZ = cameraBlockPosZ - renderRadius;

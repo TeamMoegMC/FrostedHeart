@@ -46,7 +46,7 @@ public class RobotChunk implements ICapabilitySerializable<CompoundNBT> {
     }
 
     long hashCode(BlockPos bp) {
-        return bp.getY() << 56 + bp.getX() << 28 + bp.getZ();
+        return (long) bp.getY() << 56 + bp.getX() << 28 + bp.getZ();
     }
 
     @Override

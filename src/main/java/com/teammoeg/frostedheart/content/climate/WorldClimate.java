@@ -399,10 +399,10 @@ public class WorldClimate implements NBTSerializable {
         //model : 8->0 : 0->-30 : -30->-50= 1 : 2 : 2
         int f12cptime = 12 * 50;//1/2 storm period time
         long warmpeak = s + 56 * 50;//warm period time-1/4 storm period time
-        long coldpeak = (long) (warmpeak + 3 * f12cptime);
-        long coldend = (long) (coldpeak + 1 * f12cptime);
+        long coldpeak = warmpeak + 3 * f12cptime;
+        long coldend = coldpeak + f12cptime;
         //this.tempEventStream.add(new TempEvent(s-2*50,s+12*50,0,s+24*50,0,s+36*50,s+42*50,true,true));
-        this.tempEventStream.add(new ClimateEvent(s + 0 * 50, warmpeak, 8, coldpeak, -50, coldend, coldend + 72 * 50, true, true));
+        this.tempEventStream.add(new ClimateEvent(s, warmpeak, 8, coldpeak, -50, coldend, coldend + 72 * 50, true, true));
         lasthour = -1;
         lastday = -1;
         this.updateCache(w);
@@ -554,7 +554,7 @@ public class WorldClimate implements NBTSerializable {
                         lastLevel = 1;
                         frames.add(TemperatureFrame.increase(i, 1));
                     }
-                } else if (f >= 0 - 2) {
+                } else if (f >= -2) {
                     if (lastLevel < 0) {
                         lastLevel = 0;
                         frames.add(TemperatureFrame.calm(i, 0));
@@ -608,7 +608,7 @@ public class WorldClimate implements NBTSerializable {
             return 2;
         } else if (temp >= WorldTemperature.WARM_PERIOD_LOWER_PEAK - 3) {
             return 1;
-        } else if (temp <= 0 - 2) {
+        } else if (temp <= -2) {
             for (int j = WorldTemperature.BOTTOMS.length - 1; j >= 0; j--) {//check out its level
                 float b = WorldTemperature.BOTTOMS[j];
                 if (temp < b) {//just acrosss a level

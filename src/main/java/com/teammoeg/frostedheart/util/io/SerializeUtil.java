@@ -248,7 +248,7 @@ public class SerializeUtil {
         for (int i = 0; i < 8; i++) {
             boolean bl = elms.length > i && elms[i];
             b <<= 1;
-            b |= bl ? 1 : 0;
+            b |= (byte) (bl ? 1 : 0);
 
         }
         buffer.writeByte(b);
@@ -330,7 +330,7 @@ public class SerializeUtil {
 	    	marshallers.put(int.class, new BasicMarshaller<>(IntNBT.class,IntNBT::getInt,IntNBT::valueOf,0));
 	    	marshallers.put(Integer.class, new BasicMarshaller<>(IntNBT.class,IntNBT::getInt,IntNBT::valueOf));
 	    	
-	    	marshallers.put(long.class, new BasicMarshaller<>(LongNBT.class,LongNBT::getLong,LongNBT::valueOf,0l));
+	    	marshallers.put(long.class, new BasicMarshaller<>(LongNBT.class,LongNBT::getLong,LongNBT::valueOf, 0L));
 	    	marshallers.put(Long.class, new BasicMarshaller<>(LongNBT.class,LongNBT::getLong,LongNBT::valueOf));
 	    	
 	       	marshallers.put(short.class, new BasicMarshaller<>(ShortNBT.class,ShortNBT::getShort,ShortNBT::valueOf,(short)0));

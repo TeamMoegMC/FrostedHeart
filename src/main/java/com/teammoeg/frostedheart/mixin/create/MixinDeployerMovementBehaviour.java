@@ -46,7 +46,7 @@ public abstract class MixinDeployerMovementBehaviour extends MovementBehaviour {
         Contraption c = m.contraption;
         if (c instanceof ISpeedContraption) {
             int timer = m.data.getInt("Timer");
-            timer += MathHelper.clamp(Math.abs(((ISpeedContraption) c).getSpeed()) * 10, 1, 2560);
+            timer += (int) MathHelper.clamp(Math.abs(((ISpeedContraption) c).getSpeed()) * 10, 1, 2560);
             m.data.putInt("Timer", timer);
             cbi.cancel();
         }

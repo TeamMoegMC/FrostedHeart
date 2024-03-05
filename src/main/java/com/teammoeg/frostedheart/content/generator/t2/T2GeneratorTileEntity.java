@@ -211,7 +211,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 
         int liquidtick = data.map(t -> t.steamProcess).orElse(0);
         if (liquidtick >= rt) {
-            data.ifPresent(t -> t.steamProcess -= rt);
+            data.ifPresent(t -> t.steamProcess -= (int) rt);
             return;
         }
         GeneratorSteamRecipe sgr = GeneratorSteamRecipe.findRecipe(this.tank.getFluid());

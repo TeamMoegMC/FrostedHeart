@@ -322,7 +322,7 @@ public class ResearchData implements IEnvironment {
                 contribution += ac.getResearchContribution();
         if (contribution >= 0.999)
             return r.getRequiredPoints();
-        currentProgress += contribution * r.getRequiredPoints();
+        currentProgress += (long) (contribution * r.getRequiredPoints());
         return Math.min(currentProgress, r.getRequiredPoints());
     }
 
