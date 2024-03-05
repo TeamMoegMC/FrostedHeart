@@ -316,7 +316,8 @@ public class FHResearch {
         try {
             FileUtil.transfer(gs.toJson(r.serialize()), out);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+
+            throw new RuntimeException("Cannot save research " + r.getId() + ": " + e.getMessage());
         }
     }
 
@@ -330,7 +331,7 @@ public class FHResearch {
             try {
                 FileUtil.transfer(gs.toJson(r.serialize()), out);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Cannot save research " + r.getId() + ": " + e.getMessage());
             }
 
         }

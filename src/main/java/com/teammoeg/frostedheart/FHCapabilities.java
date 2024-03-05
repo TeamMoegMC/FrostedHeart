@@ -50,7 +50,7 @@ public class FHCapabilities {
 				}
 			}
 		}catch(SecurityException ex) {
-			throw new RuntimeException(ex);
+			throw new RuntimeException("Can not access capability "+capClass.getSimpleName());
 		}
 		ctor.setAccessible(true);
 		final Constructor<T> fctor=ctor;
@@ -58,7 +58,7 @@ public class FHCapabilities {
 			try {
 				return fctor.newInstance();
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-				throw new RuntimeException("Can not create capability "+capClass.getSimpleName());
+				throw new RuntimeException("Can not create capability "+capClass.getSimpleName(), e);
 			}
 		});
 		capabilities.add(cap);

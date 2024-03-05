@@ -811,7 +811,7 @@ public class CommonEvents {
                 serverWorld.getChunkProvider().generator.func_235957_b_().func_236195_a_().keySet()
                         .remove(Structure.VILLAGE);
             } catch (UnsupportedOperationException e) {
-                throw new RuntimeException(e);
+                FHMain.LOGGER.error("Failed to remove vanilla village structures", e);
             }
         }
     }
@@ -825,7 +825,7 @@ public class CommonEvents {
                 serverWorld.getChunkProvider().generator.func_235957_b_().func_236195_a_().keySet()
                         .remove(Structure.VILLAGE);
             } catch (UnsupportedOperationException e) {
-                FHMain.LOGGER.error("Failed to remove vanilla village structures");
+                FHMain.LOGGER.error("Failed to remove vanilla village structures", e);
             }
         }
     }

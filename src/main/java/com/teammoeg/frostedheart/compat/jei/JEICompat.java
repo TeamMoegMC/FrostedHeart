@@ -222,13 +222,13 @@ public class JEICompat implements IModPlugin {
                 	try {
                 		man.unhideRecipe(i, rl);
                 	}catch(Exception ex) {
-                        throw new RuntimeException(ex);
+                        FHMain.LOGGER.error("Error un-hiding recipe",ex);
                     }//IDK How JEI And IE conflict, so just catch all.
                     if (ovrd != null)
                     	try {
                     		man.unhideRecipe(ovrd, rl);
                     	}catch(Exception ex) {
-                            throw new RuntimeException(ex);
+                            FHMain.LOGGER.error("Error un-hiding recipe",ex);
                         }//IDK How JEI And IE conflict, so just catch all.
                 }
                 if (!irs.isEmpty())

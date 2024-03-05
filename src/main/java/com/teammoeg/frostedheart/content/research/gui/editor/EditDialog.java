@@ -63,7 +63,7 @@ public abstract class EditDialog extends Panel {
         try {
             onClosed();
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RuntimeException("Error on dialog close", ex);
         }
     }
 

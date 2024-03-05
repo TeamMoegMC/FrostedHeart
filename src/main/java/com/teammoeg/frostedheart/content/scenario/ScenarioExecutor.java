@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.FHMain;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -284,10 +285,9 @@ public class ScenarioExecutor<T> {
             registerInst(ctor.newInstance());
         } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException |
                  IllegalArgumentException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            FHMain.LOGGER.error("Error registering scenario class",e);
         } catch (InvocationTargetException e) {
-            throw new RuntimeException(e.getTargetException());
+            throw new RuntimeException("Error registering scenario class" + e.getTargetException());
         }
 
     }

@@ -63,8 +63,7 @@ public class FHDataManager {
                     return dataCls.getConstructor(JsonObject.class).newInstance(jo);
                 } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                          | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-                    // TODO Auto-generated catch block
-                    throw new RuntimeException(e);
+                    throw new RuntimeException("Can not create instance of " + dataCls.getSimpleName() + " from json", e);
                 }
             }
 

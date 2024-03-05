@@ -81,12 +81,11 @@ public class FHNetwork {
 	    	CHANNEL.registerMessage(++iid,msg,FHMessage::encode,pb->{
 	    		try {
 					return ctor.newInstance(pb);
-				} catch (IllegalAccessException|IllegalArgumentException|InstantiationException e) {
-					throw new RuntimeException(e);
-				} catch (InvocationTargetException e) {
-					throw new RuntimeException(e.getCause());
+				} catch (IllegalAccessException | IllegalArgumentException | InstantiationException |
+                         InvocationTargetException e) {
+					throw new RuntimeException("Can not create message "+msg.getSimpleName(), e);
 				}
-	    	},FHMessage::handle);
+            },FHMessage::handle);
 		} catch (NoSuchMethodException | SecurityException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
