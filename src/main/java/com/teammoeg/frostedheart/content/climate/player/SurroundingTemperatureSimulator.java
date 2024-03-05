@@ -65,10 +65,26 @@ public class SurroundingTemperatureSimulator {
      */
     private static class CachedBlockInfo {
         VoxelShape shape;
+        
         float temperature;
         boolean exposeToAir;
+        BlockState bs;
+        public CachedBlockInfo(VoxelShape shape, float temperature, boolean exposeToAir, BlockState bs) {
+			super();
+			this.shape = shape;
+			this.temperature = temperature;
+			this.exposeToAir = exposeToAir;
+			this.bs = bs;
+		}
 
-        public CachedBlockInfo(VoxelShape shape,boolean airExpose) {
+		public CachedBlockInfo(VoxelShape shape, boolean exposeToAir, BlockState bs) {
+			super();
+			this.shape = shape;
+			this.exposeToAir = exposeToAir;
+			this.bs = bs;
+		}
+
+		public CachedBlockInfo(VoxelShape shape,boolean airExpose) {
             super();
             this.shape = shape;
             this.exposeToAir=airExpose;
@@ -129,7 +145,7 @@ public class SurroundingTemperatureSimulator {
        
     }
     public static void main(String[] args) {
-    	
+    	System.out.println(MathHelper.frac(-5.6));
     }
     public ChunkSection[] sections = new ChunkSection[8];// sectors(xz): - -/- +/+ -/+ + and y -/+
     public Heightmap[] maps=new Heightmap[4]; // sectors(xz): - -/- +/+ -/+ +
@@ -197,7 +213,7 @@ public class SurroundingTemperatureSimulator {
      */
     public BlockState getBlock(int x, int y, int z) {
         int i = 0;
-        z--;
+        //z--;
         if (x >= 0) {
             i += 4;
         } else {
@@ -258,6 +274,13 @@ public class SurroundingTemperatureSimulator {
             qz[i] = qz0;
             vid[i] = i;
         }
+        System.out.println("=========start=========");
+        for(int i=-1;i<=1;i++) {
+        	StringBuilder sb=new StringBuilder();
+        	 for(int j=-1;j<=1;j++)
+        		 sb.append(getInfo(new BlockPos((int)(qx0+i),(int)(qy0-2),(int)(qz0+j))).bs.getBlock().getRegistryName()).append(" , ");
+        	 System.out.println(sb.toString());
+        }
         float heat = 0;
         BlockPos.Mutable bm=new BlockPos.Mutable();
         for (int round = 0; round < num_rounds; ++round) // time-to-live for each particle is `num_rounds`
@@ -309,6 +332,10 @@ public class SurroundingTemperatureSimulator {
      */
     private CachedBlockInfo getInfo(BlockPos pos) {
         BlockPos ofregion = pos.subtract(origin);
+        if(pos.getX()<0)
+        	ofregion = ofregion.add(-1, 0, 0);
+        if(pos.getZ()<0)
+        	ofregion = ofregion.add(0, 0, -1);
         BlockState bs = getBlock(ofregion.getX(), ofregion.getY(), ofregion.getZ());
         return info.computeIfAbsent(bs, s -> getInfo(pos, s));
     }
@@ -321,7 +348,7 @@ public class SurroundingTemperatureSimulator {
     	boolean isExpose=getTopY(pos.getX(),pos.getZ())<pos.getY();
         BlockTempData b = FHDataManager.getBlockData(bs.getBlock());
         if (b == null)
-            return new CachedBlockInfo(bs.getCollisionShape(world, pos),isExpose);
+            return new CachedBlockInfo(bs.getCollisionShape(world, pos),isExpose,bs);
 
         float cblocktemp = 0;
         if (b.isLit()) {
@@ -341,7 +368,7 @@ public class SurroundingTemperatureSimulator {
                 cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_0_3) + 1) / 4;
             }
         }
-        return new CachedBlockInfo(bs.getCollisionShape(world, pos), cblocktemp,isExpose);
+        return new CachedBlockInfo(bs.getCollisionShape(world, pos), cblocktemp,isExpose,bs);
     }
 
     /***
@@ -384,12 +411,12 @@ public class SurroundingTemperatureSimulator {
         if (info.shape == EMPTY)
             return false;
         double nx=MathHelper.frac(x),ny=MathHelper.frac(y),nz=MathHelper.frac(z);
-        if(nx<0)
+        /*if(nx<0)
         	nx++;
         if(ny<0)
         	ny++;
         if(nz<0)
-        	nz++;
+        	nz++;*/
         return info.shape.contains(nx,ny,nz);
 
     }
