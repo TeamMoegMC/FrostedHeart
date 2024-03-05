@@ -58,10 +58,9 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class FHItems {
 	static final DeferredRegister<Item> registry=DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
 	static <T extends Item> RegistryObject<T> register(String name,Function<String,T> supplier) {
-		return registry.register(name,()->{ 
-			T item=supplier.apply(name);
-			//item.setRegistryName(FHMain.MODID, name);
-			return item;
+		return registry.register(name,()->{
+            //item.setRegistryName(FHMain.MODID, name);
+			return supplier.apply(name);
 		});
 	}
     public static String[] colors = new String[]{"black", "blue", "brown", "cyan", "gray", "green", "light_blue", "light_gray", "lime", "magenta", "orange", "pink", "purple", "red", "white", "yellow"};

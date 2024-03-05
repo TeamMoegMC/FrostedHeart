@@ -28,8 +28,7 @@ public abstract class AbstractAction implements PolicyAction {
 
     @Override
     public JsonObject serialize() {
-        JsonObject jo = new JsonObject();
-        return jo;
+        return new JsonObject();
     }
 
     @Override

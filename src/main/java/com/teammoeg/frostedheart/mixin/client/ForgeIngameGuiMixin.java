@@ -48,8 +48,7 @@ public class ForgeIngameGuiMixin extends IngameGui {
         PlayerEntity player = FrostedHud.getRenderViewPlayer();
         if (player == null) return;
         int x = width / 2;
-        int y = height;
-        FrostedHud.renderAirBar(stack, x, y, mc, player);
+        FrostedHud.renderAirBar(stack, x, height, mc, player);
     }
 
     /**

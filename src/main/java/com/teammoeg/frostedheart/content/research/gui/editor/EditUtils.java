@@ -38,9 +38,8 @@ public class EditUtils {
     }
 
     public static TextField getTitle(Panel p, String title) {
-        TextField tf = new TextField(p).setMaxWidth(200).setText(title).setColor(Color4I.BLACK);
 
-        return tf;
+        return new TextField(p).setMaxWidth(200).setText(title).setColor(Color4I.BLACK);
     }
 
     public static void saveResearch(Research r) {

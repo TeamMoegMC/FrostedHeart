@@ -53,8 +53,7 @@ public class LineIcon extends IconWithParent {
 
     @Override
     public LineIcon copy() {
-        LineIcon icon = new LineIcon(parent.copy(), x, y, w, h, side1, side2, tw, th);
-        return icon;
+        return new LineIcon(parent.copy(), x, y, w, h, side1, side2, tw, th);
     }
 
     @Override

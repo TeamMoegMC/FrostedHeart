@@ -213,8 +213,7 @@ public class FHIcons {
         }
 
         public JsonElement serialize() {
-            JsonObject jo = new JsonObject();
-            return jo;
+            return new JsonObject();
         }
         abstract JsonObject asObject();
         public void write(PacketBuffer buffer) {

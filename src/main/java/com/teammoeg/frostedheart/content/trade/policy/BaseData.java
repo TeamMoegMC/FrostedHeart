@@ -96,8 +96,7 @@ public abstract class BaseData implements Writeable {
     }
 
     public boolean canRestock(FHVillagerData fhvd) {
-        boolean res = restockconditions.stream().allMatch(c -> c.test(fhvd));
-        return res;
+        return restockconditions.stream().allMatch(c -> c.test(fhvd));
     }
 
     public void execute(FHVillagerData data, int count) {

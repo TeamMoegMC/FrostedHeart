@@ -352,14 +352,12 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     @Override
     public int getLowerBound() {
-        int extra = MathHelper.ceil(getRangeLevel()*2+1);
-        return extra;
+        return MathHelper.ceil(getRangeLevel()*2+1);
     }
 
     @Override
     public int getUpperBound() {
-        int rLevel = MathHelper.ceil(getRangeLevel() * 4+1);
-        return rLevel;
+        return MathHelper.ceil(getRangeLevel() * 4+1);
     }
 	@Override
 	protected void callBlockConsumerWithTypeCheck(Consumer<T> consumer, TileEntity te) {

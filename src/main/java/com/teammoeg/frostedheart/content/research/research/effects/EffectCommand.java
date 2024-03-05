@@ -89,8 +89,7 @@ public class EffectCommand extends Effect {
 
     @Override
     public List<ITextComponent> getDefaultTooltip() {
-        List<ITextComponent> tooltip = new ArrayList<>();
-        return tooltip;
+        return new ArrayList<>();
     }
 
     @Override

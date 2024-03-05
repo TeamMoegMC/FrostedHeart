@@ -53,8 +53,7 @@ public class FTBQCommands {
 		FHScenario.callClientCommand("showTask", runner, "q",q,"t",""+t);
 		runner.addTrigger(new SingleExecuteTargetTrigger(r->{
 			TeamData td=ServerQuestFile.INSTANCE.getData(r.getPlayer());
-			boolean rx=td.isCompleted(tsk);
-			return rx;
+            return td.isCompleted(tsk);
 		}),new ExecuteTarget(runner,s,l));
 		
 	}

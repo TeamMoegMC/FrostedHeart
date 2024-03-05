@@ -107,8 +107,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 
     @Override
     public List<ITextComponent> getTooltipStrings(IncubateRecipe recipe, double mouseX, double mouseY) {
-        List<ITextComponent> tooltip = new ArrayList<>();
-        return tooltip;
+        return new ArrayList<>();
     }
 
     @Override
