@@ -80,8 +80,7 @@ public class TownWorkerData {
     }
 
     public long getPriority() {
-        long prio = (priority & 0xFFFFFFFF) << 32 + (type.getPriority() & 0xFFFFFFFF);
-        return prio;
+        return (long) (priority) << 32 + (type.getPriority());
     }
 
     public TownWorkerType getType() {
