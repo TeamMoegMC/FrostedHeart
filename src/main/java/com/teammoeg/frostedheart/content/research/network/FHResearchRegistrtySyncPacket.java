@@ -41,9 +41,7 @@ public class FHResearchRegistrtySyncPacket extends NBTMessage {
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> {
-            FHResearch.initFromRegistry(this.getTag());
-        });
+        context.get().enqueueWork(() -> FHResearch.initFromRegistry(this.getTag()));
         context.get().setPacketHandled(true);
     }
 }

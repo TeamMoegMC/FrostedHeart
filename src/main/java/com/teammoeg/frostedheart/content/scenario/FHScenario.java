@@ -164,9 +164,7 @@ public class FHScenario {
 		for (Method met : cls.getMethods()) {
 			if (Modifier.isPublic(met.getModifiers())) {
 				final String name = met.getName();
-				registerCommand(name, (r, p) -> {
-					callClientCommand(name, r, p);
-				});
+				registerCommand(name, (r, p) -> callClientCommand(name, r, p));
 			}
 		}
 	}

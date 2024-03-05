@@ -864,9 +864,7 @@ public class CommonEvents {
             FHResearch.sendSyncPacket(currentPlayer);
             FHNetwork.send(currentPlayer,new FHDatapackSyncPacket());
             FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayerEntity) event.getEntity())));
-            FHCapabilities.CLIMATE_DATA.getCapability(serverWorld).ifPresent((cap) -> {
-                FHNetwork.send(currentPlayer,new FHClimatePacket(cap));
-            });
+            FHCapabilities.CLIMATE_DATA.getCapability(serverWorld).ifPresent((cap) -> FHNetwork.send(currentPlayer,new FHClimatePacket(cap)));
             //System.out.println("=x-x=");
             //System.out.println(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS.getValue(new ResourceLocation(FHMain.MODID,"add_loot")));
         }

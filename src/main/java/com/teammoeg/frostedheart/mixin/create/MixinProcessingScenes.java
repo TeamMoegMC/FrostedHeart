@@ -91,11 +91,9 @@ public class MixinProcessingScenes {
         scene.idle(30);
         scene.world.modifyTileEntity(pressPos, type,
                 pte -> pte.makeCompactingParticleEffect(util.vector.centerOf(basin), copper));
-        scene.world.modifyTileNBT(util.select.position(basin), BasinTileEntity.class, nbt -> {
-            nbt.put("VisualizedItems",
-                    NBTHelper.writeCompoundList(ImmutableList.of(IntAttached.with(1, copperBlock)), ia -> ia.getValue()
-                            .serializeNBT()));
-        });
+        scene.world.modifyTileNBT(util.select.position(basin), BasinTileEntity.class, nbt -> nbt.put("VisualizedItems",
+                NBTHelper.writeCompoundList(ImmutableList.of(IntAttached.with(1, copperBlock)), ia -> ia.getValue()
+                        .serializeNBT())));
         scene.idle(4);
         scene.world.createItemOnBelt(util.grid.at(1, 1, 1), Direction.UP, copperBlock);
         scene.idle(30);
@@ -116,11 +114,9 @@ public class MixinProcessingScenes {
         scene.idle(30);
         scene.world.modifyTileEntity(pressPos, type,
                 pte -> pte.makeCompactingParticleEffect(util.vector.centerOf(basin), log));
-        scene.world.modifyTileNBT(util.select.position(basin), BasinTileEntity.class, nbt -> {
-            nbt.put("VisualizedItems",
-                    NBTHelper.writeCompoundList(ImmutableList.of(IntAttached.with(1, bark)), ia -> ia.getValue()
-                            .serializeNBT()));
-        });
+        scene.world.modifyTileNBT(util.select.position(basin), BasinTileEntity.class, nbt -> nbt.put("VisualizedItems",
+                NBTHelper.writeCompoundList(ImmutableList.of(IntAttached.with(1, bark)), ia -> ia.getValue()
+                        .serializeNBT())));
         scene.idle(4);
         scene.world.createItemOnBelt(util.grid.at(1, 1, 1), Direction.UP, bark);
         scene.idle(30);

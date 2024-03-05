@@ -90,9 +90,7 @@ public class ResearchCommand {
                     ct.getSource().sendFeedback(GuiUtils.str("Editing mode set " + String.valueOf(FHResearch.editor)).mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
-                .then(Commands.literal("default").executes(ct -> {
-                    return Command.SINGLE_SUCCESS;
-                }))
+                .then(Commands.literal("default").executes(ct -> Command.SINGLE_SUCCESS))
                 .then(Commands.literal("energy").executes(ct -> {
                     EnergyCore.reportEnergy(ct.getSource().asPlayer());
                     return Command.SINGLE_SUCCESS;

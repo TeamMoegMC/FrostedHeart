@@ -675,48 +675,26 @@ public class FHIcons {
             } else
                 IconEditor.NOP_CHANGE_EDITOR.open(p, l, v, c);
         };
-        public static final Editor<FHItemIcon> ITEM_EDITOR = (p, l, v, c) -> {
-            SelectItemStackDialog.EDITOR.open(p, l, v == null ? null : v.stack, e -> c.accept(new FHItemIcon(e)));
-        };
-        public static final Editor<FHTextureIcon> TEXTURE_EDITOR = (p, l, v, c) -> {
-            EditPrompt.TEXT_EDITOR.open(p, l, v == null ? "" : (v.rl == null ? "" : v.rl.toString()),
-                    e -> c.accept(new FHTextureIcon(new ResourceLocation(e))));
-        };
-        public static final Editor<FHIngredientIcon> INGREDIENT_EDITOR = (p, l, v, c) -> {
-            IngredientEditor.EDITOR_INGREDIENT_EXTERN.open(p, l, v == null ? null : v.igd,
-                    e -> c.accept(new FHIngredientIcon(e)));
-        };
+        public static final Editor<FHItemIcon> ITEM_EDITOR = (p, l, v, c) -> SelectItemStackDialog.EDITOR.open(p, l, v == null ? null : v.stack, e -> c.accept(new FHItemIcon(e)));
+        public static final Editor<FHTextureIcon> TEXTURE_EDITOR = (p, l, v, c) -> EditPrompt.TEXT_EDITOR.open(p, l, v == null ? "" : (v.rl == null ? "" : v.rl.toString()),
+                e -> c.accept(new FHTextureIcon(new ResourceLocation(e))));
+        public static final Editor<FHIngredientIcon> INGREDIENT_EDITOR = (p, l, v, c) -> IngredientEditor.EDITOR_INGREDIENT_EXTERN.open(p, l, v == null ? null : v.igd,
+                e -> c.accept(new FHIngredientIcon(e)));
 
-        public static final Editor<FHIcon> INGREDIENT_SIZE_EDITOR = (p, l, v, c) -> {
-            IngredientEditor.EDITOR.open(p, l, null, e -> c.accept(FHIcons.getIcon(e)));
-        };
-        public static final Editor<FHTextIcon> TEXT_EDITOR = (p, l, v, c) -> {
-            EditPrompt.TEXT_EDITOR.open(p, l, v == null ? null : v.text, e -> c.accept(new FHTextIcon(e)));
-        };
+        public static final Editor<FHIcon> INGREDIENT_SIZE_EDITOR = (p, l, v, c) -> IngredientEditor.EDITOR.open(p, l, null, e -> c.accept(FHIcons.getIcon(e)));
+        public static final Editor<FHTextIcon> TEXT_EDITOR = (p, l, v, c) -> EditPrompt.TEXT_EDITOR.open(p, l, v == null ? null : v.text, e -> c.accept(new FHTextIcon(e)));
         public static final Editor<FHIcon> NOP_EDITOR = (p, l, v, c) -> {
             c.accept(FHNopIcon.INSTANCE);
             p.getGui().refreshWidgets();
         };
-        public static final Editor<FHIcon> NOP_CHANGE_EDITOR = (p, l, v, c) -> {
-            EDITOR.open(p, l, null, c);
-        };
-        public static final Editor<FHAnimatedIcon> ANIMATED_EDITOR = (p, l, v, c) -> {
-            new EditListDialog<>(p, l, v == null ? null : v.icons, null, EDITOR, e -> e.getClass().getSimpleName(),
-                    e -> e, e -> c.accept(new FHAnimatedIcon(e.toArray(new FHIcon[0])))).open();
-        };
-        public static final Editor<FHCombinedIcon> COMBINED_EDITOR = (p, l, v, c) -> {
-            new Combined(p, l, v, c).open();
-        };
+        public static final Editor<FHIcon> NOP_CHANGE_EDITOR = (p, l, v, c) -> EDITOR.open(p, l, null, c);
+        public static final Editor<FHAnimatedIcon> ANIMATED_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v == null ? null : v.icons, null, EDITOR, e -> e.getClass().getSimpleName(),
+                e -> e, e -> c.accept(new FHAnimatedIcon(e.toArray(new FHIcon[0])))).open();
+        public static final Editor<FHCombinedIcon> COMBINED_EDITOR = (p, l, v, c) -> new Combined(p, l, v, c).open();
 
-        public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> {
-            new SelectDialog<>(p, l, v == null ? null : v.name, o -> {
-                c.accept(new FHDelegateIcon(o));
-            }, TechIcons.internals::keySet, GuiUtils::str, e -> new String[]{e}, TechIcons.internals::get).open();
-        };
+        public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> new SelectDialog<>(p, l, v == null ? null : v.name, o -> c.accept(new FHDelegateIcon(o)), TechIcons.internals::keySet, GuiUtils::str, e -> new String[]{e}, TechIcons.internals::get).open();
 
-        public static final Editor<FHTextureUVIcon> UV_EDITOR = (p, l, v, c) -> {
-            new UV(p, l, v, c).open();
-        };
+        public static final Editor<FHTextureUVIcon> UV_EDITOR = (p, l, v, c) -> new UV(p, l, v, c).open();
 
         T v;
 

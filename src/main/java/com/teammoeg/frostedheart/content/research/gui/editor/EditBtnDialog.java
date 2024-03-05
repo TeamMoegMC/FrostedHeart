@@ -31,11 +31,7 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 public class EditBtnDialog extends BaseEditDialog {
-    public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> {
-
-
-        new EditBtnDialog(p, l, v, "Select Tag", c, SelectDialog.EDITOR_ITEM_TAGS).open();
-    };
+    public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new EditBtnDialog(p, l, v, "Select Tag", c, SelectDialog.EDITOR_ITEM_TAGS).open();
     LabeledTextBoxAndBtn box;
     Button ok;
     Button cancel;

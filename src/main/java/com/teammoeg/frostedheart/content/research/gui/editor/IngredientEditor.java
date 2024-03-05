@@ -46,14 +46,11 @@ import net.minecraftforge.common.crafting.CompoundIngredient;
 import net.minecraftforge.common.crafting.NBTIngredient;
 
 public class IngredientEditor extends BaseEditDialog {
-    public static final Editor<SingleItemList> EDITOR_ITEMLIST = (p, l, v, c) -> {
-
-        SelectItemStackDialog.EDITOR.open(p, l, (v == null || v.stack == null) ? new ItemStack(Items.AIR) : v.stack, s -> {
-            s = s.copy();
-            s.setCount(1);
-            c.accept(new SingleItemList(s));
-        });
-    };
+    public static final Editor<SingleItemList> EDITOR_ITEMLIST = (p, l, v, c) -> SelectItemStackDialog.EDITOR.open(p, l, (v == null || v.stack == null) ? new ItemStack(Items.AIR) : v.stack, s -> {
+        s = s.copy();
+        s.setCount(1);
+        c.accept(new SingleItemList(s));
+    });
     public static final Editor<TagList> EDITOR_TAGLIST = (p, l, v, c) -> {
 
 
@@ -77,27 +74,19 @@ public class IngredientEditor extends BaseEditDialog {
     };
 
 
-    public static final Editor<Collection<IItemList>> EDITOR_LIST_LIST = (p, l, v, c) -> {
-        new EditListDialog<>(p, l, v, EDITOR_LIST, IngredientEditor::getText, c).open();
-    };
+    public static final Editor<Collection<IItemList>> EDITOR_LIST_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, EDITOR_LIST, IngredientEditor::getText, c).open();
     public static final Editor<Ingredient> EDITOR_SIMPLE = (p, l, v, c) -> {
         IItemList vx = null;
         if (v != null)
             vx = v.acceptedItems[0];
-        EDITOR_LIST.open(p, l, vx, e -> {
-            c.accept(Ingredient.fromItemListStream(Stream.of(e)));
-        });
+        EDITOR_LIST.open(p, l, vx, e -> c.accept(Ingredient.fromItemListStream(Stream.of(e))));
     };
     public static final Editor<Ingredient> EDITOR_MULTIPLE = (p, l, v, c) -> {
         Collection<IItemList> list = null;
         if (v != null) list = Arrays.asList(v.acceptedItems);
-        EDITOR_LIST_LIST.open(p, l, list, e -> {
-            c.accept(Ingredient.fromItemListStream(e.stream()));
-        });
+        EDITOR_LIST_LIST.open(p, l, list, e -> c.accept(Ingredient.fromItemListStream(e.stream())));
     };
-    public static final Editor<Ingredient> VANILLA_EDITOR_CHOICE = (p, l, v, c) -> {
-        new EditorSelector<>(p, l, (t, s) -> true, v, c).addEditor("Single", EDITOR_SIMPLE).addEditor("Multiple", EDITOR_MULTIPLE).open();
-    };
+    public static final Editor<Ingredient> VANILLA_EDITOR_CHOICE = (p, l, v, c) -> new EditorSelector<>(p, l, (t, s) -> true, v, c).addEditor("Single", EDITOR_SIMPLE).addEditor("Multiple", EDITOR_MULTIPLE).open();
     public static final Editor<Ingredient> VANILLA_EDITOR = (p, l, v, c) -> {
         if (v == null || v.acceptedItems.length == 0) {
             VANILLA_EDITOR_CHOICE.open(p, l, null, c);
@@ -121,9 +110,7 @@ public class IngredientEditor extends BaseEditDialog {
         else
             EDITOR_TAGLIST.open(p, l, null, e -> c.accept(Ingredient.fromItemListStream(Stream.of(e))));
     };
-    public static final Editor<Ingredient> EDITOR_JSON = (p, l, v, c) -> {
-        EditPrompt.JSON_EDITOR.open(p, l, v == null ? null : v.serialize(), e -> c.accept(Ingredient.deserialize(e)));
-    };
+    public static final Editor<Ingredient> EDITOR_JSON = (p, l, v, c) -> EditPrompt.JSON_EDITOR.open(p, l, v == null ? null : v.serialize(), e -> c.accept(Ingredient.deserialize(e)));
     public static final Editor<Ingredient> EDITOR_INGREDIENT = (p, l, v, c) -> {
         if (v == null) {
             new EditorSelector<>(p, l, c).addEditor("ItemStack", NBT_EDITOR).addEditor("TAG", TAG_EDITOR).addEditor("Advanced", VANILLA_EDITOR).open();
@@ -148,13 +135,8 @@ public class IngredientEditor extends BaseEditDialog {
         igd.addEditor("Edit as JSON", EDITOR_JSON);
         igd.open();
     };
-    public static final Editor<IngredientWithSize> EDITOR = (p, l, v, c) -> {
-        new IngredientEditor(p, l, v, c).open();
-    };
-    public static final Editor<List<IngredientWithSize>> LIST_EDITOR = (p, l, v, c) -> {
-        new EditListDialog<>(p, l, v, null, EDITOR, IngredientEditor::getDesc, FHIcons::getIcon, e -> c.accept(new ArrayList<>(e))).open();
-
-    };
+    public static final Editor<IngredientWithSize> EDITOR = (p, l, v, c) -> new IngredientEditor(p, l, v, c).open();
+    public static final Editor<List<IngredientWithSize>> LIST_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EDITOR, IngredientEditor::getDesc, FHIcons::getIcon, e -> c.accept(new ArrayList<>(e))).open();
 
     String label;
 

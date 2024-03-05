@@ -138,9 +138,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
             for (Fluid fluid : tag.getAllElements()) {
                 if (fluid.getTags().contains(hidden)) continue;
                 ItemStack itemStack = new ItemStack(this);
-                itemStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
-                    data.fill(new FluidStack(fluid, data.getTankCapacity(0)), IFluidHandler.FluidAction.EXECUTE);
-                });
+                itemStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> data.fill(new FluidStack(fluid, data.getTankCapacity(0)), FluidAction.EXECUTE));
                 items.add(itemStack);
             }
         }
@@ -259,9 +257,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
             if (worldIn.getFluidState(blockpos).isTagged(FluidTags.WATER)) {
                 if (canFill(itemstack, Fluids.WATER)) {
                     worldIn.playSound(playerIn, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ(), SoundEvents.ITEM_BOTTLE_FILL, SoundCategory.NEUTRAL, 1.0F, 1.0F);
-                    itemstack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
-                        data.fill(new FluidStack(Fluids.WATER, data.getTankCapacity(0)), IFluidHandler.FluidAction.EXECUTE);
-                    });
+                    itemstack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> data.fill(new FluidStack(Fluids.WATER, data.getTankCapacity(0)), FluidAction.EXECUTE));
 
                     return ActionResult.resultSuccess(itemstack);
                 }

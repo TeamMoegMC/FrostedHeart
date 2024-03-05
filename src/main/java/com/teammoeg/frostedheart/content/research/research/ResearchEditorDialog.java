@@ -52,9 +52,7 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 public class ResearchEditorDialog extends BaseEditDialog {
-    public static final Editor<Collection<Research>> RESEARCH_LIST = (p, l, v, c) -> {
-        new EditListDialog<>(p, l, v, null, SelectDialog.EDITOR_RESEARCH, e -> e.getName().getString(), Research::getIcon, c).open();
-    };
+    public static final Editor<Collection<Research>> RESEARCH_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, SelectDialog.EDITOR_RESEARCH, e -> e.getName().getString(), Research::getIcon, c).open();
     Research r;
     LabeledTextBox id, name;
     LabeledSelection<ResearchCategory> cat;
@@ -104,9 +102,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
 
         add(new OpenEditorButton<>(this, "Edit Description", EditListDialog.STRING_LIST, r.desc, s -> r.desc = new ArrayList<>(s)));
         add(new OpenEditorButton<>(this, "Edit Alternative Description", EditListDialog.STRING_LIST, r.fdesc, s -> r.fdesc = new ArrayList<>(s)));
-        add(new OpenEditorButton<>(this, "Edit Parents", ResearchEditorDialog.RESEARCH_LIST, r.getParents(), s -> {
-            r.setParents(s.stream().map(Research::getSupplier).collect(Collectors.toList()));
-        }));
+        add(new OpenEditorButton<>(this, "Edit Parents", ResearchEditorDialog.RESEARCH_LIST, r.getParents(), s -> r.setParents(s.stream().map(Research::getSupplier).collect(Collectors.toList()))));
         add(new OpenEditorButton<>(this, "Edit Children", ResearchEditorDialog.RESEARCH_LIST, r.getChildren(), s -> {
             r.getChildren().forEach(e -> e.removeParent(r));
             s.forEach(e -> {
@@ -115,9 +111,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
             });
 
         }));
-        add(new OpenEditorButton<>(this, "Edit Ingredients", IngredientEditor.LIST_EDITOR, r.getRequiredItems(), s -> {
-            r.requiredItems = new ArrayList<>(s);
-        }));
+        add(new OpenEditorButton<>(this, "Edit Ingredients", IngredientEditor.LIST_EDITOR, r.getRequiredItems(), s -> r.requiredItems = new ArrayList<>(s)));
         add(new OpenEditorButton<>(this, "Edit Effects", EffectEditor.EFFECT_LIST, r.getEffects(), s -> {
             r.getEffects().forEach(Effect::deleteSelf);
             r.getEffects().clear();

@@ -46,9 +46,7 @@ public class TeamTownDataS2CPacket extends NBTMessage {
     }
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> {
-            ClientDataHolder.INSTANCE.getInstance().getData(SpecialDataTypes.TOWN_DATA).deserialize(getTag(), true);
-        });
+        context.get().enqueueWork(() -> ClientDataHolder.INSTANCE.getInstance().getData(SpecialDataTypes.TOWN_DATA).deserialize(getTag(), true));
         context.get().setPacketHandled(true);
     }
 }

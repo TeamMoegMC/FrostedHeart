@@ -53,9 +53,7 @@ public class FHClueProgressSyncPacket implements FHMessage {
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> {
-            FHResearch.clues.getById(id).setCompleted(data);
-        });
+        context.get().enqueueWork(() -> FHResearch.clues.getById(id).setCompleted(data));
         context.get().setPacketHandled(true);
     }
 }

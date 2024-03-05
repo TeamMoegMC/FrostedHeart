@@ -245,9 +245,7 @@ public class ResearchHierarchyPanel extends Panel {
                                 e.removeParent(r);
                                 EditUtils.saveResearch(e);
                             });
-                            s.forEach(e -> {
-                                e.addParent(r.getSupplier());
-                            });
+                            s.forEach(e -> e.addParent(r.getSupplier()));
                             FHResearch.reindex();
                             EditUtils.saveResearch(r);
                         });

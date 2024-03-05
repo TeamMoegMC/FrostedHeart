@@ -42,14 +42,10 @@ public class FHFluids {
     public static RegistryObject<FlowingFluid> CHLORINE = registerGas("chlorine", 0xFFADFF2F);
     public static RegistryObject<FlowingFluid> STEAM = registerGas("steam", 0xFFFFFFFF);
     public static RegistryObject<FlowingFluid> SO2 = registerGas("sulfur_dioxide", 0xFFEEE888);
-    public static RegistryObject<FlowingFluid> WOLFBERRY_TEA = FLUIDS.register("wolfberry_tea", () -> {
-        return new ForgeFlowingFluid.Source(FHFluids.WOLFBERRY_TEA_PROPERTIES);
-    });
+    public static RegistryObject<FlowingFluid> WOLFBERRY_TEA = FLUIDS.register("wolfberry_tea", () -> new ForgeFlowingFluid.Source(FHFluids.WOLFBERRY_TEA_PROPERTIES));
 
 
-    public static RegistryObject<FlowingFluid> WOLFBERRY_TEA_FLOWING = FLUIDS.register("wolfberry_tea_flowing", () -> {
-        return new ForgeFlowingFluid.Flowing(FHFluids.WOLFBERRY_TEA_PROPERTIES);
-    });
+    public static RegistryObject<FlowingFluid> WOLFBERRY_TEA_FLOWING = FLUIDS.register("wolfberry_tea_flowing", () -> new ForgeFlowingFluid.Flowing(FHFluids.WOLFBERRY_TEA_PROPERTIES));
     public static ForgeFlowingFluid.Properties WOLFBERRY_TEA_PROPERTIES = new ForgeFlowingFluid.Properties(
             WOLFBERRY_TEA, WOLFBERRY_TEA_FLOWING,
             FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE).color(0xFF6ABDFF).temperature(333))

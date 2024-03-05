@@ -46,9 +46,7 @@ public class FHResearchAttributeSyncPacket extends NBTMessage {
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> {
-        	ClientResearchDataAPI.getData().setVariants(this.getTag());
-        });
+        context.get().enqueueWork(() -> ClientResearchDataAPI.getData().setVariants(this.getTag()));
         context.get().setPacketHandled(true);
     }
 }

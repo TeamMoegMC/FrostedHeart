@@ -135,9 +135,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         public void addWidgets() {
             super.addWidgets();
             add(EditUtils.getTitle(this, "Only the first in the following takes effects"));
-            add(new OpenEditorButton<>(this, "Select Item", SelectItemStackDialog.EDITOR, e.item == null ? ItemStack.EMPTY : new ItemStack(e.item), e.item == null ? Icon.EMPTY : ItemIcon.getItemIcon(e.item), s -> {
-                e.item = s.getItem();
-            }));
+            add(new OpenEditorButton<>(this, "Select Item", SelectItemStackDialog.EDITOR, e.item == null ? ItemStack.EMPTY : new ItemStack(e.item), e.item == null ? Icon.EMPTY : ItemIcon.getItemIcon(e.item), s -> e.item = s.getItem()));
             add(new OpenEditorButton<>(this, "Edit ItemStack", SelectItemStackDialog.EDITOR, e.itemStack == null ? ItemStack.EMPTY : e.itemStack, e.itemStack == null ? Icon.EMPTY : ItemIcon.getItemIcon(e.itemStack), s -> {
                 e.item = null;
                 e.itemStack = s;
@@ -261,31 +259,15 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
     }
-    public static final Editor<EffectBuilding> BUILD = (p, l, v, c) -> {
-        new Building(p, l, v, c).open();
-    };
+    public static final Editor<EffectBuilding> BUILD = (p, l, v, c) -> new Building(p, l, v, c).open();
 
-    public static final Editor<EffectCrafting> CRAFT = (p, l, v, c) -> {
-        new Crafting(p, l, v, c).open();
-    };
-    public static final Editor<EffectItemReward> ITEM = (p, l, v, c) -> {
-        new ItemReward(p, l, v, c).open();
-    };
-    public static final Editor<EffectStats> STATS = (p, l, v, c) -> {
-        new Stats(p, l, v, c).open();
-    };
-    public static final Editor<EffectUse> USE = (p, l, v, c) -> {
-        new Use(p, l, v, c).open();
-    };
-    public static final Editor<EffectShowCategory> CAT = (p, l, v, c) -> {
-        new Category(p, l, v, c).open();
-    };
-    public static final Editor<EffectCommand> COMMAND = (p, l, v, c) -> {
-        new Command(p, l, v, c).open();
-    };
-    public static final Editor<EffectExperience> EXP = (p, l, v, c) -> {
-        new Exp(p, l, v, c).open();
-    };
+    public static final Editor<EffectCrafting> CRAFT = (p, l, v, c) -> new Crafting(p, l, v, c).open();
+    public static final Editor<EffectItemReward> ITEM = (p, l, v, c) -> new ItemReward(p, l, v, c).open();
+    public static final Editor<EffectStats> STATS = (p, l, v, c) -> new Stats(p, l, v, c).open();
+    public static final Editor<EffectUse> USE = (p, l, v, c) -> new Use(p, l, v, c).open();
+    public static final Editor<EffectShowCategory> CAT = (p, l, v, c) -> new Category(p, l, v, c).open();
+    public static final Editor<EffectCommand> COMMAND = (p, l, v, c) -> new Command(p, l, v, c).open();
+    public static final Editor<EffectExperience> EXP = (p, l, v, c) -> new Exp(p, l, v, c).open();
 
     public static final Editor<Effect> EDITOR = (p, l, v, c) -> {
         if (v instanceof EffectBuilding)
@@ -318,9 +300,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
 
     };
 
-    public static final Editor<Collection<Effect>> EFFECT_LIST = (p, l, v, c) -> {
-        new EditListDialog<>(p, l, v, null, EffectEditor.EDITOR, Effect::getBrief, Effect::getIcon, c).open();
-    };
+    public static final Editor<Collection<Effect>> EFFECT_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EffectEditor.EDITOR, Effect::getBrief, Effect::getIcon, c).open();
 
     String lbl;
 
