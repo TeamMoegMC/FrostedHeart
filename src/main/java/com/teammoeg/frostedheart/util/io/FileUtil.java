@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.util.io;
 
+import com.teammoeg.frostedheart.FHMain;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,7 +47,7 @@ public class FileUtil {
                 ba.write(data, 0, nRead);
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            FHMain.LOGGER.error("Error reading input stream", e);
         }
 
         return ba.toByteArray();

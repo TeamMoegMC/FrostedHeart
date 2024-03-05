@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.util.FHUtils;
 
@@ -60,7 +61,7 @@ public class IngredientEditor extends BaseEditDialog {
             try {
                 vx = TagCollectionManager.getManager().getItemTags().getValidatedIdFromTag(tag).toString();
             } catch (Exception ex) {
-                throw new RuntimeException(ex);
+                FHMain.LOGGER.error("Error creating editor tag list",ex);
             }
         }
         EditBtnDialog.EDITOR_ITEM_TAGS.open(p, l, vx, s -> c.accept(new TagList(TagCollectionManager.getManager().getItemTags().getTagByID(new ResourceLocation(s)))));

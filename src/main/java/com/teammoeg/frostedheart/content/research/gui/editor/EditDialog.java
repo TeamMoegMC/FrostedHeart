@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskScreen;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
@@ -46,7 +47,7 @@ public abstract class EditDialog extends Panel {
         try {
             onClose();
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            FHMain.LOGGER.error("Error closing dialog",ex);
         }
         try {
             if (previous != null) {

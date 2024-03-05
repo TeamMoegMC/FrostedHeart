@@ -234,7 +234,7 @@ public class FHResearch {
                 r.load(je.getAsJsonObject());
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            FHMain.LOGGER.error("Cannot load research " + f.getName() + ": " + e.getMessage());
         }
         return researches.getById(iid);
     }

@@ -66,7 +66,7 @@ public class FHRemote {
                         this.stableVersion = parser.parse(fr).getAsJsonObject().get("version").getAsString();
                     }
                 } catch (Throwable e) {
-                    throw new RuntimeException(e);
+                    FHMain.LOGGER.error("[TWR Version Check] Error fetching FH local version from curseforge manifest", e);
                 }
             }
         }
