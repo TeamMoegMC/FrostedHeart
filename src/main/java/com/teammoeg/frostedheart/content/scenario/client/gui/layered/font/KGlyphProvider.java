@@ -149,14 +149,10 @@ public class KGlyphProvider extends ReloadListener<Object>{
 				readFont(jp.parse(FileUtil.readString(
 					rm.getResource(rl).getInputStream())).getAsJsonObject());
 			}
-		} catch (JsonSyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (JsonSyntaxException | IOException e) {
+			FHMain.LOGGER.error("Error loading font",e);
 		}
-	}
+    }
 	@Override
 	protected Object prepare(IResourceManager resourceManagerIn, IProfiler profilerIn) {
 		onResourceManagerReload(resourceManagerIn);

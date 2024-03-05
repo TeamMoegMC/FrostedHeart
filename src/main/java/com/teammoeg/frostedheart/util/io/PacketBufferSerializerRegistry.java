@@ -26,8 +26,8 @@ import com.mojang.datafixers.util.Pair;
 import net.minecraft.network.PacketBuffer;
 
 public abstract class PacketBufferSerializerRegistry<T extends PacketWritable, R>  extends SerializerRegistry<T, R> {
-	PacketBufferSerializer<T> pbs=new PacketBufferSerializer<T>();
-	TypeRegistry<T> types=new TypeRegistry<T>();
+	PacketBufferSerializer<T> pbs= new PacketBufferSerializer<>();
+	TypeRegistry<T> types= new TypeRegistry<>();
 	public T read(PacketBuffer pb) {
 		return pbs.read(pb);
 	}

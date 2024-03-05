@@ -155,7 +155,7 @@ public class ResearchListeners {
                 }
             } else
                 this.removeIf(cl -> cl.getListener() == c);
-            return super.add(new ListenerInfo<T>(c, t));
+            return super.add(new ListenerInfo<>(c, t));
         }
 
         public void call(UUID t, Consumer<T> c) {

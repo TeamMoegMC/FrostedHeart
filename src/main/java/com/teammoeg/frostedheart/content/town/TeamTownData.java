@@ -87,7 +87,7 @@ public class TeamTownData implements NBTSerializable{
      * @param world server world instance
      */
     public void tick(ServerWorld world) {
-        PriorityQueue<TownWorkerData> pq = new PriorityQueue<TownWorkerData>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
+        PriorityQueue<TownWorkerData> pq = new PriorityQueue<>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
         blocks.values().removeIf(v -> {
             BlockPos pos = v.getPos();
             v.loaded = false;

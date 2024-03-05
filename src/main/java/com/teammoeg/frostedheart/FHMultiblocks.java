@@ -36,7 +36,7 @@ public class FHMultiblocks {
     public static IETemplateMultiblock RADIATOR = new RadiatorMultiblock();
     public static Block generator = new NormalGeneratorMultiBlock<>("generator", FHTileTypes.GENERATOR_T1);
     public static Block generator_t2 = new NormalGeneratorMultiBlock<>("generator_t2", FHTileTypes.GENERATOR_T2);
-    public static Block radiator = new FHStoneMultiblockBlock<RadiatorTileEntity>("heat_radiator", FHTileTypes.RADIATOR);
+    public static Block radiator = new FHStoneMultiblockBlock<>("heat_radiator", FHTileTypes.RADIATOR);
 
     public static void init() {
         MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR);

@@ -126,6 +126,7 @@ public class FHTileTypes {
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }
+    @SafeVarargs
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block>... valid) {
         return makeTypeMultipleBlocks(create, () -> Arrays.stream(valid).map(t->t.get()).collect(Collectors.toList()));
     }

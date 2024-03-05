@@ -164,7 +164,7 @@ public class ClientScene implements IClientScene {
 		i.removeIf(l -> l.getChatLineID() == fhchatid);
 		for(ITextComponent ic:origmsgQueue) {
 			for(IReorderingProcessor j:RenderComponentsUtil.func_238505_a_(ic,w, ClientUtils.mc().fontRenderer))
-				i.add(0, new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),j, 0));
+				i.add(0, new ChatLine<>(mc.ingameGUI.getTicks(), j, 0));
 		}
 		origmsgQueue.clear();
 		msgQueue.clear();
@@ -301,7 +301,7 @@ public class ClientScene implements IClientScene {
 						for (TextInfo t : msgQueue) {
 							if (t.hasText()) {
 								// if(hasText) {
-								i.add(0, new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(), t.asFinished(), fhchatid));
+								i.add(0, new ChatLine<>(mc.ingameGUI.getTicks(), t.asFinished(), fhchatid));
 								// }
 							}
 						}

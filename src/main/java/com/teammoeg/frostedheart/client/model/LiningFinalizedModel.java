@@ -240,7 +240,7 @@ public class LiningFinalizedModel implements IBakedModel {
         return blocksStitchedTextures.getSprite(modelLocation);
     }
     private List<BakedQuad> getLiningQuads() {
-        List<BakedQuad> returnList = new ArrayList<BakedQuad>(1);
+        List<BakedQuad> returnList = new ArrayList<>(1);
         TextureAtlasSprite liningOverlayTexture = getItemSprite(overlay);
         BakedQuad liningQuad = createBakedQuadForFace(0.5F, 1.0F, 0.5F, 1.0F, -0.4375F, 0, liningOverlayTexture, Direction.SOUTH);
         returnList.add(liningQuad);

@@ -144,7 +144,7 @@ public class SelectDialog<T> extends EditDialog {
         ClientAdvancementManager cam = ClientUtils.mc().player.connection.getAdvancementManager();
         Advancement adv = cam.getAdvancementList().getAdvancement(v);
 
-        new SelectDialog<Advancement>(p, l, adv, e -> c.accept(e.getId()), () -> cam.getAdvancementList().getAll(),
+        new SelectDialog<>(p, l, adv, e -> c.accept(e.getId()), () -> cam.getAdvancementList().getAll(),
                 Advancement::getDisplayText, advx -> new String[]{advx.getDisplayText().getString(), advx.getId().toString()},
                 advx -> FHIcons.getIcon(advx.getDisplay().getIcon())
         ).open();

@@ -63,9 +63,9 @@ import net.minecraftforge.fml.network.PacketDistributor.PacketTarget;
  * Main Research System.
  */
 public class FHResearch {
-    public static FHRegistry<Research> researches = new FHRegistry<Research>();
-    public static FHRegistry<Clue> clues = new FHRegistry<Clue>();
-    public static FHRegistry<Effect> effects = new FHRegistry<Effect>();
+    public static FHRegistry<Research> researches = new FHRegistry<>();
+    public static FHRegistry<Clue> clues = new FHRegistry<>();
+    public static FHRegistry<Effect> effects = new FHRegistry<>();
     private static OptionalLazy<List<Research>> allResearches = OptionalLazy.of(() -> researches.all());
     public static boolean editor = false;
 

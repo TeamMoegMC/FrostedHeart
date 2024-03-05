@@ -72,7 +72,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
         this.setY(-panel.getGui().getY() + 10);
         id = new LabeledTextBoxAndBtn(this, "id", r.getId(), "Random", t -> t.accept(Long.toHexString(UUID.randomUUID().getMostSignificantBits())));
 
-        cat = new LabeledSelection<ResearchCategory>(this, "category", r.getCategory(), ResearchCategory.values(), ResearchCategory::name);
+        cat = new LabeledSelection<>(this, "category", r.getCategory(), ResearchCategory.values(), ResearchCategory::name);
         name = new LabeledTextBox(this, "name", r.name);
         pts = new NumberBox(this, "points", r.points);
         showed = LabeledSelection.createBool(this, "Keep this research show in list", r.alwaysShow);

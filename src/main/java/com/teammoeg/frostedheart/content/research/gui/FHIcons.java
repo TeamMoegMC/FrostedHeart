@@ -709,7 +709,7 @@ public class FHIcons {
         };
 
         public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> {
-            new SelectDialog<String>(p, l, v == null ? null : v.name, o -> {
+            new SelectDialog<>(p, l, v == null ? null : v.name, o -> {
                 c.accept(new FHDelegateIcon(o));
             }, TechIcons.internals::keySet, GuiUtils::str, e -> new String[]{e}, TechIcons.internals::get).open();
         };
