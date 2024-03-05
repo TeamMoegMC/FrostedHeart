@@ -128,8 +128,9 @@ public class TemperatureUpdate {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.START && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
             // ignore creative and spectator players
-            if (player.isCreative() || player.isSpectator())
-                return;
+            // no longer ignore for easier debug
+           /* if (player.isCreative() || player.isSpectator())
+                return;*/
             PlayerTemperatureData data= PlayerTemperatureData.getCapability(event.player).orElse(null);
             if(data==null)return;
             if (player.ticksExisted % 10 == 0) {
@@ -233,7 +234,8 @@ public class TemperatureUpdate {
                     player.attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (dheat) * 10);
                 else if (dheat < -0.1)
                     player.attackEntityFrom(FHDamageSources.HYPOTHERMIA_INSTANT, (-dheat) * 10);
-                current += (float) (dheat * tspeed);
+                if (!player.isCreative()&&!player.isSpectator())//no modify body temp when creative or spectator
+                	current += (float) (dheat * tspeed);
                 if (current < -10)
                     current = -10;
                 else if (current > 10)

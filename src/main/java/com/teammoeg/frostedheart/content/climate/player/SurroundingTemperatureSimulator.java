@@ -31,15 +31,20 @@ import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.util.MersenneTwister;
+import com.teammoeg.frostedheart.util.RandomSequence;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.util.Direction;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.gen.Heightmap;
@@ -117,7 +122,9 @@ public class SurroundingTemperatureSimulator {
                 }
         for(int i=0;i<6;i++) {
         	vps[i]=lis.get(i).stream().mapToInt(t->t).toArray();
-        	//System.out.println(vps[i].length);
+        	/*System.out.println("---"+i);
+        	for(int j=0;j<vps[i].length;j++)
+        	System.out.println(vps[i][j]);*/
         }
        
     }
@@ -129,7 +136,7 @@ public class SurroundingTemperatureSimulator {
     BlockPos origin;
     ServerWorld world;
     Random rnd;
-
+    //RandomSequence rrnd;
     private double[] qx = new double[n], qy = new double[n], qz = new double[n];// Qpos, position of particle.
     private int[] vid = new int[n];// IDv, particle speed index in speed vector list, this lower random cost.
     //private double[] factor=
@@ -176,11 +183,12 @@ public class SurroundingTemperatureSimulator {
                 }
                 i += 2;
             }
-        ByteBuffer bb=ByteBuffer.allocate(16);
+        /*ByteBuffer bb=ByteBuffer.allocate(16);
         LongBuffer lb=bb.asLongBuffer();
         lb.put(player.getPosition().toLong());
-        lb.put(player.getServerWorld().getGameTime());
-        rnd = new MersenneTwister(bb.array());
+        lb.put(player.getServerWorld().getGameTime());*/
+        rnd = new Random(player.getServerWorld().getGameTime()^player.getPosition().toLong());
+        //rrnd=new RandomSequence(n,rnd);
     }
 
     /**
@@ -189,7 +197,7 @@ public class SurroundingTemperatureSimulator {
      */
     public BlockState getBlock(int x, int y, int z) {
         int i = 0;
-
+        z--;
         if (x >= 0) {
             i += 4;
         } else {
@@ -205,7 +213,9 @@ public class SurroundingTemperatureSimulator {
         } else {
             y += 16;
         }
+    
         if (x >= 16 || y >= 16 || z >= 16 || x < 0 || y < 0 || z < 0) {// out of bounds
+        	//System.out.println("Out of bounds x:"+x+"y:"+y+"z:"+z);
             return Blocks.AIR.getDefaultState();
         }
         ChunkSection current = sections[i];
@@ -235,9 +245,10 @@ public class SurroundingTemperatureSimulator {
         }
         return maps[i].getHeight(x, z);
     }
-    /*public int getReflecting(double ox, double oy, double oz) {
-    	
-    }*/
+    public int getOutboundSpeedFrom(Direction dir) {
+    	int[] iis=vps[dir.getAxis().ordinal()*2+dir.getAxisDirection().ordinal()];
+    	return iis[rnd.nextInt(iis.length)];
+    }
     public Pair<Float,Float> getBlockTemperatureAndWind(double qx0, double qy0, double qz0) {
     	float wind=0;
         for (int i = 0; i < n; ++i) // initialize position as the player's position and the speed (index)
@@ -253,22 +264,29 @@ public class SurroundingTemperatureSimulator {
         {
             for (int i = 0; i < n; ++i) // for all particles:
             {
+            	//Direction hitFace=getHitingFace(qx[i], qy[i], qz[i],vx[vid[i]],vy[vid[i]],vz[vid[i]]);
+            	int nid=vid[i];
                 if (isBlockade(qx[i] + vx[vid[i]], qy[i] + vy[vid[i]], qz[i] + vz[vid[i]])) // if running into a block
                 {
-                    vid[i] = rnd.nextInt(n); // re-choose a speed direction randomly (from the pre-generated pool)
+                    //vid[i]=getOutboundSpeedFrom(hitFace.getOpposite());//maybe re-choose a opposite direction vector
+                    //nid=rrnd.getNext();
+                	nid= rnd.nextInt(n); // re-choose a speed direction randomly (from the pre-generated pool)
                 }
                 qx[i] = qx[i] + vx[vid[i]]; // move x
                 qy[i] = qy[i] + vy[vid[i]]; // move y
+                float yid=vy[vid[i]];
                 qz[i] = qz[i] + vz[vid[i]]; // move z
+                vid[i]=nid;
                 bm.setX((int) qx[i]);
                 bm.setY((int) qy[i]);
                 bm.setZ((int) qz[i]);
                 BlockPos bp=bm.toImmutable();
-                heat += (float) (getHeat(bp)
-                                        * MathHelper.lerp(MathHelper.clamp(-vy[vid[i]], 0, 0.4) * 2.5, 1, 0.5)); // add heat
-                wind += getAir(bp)? (float) MathHelper.lerp((MathHelper.clamp(Math.abs(vy[vid[i]]), 0.2, 0.8) - 0.2) / 0.6, 2, 0.5) :0;
+                heat += (float) (getHeat(bp));
+                                        //* MathHelper.lerp(MathHelper.clamp(-yid, 0, 0.4) * 2.5, 1, 0.5)); // add heat
+                wind += getAir(bp)? (float) MathHelper.lerp((MathHelper.clamp(Math.abs(yid), 0.2, 0.8) - 0.2) / 0.6, 2, 0.5) :0;
             }
         }
+        //rrnd.clear();
         return Pair.of(heat / n, wind/n);
     }
 
@@ -337,13 +355,42 @@ public class SurroundingTemperatureSimulator {
     /**
      * Check if this location collides with block.
      */
+    private Direction getHitingFace(double sx, double sy, double sz,double vx,double vy,double vz) {
+        CachedBlockInfo info = getInfoCached(new BlockPos(sx+vx, sy+vy, sz+vz));
+        if (info.shape == EMPTY)
+            return null;
+        Vector3d vvec=new Vector3d(vx,vy,vz);
+        double nx=MathHelper.frac(sx+vx),ny=MathHelper.frac(sy+vy),nz=MathHelper.frac(sz+vz);
+        if(nx<0)
+        	nx++;
+        if(ny<0)
+        	ny++;
+        if(nz<0)
+        	nz++;
+        Vector3d dvec=new Vector3d(nx,ny,nz);
+        if(info.shape.contains(dvec.getX(),dvec.getY(),dvec.getZ())) {
+        	BlockRayTraceResult brtr=AxisAlignedBB.rayTrace(info.shape.toBoundingBoxList(), Vector3d.ZERO, vvec, BlockPos.ZERO);
+        	
+        	if(brtr!=null) {
+        		return brtr.getFace();
+        	}
+        }
+        return null;
+    }
     private boolean isBlockade(double x, double y, double z) {
         CachedBlockInfo info = getInfoCached(new BlockPos(x, y, z));
         if (info.shape == FULL)
             return true;
         if (info.shape == EMPTY)
             return false;
-        return info.shape.contains(MathHelper.frac(x), MathHelper.frac(y), MathHelper.frac(z));
+        double nx=MathHelper.frac(x),ny=MathHelper.frac(y),nz=MathHelper.frac(z);
+        if(nx<0)
+        	nx++;
+        if(ny<0)
+        	ny++;
+        if(nz<0)
+        	nz++;
+        return info.shape.contains(nx,ny,nz);
 
     }
 }
