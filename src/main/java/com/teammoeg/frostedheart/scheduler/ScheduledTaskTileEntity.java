@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.scheduler;
 
-public interface IScheduledTaskTE {
+public interface ScheduledTaskTileEntity {
     void executeTask();
 
     boolean isStillValid();

@@ -86,8 +86,8 @@ public class SchedulerQueue {
         while (taskNum > 0) {
             ScheduledData data = tasks.get(curpos);
             TileEntity te = Utils.getExistingTileEntity(world, data.pos);
-            if ((te instanceof IScheduledTaskTE)) {
-                ((IScheduledTaskTE) te).executeTask();
+            if ((te instanceof ScheduledTaskTileEntity)) {
+                ((ScheduledTaskTileEntity) te).executeTask();
             } else {
                 data.forRemoval = true;
             }
