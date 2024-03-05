@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
@@ -34,7 +35,7 @@ import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FHEnergyDataSyncPacket extends NBTMessage {
     public FHEnergyDataSyncPacket(PlayerEntity pe) {
-        super(EnergyCore.getCapability(pe).map(t->t.serializeNBT()).orElseGet(CompoundNBT::new));
+        super(EnergyCore.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundNBT::new));
     }
 
     public FHEnergyDataSyncPacket(PacketBuffer buffer) {

@@ -148,9 +148,7 @@ public class FHRemote {
     }
 
     protected void fetch() {
-        new Thread(() -> {
-            doFetch();
-        }).start();
+        new Thread(this::doFetch).start();
     }
 
     public OptionalLazy<FHVersion> fetchVersion() {

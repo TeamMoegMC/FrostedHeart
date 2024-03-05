@@ -62,8 +62,8 @@ class ExprNode implements Node {
     public Node simplify() {
 
         primaries = 0;
-        positive.replaceAll(n -> n.simplify());
-        negative.replaceAll(n -> n.simplify());
+        positive.replaceAll(Node::simplify);
+        negative.replaceAll(Node::simplify);
         //System.out.println("f:"+this.toString());
         List<Node> pcopy = new ArrayList<>(positive);
         for (Node n : pcopy) {//combine

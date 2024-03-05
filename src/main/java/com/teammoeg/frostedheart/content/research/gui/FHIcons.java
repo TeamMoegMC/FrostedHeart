@@ -657,21 +657,21 @@ public class FHIcons {
         };
         public static final Editor<FHIcon> CHANGE_EDITOR = (p, l, v, c) -> {
             if (v instanceof FHItemIcon) {
-                IconEditor.ITEM_EDITOR.open(p, l, (FHItemIcon) v, e -> c.accept(e));
+                IconEditor.ITEM_EDITOR.open(p, l, (FHItemIcon) v, c::accept);
             } else if (v instanceof FHCombinedIcon) {
-                IconEditor.COMBINED_EDITOR.open(p, l, (FHCombinedIcon) v, e -> c.accept(e));
+                IconEditor.COMBINED_EDITOR.open(p, l, (FHCombinedIcon) v, c::accept);
             } else if (v instanceof FHIngredientIcon) {
-                IconEditor.INGREDIENT_EDITOR.open(p, l, (FHIngredientIcon) v, e -> c.accept(e));
+                IconEditor.INGREDIENT_EDITOR.open(p, l, (FHIngredientIcon) v, c::accept);
             } else if (v instanceof FHAnimatedIcon) {
-                IconEditor.ANIMATED_EDITOR.open(p, l, (FHAnimatedIcon) v, e -> c.accept(e));
+                IconEditor.ANIMATED_EDITOR.open(p, l, (FHAnimatedIcon) v, c::accept);
             } else if (v instanceof FHTextureIcon) {
-                IconEditor.TEXTURE_EDITOR.open(p, l, (FHTextureIcon) v, e -> c.accept(e));
+                IconEditor.TEXTURE_EDITOR.open(p, l, (FHTextureIcon) v, c::accept);
             } else if (v instanceof FHTextureUVIcon) {
                 IconEditor.UV_EDITOR.open(p, l, (FHTextureUVIcon) v, e -> c.accept(v));
             } else if (v instanceof FHTextIcon) {
-                IconEditor.TEXT_EDITOR.open(p, l, (FHTextIcon) v, e -> c.accept(e));
+                IconEditor.TEXT_EDITOR.open(p, l, (FHTextIcon) v, c::accept);
             } else if (v instanceof FHDelegateIcon) {
-                IconEditor.INTERNAL_EDITOR.open(p, l, (FHDelegateIcon) v, e -> c.accept(e));
+                IconEditor.INTERNAL_EDITOR.open(p, l, (FHDelegateIcon) v, c::accept);
             } else
                 IconEditor.NOP_CHANGE_EDITOR.open(p, l, v, c);
         };

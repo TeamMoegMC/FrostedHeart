@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
@@ -35,7 +36,7 @@ import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FHBodyDataSyncPacket extends NBTMessage {
     public FHBodyDataSyncPacket(PlayerEntity pe) {
-        super(PlayerTemperatureData.getCapability(pe).map(t->t.serializeNBT()).orElseGet(CompoundNBT::new));
+        super(PlayerTemperatureData.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundNBT::new));
     }
 
 

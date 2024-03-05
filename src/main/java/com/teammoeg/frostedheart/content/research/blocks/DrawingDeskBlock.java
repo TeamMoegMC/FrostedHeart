@@ -156,7 +156,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
         if (!worldIn.isRemote && handIn == Hand.MAIN_HAND && !player.isSneaking()) {
             if (!player.isCreative() && worldIn.getLight(pos) < 8) {
                 player.sendStatusMessage(GuiUtils.translateMessage("research.too_dark"), true);
-            } else if (!player.isCreative() && PlayerTemperatureData.getCapability(player).map(t->t.getBodyTemp()).orElse(0f) < -0.2) {
+            } else if (!player.isCreative() && PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getBodyTemp).orElse(0f) < -0.2) {
                 player.sendStatusMessage(GuiUtils.translateMessage("research.too_cold"), true);
             } else {
                 if (state.get(IS_NOT_MAIN)) {

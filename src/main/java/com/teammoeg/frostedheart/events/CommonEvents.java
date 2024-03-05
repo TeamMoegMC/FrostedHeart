@@ -431,10 +431,10 @@ public class CommonEvents {
                 adj = FHDataManager.getFood(is);
             }
             if (adj != null) {
-                float current = PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(t->t.getBodyTemp()).orElse(0f);
+                float current = PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
-                float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(t->t.getEnvTemp()).orElse(0f));
+                float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(PlayerTemperatureData::getEnvTemp).orElse(0f));
                 if (heat > 1) {
                     event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
                 } else if (heat < -1)
@@ -842,7 +842,7 @@ public class CommonEvents {
             FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHClimatePacket(WorldClimate.get(serverWorld)));
             EnergyCore.getCapability(event.getPlayer()).ifPresent(t->{t.onrespawn();t.sendUpdate((ServerPlayerEntity) event.getPlayer());});
-            PlayerTemperatureData.getCapability(event.getPlayer()).ifPresent(t->t.reset());
+            PlayerTemperatureData.getCapability(event.getPlayer()).ifPresent(PlayerTemperatureData::reset);
             
         }
     }

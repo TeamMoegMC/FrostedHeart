@@ -39,7 +39,7 @@ public class FTBTeamsEvents {
 
     public static void syncDataWhenTeamChange(PlayerChangedTeamEvent event) {
     	if(event.getPlayer()!=null)
-    		FHNetwork.send(PacketDistributor.PLAYER.with(() -> event.getPlayer()),
+    		FHNetwork.send(PacketDistributor.PLAYER.with(event::getPlayer),
                 new FHResearchDataSyncPacket(ResearchDataAPI.getData(event.getPlayer())));
     }
 

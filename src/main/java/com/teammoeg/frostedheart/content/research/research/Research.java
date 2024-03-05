@@ -19,14 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.research;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -307,8 +300,8 @@ public class Research extends FHRegisteredItem implements Writeable {
                 rx.populateChild(objthis);
         }
         int i = 0;
-        effects.removeIf(e -> e == null);
-        clues.removeIf(c -> c == null);
+        effects.removeIf(Objects::isNull);
+        clues.removeIf(Objects::isNull);
         for (Effect e : effects) {
             e.addID(this.getLId(), i);
             e.parent = getSupplier();
@@ -355,7 +348,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @return children<br>
      */
     public Set<Research> getChildren() {
-        return children.stream().map(r -> r.get()).filter(e -> e != null).collect(Collectors.toSet());
+        return children.stream().map(Supplier::get).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     /*
@@ -478,7 +471,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @return parents<br>
      */
     public Set<Research> getParents() {
-        return parents.stream().filter(e -> e != null).map(r -> r.get()).filter(e -> e != null).collect(Collectors.toSet());
+        return parents.stream().filter(Objects::nonNull).map(Supplier::get).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     /**
@@ -893,7 +886,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         buffer.writeResourceLocation(category.getId());
         SerializeUtil.writeList2(buffer, parents, FHRegistry::writeSupplier);
         SerializeUtil.writeList2(buffer, clues, Clues::write);
-        SerializeUtil.writeList(buffer, requiredItems, (e, p) -> e.write(p));
+        SerializeUtil.writeList(buffer, requiredItems, IngredientWithSize::write);
         SerializeUtil.writeList(buffer, effects, Effects::write);
         buffer.writeVarLong(points);
         SerializeUtil.writeBooleans(buffer, showfdesc, hideEffects, isHidden, inCompletable, alwaysShow, infinite);

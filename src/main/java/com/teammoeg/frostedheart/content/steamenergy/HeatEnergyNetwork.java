@@ -240,7 +240,7 @@ public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializab
 	    	}
 	    	if(value<=0)break;
     	}
-    	data.values().forEach(t->t.pushData());
+    	data.values().forEach(EndPointData::pushData);
     }
 
     public void invalidate() {

@@ -200,7 +200,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     @Override
     public NonNullList<ItemStack> getInventory() {
         T master = master();
-        return Optional.ofNullable(master).flatMap(t -> t.getData()).map(t -> t.getInventory()).orElseGet(() -> master != null ? master.linventory : this.linventory);
+        return Optional.ofNullable(master).flatMap(MasterGeneratorTileEntity::getData).map(GeneratorData::getInventory).orElseGet(() -> master != null ? master.linventory : this.linventory);
     }
 
     @Override
@@ -210,7 +210,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     public boolean isDataPresent() {
         T master = master();
-        return Optional.ofNullable(master).flatMap(t -> t.getData()).isPresent();
+        return Optional.ofNullable(master).flatMap(MasterGeneratorTileEntity::getData).isPresent();
     }
 
     @Override

@@ -71,9 +71,9 @@ public class IngredientEditor extends BaseEditDialog {
         if (v == null)
             new EditorSelector<>(p, l, c).addEditor("Tag", EDITOR_TAGLIST).addEditor("Stack", EDITOR_ITEMLIST).open();
         else if (v instanceof TagList)
-            EDITOR_TAGLIST.open(p, l, (TagList) v, e -> c.accept(e));
+            EDITOR_TAGLIST.open(p, l, (TagList) v, c::accept);
         else if (v instanceof SingleItemList)
-            EDITOR_ITEMLIST.open(p, l, (SingleItemList) v, e -> c.accept(e));
+            EDITOR_ITEMLIST.open(p, l, (SingleItemList) v, c::accept);
     };
 
 

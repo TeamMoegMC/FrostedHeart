@@ -68,7 +68,7 @@ public class TemperatureUpdate {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-            double calculatedTarget = PlayerTemperatureData.getCapability(event.player).map(t->t.getBodyTemp()).orElse(0f);
+            double calculatedTarget = PlayerTemperatureData.getCapability(event.player).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
             if (!(player.isCreative() || player.isSpectator())) {
                 if (calculatedTarget > 1 || calculatedTarget < -1) {
                     if (!player.isPotionActive(FHEffects.HYPERTHERMIA.get())
@@ -149,7 +149,7 @@ public class TemperatureUpdate {
                         player.addPotionEffect(new EffectInstance(FHEffects.WET.get(), 100, 0));
                 }
                 //load current data
-                float current = PlayerTemperatureData.getCapability(event.player).map(t->t.getBodyTemp()).orElse(0f);
+                float current = PlayerTemperatureData.getCapability(event.player).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
                 double tspeed = FHConfig.SERVER.tempSpeed.get();
                 if (current < 0) {
                     float delt = (float) (FHConfig.SERVER.tdiffculty.get().self_heat.apply(player) * tspeed);

@@ -170,7 +170,7 @@ public class JEICompat implements IModPlugin {
 
     public static void scheduleSyncJEI() {
         //cachedInfoAdd=true;
-        Minecraft.getInstance().runImmediately(() -> syncJEI());
+        Minecraft.getInstance().runImmediately(JEICompat::syncJEI);
     }
 
     public static void showJEICategory(ResourceLocation rl) {

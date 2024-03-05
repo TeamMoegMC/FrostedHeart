@@ -39,9 +39,7 @@ public class FHResearchSyncEndPacket implements FHMessage {
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> {
-            FHResearch.endPacketInit();
-        });
+        context.get().enqueueWork(FHResearch::endPacketInit);
         context.get().setPacketHandled(true);
     }
 }

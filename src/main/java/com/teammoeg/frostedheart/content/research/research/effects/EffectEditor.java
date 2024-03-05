@@ -289,21 +289,21 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
 
     public static final Editor<Effect> EDITOR = (p, l, v, c) -> {
         if (v instanceof EffectBuilding)
-            BUILD.open(p, l, (EffectBuilding) v, e -> c.accept(e));
+            BUILD.open(p, l, (EffectBuilding) v, c::accept);
         else if (v instanceof EffectCrafting)
-            CRAFT.open(p, l, (EffectCrafting) v, e -> c.accept(e));
+            CRAFT.open(p, l, (EffectCrafting) v, c::accept);
         else if (v instanceof EffectItemReward)
-            ITEM.open(p, l, (EffectItemReward) v, e -> c.accept(e));
+            ITEM.open(p, l, (EffectItemReward) v, c::accept);
         else if (v instanceof EffectStats)
-            STATS.open(p, l, (EffectStats) v, e -> c.accept(e));
+            STATS.open(p, l, (EffectStats) v, c::accept);
         else if (v instanceof EffectUse)
-            USE.open(p, l, (EffectUse) v, e -> c.accept(e));
+            USE.open(p, l, (EffectUse) v, c::accept);
         else if (v instanceof EffectShowCategory)
-            CAT.open(p, l, (EffectShowCategory) v, e -> c.accept(e));
+            CAT.open(p, l, (EffectShowCategory) v, c::accept);
         else if (v instanceof EffectCommand)
-            COMMAND.open(p, l, (EffectCommand) v, e -> c.accept(e));
+            COMMAND.open(p, l, (EffectCommand) v, c::accept);
         else if (v instanceof EffectExperience)
-            EXP.open(p, l, (EffectExperience) v, e -> c.accept(e));
+            EXP.open(p, l, (EffectExperience) v, c::accept);
         else
             new EditorSelector<>(p, l, c)
                     .addEditor("Building", BUILD)

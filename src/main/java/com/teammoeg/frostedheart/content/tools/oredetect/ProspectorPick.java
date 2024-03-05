@@ -80,7 +80,7 @@ public class ProspectorPick extends FHLeveledTool {
                             }
 
                     if (!founded.isEmpty()) {
-                        int cnt = founded.values().stream().reduce(0, (a, b) -> a + b);
+                        int cnt = founded.values().stream().reduce(0, Integer::sum);
                         rseed = rnd.nextInt(cnt);
                         String ore_name = null;
                         int count = 0;

@@ -32,9 +32,7 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 public class EditPrompt extends BaseEditDialog {
-    public static Editor<String> TEXT_EDITOR = (p, l, v, c) -> {
-        open(p, l, v, c);
-    };
+    public static Editor<String> TEXT_EDITOR = EditPrompt::open;
     public static Editor<JsonElement> JSON_EDITOR = (p, l, v, c) -> {
         open(p, l, v == null ? "" : v.toString(), e -> c.accept(new JsonParser().parse(e)));
     };

@@ -22,14 +22,8 @@ package com.teammoeg.frostedheart.team;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -96,7 +90,7 @@ public class SpecialDataManager {
      * @return the data stream
      */
     public <T extends NBTSerializable> Stream<T> getAllData(SpecialDataType<T,TeamDataHolder> type) {
-        return dataByFhId.values().stream().map(t->t.getOptional(type)).filter(t->t.isPresent()).map(t->t.get());
+        return dataByFhId.values().stream().map(t->t.getOptional(type)).filter(Optional::isPresent).map(Optional::get);
     }
 
     /**

@@ -305,7 +305,7 @@ public class SurroundingTemperatureSimulator {
      * cache in normal fetch
      */
     private CachedBlockInfo getInfoCached(BlockPos pos) {
-        return posinfo.computeIfAbsent(pos, p -> getInfo(p));
+        return posinfo.computeIfAbsent(pos, this::getInfo);
     }
 
     /**

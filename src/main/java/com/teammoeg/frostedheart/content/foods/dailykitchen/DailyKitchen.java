@@ -64,7 +64,7 @@ public class DailyKitchen {
         }
         WantedFoodCapability wantedFoodCapability = FHCapabilities.WANTED_FOOD.getCapability(player).orElse(null);
         if(wantedFoodCapability==null)return;
-        Set<Item> foodsEaten = DietCapability.get(player).map(t->t.getEaten()).orElseGet(HashSet::new);
+        Set<Item> foodsEaten = DietCapability.get(player).map(IDietTracker::getEaten).orElseGet(HashSet::new);
         /*为了避免重复，每日厨房从diet存储的数据中获取foodsEaten。
         但若diet存储的foodsEaten会在死亡时候清空的话，则此处获取的foodsEaten也会是空的。
         在runClient测试中死亡会清空包括foodsEaten在内的所有数据(在TWR环境中不应如此)，此处暂且保留。

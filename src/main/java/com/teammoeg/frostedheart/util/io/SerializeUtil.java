@@ -348,7 +348,7 @@ public class SerializeUtil {
     	if(List.class.isAssignableFrom(type)) {
     		return new ListMarshaller<>(Object.class,t-> new ListListWrapper<>((List<Object>) t),ListListWrapper::new);
     	}else if(type.isArray()) {
-    		return new ListMarshaller<>(type,t-> new ArrayListWrapper<>(t),ArrayListWrapper::new);
+    		return new ListMarshaller<>(type, ArrayListWrapper::new,ArrayListWrapper::new);
     	}
     	return ClassInfo.valueOf(type);
     }

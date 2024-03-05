@@ -222,7 +222,7 @@ public class EffectCrafting extends Effect {
             initStack();
         } else {
             unlocks.replaceAll(o -> SpecialDataManager.getRecipeManager().getRecipe(o.getId()).orElse(null));
-            unlocks.removeIf(o -> o == null);
+            unlocks.removeIf(Objects::isNull);
         }
     }
 

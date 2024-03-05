@@ -369,7 +369,7 @@ public class ResearchListeners {
         SpecialDataManager.INSTANCE.save();
         SpecialDataManager.INSTANCE.load();
         FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
-        SpecialDataManager.INSTANCE.getAllData(SpecialDataTypes.RESEARCH_DATA).forEach(t -> t.sendUpdate());
+        SpecialDataManager.INSTANCE.getAllData(SpecialDataTypes.RESEARCH_DATA).forEach(TeamResearchData::sendUpdate);
     }
 
     public static ItemStack submitItem(ServerPlayerEntity s, ItemStack i) {

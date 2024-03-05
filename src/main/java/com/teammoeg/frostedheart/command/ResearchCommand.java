@@ -103,7 +103,7 @@ public class ResearchCommand {
 
                 .then(Commands.literal("attribute").then(Commands.argument("name", StringArgumentType.string()).suggests((ct, s) -> {
                             CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().asPlayer());
-                            cnbt.keySet().forEach(st -> s.suggest(st));
+                            cnbt.keySet().forEach(s::suggest);
                             return s.buildFuture();
 
                         }).executes(ct -> {
@@ -121,7 +121,7 @@ public class ResearchCommand {
 
                         .then(Commands.literal("set").then(Commands.argument("name", StringArgumentType.string()).suggests((ct, s) -> {
                             CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().asPlayer());
-                            cnbt.keySet().forEach(st -> s.suggest(st));
+                            cnbt.keySet().forEach(s::suggest);
 
                             if ("all".startsWith(s.getRemaining()))
                                 s.suggest("all");

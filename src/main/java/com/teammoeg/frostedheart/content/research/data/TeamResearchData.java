@@ -540,7 +540,7 @@ public class TeamResearchData implements NBTSerializable{
         nbt.put("vars", variants);
 
         ListNBT rs = new ListNBT();
-        rdata.stream().map(e -> e != null ? e.serialize() : new CompoundNBT()).forEach(e -> rs.add(e));
+        rdata.stream().map(e -> e != null ? e.serialize() : new CompoundNBT()).forEach(rs::add);
         nbt.put("researches", rs);
         nbt.putInt("active", activeResearchId);
         

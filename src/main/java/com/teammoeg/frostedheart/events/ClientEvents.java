@@ -231,7 +231,7 @@ public class ClientEvents {
         }
         if (itf != null) {
             float temp = itf.getHeat(stack,
-                    event.getPlayer() == null ? 37 :PlayerTemperatureData.getCapability(event.getPlayer()).map(t->t.getEnvTemp()).orElse(0f)) * tspeed;
+                    event.getPlayer() == null ? 37 :PlayerTemperatureData.getCapability(event.getPlayer()).map(PlayerTemperatureData::getEnvTemp).orElse(0f)) * tspeed;
             temp = (Math.round(temp * 1000)) / 1000.0F;// round
             if (temp != 0)
                 if (temp > 0) 

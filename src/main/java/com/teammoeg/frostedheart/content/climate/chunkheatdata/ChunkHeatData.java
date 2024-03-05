@@ -216,7 +216,7 @@ public class ChunkHeatData implements NBTSerializable {
      * This method directly get temperature adjusts at any positions.
      */
     public static Collection<ITemperatureAdjust> getAdjust(IWorldReader world, BlockPos pos) {
-        ArrayList<ITemperatureAdjust> al = new ArrayList<>(get(world, new ChunkPos(pos)).map(t->t.getAdjusters()).orElseGet(Arrays::asList));
+        ArrayList<ITemperatureAdjust> al = new ArrayList<>(get(world, new ChunkPos(pos)).map(ChunkHeatData::getAdjusters).orElseGet(Arrays::asList));
         al.removeIf(adj -> !adj.isEffective(pos));
         return al;
     }

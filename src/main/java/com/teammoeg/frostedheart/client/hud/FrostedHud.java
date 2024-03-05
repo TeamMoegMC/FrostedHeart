@@ -602,7 +602,7 @@ public class FrostedHud {
         }
         boolean f = FHConfig.CLIENT.useFahrenheit.get();
         float temperature = 0;
-        float tlvl = PlayerTemperatureData.getCapability(player).map(t->t.getEnvTemp()).orElse(0F);
+        float tlvl = PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getEnvTemp).orElse(0F);
         tlvl = Math.max(-273, tlvl);
         UV unit;
         if (f) {
@@ -1025,7 +1025,7 @@ public class FrostedHud {
         HUDElements.temperature_orb_frame.blit(mc.ingameGUI, stack, x, y + 3, BasePos.temperature_orb_frame);
         boolean f = FHConfig.CLIENT.useFahrenheit.get();
         float temperature = 0;
-        float tlvl = PlayerTemperatureData.getCapability(player).map(t->t.getFeelTemp()).orElse(0F);
+        float tlvl = PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getFeelTemp).orElse(0F);
         tlvl = Math.max(-273, tlvl);
         if (f)
             temperature = (tlvl * 9 / 5 + 32);

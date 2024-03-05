@@ -215,15 +215,15 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
                     .open();
 
         } else if (v instanceof ItemClue)
-            ITEM.open(p, l, (ItemClue) v, e -> c.accept(e));
+            ITEM.open(p, l, (ItemClue) v, c::accept);
         else if (v instanceof MinigameClue)
-            GAME.open(p, l, (MinigameClue) v, e -> c.accept(e));
+            GAME.open(p, l, (MinigameClue) v, c::accept);
         else if (v instanceof AdvancementClue)
-            ADVA.open(p, l, (AdvancementClue) v, e -> c.accept(e));
+            ADVA.open(p, l, (AdvancementClue) v, c::accept);
         else if (v instanceof KillClue)
-            KILL.open(p, l, (KillClue) v, e -> c.accept(e));
+            KILL.open(p, l, (KillClue) v, c::accept);
         else
-            CUSTOM.open(p, l, (CustomClue) v, e -> c.accept(e));
+            CUSTOM.open(p, l, (CustomClue) v, c::accept);
     };
     public static final Editor<Collection<Clue>> EDITOR_LIST = (p, l, v, c) -> {
         new EditListDialog<>(p, l, v, EDITOR, e -> e.getBrief() + e.getBriefDesc(), c).open();

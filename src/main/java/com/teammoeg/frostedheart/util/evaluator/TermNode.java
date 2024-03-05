@@ -61,7 +61,7 @@ class TermNode implements Node {
     @Override
     public Node simplify() {
         primaries = 1;
-        positive.replaceAll(n -> n.simplify());
+        positive.replaceAll(Node::simplify);
         List<Node> pcopy = new ArrayList<>(positive);
         for (Node n : pcopy) {//combine
             if (n instanceof TermNode) {
@@ -70,7 +70,7 @@ class TermNode implements Node {
                 negative.addAll(((TermNode) n).negative);
             }
         }
-        negative.replaceAll(n -> n.simplify());
+        negative.replaceAll(Node::simplify);
         List<Node> ncopy = new ArrayList<>(negative);
         for (Node n : ncopy) {
             if (n instanceof TermNode) {

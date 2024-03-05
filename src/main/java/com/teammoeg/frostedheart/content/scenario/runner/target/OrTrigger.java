@@ -22,7 +22,7 @@ public class OrTrigger implements IScenarioTrigger {
 	}
 	@Override
 	public boolean canUse() {
-		return Arrays.stream(triggers).map(a->a.canUse()).anyMatch(b->b);
+		return Arrays.stream(triggers).map(IScenarioTrigger::canUse).anyMatch(b->b);
 	}
 
 	public OrTrigger setSync() {
@@ -31,7 +31,7 @@ public class OrTrigger implements IScenarioTrigger {
 	}
 	@Override
 	public boolean use() {
-		return Arrays.stream(triggers).map(a->a.use()).anyMatch(b->b);
+		return Arrays.stream(triggers).map(IScenarioTrigger::use).anyMatch(b->b);
 	}
 
 

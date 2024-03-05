@@ -89,7 +89,7 @@ public class EnergyCore implements NBTSerializable {
         //System.out.println("slept");
         if (csd == lsd) return;
         //System.out.println("sleptx");
-        float tbody = PlayerTemperatureData.getCapability(player).map(t->t.getFeelTemp()).orElse(0f);
+        float tbody = PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getFeelTemp).orElse(0f);
         double out = Math.pow(10, 4 - Math.abs(tbody - 40) / 10);
         //System.out.println(out);
         data.utbody=out;
