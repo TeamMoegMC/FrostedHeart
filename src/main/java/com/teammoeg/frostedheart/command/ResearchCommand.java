@@ -54,7 +54,7 @@ public class ResearchCommand {
                             s.suggest(r.getId(), r.getName());
                     return s.buildFuture();
                 }).executes(ct -> {
-                    String rsn = ct.getArgument("name", String.class).toString();
+                    String rsn = ct.getArgument("name", String.class);
 
                     Research rs = FHResearch.getResearch(rsn).get();
                     if (rs == null) {
@@ -106,7 +106,7 @@ public class ResearchCommand {
 
                         }).executes(ct -> {
                             CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().asPlayer());
-                            String rsn = ct.getArgument("name", String.class).toString();
+                            String rsn = ct.getArgument("name", String.class);
                             ct.getSource().sendFeedback(GuiUtils.str(String.valueOf(cnbt.get(rsn))), false);
                             return Command.SINGLE_SUCCESS;
                         })).then(Commands.literal("all").executes(ct -> {
@@ -127,7 +127,7 @@ public class ResearchCommand {
 
                         }).then(Commands.argument("value", NBTTagArgument.func_218085_a()).executes(ct -> {
                             CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().asPlayer());
-                            String rsn = ct.getArgument("name", String.class).toString();
+                            String rsn = ct.getArgument("name", String.class);
                             INBT nbt = ct.getArgument("value", INBT.class);
                             cnbt.put(rsn, nbt);
                             ResearchDataAPI.sendVariants(ct.getSource().asPlayer());
@@ -139,7 +139,7 @@ public class ResearchCommand {
                             s.suggest(r.getId(), r.getName());
                     return s.buildFuture();
                 }).executes(ct -> {
-                    String rsn = ct.getArgument("name", String.class).toString();
+                    String rsn = ct.getArgument("name", String.class);
                     ResearchDataAPI.getData(ct.getSource().asPlayer()).resetData(FHResearch.getResearch(rsn).get(), true);
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("all").executes(ct -> {

@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.client;
 import com.teammoeg.frostedheart.content.climate.ClimateType;
 import com.teammoeg.frostedheart.content.climate.TemperatureFrame;
 
+import java.util.Arrays;
+
 public class ClientClimateData {
     public static final TemperatureFrame[] forecastData = new TemperatureFrame[40];
     public static ClimateType climate;
@@ -31,8 +33,7 @@ public class ClientClimateData {
 
     public static void clear() {
         secs = 0;
-        for (int i = 0; i < forecastData.length; i++)
-            forecastData[i] = null;
+        Arrays.fill(forecastData, null);
         climate = ClimateType.NONE;
         lastClimate = ClimateType.NONE;
         climateChange = -1;

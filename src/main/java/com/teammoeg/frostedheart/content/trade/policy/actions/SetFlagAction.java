@@ -42,7 +42,7 @@ public class SetFlagAction implements PolicyAction {
 
     @Override
     public void deal(FHVillagerData data, int num) {
-        data.flags.computeIfAbsent(name, k -> 1);
+        data.flags.putIfAbsent(name, 1);
     }
 
     @Override

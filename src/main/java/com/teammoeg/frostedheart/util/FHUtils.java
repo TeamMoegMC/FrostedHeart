@@ -240,10 +240,9 @@ public class FHUtils {
             });
             if (entity != null) {
                 if (entity instanceof MobEntity) {
-                    ((MobEntity) entity).onInitialSpawn(world, world.getDifficultyForLocation(entity.getPosition()), SpawnReason.NATURAL, (ILivingEntityData) null, (CompoundNBT) null);
+                    ((MobEntity) entity).onInitialSpawn(world, world.getDifficultyForLocation(entity.getPosition()), SpawnReason.NATURAL, null, null);
                 }
                 if (!world.addEntityAndUniquePassengers(entity)) {
-                    return;
                 }
             }
         }

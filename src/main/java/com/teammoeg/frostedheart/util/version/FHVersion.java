@@ -52,7 +52,7 @@ public class FHVersion {
             if (vers.isEmpty())
                 return empty;
             String[] main = vers.split("\\.");
-            if (main.length <= 0) return empty;
+            if (main.length == 0) return empty;
             int[] majors = new int[main.length];
             int i = -1;
             for (String s : main) {

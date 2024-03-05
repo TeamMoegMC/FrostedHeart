@@ -101,6 +101,6 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
     }
 
     public World getWorldNonnull() {
-        return (World) Objects.requireNonNull(super.getWorld());
+        return Objects.requireNonNull(super.getWorld());
     }
 }

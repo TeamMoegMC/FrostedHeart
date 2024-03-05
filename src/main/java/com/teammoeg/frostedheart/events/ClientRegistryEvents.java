@@ -220,10 +220,7 @@ public class ClientRegistryEvents {
                     // 9 is the length of "textures/" & 4 is the length of ".png"
 
                     .map(rl -> new ResourceLocation(rl.getNamespace(), rl.getPath().substring(9, rl.getPath().length() - 4)))
-                    .map(rl -> {
-                        FHMain.LOGGER.info("stitching texture" + rl);
-                        return rl;
-                    })
+                    .peek(rl -> FHMain.LOGGER.info("stitching texture" + rl))
                     .forEach(event::addSprite);
         }
     }

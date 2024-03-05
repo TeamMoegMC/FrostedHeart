@@ -213,8 +213,7 @@ public class SpecialDataManager {
 	            } catch (IllegalArgumentException ex) {
 	                ex.printStackTrace();
 	                FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
-	                return;
-	            } catch (IOException e) {
+                } catch (IOException e) {
 	                e.printStackTrace();
 	                FHMain.LOGGER.error("Unable to read data file " + f.getName() + ", ignoring...");
 	            }

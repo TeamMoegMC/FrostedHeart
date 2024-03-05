@@ -65,7 +65,7 @@ public class CampfireDefrostRecipe extends CampfireCookingRecipe implements Defr
 
     @Override
     public ItemStack getCraftingResult(IInventory inv) {
-        if (iss.length <= 0)
+        if (iss.length == 0)
             return ItemStack.EMPTY;
         return iss[recipeRNG.nextInt(getIss().length)].copy();
     }

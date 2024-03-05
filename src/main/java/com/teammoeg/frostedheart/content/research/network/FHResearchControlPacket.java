@@ -79,7 +79,6 @@ public class FHResearchControlPacket implements FHMessage {
                     return;
                 case PAUSE:
                     trd.clearCurrentResearch(r);
-                    return;
             }
         });
         context.get().setPacketHandled(true);

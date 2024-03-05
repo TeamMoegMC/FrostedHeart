@@ -111,7 +111,6 @@ public class FHRegistry<T extends FHRegisteredItem> {
             }
         }
         pb.writeVarInt(0);
-        return;
     }
 
     /**
@@ -297,7 +296,6 @@ public class FHRegistry<T extends FHRegisteredItem> {
                 in.accept(t);
             return;
         }
-        return;
     }
 
     public void runIfPresent(String id, Consumer<T> in) {

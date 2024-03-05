@@ -122,7 +122,7 @@ public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehavi
         }
 
         ticksUntilNextProgress = (int) (blockHardness / breakSpeed);
-        world.sendBlockBreakProgress(id, breakingPos, MathHelper.clamp((int) (destroyProgress / 1000), 1, 10));
+        world.sendBlockBreakProgress(id, breakingPos, MathHelper.clamp(destroyProgress / 1000, 1, 10));
         data.putInt("TicksUntilNextProgress", ticksUntilNextProgress);
         data.putInt("Progress", destroyProgress);
     }

@@ -96,7 +96,7 @@ public class TeamTownData implements NBTSerializable{
                 BlockState bs = world.getBlockState(pos);
                 TileEntity te = Utils.getExistingTileEntity(world, pos);
                 TownWorkerType twt = v.getType();
-                return twt.getBlock() != bs.getBlock() || te == null || !(te instanceof TownTileEntity) || !((TownTileEntity) te).isWorkValid();
+                return twt.getBlock() != bs.getBlock() || !(te instanceof TownTileEntity) || !((TownTileEntity) te).isWorkValid();
             }
             return false;
         });

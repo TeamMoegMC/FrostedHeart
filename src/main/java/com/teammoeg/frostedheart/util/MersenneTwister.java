@@ -236,7 +236,7 @@ public class MersenneTwister extends Random {
 		if (length == 0)
 			throw new IllegalArgumentException("Seed buffer may not be empty");
 		// ---- Begin Mersenne Twister Algorithm ----
-		int i = 1, j = 0, k = (N > length ? N : length);
+		int i = 1, j = 0, k = (Math.max(N, length));
 		setSeed(MAGIC_SEED);
 		for (; k > 0; k--) {
 			mt[i] = (mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >>> 30)) * MAGIC_FACTOR2)) + buf[j] + j;

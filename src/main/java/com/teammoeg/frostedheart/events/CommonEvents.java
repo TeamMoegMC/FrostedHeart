@@ -305,7 +305,6 @@ public class CommonEvents {
             }
             event.setResult(Event.Result.DENY);
         } else if (growBlock instanceof FHCropBlock) {
-            return;
         } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
             if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE) {
                 if (temp < -6 && event.getWorld().getRandom().nextInt(3) == 0) {
@@ -606,7 +605,7 @@ public class CommonEvents {
                     event.setCanceled(true);
                 }
             } else {
-                if (!ResearchDataAPI.getData((ServerPlayerEntity) event.getPlayer()).building.has(event.getMultiblock())) {
+                if (!ResearchDataAPI.getData(event.getPlayer()).building.has(event.getMultiblock())) {
                     //event.getPlayer().sendStatusMessage(GuiUtils.translateMessage("research.multiblock.cannot_build"), true);
                     event.setCanceled(true);
                 }
@@ -627,7 +626,7 @@ public class CommonEvents {
     public static void onPlayerKill(LivingDeathEvent event) {
         Entity ent = event.getSource().getTrueSource();
 
-        if (ent == null || !(ent instanceof PlayerEntity) || ent instanceof FakePlayer) return;
+        if (!(ent instanceof PlayerEntity) || ent instanceof FakePlayer) return;
         if (ent.getEntityWorld().isRemote) return;
         ServerPlayerEntity p = (ServerPlayerEntity) ent;
 

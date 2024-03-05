@@ -49,7 +49,7 @@ public class IfNode implements Node {
 
     @Override
     public String getText() {
-        return "@" + cmd + " exp=\"" + exp.replaceAll("\"", "\\\"") + "\"";
+        return "@" + cmd + " exp=\"" + exp.replaceAll("\"", "\"") + "\"";
     }
 
     @Override

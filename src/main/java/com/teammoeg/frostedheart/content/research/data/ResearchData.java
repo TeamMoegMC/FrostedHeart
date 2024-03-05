@@ -418,7 +418,7 @@ public class ResearchData implements IEnvironment {
 	@Override
 	public double get(String key) {
 		if (key.equals("level"))
-            return (double) level;
+            return level;
 		return 0;
 	}
 

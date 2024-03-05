@@ -15,14 +15,14 @@ public class OrTrigger implements IScenarioTrigger {
 	@Override
 	public boolean test(IScenarioThread t) {
 		
-		return Arrays.stream(triggers).map(a->a.test(t)).anyMatch(b->b);
+		return Arrays.stream(triggers).anyMatch(a -> a.test(t));
 	}
 	public boolean isAsync() {
 		return async;
 	}
 	@Override
 	public boolean canUse() {
-		return Arrays.stream(triggers).map(IScenarioTrigger::canUse).anyMatch(b->b);
+		return Arrays.stream(triggers).anyMatch(IScenarioTrigger::canUse);
 	}
 
 	public OrTrigger setSync() {
@@ -31,7 +31,7 @@ public class OrTrigger implements IScenarioTrigger {
 	}
 	@Override
 	public boolean use() {
-		return Arrays.stream(triggers).map(IScenarioTrigger::use).anyMatch(b->b);
+		return Arrays.stream(triggers).anyMatch(IScenarioTrigger::use);
 	}
 
 

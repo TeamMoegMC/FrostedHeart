@@ -729,8 +729,8 @@ public class WorldClimate implements NBTSerializable {
 
     @Override
     public String toString() {
-        return "{tempEventStream=\n" + String.join(",", tempEventStream.stream().map(Object::toString).collect(Collectors.toList())) + ",\n clockSource=" + clockSource
-                + ",\n daycache=" + dailyTempData.stream().flatMap(t -> Arrays.stream(t.hourData)).map(HourData::getTemp).map(Object::toString).reduce("", (a, b) -> a + b + ",") + ",\n frames=" + String.join(",", IntStream.range(0, frames.length).mapToObj(i -> frames[i]).map(TemperatureFrame::unpack).map(String::valueOf).collect(Collectors.toList())) + "}";
+        return "{tempEventStream=\n" + tempEventStream.stream().map(Object::toString).collect(Collectors.joining(",")) + ",\n clockSource=" + clockSource
+                + ",\n daycache=" + dailyTempData.stream().flatMap(t -> Arrays.stream(t.hourData)).map(HourData::getTemp).map(Object::toString).reduce("", (a, b) -> a + b + ",") + ",\n frames=" + IntStream.range(0, frames.length).mapToObj(i -> frames[i]).map(TemperatureFrame::unpack).map(String::valueOf).collect(Collectors.joining(",")) + "}";
     }
 
     /**

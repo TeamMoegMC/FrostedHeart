@@ -331,7 +331,6 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
 
                 this.markDirty();
                 this.markContainingBlockForUpdate(null);
-                return;
             } else if (!out.isEmpty() || !outfluid.isEmpty()) {
                 if (ItemHandlerHelper.canItemStacksStack(out, inventory.get(3))) {
                     ItemStack is = inventory.get(3);

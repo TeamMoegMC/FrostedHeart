@@ -80,7 +80,7 @@ public abstract class MixinOceanRuinPiece extends TemplateStructurePiece {
             DrownedEntity drownedentity = EntityType.DROWNED.create(worldIn.getWorld());
             drownedentity.enablePersistence();
             drownedentity.moveToBlockPosAndAngles(pos, 0.0F, 0.0F);
-            drownedentity.onInitialSpawn(worldIn, worldIn.getDifficultyForLocation(pos), SpawnReason.STRUCTURE, (ILivingEntityData) null, (CompoundNBT) null);
+            drownedentity.onInitialSpawn(worldIn, worldIn.getDifficultyForLocation(pos), SpawnReason.STRUCTURE, null, null);
             worldIn.func_242417_l(drownedentity);
             if (pos.getY() > worldIn.getSeaLevel()) {
                 worldIn.setBlockState(pos, Blocks.AIR.getDefaultState(), 2);

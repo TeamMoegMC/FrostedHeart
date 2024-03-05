@@ -63,12 +63,12 @@ public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileE
             if (from == d) continue;
             connectTo(d,network,lengthx);
         }
-        return;
     }
 
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        if (descPacket) return;
+        if (descPacket) {
+        }
     }
 
     @Override
@@ -89,7 +89,8 @@ public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileE
 
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        if (descPacket) return;
+        if (descPacket) {
+        }
     }
 
 	@Override

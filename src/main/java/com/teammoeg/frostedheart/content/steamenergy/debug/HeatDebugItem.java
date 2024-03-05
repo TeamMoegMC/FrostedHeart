@@ -62,19 +62,19 @@ public class HeatDebugItem extends Item {
 
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
 
-        RayTraceResult raytraceresult = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.SOURCE_ONLY);
+        BlockRayTraceResult raytraceresult = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.SOURCE_ONLY);
         ItemStack itemstack = playerIn.getHeldItem(handIn);
         if (worldIn.isRemote) return ActionResult.resultSuccess(itemstack);
         if (raytraceresult.getType() == RayTraceResult.Type.BLOCK) {
         	if(playerIn instanceof ServerPlayerEntity) {
-	            BlockPos blockpos = ((BlockRayTraceResult) raytraceresult).getPos();
+	            BlockPos blockpos = raytraceresult.getPos();
 	            TileEntity te = Utils.getExistingTileEntity(worldIn, blockpos);
 	            if (te instanceof EnergyNetworkProvider) {
 	            	if(((EnergyNetworkProvider) te).getNetwork()!=null)
 	            		HeatHandler.openHeatScreen((ServerPlayerEntity) playerIn, ((EnergyNetworkProvider) te).getNetwork());
 	            	else playerIn.sendMessage(GuiUtils.str("EnergyNetwork " + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUniqueID());
 	            }else if(te!=null) {
-	            	playerIn.sendMessage(GuiUtils.str("EnergyEndpoint "+te.getCapability(FHCapabilities.HEAT_EP.capability(), ((BlockRayTraceResult) raytraceresult).getFace()).orElse(null)), playerIn.getUniqueID());
+	            	playerIn.sendMessage(GuiUtils.str("EnergyEndpoint "+te.getCapability(FHCapabilities.HEAT_EP.capability(), raytraceresult.getFace()).orElse(null)), playerIn.getUniqueID());
 	            }
             }
             return ActionResult.resultSuccess(itemstack);

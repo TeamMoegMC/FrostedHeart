@@ -38,8 +38,6 @@ public interface ITemperatureAdjust extends NBTSerializable {
      */
     static ITemperatureAdjust valueOf(CompoundNBT nc) {
         switch (nc.getInt("type")) {
-            case 1:
-                return new CubicTemperatureAdjust(nc);
             case 2:
                 return new PillarTemperatureAdjust(nc);
             default:
@@ -56,8 +54,6 @@ public interface ITemperatureAdjust extends NBTSerializable {
     static ITemperatureAdjust valueOf(PacketBuffer buffer) {
         int packetId = buffer.readByte();
         switch (packetId) {
-            case 1:
-                return new CubicTemperatureAdjust(buffer);
             case 2:
                 return new PillarTemperatureAdjust(buffer);
             default:

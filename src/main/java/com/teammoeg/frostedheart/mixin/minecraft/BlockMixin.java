@@ -76,7 +76,7 @@ public class BlockMixin extends Block {
     public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
 
-        if (placer != null && placer instanceof ServerPlayerEntity && !(placer instanceof FakePlayer))
+        if (placer instanceof ServerPlayerEntity && !(placer instanceof FakePlayer))
             IOwnerTile.trySetOwner(Utils.getExistingTileEntity(worldIn, pos),SpecialDataManager.get((PlayerEntity) placer).getId());
     }
 }

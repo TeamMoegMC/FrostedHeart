@@ -118,7 +118,7 @@ public class CeramicBucket extends FHBaseItem {
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
         ItemStack itemstack = playerIn.getHeldItem(handIn);
         Fluid containedFluid = getFluid(itemstack);
-        RayTraceResult raytraceresult = rayTrace(worldIn, playerIn, containedFluid == Fluids.EMPTY ? RayTraceContext.FluidMode.SOURCE_ONLY : RayTraceContext.FluidMode.NONE);
+        BlockRayTraceResult raytraceresult = rayTrace(worldIn, playerIn, containedFluid == Fluids.EMPTY ? RayTraceContext.FluidMode.SOURCE_ONLY : RayTraceContext.FluidMode.NONE);
         ActionResult<ItemStack> ret = net.minecraftforge.event.ForgeEventFactory.onBucketUse(playerIn, worldIn, itemstack, raytraceresult);
 
         if (ret != null) return ret;
@@ -127,9 +127,8 @@ public class CeramicBucket extends FHBaseItem {
         } else if (raytraceresult.getType() != RayTraceResult.Type.BLOCK) {
             return ActionResult.resultPass(itemstack);
         } else {
-            BlockRayTraceResult blockraytraceresult = (BlockRayTraceResult) raytraceresult;
-            BlockPos blockpos = blockraytraceresult.getPos();
-            Direction direction = blockraytraceresult.getFace();
+            BlockPos blockpos = raytraceresult.getPos();
+            Direction direction = raytraceresult.getFace();
             BlockPos blockpos1 = blockpos.offset(direction);
             if (worldIn.isBlockModifiable(playerIn, blockpos) && playerIn.canPlayerEdit(blockpos1, direction, itemstack)) {
                 if (containedFluid == Fluids.EMPTY) {
@@ -156,7 +155,7 @@ public class CeramicBucket extends FHBaseItem {
                     return ActionResult.resultFail(itemstack);
                 BlockState blockstate = worldIn.getBlockState(blockpos);
                 BlockPos blockpos2 = canBlockContainFluid(worldIn, blockpos, blockstate, containedFluid) ? blockpos : blockpos1;
-                if (this.tryPlaceContainedLiquid(playerIn, worldIn, blockpos2, blockraytraceresult, containedFluid)) {
+                if (this.tryPlaceContainedLiquid(playerIn, worldIn, blockpos2, raytraceresult, containedFluid)) {
                     if (playerIn instanceof ServerPlayerEntity) {
                         CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayerEntity) playerIn, blockpos2, itemstack);
                     }

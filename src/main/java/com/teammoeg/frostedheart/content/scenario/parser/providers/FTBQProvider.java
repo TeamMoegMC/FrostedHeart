@@ -50,7 +50,7 @@ public class FTBQProvider extends StringScenarioProvider {
 		}*/
 		//b.append("\n[p]\n");
 		for(String s:quest.description) {
-			b.append(s.replaceAll("\\[", "\\[").replaceAll("@", "\\@")).append("[p]\n");
+			b.append(s.replaceAll("\\[", "[").replaceAll("@", "@")).append("[p]\n");
 		}
 		int it=0;
 		for(Task tsk:quest.tasks) {

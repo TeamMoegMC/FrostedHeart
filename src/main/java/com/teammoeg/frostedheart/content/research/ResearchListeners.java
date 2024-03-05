@@ -246,7 +246,7 @@ public class ResearchListeners {
             if (player instanceof FakePlayer) return false;
             if (player.getEntityWorld().isRemote)
                 return ClientResearchDataAPI.getData().block.has(b);
-            return ResearchDataAPI.getData((ServerPlayerEntity) player).block.has(b);
+            return ResearchDataAPI.getData(player).block.has(b);
         }
         return true;
 
@@ -265,7 +265,7 @@ public class ResearchListeners {
         if (recipe.has(r)) {
             if (s.getEntityWorld().isRemote)
                 return ClientResearchDataAPI.getData().crafting.has(r);
-            return ResearchDataAPI.getData((ServerPlayerEntity) s).crafting.has(r);
+            return ResearchDataAPI.getData(s).crafting.has(r);
         }
         return true;
     }

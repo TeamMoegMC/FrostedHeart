@@ -80,7 +80,7 @@ public class FHNetwork {
 			Constructor<T> ctor = msg.getConstructor(PacketBuffer.class);
 	    	CHANNEL.registerMessage(++iid,msg,FHMessage::encode,pb->{
 	    		try {
-					return ctor.newInstance(new Object[] {pb});
+					return ctor.newInstance(pb);
 				} catch (IllegalAccessException|IllegalArgumentException|InstantiationException e) {
 					throw new RuntimeException(e);
 				} catch (InvocationTargetException e) {

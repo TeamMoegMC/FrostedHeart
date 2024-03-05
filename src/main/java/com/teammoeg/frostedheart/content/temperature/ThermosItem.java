@@ -245,14 +245,14 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     }
 
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-        RayTraceResult raytraceresult = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.SOURCE_ONLY);
+        BlockRayTraceResult raytraceresult = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.SOURCE_ONLY);
         ItemStack itemstack = playerIn.getHeldItem(handIn);
         if (raytraceresult.getType() == RayTraceResult.Type.MISS) {
             playerIn.setActiveHand(handIn);
             return canDrink(playerIn.getHeldItem(handIn)) ? ActionResult.resultSuccess(playerIn.getHeldItem(handIn)) : ActionResult.resultFail(playerIn.getHeldItem(handIn));
         }
         if (raytraceresult.getType() == RayTraceResult.Type.BLOCK) {
-            BlockPos blockpos = ((BlockRayTraceResult) raytraceresult).getPos();
+            BlockPos blockpos = raytraceresult.getPos();
             if (worldIn.getFluidState(blockpos).isTagged(FluidTags.WATER)) {
                 if (canFill(itemstack, Fluids.WATER)) {
                     worldIn.playSound(playerIn, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ(), SoundEvents.ITEM_BOTTLE_FILL, SoundCategory.NEUTRAL, 1.0F, 1.0F);
@@ -291,7 +291,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
 
     public void updateDamage(ItemStack stack) {
         stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
-            int i = this.capacity - data.getFluidInTank(0).getAmount() >= 0 ? this.capacity - data.getFluidInTank(0).getAmount() : 0;
+            int i = Math.max(this.capacity - data.getFluidInTank(0).getAmount(), 0);
             stack.setDamage(i);
         });
     }
