@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.scheduler;
+package com.teammoeg.frostedheart.base.scheduler;
 
 /**
  * Interface for TileEntities that can have scheduled tasks.

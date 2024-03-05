@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.scheduler;
+package com.teammoeg.frostedheart.base.scheduler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
