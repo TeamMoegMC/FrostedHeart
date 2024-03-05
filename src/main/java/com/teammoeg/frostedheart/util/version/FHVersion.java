@@ -227,9 +227,7 @@ public class FHVersion {
         }
         if (other.minors.length > minors.length) {
             return SubType.pre.equals(other.minors[minors.length].getType());
-        } else if (other.minors.length < minors.length && SubType.pre.equals(minors[other.minors.length].getType()))
-            return false;
-        return true;
+        } else return other.minors.length >= minors.length || !SubType.pre.equals(minors[other.minors.length].getType());
     }
 
     @Override

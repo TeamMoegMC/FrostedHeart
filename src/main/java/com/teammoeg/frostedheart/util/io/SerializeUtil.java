@@ -246,7 +246,7 @@ public class SerializeUtil {
         }
         byte b = 0;
         for (int i = 0; i < 8; i++) {
-            boolean bl = elms.length > i ? elms[i] : false;
+            boolean bl = elms.length > i && elms[i];
             b <<= 1;
             b |= bl ? 1 : 0;
 

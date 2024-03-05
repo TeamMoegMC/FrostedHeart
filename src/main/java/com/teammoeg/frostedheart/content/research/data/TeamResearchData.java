@@ -335,8 +335,7 @@ public class TeamResearchData implements NBTSerializable{
     public boolean isClueTriggered(int id) {
         if (clueComplete.size() >= id && id > 0) {
             Boolean b = clueComplete.get(id - 1);
-            if (b != null && b == true)
-                return true;
+            return b != null && b;
         }
         return false;
     }

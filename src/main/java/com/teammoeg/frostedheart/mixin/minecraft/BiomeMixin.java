@@ -52,9 +52,7 @@ public abstract class BiomeMixin {
 
                 boolean flag = worldIn.hasWater(water.west()) && worldIn.hasWater(water.east())
                         && worldIn.hasWater(water.north()) && worldIn.hasWater(water.south());
-                if (!flag) {
-                    return true;
-                }
+                return !flag;
             }
         }
 

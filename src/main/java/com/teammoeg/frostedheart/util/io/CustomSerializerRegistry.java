@@ -54,8 +54,6 @@ public class CustomSerializerRegistry<T, U> {
     public U getDeserializer(JsonElement je) {
         JsonObject jo = je.getAsJsonObject();
         U func = fromJson.get(jo.get("type").getAsString());
-        if (func == null)
-            return null;
         return func;
     }
 

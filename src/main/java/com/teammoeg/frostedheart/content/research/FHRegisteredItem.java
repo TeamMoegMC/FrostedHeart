@@ -34,9 +34,7 @@ public abstract class FHRegisteredItem {
         if (getClass() != obj.getClass())
             return false;
         FHRegisteredItem other = (FHRegisteredItem) obj;
-        if (id != other.id)
-            return false;
-        return true;
+        return id == other.id;
     }
 
     public abstract String getLId();

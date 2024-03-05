@@ -45,14 +45,12 @@ public class FHStress implements IStressValueProvider {
 
     @Override
     public boolean hasCapacity(Block arg0) {
-    	if(arg0 ==FHBlocks.steam_core.get())return true;
-        return false;
+        return arg0 == FHBlocks.steam_core.get();
     }
 
     @Override
     public boolean hasImpact(Block arg0) {
-        if (arg0 == FHBlocks.mech_calc.get()) return true;
-        return false;
+        return arg0 == FHBlocks.mech_calc.get();
     }
 
 }

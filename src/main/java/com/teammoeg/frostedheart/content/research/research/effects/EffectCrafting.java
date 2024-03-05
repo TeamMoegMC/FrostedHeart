@@ -108,9 +108,7 @@ public class EffectCrafting extends Effect {
         super("@gui." + FHMain.MODID + ".effect.crafting", new ArrayList<>());
         Optional<? extends IRecipe<?>> r = SpecialDataManager.getRecipeManager().getRecipe(recipe);
 
-        if (r.isPresent()) {
-            unlocks.add(r.get());
-        }
+        r.ifPresent(iRecipe -> unlocks.add(iRecipe));
     }
 
     @Override
@@ -250,9 +248,7 @@ public class EffectCrafting extends Effect {
         for (String s : ls) {
             Optional<? extends IRecipe<?>> r = SpecialDataManager.getRecipeManager().getRecipe(new ResourceLocation(s));
 
-            if (r.isPresent()) {
-                unlocks.add(r.get());
-            }
+            r.ifPresent(iRecipe -> unlocks.add(iRecipe));
         }
     }
 

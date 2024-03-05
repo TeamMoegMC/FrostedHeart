@@ -60,9 +60,7 @@ public class BlizzardDamageCondition implements ILootCondition {
     @Override
     public boolean test(LootContext t) {
         if (t.getLootTable(t.getQueriedLootTableId()).getParameterSet() == LootParameterSets.ENTITY) {
-            if (t.get(LootParameters.DAMAGE_SOURCE) == FHDamageSources.BLIZZARD) {
-                return true;
-            }
+            return t.get(LootParameters.DAMAGE_SOURCE) == FHDamageSources.BLIZZARD;
         }
         return false;
     }

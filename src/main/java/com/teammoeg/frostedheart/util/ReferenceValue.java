@@ -44,11 +44,8 @@ public class ReferenceValue<T> {
             return false;
         ReferenceValue other = (ReferenceValue) obj;
         if (val == null) {
-            if (other.val != null)
-                return false;
-        } else if (!val.equals(other.val))
-            return false;
-        return true;
+            return other.val == null;
+        } else return val.equals(other.val);
     }
 
     public T getVal() {

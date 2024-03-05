@@ -108,8 +108,7 @@ public class CeramicBucket extends FHBaseItem {
 
             @Override
             public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
-                if (stack.getFluid().getAttributes().isGaseous()) return false;
-                return true;
+                return !stack.getFluid().getAttributes().isGaseous();
             }
 
         };

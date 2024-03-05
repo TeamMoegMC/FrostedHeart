@@ -249,9 +249,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
             return canBeCatalyst(itemStack) || itemStack.getItem() == Items.ROTTEN_FLESH;
         if (i == 2)
             return canBeInput(itemStack) || itemStack.isFood();
-        if (i == 3)
-            return false;
-        return true;
+        return i != 3;
     }
 
     @Override

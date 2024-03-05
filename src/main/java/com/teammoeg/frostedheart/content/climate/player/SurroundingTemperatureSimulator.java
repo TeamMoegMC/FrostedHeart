@@ -279,9 +279,7 @@ public class SurroundingTemperatureSimulator {
 
         float cblocktemp = 0;
         if (b.isLit()) {
-            boolean litOrActive = false;
-            if (bs.hasProperty(BlockStateProperties.LIT) && bs.get(BlockStateProperties.LIT))
-                litOrActive = true;
+            boolean litOrActive = bs.hasProperty(BlockStateProperties.LIT) && bs.get(BlockStateProperties.LIT);
             if (litOrActive)
                 cblocktemp += b.getTemp();
         } else

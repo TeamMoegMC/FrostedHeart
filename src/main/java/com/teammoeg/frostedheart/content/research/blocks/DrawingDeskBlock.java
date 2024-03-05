@@ -70,7 +70,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
     static final VoxelShape shape2 = Block.makeCuboidShape(0, 0, 0, 16, 12, 16);
 
     private static Direction getNeighbourDirection(boolean b, Direction directionIn) {
-        return b == false ? directionIn : directionIn.getOpposite();
+        return !b ? directionIn : directionIn.getOpposite();
     }
 
     public static void setBlockhasbook(World worldIn, BlockPos pos, BlockState state, boolean hasBook) {
@@ -178,10 +178,10 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
     public void onBlockHarvested(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
         if (!worldIn.isRemote && player.isCreative()) {
             boolean block = state.get(IS_NOT_MAIN);
-            if (block == false) {
+            if (!block) {
                 BlockPos blockpos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
                 BlockState blockstate = worldIn.getBlockState(blockpos);
-                if (blockstate.getBlock() == this && blockstate.get(IS_NOT_MAIN) == true) {
+                if (blockstate.getBlock() == this && blockstate.get(IS_NOT_MAIN)) {
                     worldIn.setBlockState(blockpos, Blocks.AIR.getDefaultState(), 35);
                 }
             }

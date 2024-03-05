@@ -112,9 +112,7 @@ public class FHUtils {
         float temp = ChunkHeatData.getTemperature((IWorld) w, p);
         if (temp <= 300)
             return false;
-        if (temp > 300 + WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
-            return false;
-        return true;
+        return !(temp > 300 + WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX);
     }
 
     public static boolean canTreeGenerate(World w, BlockPos p, Random r, int chance) {
@@ -208,10 +206,7 @@ public class FHUtils {
     }
 
     public static boolean isBlizzardHarming(IWorld iWorld, BlockPos p) {
-        if (WorldClimate.isBlizzard(iWorld) && iWorld.getHeight(Type.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) <= p.getY()) {
-            return true;
-        }
-        return false;
+        return WorldClimate.isBlizzard(iWorld) && iWorld.getHeight(Type.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) <= p.getY();
     }
 
     public static boolean isRainingAt(BlockPos pos, World world) {
@@ -220,11 +215,7 @@ public class FHUtils {
             return false;
         } else if (!world.canSeeSky(pos)) {
             return false;
-        } else if (world.getHeight(Heightmap.Type.MOTION_BLOCKING, pos).getY() > pos.getY()) {
-            return false;
-        } else {
-            return true;
-        }
+        } else return world.getHeight(Type.MOTION_BLOCKING, pos).getY() <= pos.getY();
     }
 
     public static EffectInstance noHeal(EffectInstance ei) {

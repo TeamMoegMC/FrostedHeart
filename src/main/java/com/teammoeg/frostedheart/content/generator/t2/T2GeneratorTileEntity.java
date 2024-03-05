@@ -77,9 +77,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 
     @Override
     protected boolean canFillTankFrom(int iTank, Direction side, FluidStack resource) {
-        if (side == this.getFacing() && this.posInMultiblock.equals(fluidIn))
-            return true;
-        return false;
+        return side == this.getFacing() && this.posInMultiblock.equals(fluidIn);
     }
 
 
