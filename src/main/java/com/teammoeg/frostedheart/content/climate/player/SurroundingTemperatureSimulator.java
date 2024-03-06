@@ -145,7 +145,7 @@ public class SurroundingTemperatureSimulator {
        
     }
     public static void main(String[] args) {
-    	System.out.println((16&15));
+    	System.out.println(MathHelper.floor(-15.5));
     }
     public ChunkSection[] sections = new ChunkSection[8];// sectors(xz): - - -/- +/+ -/+ + and y -/+
     public Heightmap[] maps=new Heightmap[4]; // sectors(xz): - -/- +/+ -/+ +
@@ -166,7 +166,7 @@ public class SurroundingTemperatureSimulator {
     }
 
     public SurroundingTemperatureSimulator(ServerPlayerEntity player) {
-        int sourceX = (int) player.getPosX(), sourceY = (int) player.getPosYEye(), sourceZ = (int) player.getPosZ();
+        int sourceX = MathHelper.floor(player.getPosX()), sourceY = MathHelper.floor(player.getPosYEye()), sourceZ = MathHelper.floor( player.getPosZ());
         // System.out.println(sourceX+","+sourceY+","+sourceZ);
         // these are block position offset
         int offsetN = sourceZ - range;
@@ -299,9 +299,10 @@ public class SurroundingTemperatureSimulator {
                 float yid=vy[vid[i]];
                 qz[i] = qz[i] + vz[vid[i]]; // move z
                 vid[i]=nid;
-                bm.setX((int) qx[i]);
-                bm.setY((int) qy[i]);
-                bm.setZ((int) qz[i]);
+                
+                bm.setX(MathHelper.floor(qx[i]));
+                bm.setY(MathHelper.floor(qy[i]));
+                bm.setZ(MathHelper.floor(qz[i]));
                 BlockPos bp=bm.toImmutable();
                 heat += (float) (getHeat(bp)
                                         * MathHelper.lerp(MathHelper.clamp(-yid, 0, 0.4) * 2.5, 1, 0.5)); // add heat
@@ -331,10 +332,10 @@ public class SurroundingTemperatureSimulator {
      */
     private CachedBlockInfo getInfo(BlockPos pos) {
         BlockPos ofregion = pos.subtract(origin);
-        if(pos.getX()<0)
+        /*if(pos.getX()<0)
         	ofregion = ofregion.add(-1, 0, 0);
         if(pos.getZ()<0)
-        	ofregion = ofregion.add(0, 0, -1);
+        	ofregion = ofregion.add(0, 0, -1);*/
         BlockState bs = getBlock(ofregion.getX(), ofregion.getY(), ofregion.getZ());
         return info.computeIfAbsent(bs, s -> getInfo(pos, s));
     }
@@ -386,7 +387,7 @@ public class SurroundingTemperatureSimulator {
         CachedBlockInfo info = getInfoCached(bpos);
         if (info.shape == EMPTY)
             return null;
-        Vector3d svec=new Vector3d(sx,sy,sz);
+        Vector3d svec=new Vector3d(sx, sy, sz);
         Vector3d vvec=new Vector3d(sx+vx, sy+vy, sz+vz);
         
         BlockRayTraceResult brtr=AxisAlignedBB.rayTrace(info.shape.toBoundingBoxList(), svec, vvec, bpos);
