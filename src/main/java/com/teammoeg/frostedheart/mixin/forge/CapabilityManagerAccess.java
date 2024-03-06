@@ -1,0 +1,15 @@
+package com.teammoeg.frostedheart.mixin.forge;
+
+import java.util.IdentityHashMap;
+
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
+
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityManager;
+
+@Mixin(CapabilityManager.class)
+public interface CapabilityManagerAccess {
+	@Accessor(remap=false)
+	IdentityHashMap<String, Capability<?>> getProviders();
+}

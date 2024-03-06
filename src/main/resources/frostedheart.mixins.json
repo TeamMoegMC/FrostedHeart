@@ -37,6 +37,7 @@
     "forge.FluidHandlerItemStackMixin",
     "forge.FluidHandlerItemStackSimpleMixin",
     "forge.ServerLifecycleHooksMixin",
+    "forge.CapabilityManagerAccess",
     "ftb.ChunkEventsMixin",
     "ftb.QuestScreenMixin",
     "ftb.ClientTeamManagerMixin",

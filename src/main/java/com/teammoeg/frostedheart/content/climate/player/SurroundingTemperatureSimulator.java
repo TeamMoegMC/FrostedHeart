@@ -122,32 +122,32 @@ public class SurroundingTemperatureSimulator {
                     vx[o] = x / r * v0; // normalized x
                     vy[o] = y / r * v0; // normalized y
                     vz[o] = z / r * v0; // normalized z
-                    if(x>0) 
+                    if(vx[o]> 0.1) 
                     	lis.computeIfAbsent(0,ti->new ArrayList<>()).add(o);
-                    if(x<0) 
+                    if(vx[o]<-0.1) 
                     	lis.computeIfAbsent(1,ti->new ArrayList<>()).add(o);
-                    if(y>0) 
+                    if(vy[o]> 0.1) 
                     	lis.computeIfAbsent(2,ti->new ArrayList<>()).add(o);
-                    if(y<0) 
+                    if(vy[o]<-0.1) 
                     	lis.computeIfAbsent(3,ti->new ArrayList<>()).add(o);
-                    if(z>0) 
+                    if(vz[o]> 0.1) 
                     	lis.computeIfAbsent(4,ti->new ArrayList<>()).add(o);
-                    if(z<0) 
+                    if(vz[o]<-0.1) 
                     	lis.computeIfAbsent(5,ti->new ArrayList<>()).add(o);
                     o++;
                 }
         for(int i=0;i<6;i++) {
         	vps[i]=lis.get(i).stream().mapToInt(t->t).toArray();
-        	/*System.out.println("---"+i);
-        	for(int j=0;j<vps[i].length;j++)
-        	System.out.println(vps[i][j]);*/
+        	//System.out.println("---"+i);
+        	//for(int j=0;j<vps[i].length;j++)
+        	//System.out.println(vps[i].length);
         }
        
     }
     public static void main(String[] args) {
-    	System.out.println(MathHelper.frac(-5.6));
+    	System.out.println((16&15));
     }
-    public ChunkSection[] sections = new ChunkSection[8];// sectors(xz): - -/- +/+ -/+ + and y -/+
+    public ChunkSection[] sections = new ChunkSection[8];// sectors(xz): - - -/- +/+ -/+ + and y -/+
     public Heightmap[] maps=new Heightmap[4]; // sectors(xz): - -/- +/+ -/+ +
     BlockPos origin;
     ServerWorld world;
@@ -162,6 +162,7 @@ public class SurroundingTemperatureSimulator {
 
     public Map<BlockPos, CachedBlockInfo> posinfo = new HashMap<>();// position to info cache
     public static void init() {
+    	
     }
 
     public SurroundingTemperatureSimulator(ServerPlayerEntity player) {
@@ -199,11 +200,11 @@ public class SurroundingTemperatureSimulator {
                 }
                 i += 2;
             }
-        ByteBuffer bb=ByteBuffer.allocate(16);
+        /*ByteBuffer bb=ByteBuffer.allocate(16);
         LongBuffer lb=bb.asLongBuffer();
         lb.put(player.getPosition().toLong());
-        lb.put(player.getServerWorld().getGameTime());
-        rnd = new MersenneTwister(bb.array());
+        lb.put(player.getServerWorld().getGameTime());*/
+        rnd = new MersenneTwister();
         //rrnd=new RandomSequence(n,rnd);
     }
 
@@ -216,21 +217,15 @@ public class SurroundingTemperatureSimulator {
         //z--;
         if (x >= 0) {
             i += 4;
-        } else {
-            x += 16;
         }
         if (z >= 0) {
             i += 2;
-        } else {
-            z += 16;
         }
         if (y >= 0) {
             i += 1;
-        } else {
-            y += 16;
         }
     
-        if (x >= 16 || y >= 16 || z >= 16 || x < 0 || y < 0 || z < 0) {// out of bounds
+        if (x >= 16 || y >= 16 || z >= 16 || x <= -16 || y <= -16 || z <= -16) {// out of bounds
         	//System.out.println("Out of bounds x:"+x+"y:"+y+"z:"+z);
             return Blocks.AIR.getDefaultState();
         }
@@ -238,7 +233,7 @@ public class SurroundingTemperatureSimulator {
         if (current == null)
             return Blocks.AIR.getDefaultState();
         try {
-            return current.getBlockState(x, y, z);
+            return current.getBlockState(x&15, y&15, z&15);
         } catch (Exception ex) {
             throw new RuntimeException("Failed to get block at" + x + "," + y + "," + z);
         }
@@ -274,7 +269,7 @@ public class SurroundingTemperatureSimulator {
             qz[i] = qz0;
             vid[i] = i;
         }
-        /*System.out.println("=========start=========");
+       /* System.out.println("=========start=========");
         for(int i=-1;i<=1;i++) {
         	StringBuilder sb=new StringBuilder();
         	 for(int j=-1;j<=1;j++)
@@ -291,9 +286,13 @@ public class SurroundingTemperatureSimulator {
             	int nid=vid[i];
                 if (isBlockade(qx[i] + vx[vid[i]], qy[i] + vy[vid[i]], qz[i] + vz[vid[i]])) // if running into a block
                 {
+                	Direction dir=getHitingFace(qx[i],qy[i],qz[i],vx[vid[i]],vy[vid[i]],vz[vid[i]]);
                     //vid[i]=getOutboundSpeedFrom(hitFace.getOpposite());//maybe re-choose a opposite direction vector
                     //nid=rrnd.getNext();
-                	nid= rnd.nextInt(n); // re-choose a speed direction randomly (from the pre-generated pool)
+                	if(dir!=null)
+                		nid = getOutboundSpeedFrom(dir); // choose a directional vector
+                	else
+                		nid = rnd.nextInt(n); // re-choose a speed direction randomly (from the pre-generated pool)
                 }
                 qx[i] = qx[i] + vx[vid[i]]; // move x
                 qy[i] = qy[i] + vy[vid[i]]; // move y
@@ -383,25 +382,16 @@ public class SurroundingTemperatureSimulator {
      * Check if this location collides with block.
      */
     private Direction getHitingFace(double sx, double sy, double sz,double vx,double vy,double vz) {
-        CachedBlockInfo info = getInfoCached(new BlockPos(sx+vx, sy+vy, sz+vz));
+    	BlockPos bpos=new BlockPos(sx+vx, sy+vy, sz+vz);
+        CachedBlockInfo info = getInfoCached(bpos);
         if (info.shape == EMPTY)
             return null;
-        Vector3d vvec=new Vector3d(vx,vy,vz);
-        double nx=MathHelper.frac(sx+vx),ny=MathHelper.frac(sy+vy),nz=MathHelper.frac(sz+vz);
-        if(nx<0)
-        	nx++;
-        if(ny<0)
-        	ny++;
-        if(nz<0)
-        	nz++;
-        Vector3d dvec=new Vector3d(nx,ny,nz);
-        if(info.shape.contains(dvec.getX(),dvec.getY(),dvec.getZ())) {
-        	BlockRayTraceResult brtr=AxisAlignedBB.rayTrace(info.shape.toBoundingBoxList(), Vector3d.ZERO, vvec, BlockPos.ZERO);
-        	
-        	if(brtr!=null) {
-        		return brtr.getFace();
-        	}
-        }
+        Vector3d svec=new Vector3d(sx,sy,sz);
+        Vector3d vvec=new Vector3d(sx+vx, sy+vy, sz+vz);
+        
+        BlockRayTraceResult brtr=AxisAlignedBB.rayTrace(info.shape.toBoundingBoxList(), svec, vvec, bpos);
+        if(brtr!=null)
+        	return brtr.getFace();
         return null;
     }
     private boolean isBlockade(double x, double y, double z) {

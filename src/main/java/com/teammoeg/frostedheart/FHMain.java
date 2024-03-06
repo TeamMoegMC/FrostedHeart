@@ -239,7 +239,7 @@ public class FHMain {
         //CrashReportExtender.registerCrashCallable(new ClimateCrash());
         FHNetwork.register();
         FHCapabilities.setup();
-        FHBiomes.Biomes();
+        FHBiomes.biomes();
         FHStructures.registerStructureGenerate();
         FHFeatures.initFeatures();
         SurroundingTemperatureSimulator.init();
