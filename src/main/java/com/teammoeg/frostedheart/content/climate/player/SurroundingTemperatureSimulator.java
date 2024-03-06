@@ -19,20 +19,15 @@
 
 package com.teammoeg.frostedheart.content.climate.player;
 
-import java.nio.ByteBuffer;
-import java.nio.LongBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.util.MersenneTwister;
-import com.teammoeg.frostedheart.util.RandomSequence;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -106,6 +101,7 @@ public class SurroundingTemperatureSimulator {
     private static float[] vx = new float[n], vy = new float[n], vz = new float[n];// Vp, speed vector list, this list is constant and considered a distributed ball mesh.
     private static final int num_rounds = 20;
     private static int[][] vps=new int[6][];//xp, xm, yp, ym, zp, zm
+    //private static RandomSequence startSequence;
     static {// generate speed vector list
         //int[] os = new int[11];
     	Map<Integer,List<Integer>> lis=new HashMap<>();
@@ -122,17 +118,17 @@ public class SurroundingTemperatureSimulator {
                     vx[o] = x / r * v0; // normalized x
                     vy[o] = y / r * v0; // normalized y
                     vz[o] = z / r * v0; // normalized z
-                    if(vx[o]> 0.1) 
+                    if(vx[o]>+0) 
                     	lis.computeIfAbsent(0,ti->new ArrayList<>()).add(o);
-                    if(vx[o]<-0.1) 
+                    if(vx[o]<-0) 
                     	lis.computeIfAbsent(1,ti->new ArrayList<>()).add(o);
-                    if(vy[o]> 0.1) 
+                    if(vy[o]>+0) 
                     	lis.computeIfAbsent(2,ti->new ArrayList<>()).add(o);
-                    if(vy[o]<-0.1) 
+                    if(vy[o]<-0) 
                     	lis.computeIfAbsent(3,ti->new ArrayList<>()).add(o);
-                    if(vz[o]> 0.1) 
+                    if(vz[o]>+0) 
                     	lis.computeIfAbsent(4,ti->new ArrayList<>()).add(o);
-                    if(vz[o]<-0.1) 
+                    if(vz[o]<-0) 
                     	lis.computeIfAbsent(5,ti->new ArrayList<>()).add(o);
                     o++;
                 }
@@ -142,10 +138,11 @@ public class SurroundingTemperatureSimulator {
         	//for(int j=0;j<vps[i].length;j++)
         	//System.out.println(vps[i].length);
         }
+        //startSequence=new RandomSequence(lis.get(3),new MersenneTwister());
        
     }
     public static void main(String[] args) {
-    	System.out.println(MathHelper.floor(-15.5));
+    	System.out.println((-16)&15);
     }
     public ChunkSection[] sections = new ChunkSection[8];// sectors(xz): - - -/- +/+ -/+ + and y -/+
     public Heightmap[] maps=new Heightmap[4]; // sectors(xz): - -/- +/+ -/+ +
@@ -225,7 +222,7 @@ public class SurroundingTemperatureSimulator {
             i += 1;
         }
     
-        if (x >= 16 || y >= 16 || z >= 16 || x <= -16 || y <= -16 || z <= -16) {// out of bounds
+        if (x >= 16 || y >= 16 || z >= 16 || x < -16 || y < -16 || z < -16) {// out of bounds
         	//System.out.println("Out of bounds x:"+x+"y:"+y+"z:"+z);
             return Blocks.AIR.getDefaultState();
         }
@@ -267,7 +264,7 @@ public class SurroundingTemperatureSimulator {
             qx[i] = qx0;
             qy[i] = qy0;
             qz[i] = qz0;
-            vid[i] = i;
+            vid[i] = i ;//startSequence.getNext();
         }
        /* System.out.println("=========start=========");
         for(int i=-1;i<=1;i++) {
@@ -286,7 +283,7 @@ public class SurroundingTemperatureSimulator {
             	int nid=vid[i];
                 if (isBlockade(qx[i] + vx[vid[i]], qy[i] + vy[vid[i]], qz[i] + vz[vid[i]])) // if running into a block
                 {
-                	Direction dir=getHitingFace(qx[i],qy[i],qz[i],vx[vid[i]],vy[vid[i]],vz[vid[i]]);
+                	Direction dir = getHitingFace(qx[i],qy[i],qz[i],vx[vid[i]],vy[vid[i]],vz[vid[i]]);
                     //vid[i]=getOutboundSpeedFrom(hitFace.getOpposite());//maybe re-choose a opposite direction vector
                     //nid=rrnd.getNext();
                 	if(dir!=null)
@@ -296,16 +293,14 @@ public class SurroundingTemperatureSimulator {
                 }
                 qx[i] = qx[i] + vx[vid[i]]; // move x
                 qy[i] = qy[i] + vy[vid[i]]; // move y
-                float yid=vy[vid[i]];
                 qz[i] = qz[i] + vz[vid[i]]; // move z
+                float yid=vy[vid[i]];
                 vid[i]=nid;
-                
                 bm.setX(MathHelper.floor(qx[i]));
                 bm.setY(MathHelper.floor(qy[i]));
                 bm.setZ(MathHelper.floor(qz[i]));
                 BlockPos bp=bm.toImmutable();
-                heat += (float) (getHeat(bp)
-                                        * MathHelper.lerp(MathHelper.clamp(-yid, 0, 0.4) * 2.5, 1, 0.5)); // add heat
+                heat += (float) (getHeat(bp) * MathHelper.lerp(MathHelper.clamp(-yid, 0, 0.4) * 2.5, 1, 0.5)); // add heat
                 wind += getAir(bp)? (float) MathHelper.lerp((MathHelper.clamp(Math.abs(yid), 0.2, 0.8) - 0.2) / 0.6, 2, 0.5) :0;
             }
         }

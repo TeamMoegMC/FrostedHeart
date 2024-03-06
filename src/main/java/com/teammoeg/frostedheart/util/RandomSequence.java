@@ -16,6 +16,10 @@ public class RandomSequence {
 		}
 		this.rnd=rnd;
 	}
+	public RandomSequence(List<Integer> initialSequence,Random rnd) {
+		ilist.addAll(initialSequence);
+		this.rnd=rnd;
+	}
 	public int getNext() {
 		if(llist.isEmpty()) {
 			Collections.shuffle(ilist, rnd);
