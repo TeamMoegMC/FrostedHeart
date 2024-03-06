@@ -168,7 +168,7 @@ public class TemperatureUpdate {
                 //Temperature from climate
                 envtemp += WorldTemperature.getClimateTemperature(world);
                 //Surrounding temperature
-                Pair<Float, Float> btp = new SurroundingTemperatureSimulator(player).getBlockTemperatureAndWind(player.getPosX(), player.getPosYEye(), player.getPosZ());
+                Pair<Float, Float> btp = new SurroundingTemperatureSimulator(player).getBlockTemperatureAndWind(player.getPosX(), player.getPosYEye()-0.7f, player.getPosZ());
                 float bt=btp.getFirst();
                 //int wind=btp.getSecond()+WorldTemperature.getClimateWind(world);
                 //Day-night temperature
