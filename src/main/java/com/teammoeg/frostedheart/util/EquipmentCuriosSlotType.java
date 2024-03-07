@@ -35,7 +35,7 @@ public enum EquipmentCuriosSlotType {
 	private final String key;
 	private EquipmentCuriosSlotType(boolean isCurios) {
 		this.isCurios = isCurios;
-		this.key=FHMain.rl(this.name()).toString();
+		this.key=FHMain.rl(this.name().toLowerCase()).toString();
 		this.slotUUID = UUID.nameUUIDFromBytes(key.getBytes(StandardCharsets.ISO_8859_1));
 	}
 	public boolean isHand() {
