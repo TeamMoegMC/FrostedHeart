@@ -114,7 +114,7 @@ public class SurroundingTemperatureSimulator {
     }
 
     public SurroundingTemperatureSimulator(ServerPlayerEntity player) {
-        int sourceX = (int) player.getPosX(), sourceY = (int) player.getPosYEye(), sourceZ = (int) player.getPosZ();
+        int sourceX = MathHelper.floor(player.getPosX()), sourceY = MathHelper.floor(player.getPosYEye()-.7f), sourceZ = MathHelper.floor(player.getPosZ());
         // System.out.println(sourceX+","+sourceY+","+sourceZ);
         // these are block position offset
         int offsetN = sourceZ - range;
@@ -213,7 +213,6 @@ public class SurroundingTemperatureSimulator {
             vid[i] = i;
         }
         float heat = 0;
-        BlockPos.Mutable bm=new BlockPos.Mutable();
         for (int round = 0; round < num_rounds; ++round) // time-to-live for each particle is `num_rounds`
         {
             for (int i = 0; i < n; ++i) // for all particles:
@@ -225,10 +224,7 @@ public class SurroundingTemperatureSimulator {
                 qx[i] = qx[i] + vx[vid[i]]; // move x
                 qy[i] = qy[i] + vy[vid[i]]; // move y
                 qz[i] = qz[i] + vz[vid[i]]; // move z
-                bm.setX((int) qx[i]);
-                bm.setY((int) qy[i]);
-                bm.setZ((int) qz[i]);
-                BlockPos bp=bm.toImmutable();
+                BlockPos bp=new BlockPos(qx[i],qy[i],qz[i]);
                 heat += getHeat(bp)
                         * MathHelper.lerp(MathHelper.clamp(vy[vid[i]], 0, 0.4) * 2.5, 1, 0.5); // add heat
                 wind +=getAir(bp)?MathHelper.lerp((MathHelper.clamp(Math.abs(vy[vid[i]]), 0.2, 0.8)-0.2)/0.6, 2, 0.5):0;
