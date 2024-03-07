@@ -37,6 +37,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
@@ -134,7 +137,13 @@ public class SerializeUtil {
         }
         return ItemStack.EMPTY;
     }
-
+	public static <K,V> Codec<Pair<K,V>> pairCodec(String nkey,Codec<K> key,String nval,Codec<V> val){
+		return RecordCodecBuilder.create(t->t.group(key.fieldOf(nkey).forGetter(Pair::getFirst), val.fieldOf(nval).forGetter(Pair::getSecond))
+			.apply(t,Pair::of));
+	} 
+	public static <K,V> Codec<Map<K,V>> mapCodec(Codec<K> keyCodec,Codec<V> valueCodec){
+		return Codec.compoundList(keyCodec, valueCodec).xmap(pl->pl.stream().collect(Collectors.toMap(Pair::getFirst,Pair::getSecond)),pl->pl.entrySet().stream().map(ent->Pair.of(ent.getKey(), ent.getValue())).toList()); 
+	}
 
     public static <T> List<T> parseJsonElmList(JsonElement elm, Function<JsonElement, T> mapper) {
         if (elm == null)

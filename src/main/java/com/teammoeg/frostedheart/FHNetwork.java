@@ -97,8 +97,7 @@ public class FHNetwork {
     public static void register() {
         String VERSION = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
         FHMain.LOGGER.info("FH Network Version: " + VERSION);
-        CHANNEL = NetworkRegistry.newSimpleChannel(FHMain.rl("network"), () -> VERSION,
-                VERSION::equals, VERSION::equals);
+        CHANNEL = NetworkRegistry.newSimpleChannel(FHMain.rl("network"), () -> VERSION, VERSION::equals, VERSION::equals);
 
         // CHANNEL.registerMessage(id++, ChunkWatchPacket.class,
         // ChunkWatchPacket::encode, ChunkWatchPacket::new, ChunkWatchPacket::handle);
@@ -109,14 +108,14 @@ public class FHNetwork {
         // TemperatureChangePacket::encode, TemperatureChangePacket::new,
         // TemperatureChangePacket::handle);
         
-        //Climate System
+        //Climate Messages
         registerMessage("body_data", FHBodyDataSyncPacket.class);
         registerMessage("temperature_data", FHDatapackSyncPacket.class);
 
         registerMessage("climate_data", FHClimatePacket.class);
         registerMessage("temperature_display", FHTemperatureDisplayPacket.class);
         
-        //Research System
+        //Research Messages
         registerMessage("research_registry", FHResearchRegistrtySyncPacket.class);
         registerMessage("research_sync", FHResearchSyncPacket.class);
         registerMessage("research_sync_end", FHResearchSyncEndPacket.class);
@@ -131,7 +130,7 @@ public class FHNetwork {
         registerMessage("research_effect", FHEffectProgressSyncPacket.class);
         registerMessage("research_energy_data", FHEnergyDataSyncPacket.class);
         
-        //Trade System
+        //Trade Messages
         registerMessage("bargain_request", BargainRequestPacket.class);
         registerMessage("bargain_response", BargainResponse.class);
         registerMessage("trade_commit", TradeCommitPacket.class);
@@ -146,18 +145,18 @@ public class FHNetwork {
         registerMessage("scenario_act", ServerSenarioActPacket.class);
         registerMessage("scenario_settings", FHClientSettingsPacket.class);
 
-        // Heat network system
+        // Heat Messages
         registerMessage("heat_endpoint", EndPointDataPacket.class);
 
-        // Town system
+        // Town Messages
         registerMessage("team_town_data_s2c", TeamTownDataS2CPacket.class);
     }
 
-    public static void send(PacketDistributor.PacketTarget target, Object message) {
+    public static void send(PacketDistributor.PacketTarget target, FHMessage message) {
         CHANNEL.send(target, message);
     }
 
-    public static void sendToServer(Object message) {
+    public static void sendToServer(FHMessage message) {
         CHANNEL.sendToServer(message);
     }
 

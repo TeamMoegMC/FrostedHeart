@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import net.minecraft.item.Item;
@@ -39,18 +38,23 @@ import net.minecraftforge.fml.RegistryObject;
 import top.theillusivec4.diet.api.IDietGroup;
 
 public class DietValueRecipe extends IESerializableRecipe {
+	/*public static final Codec<DietValueRecipe> CODEC=RecordCodecBuilder.create(
+		t->t.group(Registry.ITEM
+			.fieldOf("item")
+			.forGetter(o->o.item),
+			SerializeUtil.mapCodec(Codec.STRING,Codec.FLOAT)
+			.fieldOf("groups")
+			.forGetter(o->o.groups)
+		).apply(t, DietValueRecipe::new));*/
     public static class Serializer extends IERecipeSerializer<DietValueRecipe> {
-
         @Override
         public ItemStack getIcon() {
             return ItemStack.EMPTY;
         }
-
         @Override
         public DietValueRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
             return new DietValueRecipe(recipeId, DietGroupCodec.read(buffer), buffer.readRegistryId());
         }
-
         @Override
         public DietValueRecipe readFromJson(ResourceLocation id, JsonObject json) {
             Map<String, Float> m = json.get("groups").getAsJsonObject().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getAsFloat()));
@@ -59,33 +63,34 @@ public class DietValueRecipe extends IESerializableRecipe {
                 return null;
             return new DietValueRecipe(id, m, i);
         }
-
         @Override
         public void write(PacketBuffer buffer, DietValueRecipe recipe) {
             DietGroupCodec.write(buffer, recipe.groups);
             buffer.writeRegistryId(recipe.item);
         }
-
     }
     public static IRecipeType<DietValueRecipe> TYPE;
     public static RegistryObject<IERecipeSerializer<DietValueRecipe>> SERIALIZER;
     public static Map<Item, DietValueRecipe> recipeList = Collections.emptyMap();
+    
     final Map<String, Float> groups;
-
     Map<IDietGroup, Float> cache;
-
     public final Item item;
 
     public DietValueRecipe(ResourceLocation id, Item it) {
         this(id, new HashMap<>(), it);
     }
-
     public DietValueRecipe(ResourceLocation id, Map<String, Float> groups, Item it) {
         super(ItemStack.EMPTY, TYPE, id);
         this.groups = groups;
         this.item = it;
     }
-
+   /* public DietValueRecipe(Item it, Map<String, Float> groups) {
+        super(ItemStack.EMPTY, TYPE, null);
+        this.groups = groups;
+        this.item = it;
+    }
+*/
     @Override
     protected IERecipeSerializer<DietValueRecipe> getIESerializer() {
         return SERIALIZER.get();

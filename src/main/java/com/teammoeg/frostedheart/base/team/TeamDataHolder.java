@@ -28,6 +28,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 
 import dev.ftb.mods.ftbteams.data.Team;
@@ -99,7 +100,7 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 	 *
 	 * @param packet the packet
 	 */
-	public void sendToOnline(Object packet) {
+	public void sendToOnline(FHMessage packet) {
         for (ServerPlayerEntity spe : team.get().getOnlineMembers())
         	FHNetwork.send(PacketDistributor.PLAYER.with(()->spe), packet);
 	}
