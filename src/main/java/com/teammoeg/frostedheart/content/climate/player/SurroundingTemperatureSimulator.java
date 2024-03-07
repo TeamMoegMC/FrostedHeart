@@ -25,9 +25,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -340,6 +342,5 @@ public class SurroundingTemperatureSimulator {
             return false;
         double nx=MathHelper.frac(x),ny=MathHelper.frac(y),nz=MathHelper.frac(z);
         return info.shape.contains(nx,ny,nz);
-
     }
 }
