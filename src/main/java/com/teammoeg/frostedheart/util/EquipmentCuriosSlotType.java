@@ -1,6 +1,12 @@
-package com.teammoeg.frostedheart.content.climate.player;
+package com.teammoeg.frostedheart.util;
+
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
+
+import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.util.ResourceLocation;
 import top.theillusivec4.curios.api.SlotTypePreset;
 
 public enum EquipmentCuriosSlotType {
@@ -25,8 +31,12 @@ public enum EquipmentCuriosSlotType {
 	   CURIOS_GENERIC(true),
 	   UNKNOWN(false);
 	private final boolean isCurios;
-	EquipmentCuriosSlotType(boolean isCurios) {
+	private final UUID slotUUID;
+	private final String key;
+	private EquipmentCuriosSlotType(boolean isCurios) {
 		this.isCurios = isCurios;
+		this.key=FHMain.rl(this.name()).toString();
+		this.slotUUID = UUID.nameUUIDFromBytes(key.getBytes(StandardCharsets.ISO_8859_1));
 	}
 	public boolean isHand() {
 		return this==MAINHAND||this==OFFHAND;
@@ -61,6 +71,12 @@ public enum EquipmentCuriosSlotType {
 	}
 	public boolean isCurios() {
 		return isCurios;
+	}
+	public UUID getSlotUUID() {
+		return slotUUID;
+	}
+	public String getKey() {
+		return key;
 	}
 	
 	

@@ -72,6 +72,7 @@ import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.util.EquipmentCuriosSlotType;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
@@ -186,15 +187,15 @@ public class CommonEvents {
 
         if(data!=null) {
         	UUID rnuuid=UUID.nameUUIDFromBytes((FHMain.MODID+event.getSlotType().toString()).getBytes(StandardCharsets.ISO_8859_1));
-        	String amd=FHMain.MODID+":armor_data";
         	EquipmentSlotType es=event.getItemStack().getEquipmentSlot();
+        	EquipmentCuriosSlotType ecs=EquipmentCuriosSlotType.fromVanilla(es);
         	if(event.getSlotType()==es) {
 	        	if(data.getInsulation()!=0)
-	        		event.addModifier(FHAttributes.INSULATION.get(), new AttributeModifier(rnuuid,amd, data.getInsulation(), Operation.ADDITION));
+	        		event.addModifier(FHAttributes.INSULATION.get(), new AttributeModifier(ecs.getSlotUUID(), ecs.getKey(), data.getInsulation(), Operation.ADDITION));
 	        	if(data.getColdProof()!=0)
-	        		event.addModifier(FHAttributes.WIND_PROOF.get(), new AttributeModifier(rnuuid,amd, data.getColdProof(), Operation.ADDITION));
+	        		event.addModifier(FHAttributes.WIND_PROOF.get(), new AttributeModifier(ecs.getSlotUUID(), ecs.getKey(), data.getColdProof(), Operation.ADDITION));
 	        	if(data.getHeatProof()!=0)
-	        		event.addModifier(FHAttributes.HEAT_PROOF.get(), new AttributeModifier(rnuuid,amd, data.getHeatProof(), Operation.ADDITION));
+	        		event.addModifier(FHAttributes.HEAT_PROOF.get(), new AttributeModifier(ecs.getSlotUUID(), ecs.getKey(), data.getHeatProof(), Operation.ADDITION));
         	}
         }
     }

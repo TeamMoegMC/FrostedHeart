@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.content.climate.player;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.util.EquipmentCuriosSlotType;
+
 import net.minecraft.item.ItemStack;
 
 /**

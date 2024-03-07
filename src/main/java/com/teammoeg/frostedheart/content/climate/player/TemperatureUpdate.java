@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
+import com.teammoeg.frostedheart.util.EquipmentCuriosSlotType;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.entity.ai.attributes.AttributeModifier;

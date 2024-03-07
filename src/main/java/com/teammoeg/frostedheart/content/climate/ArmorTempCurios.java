@@ -7,6 +7,7 @@ import com.google.common.collect.Multimap;
 import com.teammoeg.frostedheart.FHAttributes;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
+import com.teammoeg.frostedheart.util.EquipmentCuriosSlotType;
 
 import net.minecraft.entity.ai.attributes.Attribute;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
@@ -22,19 +23,15 @@ public class ArmorTempCurios implements ICurio {
 
 	@Override
 	public Multimap<Attribute, AttributeModifier> getAttributeModifiers(SlotContext slotContext, UUID uuid) {
-		
 		Multimap<Attribute, AttributeModifier> mm=HashMultimap.create();
-
-        
         if(data!=null) {
-        	String amd=FHMain.MODID+":armor_data";
-        	
+        	EquipmentCuriosSlotType slot=EquipmentCuriosSlotType.fromCurios(slotContext.getIdentifier());
         	if(data.getInsulation()!=0)
-        		mm.put(FHAttributes.INSULATION.get(), new AttributeModifier(uuid,amd, data.getInsulation(), Operation.ADDITION));
+        		mm.put(FHAttributes.INSULATION.get(), new AttributeModifier(uuid,slot.getKey(), data.getInsulation(), Operation.ADDITION));
         	if(data.getColdProof()!=0)
-        		mm.put(FHAttributes.WIND_PROOF.get(), new AttributeModifier(uuid,amd, data.getColdProof(), Operation.ADDITION));
+        		mm.put(FHAttributes.WIND_PROOF.get(), new AttributeModifier(uuid,slot.getKey(), data.getColdProof() , Operation.ADDITION));
         	if(data.getHeatProof()!=0)
-        		mm.put(FHAttributes.HEAT_PROOF.get(), new AttributeModifier(uuid,amd, data.getHeatProof(), Operation.ADDITION));
+        		mm.put(FHAttributes.HEAT_PROOF.get(), new AttributeModifier(uuid,slot.getKey(), data.getHeatProof() , Operation.ADDITION));
         }
 		return ICurio.super.getAttributeModifiers(slotContext, uuid);
 	}
