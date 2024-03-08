@@ -19,12 +19,10 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
-import java.util.Random;
-
-import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
@@ -46,17 +44,14 @@ import net.minecraftforge.items.ItemHandlerHelper;
 public class GeneratorData implements NBTSerializable{
 	public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
-    public int process = 0;
-    public int processMax = 0;
+    public int process = 0, processMax = 0;
     public int overdriveLevel = 0;
     public float steamLevel;
     public int steamProcess;
-    public int heated;
+    public int heated,ranged;
     public float power;
     public Fluid fluid;
-    public boolean isWorking;
-    public boolean isOverdrive;
-    public boolean isActive;
+    public boolean isWorking, isOverdrive, isActive;
     public float TLevel,RLevel;
     protected NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
 
@@ -67,7 +62,10 @@ public class GeneratorData implements NBTSerializable{
     public LazyOptional<HeatProviderEndPoint> epcap=LazyOptional.of(()->ep);
     public RegistryKey<World> dimension;
 
-    final float heatAddInterval = 20;
+    final float heatChance = .05f;
+    
+    
+    
     public GeneratorData(TeamDataHolder teamResearchData) {
         teamData = teamResearchData;
     }
@@ -138,32 +136,35 @@ public class GeneratorData implements NBTSerializable{
     }
     public void tickHeatedProcess(World world) {
     	int heatedMax=getMaxHeated();
-        if (isActive&&heated != heatedMax) {
-            Random random = world.rand;
-            boolean needAdd = false;
-            float heatAddProbability = 1F / heatAddInterval;
-            if (isOverdrive) {
-                heatAddProbability = 2F / heatAddInterval;
+    	int rangedMax=getMaxRanged();
+        if (isActive) {
+            if(heated != heatedMax) {
+	            if (world.rand.nextFloat() < heatChance*(isOverdrive?2:1)) {
+	            	if (heated < heatedMax) {
+		                heated++;
+		            } else {
+		                heated--;
+		            }
+	            }
+            } 
+            if(ranged != rangedMax) {
+	            if (world.rand.nextFloat() < heatChance*(isOverdrive?2:1)) {
+	            	if (ranged < rangedMax) {
+	 	            	ranged++;
+	 	            } else {
+	 	            	ranged--;
+	 	            }
+	            }
             }
-            if (random.nextFloat() < heatAddProbability) {
-                needAdd = true;
-            }
-            if (heated < heatedMax && needAdd) {
-                heated++;
-            } else if (heated > heatedMax && needAdd) {
-                heated--;
-            }
-        } else if (!isActive) {
+        } else {
             if (heated > 0){
-                Random random = world.rand;
-                float heatAddProbability = 2F / heatAddInterval;
-                if (random.nextFloat() < heatAddProbability) {
+                if (world.rand.nextFloat() < heatChance * 2) {
                     heated--;
                 }
             }
         }
-        TLevel=(Math.min(heated / 100F,this.getMaxTemperatureLevel()));
-        RLevel=(Math.min(heated / 100F,this.getMaxRangeLevel()));
+        TLevel=heated / 100F;
+        RLevel=ranged / 100F;
 
     }
     public boolean tickFuelProcess(World w) {
@@ -191,6 +192,7 @@ public class GeneratorData implements NBTSerializable{
     }
     public void onPosChange() {
     	heated=0;
+    	ranged=0;
     	TLevel=0;
     	RLevel=0;
     	process=0;
@@ -208,9 +210,12 @@ public class GeneratorData implements NBTSerializable{
 		return 1+steamLevel;
 	}
     public int getMaxHeated() {
-        return (int) (100*Math.max(this.getMaxTemperatureLevel(), this.getMaxRangeLevel()));
+        return (int) (100*this.getMaxTemperatureLevel());
     }
-
+    public int getMaxRanged() {
+        return (int) (100*this.getMaxRangeLevel());
+    }
+    
 	@Override
 	public void save(CompoundNBT result, boolean isPacket) {
 		// TODO Auto-generated method stub
@@ -224,6 +229,7 @@ public class GeneratorData implements NBTSerializable{
         result.putFloat("steamLevel",steamLevel);
         result.putFloat("powerLevel", power);
         result.putInt("heated", heated);
+        result.putInt("ranged", ranged);
         result.putFloat("tempLevel", TLevel);
         result.putFloat("rangeLevel",RLevel);
         if (fluid != null)
@@ -250,6 +256,7 @@ public class GeneratorData implements NBTSerializable{
         steamLevel = data.getFloat("steamLevel");
         power = data.getFloat("powerLevel");
         heated=data.getInt("heated");
+        ranged=data.getInt("ranged");
         TLevel=data.getFloat("tempLevel");
         RLevel=data.getFloat("rangeLevel");
         if (data.contains("steamFluid"))
