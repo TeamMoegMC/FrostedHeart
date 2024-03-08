@@ -40,6 +40,7 @@ import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -273,7 +274,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         this.markContainingBlockForUpdate(null);
         return true;
     }
-    public void onUpgradeMaintainClicked(PlayerEntity player) {
+    public void onUpgradeMaintainClicked(ServerPlayerEntity player) {
     	upgradeStructure(player);
     };
     public abstract List<IngredientWithSize> getRepairCost();
@@ -304,13 +305,14 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	}
     	return true;
     }
-    public void upgradeStructure(PlayerEntity entityplayer) {
+    public void upgradeStructure(ServerPlayerEntity entityplayer) {
     	if(!isValidStructure())
     		return;
     	if(!FHUtils.costItems(entityplayer, getUpgradeCost()))
     		return;
     	BlockPos negMasterOffset=this.multiblockInstance.getMasterFromOriginOffset().subtract(getNextLevelMultiblock().getMasterFromOriginOffset());
         Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, getFacing().getOpposite());
+        ((MultiBlockAccess) getNextLevelMultiblock()).setPlayer(entityplayer);
         ((MultiBlockAccess) getNextLevelMultiblock()).callForm(world, getBlockPosForPos(negMasterOffset), rot, Mirror.NONE, getFacing());
 
     }

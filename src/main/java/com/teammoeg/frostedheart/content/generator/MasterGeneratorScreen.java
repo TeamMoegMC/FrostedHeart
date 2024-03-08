@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.client.Point;
@@ -180,10 +181,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
                 }));
         this.addButton(new MasterGeneratorGuiButtonUpgrade(guiLeft + 75, guiTop + 116, 26, 18, 0,424, 148,
                 btn -> {
-                	CompoundNBT tag = new CompoundNBT();
-                    tag.putInt("upgrade", 1);
-                    tag.putUniqueId("player",ClientUtils.mc().player.getUniqueID());
-                    ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(tile.master(), tag));
+                	FHNetwork.sendToServer(new GeneratorModifyPacket());
                     fullInit();
                 }));
 
