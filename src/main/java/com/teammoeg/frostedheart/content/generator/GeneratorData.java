@@ -46,12 +46,13 @@ public class GeneratorData implements NBTSerializable{
     public static final int OUTPUT_SLOT = 1;
     public int process = 0, processMax = 0;
     public int overdriveLevel = 0;
+    final int maxOverdriveLevel=24000;
     public float steamLevel;
     public int steamProcess;
     public int heated,ranged;
     public float power;
     public Fluid fluid;
-    public boolean isWorking, isOverdrive, isActive;
+    public boolean isWorking, isOverdrive, isActive, isBroken;
     public float TLevel,RLevel;
     protected NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
 
@@ -168,7 +169,7 @@ public class GeneratorData implements NBTSerializable{
 
     }
     public boolean tickFuelProcess(World w) {
-        if (!isWorking)
+        if (!isWorking||isBroken)
             return false;
         boolean hasFuel = true;
         if (isOverdrive) {
@@ -226,6 +227,7 @@ public class GeneratorData implements NBTSerializable{
         result.putBoolean("isWorking", isWorking);
         result.putBoolean("isOverdrive", isOverdrive);
         result.putBoolean("isActive", isActive);
+        result.putBoolean("isBroken", isBroken);
         result.putFloat("steamLevel",steamLevel);
         result.putFloat("powerLevel", power);
         result.putInt("heated", heated);
@@ -253,6 +255,7 @@ public class GeneratorData implements NBTSerializable{
         isWorking = data.getBoolean("isWorking");
         isOverdrive = data.getBoolean("isOverdrive");
         isActive = data.getBoolean("isActive");
+        isBroken = data.getBoolean("isBroken");
         steamLevel = data.getFloat("steamLevel");
         power = data.getFloat("powerLevel");
         heated=data.getInt("heated");

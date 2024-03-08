@@ -19,18 +19,26 @@
 
 package com.teammoeg.frostedheart.content.generator.t1;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.function.Consumer;
 
+import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.tool.GeneratorDriveHandler;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.blocks.stone.AlloySmelterTileEntity;
 import blusunrize.immersiveengineering.common.blocks.stone.BlastFurnaceTileEntity;
+import blusunrize.immersiveengineering.common.items.IEItems;
 import blusunrize.immersiveengineering.common.util.Utils;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
@@ -38,8 +46,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3i;
 
 public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1GeneratorTileEntity> {
-
-    
     GeneratorDriveHandler generatorDriveHandler;
     private static BlockPos lastSupportPos;
     public T1GeneratorTileEntity() {
@@ -116,4 +122,18 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
         super.writeCustomNBT(nbt, descPacket);
         
     }
+    final List<IngredientWithSize> repair=Arrays.asList(IngredientWithSize.of(new ItemStack(AllItems.COPPER_INGOT.get(),64)));
+    final List<IngredientWithSize> upgrade=Arrays.asList(IngredientWithSize.of(new ItemStack(AllItems.COPPER_INGOT.get(),64)));
+	@Override
+	public List<IngredientWithSize> getRepairCost() {
+		return repair;
+	}
+	@Override
+	public List<IngredientWithSize> getUpgradeCost() {
+		return upgrade;
+	}
+	@Override
+	public IETemplateMultiblock getNextLevelMultiblock() {
+		return FHMultiblocks.GENERATOR_T2;
+	}
 }

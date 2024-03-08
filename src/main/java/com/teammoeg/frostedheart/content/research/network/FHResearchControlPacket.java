@@ -51,12 +51,12 @@ public class FHResearchControlPacket implements FHMessage {
 
     public FHResearchControlPacket(PacketBuffer buffer) {
         researchID = buffer.readVarInt();
-        status = Operator.values()[buffer.readVarInt()];
+        status = Operator.values()[buffer.readByte()];
     }
 
     public void encode(PacketBuffer buffer) {
         buffer.writeVarInt(researchID);
-        buffer.writeVarInt(status.ordinal());
+        buffer.writeByte(status.ordinal());
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {

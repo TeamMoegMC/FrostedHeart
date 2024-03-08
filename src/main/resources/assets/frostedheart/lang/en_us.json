@@ -155,6 +155,8 @@
   "fluid.frostedheart.steam": "Any Steam",
   "fluid.frostedheart.sulfur_dioxide": "Sulfur Dioxide",
   "fluid.frostedheart.wolfberry_tea": "Wolfberry Tea",
+  "gui.frostedheart.generator.no_enough_space": "No enough space, there must be space of %s x %s x %s around the generator",
+  "gui.frostedheart.generator.upgrade_material": "Upgrade material",
   "gui.frostedheart.draw_desk.examine": "Examine item",
   "gui.frostedheart.draw_desk.unable_examine": "Unable to examine this now",
   "gui.frostedheart.draw_desk.help": "Help",

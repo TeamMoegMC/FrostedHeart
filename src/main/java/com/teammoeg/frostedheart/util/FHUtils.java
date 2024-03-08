@@ -157,7 +157,41 @@ public class FHUtils {
             return true;
         return r.nextInt(Math.max(1, MathHelper.ceil(-temp / 2))) == 0;
     }
-
+    public static boolean costItems(PlayerEntity player,List<IngredientWithSize> costList) {
+        // first do simple verify
+        for (IngredientWithSize iws : costList) {
+            int count = iws.getCount();
+            for (ItemStack it : player.inventory.mainInventory) {
+                if (iws.testIgnoringSize(it)) {
+                    count -= it.getCount();
+                    if (count <= 0)
+                        break;
+                }
+            }
+            if (count > 0)
+                return false;
+        }
+        // then really consume item
+        List<ItemStack> ret = new ArrayList<>();
+        for (IngredientWithSize iws : costList) {
+            int count = iws.getCount();
+            for (ItemStack it : player.inventory.mainInventory) {
+                if (iws.testIgnoringSize(it)) {
+                    int redcount = Math.min(count, it.getCount());
+                    ret.add(it.split(redcount));
+                    count -= redcount;
+                    if (count <= 0)
+                        break;
+                }
+            }
+            if (count > 0) {// wrong, revert.
+                for (ItemStack it : ret)
+                    FHUtils.giveItem(player, it);
+                return false;
+            }
+        }
+        return true;
+    }
     public static Ingredient createIngredient(ItemStack is) {
         if (is.hasTag()) return new NBTIngredientAccess(is);
         return Ingredient.fromStacks(is);

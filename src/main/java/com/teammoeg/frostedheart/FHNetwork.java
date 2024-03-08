@@ -23,6 +23,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
@@ -90,6 +91,13 @@ public class FHNetwork {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+    }
+    /**
+     * Register Message Type, should provide a deserializer
+     * */
+    public static synchronized <T extends FHMessage> void registerMessage(String name,Class<T> msg,Function<PacketBuffer,T> func) {
+    	classesId.put(msg,FHMain.rl(name));
+	    CHANNEL.registerMessage(++iid,msg,FHMessage::encode,func,FHMessage::handle);
     }
     public static ResourceLocation getId(Class<? extends FHMessage> cls) {
     	return classesId.get(cls);

@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -29,11 +30,15 @@ import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerChangeListener;
+import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import blusunrize.immersiveengineering.api.utils.DirectionUtils;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -43,12 +48,16 @@ import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.IIntArray;
 import net.minecraft.util.IntArray;
+import net.minecraft.util.Mirror;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.Rotation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
@@ -77,6 +86,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 			switch(index) {
 			case 0:return (int) (getTemperatureLevel()*100);
 			case 1:return (int) (getRangeLevel()*100);
+			case 2:return isBroken?1:0;
 			}
 			return 0;
 		}
@@ -92,12 +102,13 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 			switch(index) {
 			case 0:setTemperatureLevel(value/100f);break;
 			case 1:setRangeLevel(value/100f);break;
+			case 2:isBroken=value!=0;
 			}
 		}
 
 		@Override
 		public int size() {
-			return base.size()+2;
+			return base.size()+3;
 		}
     	
     };
@@ -105,7 +116,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
     private boolean hasFuel;//for rendering
-    protected ItemStack currentItem;
+    boolean isBroken;
     //local inventory, prevent lost
     NonNullList<ItemStack> linventory = NonNullList.withSize(2, ItemStack.EMPTY);
 
@@ -244,6 +255,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         super.readCustomNBT(nbt, descPacket);
         ItemStackHelper.loadAllItems(nbt, linventory);
         hasFuel = nbt.getBoolean("hasFuel");
+        isBroken = nbt.getBoolean("isBroken");
         if(!descPacket&&this.getWorld() instanceof ServerWorld) {
             Optional<GeneratorData> data = this.getData();
             data.ifPresent(t -> {
@@ -261,7 +273,47 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         this.markContainingBlockForUpdate(null);
         return true;
     }
+    public void onUpgradeMaintainClicked(PlayerEntity player) {
+    	upgradeStructure(player);
+    };
+    public abstract List<IngredientWithSize> getRepairCost();
+    public abstract List<IngredientWithSize> getUpgradeCost();
+    public abstract IETemplateMultiblock getNextLevelMultiblock();
+    public boolean isValidStructure() {
+    	IETemplateMultiblock ietm=getNextLevelMultiblock();
+    	if(ietm==null)
+    		return false;
+    	Vector3i csize=this.multiblockInstance.getSize(world);
+    	Vector3i nsize=ietm.getSize(world);
+    	BlockPos masterOffset=ietm.getMasterFromOriginOffset().subtract(this.multiblockInstance.getMasterFromOriginOffset());
+    	BlockPos negMasterOffset=this.multiblockInstance.getMasterFromOriginOffset().subtract(ietm.getMasterFromOriginOffset());
+    	AxisAlignedBB aabb=new AxisAlignedBB(masterOffset,masterOffset.add(csize));
+    	
+    	for(int x=0;x<nsize.getX();x++) {
+    		for(int y=0;y<nsize.getY();y++) {
+    			for(int z=0;z<nsize.getZ();z++) {
+    				if(aabb.contains(x,y,z))
+    					continue;
+    				BlockPos cpos=negMasterOffset.add(x, y, z);
+    				BlockPos actual=this.getBlockPosForPos(cpos);
+    				if(world.getBlockState(actual).getBlock()!=Blocks.AIR) {
+    					return false;
+    				}
+    	    	}
+        	}
+    	}
+    	return true;
+    }
+    public void upgradeStructure(PlayerEntity entityplayer) {
+    	if(!isValidStructure())
+    		return;
+    	if(!FHUtils.costItems(entityplayer, getUpgradeCost()))
+    		return;
+    	BlockPos negMasterOffset=this.multiblockInstance.getMasterFromOriginOffset().subtract(getNextLevelMultiblock().getMasterFromOriginOffset());
+        Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, getFacing().getOpposite());
+        ((MultiBlockAccess) getNextLevelMultiblock()).callForm(world, getBlockPosForPos(negMasterOffset), rot, Mirror.NONE, getFacing());
 
+    }
     @Override
     public void receiveMessageFromClient(CompoundNBT message) {
         super.receiveMessageFromClient(message);
@@ -278,8 +330,6 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
     public void regist() {
-    	//System.out.println("Regist");
-        // TODO: seems to be an issue here. getData is empty
     	getDataNoCheck().ifPresent(t -> {
         	if(!master().pos.equals(t.actualPos))
         		t.onPosChange();
@@ -325,6 +375,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         guiData.set(PROCESS_MAX, data.map(t -> t.processMax).orElse(0));
         guiData.set(OVERDRIVE, data.map(t -> t.overdriveLevel).orElse(0));
         guiData.set(POWER, (int)(float)data.map(t->t.power).orElse(0F));
+        isBroken = data.map(t->t.isBroken).orElse(false);
         tickDrives(isWorking);
         return isWorking;
     	/*if(this.getIsActive())
@@ -346,6 +397,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         if(!this.isDummy()||descPacket) {
 	        ItemStackHelper.saveAllItems(nbt, linventory);
 	        nbt.putBoolean("hasFuel", hasFuel);
+	        nbt.putBoolean("isBroken", isBroken);
         }
     }
 

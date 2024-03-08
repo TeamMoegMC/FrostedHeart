@@ -19,10 +19,13 @@
 
 package com.teammoeg.frostedheart.content.generator.t2;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
 
+import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
@@ -33,6 +36,9 @@ import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
@@ -240,6 +246,25 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 	        nbt.put("fluid", tankx);
         }
     }
+    final List<IngredientWithSize> repair=Arrays.asList(IngredientWithSize.of(new ItemStack(AllItems.COPPER_INGOT.get(),64)));
+    final List<IngredientWithSize> upgrade=Arrays.asList(IngredientWithSize.of(new ItemStack(AllItems.COPPER_INGOT.get(),64)));
+	@Override
+	public List<IngredientWithSize> getRepairCost() {
+		// TODO Auto-generated method stub
+		return repair;
+	}
+
+	@Override
+	public List<IngredientWithSize> getUpgradeCost() {
+		// TODO Auto-generated method stub
+		return upgrade;
+	}
+
+	@Override
+	public IETemplateMultiblock getNextLevelMultiblock() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 
 }

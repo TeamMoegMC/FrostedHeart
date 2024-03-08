@@ -2,7 +2,9 @@ package com.teammoeg.frostedheart.content.generator;
 
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
@@ -10,6 +12,7 @@ import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.client.Point;
 
 import blusunrize.immersiveengineering.ImmersiveEngineering;
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
@@ -18,10 +21,12 @@ import blusunrize.immersiveengineering.client.utils.GuiHelper;
 import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Quaternion;
 import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 
@@ -150,10 +155,13 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 	    //overdrive level
 	    drawCenterText(matrixStack,141,45, 0+"",0xffffffff);
 	}
+	boolean validStructure;
+	
     @Override
     public void init() {
         super.init();
         this.buttons.clear();
+        validStructure=tile.isValidStructure();
         this.addButton(new MasterGeneratorGuiButtonBoolean(guiLeft + 5, guiTop + 24, 11, 22, tile.isWorking(), 472, 148,
                 btn -> {
                     CompoundNBT tag = new CompoundNBT();
@@ -172,10 +180,10 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
                 }));
         this.addButton(new MasterGeneratorGuiButtonUpgrade(guiLeft + 75, guiTop + 116, 26, 18, 0,424, 148,
                 btn -> {
-                    /*CompoundNBT tag = new CompoundNBT();
-                    tile.setOverdrive(!btn.getState());
-                    tag.putBoolean("isOverdrive", tile.isOverdrive());
-                    FHNetwork.sendToServer(new MessageTileSync(tile.master(), tag));*/
+                	CompoundNBT tag = new CompoundNBT();
+                    tag.putInt("upgrade", 1);
+                    tag.putUniqueId("player",ClientUtils.mc().player.getUniqueID());
+                    ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(tile.master(), tag));
                     fullInit();
                 }));
 
@@ -212,7 +220,21 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         if (isMouseIn(mouseX, mouseY, 18, 18, 32, 32)) {
             tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
         }
-
+        if (isMouseIn(mouseX, mouseY, 75, 116, 26, 18)) {
+        	Optional<GeneratorData> generatorData=tile.getDataNoCheck();
+        	if(tile.getNextLevelMultiblock()!=null&&!tile.isBroken) {
+        		if(!validStructure) {
+        			Vector3i v3i=tile.getNextLevelMultiblock().getSize(ClientUtils.mc().world);
+        			tooltip.add(GuiUtils.translateGui("generator.no_enough_space",v3i.getX(),v3i.getY(),v3i.getZ()));
+        		} else {
+        			tooltip.add(GuiUtils.translateGui("generator.upgrade_material"));
+        			for(IngredientWithSize iws:tile.getUpgradeCost()) {
+        				ItemStack[] iss=iws.getMatchingStacks();
+        				tooltip.add(GuiUtils.str(iws.getCount()+"x ").appendSibling(iss[(int) ((new Date().getTime()/1000)%iss.length)].getDisplayName()));
+        			}
+        		}
+        	}
+        }
         if (!tooltip.isEmpty()) {
             net.minecraftforge.fml.client.gui.GuiUtils.drawHoveringText(transform, tooltip, mouseX, mouseY, width, height, -1, font);
         }

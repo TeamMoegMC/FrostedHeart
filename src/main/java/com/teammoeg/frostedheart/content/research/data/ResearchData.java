@@ -221,42 +221,8 @@ public class ResearchData implements IEnvironment {
                 return false;
             }
         }
-        if (research.getRequiredItems().isEmpty()) {
-            setActive();
-            return true;
-        }
-        // first do simple verify
-        for (IngredientWithSize iws : research.getRequiredItems()) {
-            int count = iws.getCount();
-            for (ItemStack it : player.inventory.mainInventory) {
-                if (iws.testIgnoringSize(it)) {
-                    count -= it.getCount();
-                    if (count <= 0)
-                        break;
-                }
-            }
-            if (count > 0)
-                return false;
-        }
-        // then really consume item
-        List<ItemStack> ret = new ArrayList<>();
-        for (IngredientWithSize iws : research.getRequiredItems()) {
-            int count = iws.getCount();
-            for (ItemStack it : player.inventory.mainInventory) {
-                if (iws.testIgnoringSize(it)) {
-                    int redcount = Math.min(count, it.getCount());
-                    ret.add(it.split(redcount));
-                    count -= redcount;
-                    if (count <= 0)
-                        break;
-                }
-            }
-            if (count > 0) {// wrong, revert.
-                for (ItemStack it : ret)
-                    FHUtils.giveItem(player, it);
-                return false;
-            }
-        }
+        if(!research.getRequiredItems().isEmpty()&&!FHUtils.costItems(player,this.getResearch().getRequiredItems()))
+        	return false;
         setActive();
         return true;
     }
