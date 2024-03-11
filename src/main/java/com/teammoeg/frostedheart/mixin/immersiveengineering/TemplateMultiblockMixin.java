@@ -64,4 +64,9 @@ public abstract class TemplateMultiblockMixin implements IMultiblock, MultiBlock
         if (pe != null)
             IOwnerTile.trySetOwner(Utils.getExistingTileEntity(world, master), FHTeamDataManager.get(pe).getId());
     }
+
+	@Override
+	public void setPlayer(ServerPlayerEntity spe) {
+		pe=spe;
+	}
 }

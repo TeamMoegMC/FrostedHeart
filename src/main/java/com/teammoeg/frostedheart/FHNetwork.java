@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
+import com.teammoeg.frostedheart.content.generator.GeneratorModifyPacket;
 import com.teammoeg.frostedheart.content.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.content.research.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.content.research.network.FHDrawingDeskOperationPacket;
@@ -158,6 +159,9 @@ public class FHNetwork {
 
         // Town Messages
         registerMessage("team_town_data_s2c", TeamTownDataS2CPacket.class);
+        
+        // Generator Messages
+        registerMessage("generator_upgrade", GeneratorModifyPacket.class);
     }
 
     public static void send(PacketDistributor.PacketTarget target, FHMessage message) {

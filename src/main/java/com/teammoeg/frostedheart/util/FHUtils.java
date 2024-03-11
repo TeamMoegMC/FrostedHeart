@@ -191,6 +191,7 @@ public class FHUtils {
             if (count > 0)
                 return false;
         }
+        System.out.println("test");
         // then really consume item
         List<ItemStack> ret = new ArrayList<>();
         for (IngredientWithSize iws : costList) {

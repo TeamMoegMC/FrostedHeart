@@ -186,16 +186,17 @@ public class CommonEvents {
         ArmorTempData data=FHDataManager.getArmor(event.getItemStack());
 
         if(data!=null) {
-        	UUID rnuuid=UUID.nameUUIDFromBytes((FHMain.MODID+event.getSlotType().toString()).getBytes(StandardCharsets.ISO_8859_1));
         	EquipmentSlotType es=event.getItemStack().getEquipmentSlot();
-        	EquipmentCuriosSlotType ecs=EquipmentCuriosSlotType.fromVanilla(es);
-        	if(event.getSlotType()==es) {
-	        	if(data.getInsulation()!=0)
-	        		event.addModifier(FHAttributes.INSULATION.get(), new AttributeModifier(ecs.getSlotUUID(0), ecs.getKey(0), data.getInsulation(), Operation.ADDITION));
-	        	if(data.getColdProof()!=0)
-	        		event.addModifier(FHAttributes.WIND_PROOF.get(), new AttributeModifier(ecs.getSlotUUID(0), ecs.getKey(0), data.getColdProof(), Operation.ADDITION));
-	        	if(data.getHeatProof()!=0)
-	        		event.addModifier(FHAttributes.HEAT_PROOF.get(), new AttributeModifier(ecs.getSlotUUID(0), ecs.getKey(0), data.getHeatProof(), Operation.ADDITION));
+        	if(es!=null) {
+	        	EquipmentCuriosSlotType ecs=EquipmentCuriosSlotType.fromVanilla(es);
+	        	if(event.getSlotType()==es) {
+		        	if(data.getInsulation()!=0)
+		        		event.addModifier(FHAttributes.INSULATION.get(), new AttributeModifier(ecs.getSlotUUID(0), ecs.getKey(0), data.getInsulation(), Operation.ADDITION));
+		        	if(data.getColdProof()!=0)
+		        		event.addModifier(FHAttributes.WIND_PROOF.get(), new AttributeModifier(ecs.getSlotUUID(0), ecs.getKey(0), data.getColdProof(), Operation.ADDITION));
+		        	if(data.getHeatProof()!=0)
+		        		event.addModifier(FHAttributes.HEAT_PROOF.get(), new AttributeModifier(ecs.getSlotUUID(0), ecs.getKey(0), data.getHeatProof(), Operation.ADDITION));
+	        	}
         	}
         }
     }
