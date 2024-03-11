@@ -178,7 +178,7 @@ public class FrostedHud {
         static final UV forecast_decrease = new UV(0, 44, 12, 12, 512, 256);
         static final UV[] hud_decimal_digits=new UV[10];
         static final UV[] hud_integer_digits=new UV[10];
-        {
+        static {
         	for(int i=0;i<10;i++) {
         		hud_decimal_digits[(i+1)%10]=new UV(6*i, 17, 6, 8, 100, 34);
         		hud_integer_digits[(i+1)%10]=new UV(10*i, 0, 10, 17, 100, 34);
@@ -669,7 +669,7 @@ public class FrostedHud {
         int mhealthState = omax >= 20 ? 99 : MathHelper.ceil(omax / 20 * 100) - 1;
         int healthState = health <= 0 ? 0 : MathHelper.ceil(health / healthMax * 100) - 1;
         int absorbState = absorb <= 0 ? 0 : MathHelper.ceil(absorb / 20 * 100) - 1;
-        Atlases.maxhealth_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_inner, 99-mhealthState);
+        Atlases.maxhealth_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_inner, mhealthState);
         Atlases.health_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_inner, healthState);
         Atlases.absorption_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_outer, absorbState);
         int ihealth = (int) Math.ceil(health);
@@ -905,13 +905,13 @@ public class FrostedHud {
         mc.getTextureManager().bindTexture(digits);
         // sign and unit
 
-        signUV.blit(stack, offsetX, offsetY, BasePos.sign);
-        unitUV.blit(stack, offsetX, offsetY, BasePos.unit);
+        //signUV.blit(stack, offsetX, offsetY, BasePos.sign);
+        //unitUV.blit(stack, offsetX, offsetY, BasePos.unit);
 
         // digits
         ArrayList<UV> uv4is = getIntegerDigitUVs((int) Math.round(abs));
         int size=uv4is.size();
-        if(size == 3)
+        if(size < 3)
         	uv4is.add(HUDElements.hud_decimal_digits[(int) (Math.round(abs*10)%10)]);
         uv4is.add(signUV);
         uv4is.add(unitUV);

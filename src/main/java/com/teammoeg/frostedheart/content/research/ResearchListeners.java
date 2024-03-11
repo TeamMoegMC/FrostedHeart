@@ -48,6 +48,7 @@ import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.LivingEntity;
@@ -356,7 +357,20 @@ public class ResearchListeners {
         killClues.clear();
         te = null;
     }
+    public static boolean hasMultiblock(UUID rid,IETemplateMultiblock mb) {
+        if (ResearchListeners.multiblock.has(mb))
+            if (rid==null) {
+                if (!ClientResearchDataAPI.getData().building.has(mb)) {
+                    return false;
+                }
+            } else {
+                if (!ResearchDataAPI.getData(rid).building.has(mb)) {
+                    return false;
+                }
 
+            }
+        return true;
+    }
     @OnlyIn(Dist.CLIENT)
     public static void reloadEditor() {
         if (!Minecraft.getInstance().isSingleplayer())

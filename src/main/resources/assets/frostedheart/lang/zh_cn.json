@@ -154,6 +154,7 @@
   "fluid.frostedheart.wolfberry_tea": "枸杞水",
   "gui.frostedheart.generator.no_enough_space": "无升级空间，能量塔周围%s x %s x %s的空间需要有空间",
   "gui.frostedheart.generator.upgrade_material": "升级素材",
+  "gui.frostedheart.generator.incomplete_research": "需要更多研究",
   "gui.frostedheart.draw_desk.examine": "研究物品",
   "gui.frostedheart.draw_desk.unable_examine": "暂时无法研究该物品",
   "gui.frostedheart.draw_desk.help": "使用方法",

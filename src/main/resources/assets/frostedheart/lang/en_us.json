@@ -157,6 +157,7 @@
   "fluid.frostedheart.wolfberry_tea": "Wolfberry Tea",
   "gui.frostedheart.generator.no_enough_space": "No enough space, there must be space of %s x %s x %s around the generator",
   "gui.frostedheart.generator.upgrade_material": "Upgrade material",
+  "gui.frostedheart.generator.incomplete_research": "More study required",
   "gui.frostedheart.draw_desk.examine": "Examine item",
   "gui.frostedheart.draw_desk.unable_examine": "Unable to examine this now",
   "gui.frostedheart.draw_desk.help": "Help",

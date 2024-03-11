@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerChangeListener;
 import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
@@ -209,7 +210,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA));
     }
     public final Optional<GeneratorData> getData() {
-        return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA)).filter(t -> master().pos.equals(t.actualPos)||t.actualPos.equals(BlockPos.ZERO));
+        return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA)).filter(t -> master().pos.equals(t.actualPos));
     }
 
     @Nullable
@@ -326,6 +327,8 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     public void upgradeStructure(ServerPlayerEntity entityplayer) {
     	if(!isValidStructure())
     		return;
+    	if(!ResearchListeners.hasMultiblock(getOwner(), getNextLevelMultiblock()))
+    		return;
     	if(!FHUtils.costItems(entityplayer, getUpgradeCost()))
     		return;
     	BlockPos negMasterOffset=this.multiblockInstance.getMasterFromOriginOffset().subtract(getNextLevelMultiblock().getMasterFromOriginOffset());
@@ -359,6 +362,19 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
             t.dimension = this.world.getDimensionKey();
         });
     }
+    
+    public void tryRegist() {
+    	getDataNoCheck().ifPresent(t -> {
+    		if(BlockPos.ZERO.equals(t.actualPos)) {
+	        	if(!master().pos.equals(t.actualPos))
+	        		t.onPosChange();
+	        	this.setWorking(t.isWorking);
+	        	this.setOverdrive(t.isOverdrive);
+	            t.actualPos = master().pos;
+	            t.dimension = this.world.getDimensionKey();
+    		}
+        });
+    }
 
 	@Override
 	public void onOwnerChange() {
@@ -382,6 +398,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     @Override
     protected boolean tickFuel() {
         // just finished process or during process
+    	tryRegist();
         Optional<GeneratorData> data = this.getData();
         data.ifPresent(t -> {
             t.isOverdrive = this.isOverdrive;
@@ -405,7 +422,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     public void tickHeat(boolean isWorking) {
     }
     public void unregist() {
-        getData().ifPresent(t -> {
+        getDataNoCheck().ifPresent(t -> {
             t.actualPos = BlockPos.ZERO;
             t.dimension = null;
         });

@@ -10,6 +10,7 @@ import java.util.Optional;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.AtlasUV;
@@ -67,15 +68,16 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		   }
 	}
 	
-	private static final AtlasUV rangeicons=new AtlasUV(TEXTURE, 256, 0, 128, 64, 2, 5, TEXH, TEXW);
+	private static final AtlasUV rangeicons=new AtlasUV(TEXTURE, 256, 0, 128, 64, 2, 5, TEXW, TEXH);
 	private static final Point rangePoint=new Point(24,61);
-	private static final RotatableUV minorPointer=new RotatableUV(TEXTURE, 276, 192, 20, 20, 10, 10, TEXH, TEXW);
+	private static final RotatableUV minorPointer=new RotatableUV(TEXTURE, 276, 192, 20, 20, 10, 10, TEXW, TEXH);
 	private static final RotatableUV majorPointer=new RotatableUV(TEXTURE, 248, 192, 28, 28, 14, 14, TEXW, TEXH);
 	private static final Point tempGauge=new Point(74, 12);
 	private static final Point rangeGauge=new Point(25, 25);
 	private static final Point overGauge=new Point(131, 25);
 	private static final AtlasUV generatorSymbol=new AtlasUV(TEXTURE, 176, 0, 24, 48, 3, 12, TEXW, TEXH);
 	private static final Point generatorPos=new Point(76, 44);
+	MasterGeneratorGuiButtonUpgrade upgrade;
 	public MasterGeneratorScreen(MasterGeneratorContainer<T> inventorySlotsIn, PlayerInventory inv, ITextComponent title) {
 		super(inventorySlotsIn, inv, title);
 		tile=inventorySlotsIn.tile;
@@ -100,7 +102,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		//System.out.println(ininvarrx+","+ininvarry+"-"+inarryl);
 		//range circle
 		int actualRangeLvl=(int) (tile.getRangeLevel()+0.05);
-		rangeicons.blitAtlas(matrixStack, x, y, rangePoint, actualRangeLvl);
+		rangeicons.blitAtlas(matrixStack, guiLeft, guiTop, rangePoint, actualRangeLvl);
 		
 		//fuel slots
 		Point in=container.getSlotIn();
@@ -131,15 +133,15 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		this.blit(matrixStack, 85, 93, 6, 22, 412, 148);
 
 		//generator symbol
-		generatorSymbol.blitAtlas(matrixStack, x, y, generatorPos,((tile.isWorking()&&tile.guiData.get(MasterGeneratorTileEntity.PROCESS)>0)?2:1),(container.getTier()-1));
+		generatorSymbol.blitAtlas(matrixStack, guiLeft, guiTop, generatorPos,((tile.isWorking()&&tile.guiData.get(MasterGeneratorTileEntity.PROCESS)>0)?2:1),(container.getTier()-1));
 		
 		
 		//range gauge
-		minorPointer.blitRotated(matrixStack, x, y, rangeGauge, tile.getRangeLevel()/4f*271f);
+		minorPointer.blitRotated(matrixStack, guiLeft, guiTop, rangeGauge, tile.getRangeLevel()/4f*271f);
 		//temp gauge
-		majorPointer.blitRotated(matrixStack, x, y, tempGauge, (tile.getTemperatureLevel())/4f*271f);
+		majorPointer.blitRotated(matrixStack, guiLeft, guiTop, tempGauge, (tile.getTemperatureLevel())/4f*271f);
 		//overdrive gauge
-		minorPointer.blitRotated(matrixStack, x, y, overGauge, 0*271f);
+		minorPointer.blitRotated(matrixStack, guiLeft, guiTop, overGauge, 0*271f);
 	}
 	private void drawCenterText(MatrixStack matrixStack,int x,int y,String s,int clr) {
 		this.font.drawText(matrixStack,TranslateUtils.str(s),x- (float) this.font.getStringWidth(s) /2, y-4, clr);
@@ -178,8 +180,9 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
                     ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(tile.master(), tag));
                     fullInit();
                 }));
-        this.addButton(new MasterGeneratorGuiButtonUpgrade(guiLeft + 75, guiTop + 116, 26, 18, 0,424, 148,
+        this.addButton(upgrade=new MasterGeneratorGuiButtonUpgrade(guiLeft + 75, guiTop + 116, 26, 18, 1,424, 148,
                 btn -> {
+                	
                 	FHNetwork.sendToServer(new GeneratorModifyPacket());
                     fullInit();
                 }));
@@ -220,13 +223,17 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         if (isMouseIn(mouseX, mouseY, 75, 116, 26, 18)) {
         	Optional<GeneratorData> generatorData=tile.getDataNoCheck();
         	if(tile.getNextLevelMultiblock()!=null&&!tile.isBroken) {
+        		upgrade.setStateByInt(1);
         		if(!validStructure) {
         			Vector3i v3i=tile.getNextLevelMultiblock().getSize(ClientUtils.mc().world);
         			tooltip.add(TranslateUtils.translateGui("generator.no_enough_space",v3i.getX(),v3i.getY(),v3i.getZ()));
+        		}else if(ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock())) {
+        			tooltip.add(TranslateUtils.translateGui("generator.incomplete_research"));
         		} else {
         			tooltip.add(TranslateUtils.translateGui("generator.upgrade_material"));
         			BitSet bs=FHUtils.checkItemList(ClientUtils.mc().player, tile.getUpgradeCost());
         			int i=0;
+        			boolean isOk=true;;
         			for(IngredientWithSize iws:tile.getUpgradeCost()) {
         				ItemStack[] iss=iws.getMatchingStacks();
         				IFormattableTextComponent iftc=TranslateUtils.str(iws.getCount()+"x ").appendSibling(iss[(int) ((new Date().getTime()/1000)%iss.length)].getDisplayName());
@@ -234,10 +241,30 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         					iftc=iftc.mergeStyle(TextFormatting.GREEN);
         				else
         					iftc=iftc.mergeStyle(TextFormatting.RED);
+        				isOk&=bs.get(i);
         				i++;
         				tooltip.add(iftc);
         			}
+        			upgrade.setStateByInt(isOk?0:1);
         		}
+        	}else if(tile.isBroken) {
+    			tooltip.add(TranslateUtils.translateGui("generator.repair_material"));
+    			BitSet bs=FHUtils.checkItemList(ClientUtils.mc().player, tile.getUpgradeCost());
+    			int i=0;
+    			boolean isOk=true;;
+    			for(IngredientWithSize iws:tile.getRepairCost()) {
+    				ItemStack[] iss=iws.getMatchingStacks();
+    				IFormattableTextComponent iftc=TranslateUtils.str(iws.getCount()+"x ").appendSibling(iss[(int) ((new Date().getTime()/1000)%iss.length)].getDisplayName());
+    				if(bs.get(i))
+    					iftc=iftc.mergeStyle(TextFormatting.GREEN);
+    				else
+    					iftc=iftc.mergeStyle(TextFormatting.RED);
+    				isOk&=bs.get(i);
+    				i++;
+    				tooltip.add(iftc);
+    			}
+    			upgrade.setStateByInt(isOk?2:3);
+        		
         	}
         }
         if (!tooltip.isEmpty()) {
