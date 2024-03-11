@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.town.warehouse;
 
-import com.teammoeg.frostedheart.util.BlockScanner;
+import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -9,7 +10,7 @@ import java.util.AbstractMap;
 import static net.minecraft.block.PlantBlockHelper.isAir;
 
 //仓库的结构不考虑密封，体积仅统计地板上方的空气。
-public class WarehouseBlockScanner extends BlockScanner.FloorBlockScanner {
+public class WarehouseBlockScanner extends FloorBlockScanner {
     private int volume = 0;
     private int area = 0;
     private static final int MAX_SCANNING_TIMES = 512;

@@ -46,6 +46,7 @@ public class AttachCapabilityEvents {
             World world = event.getObject().getWorld();
             if (!world.isRemote) {
                 event.addCapability(new ResourceLocation(FHMain.MODID, "chunk_data"), FHCapabilities.CHUNK_HEAT.provider());
+                event.addCapability(new ResourceLocation(FHMain.MODID, "chunk_town_resource"), FHCapabilities.CHUNK_TOWN_RESOURCE.provider());
             }
         }
     }

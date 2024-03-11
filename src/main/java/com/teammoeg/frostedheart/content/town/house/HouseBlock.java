@@ -85,10 +85,4 @@ public class HouseBlock extends FHTownBuildingCoreBlock {
         }
         return ActionResultType.PASS;
     }
-
-    @Nullable
-    @Override
-    public BlockState getStateForPlacement(BlockItemUseContext context) {
-        return this.getDefaultState().with(BlockStateProperties.FACING, context.getFace().getOpposite());
-    }
 }

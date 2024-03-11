@@ -5,9 +5,12 @@ import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.content.climate.chunkheatdata.ChunkHeatData;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.SoundType;
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
@@ -17,12 +20,20 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ToolType;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public abstract class FHTownBuildingCoreBlock extends FHBaseBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
+    public static final Properties TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY = Block.Properties
+            .create(Material.WOOD)
+            .sound(SoundType.WOOD)
+            .setRequiresTool()
+            .harvestTool(ToolType.AXE)
+            .hardnessAndResistance(2, 6)
+            .notSolid();
 
     public FHTownBuildingCoreBlock(Properties blockProps) {
         super(blockProps);
@@ -54,5 +65,11 @@ public abstract class FHTownBuildingCoreBlock extends FHBaseBlock {
                 }
             }
         }
+    }
+
+    @Nullable
+    @Override
+    public BlockState getStateForPlacement(BlockItemUseContext context) {
+        return this.getDefaultState().with(BlockStateProperties.FACING, context.getFace().getOpposite());
     }
 }

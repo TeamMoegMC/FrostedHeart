@@ -39,6 +39,7 @@ public enum TownResourceType {
      */
     HEAT(null),
     WOOD(t -> 250D + 100 * t.get(STORAGE)),
+    COAL(t -> 2500 + 100 * t.get(STORAGE)),
     IRON(t -> 250D + 100 * t.get(STORAGE)),
     STONE(t -> 250D + 100 * t.get(STORAGE)),
     TOOL(t -> 250D + 100 * t.get(STORAGE)),

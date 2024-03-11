@@ -1,10 +1,12 @@
-package com.teammoeg.frostedheart.content.town.warehouse;
+package com.teammoeg.frostedheart.content.town.mine;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.content.town.TownTileEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
+import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import net.minecraft.nbt.CompoundNBT;
@@ -13,22 +15,27 @@ import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHouseBlock;
 
-public class WarehouseTileEntity extends FHBaseTileEntity implements TownTileEntity, ITickableTileEntity, FHBlockInterfaces.IActiveState {
-    public int volume;//有效体积
-    public int area;//占地面积
-    public double capacity;//最大容量
+public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEntity, ITickableTileEntity,
+        FHBlockInterfaces.IActiveState{
+    public Set<BlockPos> linkedMines = new HashSet<>();
+    public int volume;
+    public int area;
+    public int rack;
+    public int chest;
 
-    public WarehouseTileEntity() {
-        super(FHTileTypes.WAREHOUSE.get());
+    public MineBaseTileEntity(){
+        super(FHTileTypes.MINE_BASE.get());
     }
 
     public boolean isStructureValid(){
-        BlockPos warehousePos = this.getPos();
-        BlockPos doorPos = BlockScanner.getDoorAdjacent(world, warehousePos);
+        BlockPos mineBasePos = this.getPos();
+        BlockPos doorPos = BlockScanner.getDoorAdjacent(world, mineBasePos);
         if (doorPos == null) return false;
         BlockPos floorBelowDoor = BlockScanner.getBlockBelow((pos)->!(Objects.requireNonNull(world).getBlockState(pos).isIn(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
         for (Direction direction : BlockScanner.PLANE_DIRECTIONS) {
@@ -40,26 +47,29 @@ public class WarehouseTileEntity extends FHBaseTileEntity implements TownTileEnt
                 }
                 startPos = startPos.down();
             }
-            WarehouseBlockScanner scanner = new WarehouseBlockScanner(world, startPos);
+            MineBaseBlockScanner scanner = new MineBaseBlockScanner(world, startPos);
+            FHMain.LOGGER.info("New scanner created; Start pos: " + startPos);
             if(scanner.scan()){
-                this.area = scanner.getArea();
-                this.volume = scanner.getVolume();
-                this.capacity = area*Math.pow((volume*0.02/area), 0.9)*37;
+                FHMain.LOGGER.info("scan successful");
+                this.area = scanner.area;
+                this.volume = scanner.volume;
+                this.rack = scanner.rack;
+                this.chest = scanner.chest;
+                this.linkedMines = scanner.linkedMines;
                 return true;
             }
         }
         return false;
     }
 
-
     @Override
     public void readCustomNBT(CompoundNBT compoundNBT, boolean b) {
-        //todo
+
     }
 
     @Override
     public void writeCustomNBT(CompoundNBT compoundNBT, boolean b) {
-        //todo
+
     }
 
     @Override
@@ -69,7 +79,7 @@ public class WarehouseTileEntity extends FHBaseTileEntity implements TownTileEnt
 
     @Override
     public TownWorkerType getWorker() {
-        return TownWorkerType.WAREHOUSE;
+        return null;
     }
 
     @Override

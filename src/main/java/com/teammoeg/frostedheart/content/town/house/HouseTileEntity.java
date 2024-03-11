@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEn
 import com.teammoeg.frostedheart.content.town.TownTileEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.util.BlockScanner;
+import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
@@ -35,6 +35,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ColumnPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
@@ -43,7 +44,7 @@ import javax.annotation.Nonnull;
 
 import java.util.*;
 
-import static com.teammoeg.frostedheart.util.BlockScanner.FloorBlockScanner.isHouseBlock;
+import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHouseBlock;
 
 
 /**
@@ -73,7 +74,7 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
     public double temperature = 0;
     public Map<String, Integer> decorations = new HashMap<>();
     public double rating = 0;
-    public Set<AbstractMap.SimpleEntry<Integer, Integer>> occupiedArea;
+    public Set<ColumnPos> occupiedArea;
     public double temperatureModifier = 0;
 
     /** Tile data, stored in tile entity. */
@@ -151,7 +152,7 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
      */
     public boolean isStructureValid() {
         BlockPos housePos = this.getPos();
-        Set<BlockPos> doorPosSet = BlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(world).getBlockState(pos).isIn(BlockTags.DOORS));
+        List<BlockPos> doorPosSet = BlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(world).getBlockState(pos).isIn(BlockTags.DOORS));
         if (doorPosSet.isEmpty()) return false;
         for (BlockPos doorPos : doorPosSet) {
             BlockPos floorBelowDoor = BlockScanner.getBlockBelow((pos)->!(Objects.requireNonNull(world).getBlockState(pos).isIn(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块

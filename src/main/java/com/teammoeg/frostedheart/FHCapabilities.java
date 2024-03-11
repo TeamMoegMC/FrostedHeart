@@ -14,6 +14,7 @@ import com.teammoeg.frostedheart.content.foods.dailykitchen.WantedFoodCapability
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
+import com.teammoeg.frostedheart.content.town.ChunkTownResourceCapability;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraftforge.common.util.NonNullSupplier;
@@ -28,6 +29,7 @@ public class FHCapabilities {
 	public static final FHCapability<ChunkHeatData> CHUNK_HEAT=register(ChunkHeatData.class);
 	public static final FHCapability<HeatEndpoint> HEAT_EP=register(HeatEndpoint.class);
 	public static final FHCapability<WantedFoodCapability> WANTED_FOOD=register(WantedFoodCapability.class);
+	public static final FHCapability<ChunkTownResourceCapability> CHUNK_TOWN_RESOURCE=register(ChunkTownResourceCapability.class);
 	
 	public static void setup() {
 		for(FHCapability<?> cap:capabilities)
