@@ -62,8 +62,7 @@ public class AtlasUV extends TexturedUV {
 	}
 	Map<Point,UV> cache=new HashMap<>();
 	public UV childAtlas(int gridX,int gridY) {
-		Point p=Point.of(gridX, gridY);
-		return cache.computeIfAbsent(p, px->new TexturedUV(texture, x + px.getX() * w, y + px.getY() * h, w, h, textureW, textureH));
+		return cache.computeIfAbsent(new Point(gridX, gridY), px->new TexturedUV(texture, x + px.getX() * w, y + px.getY() * h, w, h, textureW, textureH));
 	}
 	public UV childAtlas(int gridIndex) {
 		return childAtlas(gridIndex % gridW, gridIndex / gridW);

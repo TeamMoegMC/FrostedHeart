@@ -130,9 +130,9 @@ public class FrostedHud {
         static final Point unit=new Point(11, 24);
         
         static final PointSet[] digits=new PointSet[] {
-        new PointSet(Point.of(13, 7), Point.of(25, 16), sign, unit),
-        new PointSet(Point.of(8, 7), Point.of(18, 7), Point.of(28, 16), sign, unit),
-        new PointSet(Point.of(7, 7), Point.of(14, 7), Point.of(24, 7), sign, unit)};
+        new PointSet(new Point(13, 7 ), new Point(25, 16), sign, unit),
+        new PointSet(new Point(8 , 7 ), new Point(18, 7 ), new Point(28, 16), sign, unit),
+        new PointSet(new Point(7 , 7 ), new Point(14, 7 ), new Point(24, 7 ), sign, unit)};
     }
     static final class HUDElements {
         static final UV hotbar_slot = new UV(1, 1, 20, 20);

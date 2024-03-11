@@ -24,6 +24,8 @@ import java.util.Objects;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.util.math.vector.Quaternion;
+import net.minecraft.util.math.vector.Vector3f;
 
 public class UV extends Rect {
 	public enum Transition{
@@ -66,7 +68,17 @@ public class UV extends Rect {
 	public UV(UV uv) {
         this(uv.x, uv.y, uv.w, uv.h,uv.textureW,uv.textureH);
     }
-	
+	public void blitRotated(MatrixStack matrixStack, int targetX, int targetY,int centerX,int centerY,float degrees) {
+		matrixStack.push();
+		matrixStack.translate(targetX + centerX, targetY + centerY, 0);//move to gauge center
+		matrixStack.rotate(new Quaternion(new Vector3f(0,0,1),degrees,true));//rotate around Z
+		AbstractGui.blit(matrixStack,-centerX,-centerY, w, h, x, y, w, h, textureW, textureH);//draw with center offset
+		matrixStack.pop();
+	}
+    //blit with width transition and  custom texture size
+    public void blitRotated(MatrixStack matrixStack, int targetX, int targetY,Point loc,int centerX,int centerY,float degrees) {
+    	blitRotated(matrixStack, targetX + loc.getX(), targetY + loc.getY(), centerX, centerY, degrees);
+    }
     //blit with width transition and  custom texture size
     public void blit(MatrixStack s, int targetX, int targetY, int sourceWidth, int sourceHeight) {
         AbstractGui.blit(s, targetX, targetY, x, y, sourceWidth, sourceHeight, textureW, textureH);

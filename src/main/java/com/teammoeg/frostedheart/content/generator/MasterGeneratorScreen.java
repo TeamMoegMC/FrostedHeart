@@ -12,7 +12,10 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.client.AtlasUV;
 import com.teammoeg.frostedheart.util.client.Point;
+import com.teammoeg.frostedheart.util.client.RotatableUV;
+import com.teammoeg.frostedheart.util.client.UV;
 
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -64,11 +67,15 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		   }
 	}
 	
-	public static final Point[] rangelevels=new Point[] {
-			new Point(256,0),new Point(384,0),
-			new Point(256,64),new Point(384,64),
-			new Point(256,128)
-	};
+	private static final AtlasUV rangeicons=new AtlasUV(TEXTURE, 256, 0, 128, 64, 2, TEXH, TEXW);
+	private static final Point rangePoint=new Point(24,61);
+	private static final RotatableUV minorPointer=new RotatableUV(276, 192, 20, 20, 10, 10, TEXH, TEXW);
+	private static final RotatableUV majorPointer=new RotatableUV(248, 192, 28, 28, 14, 14, TEXW, TEXH);
+	private static final Point tempGauge=new Point(74, 12);
+	private static final Point rangeGauge=new Point(25, 25);
+	private static final Point overGauge=new Point(131, 25);
+	private static final AtlasUV generatorSymbol=new AtlasUV(TEXTURE, 176, 0, 24, 48, 3, TEXW, TEXH);
+	private static final Point generatorPos=new Point(76, 44);
 	public MasterGeneratorScreen(MasterGeneratorContainer<T> inventorySlotsIn, PlayerInventory inv, ITextComponent title) {
 		super(inventorySlotsIn, inv, title);
 		tile=inventorySlotsIn.tile;
@@ -93,7 +100,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		//System.out.println(ininvarrx+","+ininvarry+"-"+inarryl);
 		//range circle
 		int actualRangeLvl=(int) (tile.getRangeLevel()+0.05);
-		this.blit(matrixStack, 24,61, 128, 64,rangelevels[actualRangeLvl].getX(), rangelevels[actualRangeLvl].getY());
+		rangeicons.blitAtlas(matrixStack, x, y, rangePoint, actualRangeLvl);
 		
 		//fuel slots
 		Point in=container.getSlotIn();
@@ -122,29 +129,17 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 
 		//upgrade arrow
 		this.blit(matrixStack, 85, 93, 6, 22, 412, 148);
+
 		//generator symbol
-		this.blit(matrixStack, 76, 44, 24, 48, 176+24*((tile.isWorking()&&tile.guiData.get(MasterGeneratorTileEntity.PROCESS)>0)?2:1), (container.getTier()-1)*48);
+		generatorSymbol.blitAtlas(matrixStack, x, y, generatorPos,((tile.isWorking()&&tile.guiData.get(MasterGeneratorTileEntity.PROCESS)>0)?2:1),(container.getTier()-1));
+		
 		
 		//range gauge
-		matrixStack.push();
-		matrixStack.translate(guiLeft+35, guiTop+35, 0);//move to gauge center
-		matrixStack.rotate(new Quaternion(new Vector3f(0,0,1),tile.getRangeLevel()/4f*271f,true));//rotate around Z
-		AbstractGui.blit(matrixStack,-10,-10, 20,20, 276, 192, 20, 20, TEXW, TEXH);//draw with center offset
-		matrixStack.pop();
-		
+		minorPointer.blitRotated(matrixStack, x, y, rangeGauge, tile.getRangeLevel()/4f*271f);
 		//temp gauge
-		matrixStack.push();
-		matrixStack.translate(guiLeft+88, guiTop+26, 0);
-		matrixStack.rotate(new Quaternion(new Vector3f(0,0,1),(tile.getTemperatureLevel())/4f*271f,true));
-		AbstractGui.blit(matrixStack,-14,-14, 28,28, 248, 192, 28, 28, TEXW, TEXH);
-		matrixStack.pop();
-		
+		majorPointer.blitRotated(matrixStack, x, y, tempGauge, (tile.getTemperatureLevel())/4f*271f);
 		//overdrive gauge
-		matrixStack.push();
-		matrixStack.translate(guiLeft+141, guiTop+35, 0);
-		matrixStack.rotate(new Quaternion(new Vector3f(0,0,1),0*271f,true));
-		AbstractGui.blit(matrixStack,-10,-10, 20,20, 276, 192, 20, 20, TEXW, TEXH);
-		matrixStack.pop();
+		minorPointer.blitRotated(matrixStack, x, y, overGauge, 0*271f);
 	}
 	private void drawCenterText(MatrixStack matrixStack,int x,int y,String s,int clr) {
 		this.font.drawText(matrixStack,TranslateUtils.str(s),x- (float) this.font.getStringWidth(s) /2, y-4, clr);
