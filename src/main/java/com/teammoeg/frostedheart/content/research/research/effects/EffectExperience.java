@@ -26,7 +26,7 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
@@ -69,13 +69,13 @@ public class EffectExperience extends Effect {
 
     @Override
     public IFormattableTextComponent getDefaultName() {
-        return GuiUtils.translateGui("effect.exp");
+        return TranslateUtils.translateGui("effect.exp");
     }
 
     @Override
     public List<ITextComponent> getDefaultTooltip() {
         List<ITextComponent> tooltip = new ArrayList<>();
-        tooltip.add(GuiUtils.str("+" + exp));
+        tooltip.add(TranslateUtils.str("+" + exp));
         return tooltip;
     }
 

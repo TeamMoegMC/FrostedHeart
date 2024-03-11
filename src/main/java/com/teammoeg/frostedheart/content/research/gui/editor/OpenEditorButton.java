@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import java.util.function.Consumer;
 
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -39,7 +39,7 @@ public class OpenEditorButton<T> extends SimpleTextButton {
     }
 
     public OpenEditorButton(Panel panel, String label, Editor<T> e, T val, Icon ic, Consumer<T> cb) {
-        super(panel, GuiUtils.str(label), ic);
+        super(panel, TranslateUtils.str(label), ic);
         lbl = label;
         edi = e;
         this.val = val;

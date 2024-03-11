@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.util.OptionalLazy;
+import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;

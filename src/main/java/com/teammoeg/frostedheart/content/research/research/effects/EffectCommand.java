@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.FHTeamDataManager;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.block.Blocks;
@@ -79,7 +79,7 @@ public class EffectCommand extends Effect {
 
     @Override
     public IFormattableTextComponent getDefaultName() {
-        return GuiUtils.translateGui("effect.command");
+        return TranslateUtils.translateGui("effect.command");
     }
 
     @Override

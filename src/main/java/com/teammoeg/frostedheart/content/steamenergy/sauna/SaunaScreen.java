@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.client.Point;
 import com.teammoeg.frostedheart.util.client.UV;
 
@@ -34,7 +34,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
 public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
-    private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("sauna_vent");
+    private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("sauna_vent");
 
     private static final UV clock1 = new UV(176, 0, 38, 38);
     private static final UV clock2 = new UV(214, 0, 38, 38);

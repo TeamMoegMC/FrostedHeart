@@ -37,7 +37,7 @@ import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.entity.player.PlayerEntity;
@@ -143,7 +143,7 @@ public class EffectCrafting extends Effect {
 
     @Override
     public IFormattableTextComponent getDefaultName() {
-        return GuiUtils.translateGui("effect.crafting");
+        return TranslateUtils.translateGui("effect.crafting");
     }
 
     @Override
@@ -162,7 +162,7 @@ public class EffectCrafting extends Effect {
                 }
             }
             if (stacks.isEmpty())
-                tooltip.add(GuiUtils.translateGui("effect.recipe.error"));
+                tooltip.add(TranslateUtils.translateGui("effect.recipe.error"));
             else
                 for (ItemStack is : stacks) {
                     tooltip.add(is.getDisplayName());

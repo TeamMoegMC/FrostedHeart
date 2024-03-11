@@ -27,8 +27,8 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
-import com.teammoeg.frostedheart.util.EquipmentCuriosSlotType;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
 
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import net.minecraft.client.renderer.entity.model.BipedModel;
@@ -58,8 +58,8 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
     @Override
     public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
         String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
-        list.add(GuiUtils.translateTooltip("charger.heat_vest").mergeStyle(TextFormatting.GRAY));
-        list.add(GuiUtils.translateTooltip("steam_stored", stored).mergeStyle(TextFormatting.GOLD));
+        list.add(TranslateUtils.translateTooltip("charger.heat_vest").mergeStyle(TextFormatting.GRAY));
+        list.add(TranslateUtils.translateTooltip("steam_stored", stored).mergeStyle(TextFormatting.GOLD));
     }
 
     @Override

@@ -24,7 +24,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
@@ -35,7 +35,7 @@ import net.minecraftforge.fluids.capability.ItemFluidContainer;
 class WantedFoodsGenerator {
     private final Random random;
     private final Set<Item> foodsEaten;
-    private TextComponent wantedFoodsText = GuiUtils.translateMessage("wanted_foods");
+    private TextComponent wantedFoodsText = TranslateUtils.translateMessage("wanted_foods");
     private final int eatenFoodsAmount;
     private final int maxGenerateAmount;
     private HashSet<Item> wantedFoods = new HashSet<>();
@@ -70,7 +70,7 @@ class WantedFoodsGenerator {
         for (Item food : foodsEaten) {
             if (wantedFoodsNumber.contains(i) && (isNotBadFood(food)) && !(food instanceof ItemFluidContainer/*Don't eat thermos!*/)) {
                 wantedFoods.add(food);
-                wantedFoodsText.appendSibling(new TranslationTextComponent(food.getTranslationKey())).appendSibling(GuiUtils.str("  "));
+                wantedFoodsText.appendSibling(new TranslationTextComponent(food.getTranslationKey())).appendSibling(TranslateUtils.str("  "));
             }
             i++;
         }

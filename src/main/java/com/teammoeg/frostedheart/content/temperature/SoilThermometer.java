@@ -24,7 +24,7 @@ import java.util.List;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
@@ -49,7 +49,7 @@ public class SoilThermometer extends FHBaseItem {
 
     @Override
     public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-        tooltip.add(GuiUtils.translateTooltip("thermometer.usage").mergeStyle(TextFormatting.GRAY));
+        tooltip.add(TranslateUtils.translateTooltip("thermometer.usage").mergeStyle(TextFormatting.GRAY));
     }
 
     /**
@@ -67,13 +67,13 @@ public class SoilThermometer extends FHBaseItem {
 
     @Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-        playerIn.sendStatusMessage(GuiUtils.translateMessage("thermometer.testing"), true);
+        playerIn.sendStatusMessage(TranslateUtils.translateMessage("thermometer.testing"), true);
         playerIn.setActiveHand(handIn);
         if (playerIn instanceof ServerPlayerEntity && playerIn.abilities.isCreativeMode) {
             BlockRayTraceResult brtr = rayTrace(worldIn, playerIn, FluidMode.ANY);
             if (brtr.getType() != Type.MISS) {
 
-            	playerIn.sendMessage(GuiUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(ChunkHeatData.getTemperature(playerIn.world, brtr.getPos()))), playerIn.getUniqueID());
+            	playerIn.sendMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(ChunkHeatData.getTemperature(playerIn.world, brtr.getPos()))), playerIn.getUniqueID());
             }
 
         }

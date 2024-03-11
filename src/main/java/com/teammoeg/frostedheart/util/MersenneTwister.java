@@ -1,4 +1,7 @@
 package com.teammoeg.frostedheart.util;
+
+import com.teammoeg.frostedheart.util.utility.RandomBase;
+
 public class MersenneTwister extends RandomBase{
 
     /** Serializable version identifier. */

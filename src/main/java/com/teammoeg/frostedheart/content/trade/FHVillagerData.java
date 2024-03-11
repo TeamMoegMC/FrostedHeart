@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
@@ -124,7 +124,7 @@ public class FHVillagerData implements INamedContainerProvider {
 
     @Override
     public ITextComponent getDisplayName() {
-        return GuiUtils.translateGui("trade.title");
+        return TranslateUtils.translateGui("trade.title");
     }
 
     public PolicySnapshot getPolicy() {

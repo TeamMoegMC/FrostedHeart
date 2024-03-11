@@ -27,7 +27,7 @@ import java.util.function.Function;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -54,7 +54,7 @@ public class EditListDialog<T> extends EditDialog {
         public ButtonAddValue(Panel panel) {
             super(panel);
             setHeight(12);
-            setTitle(GuiUtils.str("+ ").appendSibling(new TranslationTextComponent("gui.add")));
+            setTitle(TranslateUtils.str("+ ").appendSibling(new TranslationTextComponent("gui.add")));
         }
 
         @Override
@@ -101,7 +101,7 @@ public class EditListDialog<T> extends EditDialog {
             if (getMouseX() >= getX() + width - 19) {
                 l.translate("selectServer.delete");
             } else {
-                l.add(GuiUtils.str(read.apply(list.get(index))));
+                l.add(TranslateUtils.str(read.apply(list.get(index))));
             }
         }
 
@@ -180,7 +180,7 @@ public class EditListDialog<T> extends EditDialog {
             list = new ArrayList<>(vx);
         else
             list = new ArrayList<>();
-        title = GuiUtils.str(label).mergeStyle(TextFormatting.BOLD);
+        title = TranslateUtils.str(label).mergeStyle(TextFormatting.BOLD);
         this.editor = editor;
         this.def = def;
         this.read = toread;

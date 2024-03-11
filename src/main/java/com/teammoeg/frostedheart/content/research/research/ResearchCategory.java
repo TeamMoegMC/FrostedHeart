@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -48,8 +48,8 @@ public enum ResearchCategory {
 
     ResearchCategory(String id) {
         this.id = FHMain.rl(id);
-        this.name = GuiUtils.translateResearchCategoryName(id);
-        this.desc = GuiUtils.translateResearchCategoryDesc(id);
+        this.name = TranslateUtils.translateResearchCategoryName(id);
+        this.desc = TranslateUtils.translateResearchCategoryDesc(id);
         this.icon = FHMain.rl("textures/gui/research/category/" + id + ".png");
         //FHMain.rl("textures/gui/research/category/background/" + id + ".png");
 

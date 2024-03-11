@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHKineticBlock;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
@@ -69,7 +69,7 @@ public class MechCalcBlock extends FHKineticBlock {
                                ITooltipFlag flagIn) {
         super.addInformation(stack, worldIn, tooltip, flagIn);
         if (stack.hasTag() && stack.getTag().getBoolean("prod")) {
-            tooltip.add(GuiUtils.str("For Display Only"));
+            tooltip.add(TranslateUtils.str("For Display Only"));
         }
     }
 

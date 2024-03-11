@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.util.client;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import net.minecraft.util.ResourceLocation;
@@ -56,5 +59,16 @@ public class AtlasUV extends TexturedUV {
 	}
 	public void blitAtlasVH(MatrixStack s, int targetX, int targetY, Point loc, int gridIndex) {
 		super.blitAtlas(s, targetX, targetY, loc, gridIndex / gridW, gridIndex % gridW);
+	}
+	Map<Point,UV> cache=new HashMap<>();
+	public UV childAtlas(int gridX,int gridY) {
+		Point p=Point.of(gridX, gridY);
+		return cache.computeIfAbsent(p, px->new TexturedUV(texture, x + px.getX() * w, y + px.getY() * h, w, h, textureW, textureH));
+	}
+	public UV childAtlas(int gridIndex) {
+		return childAtlas(gridIndex % gridW, gridIndex / gridW);
+	}
+	public UV childAtlasVH(int gridIndex) {
+		return childAtlas(gridIndex / gridW, gridIndex % gridW);
 	}
 }

@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
@@ -48,7 +48,7 @@ public class EditPrompt extends BaseEditDialog {
     public EditPrompt(Widget panel, String label, String val, Consumer<String> onFinished) {
         super(panel);
         box = new LabeledTextBox(this, label, val);
-        ok = new SimpleTextButton(this, GuiUtils.str("OK"), Icon.EMPTY) {
+        ok = new SimpleTextButton(this, TranslateUtils.str("OK"), Icon.EMPTY) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -61,7 +61,7 @@ public class EditPrompt extends BaseEditDialog {
             }
 
         };
-        cancel = new SimpleTextButton(this, GuiUtils.str("Cancel"), Icon.EMPTY) {
+        cancel = new SimpleTextButton(this, TranslateUtils.str("Cancel"), Icon.EMPTY) {
 
             @Override
             public void onClicked(MouseButton arg0) {

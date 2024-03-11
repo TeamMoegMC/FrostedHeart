@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.teammoeg.frostedheart.util.FHTemperatureDifficulty;
+import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;

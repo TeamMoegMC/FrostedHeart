@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.util.ReferenceSupplier;
+import com.teammoeg.frostedheart.util.utility.ReferenceSupplier;
 
 import net.minecraft.fluid.FlowingFluid;
 import net.minecraft.fluid.Fluid;

@@ -34,7 +34,7 @@ import com.teammoeg.frostedheart.content.scenario.runner.target.IScenarioTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTeamDataManager;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraft.entity.player.PlayerEntity;
@@ -346,6 +346,6 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
     	return getPlayer().getLanguage();
     }
 	public void sendMessage(String s) {
-		getPlayer().sendStatusMessage(GuiUtils.str(s), false);
+		getPlayer().sendStatusMessage(TranslateUtils.str(s), false);
 	}
 }

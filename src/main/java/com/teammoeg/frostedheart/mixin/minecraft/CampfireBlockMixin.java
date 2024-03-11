@@ -31,7 +31,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
 
 import net.minecraft.block.BlockState;
@@ -116,11 +116,11 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
                     } else {
                         ICampfireExtra info = (ICampfireExtra) campfiretileentity;
                         if (state.get(CampfireBlock.LIT)) {
-                            player.sendStatusMessage(GuiUtils.translateMessage("campfire.remaining", Integer.toString(info.getLifeTime() / 20)), true);
+                            player.sendStatusMessage(TranslateUtils.translateMessage("campfire.remaining", Integer.toString(info.getLifeTime() / 20)), true);
                         } else if (info.getLifeTime() > 0) {
-                            player.sendStatusMessage(GuiUtils.translateMessage("campfire.ignition"), true);
+                            player.sendStatusMessage(TranslateUtils.translateMessage("campfire.ignition"), true);
                         } else {
-                            player.sendStatusMessage(GuiUtils.translateMessage("campfire.fuel"), true);
+                            player.sendStatusMessage(TranslateUtils.translateMessage("campfire.fuel"), true);
                         }
                         return ActionResultType.SUCCESS;
                     }

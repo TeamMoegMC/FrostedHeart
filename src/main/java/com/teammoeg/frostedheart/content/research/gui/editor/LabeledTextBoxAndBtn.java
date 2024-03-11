@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import java.util.function.Consumer;
 
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
@@ -34,7 +34,7 @@ public class LabeledTextBoxAndBtn extends LabeledTextBox {
 
     public LabeledTextBoxAndBtn(Panel panel, String lab, String txt, String btn, Consumer<Consumer<String>> onbtn) {
         super(panel, lab, txt);
-        this.btn = new SimpleTextButton(this, GuiUtils.str(btn), Icon.EMPTY) {
+        this.btn = new SimpleTextButton(this, TranslateUtils.str(btn), Icon.EMPTY) {
 
             @Override
             public void onClicked(MouseButton arg0) {

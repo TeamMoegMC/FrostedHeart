@@ -28,7 +28,8 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TownResourceType;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
+
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 
@@ -41,7 +42,7 @@ public class TownCommand {
                 Commands.literal("name")
                         .executes(ct -> {
                             TeamTown town = TeamTown.from(ct.getSource().asPlayer());
-                            ct.getSource().sendFeedback(GuiUtils.str(town.getName()), true);
+                            ct.getSource().sendFeedback(TranslateUtils.str(town.getName()), true);
                             return Command.SINGLE_SUCCESS;
                         });
 
@@ -49,7 +50,7 @@ public class TownCommand {
                 Commands.literal("list")
                         .executes(ct -> {
                             TeamTown town = TeamTown.from(ct.getSource().asPlayer());
-                            ct.getSource().sendFeedback(GuiUtils.str(town.getResources()), true);
+                            ct.getSource().sendFeedback(TranslateUtils.str(town.getResources()), true);
                             return Command.SINGLE_SUCCESS;
                         });
 
@@ -67,7 +68,7 @@ public class TownCommand {
                                             String type = StringArgumentType.getString(ct, "type");
                                             TeamTown town = TeamTown.from(ct.getSource().asPlayer());
                                             town.add(TownResourceType.from(type), amount, false);
-                                            ct.getSource().sendFeedback(GuiUtils.str("Resource added"), true);
+                                            ct.getSource().sendFeedback(TranslateUtils.str("Resource added"), true);
                                             return Command.SINGLE_SUCCESS;
                                         })
                                 )
@@ -77,8 +78,8 @@ public class TownCommand {
                 Commands.literal("list").executes(ct -> {
                     TeamTown town = TeamTown.from(ct.getSource().asPlayer());
                             int size = town.getResidents().values().size();
-                            ct.getSource().sendFeedback(GuiUtils.str("Total residents: " + size), true);
-                            ct.getSource().sendFeedback(GuiUtils.str(town.getResidents().values()), true);
+                            ct.getSource().sendFeedback(TranslateUtils.str("Total residents: " + size), true);
+                            ct.getSource().sendFeedback(TranslateUtils.str(town.getResidents().values()), true);
                             return Command.SINGLE_SUCCESS;
                         });
 
@@ -88,7 +89,7 @@ public class TownCommand {
                                 .then(Commands.argument("last_name", StringArgumentType.string()).executes(ct -> {
                                     TeamTown town = TeamTown.from(ct.getSource().asPlayer());
                                     town.addResident(new Resident(StringArgumentType.getString(ct, "first_name"), StringArgumentType.getString(ct, "last_name")));
-                                    ct.getSource().sendFeedback(GuiUtils.str("Resident added"), true);
+                                    ct.getSource().sendFeedback(TranslateUtils.str("Resident added"), true);
                                     return Command.SINGLE_SUCCESS;
                                 }))
                         );
@@ -96,10 +97,10 @@ public class TownCommand {
         LiteralArgumentBuilder<CommandSource> listBlocks =
                 Commands.literal("list").executes(ct -> {
                     TeamTown town = TeamTown.from(ct.getSource().asPlayer());
-                    ct.getSource().sendFeedback(GuiUtils.str("Total blocks: " + town.getTownBlocks().size()), true);
+                    ct.getSource().sendFeedback(TranslateUtils.str("Total blocks: " + town.getTownBlocks().size()), true);
                     town.getTownBlocks().forEach((k, v) -> {
                         String blockName = v.getType().getBlock().getTranslationKey();
-                        ct.getSource().sendFeedback(GuiUtils.translate(blockName).appendSibling(GuiUtils.str(" at " + k)), true);
+                        ct.getSource().sendFeedback(TranslateUtils.translate(blockName).appendSibling(TranslateUtils.str(" at " + k)), true);
                     });
                     return Command.SINGLE_SUCCESS;
                 });

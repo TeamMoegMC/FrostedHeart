@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -45,7 +45,7 @@ public class ConfirmDialog extends BaseEditDialog {
         tf = new TextField(this).setColor(Color4I.RED).setMaxWidth(200).setText(label);
         fin = onFinished;
         selected = !exp;
-        cancel = new SimpleTextButton(this, GuiUtils.str("Cancel"), Icon.EMPTY) {
+        cancel = new SimpleTextButton(this, TranslateUtils.str("Cancel"), Icon.EMPTY) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -54,7 +54,7 @@ public class ConfirmDialog extends BaseEditDialog {
             }
 
         };
-        ok = new SimpleTextButton(this, GuiUtils.str("OK"), Icon.EMPTY) {
+        ok = new SimpleTextButton(this, TranslateUtils.str("OK"), Icon.EMPTY) {
 
             @Override
             public void onClicked(MouseButton arg0) {

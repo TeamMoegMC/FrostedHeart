@@ -27,7 +27,7 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
@@ -84,23 +84,23 @@ public class EffectStats extends Effect {
 
     @Override
     public IFormattableTextComponent getDefaultName() {
-        return GuiUtils.translateGui("effect.stats");
+        return TranslateUtils.translateGui("effect.stats");
     }
 
 
     @Override
     public List<ITextComponent> getDefaultTooltip() {
         List<ITextComponent> tooltip = new ArrayList<>();
-        tooltip.add(GuiUtils.translateGui("effect.stats." + vars));
+        tooltip.add(TranslateUtils.translateGui("effect.stats." + vars));
         String vtext;
         if (isPercentage) {
             vtext = NumberFormat.getPercentInstance().format(val / 100);
         } else
             vtext = NumberFormat.getInstance().format(val);
         if (val > 0) {
-            tooltip.add(GuiUtils.str("+" + vtext));
+            tooltip.add(TranslateUtils.str("+" + vtext));
         } else
-            tooltip.add(GuiUtils.str(vtext));
+            tooltip.add(TranslateUtils.str(vtext));
         return tooltip;
     }
 

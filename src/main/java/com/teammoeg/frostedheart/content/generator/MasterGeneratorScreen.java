@@ -11,7 +11,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.Point;
 
 import blusunrize.immersiveengineering.ImmersiveEngineering;
@@ -39,7 +39,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 	T tile;
 	public static final int TEXW=512;
 	public static final int TEXH=256;
-	private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("general_generator");
+	private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("general_generator");
 	public static class MasterGeneratorGuiButtonBoolean extends GuiButtonBoolean{
 
 		public MasterGeneratorGuiButtonBoolean(int x, int y, int w, int h, boolean state,
@@ -147,7 +147,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		matrixStack.pop();
 	}
 	private void drawCenterText(MatrixStack matrixStack,int x,int y,String s,int clr) {
-		this.font.drawText(matrixStack,GuiUtils.str(s),x- (float) this.font.getStringWidth(s) /2, y-4, clr);
+		this.font.drawText(matrixStack,TranslateUtils.str(s),x- (float) this.font.getStringWidth(s) /2, y-4, clr);
 	}
 	protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int x, int y) {
 		//titles
@@ -201,40 +201,40 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         }
         if (isMouseIn(mouseX, mouseY, 5, 24, 11, 22)) {
             if (tile.isWorking()) {
-                tooltip.add(GuiUtils.translateGui("generator.mode.off"));
+                tooltip.add(TranslateUtils.translateGui("generator.mode.off"));
             } else {
-                tooltip.add(GuiUtils.translateGui("generator.mode.on"));
+                tooltip.add(TranslateUtils.translateGui("generator.mode.on"));
             }
         }
 
         if (isMouseIn(mouseX, mouseY, 160, 24, 11, 22)) {
             if (tile.isOverdrive()) {
-                tooltip.add(GuiUtils.translateGui("generator.overdrive.off"));
+                tooltip.add(TranslateUtils.translateGui("generator.overdrive.off"));
             } else {
-                tooltip.add(GuiUtils.translateGui("generator.overdrive.on"));
+                tooltip.add(TranslateUtils.translateGui("generator.overdrive.on"));
             }
         }
 
         if (isMouseIn(mouseX, mouseY, 63, 0, 50, 50)) {
-            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(TemperatureDisplayHelper.toTemperatureDeltaIntString( tile.getActualTemp())));
+            tooltip.add(TranslateUtils.translateGui("generator.temperature.level").appendString(TemperatureDisplayHelper.toTemperatureDeltaIntString( tile.getActualTemp())));
         }
 
         if (isMouseIn(mouseX, mouseY, 18, 18, 32, 32)) {
-            tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
+            tooltip.add(TranslateUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
         }
         if (isMouseIn(mouseX, mouseY, 75, 116, 26, 18)) {
         	Optional<GeneratorData> generatorData=tile.getDataNoCheck();
         	if(tile.getNextLevelMultiblock()!=null&&!tile.isBroken) {
         		if(!validStructure) {
         			Vector3i v3i=tile.getNextLevelMultiblock().getSize(ClientUtils.mc().world);
-        			tooltip.add(GuiUtils.translateGui("generator.no_enough_space",v3i.getX(),v3i.getY(),v3i.getZ()));
+        			tooltip.add(TranslateUtils.translateGui("generator.no_enough_space",v3i.getX(),v3i.getY(),v3i.getZ()));
         		} else {
-        			tooltip.add(GuiUtils.translateGui("generator.upgrade_material"));
+        			tooltip.add(TranslateUtils.translateGui("generator.upgrade_material"));
         			BitSet bs=FHUtils.checkItemList(ClientUtils.mc().player, tile.getUpgradeCost());
         			int i=0;
         			for(IngredientWithSize iws:tile.getUpgradeCost()) {
         				ItemStack[] iss=iws.getMatchingStacks();
-        				IFormattableTextComponent iftc=GuiUtils.str(iws.getCount()+"x ").appendSibling(iss[(int) ((new Date().getTime()/1000)%iss.length)].getDisplayName());
+        				IFormattableTextComponent iftc=TranslateUtils.str(iws.getCount()+"x ").appendSibling(iss[(int) ((new Date().getTime()/1000)%iss.length)].getDisplayName());
         				if(bs.get(i))
         					iftc=iftc.mergeStyle(TextFormatting.GREEN);
         				else

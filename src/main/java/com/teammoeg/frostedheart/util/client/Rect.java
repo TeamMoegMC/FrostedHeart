@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.util.client;
 
+import java.util.Objects;
+
 public class Rect extends Point {
     protected final int w, h;
 
@@ -47,5 +49,22 @@ public class Rect extends Point {
 	@Override
 	public String toString() {
 		return "Rect [w=" + w + ", h=" + h + ", x=" + x + ", y=" + y + "]";
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + Objects.hash(h, w);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (!super.equals(obj)) return false;
+		if (getClass() != obj.getClass()) return false;
+		Rect other = (Rect) obj;
+		return h == other.h && w == other.w;
 	}
 }

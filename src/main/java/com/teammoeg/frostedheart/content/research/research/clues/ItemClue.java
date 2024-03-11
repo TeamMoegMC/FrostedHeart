@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.research.research.clues;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.item.ItemStack;
@@ -75,7 +75,7 @@ public class ItemClue extends Clue {
         if (stack.hasNoMatchingItems())
             return null;
         return stack.getMatchingStacks()[0].getDisplayName().copyRaw()
-                .appendSibling(GuiUtils.str(" x" + stack.getCount()));
+                .appendSibling(TranslateUtils.str(" x" + stack.getCount()));
     }
 
     @Override
@@ -88,8 +88,8 @@ public class ItemClue extends Clue {
         if (name != null && !name.isEmpty())
             return super.getName();
         if (consume)
-            return GuiUtils.translate("clue." + FHMain.MODID + ".consume_item");
-        return GuiUtils.translate("clue." + FHMain.MODID + ".item");
+            return TranslateUtils.translate("clue." + FHMain.MODID + ".consume_item");
+        return TranslateUtils.translate("clue." + FHMain.MODID + ".item");
     }
 
     @Override

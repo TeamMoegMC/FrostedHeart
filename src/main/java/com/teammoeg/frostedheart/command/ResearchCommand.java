@@ -32,8 +32,8 @@ import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.research.research.Research;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.FHTeamDataManager;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
@@ -58,14 +58,14 @@ public class ResearchCommand {
 
                     Research rs = FHResearch.getResearch(rsn).get();
                     if (rs == null) {
-                        ct.getSource().sendErrorMessage(GuiUtils.str("Research not found").mergeStyle(TextFormatting.RED));
+                        ct.getSource().sendErrorMessage(TranslateUtils.str("Research not found").mergeStyle(TextFormatting.RED));
                         return Command.SINGLE_SUCCESS;
                     }
                     ResearchData rd = ResearchDataAPI.getData(ct.getSource().asPlayer()).getData(rs);
                     rd.setFinished(true);
                     rd.announceCompletion();
 
-                    ct.getSource().sendFeedback(GuiUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("all").executes(ct -> {
                     TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().asPlayer());
@@ -75,19 +75,19 @@ public class ResearchCommand {
                         rd.setFinished(true);
                         rd.announceCompletion();
                     }
-                    ct.getSource().sendFeedback(GuiUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
                 .then(Commands.literal("transfer").then(Commands.argument("from", UUIDArgument.func_239194_a_())
                         .then(Commands.argument("to", UUIDArgument.func_239194_a_())).executes(ct -> {
                             Team team = FTBTeamsAPI.getManager().getTeamByID(UUIDArgument.func_239195_a_(ct, "to"));
                             FHTeamDataManager.INSTANCE.transfer(UUIDArgument.func_239195_a_(ct, "from"), team);
-                            ct.getSource().sendFeedback(GuiUtils.str("Transfered to " + team.getDisplayName()).mergeStyle(TextFormatting.GREEN), false);
+                            ct.getSource().sendFeedback(TranslateUtils.str("Transfered to " + team.getDisplayName()).mergeStyle(TextFormatting.GREEN), false);
                             return Command.SINGLE_SUCCESS;
                         })))
                 .then(Commands.literal("edit").then(Commands.argument("enable", BoolArgumentType.bool()).executes(ct -> {
                     FHResearch.editor = ct.getArgument("enable", Boolean.class);
-                    ct.getSource().sendFeedback(GuiUtils.str("Editing mode set " + FHResearch.editor).mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendFeedback(TranslateUtils.str("Editing mode set " + FHResearch.editor).mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
                 .then(Commands.literal("default").executes(ct -> Command.SINGLE_SUCCESS))
@@ -107,12 +107,12 @@ public class ResearchCommand {
                         }).executes(ct -> {
                             CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().asPlayer());
                             String rsn = ct.getArgument("name", String.class);
-                            ct.getSource().sendFeedback(GuiUtils.str(String.valueOf(cnbt.get(rsn))), false);
+                            ct.getSource().sendFeedback(TranslateUtils.str(String.valueOf(cnbt.get(rsn))), false);
                             return Command.SINGLE_SUCCESS;
                         })).then(Commands.literal("all").executes(ct -> {
 
                             CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().asPlayer());
-                            ct.getSource().sendFeedback(GuiUtils.str(cnbt.toString()), false);
+                            ct.getSource().sendFeedback(TranslateUtils.str(cnbt.toString()), false);
                             return Command.SINGLE_SUCCESS;
 
                         }))

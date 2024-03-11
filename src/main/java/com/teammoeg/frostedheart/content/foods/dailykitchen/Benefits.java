@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.thermopolium.data.recipes.BowlContainingRecipe;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -142,7 +142,7 @@ class Benefits {
         this.giveEnergy();
         capability.countEatenTimes();
 
-        player.sendStatusMessage(GuiUtils.translateMessage("eat_wanted_food"), false);
+        player.sendStatusMessage(TranslateUtils.translateMessage("eat_wanted_food"), false);
     }
 
     public void tryGive(Item food) {

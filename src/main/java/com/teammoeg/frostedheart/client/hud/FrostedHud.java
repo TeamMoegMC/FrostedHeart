@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.client.hud;
 
-import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,6 +40,7 @@ import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.util.client.AtlasUV;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.client.Point;
+import com.teammoeg.frostedheart.util.client.PointSet;
 import com.teammoeg.frostedheart.util.client.UV;
 import com.teammoeg.frostedheart.util.client.UV.Transition;
 
@@ -130,14 +129,10 @@ public class FrostedHud {
         static final Point sign=new Point(1, 12);
         static final Point unit=new Point(11, 24);
         
-        static final Point dig1Dec1=Point.of(25, 16);
-        static final Point dig2Dec1=Point.of(28, 16);
-        static final Point dig1Int1=Point.of(13, 7);
-        static final Point dig2Int1=Point.of(8, 7);
-        static final Point dig2Int2=Point.of(18, 7);
-        static final Point dig3Int1=Point.of(7, 7);
-        static final Point dig3Int2=Point.of(14, 7);
-        static final Point dig3Int3=Point.of(24, 7);
+        static final PointSet[] digits=new PointSet[] {
+        new PointSet(Point.of(13, 7), Point.of(25, 16), sign, unit),
+        new PointSet(Point.of(8, 7), Point.of(18, 7), Point.of(28, 16), sign, unit),
+        new PointSet(Point.of(7, 7), Point.of(14, 7), Point.of(24, 7), sign, unit)};
     }
     static final class HUDElements {
         static final UV hotbar_slot = new UV(1, 1, 20, 20);
@@ -181,7 +176,19 @@ public class FrostedHud {
         static final UV forecast_window = new UV(0, 0, 358, 16, 512, 256);
         static final UV forecast_increase = new UV(0, 32, 12, 12, 512, 256);
         static final UV forecast_decrease = new UV(0, 44, 12, 12, 512, 256);
-
+        static final UV[] hud_decimal_digits=new UV[10];
+        static final UV[] hud_integer_digits=new UV[10];
+        {
+        	for(int i=0;i<10;i++) {
+        		hud_decimal_digits[(i+1)%10]=new UV(6*i, 17, 6, 8, 100, 34);
+        		hud_integer_digits[(i+1)%10]=new UV(10*i, 0, 10, 17, 100, 34);
+        	}
+        }
+        static final UV hud_positive=UV.deltaWH(61, 17, 68, 24, 100, 34);
+        static final UV hud_negative=UV.deltaWH(68, 17, 75, 24, 100, 34);
+        static final UV hud_celsius =UV.deltaWH(0, 25, 13, 34, 100, 34);
+        static final UV hud_farenhit=UV.deltaWH(13, 25, 26, 34, 100, 34);
+        
         static final UV forecast_snow = new UV(0, 56, 12, 12, 512, 256);
         static final UV forecast_blizzard = new UV(0, 68, 12, 12, 512, 256);
         static final UV forecast_sun = new UV(0, 80, 12, 12, 512, 256);
@@ -304,48 +311,15 @@ public class FrostedHud {
         return (Math.min(atemp, endTemp) - startTemp) / (endTemp - startTemp);
     }
 
-    private static UV getDecDigitUV(int dec) {
-        return UV.deltaWH(6 * (dec - 1), 17, 6 * dec, 25, 100, 34);
-    }
 
     private static ArrayList<UV> getIntegerDigitUVs(int digit) {
 
-        ArrayList<UV> rtn = new ArrayList<>();
-        UV v1, v2, v3;
-        if (digit / 10 == 0) { // len = 1
-            int firstDigit = digit;
-            if (firstDigit == 0)
-                firstDigit += 10;
-            v1 = UV.deltaWH(10 * (firstDigit - 1), 0, 10 * firstDigit, 17, 100, 34);
-            rtn.add(v1);
-        } else if (digit / 10 < 10) { // len = 2
-            int firstDigit = digit / 10;
-            if (firstDigit == 0)
-                firstDigit += 10;
-            int secondDigit = digit % 10;
-            if (secondDigit == 0)
-                secondDigit += 10;
-            v1 = UV.deltaWH(10 * (firstDigit - 1), 0, 10 * firstDigit, 17, 100, 34);
-            v2 = UV.deltaWH(10 * (secondDigit - 1), 0, 10 * secondDigit, 17, 100, 34);
-            rtn.add(v1);
-            rtn.add(v2);
-        } else { // len = 3
-            int thirdDigit = digit % 10;
-            if (thirdDigit == 0)
-                thirdDigit += 10;
-            int secondDigit = digit / 10;
-            if (secondDigit == 0)
-                secondDigit += 10;
-            int firstDigit = digit / 100;
-            if (firstDigit == 0)
-                firstDigit += 10;
-            v1 = UV.deltaWH(10 * (firstDigit - 1), 0, 10 * firstDigit, 17, 100, 34);
-            v2 = UV.deltaWH(10 * (secondDigit - 1), 0, 10 * secondDigit, 17, 100, 34);
-            v3 = UV.deltaWH(10 * (thirdDigit - 1), 0, 10 * thirdDigit, 17, 100, 34);
-            rtn.add(v1);
-            rtn.add(v2);
-            rtn.add(v3);
-        }
+        ArrayList<UV> rtn = new ArrayList<>(3);
+        do{
+        	int crnDigit=digit%10;
+        	digit=digit/10;
+        	rtn.add(0, HUDElements.hud_integer_digits[crnDigit]);
+        }while(digit>0&&rtn.size()<3);
         return rtn;
     }
 
@@ -923,13 +897,10 @@ public class FrostedHud {
 
     private static void renderTemp(MatrixStack stack, Minecraft mc, float temp, int tlevel, int offsetX, int offsetY,
                                    boolean celsius) {
-        UV unitUV = celsius ? UV.deltaWH(0, 25, 13, 34, 100, 34) : UV.deltaWH(13, 25, 26, 34, 100, 34);
-        UV signUV = temp >= 0 ? UV.deltaWH(61, 17, 68, 24, 100, 34) : UV.deltaWH(68, 17, 75, 24, 100, 34);
+        UV unitUV = celsius ? HUDElements.hud_celsius : HUDElements.hud_farenhit;
+        UV signUV = temp >= 0 ? HUDElements.hud_positive : HUDElements.hud_negative;
+ 
         double abs = Math.abs(temp);
-        BigDecimal bigDecimal = new BigDecimal(String.valueOf(abs));
-        bigDecimal.round(new MathContext(1));
-        int integer = bigDecimal.intValue();
-        int decimal = (int) (bigDecimal.subtract(new BigDecimal(integer)).doubleValue() * 10);
         // draw orb
         if (tlevel > 80) {
             mc.getTextureManager().bindTexture(ardent);
@@ -960,20 +931,14 @@ public class FrostedHud {
         unitUV.blit(stack, offsetX, offsetY, BasePos.unit);
 
         // digits
-        ArrayList<UV> uv4is = getIntegerDigitUVs(integer);
-        UV decUV = getDecDigitUV(decimal);
-        if (uv4is.size() == 1) {
-            uv4is.get(0).blit(stack, offsetX, offsetY, BasePos.dig1Int1);
-            decUV       .blit(stack, offsetX, offsetY, BasePos.dig1Dec1);
-        } else if (uv4is.size() == 2) {
-            uv4is.get(0).blit(stack, offsetX, offsetY, BasePos.dig2Int1);
-            uv4is.get(1).blit(stack, offsetX, offsetY, BasePos.dig2Int2);
-            decUV       .blit(stack, offsetX, offsetY, BasePos.dig2Dec1);
-        } else if (uv4is.size() == 3) {
-            uv4is.get(0).blit(stack, offsetX, offsetY, BasePos.dig3Int1);
-            uv4is.get(1).blit(stack, offsetX, offsetY, BasePos.dig3Int2);
-            uv4is.get(2).blit(stack, offsetX, offsetY, BasePos.dig3Int3);
-        }
+        ArrayList<UV> uv4is = getIntegerDigitUVs((int) Math.round(abs));
+        int size=uv4is.size();
+        if(size == 3)
+        	uv4is.add(HUDElements.hud_decimal_digits[(int) (Math.round(abs*10)%10)]);
+        uv4is.add(signUV);
+        uv4is.add(unitUV);
+        BasePos.digits[size-1].drawUVs(uv4is, stack, offsetX, offsetY);
+        
         // mc.getTextureManager().bindTexture(HUD_ELEMENTS);
     }
 

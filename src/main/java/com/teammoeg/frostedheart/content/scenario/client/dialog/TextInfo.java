@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.content.scenario.client.dialog;
 
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
-import com.teammoeg.frostedheart.util.ReferenceValue;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.utility.ReferenceValue;
 
 import net.minecraft.util.ICharacterConsumer;
 import net.minecraft.util.IReorderingProcessor;

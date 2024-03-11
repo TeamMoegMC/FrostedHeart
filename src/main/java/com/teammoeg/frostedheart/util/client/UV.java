@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.util.client;
 
+import java.util.Objects;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import net.minecraft.client.gui.AbstractGui;
@@ -119,4 +121,19 @@ public class UV extends Rect {
     public void blitAtlas(MatrixStack s, int targetX, int targetY, Point loc, int gridX, int gridY) {
         blitAtlas(s, targetX + loc.getX(), targetY + loc.getY(), gridX, gridY);
     }
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + Objects.hash(textureH, textureW);
+		return result;
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (!super.equals(obj)) return false;
+		if (getClass() != obj.getClass()) return false;
+		UV other = (UV) obj;
+		return textureH == other.textureH && textureW == other.textureW;
+	}
 }

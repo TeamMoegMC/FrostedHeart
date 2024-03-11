@@ -46,10 +46,10 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.frostedheart.util.ReferenceValue;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.FileUtil;
+import com.teammoeg.frostedheart.util.utility.ReferenceValue;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.thermopolium.items.StewItem;
 
@@ -127,7 +127,7 @@ public class DebugCommand {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
-                    ct.getSource().sendFeedback(GuiUtils.str("Exported " + items.size() + " Foods"), true);
+                    ct.getSource().sendFeedback(TranslateUtils.str("Exported " + items.size() + " Foods"), true);
                     return Command.SINGLE_SUCCESS;
                 }))
 
@@ -291,7 +291,7 @@ public class DebugCommand {
                                 packet.sendToAll(ct.getSource().getServer());
                             }
                         }
-                    ct.getSource().sendFeedback(GuiUtils.str("Fixed " + tchunks.val + " Chunks"), true);
+                    ct.getSource().sendFeedback(TranslateUtils.str("Fixed " + tchunks.val + " Chunks"), true);
                     return Command.SINGLE_SUCCESS;
                 }));
 

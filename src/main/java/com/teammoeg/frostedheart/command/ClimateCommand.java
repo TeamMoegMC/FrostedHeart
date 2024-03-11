@@ -25,7 +25,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.ClimateEvent;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
@@ -37,7 +37,7 @@ public class ClimateCommand {
         LiteralArgumentBuilder<CommandSource> get = Commands.literal("get")
                 .executes((ct) -> {
                     try {
-                        ct.getSource().sendFeedback(GuiUtils.str(String.valueOf(WorldClimate.get(ct.getSource().getWorld()))), true);
+                        ct.getSource().sendFeedback(TranslateUtils.str(String.valueOf(WorldClimate.get(ct.getSource().getWorld()))), true);
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -46,43 +46,43 @@ public class ClimateCommand {
         LiteralArgumentBuilder<CommandSource> rebuild = Commands.literal("rebuild").then(Commands.literal("cache").executes(ct -> {
 
                     WorldClimate.get(ct.getSource().getWorld()).rebuildCache(ct.getSource().getWorld());
-                    ct.getSource().sendFeedback(GuiUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 }))
                 .executes((ct) -> {
 
                     WorldClimate.get(ct.getSource().getWorld()).resetTempEvent(ct.getSource().getWorld());
-                    ct.getSource().sendFeedback(GuiUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 });
         LiteralArgumentBuilder<CommandSource> init = Commands.literal("init")
                 .executes((ct) -> {
                     WorldClimate.get(ct.getSource().getWorld()).addInitTempEvent(ct.getSource().getWorld());
-                    ct.getSource().sendFeedback(GuiUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 });
 
         LiteralArgumentBuilder<CommandSource> app = Commands.literal("append").then(
                 Commands.literal("warm").executes(ct -> {
                     WorldClimate.get(ct.getSource().getWorld()).appendTempEvent(ClimateEvent::getWarmClimateEvent);
-                    ct.getSource().sendFeedback(GuiUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })
         ).then(
                 Commands.literal("cold").executes(ct -> {
                     WorldClimate.get(ct.getSource().getWorld()).appendTempEvent(ClimateEvent::getColdClimateEvent);
-                    ct.getSource().sendFeedback(GuiUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })
         ).then(
                 Commands.literal("blizzard").executes(ct -> {
                     WorldClimate.get(ct.getSource().getWorld()).appendTempEvent(ClimateEvent::getBlizzardClimateEvent);
-                    ct.getSource().sendFeedback(GuiUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })
         ).executes(ct -> {
             WorldClimate.get(ct.getSource().getWorld()).appendTempEvent(ClimateEvent::getClimateEvent);
-            ct.getSource().sendFeedback(GuiUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+            ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
             return Command.SINGLE_SUCCESS;
         });
         LiteralArgumentBuilder<CommandSource> reset = Commands.literal("resetVanilla")

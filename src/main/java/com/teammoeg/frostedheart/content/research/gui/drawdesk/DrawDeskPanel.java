@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.content.research.network.FHDrawingDeskOperation
 import com.teammoeg.frostedheart.content.research.network.FHResearchControlPacket;
 import com.teammoeg.frostedheart.content.research.network.FHResearchControlPacket.Operator;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -95,9 +95,9 @@ public class DrawDeskPanel extends Panel {
             public void addMouseOverText(TooltipList list) {
                 super.addMouseOverText(list);
                 if (!ResearchListeners.canExamine(dd.getTile().getInventory().get(DrawingDeskTileEntity.EXAMINE_SLOT)))
-                    list.add(GuiUtils.translateGui("draw_desk.unable_examine"));
+                    list.add(TranslateUtils.translateGui("draw_desk.unable_examine"));
                 else
-                    list.add(GuiUtils.translateGui("draw_desk.examine"));
+                    list.add(TranslateUtils.translateGui("draw_desk.examine"));
             }
 
             @Override

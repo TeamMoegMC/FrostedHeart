@@ -35,7 +35,7 @@ import com.google.common.collect.Iterators;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.config.ui.ItemSearchMode;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -187,7 +187,7 @@ public class SelectItemStackDialog extends EditDialog {
         @Override
         public void addMouseOverText(TooltipList list) {
             super.addMouseOverText(list);
-            list.add(activeMode.getDisplayName().mergeStyle(TextFormatting.GRAY).appendSibling(GuiUtils.str(" [" + panelStacks.widgets.size() + "]").mergeStyle(TextFormatting.DARK_GRAY)));
+            list.add(activeMode.getDisplayName().mergeStyle(TextFormatting.GRAY).appendSibling(TranslateUtils.str(" [" + panelStacks.widgets.size() + "]").mergeStyle(TextFormatting.DARK_GRAY)));
         }
 
         @Override
@@ -289,7 +289,7 @@ public class SelectItemStackDialog extends EditDialog {
 
             @Override
             public IFormattableTextComponent getDisplayName() {
-                return GuiUtils.str("Blocks");
+                return TranslateUtils.str("Blocks");
             }
 
             @Override

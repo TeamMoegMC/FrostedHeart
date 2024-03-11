@@ -14,8 +14,8 @@ import com.teammoeg.frostedheart.content.scenario.network.FHClientReadyPacket;
 import com.teammoeg.frostedheart.content.scenario.network.FHClientSettingsPacket;
 import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
-import com.teammoeg.frostedheart.util.ReferenceValue;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.utility.ReferenceValue;
 
 import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
 import net.minecraft.client.Minecraft;

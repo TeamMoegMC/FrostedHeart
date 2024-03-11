@@ -29,7 +29,7 @@ import java.util.function.Predicate;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.tools.FHLeveledTool;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.util.ITooltipFlag;
@@ -99,7 +99,7 @@ public class CoreSpade extends FHLeveledTool {
 
                 if (!founded.isEmpty()) {
                     int count = 0;
-                    IFormattableTextComponent s = GuiUtils.translateMessage("corespade.ore");
+                    IFormattableTextComponent s = TranslateUtils.translateMessage("corespade.ore");
                     for (Entry<String, Integer> f : founded.entrySet()) {
                         if (rnd.nextInt((int) (f.getValue() * corr)) != 0) {
                             s = s.appendSibling(new TranslationTextComponent(f.getKey())
@@ -112,7 +112,7 @@ public class CoreSpade extends FHLeveledTool {
                         return ActionResultType.SUCCESS;
                     }
                 }
-                player.sendStatusMessage(GuiUtils.translateMessage("corespade.nothing").mergeStyle(TextFormatting.GRAY),
+                player.sendStatusMessage(TranslateUtils.translateMessage("corespade.nothing").mergeStyle(TextFormatting.GRAY),
                         false);
             }
         }
@@ -147,7 +147,7 @@ public class CoreSpade extends FHLeveledTool {
 
     @Override
     public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-        tooltip.add(GuiUtils.translateTooltip("meme.core_spade").mergeStyle(TextFormatting.GRAY));
+        tooltip.add(TranslateUtils.translateTooltip("meme.core_spade").mergeStyle(TextFormatting.GRAY));
     }
 
     @Override
