@@ -2,11 +2,13 @@ package com.teammoeg.frostedheart.content.generator;
 
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.client.Point;
@@ -27,8 +29,10 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Quaternion;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 
 public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> extends IEContainerScreen<MasterGeneratorContainer<T>> {
 	T tile;
@@ -228,9 +232,17 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         			tooltip.add(GuiUtils.translateGui("generator.no_enough_space",v3i.getX(),v3i.getY(),v3i.getZ()));
         		} else {
         			tooltip.add(GuiUtils.translateGui("generator.upgrade_material"));
+        			BitSet bs=FHUtils.checkItemList(ClientUtils.mc().player, tile.getUpgradeCost());
+        			int i=0;
         			for(IngredientWithSize iws:tile.getUpgradeCost()) {
         				ItemStack[] iss=iws.getMatchingStacks();
-        				tooltip.add(GuiUtils.str(iws.getCount()+"x ").appendSibling(iss[(int) ((new Date().getTime()/1000)%iss.length)].getDisplayName()));
+        				IFormattableTextComponent iftc=GuiUtils.str(iws.getCount()+"x ").appendSibling(iss[(int) ((new Date().getTime()/1000)%iss.length)].getDisplayName());
+        				if(bs.get(i))
+        					iftc=iftc.mergeStyle(TextFormatting.GREEN);
+        				else
+        					iftc=iftc.mergeStyle(TextFormatting.RED);
+        				i++;
+        				tooltip.add(iftc);
         			}
         		}
         	}

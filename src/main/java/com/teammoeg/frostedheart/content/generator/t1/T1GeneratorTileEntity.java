@@ -123,14 +123,9 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
         
     }
     final List<IngredientWithSize> repair=Arrays.asList(IngredientWithSize.of(new ItemStack(AllItems.COPPER_INGOT.get(),64)));
-    final List<IngredientWithSize> upgrade=Arrays.asList(IngredientWithSize.of(new ItemStack(AllItems.COPPER_INGOT.get(),64)));
 	@Override
 	public List<IngredientWithSize> getRepairCost() {
 		return repair;
-	}
-	@Override
-	public List<IngredientWithSize> getUpgradeCost() {
-		return upgrade;
 	}
 	@Override
 	public IETemplateMultiblock getNextLevelMultiblock() {
