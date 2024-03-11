@@ -232,6 +232,8 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
                 data.ifPresent(t -> t.fluid = fs2.getFluid());
                 return;
             }
+        } else {
+        	data.ifPresent(t->{t.steamLevel=0;t.steamProcess=0;t.power=0;});
         }
         noliquidtick = 40;
     }

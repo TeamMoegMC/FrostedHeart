@@ -227,7 +227,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         		if(!validStructure) {
         			Vector3i v3i=tile.getNextLevelMultiblock().getSize(ClientUtils.mc().world);
         			tooltip.add(TranslateUtils.translateGui("generator.no_enough_space",v3i.getX(),v3i.getY(),v3i.getZ()));
-        		}else if(ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock())) {
+        		}else if(!ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock())) {
         			tooltip.add(TranslateUtils.translateGui("generator.incomplete_research"));
         		} else {
         			tooltip.add(TranslateUtils.translateGui("generator.upgrade_material"));
