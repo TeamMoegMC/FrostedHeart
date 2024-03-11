@@ -44,7 +44,14 @@ public enum TownWorkerType {
         double actualCost = town.cost(TownResourceType.PREP_FOOD, cost, false);
         return cost == actualCost;
     }, 0),
-    WAREHOUSE(FHBlocks.warehouse.get(), null, 0);
+    WAREHOUSE(FHBlocks.warehouse.get(), null, 0),
+    MINE(FHBlocks.mine.get(), (town, workDate) -> {
+        double add = 1;
+        double actualAdd = town.add(TownResourceType.STONE, add, false);/*日后再说*/
+        return add == actualAdd;
+    }, 0),
+    MINE_BASE(FHBlocks.mine_base.get(), null, 0)//日后再说
+    ;
 
     /**
      * Town block.

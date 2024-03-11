@@ -59,8 +59,11 @@ import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
 import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
+import com.teammoeg.frostedheart.content.town.FHTownBuildingCoreBlock;
 import com.teammoeg.frostedheart.content.town.house.HouseBlock;
 
+import com.teammoeg.frostedheart.content.town.mine.MineBaseBlock;
+import com.teammoeg.frostedheart.content.town.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -179,20 +182,10 @@ public class FHBlocks {
             .harvestTool(ToolType.PICKAXE)
             .hardnessAndResistance(2, 10)
             .notSolid()));
-    public static RegistryObject<Block> house = register("house",()->new HouseBlock( Block.Properties
-            .create(Material.WOOD)
-            .sound(SoundType.WOOD)
-            .setRequiresTool()
-            .harvestTool(ToolType.AXE)
-            .hardnessAndResistance(2, 6)
-            .notSolid()));
-    public static RegistryObject<Block> warehouse = register("warehouse",()->new WarehouseBlock( Block.Properties
-            .create(Material.WOOD)
-            .sound(SoundType.WOOD)
-            .setRequiresTool()
-            .harvestTool(ToolType.AXE)
-            .hardnessAndResistance(2, 6)
-            .notSolid()));
+    public static RegistryObject<Block> house = register("house",()->new HouseBlock(FHTownBuildingCoreBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
+    public static RegistryObject<Block> warehouse = register("warehouse",()->new WarehouseBlock(FHTownBuildingCoreBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
+    public static RegistryObject<Block> mine = register("mine",()->new MineBlock(FHTownBuildingCoreBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
+    public static RegistryObject<Block> mine_base = register("mine_base", ()->new MineBaseBlock(FHTownBuildingCoreBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
     public static final BlockEntry<SteamCoreBlock> steam_core = REGISTRATE.block("steam_core", SteamCoreBlock::new)
         .initialProperties(Material.IRON)
         .properties(t->t
