@@ -21,27 +21,35 @@ package com.teammoeg.frostedheart.util.client;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 
 public class AtlasUV extends TexturedUV {
-    public AtlasUV(ResourceLocation texture, int w, int h) {
+	int gridW;
+    public AtlasUV(ResourceLocation texture, int w, int h, int gridW) {
         super(texture, 0, 0, w, h);
+        this.gridW=gridW;
     }
-
-    public AtlasUV(ResourceLocation texture, int x, int y, int w, int h) {
-        super(texture, x, y, w, h);
+    public AtlasUV(ResourceLocation texture, int w, int h, int gridW, int tw, int th) {
+        super(texture, 0, 0, w, h, tw, th);
+        this.gridW=gridW;
     }
-
-    //blit with texture bind and altas set
-    public void blit(Minecraft mc, MatrixStack s, int lx, int ly, int mx, int my, int p3, int p4) {
-        mc.getTextureManager().bindTexture(texture);
-        super.blit(s, lx, ly, mx, my, p3, p4);
-    }
-
-    //blit with texture bind and altas set add point
-    public void blit(Minecraft mc, MatrixStack s, int lx, int ly, Point loc, int mx, int my, int p3, int p4) {
-        mc.getTextureManager().bindTexture(texture);
-        super.blit(s, lx, ly, loc, mx, my, p3, p4);
-    }
+	public AtlasUV(ResourceLocation texture, int x, int y, int w, int h, int gridW, int tw, int th) {
+		super(texture, x, y, w, h, tw, th);
+		this.gridW=gridW;
+	}
+	public AtlasUV(String texture, int x, int y, int w, int h, int gridW, int tw, int th) {
+		super(texture, x, y, w, h, tw, th);
+		this.gridW=gridW;
+	}
+	public AtlasUV(String texture, int w, int h, int gridW, int tw, int th) {
+		super(texture, 0, 0, w, h, tw, th);
+		this.gridW=gridW;
+	}
+	public void blitAtlas(MatrixStack s, int targetX, int targetY, int gridIndex) {
+		super.blitAtlas(s, targetX, targetY, gridIndex % gridW, gridIndex / gridW);
+	}
+	public void blitAtlas(MatrixStack s, int targetX, int targetY, Point loc, int gridIndex) {
+		// TODO Auto-generated method stub
+		super.blitAtlas(s, targetX, targetY, loc, gridIndex % gridW, gridIndex / gridW);
+	}
 }

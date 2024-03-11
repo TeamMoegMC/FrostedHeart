@@ -133,14 +133,11 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
                     new boolean[]{false, true})
     );
     List<IngredientWithSize> upgrade;
-    Predicate<ItemStack> generator_core=Ingredient.fromItems(FHBlocks.generator_core_t1.get()).negate();
+    
     public MasterGeneratorTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
         super(multiblockInstance, type, hasRSControl);
-        IETemplateMultiblock ietm=getNextLevelMultiblock();
-        if(ietm!=null) {
-        	upgrade=Arrays.stream(ietm.getTotalMaterials()).filter(generator_core).map(IngredientWithSize::of).collect(Collectors.toList());
-        	
-        }
+        
+
     }
 
     @Override
@@ -291,10 +288,17 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     };
     public abstract List<IngredientWithSize> getRepairCost();
     public List<IngredientWithSize> getUpgradeCost(){
-    	return upgrade;
+    	IETemplateMultiblock ietm=getNextLevelMultiblock();
+        if(ietm!=null) {
+        	if(upgrade==null) {
+        		upgrade=Arrays.stream(ietm.getTotalMaterials()).filter(Ingredient.fromItems(FHBlocks.generator_core_t1.get()).negate()).map(IngredientWithSize::of).collect(Collectors.toList());
+        	}
+        	return upgrade;
+        }
+    	return null;
     };
     public abstract IETemplateMultiblock getNextLevelMultiblock();
-    public boolean isValidStructure() {
+    public boolean isValidStructure() { 
     	IETemplateMultiblock ietm=getNextLevelMultiblock();
     	if(ietm==null)
     		return false;

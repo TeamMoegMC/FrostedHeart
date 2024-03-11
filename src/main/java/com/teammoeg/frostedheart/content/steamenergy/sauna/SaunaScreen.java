@@ -66,13 +66,13 @@ public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
         float powerFraction = tile.getPowerFraction();
 
         if (powerFraction < 0.25) {
-            clock1.blit(mc.ingameGUI, matrixStack, guiLeft, guiTop, clockPos);
+            clock1.blitAt(matrixStack, guiLeft, guiTop, clockPos);
         } else if (powerFraction < 0.5) {
-            clock2.blit(mc.ingameGUI, matrixStack, guiLeft, guiTop, clockPos);
+            clock2.blitAt(matrixStack, guiLeft, guiTop, clockPos);
         } else if (powerFraction < 0.75) {
-            clock3.blit(mc.ingameGUI, matrixStack, guiLeft, guiTop, clockPos);
+            clock3.blitAt(matrixStack, guiLeft, guiTop, clockPos);
         } else {
-            clock4.blit(mc.ingameGUI, matrixStack, guiLeft, guiTop, clockPos);
+            clock4.blitAt(matrixStack, guiLeft, guiTop, clockPos);
         }
 
         // draw flame if the sauna is on
@@ -97,7 +97,7 @@ public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
                             flame5.getX(), flame5.getY() + offset, flame5.getW(), height);
                 }
             } else {
-                flame1.blit(mc.ingameGUI, matrixStack, guiLeft, guiTop, flamePos);
+                flame1.blitAt(matrixStack, guiLeft, guiTop, flamePos);
             }
         }
     }

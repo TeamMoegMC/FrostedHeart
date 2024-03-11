@@ -24,80 +24,96 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.AbstractGui;
 
 public class UV extends Rect {
-
+	public enum Transition{
+		UP,
+		DOWN,
+		LEFT,
+		RIGHT;
+	}
+	final int textureW,textureH;
     public static UV delta(int x1, int y1, int x2, int y2) {
         return new UV(Rect.delta(x1, y1, x2, y2));
     }
-
+    public static UV deltaWH(int x1, int y1, int x2, int y2,int tw,int th) {
+        return new UV(Rect.delta(x1, y1, x2, y2), tw, th);
+    }
     public UV(int x, int y, int w, int h) {
         super(x, y, w, h);
+        textureW=256;
+        textureH=256;
     }
 
-    public UV(Rect r) {
+    public UV(int x, int y, int w, int h, int textureW, int textureH) {
+		super(x, y, w, h);
+		this.textureW = textureW;
+		this.textureH = textureH;
+	}
+
+	public UV(Rect r) {
         super(r);
+        textureW=256;
+        textureH=256;
     }
 
-    public UV(UV uv) {
-        this(uv.x, uv.y, uv.w, uv.h);
-    }
+    public UV(Rect r, int textureW, int textureH) {
+		super(r);
+		this.textureW = textureW;
+		this.textureH = textureH;
+	}
 
-    //normal blit
-    public void blit(AbstractGui gui, MatrixStack s, int lx, int ly) {
-        gui.blit(s, lx, ly, x, y, w, h);
+	public UV(UV uv) {
+        this(uv.x, uv.y, uv.w, uv.h,uv.textureW,uv.textureH);
     }
-
-    //blit with width transition
-    public void blit(AbstractGui gui, MatrixStack s, int lx, int ly, int w) {
-        gui.blit(s, lx, ly, x, y, w, h);
-    }
-
-    // normal blit with custom texture size
-    public void blit(AbstractGui gui, MatrixStack s, int lx, int ly, int textureW, int textureH) {
-        AbstractGui.blit(s, lx, ly, x, y, w, h, textureW, textureH);
-    }
-
+	
     //blit with width transition and  custom texture size
-    public void blit(AbstractGui gui, MatrixStack s, int lx, int ly, int w, int textureW, int textureH) {
-        AbstractGui.blit(s, lx, ly, x, y, w, h, textureW, textureH);
+    public void blit(MatrixStack s, int targetX, int targetY, int sourceWidth, int sourceHeight) {
+        AbstractGui.blit(s, targetX, targetY, x, y, sourceWidth, sourceHeight, textureW, textureH);
     }
-
-    //normal blit add point
-    public void blit(AbstractGui gui, MatrixStack s, int lx, int ly, Point loc) {
-        blit(gui, s, lx + loc.getX(), ly + loc.getY());
-    }
-
-    //blit with width transition add point
-    public void blit(AbstractGui gui, MatrixStack s, int lx, int ly, Point loc, int w) {
-        blit(gui, s, lx + loc.getX(), ly + loc.getY(), w);
-    }
-
-    //normal blit add point with custom texture size
-    public void blit(AbstractGui gui, MatrixStack s, int lx, int ly, Point loc, int textureW, int textureH) {
-        blit(gui, s, lx + loc.getX(), ly + loc.getY(), textureW, textureH);
+    
+    //blit with width transition and  custom texture size
+    public void blit(MatrixStack s, int targetX, int targetY, int sourceWidth) {
+        AbstractGui.blit(s, targetX, targetY, x, y, sourceWidth, h, textureW, textureH);
     }
 
     //normal blit
-    public void blit(MatrixStack s, int lx, int ly, int p3, int p4) {
-        AbstractGui.blit(s, lx, ly, x, y, w, h, p3, p4);
+    public void blit(MatrixStack s, int targetX, int targetY) {
+        AbstractGui.blit(s, targetX, targetY, x, y, w, h, textureW, textureH);
     }
 
     //blit with atlas
-    public void blit(MatrixStack s, int lx, int ly, int mx, int my, int p3, int p4) {
-        AbstractGui.blit(s, lx, ly, x + mx * w, y + my * h, w, h, p3, p4);
+    public void blitAtlas(MatrixStack s, int targetX, int targetY, int gridX, int gridY) {
+        AbstractGui.blit(s, targetX, targetY, x + gridX * w, y + gridY * h, w, h, textureW, textureH);
+    }
+    
+    //blit with width transition add point
+    public void blit(MatrixStack s, int targetX, int targetY, Point loc, int sourceWidth) {
+        blit(s, targetX + loc.getX(), targetY + loc.getY(), sourceWidth);
     }
 
-    //blit add point
-    public void blit(MatrixStack s, int lx, int ly, Point loc, int p3, int p4) {
-        blit(s, lx + loc.getX(), ly + loc.getY(), p3, p4);
+    //blit with width transition add point
+    public void blit(MatrixStack s, int targetX, int targetY, Point loc, Transition direction,double progress) {
+    	blit(s, targetX + loc.getX(), targetY + loc.getY(), direction, progress);
+    }
+    //blit with width transition add point
+    public void blit(MatrixStack s, int targetX, int targetY, Transition direction,double progress) {
+    	if(progress<0)
+    		return;
+    	if(progress>1)
+    		progress=1;
+    	switch(direction) {
+    	case UP   :blit(s, targetX, targetY +(int)(h*(1-progress)), w, (int)(h*progress));return;
+    	case LEFT :blit(s, targetX +(int)(w*(1-progress)), targetY, (int)(w*progress), h);return;
+    	case DOWN :blit(s, targetX, targetY, w, (int)(h*progress));return;
+    	case RIGHT:blit(s, targetX, targetY, (int)(w*progress), h);return;
+    	}
+    }
+    //normal blit add point with custom texture size
+    public void blitAt(MatrixStack s, int targetX, int targetY, Point loc) {
+        blit(s, targetX + loc.getX(), targetY + loc.getY());
     }
 
     //blit with atlas and add point
-    public void blit(MatrixStack s, int lx, int ly, Point loc, int mx, int my, int p3, int p4) {
-        blit(s, lx + loc.getX(), ly + loc.getY(), mx, my, p3, p4);
-    }
-
-    // blit with height transition
-    public void blitHeightTransition(AbstractGui gui, MatrixStack s, int lx, int ly, int h) {
-        gui.blit(s, lx, ly, x, y, w, h);
+    public void blitAtlas(MatrixStack s, int targetX, int targetY, Point loc, int gridX, int gridY) {
+        blitAtlas(s, targetX + loc.getX(), targetY + loc.getY(), gridX, gridY);
     }
 }
