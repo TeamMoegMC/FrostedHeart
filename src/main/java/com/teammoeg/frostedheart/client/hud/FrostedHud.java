@@ -118,6 +118,7 @@ public class FrostedHud {
         static final Point right_half_2 = new Point(/* 76, -64, */38, -64);
         static final Point right_half_3 = new Point(/* 96, -64, */58, -64);
         static final Point forecast_window = new Point(-179, 0);
+        static final Point forecast_frame = new Point(-81,0);
         static final Point forecast_date = new Point(forecast_window.getX() + 60, 4);
         static final Point forecast_temp = new Point(forecast_window.getX() + 7, 4);
         static final Point forecast_unit = new Point(forecast_window.getX() + 34, 4);
@@ -126,6 +127,17 @@ public class FrostedHud {
         static final Point act_split = new Point(5, 80);
         
         static final Point act_subtitle = new Point(5, 83);
+        static final Point sign=new Point(1, 12);
+        static final Point unit=new Point(11, 24);
+        
+        static final Point dig1Dec1=Point.of(25, 16);
+        static final Point dig2Dec1=Point.of(28, 16);
+        static final Point dig1Int1=Point.of(13, 7);
+        static final Point dig2Int1=Point.of(8, 7);
+        static final Point dig2Int2=Point.of(18, 7);
+        static final Point dig3Int1=Point.of(7, 7);
+        static final Point dig3Int2=Point.of(14, 7);
+        static final Point dig3Int3=Point.of(24, 7);
     }
     static final class HUDElements {
         static final UV hotbar_slot = new UV(1, 1, 20, 20);
@@ -167,8 +179,8 @@ public class FrostedHud {
         static final UV icon_horse_normal = new UV(143, 48, 12, 12);
         static final UV icon_horse_abnormal_white = new UV(156, 48, 12, 12);
         static final UV forecast_window = new UV(0, 0, 358, 16, 512, 256);
-        static final UV forecast_increase = new UV(0, 32, 12, 12);
-        static final UV forecast_decrease = new UV(0, 44, 12, 12);
+        static final UV forecast_increase = new UV(0, 32, 12, 12, 512, 256);
+        static final UV forecast_decrease = new UV(0, 44, 12, 12, 512, 256);
 
         static final UV forecast_snow = new UV(0, 56, 12, 12, 512, 256);
         static final UV forecast_blizzard = new UV(0, 68, 12, 12, 512, 256);
@@ -293,7 +305,7 @@ public class FrostedHud {
     }
 
     private static UV getDecDigitUV(int dec) {
-        return UV.delta(6 * (dec - 1), 17, 6 * dec, 25);
+        return UV.deltaWH(6 * (dec - 1), 17, 6 * dec, 25, 100, 34);
     }
 
     private static ArrayList<UV> getIntegerDigitUVs(int digit) {
@@ -304,7 +316,7 @@ public class FrostedHud {
             int firstDigit = digit;
             if (firstDigit == 0)
                 firstDigit += 10;
-            v1 = UV.delta(10 * (firstDigit - 1), 0, 10 * firstDigit, 17);
+            v1 = UV.deltaWH(10 * (firstDigit - 1), 0, 10 * firstDigit, 17, 100, 34);
             rtn.add(v1);
         } else if (digit / 10 < 10) { // len = 2
             int firstDigit = digit / 10;
@@ -313,8 +325,8 @@ public class FrostedHud {
             int secondDigit = digit % 10;
             if (secondDigit == 0)
                 secondDigit += 10;
-            v1 = UV.delta(10 * (firstDigit - 1), 0, 10 * firstDigit, 17);
-            v2 = UV.delta(10 * (secondDigit - 1), 0, 10 * secondDigit, 17);
+            v1 = UV.deltaWH(10 * (firstDigit - 1), 0, 10 * firstDigit, 17, 100, 34);
+            v2 = UV.deltaWH(10 * (secondDigit - 1), 0, 10 * secondDigit, 17, 100, 34);
             rtn.add(v1);
             rtn.add(v2);
         } else { // len = 3
@@ -327,9 +339,9 @@ public class FrostedHud {
             int firstDigit = digit / 100;
             if (firstDigit == 0)
                 firstDigit += 10;
-            v1 = UV.delta(10 * (firstDigit - 1), 0, 10 * firstDigit, 17);
-            v2 = UV.delta(10 * (secondDigit - 1), 0, 10 * secondDigit, 17);
-            v3 = UV.delta(10 * (thirdDigit - 1), 0, 10 * thirdDigit, 17);
+            v1 = UV.deltaWH(10 * (firstDigit - 1), 0, 10 * firstDigit, 17, 100, 34);
+            v2 = UV.deltaWH(10 * (secondDigit - 1), 0, 10 * secondDigit, 17, 100, 34);
+            v3 = UV.deltaWH(10 * (thirdDigit - 1), 0, 10 * thirdDigit, 17, 100, 34);
             rtn.add(v1);
             rtn.add(v2);
             rtn.add(v3);
@@ -359,7 +371,7 @@ public class FrostedHud {
             int airState = MathHelper.ceil(air / (float) maxAir * 100) - 1;
             if (airState > 99)
                 airState = 99;
-            Atlases.oxygen_bar.blitAtlas(stack, x, y, BarPos.right_half_3, airState);
+            Atlases.oxygen_bar.blitAtlasVH(stack, x, y, BarPos.right_half_3, airState);
         }
         RenderSystem.disableBlend();
         mc.getProfiler().endSection();
@@ -425,7 +437,7 @@ public class FrostedHud {
         int armorValueState = MathHelper.ceil(armorValue / 20.0F * 100) - 1;
         if (armorValueState > 99)
             armorValueState = 99;
-        Atlases.defence_bar.blitAtlas(stack, x, y, BarPos.left_half_1, armorValueState);
+        Atlases.defence_bar.blitAtlasVH(stack, x, y, BarPos.left_half_1, armorValueState);
 
         RenderSystem.disableBlend();
         mc.getProfiler().endSection();
@@ -475,7 +487,7 @@ public class FrostedHud {
             int foodLevelState = MathHelper.ceil(foodLevel / 20.0F * 100) - 1;
             if (foodLevelState > 99)
                 foodLevelState = 99;
-            Atlases.hunger_bar.blitAtlas(stack, x, y, BarPos.right_half_1, foodLevelState);
+            Atlases.hunger_bar.blitAtlasVH(stack, x, y, BarPos.right_half_1, foodLevelState);
         }
         RenderSystem.disableBlend();
         mc.getProfiler().endSection();
@@ -536,11 +548,11 @@ public class FrostedHud {
         // markers (moving across window by hour)
         IngameGui.blit(stack, windowX + 2, 0, firstDayU, markerV, firstDayW, markerH, 512, 256);
 
-        HUDElements.forecast_marker.blit(stack, windowX - markerMovingOffset + markerLength, 0);
-        HUDElements.forecast_marker.blit(stack, windowX - markerMovingOffset + markerLength * 2, 0);
-        HUDElements.forecast_marker.blit(stack, windowX - markerMovingOffset + markerLength * 3, 0);
-        HUDElements.forecast_marker.blit(stack, windowX - markerMovingOffset + markerLength * 4, 0);
-        HUDElements.forecast_marker.blit(stack, windowX - markerMovingOffset + markerLength * 5, 0, 257 - markerLength * 5 + markerMovingOffset + 2);
+        HUDElements.forecast_marker.blit(stack, x - markerMovingOffset + markerLength, 0, BasePos.forecast_frame);
+        HUDElements.forecast_marker.blit(stack, x - markerMovingOffset + markerLength * 2, 0, BasePos.forecast_frame);
+        HUDElements.forecast_marker.blit(stack, x - markerMovingOffset + markerLength * 3, 0, BasePos.forecast_frame);
+        HUDElements.forecast_marker.blit(stack, x - markerMovingOffset + markerLength * 4, 0, BasePos.forecast_frame);
+        HUDElements.forecast_marker.blit(stack, x - markerMovingOffset + markerLength * 5, 0, BasePos.forecast_frame, 257 - markerLength * 5 + markerMovingOffset + 2);
 
 
         FrameType last = FrameType.NOP;
@@ -580,7 +592,7 @@ public class FrostedHud {
             temperature = tlvl;
             unit = HUDElements.forecast_celsius;
         }
-        unit.blitAtlas(stack, x + BasePos.forecast_unit.getX(), BasePos.forecast_unit.getY(), 512, 256);
+        unit.blit(stack, x, 0, BasePos.forecast_unit);
         // day render
         mc.fontRenderer.drawString(stack, "" + date, x + BasePos.forecast_date.getX(), BasePos.forecast_date.getY(), 0xe6e6f2);
 
@@ -696,13 +708,13 @@ public class FrostedHud {
         if (absorbState > 99)
             absorbState = 99;
         if (mhealthState < 99) {
-            Atlases.maxhealth_bar.blitAtlas(stack, x, y, BarPos.left_threequarters_inner, mhealthState);
+            Atlases.maxhealth_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_inner, 99-mhealthState);
         }
         if (healthState > 0) {
-            Atlases.health_bar.blitAtlas(stack, x, y, BarPos.left_threequarters_inner, healthState);
+            Atlases.health_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_inner, healthState);
         }
         if (absorbState > 0) {
-            Atlases.absorption_bar.blitAtlas(stack, x, y, BarPos.left_threequarters_outer, absorbState);
+            Atlases.absorption_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_outer, absorbState);
         }
         int ihealth = (int) Math.ceil(health);
         int offset = mc.fontRenderer.getStringWidth(String.valueOf(ihealth)) / 2;
@@ -860,7 +872,7 @@ public class FrostedHud {
         int jumpState = MathHelper.ceil(jumpPower * 100) - 1;
         if (jumpState > 99)
             jumpState = 99;
-        Atlases.horse_jump_bar.blitAtlas(stack, x, y, BarPos.right_threequarters_outer, jumpState);
+        Atlases.horse_jump_bar.blitAtlasVH(stack, x, y, BarPos.right_threequarters_outer, jumpState);
 
         RenderSystem.disableBlend();
         mc.getProfiler().endSection();
@@ -880,7 +892,7 @@ public class FrostedHud {
         int healthState = MathHelper.ceil(health / healthMax * 100) - 1;
         if (healthState > 99)
             healthState = 99;
-        Atlases.horse_health_bar.blitAtlas(stack, x, y, BarPos.right_threequarters_inner, healthState);
+        Atlases.horse_health_bar.blitAtlasVH(stack, x, y, BarPos.right_threequarters_inner, healthState);
 
         RenderSystem.disableBlend();
         mc.getProfiler().endSection();
@@ -943,22 +955,24 @@ public class FrostedHud {
         // draw temperature
         mc.getTextureManager().bindTexture(digits);
         // sign and unit
-        signUV.blit(stack, offsetX + 1, offsetY + 12);
-        unitUV.blit(stack, offsetX + 11, offsetY + 24);
+
+        signUV.blit(stack, offsetX, offsetY, BasePos.sign);
+        unitUV.blit(stack, offsetX, offsetY, BasePos.unit);
+
         // digits
         ArrayList<UV> uv4is = getIntegerDigitUVs(integer);
         UV decUV = getDecDigitUV(decimal);
         if (uv4is.size() == 1) {
-            uv4is.get(0).blit(stack, offsetX + 13, offsetY + 7);
-            decUV.blit(stack, offsetX + 25, offsetY + 16);
+            uv4is.get(0).blit(stack, offsetX, offsetY, BasePos.dig1Int1);
+            decUV       .blit(stack, offsetX, offsetY, BasePos.dig1Dec1);
         } else if (uv4is.size() == 2) {
-            uv4is.get(0).blit(stack, offsetX + 8, offsetY + 7);
-            uv4is.get(1).blit(stack, offsetX + 18, offsetY + 7);
-            decUV.blit(stack, offsetX + 28, offsetY + 16);
+            uv4is.get(0).blit(stack, offsetX, offsetY, BasePos.dig2Int1);
+            uv4is.get(1).blit(stack, offsetX, offsetY, BasePos.dig2Int2);
+            decUV       .blit(stack, offsetX, offsetY, BasePos.dig2Dec1);
         } else if (uv4is.size() == 3) {
-            uv4is.get(0).blit(stack, offsetX + 7, offsetY + 7);
-            uv4is.get(1).blit(stack, offsetX + 14, offsetY + 7);
-            uv4is.get(2).blit(stack, offsetX + 24, offsetY + 7);
+            uv4is.get(0).blit(stack, offsetX, offsetY, BasePos.dig3Int1);
+            uv4is.get(1).blit(stack, offsetX, offsetY, BasePos.dig3Int2);
+            uv4is.get(2).blit(stack, offsetX, offsetY, BasePos.dig3Int3);
         }
         // mc.getTextureManager().bindTexture(HUD_ELEMENTS);
     }
@@ -1003,7 +1017,7 @@ public class FrostedHud {
             if (waterLevel > 0) {
                 if (waterLevelState > 99)
                     waterLevelState = 99;
-                Atlases.thirst_bar.blitAtlas(stack, x, y, BarPos.right_half_2, waterLevelState);
+                Atlases.thirst_bar.blitAtlasVH(stack, x, y, BarPos.right_half_2, waterLevelState);
             }
         });
 

@@ -49,7 +49,12 @@ public class AtlasUV extends TexturedUV {
 		super.blitAtlas(s, targetX, targetY, gridIndex % gridW, gridIndex / gridW);
 	}
 	public void blitAtlas(MatrixStack s, int targetX, int targetY, Point loc, int gridIndex) {
-		// TODO Auto-generated method stub
 		super.blitAtlas(s, targetX, targetY, loc, gridIndex % gridW, gridIndex / gridW);
+	}
+	public void blitAtlasVH(MatrixStack s, int targetX, int targetY, int gridIndex) {
+		super.blitAtlas(s, targetX, targetY, gridIndex / gridW, gridIndex % gridW);
+	}
+	public void blitAtlasVH(MatrixStack s, int targetX, int targetY, Point loc, int gridIndex) {
+		super.blitAtlas(s, targetX, targetY, loc, gridIndex / gridW, gridIndex % gridW);
 	}
 }

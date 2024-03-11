@@ -34,5 +34,7 @@ public class Point {
     public int getY() {
         return y;
     }
-
+    public static Point of(int x, int y) {
+    	return new Point(x, y);
+    }
 }
