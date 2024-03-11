@@ -2,16 +2,18 @@ package com.teammoeg.frostedheart.util.client;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-public class RotatableUV extends UV {
+import net.minecraft.util.ResourceLocation;
+
+public class RotatableUV extends TexturedUV {
 	int cX,cY;
-	public RotatableUV(int x, int y, int w, int h,int cX, int cY) {
-		super(x, y, w, h);
+	public RotatableUV(ResourceLocation rl,int x, int y, int w, int h,int cX, int cY) {
+		super(rl, x, y, w, h);
 		this.cX=cX;
 		this.cY=cY;
 	}
 
-	public RotatableUV(int x, int y, int w, int h,int cX, int cY, int textureW, int textureH) {
-		super(x, y, w, h, textureW, textureH);
+	public RotatableUV(ResourceLocation rl,int x, int y, int w, int h,int cX, int cY, int textureW, int textureH) {
+		super(rl, x, y, w, h, textureW, textureH);
 		this.cX=cX;
 		this.cY=cY;
 	}

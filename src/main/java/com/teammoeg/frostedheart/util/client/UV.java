@@ -93,7 +93,15 @@ public class UV extends Rect {
     public void blit(MatrixStack s, int targetX, int targetY) {
         AbstractGui.blit(s, targetX, targetY, x, y, w, h, textureW, textureH);
     }
-
+    
+    //normal blit
+    public void blitCenter(MatrixStack s, int centerX, int centerY) {
+        AbstractGui.blit(s, centerX - w / 2, centerY - h / 2, x, y, w, h, textureW, textureH);
+    }
+    //blit add point
+    public void blitCenter(MatrixStack s, int centerX, int centerY, Point loc) {
+    	blitCenter(s, centerX + loc.getX(), centerY + loc.getY());
+    }
     //blit with atlas
     public void blitAtlas(MatrixStack s, int targetX, int targetY, int gridX, int gridY) {
         AbstractGui.blit(s, targetX, targetY, x + gridX * w, y + gridY * h, w, h, textureW, textureH);

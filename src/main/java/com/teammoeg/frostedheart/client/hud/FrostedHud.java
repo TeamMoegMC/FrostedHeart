@@ -71,15 +71,15 @@ import net.minecraft.util.text.ITextComponent;
 
 public class FrostedHud {
     static final class Atlases {
-        static final AtlasUV health_bar =       new AtlasUV("hud/atlantes/hp.png", 32, 32, 10, 320, 320);
-        static final AtlasUV maxhealth_bar =    new AtlasUV("hud/atlantes/maxhp.png", 32, 32, 10, 320, 320);
-        static final AtlasUV absorption_bar =   new AtlasUV("hud/atlantes/absorption.png", 36, 36, 10, 360, 360);
-        static final AtlasUV hunger_bar =       new AtlasUV("hud/atlantes/hunger.png", 16, 32, 10, 160, 320);
-        static final AtlasUV thirst_bar =       new AtlasUV("hud/atlantes/thirst.png", 16, 32, 10, 160, 320);
-        static final AtlasUV oxygen_bar =       new AtlasUV("hud/atlantes/oxygen.png", 16, 32, 10, 160, 320);
-        static final AtlasUV defence_bar =      new AtlasUV("hud/atlantes/defence.png", 16, 32, 10, 160, 320);
-        static final AtlasUV horse_health_bar = new AtlasUV("hud/atlantes/horsehp.png", 32, 32, 10, 320, 320);
-        static final AtlasUV horse_jump_bar =   new AtlasUV("hud/atlantes/jump.png", 36, 36, 10, 360, 360);
+        static final AtlasUV health_bar =       new AtlasUV("hud/atlantes/hp.png", 32, 32, 10, 100, 320, 320);
+        static final AtlasUV maxhealth_bar =    new AtlasUV("hud/atlantes/maxhp.png", 32, 32, 10, 100, 320, 320);
+        static final AtlasUV absorption_bar =   new AtlasUV("hud/atlantes/absorption.png", 36, 36, 10, 100, 360, 360);
+        static final AtlasUV hunger_bar =       new AtlasUV("hud/atlantes/hunger.png", 16, 32, 10, 100, 160, 320);
+        static final AtlasUV thirst_bar =       new AtlasUV("hud/atlantes/thirst.png", 16, 32, 10, 100, 160, 320);
+        static final AtlasUV oxygen_bar =       new AtlasUV("hud/atlantes/oxygen.png", 16, 32, 10, 100, 160, 320);
+        static final AtlasUV defence_bar =      new AtlasUV("hud/atlantes/defence.png", 16, 32, 10, 100, 160, 320);
+        static final AtlasUV horse_health_bar = new AtlasUV("hud/atlantes/horsehp.png", 32, 32, 10, 100, 320, 320);
+        static final AtlasUV horse_jump_bar =   new AtlasUV("hud/atlantes/jump.png", 36, 36, 10, 100, 360, 360);
     }
     static final class BarPos {
         static final Point exp_bar = new Point(-112 + 19, -26);
@@ -343,8 +343,6 @@ public class FrostedHud {
                 HUDElements.icon_oxygen_normal.blitAt(stack, x, y, IconPos.right_half_3);
             }
             int airState = MathHelper.ceil(air / (float) maxAir * 100) - 1;
-            if (airState > 99)
-                airState = 99;
             Atlases.oxygen_bar.blitAtlasVH(stack, x, y, BarPos.right_half_3, airState);
         }
         RenderSystem.disableBlend();
@@ -409,8 +407,6 @@ public class FrostedHud {
         HUDElements.icon_defence_normal.blitAt(stack, x, y, IconPos.left_half_1);
         int armorValue = player.getTotalArmorValue();
         int armorValueState = MathHelper.ceil(armorValue / 20.0F * 100) - 1;
-        if (armorValueState > 99)
-            armorValueState = 99;
         Atlases.defence_bar.blitAtlasVH(stack, x, y, BarPos.left_half_1, armorValueState);
 
         RenderSystem.disableBlend();
@@ -459,8 +455,6 @@ public class FrostedHud {
         int foodLevel = stats.getFoodLevel();
         if (foodLevel > 0) {
             int foodLevelState = MathHelper.ceil(foodLevel / 20.0F * 100) - 1;
-            if (foodLevelState > 99)
-                foodLevelState = 99;
             Atlases.hunger_bar.blitAtlasVH(stack, x, y, BarPos.right_half_1, foodLevelState);
         }
         RenderSystem.disableBlend();
@@ -675,21 +669,9 @@ public class FrostedHud {
         int mhealthState = omax >= 20 ? 99 : MathHelper.ceil(omax / 20 * 100) - 1;
         int healthState = health <= 0 ? 0 : MathHelper.ceil(health / healthMax * 100) - 1;
         int absorbState = absorb <= 0 ? 0 : MathHelper.ceil(absorb / 20 * 100) - 1;
-        if (healthState > 99)
-            healthState = 99;
-        if (mhealthState < 0)
-            mhealthState = 0;
-        if (absorbState > 99)
-            absorbState = 99;
-        if (mhealthState < 99) {
-            Atlases.maxhealth_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_inner, 99-mhealthState);
-        }
-        if (healthState > 0) {
-            Atlases.health_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_inner, healthState);
-        }
-        if (absorbState > 0) {
-            Atlases.absorption_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_outer, absorbState);
-        }
+        Atlases.maxhealth_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_inner, 99-mhealthState);
+        Atlases.health_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_inner, healthState);
+        Atlases.absorption_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_outer, absorbState);
         int ihealth = (int) Math.ceil(health);
         int offset = mc.fontRenderer.getStringWidth(String.valueOf(ihealth)) / 2;
         mc.fontRenderer.drawStringWithShadow(stack, String.valueOf(ihealth),
@@ -844,8 +826,6 @@ public class FrostedHud {
 
         float jumpPower = player.getHorseJumpPower();
         int jumpState = MathHelper.ceil(jumpPower * 100) - 1;
-        if (jumpState > 99)
-            jumpState = 99;
         Atlases.horse_jump_bar.blitAtlasVH(stack, x, y, BarPos.right_threequarters_outer, jumpState);
 
         RenderSystem.disableBlend();
@@ -864,8 +844,6 @@ public class FrostedHud {
         int health = (int) mount.getHealth();
         float healthMax = mount.getMaxHealth();
         int healthState = MathHelper.ceil(health / healthMax * 100) - 1;
-        if (healthState > 99)
-            healthState = 99;
         Atlases.horse_health_bar.blitAtlasVH(stack, x, y, BarPos.right_threequarters_inner, healthState);
 
         RenderSystem.disableBlend();
@@ -979,11 +957,7 @@ public class FrostedHud {
         player.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(data -> {
             int waterLevel = data.getWaterLevel();
             int waterLevelState = MathHelper.ceil(waterLevel / 20.0F * 100) - 1;
-            if (waterLevel > 0) {
-                if (waterLevelState > 99)
-                    waterLevelState = 99;
-                Atlases.thirst_bar.blitAtlasVH(stack, x, y, BarPos.right_half_2, waterLevelState);
-            }
+            Atlases.thirst_bar.blitAtlasVH(stack, x, y, BarPos.right_half_2, waterLevelState);
         });
 
         RenderSystem.disableBlend();

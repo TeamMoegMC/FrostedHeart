@@ -67,14 +67,14 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		   }
 	}
 	
-	private static final AtlasUV rangeicons=new AtlasUV(TEXTURE, 256, 0, 128, 64, 2, TEXH, TEXW);
+	private static final AtlasUV rangeicons=new AtlasUV(TEXTURE, 256, 0, 128, 64, 2, 5, TEXH, TEXW);
 	private static final Point rangePoint=new Point(24,61);
-	private static final RotatableUV minorPointer=new RotatableUV(276, 192, 20, 20, 10, 10, TEXH, TEXW);
-	private static final RotatableUV majorPointer=new RotatableUV(248, 192, 28, 28, 14, 14, TEXW, TEXH);
+	private static final RotatableUV minorPointer=new RotatableUV(TEXTURE, 276, 192, 20, 20, 10, 10, TEXH, TEXW);
+	private static final RotatableUV majorPointer=new RotatableUV(TEXTURE, 248, 192, 28, 28, 14, 14, TEXW, TEXH);
 	private static final Point tempGauge=new Point(74, 12);
 	private static final Point rangeGauge=new Point(25, 25);
 	private static final Point overGauge=new Point(131, 25);
-	private static final AtlasUV generatorSymbol=new AtlasUV(TEXTURE, 176, 0, 24, 48, 3, TEXW, TEXH);
+	private static final AtlasUV generatorSymbol=new AtlasUV(TEXTURE, 176, 0, 24, 48, 3, 12, TEXW, TEXH);
 	private static final Point generatorPos=new Point(76, 44);
 	public MasterGeneratorScreen(MasterGeneratorContainer<T> inventorySlotsIn, PlayerInventory inv, ITextComponent title) {
 		super(inventorySlotsIn, inv, title);
