@@ -36,8 +36,8 @@ import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
@@ -105,15 +105,15 @@ public class TradeScreen extends BaseScreen {
         rels.setTooltip(c -> {
             int relation = cx.relations.sum();
             if (relation < TradeContainer.RELATION_TO_TRADE && !cx.order.isEmpty()) {
-                c.add(GuiUtils.translateGui("trade.unwilling").mergeStyle(TextFormatting.DARK_RED));
+                c.add(TranslateUtils.translateGui("trade.unwilling").mergeStyle(TextFormatting.DARK_RED));
                 return;
             }
             if (cx.discountAmount != 0)
-                c.add(GuiUtils.translateGui("trade.discount").appendSibling(GuiUtils
+                c.add(TranslateUtils.translateGui("trade.discount").appendSibling(TranslateUtils
                         .str(" -" + (int) Math.ceil(cx.discountAmount / 10f)).mergeStyle(TextFormatting.GREEN)));
             if (cx.relationMinus > 0)
-                c.add(GuiUtils.translateGui("trade.bad_relation").appendSibling(
-                        GuiUtils.str(" " + (int) Math.ceil(cx.relationMinus / 10f)).mergeStyle(TextFormatting.RED)));
+                c.add(TranslateUtils.translateGui("trade.bad_relation").appendSibling(
+                        TranslateUtils.str(" " + (int) Math.ceil(cx.relationMinus / 10f)).mergeStyle(TextFormatting.RED)));
 
         });
         rels.setPos(110, 108);
@@ -146,11 +146,11 @@ public class TradeScreen extends BaseScreen {
     public void addWidgets() {
 
         RTextField ptf = new RTextField(this).addFlags(Theme.CENTERED | Theme.SHADOW).setMaxWidth(56).setMinWidth(56)
-                .setMaxLine(1).setText(GuiUtils.translateGui("trade.me"));
+                .setMaxLine(1).setText(TranslateUtils.translateGui("trade.me"));
         ptf.setPos(0, 119);
         super.add(ptf);
         RTextField vptf = new RTextField(this).addFlags(Theme.CENTERED | Theme.SHADOW).setMaxWidth(56).setMinWidth(56)
-                .setMaxLine(1).setText(GuiUtils.translateGui("trade.profession." + cx.data.policytype));
+                .setMaxLine(1).setText(TranslateUtils.translateGui("trade.profession." + cx.data.policytype));
         vptf.setPos(132, 119);
         super.add(vptf);
 
@@ -166,14 +166,14 @@ public class TradeScreen extends BaseScreen {
         super.add(tab);
         ToolTipWidget ttw = new ToolTipWidget(this, list -> {
             int tot = cx.relations.sum();
-            list.add(GuiUtils.translateGui("trade.relation").appendSibling(GuiUtils.str(tot > 0 ? " +" + tot : "" + tot)
+            list.add(TranslateUtils.translateGui("trade.relation").appendSibling(TranslateUtils.str(tot > 0 ? " +" + tot : "" + tot)
                     .mergeStyle(tot > 0 ? TextFormatting.GREEN : TextFormatting.RED)));
 
             for (RelationModifier m : RelationModifier.values()) {
                 int rel = cx.relations.get(m);
                 if (rel == 0)
                     continue;
-                IFormattableTextComponent tx = GuiUtils.str(rel > 0 ? " +" + rel : " " + rel)
+                IFormattableTextComponent tx = TranslateUtils.str(rel > 0 ? " +" + rel : " " + rel)
                         .mergeStyle(rel > 0 ? TextFormatting.GREEN : TextFormatting.RED);
                 list.add(m.getDesc().appendSibling(tx));
 
@@ -302,7 +302,7 @@ public class TradeScreen extends BaseScreen {
                     FakeSlot slot = slots[j++];
                     if (cur.getStore() == 0) {
                         slot.setOverlay(TradeIcons.NOBUY, 7, 6);
-                        slot.setTooltip(c -> c.add(GuiUtils.translateGui("trade.not_needed_now").mergeStyle(TextFormatting.RED)));
+                        slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.not_needed_now").mergeStyle(TextFormatting.RED)));
                     } else {
                         slot.resetOverlay();
                         slot.setTooltip(null);
@@ -324,21 +324,21 @@ public class TradeScreen extends BaseScreen {
                     if (sd.getStore() == 0) {
                         if (sd.canRestock(cx.data)) {
                             slot.setOverlay(TradeIcons.STOCKOUT, 7, 6);
-                            slot.setTooltip(c -> c.add(GuiUtils.translateGui("trade.no_stock").mergeStyle(TextFormatting.RED)));
+                            slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.no_stock").mergeStyle(TextFormatting.RED)));
                         } else {
                             slot.setOverlay(TradeIcons.NORESTOCK, 7, 6);
-                            slot.setTooltip(c -> c.add(GuiUtils.translateGui("trade.not_restocking").mergeStyle(TextFormatting.RED)));
+                            slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.not_restocking").mergeStyle(TextFormatting.RED)));
                         }
                     } else {
                         if (sd.isFullStock()) {
                             slot.setOverlay(TradeIcons.FULL, 7, 6);
-                            slot.setTooltip(c -> c.add(GuiUtils.translateGui("trade.full_stock").mergeStyle(TextFormatting.GREEN)));
+                            slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.full_stock").mergeStyle(TextFormatting.GREEN)));
                         } else if (sd.canRestock(cx.data)) {
                             slot.setOverlay(TradeIcons.RESTOCKS, 7, 6);
-                            slot.setTooltip(c -> c.add(GuiUtils.translateGui("trade.restocking").mergeStyle(TextFormatting.YELLOW)));
+                            slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.restocking").mergeStyle(TextFormatting.YELLOW)));
                         } else {
                             slot.resetOverlay();
-                            slot.setTooltip(c -> c.add(GuiUtils.translateGui("trade.not_restocking")));
+                            slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.not_restocking")));
                         }
                     }
                     slot.setSlot(sd.getItem());
@@ -372,36 +372,36 @@ public class TradeScreen extends BaseScreen {
             if (cx.originalVOffer > cx.poffer) {
                 trade.setNormal(TradeIcons.DEALGRN);
                 trade.setOver(TradeIcons.DEALGRNO);
-                trade.setTooltips(c -> c.add(GuiUtils.translateGui("trade.discounted_offering")));
+                trade.setTooltips(c -> c.add(TranslateUtils.translateGui("trade.discounted_offering")));
             } else if (cx.poffer - cx.originalVOffer > 10) {
                 trade.setNormal(TradeIcons.DEALYEL);
                 trade.setOver(TradeIcons.DEALYELO);
-                trade.setTooltips(c -> c.add(GuiUtils.translateGui("trade.too_much_offering")));
+                trade.setTooltips(c -> c.add(TranslateUtils.translateGui("trade.too_much_offering")));
             } else {
                 trade.setNormal(TradeIcons.DEALN);
                 trade.setOver(TradeIcons.DEALO);
-                trade.setTooltips(c -> c.add(GuiUtils.translateGui("trade.deal")));
+                trade.setTooltips(c -> c.add(TranslateUtils.translateGui("trade.deal")));
             }
         } else {
-            trade.setTooltips(c -> c.add(GuiUtils.translateGui("trade.not_enough_offering")));
+            trade.setTooltips(c -> c.add(TranslateUtils.translateGui("trade.not_enough_offering")));
             trade.setEnabled(false);
         }
         if (cx.relations.sum() >= 40) {
             if (cx.order.isEmpty()) {
-                bargain.setTooltips(c -> c.add(GuiUtils.translateGui("trade.trade_to_bargain")));
+                bargain.setTooltips(c -> c.add(TranslateUtils.translateGui("trade.trade_to_bargain")));
                 bargain.setEnabled(false);
             } else {
                 if (cx.discountRatio > 0.4) {
-                    bargain.setTooltips(c -> c.add(GuiUtils.translateGui("trade.maxed_bargain")));
+                    bargain.setTooltips(c -> c.add(TranslateUtils.translateGui("trade.maxed_bargain")));
                     bargain.setEnabled(false);
                 } else {
-                    bargain.setTooltips(c -> c.add(GuiUtils.translateGui("trade.bargain")));
+                    bargain.setTooltips(c -> c.add(TranslateUtils.translateGui("trade.bargain")));
                     bargain.setEnabled(true);
                 }
             }
 
         } else {
-            bargain.setTooltips(c -> c.add(GuiUtils.translateGui("trade.no_bargain")));
+            bargain.setTooltips(c -> c.add(TranslateUtils.translateGui("trade.no_bargain")));
             bargain.setEnabled(false);
         }
     }

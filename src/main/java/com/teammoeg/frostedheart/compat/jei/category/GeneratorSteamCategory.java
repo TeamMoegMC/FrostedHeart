@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
@@ -106,12 +106,12 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
         List<ITextComponent> tooltip = new ArrayList<>();
 
         if (isMouseIn(mouseX, mouseY, 8, 9, 2, 54)) {
-            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(String.valueOf(recipe.level)));
+            tooltip.add(TranslateUtils.translateGui("generator.temperature.level").appendString(String.valueOf(recipe.level)));
         }
 
 
         if (isMouseIn(mouseX, mouseY, 142, 9, 2, 54)) {
-            tooltip.add(GuiUtils.translateGui("generator.power.level").appendString(String.valueOf(recipe.power)));
+            tooltip.add(TranslateUtils.translateGui("generator.power.level").appendString(String.valueOf(recipe.power)));
         }
         return tooltip;
     }

@@ -28,7 +28,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.chunkheatdata.ITemperatureAdjust;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
@@ -52,11 +52,11 @@ public class AddTempCommand {
                 .executes((ct) -> {
                     Collection<ITemperatureAdjust> adjs = ChunkHeatData.getAdjust(ct.getSource().getWorld(), ct.getSource().asPlayer().getPosition());
                     if (adjs.isEmpty()) {
-                        ct.getSource().sendFeedback(GuiUtils.str("No Active Adjust!"), true);
+                        ct.getSource().sendFeedback(TranslateUtils.str("No Active Adjust!"), true);
                     } else {
-                        ct.getSource().sendFeedback(GuiUtils.str("Active Adjusts:"), true);
+                        ct.getSource().sendFeedback(TranslateUtils.str("Active Adjusts:"), true);
                         for (ITemperatureAdjust adj : adjs) {
-                            ct.getSource().sendFeedback(GuiUtils.str("center:" + adj.getCenterX() + " " + adj.getCenterY() + " " + adj.getCenterZ() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(ct.getSource().asPlayer().getPosition())), true);
+                            ct.getSource().sendFeedback(TranslateUtils.str("center:" + adj.getCenterX() + " " + adj.getCenterY() + " " + adj.getCenterZ() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(ct.getSource().asPlayer().getPosition())), true);
                         }
                     }
                     return Command.SINGLE_SUCCESS;
@@ -65,11 +65,11 @@ public class AddTempCommand {
                         .executes((ct) -> {
                             Collection<ITemperatureAdjust> adjs = ChunkHeatData.getAdjust(ct.getSource().getWorld(), BlockPosArgument.getBlockPos(ct, "position"));
                             if (adjs.isEmpty()) {
-                                ct.getSource().sendFeedback(GuiUtils.str("No Active Adjust!"), true);
+                                ct.getSource().sendFeedback(TranslateUtils.str("No Active Adjust!"), true);
                             } else {
-                                ct.getSource().sendFeedback(GuiUtils.str("Active Adjusts:"), true);
+                                ct.getSource().sendFeedback(TranslateUtils.str("Active Adjusts:"), true);
                                 for (ITemperatureAdjust adj : adjs) {
-                                    ct.getSource().sendFeedback(GuiUtils.str("center:" + adj.getCenterX() + " " + adj.getCenterY() + " " + adj.getCenterZ() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(BlockPosArgument.getBlockPos(ct, "position"))), true);
+                                    ct.getSource().sendFeedback(TranslateUtils.str("center:" + adj.getCenterX() + " " + adj.getCenterY() + " " + adj.getCenterZ() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(BlockPosArgument.getBlockPos(ct, "position"))), true);
                                 }
                             }
                             return Command.SINGLE_SUCCESS;

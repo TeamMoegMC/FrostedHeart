@@ -1,9 +1,10 @@
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.utility;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
@@ -40,6 +41,9 @@ public class PairList<K,V> extends ArrayList<Pair<K,V>> {
 	}
 	public void forEach(BiConsumer<K, V> action) {
 		super.forEach(t->action.accept(t.getFirst(), t.getSecond()));
+	}
+	public void replaceAll(BiFunction<K, V, Pair<K,V>> action) {
+		super.replaceAll(t->action.apply(t.getFirst(), t.getSecond()));
 	}
 	public boolean removeIf(BiPredicate<K,V> filter) {
 		return super.removeIf(t->filter.test(t.getFirst(), t.getSecond()));

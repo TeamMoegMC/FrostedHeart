@@ -26,8 +26,8 @@ import javax.annotation.Nullable;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
-import com.teammoeg.frostedheart.util.EquipmentCuriosSlotType;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
 
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
@@ -58,9 +58,9 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
     @Override
     public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
         if (stack.getDamage() > 0)
-            list.add(GuiUtils.translateTooltip("meme.mushroom").mergeStyle(TextFormatting.GRAY));
+            list.add(TranslateUtils.translateTooltip("meme.mushroom").mergeStyle(TextFormatting.GRAY));
         else
-            list.add(GuiUtils.translateTooltip("mushroom").mergeStyle(TextFormatting.GRAY));
+            list.add(TranslateUtils.translateTooltip("mushroom").mergeStyle(TextFormatting.GRAY));
     }
 
 

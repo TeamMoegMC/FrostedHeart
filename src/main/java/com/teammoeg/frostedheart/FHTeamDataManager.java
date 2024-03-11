@@ -33,9 +33,9 @@ import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import org.apache.commons.io.FileUtils;
 
 import com.mojang.authlib.GameProfile;
-import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;

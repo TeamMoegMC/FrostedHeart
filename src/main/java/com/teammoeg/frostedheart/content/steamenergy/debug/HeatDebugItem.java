@@ -23,7 +23,7 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.HeatHandler;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.entity.player.PlayerEntity;
@@ -72,9 +72,9 @@ public class HeatDebugItem extends Item {
 	            if (te instanceof EnergyNetworkProvider) {
 	            	if(((EnergyNetworkProvider) te).getNetwork()!=null)
 	            		HeatHandler.openHeatScreen((ServerPlayerEntity) playerIn, ((EnergyNetworkProvider) te).getNetwork());
-	            	else playerIn.sendMessage(GuiUtils.str("EnergyNetwork " + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUniqueID());
+	            	else playerIn.sendMessage(TranslateUtils.str("EnergyNetwork " + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUniqueID());
 	            }else if(te!=null) {
-	            	playerIn.sendMessage(GuiUtils.str("EnergyEndpoint "+te.getCapability(FHCapabilities.HEAT_EP.capability(), raytraceresult.getFace()).orElse(null)), playerIn.getUniqueID());
+	            	playerIn.sendMessage(TranslateUtils.str("EnergyEndpoint "+te.getCapability(FHCapabilities.HEAT_EP.capability(), raytraceresult.getFace()).orElse(null)), playerIn.getUniqueID());
 	            }
             }
             return ActionResult.resultSuccess(itemstack);

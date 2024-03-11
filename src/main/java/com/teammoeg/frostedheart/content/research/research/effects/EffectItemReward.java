@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.entity.player.PlayerEntity;
@@ -79,7 +79,7 @@ public class EffectItemReward extends Effect {
 
     @Override
     public IFormattableTextComponent getDefaultName() {
-        return GuiUtils.translateGui("effect.item_reward");
+        return TranslateUtils.translateGui("effect.item_reward");
     }
 
     @Override
@@ -89,7 +89,7 @@ public class EffectItemReward extends Effect {
             if (stack.getCount() == 1)
                 tooltip.add(stack.getDisplayName());
             else
-                tooltip.add(((IFormattableTextComponent) stack.getDisplayName()).appendSibling(GuiUtils.str(" x " + stack.getCount())));
+                tooltip.add(((IFormattableTextComponent) stack.getDisplayName()).appendSibling(TranslateUtils.str(" x " + stack.getCount())));
         }
         return tooltip;
     }

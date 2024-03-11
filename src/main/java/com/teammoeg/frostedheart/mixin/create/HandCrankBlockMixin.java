@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.contraptions.components.crank.HandCrankBlock;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -49,7 +49,7 @@ public class HandCrankBlockMixin {
             ci.setReturnValue(ActionResultType.FAIL);
         } else if (player.getFoodStats().getFoodLevel() < 4) {
             if (player.getEntityWorld().isRemote)
-                player.sendStatusMessage(GuiUtils.translateMessage("crank.feel_hunger"), true);
+                player.sendStatusMessage(TranslateUtils.translateMessage("crank.feel_hunger"), true);
             ci.setReturnValue(ActionResultType.FAIL);
         }
     }

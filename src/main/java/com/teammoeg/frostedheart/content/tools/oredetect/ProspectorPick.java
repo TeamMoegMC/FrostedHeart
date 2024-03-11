@@ -26,7 +26,7 @@ import java.util.Random;
 
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.tools.FHLeveledTool;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
@@ -94,17 +94,17 @@ public class ProspectorPick extends FHLeveledTool {
                         }
                         if (ore_name != null) {
                             if (count < 20)
-                                player.sendStatusMessage(GuiUtils.translateMessage("vein_size.small").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), false);
+                                player.sendStatusMessage(TranslateUtils.translateMessage("vein_size.small").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), false);
                             else if (count < 40)
-                                player.sendStatusMessage(GuiUtils.translateMessage("vein_size.medium").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), false);
+                                player.sendStatusMessage(TranslateUtils.translateMessage("vein_size.medium").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), false);
                             else {
-                                player.sendStatusMessage(GuiUtils.translateMessage("vein_size.large").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), false);
+                                player.sendStatusMessage(TranslateUtils.translateMessage("vein_size.large").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), false);
                             }
                             return ActionResultType.SUCCESS;
                         }
                     }
                 }
-                player.sendStatusMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GOLD), false);
+                player.sendStatusMessage(TranslateUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GOLD), false);
             }
         }
         return ActionResultType.SUCCESS;

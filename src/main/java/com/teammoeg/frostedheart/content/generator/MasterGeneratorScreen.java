@@ -2,15 +2,20 @@ package com.teammoeg.frostedheart.content.generator;
 
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.client.AtlasUV;
 import com.teammoeg.frostedheart.util.client.Point;
+import com.teammoeg.frostedheart.util.client.RotatableUV;
+import com.teammoeg.frostedheart.util.client.UV;
 
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -28,14 +33,16 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Quaternion;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 
 public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> extends IEContainerScreen<MasterGeneratorContainer<T>> {
 	T tile;
 	public static final int TEXW=512;
 	public static final int TEXH=256;
-	private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("general_generator");
+	private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("general_generator");
 	public static class MasterGeneratorGuiButtonBoolean extends GuiButtonBoolean{
 
 		public MasterGeneratorGuiButtonBoolean(int x, int y, int w, int h, boolean state,
@@ -60,11 +67,15 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		   }
 	}
 	
-	public static final Point[] rangelevels=new Point[] {
-			new Point(256,0),new Point(384,0),
-			new Point(256,64),new Point(384,64),
-			new Point(256,128)
-	};
+	private static final AtlasUV rangeicons=new AtlasUV(TEXTURE, 256, 0, 128, 64, 2, 5, TEXH, TEXW);
+	private static final Point rangePoint=new Point(24,61);
+	private static final RotatableUV minorPointer=new RotatableUV(TEXTURE, 276, 192, 20, 20, 10, 10, TEXH, TEXW);
+	private static final RotatableUV majorPointer=new RotatableUV(TEXTURE, 248, 192, 28, 28, 14, 14, TEXW, TEXH);
+	private static final Point tempGauge=new Point(74, 12);
+	private static final Point rangeGauge=new Point(25, 25);
+	private static final Point overGauge=new Point(131, 25);
+	private static final AtlasUV generatorSymbol=new AtlasUV(TEXTURE, 176, 0, 24, 48, 3, 12, TEXW, TEXH);
+	private static final Point generatorPos=new Point(76, 44);
 	public MasterGeneratorScreen(MasterGeneratorContainer<T> inventorySlotsIn, PlayerInventory inv, ITextComponent title) {
 		super(inventorySlotsIn, inv, title);
 		tile=inventorySlotsIn.tile;
@@ -89,7 +100,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		//System.out.println(ininvarrx+","+ininvarry+"-"+inarryl);
 		//range circle
 		int actualRangeLvl=(int) (tile.getRangeLevel()+0.05);
-		this.blit(matrixStack, 24,61, 128, 64,rangelevels[actualRangeLvl].getX(), rangelevels[actualRangeLvl].getY());
+		rangeicons.blitAtlas(matrixStack, x, y, rangePoint, actualRangeLvl);
 		
 		//fuel slots
 		Point in=container.getSlotIn();
@@ -118,32 +129,20 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 
 		//upgrade arrow
 		this.blit(matrixStack, 85, 93, 6, 22, 412, 148);
+
 		//generator symbol
-		this.blit(matrixStack, 76, 44, 24, 48, 176+24*((tile.isWorking()&&tile.guiData.get(MasterGeneratorTileEntity.PROCESS)>0)?2:1), (container.getTier()-1)*48);
+		generatorSymbol.blitAtlas(matrixStack, x, y, generatorPos,((tile.isWorking()&&tile.guiData.get(MasterGeneratorTileEntity.PROCESS)>0)?2:1),(container.getTier()-1));
+		
 		
 		//range gauge
-		matrixStack.push();
-		matrixStack.translate(guiLeft+35, guiTop+35, 0);//move to gauge center
-		matrixStack.rotate(new Quaternion(new Vector3f(0,0,1),tile.getRangeLevel()/4f*271f,true));//rotate around Z
-		AbstractGui.blit(matrixStack,-10,-10, 20,20, 276, 192, 20, 20, TEXW, TEXH);//draw with center offset
-		matrixStack.pop();
-		
+		minorPointer.blitRotated(matrixStack, x, y, rangeGauge, tile.getRangeLevel()/4f*271f);
 		//temp gauge
-		matrixStack.push();
-		matrixStack.translate(guiLeft+88, guiTop+26, 0);
-		matrixStack.rotate(new Quaternion(new Vector3f(0,0,1),(tile.getTemperatureLevel())/4f*271f,true));
-		AbstractGui.blit(matrixStack,-14,-14, 28,28, 248, 192, 28, 28, TEXW, TEXH);
-		matrixStack.pop();
-		
+		majorPointer.blitRotated(matrixStack, x, y, tempGauge, (tile.getTemperatureLevel())/4f*271f);
 		//overdrive gauge
-		matrixStack.push();
-		matrixStack.translate(guiLeft+141, guiTop+35, 0);
-		matrixStack.rotate(new Quaternion(new Vector3f(0,0,1),0*271f,true));
-		AbstractGui.blit(matrixStack,-10,-10, 20,20, 276, 192, 20, 20, TEXW, TEXH);
-		matrixStack.pop();
+		minorPointer.blitRotated(matrixStack, x, y, overGauge, 0*271f);
 	}
 	private void drawCenterText(MatrixStack matrixStack,int x,int y,String s,int clr) {
-		this.font.drawText(matrixStack,GuiUtils.str(s),x- (float) this.font.getStringWidth(s) /2, y-4, clr);
+		this.font.drawText(matrixStack,TranslateUtils.str(s),x- (float) this.font.getStringWidth(s) /2, y-4, clr);
 	}
 	protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int x, int y) {
 		//titles
@@ -197,38 +196,46 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         }
         if (isMouseIn(mouseX, mouseY, 5, 24, 11, 22)) {
             if (tile.isWorking()) {
-                tooltip.add(GuiUtils.translateGui("generator.mode.off"));
+                tooltip.add(TranslateUtils.translateGui("generator.mode.off"));
             } else {
-                tooltip.add(GuiUtils.translateGui("generator.mode.on"));
+                tooltip.add(TranslateUtils.translateGui("generator.mode.on"));
             }
         }
 
         if (isMouseIn(mouseX, mouseY, 160, 24, 11, 22)) {
             if (tile.isOverdrive()) {
-                tooltip.add(GuiUtils.translateGui("generator.overdrive.off"));
+                tooltip.add(TranslateUtils.translateGui("generator.overdrive.off"));
             } else {
-                tooltip.add(GuiUtils.translateGui("generator.overdrive.on"));
+                tooltip.add(TranslateUtils.translateGui("generator.overdrive.on"));
             }
         }
 
         if (isMouseIn(mouseX, mouseY, 63, 0, 50, 50)) {
-            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(TemperatureDisplayHelper.toTemperatureDeltaIntString( tile.getActualTemp())));
+            tooltip.add(TranslateUtils.translateGui("generator.temperature.level").appendString(TemperatureDisplayHelper.toTemperatureDeltaIntString( tile.getActualTemp())));
         }
 
         if (isMouseIn(mouseX, mouseY, 18, 18, 32, 32)) {
-            tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
+            tooltip.add(TranslateUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
         }
         if (isMouseIn(mouseX, mouseY, 75, 116, 26, 18)) {
         	Optional<GeneratorData> generatorData=tile.getDataNoCheck();
         	if(tile.getNextLevelMultiblock()!=null&&!tile.isBroken) {
         		if(!validStructure) {
         			Vector3i v3i=tile.getNextLevelMultiblock().getSize(ClientUtils.mc().world);
-        			tooltip.add(GuiUtils.translateGui("generator.no_enough_space",v3i.getX(),v3i.getY(),v3i.getZ()));
+        			tooltip.add(TranslateUtils.translateGui("generator.no_enough_space",v3i.getX(),v3i.getY(),v3i.getZ()));
         		} else {
-        			tooltip.add(GuiUtils.translateGui("generator.upgrade_material"));
+        			tooltip.add(TranslateUtils.translateGui("generator.upgrade_material"));
+        			BitSet bs=FHUtils.checkItemList(ClientUtils.mc().player, tile.getUpgradeCost());
+        			int i=0;
         			for(IngredientWithSize iws:tile.getUpgradeCost()) {
         				ItemStack[] iss=iws.getMatchingStacks();
-        				tooltip.add(GuiUtils.str(iws.getCount()+"x ").appendSibling(iss[(int) ((new Date().getTime()/1000)%iss.length)].getDisplayName()));
+        				IFormattableTextComponent iftc=TranslateUtils.str(iws.getCount()+"x ").appendSibling(iss[(int) ((new Date().getTime()/1000)%iss.length)].getDisplayName());
+        				if(bs.get(i))
+        					iftc=iftc.mergeStyle(TextFormatting.GREEN);
+        				else
+        					iftc=iftc.mergeStyle(TextFormatting.RED);
+        				i++;
+        				tooltip.add(iftc);
         			}
         		}
         	}

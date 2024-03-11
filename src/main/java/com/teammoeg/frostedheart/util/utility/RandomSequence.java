@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.utility;
 
 import java.util.ArrayList;
 import java.util.Collections;

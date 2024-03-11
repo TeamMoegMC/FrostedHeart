@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.research.research.clues;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
@@ -90,7 +90,7 @@ public class AdvancementClue extends TickListenerClue {
     public ITextComponent getName() {
         if (name != null && !name.isEmpty())
             return super.getName();
-        return GuiUtils.translate("clue." + FHMain.MODID + ".advancement");
+        return TranslateUtils.translate("clue." + FHMain.MODID + ".advancement");
     }
 
     @Override

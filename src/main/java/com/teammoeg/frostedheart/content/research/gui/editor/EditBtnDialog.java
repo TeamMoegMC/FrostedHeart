@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
@@ -39,7 +39,7 @@ public class EditBtnDialog extends BaseEditDialog {
     public EditBtnDialog(Widget panel, String label, String val, String sel, Consumer<String> onFinished, Editor<String> onbtn) {
         super(panel);
         box = new LabeledTextBoxAndBtn(this, label, val, sel, e -> onbtn.open(panel, sel, box.getText(), e));
-        ok = new SimpleTextButton(this, GuiUtils.str("OK"), Icon.EMPTY) {
+        ok = new SimpleTextButton(this, TranslateUtils.str("OK"), Icon.EMPTY) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -52,7 +52,7 @@ public class EditBtnDialog extends BaseEditDialog {
             }
 
         };
-        cancel = new SimpleTextButton(this, GuiUtils.str("Cancel"), Icon.EMPTY) {
+        cancel = new SimpleTextButton(this, TranslateUtils.str("Cancel"), Icon.EMPTY) {
 
             @Override
             public void onClicked(MouseButton arg0) {

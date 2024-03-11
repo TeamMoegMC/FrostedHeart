@@ -24,8 +24,8 @@ import java.util.List;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
-import com.teammoeg.frostedheart.util.EquipmentCuriosSlotType;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
 
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import net.minecraft.advancements.CriteriaTriggers;
@@ -56,8 +56,8 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
     @Override
     public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
-        tooltip.add(GuiUtils.translateTooltip("meme.steam_bottle").mergeStyle(TextFormatting.GRAY));
-        tooltip.add(GuiUtils.translateTooltip("steam_stored", stored).mergeStyle(TextFormatting.GOLD));
+        tooltip.add(TranslateUtils.translateTooltip("meme.steam_bottle").mergeStyle(TextFormatting.GRAY));
+        tooltip.add(TranslateUtils.translateTooltip("steam_stored", stored).mergeStyle(TextFormatting.GOLD));
     }
 
     @Override

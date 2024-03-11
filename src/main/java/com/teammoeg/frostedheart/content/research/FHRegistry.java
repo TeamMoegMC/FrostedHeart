@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.util.OptionalLazy;
+import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;

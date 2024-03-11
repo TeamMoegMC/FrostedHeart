@@ -24,7 +24,7 @@ import java.util.List;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.client.util.ITooltipFlag;
@@ -81,15 +81,15 @@ public class RubbingTool extends FHBaseItem {
         if (hasResearch(stack)) {
             Research rs = FHResearch.getResearch(getResearch(stack)).get();
             if (rs != null)
-                tooltip.add(GuiUtils.translateTooltip("rubbing.current", rs.getName()).mergeStyle(TextFormatting.GOLD));
+                tooltip.add(TranslateUtils.translateTooltip("rubbing.current", rs.getName()).mergeStyle(TextFormatting.GOLD));
             else
-                tooltip.add(GuiUtils.translateTooltip("rubbing.current.empty").mergeStyle(TextFormatting.GRAY));
+                tooltip.add(TranslateUtils.translateTooltip("rubbing.current.empty").mergeStyle(TextFormatting.GRAY));
         } else
-            tooltip.add(GuiUtils.translateTooltip("rubbing.current.empty").mergeStyle(TextFormatting.GRAY));
+            tooltip.add(TranslateUtils.translateTooltip("rubbing.current.empty").mergeStyle(TextFormatting.GRAY));
         int points = getPoint(stack);
         if (points > 0) {
-            tooltip.add(GuiUtils.translateTooltip("rubbing.points", points));
-            tooltip.add(GuiUtils.translateTooltip("rubbing.points.hint").mergeStyle(TextFormatting.YELLOW));
+            tooltip.add(TranslateUtils.translateTooltip("rubbing.points", points));
+            tooltip.add(TranslateUtils.translateTooltip("rubbing.points.hint").mergeStyle(TextFormatting.YELLOW));
         }
         super.addInformation(stack, worldIn, tooltip, flagIn);
 

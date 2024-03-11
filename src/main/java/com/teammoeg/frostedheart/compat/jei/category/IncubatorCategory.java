@@ -29,8 +29,8 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
@@ -139,9 +139,9 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
         guiFluidStacks.init(0, true, 57, 16, 16, 46, recipe.water * 5, false, null);
         guiFluidStacks.addTooltipCallback((s, o, i, t) -> {
             if (s == 0)
-                t.add(GuiUtils.translateGui("mb_per_sec", recipe.water));
+                t.add(TranslateUtils.translateGui("mb_per_sec", recipe.water));
             if (recipe.isFood && s == 1)
-                t.add(GuiUtils.translateGui("per_food_value", recipe.output_fluid.getAmount()));
+                t.add(TranslateUtils.translateGui("per_food_value", recipe.output_fluid.getAmount()));
         });
         guiFluidStacks.init(1, true, 113, 16, 16, 46, recipe.water * 5, false, null);
         guiFluidStacks.set(ingredients);
@@ -152,9 +152,9 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
         guiItemStacks.init(1, true, 11, 12);
         guiItemStacks.addTooltipCallback((s, o, i, t) -> {
             if (s == 1 && !recipe.consume_catalyst)
-                t.add(GuiUtils.translateGui("not_consume"));
+                t.add(TranslateUtils.translateGui("not_consume"));
             else if (s == 2 && recipe.isFood)
-                t.add(GuiUtils.translateGui("any_food"));
+                t.add(TranslateUtils.translateGui("any_food"));
         });
         guiItemStacks.init(2, true, 29, 12);
         guiItemStacks.init(3, false, 138, 31);

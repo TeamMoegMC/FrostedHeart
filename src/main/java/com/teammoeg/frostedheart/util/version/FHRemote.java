@@ -27,8 +27,8 @@ import java.util.Scanner;
 
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.io.FileUtil;
+import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;

@@ -47,10 +47,10 @@ import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacke
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.client.GuiClickedEvent;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.version.FHVersion;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -164,7 +164,7 @@ public class ClientEvents {
         //IWarmKeepingEquipment iwe = null;
         for (InspireRecipe ir : FHUtils.filterRecipes(null, InspireRecipe.TYPE)) {
             if (ir.item.test(stack)) {
-                event.getToolTip().add(GuiUtils.translateTooltip("inspire_item").mergeStyle(TextFormatting.GRAY));
+                event.getToolTip().add(TranslateUtils.translateTooltip("inspire_item").mergeStyle(TextFormatting.GRAY));
                 break;
             }
         }
@@ -217,10 +217,10 @@ public class ClientEvents {
             if (temp != 0)
                 if (temp > 0)
                     event.getToolTip()
-                            .add(GuiUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.GOLD));
+                            .add(TranslateUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.GOLD));
                 else
                     event.getToolTip()
-                            .add(GuiUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.AQUA));
+                            .add(TranslateUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.AQUA));
         }
         if (itf != null) {
             float temp = itf.getHeat(stack,
@@ -229,10 +229,10 @@ public class ClientEvents {
             if (temp != 0)
                 if (temp > 0) 
                     event.getToolTip()
-                            .add(GuiUtils.translateTooltip("food_temp", "+" + TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
+                            .add(TranslateUtils.translateTooltip("food_temp", "+" + TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
                 else
                     event.getToolTip()
-                            .add(GuiUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
+                            .add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
         }
       /*  if (iwe != null) {
             float temp = iwe.getFactor(null, stack);
@@ -247,10 +247,10 @@ public class ClientEvents {
             if (temp != 0)
                 if (temp > 0)
                     event.getToolTip().add(
-                            GuiUtils.translateTooltip("armor_heating", "+" + TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
+                            TranslateUtils.translateTooltip("armor_heating", "+" + TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
                 else
                     event.getToolTip()
-                            .add(GuiUtils.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
+                            .add(TranslateUtils.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
         }
     }
 
@@ -259,7 +259,7 @@ public class ClientEvents {
         ItemStack stack = event.getItemStack();
         Item i = stack.getItem();
         if (i == Items.FLINT) {
-            event.getToolTip().add(GuiUtils.translateTooltip("double_flint_ignition").mergeStyle(GRAY));
+            event.getToolTip().add(TranslateUtils.translateTooltip("double_flint_ignition").mergeStyle(GRAY));
         }
     }
 
@@ -267,13 +267,13 @@ public class ClientEvents {
     public static void addWeatherItemTooltips(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
         if (stack.getItem() == FHItems.temperatureProbe.get()) {
-            event.getToolTip().add(GuiUtils.translateTooltip("temperature_probe").mergeStyle(TextFormatting.GRAY));
+            event.getToolTip().add(TranslateUtils.translateTooltip("temperature_probe").mergeStyle(TextFormatting.GRAY));
         }
         if (stack.getItem() == FHItems.weatherRadar.get()) {
-            event.getToolTip().add(GuiUtils.translateTooltip("weather_radar").mergeStyle(TextFormatting.GRAY));
+            event.getToolTip().add(TranslateUtils.translateTooltip("weather_radar").mergeStyle(TextFormatting.GRAY));
         }
         if (stack.getItem() == FHItems.weatherHelmet.get()) {
-            event.getToolTip().add(GuiUtils.translateTooltip("weather_helmet").mergeStyle(TextFormatting.GRAY));
+            event.getToolTip().add(TranslateUtils.translateTooltip("weather_helmet").mergeStyle(TextFormatting.GRAY));
         }
     }
 
@@ -297,7 +297,7 @@ public class ClientEvents {
                 FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
                 FontRenderer font = gui.getMinecraft().fontRenderer;
                 if (!stableVersion.isEmpty() && (clientVersion.isEmpty() || !clientVersion.laterThan(stableVersion))) {
-                    List<IReorderingProcessor> list = font.trimStringToWidth(GuiUtils.translateGui("update_recommended")
+                    List<IReorderingProcessor> list = font.trimStringToWidth(TranslateUtils.translateGui("update_recommended")
                             .appendString(stableVersion.getOriginal()).mergeStyle(TextFormatting.BOLD), 70);
                     int l = 0;
                     for (IReorderingProcessor line : list) {
@@ -308,7 +308,7 @@ public class ClientEvents {
                         l += 9;
                     }
                     if (isStable) {
-                        IFormattableTextComponent itxc = GuiUtils.str("CurseForge")
+                        IFormattableTextComponent itxc = TranslateUtils.str("CurseForge")
                                 .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
                                 .mergeStyle(TextFormatting.GOLD);
                         boolean needEvents = true;
@@ -466,11 +466,11 @@ public class ClientEvents {
                 return;
             FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
             if (!stableVersion.isEmpty() && (clientVersion.isEmpty() || !clientVersion.laterThan(stableVersion))) {
-                event.getPlayer().sendStatusMessage(GuiUtils.translateGui("update_recommended")
+                event.getPlayer().sendStatusMessage(TranslateUtils.translateGui("update_recommended")
                         .appendString(stableVersion.getOriginal()).mergeStyle(TextFormatting.BOLD), false);
                 if (isStable) {
                     event.getPlayer()
-                            .sendStatusMessage(GuiUtils.str("CurseForge")
+                            .sendStatusMessage(TranslateUtils.str("CurseForge")
                                     .setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
                                             "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
                                     .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
@@ -491,12 +491,12 @@ public class ClientEvents {
         if (ServerLifecycleHooks.getCurrentServer() != null)
             if (FHMain.saveNeedUpdate) {
                 event.getPlayer().sendStatusMessage(
-                        GuiUtils.translateGui("save_update_needed", FHMain.lastServerConfig.getAbsolutePath())
+                        TranslateUtils.translateGui("save_update_needed", FHMain.lastServerConfig.getAbsolutePath())
                                 .mergeStyle(TextFormatting.RED),
                         false);
             } else if (FHMain.lastbkf != null) {
-                event.getPlayer().sendStatusMessage(GuiUtils.translateGui("save_updated")
-                                .appendSibling(GuiUtils.str(FHMain.lastbkf.getName()).setStyle(Style.EMPTY
+                event.getPlayer().sendStatusMessage(TranslateUtils.translateGui("save_updated")
+                                .appendSibling(TranslateUtils.str(FHMain.lastbkf.getName()).setStyle(Style.EMPTY
                                         .setClickEvent(
                                                 new ClickEvent(ClickEvent.Action.OPEN_FILE, FHMain.lastbkf.getAbsolutePath()))
                                         .applyFormatting(TextFormatting.UNDERLINE))),

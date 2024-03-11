@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart;
 
 import static com.simibubi.create.foundation.data.ModelGen.*;
-import static com.teammoeg.frostedheart.util.FHProps.*;
+import static com.teammoeg.frostedheart.util.constants.FHProps.*;
 
 import java.util.function.Function;
 import java.util.function.Supplier;

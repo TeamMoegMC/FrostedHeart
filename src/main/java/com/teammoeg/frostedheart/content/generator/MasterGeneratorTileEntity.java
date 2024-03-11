@@ -19,13 +19,19 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -43,6 +49,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
@@ -125,9 +132,11 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
             new IEInventoryHandler(2, this, 0, new boolean[]{true, false},
                     new boolean[]{false, true})
     );
-
+    List<IngredientWithSize> upgrade;
+    
     public MasterGeneratorTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
         super(multiblockInstance, type, hasRSControl);
+        
 
     }
 
@@ -278,9 +287,18 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	upgradeStructure(player);
     };
     public abstract List<IngredientWithSize> getRepairCost();
-    public abstract List<IngredientWithSize> getUpgradeCost();
+    public List<IngredientWithSize> getUpgradeCost(){
+    	IETemplateMultiblock ietm=getNextLevelMultiblock();
+        if(ietm!=null) {
+        	if(upgrade==null) {
+        		upgrade=Arrays.stream(ietm.getTotalMaterials()).filter(Ingredient.fromItems(FHBlocks.generator_core_t1.get()).negate()).map(IngredientWithSize::of).collect(Collectors.toList());
+        	}
+        	return upgrade;
+        }
+    	return null;
+    };
     public abstract IETemplateMultiblock getNextLevelMultiblock();
-    public boolean isValidStructure() {
+    public boolean isValidStructure() { 
     	IETemplateMultiblock ietm=getNextLevelMultiblock();
     	if(ietm==null)
     		return false;

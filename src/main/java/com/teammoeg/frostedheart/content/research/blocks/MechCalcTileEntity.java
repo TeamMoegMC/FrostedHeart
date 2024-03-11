@@ -26,7 +26,7 @@ import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
 import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -66,16 +66,16 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
         boolean flag = true;
         float spd = MathHelper.abs(super.getSpeed());
         if (spd > 64) {
-            tooltip.add(GuiUtils.translateTooltip("mechanical_calculator.too_fast").mergeStyle(TextFormatting.RED));
+            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.too_fast").mergeStyle(TextFormatting.RED));
             flag = false;
         }
         if (this.currentPoints >= maxPoints) {
-            tooltip.add(GuiUtils.translateTooltip("mechanical_calculator.full").mergeStyle(TextFormatting.RED));
+            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.full").mergeStyle(TextFormatting.RED));
             flag = false;
         }
         if (flag && spd > 0)
-            tooltip.add(GuiUtils.translateTooltip("mechanical_calculator.working").mergeStyle(TextFormatting.GREEN));
-        tooltip.add(GuiUtils.translateTooltip("mechanical_calculator.points", currentPoints, maxPoints));
+            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.working").mergeStyle(TextFormatting.GREEN));
+        tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.points", currentPoints, maxPoints));
         return true;
     }
 

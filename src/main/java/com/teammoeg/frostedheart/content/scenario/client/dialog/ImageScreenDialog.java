@@ -8,7 +8,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
@@ -97,7 +97,7 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		RenderSystem.disableBlend();
 		matrixStack.pop();
 		if(escapes!=MAX_ESCAPE) {
-			this.minecraft.fontRenderer.drawTextWithShadow(matrixStack, GuiUtils.translateMessage("escape_count",escapes), 10, 10, 0xFFAAAAAA);
+			this.minecraft.fontRenderer.drawTextWithShadow(matrixStack, TranslateUtils.translateMessage("escape_count",escapes), 10, 10, 0xFFAAAAAA);
 		}
 	}
 

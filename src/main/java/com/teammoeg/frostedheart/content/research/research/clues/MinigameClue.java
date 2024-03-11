@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.research.clues;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.ITextComponent;
@@ -66,7 +66,7 @@ public class MinigameClue extends CustomClue {
     public ITextComponent getName() {
         if (name != null && !name.isEmpty())
             return super.getName();
-        return GuiUtils.translate("clue." + FHMain.MODID + ".minigame.t" + level);
+        return TranslateUtils.translate("clue." + FHMain.MODID + ".minigame.t" + level);
     }
 
     @Override

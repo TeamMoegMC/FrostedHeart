@@ -26,7 +26,7 @@ import java.util.Random;
 
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.tools.FHLeveledTool;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
@@ -80,7 +80,7 @@ public class GeologistsHammer extends FHLeveledTool {
                             }
                     if (!founded.isEmpty()) {
                         int count = 0;
-                        IFormattableTextComponent s = GuiUtils.translateMessage("vein_size.found");
+                        IFormattableTextComponent s = TranslateUtils.translateMessage("vein_size.found");
                         for (Entry<String, Integer> f : founded.entrySet()) {
                             if (rnd.nextInt((int) (f.getValue() * corr)) != 0) {
                                 int rval = f.getValue();
@@ -89,7 +89,7 @@ public class GeologistsHammer extends FHLeveledTool {
                                     if (err > 0)
                                         rval += rnd.nextInt(err * 2) - err;
                                 }
-                                s = s.appendSibling(GuiUtils.translateMessage("vein_size.count", rval).appendSibling(new TranslationTextComponent(f.getKey()).mergeStyle(TextFormatting.GREEN)).appendString(" "));
+                                s = s.appendSibling(TranslateUtils.translateMessage("vein_size.count", rval).appendSibling(new TranslationTextComponent(f.getKey()).mergeStyle(TextFormatting.GREEN)).appendString(" "));
                                 count++;
                             }
                         }
@@ -99,7 +99,7 @@ public class GeologistsHammer extends FHLeveledTool {
                         }
                     }
                 }
-                player.sendStatusMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GRAY), false);
+                player.sendStatusMessage(TranslateUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GRAY), false);
             }
         }
         return ActionResultType.SUCCESS;

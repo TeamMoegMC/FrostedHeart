@@ -42,7 +42,7 @@ import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.clues.ClueEditor;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.frostedheart.content.research.research.effects.EffectEditor;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -87,7 +87,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
     public void addWidgets() {
         add(EditUtils.getTitle(this, "Edit/New Research"));
         add(id);
-        add(new SimpleTextButton(this, GuiUtils.str("Reset id"), Icon.EMPTY) {
+        add(new SimpleTextButton(this, TranslateUtils.str("Reset id"), Icon.EMPTY) {
             @Override
             public void onClicked(MouseButton arg0) {
                 id.setText(r.getId());
@@ -124,7 +124,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
             r.getClues().addAll(s);
             r.doIndex();
         }));
-        add(new SimpleTextButton(this, GuiUtils.str("Remove"), Icon.EMPTY) {
+        add(new SimpleTextButton(this, TranslateUtils.str("Remove"), Icon.EMPTY) {
 
             @Override
             public void onClicked(MouseButton arg0) {

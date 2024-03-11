@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.utility;
 public abstract class RandomBase{
     /** Next gaussian. */
     private double nextGaussian;

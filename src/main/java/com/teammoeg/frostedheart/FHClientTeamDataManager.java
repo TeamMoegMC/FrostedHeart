@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart;
 import java.util.UUID;
 
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
-import com.teammoeg.frostedheart.util.OptionalLazy;
+import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 /**
  * Synced client data manager.

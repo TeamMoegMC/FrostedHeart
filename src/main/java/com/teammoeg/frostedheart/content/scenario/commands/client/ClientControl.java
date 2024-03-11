@@ -34,8 +34,8 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.Grap
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsLineContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsRectContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsTextContent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.client.Point;
 import com.teammoeg.frostedheart.util.client.Rect;
 
@@ -72,12 +72,12 @@ public class ClientControl implements IClientControlCommand {
 		Task tsk=quest.tasks.get(t);
 		ITextComponent itt;
 		if(tsk instanceof ItemTask) {
-			itt=GuiUtils.translateMessage("item_task",tsk.getTitle());
+			itt=TranslateUtils.translateMessage("item_task",tsk.getTitle());
 			
 		}else if(tsk instanceof KillTask) {
-			itt=GuiUtils.translateMessage("kill_task",tsk.getTitle());
+			itt=TranslateUtils.translateMessage("kill_task",tsk.getTitle());
 		}else {
-			itt=GuiUtils.translateMessage("other_task",tsk.getTitle());
+			itt=TranslateUtils.translateMessage("other_task",tsk.getTitle());
 		}
 		runner.cls();
 		runner.processClient(ClientTextComponentUtils.parse(itt.getString()), true, false);
@@ -124,7 +124,7 @@ public class ClientControl implements IClientControlCommand {
 		if(show!=null) {
 			if(show>0) {
 				if(!(ClientScene.INSTANCE.dialog instanceof ImageScreenDialog)) {
-					id=new ImageScreenDialog(GuiUtils.str(""));
+					id=new ImageScreenDialog(TranslateUtils.str(""));
 					if(ClientScene.INSTANCE.dialog!=null)
 						ClientScene.INSTANCE.dialog.closeDialog();
 					ClientScene.INSTANCE.dialog=id;

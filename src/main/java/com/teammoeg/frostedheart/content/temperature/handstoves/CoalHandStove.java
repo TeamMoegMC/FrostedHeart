@@ -25,9 +25,9 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
-import com.teammoeg.frostedheart.util.EquipmentCuriosSlotType;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
 
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
@@ -78,10 +78,10 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 
     @Override
     public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
-        list.add(GuiUtils.translateTooltip("handstove.add_fuel").mergeStyle(TextFormatting.GRAY));
+        list.add(TranslateUtils.translateTooltip("handstove.add_fuel").mergeStyle(TextFormatting.GRAY));
         if (getAshAmount(stack) >= 800)
-            list.add(GuiUtils.translateTooltip("handstove.trash_ash").mergeStyle(TextFormatting.RED));
-        list.add(GuiUtils.translateTooltip("handstove.fuel", getFuelAmount(stack) / 2).mergeStyle(TextFormatting.GRAY));
+            list.add(TranslateUtils.translateTooltip("handstove.trash_ash").mergeStyle(TextFormatting.RED));
+        list.add(TranslateUtils.translateTooltip("handstove.fuel", getFuelAmount(stack) / 2).mergeStyle(TextFormatting.GRAY));
     }
 
 

@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EntityType;
@@ -70,9 +70,9 @@ public class PlayerEvents {
                     new EffectInstance(Effects.NAUSEA, (int) (1000 * (world.rand.nextDouble() + 0.5)), 5));
 
             serverPlayerEntity.connection.sendPacket(
-                    new STitlePacket(STitlePacket.Type.TITLE, GuiUtils.translateMessage("too_cold_to_transmute")));
+                    new STitlePacket(STitlePacket.Type.TITLE, TranslateUtils.translateMessage("too_cold_to_transmute")));
             serverPlayerEntity.connection.sendPacket(
-                    new STitlePacket(STitlePacket.Type.SUBTITLE, GuiUtils.translateMessage("magical_backslash")));
+                    new STitlePacket(STitlePacket.Type.SUBTITLE, TranslateUtils.translateMessage("magical_backslash")));
 
             double posX = pos.getX() + (world.rand.nextDouble() - world.rand.nextDouble()) * 4.5D;
             double posY = pos.getY() + world.rand.nextInt(3) - 1;
@@ -100,14 +100,14 @@ public class PlayerEvents {
                 boolean nextHourB = WorldClimate.isFutureBlizzard(serverPlayer.world, 1);
                 if (!thisHourB) { // not in blizzard yet
                     if (nextHourB) {
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_warning")
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.blizzard_warning")
                                 .mergeStyle(TextFormatting.DARK_RED).mergeStyle(TextFormatting.BOLD), true);
                         // serverPlayer.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE,
                         // GuiUtils.translateMessage("forecast.blizzard_warning")));
                     }
                 } else { // in blizzard now
                     if (!nextHourB) {
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_retreating")
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.blizzard_retreating")
                                 .mergeStyle(TextFormatting.GREEN).mergeStyle(TextFormatting.BOLD), true);
                         // serverPlayer.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE,
                         // GuiUtils.translateMessage("forecast.blizzard_retreating")));
@@ -133,11 +133,11 @@ public class PlayerEvents {
                             || WorldClimate.isFutureBlizzard(serverPlayer.world, 0, 18)
                             || WorldClimate.isFutureBlizzard(serverPlayer.world, 1, 0);
                     if (blizzard)
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_today"), false);
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.blizzard_today"), false);
                     else if (snow)
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.snow_today"), false);
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.snow_today"), false);
                     else
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.clear_today"), false);
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.clear_today"), false);
 
                 }
 
@@ -164,11 +164,11 @@ public class PlayerEvents {
                             || WorldClimate.isFutureBlizzard(serverPlayer.world, 0, 18)
                             || WorldClimate.isFutureBlizzard(serverPlayer.world, 1, 0);
                     if (blizzard)
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_tomorrow"), false);
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.blizzard_tomorrow"), false);
                     else if (snow)
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.snow_tomorrow"), false);
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.snow_tomorrow"), false);
                     else
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.clear_tomorrow"), false);
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.clear_tomorrow"), false);
                 }
             }
 

@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.constants;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;

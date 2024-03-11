@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.utility;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

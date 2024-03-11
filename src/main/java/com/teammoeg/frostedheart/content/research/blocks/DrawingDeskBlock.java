@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.FHTeamDataManager;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
@@ -155,9 +155,9 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         if (!worldIn.isRemote && handIn == Hand.MAIN_HAND && !player.isSneaking()) {
             if (!player.isCreative() && worldIn.getLight(pos) < 8) {
-                player.sendStatusMessage(GuiUtils.translateMessage("research.too_dark"), true);
+                player.sendStatusMessage(TranslateUtils.translateMessage("research.too_dark"), true);
             } else if (!player.isCreative() && PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getBodyTemp).orElse(0f) < -0.2) {
-                player.sendStatusMessage(GuiUtils.translateMessage("research.too_cold"), true);
+                player.sendStatusMessage(TranslateUtils.translateMessage("research.too_cold"), true);
             } else {
                 if (state.get(IS_NOT_MAIN)) {
                     pos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
@@ -168,7 +168,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
                 if (crid != null && crid.equals(IOwnerTile.getOwner(ii)))
                     NetworkHooks.openGui((ServerPlayerEntity) player, (IInteractionObjectIE) ii, ii.getPos());
                 else
-                    player.sendStatusMessage(GuiUtils.translateMessage("research.not_owned"), true);
+                    player.sendStatusMessage(TranslateUtils.translateMessage("research.not_owned"), true);
             }
         }
         return ActionResultType.SUCCESS;

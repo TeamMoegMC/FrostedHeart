@@ -24,7 +24,7 @@ import java.util.List;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
@@ -48,8 +48,8 @@ public class ThermometerItem extends FHBaseItem {
 
     @Override
     public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-        tooltip.add(GuiUtils.translateTooltip("thermometer.usage").mergeStyle(TextFormatting.GRAY));
-        tooltip.add(GuiUtils.translateTooltip("meme.thermometerbody").mergeStyle(TextFormatting.GRAY));
+        tooltip.add(TranslateUtils.translateTooltip("thermometer.usage").mergeStyle(TextFormatting.GRAY));
+        tooltip.add(TranslateUtils.translateTooltip("meme.thermometerbody").mergeStyle(TextFormatting.GRAY));
     }
 
     public int getTemperature(ServerPlayerEntity p) {
@@ -77,7 +77,7 @@ public class ThermometerItem extends FHBaseItem {
 
     @Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-        playerIn.sendStatusMessage(GuiUtils.translateMessage("thermometer.testing"), true);
+        playerIn.sendStatusMessage(TranslateUtils.translateMessage("thermometer.testing"), true);
         playerIn.setActiveHand(handIn);
         if (playerIn instanceof ServerPlayerEntity && playerIn.abilities.isCreativeMode) {
             TemperatureDisplayHelper.sendTemperature((ServerPlayerEntity) playerIn, "info.thermometerbody", getTemperature((ServerPlayerEntity) playerIn) / 10f + 37f);

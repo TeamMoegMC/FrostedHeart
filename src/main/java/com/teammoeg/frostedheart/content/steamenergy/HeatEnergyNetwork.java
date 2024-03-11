@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -261,7 +261,7 @@ public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializab
     }
 	@Override
 	public ITextComponent getDisplayName() {
-		return GuiUtils.translateGui("heat_stat");
+		return TranslateUtils.translateGui("heat_stat");
 	}
 
 
