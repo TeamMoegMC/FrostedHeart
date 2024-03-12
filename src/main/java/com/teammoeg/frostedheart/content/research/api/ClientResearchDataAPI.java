@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.content.research.api;
 
 import com.teammoeg.frostedheart.FHClientTeamDataManager;
-import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.api.distmarker.Dist;

@@ -6,7 +6,6 @@ import java.util.UUID;
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import top.theillusivec4.curios.api.SlotTypePreset;
 

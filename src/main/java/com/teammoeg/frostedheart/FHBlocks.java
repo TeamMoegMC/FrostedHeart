@@ -61,10 +61,10 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
 import com.teammoeg.frostedheart.content.town.FHTownBuildingCoreBlock;
 import com.teammoeg.frostedheart.content.town.house.HouseBlock;
-
 import com.teammoeg.frostedheart.content.town.mine.MineBaseBlock;
 import com.teammoeg.frostedheart.content.town.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlock;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;

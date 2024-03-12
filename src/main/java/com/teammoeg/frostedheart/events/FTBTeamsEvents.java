@@ -22,9 +22,9 @@ package com.teammoeg.frostedheart.events;
 import java.util.UUID;
 
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
-import com.teammoeg.frostedheart.FHTeamDataManager;
 
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.PlayerTeam;

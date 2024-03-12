@@ -22,9 +22,9 @@ package com.teammoeg.frostedheart.content.research.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.base.network.NBTMessage;
-import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;

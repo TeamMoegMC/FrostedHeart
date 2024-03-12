@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import net.minecraft.item.Item;

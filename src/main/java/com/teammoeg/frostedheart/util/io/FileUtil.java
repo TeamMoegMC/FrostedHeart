@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.util.io;
 
-import com.teammoeg.frostedheart.FHMain;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,6 +27,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+
+import com.teammoeg.frostedheart.FHMain;
 
 public class FileUtil {
     public static byte[] readAll(File f) throws IOException {

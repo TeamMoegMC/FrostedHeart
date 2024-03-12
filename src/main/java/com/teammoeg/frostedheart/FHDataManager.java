@@ -27,7 +27,16 @@ import java.util.Map.Entry;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.teammoeg.frostedheart.content.climate.data.*;
+import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
+import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
+import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
+import com.teammoeg.frostedheart.content.climate.data.CupData;
+import com.teammoeg.frostedheart.content.climate.data.CupTempAdjustProxy;
+import com.teammoeg.frostedheart.content.climate.data.DataEntry;
+import com.teammoeg.frostedheart.content.climate.data.DrinkTempData;
+import com.teammoeg.frostedheart.content.climate.data.FoodTempData;
+import com.teammoeg.frostedheart.content.climate.data.JsonDataHolder;
+import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 

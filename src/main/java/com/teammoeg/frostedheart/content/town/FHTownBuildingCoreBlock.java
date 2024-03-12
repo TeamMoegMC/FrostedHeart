@@ -1,8 +1,12 @@
 package com.teammoeg.frostedheart.content.town;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.content.climate.chunkheatdata.ChunkHeatData;
+
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SoundType;
@@ -21,9 +25,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ToolType;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public abstract class FHTownBuildingCoreBlock extends FHBaseBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;

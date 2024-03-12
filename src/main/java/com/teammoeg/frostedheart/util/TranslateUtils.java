@@ -19,14 +19,14 @@
 
 package com.teammoeg.frostedheart.util;
 
+import java.util.Collection;
+import java.util.Map;
+
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
-
-import java.util.Collection;
-import java.util.Map;
 
 public class TranslateUtils {
 

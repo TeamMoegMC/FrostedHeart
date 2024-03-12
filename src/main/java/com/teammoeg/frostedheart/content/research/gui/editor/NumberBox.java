@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
 import com.teammoeg.frostedheart.FHMain;
+
 import dev.ftb.mods.ftblibrary.ui.Panel;
 
 public class NumberBox extends LabeledTextBox {

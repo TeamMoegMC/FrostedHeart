@@ -45,10 +45,10 @@ import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorTileEntity
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEntity;
 import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
-
 import com.teammoeg.frostedheart.content.town.mine.MineBaseTileEntity;
 import com.teammoeg.frostedheart.content.town.mine.MineTileEntity;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseTileEntity;
+
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;

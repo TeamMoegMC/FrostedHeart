@@ -19,20 +19,20 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.FHTeamDataManager;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-
-import dev.ftb.mods.ftbteams.data.Team;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.BlockPos;
-
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.content.town.resident.Resident;
+
+import dev.ftb.mods.ftbteams.data.Team;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.math.BlockPos;
 
 /**
  * The town for a player team.

@@ -22,17 +22,24 @@ package com.teammoeg.frostedheart;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.base.team.SpecialDataType;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import org.apache.commons.io.FileUtils;
 
 import com.mojang.authlib.GameProfile;
+import com.teammoeg.frostedheart.base.team.SpecialDataType;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;

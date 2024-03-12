@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.command;
 
+import java.util.Arrays;
+
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
@@ -32,8 +34,6 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
-
-import java.util.Arrays;
 
 public class TownCommand {
     public static void register(CommandDispatcher<CommandSource> dispatcher) {

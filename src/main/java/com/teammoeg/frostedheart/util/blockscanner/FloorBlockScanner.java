@@ -1,15 +1,15 @@
 package com.teammoeg.frostedheart.util.blockscanner;
 
+import java.util.AbstractMap;
+import java.util.HashSet;
+
 import com.teammoeg.frostedheart.FHTags;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.Tags;
-
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.HashSet;
 
 /**
  * scan valid floor

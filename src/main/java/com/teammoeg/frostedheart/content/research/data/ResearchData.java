@@ -19,9 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.data;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -35,9 +33,7 @@ import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.io.SerializeUtil.CompoundBuilder;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.common.MinecraftForge;

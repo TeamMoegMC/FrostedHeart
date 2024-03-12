@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.client;
 
+import java.util.Arrays;
+
 import com.teammoeg.frostedheart.content.climate.ClimateType;
 import com.teammoeg.frostedheart.content.climate.TemperatureFrame;
-
-import java.util.Arrays;
 
 public class ClientClimateData {
     public static final TemperatureFrame[] forecastData = new TemperatureFrame[40];

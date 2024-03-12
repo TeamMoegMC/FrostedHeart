@@ -1,12 +1,13 @@
 package com.teammoeg.frostedheart.content.town;
 
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
-import net.minecraft.nbt.CompoundNBT;
-
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
+
+import net.minecraft.nbt.CompoundNBT;
 
 /**
  * 用于存储一个区块中含有的自然资源量。主要用于存储矿物等不可再生自然资源。

@@ -16,14 +16,10 @@ public class FHCapability<C extends NBTSerializable> {
 	private Class<C> capClass;
 	private Capability<C> capability;
 	private NonNullSupplier<C> factory;
-    public Capability<C> capability() {
-		return capability;
-	}
 	public FHCapability(Class<C> capClass, NonNullSupplier<C> factory) {
 		super();
 		this.capClass = capClass;
 		this.factory = factory;
-		
 	}
 	@SuppressWarnings("unchecked")
 	public void register() {
@@ -49,5 +45,7 @@ public class FHCapability<C extends NBTSerializable> {
 			return ((ICapabilityProvider)cap).getCapability(capability);
 		return LazyOptional.empty();
 	}
-
+    public Capability<C> capability() {
+		return capability;
+	}
 }

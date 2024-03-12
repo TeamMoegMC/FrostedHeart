@@ -23,11 +23,18 @@ import static net.minecraft.util.text.TextFormatting.*;
 
 import java.util.List;
 
-import com.teammoeg.frostedheart.*;
-import com.teammoeg.frostedheart.FHClientTeamDataManager;
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.FHClientTeamDataManager;
+import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.FHDataManager;
+import com.teammoeg.frostedheart.FHEffects;
+import com.teammoeg.frostedheart.FHItems;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.FHParticleTypes;
+import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;

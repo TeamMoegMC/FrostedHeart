@@ -1,5 +1,16 @@
 package com.teammoeg.frostedheart.util.blockscanner;
 
+import static net.minecraft.block.PlantBlockHelper.*;
+
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.tags.BlockTags;
@@ -7,13 +18,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
-
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
-import static net.minecraft.block.PlantBlockHelper.isAir;
 
 /**
  * 提供了一些扫描方块用的静态方法

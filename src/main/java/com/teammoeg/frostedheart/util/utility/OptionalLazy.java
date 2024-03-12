@@ -28,7 +28,11 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.*;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.common.util.NonNullConsumer;
+import net.minecraftforge.common.util.NonNullFunction;
+import net.minecraftforge.common.util.NonNullPredicate;
+import net.minecraftforge.common.util.NonNullSupplier;
 
 /**
  * An modified version for LazyOptional by forge, compatibilities for null return

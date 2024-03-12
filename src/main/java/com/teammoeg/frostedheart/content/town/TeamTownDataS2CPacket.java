@@ -21,9 +21,9 @@ package com.teammoeg.frostedheart.content.town;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.FHClientTeamDataManager;
 import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 
 import net.minecraft.entity.player.PlayerEntity;

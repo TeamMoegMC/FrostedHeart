@@ -24,8 +24,8 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;

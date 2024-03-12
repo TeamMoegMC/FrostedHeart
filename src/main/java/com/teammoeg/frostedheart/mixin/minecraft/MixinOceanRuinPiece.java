@@ -30,7 +30,6 @@ import com.teammoeg.frostedheart.util.mixin.StructureUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ILivingEntityData;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.monster.DrownedEntity;
 import net.minecraft.loot.LootTables;

@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.research.gui.tech;
 import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
+import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;

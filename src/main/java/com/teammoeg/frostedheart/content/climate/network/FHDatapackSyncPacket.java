@@ -21,9 +21,9 @@ package com.teammoeg.frostedheart.content.climate.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.climate.data.DataEntry;
-import com.teammoeg.frostedheart.FHDataManager;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;

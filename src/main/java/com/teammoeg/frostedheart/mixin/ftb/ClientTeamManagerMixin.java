@@ -24,11 +24,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import com.teammoeg.frostedheart.FHMain;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.util.mixin.FTBFixUtils;
 

@@ -21,9 +21,9 @@ package com.teammoeg.frostedheart.content.research.research.clues;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.item.ItemStack;

@@ -1,14 +1,14 @@
 package com.teammoeg.frostedheart.util.blockscanner;
 
 
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-
 import java.util.AbstractMap;
 import java.util.HashSet;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+
+import net.minecraft.util.Direction;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 /**
  * scan air

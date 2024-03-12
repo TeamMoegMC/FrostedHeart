@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.content.research.api;
 
 import java.util.UUID;
 
-import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
-import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
+import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.entity.player.PlayerEntity;
