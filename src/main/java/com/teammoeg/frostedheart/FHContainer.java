@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart;
 
 import com.teammoeg.frostedheart.content.decoration.RelicChestContainer;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
-import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorContainer;
-import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
-import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorContainer;
-import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.heatdevice.generator.t1.T1GeneratorContainer;
+import com.teammoeg.frostedheart.content.heatdevice.generator.t1.T1GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.heatdevice.generator.t2.T2GeneratorContainer;
+import com.teammoeg.frostedheart.content.heatdevice.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Container;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Container;

@@ -29,8 +29,8 @@ import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
+import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
 

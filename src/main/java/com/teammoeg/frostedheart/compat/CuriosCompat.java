@@ -25,7 +25,7 @@ import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestItem;
+import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestItem;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;

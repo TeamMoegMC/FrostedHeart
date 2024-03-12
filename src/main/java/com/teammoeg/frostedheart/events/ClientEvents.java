@@ -51,7 +51,7 @@ import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacket;
-import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
+import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.TranslateUtils;

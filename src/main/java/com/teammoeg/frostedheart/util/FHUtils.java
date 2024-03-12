@@ -38,7 +38,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.capability.FHCapability;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 

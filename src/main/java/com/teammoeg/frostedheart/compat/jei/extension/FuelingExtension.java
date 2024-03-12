@@ -23,8 +23,8 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import com.teammoeg.frostedheart.FHItems;
-import com.teammoeg.frostedheart.content.temperature.handstoves.CoalHandStove;
-import com.teammoeg.frostedheart.content.temperature.handstoves.FuelingRecipe;
+import com.teammoeg.frostedheart.content.utility.handstoves.CoalHandStove;
+import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.IIngredients;
