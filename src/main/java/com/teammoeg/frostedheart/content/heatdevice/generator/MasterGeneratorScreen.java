@@ -138,7 +138,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		//temp gauge
 		majorPointer.blitRotated(matrixStack, guiLeft, guiTop, tempGauge, (tile.getTemperatureLevel())/4f*271f);
 		//overdrive gauge
-		minorPointer.blitRotated(matrixStack, guiLeft, guiTop, overGauge, 0*271f);
+		minorPointer.blitRotated(matrixStack, guiLeft, guiTop, overGauge, container.data.get(MasterGeneratorTileEntity.OVERDRIVE)/1000f*271f);
 	}
 	private void drawCenterText(MatrixStack matrixStack,int x,int y,String s,int clr) {
 		this.font.drawText(matrixStack,TranslateUtils.str(s),x- (float) this.font.getStringWidth(s) /2, y-4, clr);
@@ -152,7 +152,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 	    //range level
 	    drawCenterText(matrixStack,35,45, tile.getActualRange()+"",0xffffffff);
 	    //overdrive level
-	    drawCenterText(matrixStack,141,45, 0+"",0xffffffff);
+	    drawCenterText(matrixStack,141,45,  container.data.get(MasterGeneratorTileEntity.OVERDRIVE)/10+"",0xffffffff);
 	}
 	boolean validStructure;
 	

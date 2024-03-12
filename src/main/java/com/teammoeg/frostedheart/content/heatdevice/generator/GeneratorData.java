@@ -46,7 +46,6 @@ public class GeneratorData implements NBTSerializable{
     public static final int OUTPUT_SLOT = 1;
     public int process = 0, processMax = 0;
     public int overdriveLevel = 0;
-    final int maxOverdriveLevel=24000;
     public float steamLevel;
     public int steamProcess;
     public int heated,ranged;
@@ -173,12 +172,17 @@ public class GeneratorData implements NBTSerializable{
             return false;
         boolean hasFuel = true;
         if (isOverdrive) {
-            while (process <= 3 && hasFuel) {
+            while (process <= 1 && hasFuel) {
                 hasFuel = consumesFuel(w);
             }
-            if (process > 3) {
-                process -= 4;
+            if (process > 1) {
+                process -= 2;
                 return true;
+            }
+            overdriveLevel+=20;
+            overdriveLevel-=5*(teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER)+1);
+            if(overdriveLevel>=this.getMaxOverdrive()) {
+            	isBroken=true;
             }
         } else {
             while (process <= 0 && hasFuel) {
@@ -215,6 +219,9 @@ public class GeneratorData implements NBTSerializable{
     }
     public int getMaxRanged() {
         return (int) (100*this.getMaxRangeLevel());
+    }
+    public int getMaxOverdrive() {
+    	return 240400;
     }
     
 	@Override

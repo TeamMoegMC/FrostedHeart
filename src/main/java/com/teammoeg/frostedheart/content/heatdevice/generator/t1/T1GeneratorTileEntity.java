@@ -120,11 +120,6 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
         super.writeCustomNBT(nbt, descPacket);
         
     }
-    final List<IngredientWithSize> repair=Arrays.asList(IngredientWithSize.of(new ItemStack(AllItems.COPPER_INGOT.get(),64)));
-	@Override
-	public List<IngredientWithSize> getRepairCost() {
-		return repair;
-	}
 	@Override
 	public IETemplateMultiblock getNextLevelMultiblock() {
 		return FHMultiblocks.GENERATOR_T2;

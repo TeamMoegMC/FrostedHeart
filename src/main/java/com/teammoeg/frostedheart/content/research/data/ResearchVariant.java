@@ -27,6 +27,7 @@ public enum ResearchVariant {
     //GENERATOR_LOCATION("generator_loc"),//generator location, to keep generators unique.
     VILLAGER_RELATION("vlg_relationship"),//relationship modifier between villagers.
     VILLAGER_FORGIVENESS("vlg_forgive"),//Forgiveness for each kill in stats
+    OVERDRIVE_RECOVER("overdrive_recover"),//Overdrive recover speed
     HAS_FORECAST("has_forecast");//Weather forecast enabled
 
     private final String token;

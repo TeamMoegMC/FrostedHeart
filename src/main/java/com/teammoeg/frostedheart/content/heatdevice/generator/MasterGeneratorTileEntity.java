@@ -49,6 +49,7 @@ import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
@@ -56,6 +57,7 @@ import net.minecraft.util.IIntArray;
 import net.minecraft.util.IntArray;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -282,9 +284,16 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         return true;
     }
     public void onUpgradeMaintainClicked(ServerPlayerEntity player) {
-    	upgradeStructure(player);
+    	if(isBroken) {
+    		repairStructure(player);
+    	} else {
+    		upgradeStructure(player);
+    	}
     };
-    public abstract List<IngredientWithSize> getRepairCost();
+    private final List<IngredientWithSize> repair=Arrays.asList(new IngredientWithSize(Ingredient.fromTag(ItemTags.createOptional(new ResourceLocation("forge","ingots/copper"))),32),new IngredientWithSize(Ingredient.fromTag(ItemTags.createOptional(new ResourceLocation("forge","stone"))),8));
+    public final List<IngredientWithSize> getRepairCost(){
+    	return repair;
+    };
     public List<IngredientWithSize> getUpgradeCost(){
     	IETemplateMultiblock ietm=getNextLevelMultiblock();
         if(ietm!=null) {
@@ -332,6 +341,15 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, getFacing().getOpposite());
         ((MultiBlockAccess) getNextLevelMultiblock()).setPlayer(entityplayer);
         ((MultiBlockAccess) getNextLevelMultiblock()).callForm(world, getBlockPosForPos(negMasterOffset), rot, Mirror.NONE, getFacing());
+
+    }
+    public void repairStructure(ServerPlayerEntity entityplayer) {
+    	if(!isBroken)
+    		return;
+    	if(!FHUtils.costItems(entityplayer, getRepairCost()))
+    		return;
+    	isBroken=false;
+    	getData().ifPresent(t->t.isBroken=false);
 
     }
     @Override
@@ -407,7 +425,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         setRangeLevel(data.map(t -> t.RLevel).orElse(0F));
         guiData.set(PROCESS, data.map(t -> t.process).orElse(0));
         guiData.set(PROCESS_MAX, data.map(t -> t.processMax).orElse(0));
-        guiData.set(OVERDRIVE, data.map(t -> t.overdriveLevel).orElse(0));
+        guiData.set(OVERDRIVE, data.map(t -> t.overdriveLevel*1000/t.getMaxOverdrive()).orElse(0));
         guiData.set(POWER, (int)(float)data.map(t->t.power).orElse(0F));
         isBroken = data.map(t->t.isBroken).orElse(false);
         tickDrives(isWorking);

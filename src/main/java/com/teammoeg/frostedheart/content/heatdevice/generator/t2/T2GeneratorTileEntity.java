@@ -248,23 +248,10 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 	        nbt.put("fluid", tankx);
         }
     }
-    final List<IngredientWithSize> repair=Arrays.asList(IngredientWithSize.of(new ItemStack(AllItems.COPPER_INGOT.get(),64)));
-    final List<IngredientWithSize> upgrade=Arrays.asList(IngredientWithSize.of(new ItemStack(AllItems.COPPER_INGOT.get(),64)));
-	@Override
-	public List<IngredientWithSize> getRepairCost() {
-		// TODO Auto-generated method stub
-		return repair;
-	}
 
-	@Override
-	public List<IngredientWithSize> getUpgradeCost() {
-		// TODO Auto-generated method stub
-		return upgrade;
-	}
 
 	@Override
 	public IETemplateMultiblock getNextLevelMultiblock() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
