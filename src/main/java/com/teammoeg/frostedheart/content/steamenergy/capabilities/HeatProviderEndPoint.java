@@ -41,21 +41,23 @@ public class HeatProviderEndPoint extends HeatPowerEndpoint{
     /**
      * Instantiates HeatProviderEndPoint.<br>
      *
+     * @param priority consumer priority, if power is low, endpoint with lower priority would detach first
      * @param maxPower  the max power to store<br>
      * @param maxGenerate the max heat put to network<br>
      */
-    public HeatProviderEndPoint(float maxPower, float maxGenerate) {
-        super(Math.max(maxPower, maxGenerate));
+    public HeatProviderEndPoint(int priority, float maxPower, float maxGenerate) {
+        super(priority, Math.max(maxPower, maxGenerate));
         this.maxGenerate = maxGenerate;
 
     }
     /**
      * Instantiates HeatProviderEndPoint with recommended cache value.<br>
      *
+     * @param priority consumer priority, if power is low, endpoint with lower priority would detach first
      * @param maxGenerate the max heat put to network<br>
      */
     public HeatProviderEndPoint(float maxGenerate) {
-        super(maxGenerate*4);
+        super(0, maxGenerate*4);
         this.maxGenerate = maxGenerate;
     }
     public boolean canSendHeat() {

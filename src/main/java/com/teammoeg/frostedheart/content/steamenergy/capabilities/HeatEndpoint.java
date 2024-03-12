@@ -145,5 +145,5 @@ public abstract class HeatEndpoint implements NBTSerializable{
      */
     public abstract float getMaxIntake();
 
-    
+    public abstract int getPriority();
 }

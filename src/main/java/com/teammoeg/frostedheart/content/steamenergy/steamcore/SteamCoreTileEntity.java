@@ -27,7 +27,7 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
         this.setLazyTickRate(20);
     }
 
-    HeatConsumerEndpoint network = new HeatConsumerEndpoint(FHConfig.COMMON.steamCoreMaxPower.get().floatValue(),FHConfig.COMMON.steamCorePowerIntake.get().floatValue());
+    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, FHConfig.COMMON.steamCoreMaxPower.get().floatValue(),FHConfig.COMMON.steamCorePowerIntake.get().floatValue());
     
     public float getGeneratedSpeed(){
         float speed = FHConfig.COMMON.steamCoreGeneratedSpeed.get().floatValue();

@@ -31,23 +31,26 @@ public class HeatConsumerEndpoint extends HeatPowerEndpoint{
      * The max intake value.<br>
      */
     public final float maxIntake;
+    
     /**
      * Instantiates a new SteamNetworkConsumer.<br>
      *
+     * @param priority consumer priority, if power is low, endpoint with lower priority would detach first
      * @param maxPower  the max power to store<br>
      * @param maxIntake the max heat requested from network<br>
      */
-    public HeatConsumerEndpoint(float maxPower, float maxIntake) {
-        super(Math.max(maxPower, maxIntake));
+    public HeatConsumerEndpoint(int priority, float maxPower, float maxIntake) {
+        super(priority, Math.max(maxPower, maxIntake));
         this.maxIntake = maxIntake;
     }
     /**
      * Instantiates a new SteamNetworkConsumer with recommended cache value.<br>
      * MaxIntake defaults 4 times maxIntake. <br>
+     * @param priority consumer priority, if power is low, endpoint with lower priority would detach first
      * @param maxIntake the max heat requested from network<br>
      */
     public HeatConsumerEndpoint(float maxIntake) {
-        super(maxIntake*4);
+        super(0, maxIntake*4);
         this.maxIntake = maxIntake;
     }
     

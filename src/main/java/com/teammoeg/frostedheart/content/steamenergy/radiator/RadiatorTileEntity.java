@@ -45,7 +45,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
-    HeatConsumerEndpoint network = new HeatConsumerEndpoint(100, 4);
+    HeatConsumerEndpoint network = new HeatConsumerEndpoint(100, 100, 4);
 
     public RadiatorTileEntity() {
         super(FHMultiblocks.RADIATOR, FHTileTypes.RADIATOR.get(), false);

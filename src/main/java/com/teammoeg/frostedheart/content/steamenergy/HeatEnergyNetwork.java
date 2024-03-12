@@ -63,7 +63,7 @@ public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializab
     transient World world;
     transient TileEntity cur;
 
-    transient PriorityQueue<HeatEndpoint> endpoints=new PriorityQueue<>(Comparator.comparingInt(HeatEndpoint::getDistance));
+    transient PriorityQueue<HeatEndpoint> endpoints=new PriorityQueue<>(Comparator.comparingInt(HeatEndpoint::getPriority).reversed().thenComparing(HeatEndpoint::getDistance));
     public Map<HeatEndpoint,EndPointData> data=new HashMap<>();
     public Set<EndPointData> epdataset=new HashSet<>();
     Map<BlockPos,Integer> propagated=new HashMap<>();

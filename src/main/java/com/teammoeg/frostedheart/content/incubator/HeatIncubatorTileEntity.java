@@ -32,7 +32,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class HeatIncubatorTileEntity extends IncubatorTileEntity{
-    HeatConsumerEndpoint network = new HeatConsumerEndpoint(80, 5);
+    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 80, 5);
 
     public HeatIncubatorTileEntity() {
         super(FHTileTypes.INCUBATOR2.get());

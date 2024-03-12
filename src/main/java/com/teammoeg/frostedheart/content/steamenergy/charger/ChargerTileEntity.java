@@ -53,7 +53,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
-    HeatConsumerEndpoint network = new HeatConsumerEndpoint(200,5);
+    HeatConsumerEndpoint network = new HeatConsumerEndpoint(-10, 200,5);
     float power;
     private static void splitAndSpawnExperience(World world, BlockPos pos, float experience) {
         int i = MathHelper.floor(experience);

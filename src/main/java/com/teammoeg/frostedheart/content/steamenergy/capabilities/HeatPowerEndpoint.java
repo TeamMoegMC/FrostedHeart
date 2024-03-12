@@ -9,12 +9,16 @@ import net.minecraft.nbt.CompoundNBT;
  */
 public abstract class HeatPowerEndpoint extends HeatEndpoint {
     public final float maxPower;
-    
+    public final int priority;
     protected float power;
-	
-	public HeatPowerEndpoint(float maxPower) {
+	/**
+	 * @param priority consumer priority, if power is low, endpoint with lower priority would detach first
+	 * 
+	 * */
+	public HeatPowerEndpoint(int priority,float maxPower) {
 		super();
 		this.maxPower = maxPower;
+		this.priority = priority;
 	}
 
     public float getMaxPower() {
@@ -46,5 +50,9 @@ public abstract class HeatPowerEndpoint extends HeatEndpoint {
     public boolean canProvideHeat() {
     	return power>0;
     }
+
+	public int getPriority() {
+		return priority;
+	}
 
 }

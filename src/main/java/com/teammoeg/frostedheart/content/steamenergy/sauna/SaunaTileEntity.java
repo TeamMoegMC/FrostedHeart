@@ -84,7 +84,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
     private int workPeriod;
     Set<BlockPos> floor = new HashSet<>();
     Set<BlockPos> edges = new HashSet<>();
-    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10,1);
+    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 10,1);
 
     protected NonNullList<ItemStack> inventory;
     private LazyOptional<IItemHandler> insertionCap;

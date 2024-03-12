@@ -78,7 +78,7 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
     public double temperatureModifier = 0;
 
     /** Tile data, stored in tile entity. */
-    HeatConsumerEndpoint endpoint = new HeatConsumerEndpoint(10,1);
+    HeatConsumerEndpoint endpoint = new HeatConsumerEndpoint(99,10,1);
 
     public HouseTileEntity() {
         super(FHTileTypes.HOUSE.get());

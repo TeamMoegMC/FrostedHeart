@@ -38,7 +38,7 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements  ITickabl
             c.accept(pos.offset(d), d.getOpposite());
         }
     });
-    HeatProviderEndPoint endpoint=new HeatProviderEndPoint(Integer.MAX_VALUE, Integer.MAX_VALUE);
+    HeatProviderEndPoint endpoint=new HeatProviderEndPoint(-1, Integer.MAX_VALUE, Integer.MAX_VALUE);
     public DebugHeaterTileEntity() {
         super(FHTileTypes.DEBUGHEATER.get());
     }
