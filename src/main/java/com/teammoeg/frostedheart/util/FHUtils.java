@@ -168,6 +168,23 @@ public class FHUtils {
             return true;
         return r.nextInt(Math.max(1, MathHelper.ceil(-temp / 2))) == 0;
     }
+    public static boolean hasItems(PlayerEntity player,List<IngredientWithSize> costList) {
+    	int i=0;
+        for (IngredientWithSize iws : costList) {
+            int count = iws.getCount();
+            for (ItemStack it : player.inventory.mainInventory) {
+                if (iws.testIgnoringSize(it)) {
+                    count -= it.getCount();
+                    if (count <= 0)
+                        break;
+                }
+            }
+            if (count > 0) {
+            	return false;
+            }
+        }
+        return true;
+    }
     public static BitSet checkItemList(PlayerEntity player,List<IngredientWithSize> costList) {
     	BitSet bs=new BitSet(costList.size());
     	int i=0;

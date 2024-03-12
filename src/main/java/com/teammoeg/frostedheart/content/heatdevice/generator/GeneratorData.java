@@ -171,19 +171,21 @@ public class GeneratorData implements NBTSerializable{
         if (!isWorking||isBroken)
             return false;
         boolean hasFuel = true;
+        overdriveLevel-=5*(teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER)+1);
         if (isOverdrive) {
             while (process <= 1 && hasFuel) {
                 hasFuel = consumesFuel(w);
+            }
+            overdriveLevel+=20;
+            if(overdriveLevel>=this.getMaxOverdrive()) {
+            	isBroken=true;
             }
             if (process > 1) {
                 process -= 2;
                 return true;
             }
-            overdriveLevel+=20;
-            overdriveLevel-=5*(teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER)+1);
-            if(overdriveLevel>=this.getMaxOverdrive()) {
-            	isBroken=true;
-            }
+
+
         } else {
             while (process <= 0 && hasFuel) {
                 hasFuel = consumesFuel(w);
@@ -193,6 +195,7 @@ public class GeneratorData implements NBTSerializable{
                 return true;
             }
         }
+        
         return false;
     }
     public void onPosChange() {
