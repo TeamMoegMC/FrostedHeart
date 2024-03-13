@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.climate.data;
+package com.teammoeg.frostedheart.util.io;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

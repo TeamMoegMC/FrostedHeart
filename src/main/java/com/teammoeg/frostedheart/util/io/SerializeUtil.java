@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -39,6 +40,7 @@ import com.google.gson.JsonPrimitive;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
@@ -137,6 +139,22 @@ public class SerializeUtil {
         }
         return ItemStack.EMPTY;
     }
+    public static <A> MapCodec<A> defCodecValue(Codec<A> val,String name,A def){
+    	return defCodec(val, name, ()->def);
+    }
+    public static <A> MapCodec<A> defCodec(Codec<A> val,String name,Supplier<A> def){
+    	return new DefaultValueCodec<A>(name,val,def);
+    }
+    public static <A> Codec<A> nullableCodecValue(Codec<A> val){
+    	return new NullableCodec<A>(val);
+    }
+    public static <A> Codec<A> nullableCodecValue(Codec<A> val,A def){
+    	return nullableCodec(val, ()->def);
+    }
+    public static <A> Codec<A> nullableCodec(Codec<A> val, Supplier<A> def){
+    	return new NullableCodec<A>(val, def);
+    }
+    
 	public static <K,V> Codec<Pair<K,V>> pairCodec(String nkey,Codec<K> key,String nval,Codec<V> val){
 		return RecordCodecBuilder.create(t->t.group(key.fieldOf(nkey).forGetter(Pair::getFirst), val.fieldOf(nval).forGetter(Pair::getSecond))
 			.apply(t,Pair::of));

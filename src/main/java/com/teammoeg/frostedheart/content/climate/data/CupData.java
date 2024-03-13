@@ -19,15 +19,20 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-public class CupData extends JsonDataHolder {
-
-    public CupData(JsonObject data) {
-        super(data);
-    }
+public class CupData{
+	public static final MapCodec<CupData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+		Codec.FLOAT.fieldOf("efficiency").forGetter(o->o.efficiency)).apply(t, CupData::new));
+	float efficiency;
+	public CupData(float efficiency) {
+		super();
+		this.efficiency = efficiency;
+	}
 
     public Float getEfficiency() {
-        return this.getFloat("efficiency");
+        return efficiency;
     }
 }

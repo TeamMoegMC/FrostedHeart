@@ -19,78 +19,43 @@
 
 package com.teammoeg.frostedheart;
 
-import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.JsonOps;
+import com.mojang.serialization.MapCodec;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.content.climate.data.CupData;
 import com.teammoeg.frostedheart.content.climate.data.CupTempAdjustProxy;
-import com.teammoeg.frostedheart.content.climate.data.DataEntry;
+import com.teammoeg.frostedheart.content.climate.data.DataReference;
 import com.teammoeg.frostedheart.content.climate.data.DrinkTempData;
 import com.teammoeg.frostedheart.content.climate.data.FoodTempData;
-import com.teammoeg.frostedheart.content.climate.data.JsonDataHolder;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.NBTDynamicOps;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fluids.FluidStack;
 
 public class FHDataManager {
-    public enum FHDataType {
-        Armor(new DataType<>(ArmorTempData.class, "temperature", "armor")),
-        Biome(new DataType<>(BiomeTempData.class, "temperature", "biome")),
-        Food(new DataType<>(FoodTempData.class, "temperature", "food")),
-        Block(new DataType<>(BlockTempData.class, "temperature", "block")),
-        Drink(new DataType<>(DrinkTempData.class, "temperature", "drink")),
-        Cup(new DataType<>(CupData.class, "temperature", "cup")),
-        World(new DataType<>(WorldTempData.class, "temperature", "world"));
-
-        public static class DataType<T extends JsonDataHolder> {
-            final Class<T> dataCls;
-            final String location;
-            final String domain;
-
-            public DataType(Class<T> dataCls, String domain, String location) {
-                this.location = location;
-                this.dataCls = dataCls;
-                this.domain = domain;
-            }
-
-            public T create(JsonObject jo) {
-                try {
-                    return dataCls.getConstructor(JsonObject.class).newInstance(jo);
-                } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-                         | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-                    throw new RuntimeException("Can not create instance of " + dataCls.getSimpleName() + " from json", e);
-                }
-            }
-
-            public String getLocation() {
-                return domain + "/" + location;
-            }
-        }
-
-        public final DataType<? extends JsonDataHolder> type;
-
-        FHDataType(DataType<? extends JsonDataHolder> type) {
-            this.type = type;
-        }
-
-    }
-
-    public static class ResourceMap<T extends JsonDataHolder> extends HashMap<ResourceLocation, T> {
+    public static class ResourceMap<T> extends HashMap<ResourceLocation, T> {
         /**
          *
          */
@@ -112,12 +77,57 @@ public class FHDataManager {
             super(m);
         }
     }
+    public enum FHDataType {
+        Armor(new DataType<>(ArmorTempData.class, "temperature", "armor", ArmorTempData.CODEC)),
+        Biome(new DataType<>(BiomeTempData.class, "temperature", "biome", BiomeTempData.CODEC)),
+        Food(new DataType<>(FoodTempData.class, "temperature", "food", FoodTempData.CODEC)),
+        Block(new DataType<>(BlockTempData.class, "temperature", "block", BlockTempData.CODEC)),
+        Drink(new DataType<>(DrinkTempData.class, "temperature", "drink", DrinkTempData.CODEC)),
+        Cup(new DataType<>(CupData.class, "temperature", "cup", CupData.CODEC)),
+        World(new DataType<>(WorldTempData.class, "temperature", "world", WorldTempData.CODEC));
 
-    @SuppressWarnings("rawtypes")
-    public static final EnumMap<FHDataType, ResourceMap> ALL_DATA = new EnumMap<>(FHDataType.class);
+        public static class DataType<T> {
+            final Class<T> dataCls;
+            final String location;
+            final String domain;
+            final Codec<DataReference<T>> codec;
+
+            public DataType(Class<T> dataCls, String domain, String location, MapCodec<T> codec) {
+                this.location = location;
+                this.dataCls = dataCls;
+                this.domain = domain;
+                this.codec=DataReference.createCodec(codec).codec();
+            }
+
+            public DataReference<T> create(JsonElement jo) {
+                return codec.decode(JsonOps.INSTANCE, jo).result().map(t->t.getFirst()).orElse(null);
+            }
+            public void write(DataReference<T> obj,PacketBuffer pb) {
+            	pb.writeCompoundTag(codec.encodeStart(NBTDynamicOps.INSTANCE, obj).result().map(t->((CompoundNBT)t)).orElseGet(CompoundNBT::new));
+            };
+            public DataReference<T> read(PacketBuffer pb) {
+            	return codec.decode(NBTDynamicOps.INSTANCE,pb.readCompoundTag()).result().map(t->t.getFirst()).orElse(null);
+            };
+            public String getLocation() {
+                return domain + "/" + location;
+            }
+        }
+
+        public final DataType<?> type;
+
+        FHDataType(DataType<?> type) {
+            this.type = type;
+        }
+
+    }
+    public static void main(String[] args) {
+    	System.out.println(ArmorTempData.CODEC.decode(JsonOps.INSTANCE, JsonOps.INSTANCE.getMap(new JsonParser().parse("{\"factor\":12}")).result().get()).result().orElse(null));
+    	System.out.println(FHDataType.Armor.type.codec.encodeStart(NBTDynamicOps.INSTANCE,(DataReference)FHDataType.Armor.type.create(new JsonParser().parse("{\"id\":\"abc:def\",\"factor\":12}"))).result().map(Object::toString).orElse(""));
+    }
+
+    public static final EnumMap<FHDataType, ResourceMap<?>> ALL_DATA = new EnumMap<>(FHDataType.class);
 
     public static boolean synched = false;
-    private static final JsonParser parser = new JsonParser();
     static {
         for (FHDataType dt : FHDataType.values()) {
             ALL_DATA.put(dt, new ResourceMap<>());
@@ -125,8 +135,8 @@ public class FHDataManager {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends JsonDataHolder> ResourceMap<T> get(FHDataType dt) {
-        return ALL_DATA.get(dt);
+    public static <T> ResourceMap<T> get(FHDataType dt) {
+        return (ResourceMap<T>)ALL_DATA.get(dt);
 
     }
 
@@ -180,20 +190,20 @@ public class FHDataManager {
     }
 
     @SuppressWarnings("unchecked")
-    public static void load(DataEntry[] entries) {
-        reset();
-        for (DataEntry de : entries) {
-            JsonDataHolder jdh = de.type.type.create(parser.parse(de.data).getAsJsonObject());
+    public static void load(FHDataType type, List<DataReference> entries) {
+    	ResourceMap<Object> map=((ResourceMap<Object>)ALL_DATA.get(type));
+    	map.clear();
+        for (DataReference de : entries) {
             //System.out.println("registering "+dt.type.location+": "+jdh.getId());
-            ALL_DATA.get(de.type).put(jdh.getId(), jdh);
+        	map.put(de.getId(), de.getObj());
         }
     }
 
     @SuppressWarnings("unchecked")
     public static void register(FHDataType dt, JsonObject data) {
-        JsonDataHolder jdh = dt.type.create(data);
+    	DataReference<?> jdh = dt.type.create(data);
         //System.out.println("registering "+dt.type.location+": "+jdh.getId());
-        ALL_DATA.get(dt).put(jdh.getId(), jdh);
+    	((ResourceMap<Object>)ALL_DATA.get(dt)).put(jdh.getId(), jdh.getObj());
         synched = false;
     }
 
@@ -204,17 +214,10 @@ public class FHDataManager {
     }
 
     @SuppressWarnings("rawtypes")
-    public static DataEntry[] save() {
-        int tsize = 0;
-        for (ResourceMap map : ALL_DATA.values()) {
-            tsize += map.size();
-        }
-        DataEntry[] entries = new DataEntry[tsize];
-        int i = -1;
-        for (Entry<FHDataType, ResourceMap> entry : ALL_DATA.entrySet()) {
-            for (Object jdh : entry.getValue().values()) {
-                entries[++i] = new DataEntry(entry.getKey(), ((JsonDataHolder) jdh).getData());
-            }
+    public static List<DataReference> save(FHDataType type) {
+    	List<DataReference> entries = new ArrayList<>();
+        for (Entry<ResourceLocation, ?> jdh : ALL_DATA.get(type).entrySet()) {
+            entries.add(new DataReference(jdh.getKey(), jdh.getValue()));
         }
         return entries;
     }

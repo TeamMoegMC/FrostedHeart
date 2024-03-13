@@ -19,20 +19,24 @@
 
 package com.teammoeg.frostedheart.content.climate.network;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.FHDataManager;
+import com.teammoeg.frostedheart.FHDataManager.FHDataType;
 import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.content.climate.data.DataEntry;
+import com.teammoeg.frostedheart.content.climate.data.DataReference;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FHDatapackSyncPacket implements FHMessage {
-    DataEntry[] entries;
-
-    public FHDatapackSyncPacket() {
-        entries = FHDataManager.save();
+    List<DataReference> entries;
+    FHDataType type;
+    public FHDatapackSyncPacket(FHDataType type) {
+        entries = FHDataManager.save(type);
+        this.type=type;
     }
 
     public FHDatapackSyncPacket(PacketBuffer buffer) {
@@ -40,22 +44,19 @@ public class FHDatapackSyncPacket implements FHMessage {
     }
 
     public void decode(PacketBuffer buffer) {
-        entries = new DataEntry[buffer.readVarInt()];
-        for (int i = 0; i < entries.length; i++) {
-            entries[i] = new DataEntry(buffer);
-        }
+    	type = FHDataType.values()[buffer.readByte()];
+        entries = SerializeUtil.readList(buffer,t->type.type.read(buffer));
     }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeVarInt(entries.length);
-        for (DataEntry de : entries)
-            de.encode(buffer);
+    	buffer.writeByte(type.ordinal());
+        SerializeUtil.writeList(buffer, entries, type.type::write);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-            FHDataManager.load(entries);
+            FHDataManager.load(type,entries);
         });
         context.get().setPacketHandled(true);
     }

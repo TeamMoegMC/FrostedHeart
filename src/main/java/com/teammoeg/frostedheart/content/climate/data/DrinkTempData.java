@@ -19,15 +19,21 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-public class DrinkTempData extends JsonDataHolder {
-
-    public DrinkTempData(JsonObject data) {
-        super(data);
-    }
+public class DrinkTempData {
+	public static final MapCodec<DrinkTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+		SerializeUtil.defCodecValue(Codec.FLOAT,"heat", 0f).forGetter(o->o.heat)).apply(t, DrinkTempData::new));
+	float heat;
+	public DrinkTempData(float heat) {
+		super();
+		this.heat = heat;
+	}
 
     public float getHeat() {
-        return this.getFloatOrDefault("heat", 0F);
+        return heat;
     }
 }

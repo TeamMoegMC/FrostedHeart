@@ -19,16 +19,21 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-public class WorldTempData extends JsonDataHolder {
-
-    public WorldTempData(JsonObject data) {
-        super(data);
-    }
-
-    public float getTemp() {
-        return this.getFloatOrDefault("temperature", 0F);
+public class WorldTempData{
+	public static final MapCodec<WorldTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+		SerializeUtil.defCodecValue(Codec.FLOAT,"temperature", 0f).forGetter(o->o.temperature)).apply(t, WorldTempData::new));
+	float temperature;
+    public WorldTempData(float temperature) {
+		super();
+		this.temperature = temperature;
+	}
+	public float getTemp() {
+        return temperature;
     }
 
 }

@@ -20,28 +20,43 @@
 package com.teammoeg.frostedheart.content.climate.data;
 
 import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.item.ItemStack;
 
-public class FoodTempData extends JsonDataHolder implements ITempAdjustFood {
+public class FoodTempData implements ITempAdjustFood {
 
-    public FoodTempData(JsonObject data) {
-        super(data);
-    }
 
+	public static final MapCodec<FoodTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+		SerializeUtil.defCodecValue(Codec.FLOAT,"heat", 0f).forGetter(o->o.heat),
+		SerializeUtil.defCodecValue(Codec.FLOAT,"min", -15f).forGetter(o->o.min),
+		SerializeUtil.defCodecValue(Codec.FLOAT,"max", 15f).forGetter(o->o.max)).apply(t, FoodTempData::new));
+
+    float heat;
+    float min;
+    float max;
+	public FoodTempData(float heat, float min, float max) {
+		super();
+		this.heat = heat;
+		this.min = min;
+		this.max = max;
+	}
     @Override
     public float getHeat(ItemStack is, float env) {
-        return this.getFloatOrDefault("heat", 0F);
+        return heat;
     }
 
     @Override
     public float getMaxTemp(ItemStack is) {
-        return this.getFloatOrDefault("max", 15F);
+        return max;
     }
 
     @Override
     public float getMinTemp(ItemStack is) {
-        return this.getFloatOrDefault("min", -15F);
+        return min;
     }
 }

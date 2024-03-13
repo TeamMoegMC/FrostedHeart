@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHItems;
-import com.teammoeg.frostedheart.content.climate.data.JsonHelper;
+import com.teammoeg.frostedheart.util.io.JsonHelper;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.inventory.CraftingInventory;

@@ -59,6 +59,7 @@ public class TemperatureUpdate {
 
     public static final float SELF_HEATING_CONSTANT = 0.036F;
 
+    
     /**
      * Perform temperature effect
      *

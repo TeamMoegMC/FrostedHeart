@@ -19,27 +19,37 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-public class BlockTempData extends JsonDataHolder {
+public class BlockTempData{
+	float temperature;
+	boolean level;
+	boolean lit;
+	public static final MapCodec<BlockTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+		SerializeUtil.defCodecValue(Codec.FLOAT,"temperature", 0f).forGetter(o->o.temperature),
+		SerializeUtil.defCodecValue(Codec.BOOL,"level", false).forGetter(o->o.level),
+		SerializeUtil.defCodecValue(Codec.BOOL,"lit", false).forGetter(o->o.lit)).apply(t, BlockTempData::new));
+    
 
-    public BlockTempData(JsonObject data) {
-        super(data);
-    }
+    public BlockTempData(float temperature, boolean level, boolean lit) {
+		super();
+		this.temperature = temperature;
+		this.level = level;
+		this.lit = lit;
+	}
 
-    public int getRange() {
-        return this.getIntOrDefault("range", 5);
-    }
-
-    public float getTemp() {
-        return this.getFloatOrDefault("temperature", 0F);
+	public float getTemp() {
+        return temperature;
     }
 
     public boolean isLevel() {
-        return this.getBooleanOrDefault("level_divide", false);
+        return level;
     }
 
     public boolean isLit() {
-        return this.getBooleanOrDefault("must_lit", false);
+        return lit;
     }
 }

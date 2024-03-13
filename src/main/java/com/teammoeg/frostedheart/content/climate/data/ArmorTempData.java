@@ -19,21 +19,33 @@
 
 package com.teammoeg.frostedheart.content.climate.data;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-public class ArmorTempData extends JsonDataHolder {
+public class ArmorTempData {
+	public static final MapCodec<ArmorTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+		SerializeUtil.defCodecValue(Codec.FLOAT, "factor", 0f).forGetter(o->o.insulation),
+		SerializeUtil.defCodecValue(Codec.FLOAT, "heat_proof", 0f).forGetter(o->o.heat_proof),
+		SerializeUtil.defCodecValue(Codec.FLOAT, "wind_proof", 0f).forGetter(o->o.wind_proof)).apply(t, ArmorTempData::new));
+	float insulation;
+	float heat_proof;
+	float wind_proof;
 
-    public ArmorTempData(JsonObject data) {
-        super(data);
-    }
-    public float getInsulation() {
-    	return this.getFloatOrDefault("factor", 0F);
+    public ArmorTempData(float insulation, float heat_proof, float wind_proof) {
+		this.insulation = insulation;
+		this.heat_proof = heat_proof;
+		this.wind_proof = wind_proof;
+	}
+	public float getInsulation() {
+    	return insulation;
     }
     public float getHeatProof() {
-    	return this.getFloatOrDefault("heat_proof", 0F);
+    	return heat_proof;
     }
     public float getColdProof() {
-    	return this.getFloatOrDefault("wind_proof", 0F);
+    	return wind_proof;
     }
   /*  @Override
     public float getFactor(ServerPlayerEntity pe, ItemStack stack) {
@@ -64,4 +76,8 @@ public class ArmorTempData extends JsonDataHolder {
         }
         return base;
     }*/
+	@Override
+	public String toString() {
+		return "ArmorTempData [insulation=" + insulation + ", heat_proof=" + heat_proof + ", wind_proof=" + wind_proof + "]";
+	}
 }
