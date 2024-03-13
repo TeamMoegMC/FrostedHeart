@@ -41,6 +41,7 @@ import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.heatdevice.generator.MasterGeneratorScreen;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.gui.tech.ResearchToast;
@@ -115,6 +116,9 @@ public class ClientEvents {
         if (event.side == LogicalSide.CLIENT && event.phase == TickEvent.Phase.START
                 && event.player instanceof ClientPlayerEntity) {
             ClientPlayerEntity player = (ClientPlayerEntity) event.player;
+            if(ClientUtils.mc().currentScreen instanceof MasterGeneratorScreen&&player.ticksExisted%20==0) {
+            	((MasterGeneratorScreen)ClientUtils.mc().currentScreen).fullInit();
+            }
             if (!player.isSpectator() && !player.isCreative() && player.world != null) {
                 if (player.ticksExisted % 60 <= 3) {
                 	 PlayerTemperatureData ptd=PlayerTemperatureData.getCapability(player).orElse(null);

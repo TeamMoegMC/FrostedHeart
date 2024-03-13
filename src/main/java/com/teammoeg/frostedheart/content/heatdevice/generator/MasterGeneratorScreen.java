@@ -26,6 +26,7 @@ import blusunrize.immersiveengineering.client.gui.elements.GuiButtonState;
 import blusunrize.immersiveengineering.client.utils.GuiHelper;
 import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -177,7 +178,19 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
                     ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(tile.master(), tag));
                     fullInit();
                 }));
-        this.addButton(upgrade=new MasterGeneratorGuiButtonUpgrade(guiLeft + 75, guiTop + 116, 26, 18, 1,424, 148,
+        int level=1;
+        PlayerEntity player=ClientUtils.mc().player;
+        if(tile.isBroken) {
+        	if(FHUtils.hasItems(player, tile.getRepairCost())) 
+        		level=2;
+        	else
+        		level=3;
+        } else {
+        	 if(validStructure&&ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock())&&FHUtils.hasItems(player, tile.getUpgradeCost())) {
+        		 level=0;
+        	 }
+        }
+        this.addButton(upgrade=new MasterGeneratorGuiButtonUpgrade(guiLeft + 75, guiTop + 116, 26, 18, level,424, 148,
                 btn -> {
                 	
                 	FHNetwork.sendToServer(new GeneratorModifyPacket());
@@ -217,6 +230,9 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         if (isMouseIn(mouseX, mouseY, 18, 18, 32, 32)) {
             tooltip.add(TranslateUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
         }
+        if (isMouseIn(mouseX, mouseY, 124, 18, 32, 32)) {
+            tooltip.add(TranslateUtils.translateGui("generator.over.level",container.data.get(MasterGeneratorTileEntity.OVERDRIVE)/10f));
+        }
         if (isMouseIn(mouseX, mouseY, 75, 116, 26, 18)) {
         	Optional<GeneratorData> generatorData=tile.getDataNoCheck();
         	if(tile.getNextLevelMultiblock()!=null&&!tile.isBroken) {
@@ -246,7 +262,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         		}
         	}else if(tile.isBroken) {
     			tooltip.add(TranslateUtils.translateGui("generator.repair_material"));
-    			BitSet bs=FHUtils.checkItemList(ClientUtils.mc().player, tile.getUpgradeCost());
+    			BitSet bs=FHUtils.checkItemList(ClientUtils.mc().player, tile.getRepairCost());
     			int i=0;
     			boolean isOk=true;;
     			for(IngredientWithSize iws:tile.getRepairCost()) {

@@ -43,12 +43,14 @@ import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMulti
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.item.TNTEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.play.server.SExplosionPacket;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
@@ -66,6 +68,7 @@ import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.world.Explosion;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
@@ -349,7 +352,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	if(!FHUtils.costItems(entityplayer, getRepairCost()))
     		return;
     	isBroken=false;
-    	getData().ifPresent(t->t.isBroken=false);
+    	getData().ifPresent(t->{t.isBroken=false;t.overdriveLevel=0;});
 
     }
     @Override
@@ -410,6 +413,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     protected void tickDrives(boolean isActive) {
 
     }
+    int remTicks;
     @Override
     protected boolean tickFuel() {
         // just finished process or during process
@@ -423,11 +427,29 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         boolean isWorking=data.map(t -> t.isActive).orElse(false);
         setTemperatureLevel(data.map(t -> t.TLevel).orElse(0F));
         setRangeLevel(data.map(t -> t.RLevel).orElse(0F));
+        boolean lastIsBroken=isBroken;
         guiData.set(PROCESS, data.map(t -> t.process).orElse(0));
         guiData.set(PROCESS_MAX, data.map(t -> t.processMax).orElse(0));
         guiData.set(OVERDRIVE, data.map(t -> t.overdriveLevel*1000/t.getMaxOverdrive()).orElse(0));
         guiData.set(POWER, (int)(float)data.map(t->t.power).orElse(0F));
         isBroken = data.map(t->t.isBroken).orElse(false);
+        if(lastIsBroken!=isBroken&&isBroken) {
+        	remTicks=100;
+        }
+        if(remTicks>0) {
+        	if(remTicks%5==0) {
+	        	BlockPos pos=this.getBlockPosForPos(
+	        			new BlockPos(world.rand.nextInt(multiblockInstance.getSize(world).getX()),
+	        						world.rand.nextInt(multiblockInstance.getSize(world).getY()),
+	        						world.rand.nextInt(multiblockInstance.getSize(world).getZ())));
+	            for(PlayerEntity serverplayerentity : this.world.getPlayers()) {
+	                if (serverplayerentity.getPosition().distanceSq(pos) < 4096.0D) {
+	                   ((ServerPlayerEntity)serverplayerentity).connection.sendPacket(new SExplosionPacket(pos.getX(), pos.getY(), pos.getZ(), 8, Arrays.asList(), null));
+	                }
+	             }
+        	}
+        	remTicks--;
+        }
         tickDrives(isWorking);
         return isWorking;
     	/*if(this.getIsActive())
