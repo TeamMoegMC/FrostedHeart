@@ -167,6 +167,9 @@ public class SerializeUtil {
 	public static <K,V> Codec<Map<K,V>> mapCodec(Codec<K> keyCodec,Codec<V> valueCodec){
 		return Codec.compoundList(keyCodec, valueCodec).xmap(pl->pl.stream().collect(Collectors.toMap(Pair::getFirst,Pair::getSecond)),pl->pl.entrySet().stream().map(ent->Pair.of(ent.getKey(), ent.getValue())).collect(Collectors.toList())); 
 	}
+	public static <K,V> Codec<Map<K,V>> mapCodec(String nkey,Codec<K> keyCodec,String nval,Codec<V> valueCodec){
+		return Codec.list(SerializeUtil.pairCodec(nkey, keyCodec, nval, valueCodec)).xmap(pl->pl.stream().collect(Collectors.toMap(Pair::getFirst,Pair::getSecond)),pl->pl.entrySet().stream().map(ent->Pair.of(ent.getKey(), ent.getValue())).collect(Collectors.toList())); 
+	}
 
     public static <T> List<T> parseJsonElmList(JsonElement elm, Function<JsonElement, T> mapper) {
         if (elm == null)
