@@ -40,11 +40,15 @@ import com.google.gson.JsonPrimitive;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
+import io.netty.handler.codec.DecoderException;
+import io.netty.handler.codec.EncoderException;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.ByteArrayNBT;
 import net.minecraft.nbt.ByteNBT;
@@ -62,6 +66,7 @@ import net.minecraft.nbt.ShortNBT;
 import net.minecraft.nbt.StringNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Util;
 
 public class SerializeUtil {
     public static class CompoundBuilder {
@@ -340,6 +345,78 @@ public class SerializeUtil {
 
     public static <V> void writeStringMap(PacketBuffer buffer, Map<String, V> elms, BiConsumer<V, PacketBuffer> valuewriter) {
         writeMap(buffer, elms, (p, b) -> b.writeString(p), valuewriter);
+    }
+    public static <T> void writeCodec(PacketBuffer pb, Codec<T> codec, T obj) {
+    	DataResult<Object> ob=codec.encodeStart(DataOps.COMPRESSED, obj);
+    	Optional<Object> ret=ob.resultOrPartial(EncoderException::new);
+    	writeObject(pb,ret.get());
+    }
+    public static <T> T readCodec(PacketBuffer pb, Codec<T> codec) {
+    	DataResult<Pair<T, Object>> ob=codec.decode(DataOps.COMPRESSED, readObject(pb));
+    	Optional<Pair<T, Object>> ret=ob.resultOrPartial(DecoderException::new);
+    	return ret.get().getFirst();
+    }
+    public static void writeObject(PacketBuffer pb,Object input) {
+		if(input instanceof Byte) {
+			pb.writeByte(1);
+			pb.writeByte((Byte)input);
+		}else if(input instanceof Short) {
+			pb.writeByte(2);
+			pb.writeShort((Short) input);
+		}else if(input instanceof Integer) {
+			pb.writeByte(3);
+			pb.writeVarInt((Integer) input);
+		}else if(input instanceof Long) {
+			pb.writeByte(4);
+			pb.writeLong((Long) input);
+		}else if(input instanceof Float) {
+			pb.writeByte(5);
+			pb.writeFloat((Float) input);
+		}else if(input instanceof Double) {
+			pb.writeByte(6);
+			pb.writeDouble((Double) input);
+		}else if(input instanceof String) {
+			pb.writeByte(7);
+			pb.writeString((String) input);
+		}else if(input instanceof Map) {
+			pb.writeByte(8);
+			SerializeUtil.writeList(pb, ((Map<Object,Object>)input).entrySet(),(t,p)->{writeObject(pb,t.getKey());writeObject(pb,t.getValue());});
+		}else if(input instanceof List) {
+			Class<?> cls=DataOps.getElmClass(((List<Object>)input));
+			if(cls==Byte.class) {
+				pb.writeByte(9);
+				byte[] bs=DataOps.INSTANCE.getByteArray(input).result().get();
+				pb.writeVarInt(bs.length);
+				pb.writeBytes(bs);
+			}else if(cls==Integer.class) {
+				pb.writeByte(10);
+				SerializeUtil.writeList(pb, ((List<Integer>)input), (t,p)->p.writeVarInt(t));
+			}else if(cls==Long.class) {
+				pb.writeByte(11);
+				SerializeUtil.writeList(pb, ((List<Long>)input), (t,p)->p.writeLong(t));
+			}else {
+				pb.writeByte(12);
+				SerializeUtil.writeList2(pb, ((List<Object>)input), SerializeUtil::writeObject);
+			}
+		}
+		pb.writeByte(0);
+    }
+    public static Object readObject(PacketBuffer pb) {
+    	switch(pb.readByte()) {
+    	case 1:return pb.readByte();
+    	case 2:return pb.readShort();
+    	case 3:return pb.readVarInt();
+    	case 4:return pb.readLong();
+    	case 5:return pb.readFloat();
+    	case 6:return pb.readDouble();
+    	case 7:return pb.readString();
+    	case 8:return SerializeUtil.readMap(pb, new HashMap<>(), SerializeUtil::readObject, SerializeUtil::readObject);
+    	case 9:return pb.readBytes(pb.readVarInt());
+    	case 10:return SerializeUtil.readList(pb, PacketBuffer::readVarInt);
+    	case 11:return SerializeUtil.readList(pb, PacketBuffer::readLong);
+    	case 12:return SerializeUtil.readList(pb, SerializeUtil::readObject);
+    	}
+    	return null;
     }
     private static final Map<Class<?>,Marshaller> marshallers=new HashMap<>();
     private static boolean isBasicInitialized=false;

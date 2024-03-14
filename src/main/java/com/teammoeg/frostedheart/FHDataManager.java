@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
@@ -43,15 +44,22 @@ import com.teammoeg.frostedheart.content.climate.data.FoodTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.io.DataOps;
+import com.teammoeg.frostedheart.util.io.NBTOps;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.NBTDynamicOps;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidStack;
 
 public class FHDataManager {
@@ -103,26 +111,37 @@ public class FHDataManager {
                 return codec.decode(JsonOps.INSTANCE, jo).result().map(t->t.getFirst()).orElse(null);
             }
             public void write(DataReference<T> obj,PacketBuffer pb) {
-            	pb.writeCompoundTag(codec.encodeStart(NBTDynamicOps.INSTANCE, obj).result().map(t->((CompoundNBT)t)).orElseGet(CompoundNBT::new));
+            	
+            	SerializeUtil.writeCodec(pb, codec, obj);
             };
             public DataReference<T> read(PacketBuffer pb) {
-            	return codec.decode(NBTDynamicOps.INSTANCE,pb.readCompoundTag()).result().map(t->t.getFirst()).orElse(null);
+            	return SerializeUtil.readCodec(pb, codec);
             };
             public String getLocation() {
                 return domain + "/" + location;
             }
         }
 
-        public final DataType<?> type;
+        public final DataType<Object> type;
 
         FHDataType(DataType<?> type) {
-            this.type = type;
+            this.type = (DataType<Object>) type;
         }
 
     }
     public static void main(String[] args) {
     	System.out.println(ArmorTempData.CODEC.decode(JsonOps.INSTANCE, JsonOps.INSTANCE.getMap(new JsonParser().parse("{\"factor\":12}")).result().get()).result().orElse(null));
-    	System.out.println(FHDataType.Armor.type.codec.encodeStart(NBTDynamicOps.INSTANCE,(DataReference)FHDataType.Armor.type.create(new JsonParser().parse("{\"id\":\"abc:def\",\"factor\":12}"))).result().map(Object::toString).orElse(""));
+    	//Object nbt=FHDataType.Armor.type.codec.encodeStart(DataOps.COMPRESSED,(DataReference<Object>)FHDataType.Armor.type.create(new JsonParser().parse("{\"id\":\"abc:def\",\"factor\":12}"))).result().orElse(null);
+    	ByteBuf bb=ByteBufAllocator.DEFAULT.buffer(256);
+    	PacketBuffer pb=new PacketBuffer(bb);
+    	FHDataType.Armor.type.write((DataReference<Object>)FHDataType.Armor.type.create(new JsonParser().parse("{\"id\":\"abc:def\",\"factor\":12}")), pb);
+    	System.out.println(bb.writerIndex());
+    	bb.resetReaderIndex();
+    	for(int i=0;i<bb.writerIndex();i++)
+    		System.out.print(bb.readByte()+" ");
+    	System.out.println();
+    	bb.resetReaderIndex();
+    	System.out.println(FHDataType.Armor.type.read(pb));
     }
 
     public static final EnumMap<FHDataType, ResourceMap<?>> ALL_DATA = new EnumMap<>(FHDataType.class);

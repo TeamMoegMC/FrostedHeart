@@ -19,10 +19,14 @@
 
 package com.teammoeg.frostedheart.util.io;
 
+import java.util.function.Function;
+
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
 
-public class JsonSerializerRegistry<U extends Writeable> extends PacketBufferSerializerRegistry<U, JsonObject> {
+import net.minecraft.network.PacketBuffer;
+
+public class JsonSerializerRegistry<U extends Writeable> extends PacketBufferSerializerRegistry<U, Object, JsonObject> {
 
 
 
@@ -38,6 +42,20 @@ public class JsonSerializerRegistry<U extends Writeable> extends PacketBufferSer
 	@Override
 	protected String readType(JsonObject obj) {
 		return obj.get("type").getAsString();
+	}
+
+	public void register(Class<? extends U> cls, String type, Function<JsonObject, U> json, Function<U, JsonObject> obj, Function<PacketBuffer, U> packet) {
+		// TODO Auto-generated method stub
+		super.register(cls, type, json, (t,c)->obj.apply(t), packet);
+	}
+
+	@Override
+	public U read(JsonObject fromObj) {
+		return super.read(fromObj);
+	}
+
+	public JsonObject write(U fromObj) {
+		return super.write(fromObj, null);
 	}
 
 

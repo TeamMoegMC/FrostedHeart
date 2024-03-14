@@ -19,13 +19,15 @@
 
 package com.teammoeg.frostedheart.util.io;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Pair;
 
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
 
-public class NBTSerializerRegistry<U extends Writeable> extends PacketBufferSerializerRegistry<U, CompoundNBT> {
+public class NBTSerializerRegistry<U extends Writeable> extends PacketBufferSerializerRegistry<U, Object, CompoundNBT> {
 
 
     public NBTSerializerRegistry() {
@@ -53,5 +55,13 @@ public class NBTSerializerRegistry<U extends Writeable> extends PacketBufferSeri
 	protected String readType(CompoundNBT obj) {
 		// TODO Auto-generated method stub
 		return obj.getString("type");
+	}
+	public void register(Class<? extends U> cls, String type, Function<CompoundNBT, U> json, Function<U, CompoundNBT> obj, Function<PacketBuffer, U> packet) {
+		// TODO Auto-generated method stub
+		super.register(cls, type, json, (t,c)->obj.apply(t), packet);
+	}
+	public CompoundNBT write(U fromObj) {
+		// TODO Auto-generated method stub
+		return super.write(fromObj, null);
 	}
 }

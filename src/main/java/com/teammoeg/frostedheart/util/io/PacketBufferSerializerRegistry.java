@@ -19,13 +19,14 @@
 
 package com.teammoeg.frostedheart.util.io;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Pair;
 
 import net.minecraft.network.PacketBuffer;
 
-public abstract class PacketBufferSerializerRegistry<T extends PacketWritable, R>  extends SerializerRegistry<T, R> {
+public abstract class PacketBufferSerializerRegistry<T extends PacketWritable, C, R>  extends SerializerRegistry<T, C, R> {
 	PacketBufferSerializer<T> pbs= new PacketBufferSerializer<>();
 	TypeRegistry<T> types= new TypeRegistry<>();
 	public T read(PacketBuffer pb) {
@@ -56,10 +57,10 @@ public abstract class PacketBufferSerializerRegistry<T extends PacketWritable, R
 		return types.fullTypeOf(cls);
 	}
 
-	public void register(Class<? extends T> cls, String type, Function<R, T> json, Function<T, R> obj, Function<PacketBuffer, T> packet) {
+	public void register(Class<? extends T> cls, String type, Function<R, T> read, BiFunction<T, C, R> write, Function<PacketBuffer, T> packet) {
 		pbs.register(cls, packet);
 		types.register(cls, type);
-    	super.register( type,json, obj);
+    	super.register( type,read, write);
 	}
 
 	public PacketBufferSerializerRegistry() {

@@ -2,13 +2,14 @@ package com.teammoeg.frostedheart.util.io;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Pair;
 
-public abstract class SerializerRegistry<T, R> {
+public abstract class SerializerRegistry<T, C, R> {
 	protected Map<String, Function<R, T>> from = new HashMap<>();
-    protected Map<String, Function<T, R>> to = new HashMap<>();
+    protected Map<String, BiFunction<T, C, R>> to = new HashMap<>();
 	public SerializerRegistry() {
 		super();
 	}
@@ -17,7 +18,7 @@ public abstract class SerializerRegistry<T, R> {
 		from.put(type, s);
 	}
 
-    protected void putDeserializer(String type, Function<T, R> s) {
+    protected void putDeserializer(String type, BiFunction<T, C, R> s) {
 		to.put(type, s);
 	}
 
@@ -31,17 +32,17 @@ public abstract class SerializerRegistry<T, R> {
 		return ffrom.apply(fromObj);
 	}
 	public abstract Pair<Integer,String> typeOf(Class<?> cls);
-	public R write(T fromObj) {
+	public R write(T fromObj,C context) {
 		if(fromObj==null)return null;
 		Pair<Integer, String> type=typeOf(fromObj.getClass());
 		if(type==null)return null;
-		Function<T, R> ffrom=to.get(type.getSecond());
+		BiFunction<T, C, R> ffrom=to.get(type.getSecond());
 		if(ffrom==null)return null;
-		R obj= ffrom.apply(fromObj);
+		R obj= ffrom.apply(fromObj, context);
 		writeType(type,obj);
 		return obj;
 	}
-	protected void register(String type, Function<R, T> json, Function<T, R> obj) {
+	protected void register(String type, Function<R, T> json, BiFunction<T, C, R> obj) {
 	    putSerializer(type, json);
 	    putDeserializer(type,obj);
 	}
