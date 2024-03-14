@@ -8,6 +8,7 @@ import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import net.minecraft.block.BlockState;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ColumnPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.Tags;
 import se.mickelus.tetra.blocks.TetraBlock;
@@ -30,6 +31,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
     public int chest = 0;
     public int rack = 0;
     public Set<BlockPos> linkedMines = new HashSet<>();
+    public Set<ColumnPos> occupiedArea = new HashSet<>();
 
     @Override
     public boolean isValidFloor(BlockPos pos){
@@ -65,6 +67,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
         this.scan(256, (blockPos) -> {
             area++;
             FHMain.LOGGER.info("Scanning pos: " + blockPos);
+            occupiedArea.add(toColumnPos(blockPos));
             }, BlockScanner.PREDICATE_FALSE);
         if(!this.rails.isEmpty()){
             RailScanner railScanner = new RailScanner();

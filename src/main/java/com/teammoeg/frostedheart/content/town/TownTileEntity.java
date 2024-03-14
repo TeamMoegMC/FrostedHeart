@@ -20,6 +20,9 @@
 package com.teammoeg.frostedheart.content.town;
 
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.math.ColumnPos;
+
+import java.util.Collection;
 
 /**
  * A town block's tile entity.
@@ -65,4 +68,6 @@ public interface TownTileEntity {
      * @param data the work data
      */
     void setWorkData(CompoundNBT data);
+
+    Collection<ColumnPos> getOccupiedArea();
 }

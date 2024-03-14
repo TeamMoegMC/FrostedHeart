@@ -115,7 +115,7 @@ public class HouseBlockScanner extends BlockScanner {
         FloorBlockScanner floorBlockScanner = new FloorBlockScanner(world, startPos);
         floorBlockScanner.scan(MAX_SCANNING_TIMES_FLOOR, (pos) -> {
             this.area++;
-            this.occupiedArea.add(new ColumnPos(pos.getX(), pos.getZ()));
+            this.occupiedArea.add(toColumnPos(pos));
             //FHMain.LOGGER.debug("HouseScanner: scanning floor pos " + pos);
         }, (pos) -> !this.isValid);
         //FHMain.LOGGER.debug("HouseScanner: first scan area: " + area);

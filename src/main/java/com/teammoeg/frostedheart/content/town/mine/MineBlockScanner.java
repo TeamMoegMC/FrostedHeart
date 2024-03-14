@@ -3,10 +3,12 @@ package com.teammoeg.frostedheart.content.town.mine;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ColumnPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.Tags;
 
 import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static net.minecraft.block.PlantBlockHelper.isAir;
@@ -17,6 +19,7 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
     private final int startZ;
     public int validStone = 0;
     public int light = 0;
+    public Set<ColumnPos> occupiedArea = new HashSet<>();
     public MineBlockScanner(World world, BlockPos startPos) {
         super(world, startPos);
         this.startX = startPos.getX();
@@ -53,6 +56,7 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
         this.scan(512, CONSUMER_NULL, (pos)->{
             if(isStoneOrOre(world, pos)){
                 validStone++;
+                occupiedArea.add(toColumnPos(pos));
             }
             light += world.getBlockState(pos).getLightValue(world, pos);
         }, PREDICATE_FALSE);

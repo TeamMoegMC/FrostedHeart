@@ -140,6 +140,11 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
         temperatureModifier = data.getDouble("temperatureModifier");
     }
 
+    @Override
+    public Collection<ColumnPos> getOccupiedArea() {
+        return this.occupiedArea;
+    }
+
     /**
      * Determine whether the house structure is well-defined.
      * <p>

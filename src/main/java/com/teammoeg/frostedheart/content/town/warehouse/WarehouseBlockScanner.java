@@ -3,9 +3,12 @@ package com.teammoeg.frostedheart.content.town.warehouse;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ColumnPos;
 import net.minecraft.world.World;
 
 import java.util.AbstractMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import static net.minecraft.block.PlantBlockHelper.isAir;
 
@@ -14,6 +17,7 @@ public class WarehouseBlockScanner extends FloorBlockScanner {
     private int volume = 0;
     private int area = 0;
     private static final int MAX_SCANNING_TIMES = 512;
+    public Set<ColumnPos> occupiedArea = new HashSet<>();
 
     public WarehouseBlockScanner(World world, BlockPos startPos) {
         super(world, startPos);
@@ -33,6 +37,7 @@ public class WarehouseBlockScanner extends FloorBlockScanner {
             AbstractMap.SimpleEntry<Integer, Boolean> floorInformation = countBlocksAbove(pos1, (pos2)->!isAir(world.getBlockState(pos2)));
             if(!floorInformation.getValue()) this.isValid=false;
             this.volume += floorInformation.getKey();
+            occupiedArea.add(toColumnPos(pos1));
         },(useless)->false);
     }
 }

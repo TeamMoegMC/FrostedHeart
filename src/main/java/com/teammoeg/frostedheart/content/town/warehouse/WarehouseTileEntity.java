@@ -12,8 +12,11 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ColumnPos;
 
+import java.util.Collection;
 import java.util.Objects;
+import java.util.Set;
 
 import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHouseBlock;
 
@@ -21,6 +24,7 @@ public class WarehouseTileEntity extends FHBaseTileEntity implements TownTileEnt
     public int volume;//有效体积
     public int area;//占地面积
     public double capacity;//最大容量
+    public Set<ColumnPos> occupiedArea;
 
     public WarehouseTileEntity() {
         super(FHTileTypes.WAREHOUSE.get());
@@ -45,6 +49,7 @@ public class WarehouseTileEntity extends FHBaseTileEntity implements TownTileEnt
                 this.area = scanner.getArea();
                 this.volume = scanner.getVolume();
                 this.capacity = area*Math.pow((volume*0.02/area), 0.9)*37;
+                this.occupiedArea = scanner.occupiedArea;
                 return true;
             }
         }
@@ -85,6 +90,11 @@ public class WarehouseTileEntity extends FHBaseTileEntity implements TownTileEnt
     @Override
     public void setWorkData(CompoundNBT data) {
 
+    }
+
+    @Override
+    public Collection<ColumnPos> getOccupiedArea() {
+        return this.occupiedArea;
     }
 
     @Override

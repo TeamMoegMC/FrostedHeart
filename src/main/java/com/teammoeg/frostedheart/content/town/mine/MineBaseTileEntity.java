@@ -14,7 +14,9 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ColumnPos;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -28,6 +30,7 @@ public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEnti
     public int area;
     public int rack;
     public int chest;
+    public Set<ColumnPos> occupiedArea;
 
     public MineBaseTileEntity(){
         super(FHTileTypes.MINE_BASE.get());
@@ -56,6 +59,7 @@ public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEnti
                 this.rack = scanner.rack;
                 this.chest = scanner.chest;
                 this.linkedMines = scanner.linkedMines;
+                this.occupiedArea = scanner.occupiedArea;
                 return true;
             }
         }
@@ -95,6 +99,11 @@ public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEnti
     @Override
     public void setWorkData(CompoundNBT data) {
 
+    }
+
+    @Override
+    public Collection<ColumnPos> getOccupiedArea() {
+        return this.occupiedArea;
     }
 
     @Override

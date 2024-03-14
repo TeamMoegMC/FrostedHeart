@@ -16,6 +16,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ColumnPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
@@ -317,6 +318,10 @@ public class BlockScanner {
             posSet.add(BlockPos.fromLong(posLong));
         }
         return posSet;
+    }
+
+    public static ColumnPos toColumnPos(BlockPos pos){
+        return new ColumnPos(pos.getX(), pos.getZ());
     }
 
 
