@@ -19,16 +19,16 @@ import net.minecraft.util.math.ChunkPos;
 
 public class WorldMarker {
 	public static class ChunkMarker{
-		public static final Codec<ChunkMarker> CODEC=RecordCodecBuilder.create(t->t.group(Codec.list(SerializeUtil.nullableCodecValue(Codec.LONG_STREAM, null)).fieldOf("data").forGetter(o->o.getList())).apply(t, ChunkMarker::new));
+		public static final Codec<ChunkMarker> CODEC=RecordCodecBuilder.create(t->t.group(Codec.list(SerializeUtil.nullableCodecValue(Codec.LONG_STREAM.xmap(LongStream::toArray, LongStream::of), null)).fieldOf("data").forGetter(o->o.getList())).apply(t, ChunkMarker::new));
 		BitSet[] sections=new BitSet[16];
 		
 		public ChunkMarker() {
 		}
-		public ChunkMarker(List<LongStream> data) {
+		public ChunkMarker(List<long[]> data) {
 			for(int i=0;i<sections.length;i++) {
-				LongStream ls=data.get(i);
+				long[] ls=data.get(i);
 				if(ls==null)continue;
-				sections[i]=BitSet.valueOf(ls.toArray());
+				sections[i]=BitSet.valueOf(ls);
 			}
 		}
 		public BitSet getOrCreateSection(int sec) {
@@ -36,8 +36,8 @@ public class WorldMarker {
 				sections[sec]=new BitSet(4096);
 			return sections[sec];
 		}
-		public List<LongStream> getList(){
-			return Stream.of(sections).map(o->o==null?null:LongStream.of(o.toLongArray())).collect(Collectors.toList());
+		public List<long[]> getList(){
+			return Stream.of(sections).map(o->o==null?null:o.toLongArray()).collect(Collectors.toList());
 		}
 		private int getBitIndex(int x,int y,int z) {
 			return ((x&15)<<8)+((y&15)<<4)+(z&15);

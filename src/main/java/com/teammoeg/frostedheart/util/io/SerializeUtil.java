@@ -30,6 +30,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import com.google.common.collect.Lists;
@@ -159,7 +160,9 @@ public class SerializeUtil {
     public static <A> Codec<A> nullableCodec(Codec<A> val, Supplier<A> def){
     	return new NullableCodec<A>(val, def);
     }
-    
+    public static <A> Codec<Stream<A>> streamCodec(Codec<A> codec){
+    	return new StreamCodec<>(codec);
+    }
 	public static <K,V> Codec<Pair<K,V>> pairCodec(String nkey,Codec<K> key,String nval,Codec<V> val){
 		return RecordCodecBuilder.create(t->t.group(key.fieldOf(nkey).forGetter(Pair::getFirst), val.fieldOf(nval).forGetter(Pair::getSecond))
 			.apply(t,Pair::of));
