@@ -45,7 +45,6 @@ public class JsonSerializerRegistry<U extends Writeable> extends PacketBufferSer
 	}
 
 	public void register(Class<? extends U> cls, String type, Function<JsonObject, U> json, Function<U, JsonObject> obj, Function<PacketBuffer, U> packet) {
-		// TODO Auto-generated method stub
 		super.register(cls, type, json, (t,c)->obj.apply(t), packet);
 	}
 

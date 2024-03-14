@@ -33,6 +33,8 @@ import java.util.stream.Collectors;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
@@ -59,6 +61,7 @@ import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.IItemProvider;
 import net.minecraft.util.ResourceLocation;
@@ -152,7 +155,12 @@ public class Research extends FHRegisteredItem implements Writeable {
         desc = new ArrayList<>();
         fdesc = new ArrayList<>();
     }
-
+    /*public static final Codec<Research> CODEC=RecordCodecBuilder.create(t->t.group(
+    	Codec.STRING.fieldOf("id").forGetter(o->o.id),
+    	Codec.STRING.fieldOf("name").forGetter(o->o.name),
+    	Codec.list(Codec.STRING).fieldOf("desc").forGetter(o->o.desc),
+    	Codec.list(Codec.STRING).fieldOf("fdesc").forGetter(o->o.fdesc)
+    	));*/
     /**
      * Instantiates a new Research with a PacketBuffer object.<br>
      * This would be called before research registry and category init.
