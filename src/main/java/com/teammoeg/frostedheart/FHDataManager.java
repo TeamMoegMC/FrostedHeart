@@ -78,56 +78,55 @@ public class FHDataManager {
             super(m);
         }
     }
-    public enum FHDataType {
-        Armor(new DataType<>(ArmorTempData.class, "temperature", "armor", ArmorTempData.CODEC)),
-        Biome(new DataType<>(BiomeTempData.class, "temperature", "biome", BiomeTempData.CODEC)),
-        Food (new DataType<>(FoodTempData.class , "temperature", "food" , FoodTempData.CODEC )),
-        Block(new DataType<>(BlockTempData.class, "temperature", "block", BlockTempData.CODEC)),
-        Drink(new DataType<>(DrinkTempData.class, "temperature", "drink", DrinkTempData.CODEC)),
-        Cup  (new DataType<>(CupData.class      , "temperature", "cup"  , CupData.CODEC      )),
-        World(new DataType<>(WorldTempData.class, "temperature", "world", WorldTempData.CODEC));
+    public static class DataType<T> {
+        public static final List<DataType<?>> types = new ArrayList<>();
+        final int id;
+        final Class<T> dataCls;
+        final String location;
+        final String domain;
+        final Codec<DataReference<T>> codec;
 
-        public static class DataType<T> {
-            final Class<T> dataCls;
-            final String location;
-            final String domain;
-            final Codec<DataReference<T>> codec;
-
-            public DataType(Class<T> dataCls, String domain, String location, MapCodec<T> codec) {
-                this.location = location;
-                this.dataCls = dataCls;
-                this.domain = domain;
-                this.codec=DataReference.createCodec(codec).codec();
-            }
-
-            public DataReference<T> create(JsonElement jo) {
-                return codec.decode(JsonOps.INSTANCE, jo).result().map(t->t.getFirst()).orElse(null);
-            }
-            public void write(DataReference<T> obj,PacketBuffer pb) {
-            	
-            	SerializeUtil.writeCodec(pb, codec, obj);
-            };
-            public DataReference<T> read(PacketBuffer pb) {
-            	return SerializeUtil.readCodec(pb, codec);
-            };
-            public String getLocation() {
-                return domain + "/" + location;
-            }
+        public DataType(Class<T> dataCls, String domain, String location, MapCodec<T> codec) {
+            this.location = location;
+            this.dataCls = dataCls;
+            this.domain = domain;
+            this.codec=DataReference.createCodec(codec).codec();
+            this.id=types.size();
+            types.add(this);
         }
 
-        public final DataType<Object> type;
-
-        FHDataType(DataType<?> type) {
-            this.type = (DataType<Object>) type;
+        public DataReference<T> create(JsonElement jo) {
+            return codec.decode(JsonOps.INSTANCE, jo).result().map(t->t.getFirst()).orElse(null);
+        }
+        public void write(DataReference<T> obj,PacketBuffer pb) {
+        	
+        	SerializeUtil.writeCodec(pb, codec, obj);
+        };
+        public DataReference<T> read(PacketBuffer pb) {
+        	return SerializeUtil.readCodec(pb, codec);
+        };
+        public String getLocation() {
+            return domain + "/" + location;
         }
 
+		public int getId() {
+			return id;
+		}
     }
+
+    public static final DataType<ArmorTempData> Armor = (new DataType<>(ArmorTempData.class, "temperature", "armor", ArmorTempData.CODEC));
+    public static final DataType<BiomeTempData> Biome = (new DataType<>(BiomeTempData.class, "temperature", "biome", BiomeTempData.CODEC));
+    public static final DataType<FoodTempData>  Food  = (new DataType<>(FoodTempData.class , "temperature", "food" , FoodTempData.CODEC ));
+    public static final DataType<BlockTempData> Block = (new DataType<>(BlockTempData.class, "temperature", "block", BlockTempData.CODEC));
+    public static final DataType<DrinkTempData> Drink = (new DataType<>(DrinkTempData.class, "temperature", "drink", DrinkTempData.CODEC));
+    public static final DataType<CupData>       Cup   = (new DataType<>(CupData.class      , "temperature", "cup"  , CupData.CODEC      ));
+    public static final DataType<WorldTempData> World = (new DataType<>(WorldTempData.class, "temperature", "world", WorldTempData.CODEC));
     public static void main(String[] args) {
     	System.out.println(ArmorTempData.CODEC.decode(JsonOps.INSTANCE, JsonOps.INSTANCE.getMap(new JsonParser().parse("{\"factor\":12}")).result().get()).result().orElse(null));
     	//Object nbt=FHDataType.Armor.type.codec.encodeStart(DataOps.COMPRESSED,(DataReference<Object>)FHDataType.Armor.type.create(new JsonParser().parse("{\"id\":\"abc:def\",\"factor\":12}"))).result().orElse(null);
     	ByteBuf bb=ByteBufAllocator.DEFAULT.buffer(256);
     	PacketBuffer pb=new PacketBuffer(bb);
-    	FHDataType.Armor.type.write((DataReference<Object>)FHDataType.Armor.type.create(new JsonParser().parse("{\"id\":\"abc:def\",\"factor\":12}")), pb);
+    	Armor.write(Armor.create(new JsonParser().parse("{\"id\":\"abc:def\",\"factor\":12}")), pb);
     	System.out.println(bb.writerIndex());
     	bb.resetReaderIndex();
     	for(int i=0;i<bb.writerIndex();i++)
@@ -143,60 +142,60 @@ public class FHDataManager {
     	}
     	System.out.println();
     	bb.resetReaderIndex();
-    	System.out.println(FHDataType.Armor.type.read(pb));
+    	System.out.println(Armor.read(pb));
     }
 
-    public static final EnumMap<FHDataType, ResourceMap<?>> ALL_DATA = new EnumMap<>(FHDataType.class);
+    public static final Map<DataType<?>, ResourceMap<Object>> ALL_DATA = new HashMap<>();
 
     public static boolean synched = false;
     static {
-        for (FHDataType dt : FHDataType.values()) {
+        for (DataType<?> dt : DataType.types) {
             ALL_DATA.put(dt, new ResourceMap<>());
         }
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> ResourceMap<T> get(FHDataType dt) {
+    public static <T> ResourceMap<T> get(DataType<T> dt) {
         return (ResourceMap<T>)ALL_DATA.get(dt);
 
     }
 
     public static ArmorTempData getArmor(ItemStack is) {
         //System.out.println(is.getItem().getRegistryName());
-        return FHDataManager.<ArmorTempData>get(FHDataType.Armor).get(RegistryUtils.getRegistryName(is.getItem()));
+        return FHDataManager.<ArmorTempData>get(Armor).get(RegistryUtils.getRegistryName(is.getItem()));
     }
 
     public static ArmorTempData getArmor(String is) {
         //System.out.println(is.getItem().getRegistryName());
-        return FHDataManager.<ArmorTempData>get(FHDataType.Armor).get(new ResourceLocation(is));
+        return FHDataManager.<ArmorTempData>get(Armor).get(new ResourceLocation(is));
     }
 
     public static Float getBiomeTemp(Biome b) {
         if (b == null) return 0f;
-        BiomeTempData data = FHDataManager.<BiomeTempData>get(FHDataType.Biome).get(RegistryUtils.getRegistryName(b));
+        BiomeTempData data = FHDataManager.get(Biome).get(RegistryUtils.getRegistryName(b));
         if (data != null)
             return data.getTemp();
         return 0F;
     }
 
     public static BlockTempData getBlockData(Block b) {
-        return FHDataManager.<BlockTempData>get(FHDataType.Block).get(RegistryUtils.getRegistryName(b));
+        return FHDataManager.get(Block).get(RegistryUtils.getRegistryName(b));
     }
 
     public static BlockTempData getBlockData(ItemStack b) {
-        return FHDataManager.<BlockTempData>get(FHDataType.Block).get(RegistryUtils.getRegistryName(b.getItem()));
+        return FHDataManager.get(Block).get(RegistryUtils.getRegistryName(b.getItem()));
     }
 
     public static float getDrinkHeat(FluidStack f) {
-        DrinkTempData dtd = FHDataManager.<DrinkTempData>get(FHDataType.Drink).get(RegistryUtils.getRegistryName(f.getFluid()));
+        DrinkTempData dtd = FHDataManager.get(Drink).get(RegistryUtils.getRegistryName(f.getFluid()));
         if (dtd != null)
             return dtd.getHeat();
         return -0.3f;
     }
 
     public static ITempAdjustFood getFood(ItemStack is) {
-        CupData data = FHDataManager.<CupData>get(FHDataType.Cup).get(RegistryUtils.getRegistryName(is.getItem()));
-        ResourceMap<FoodTempData> foodData = FHDataManager.get(FHDataType.Food);
+        CupData data = FHDataManager.get(Cup).get(RegistryUtils.getRegistryName(is.getItem()));
+        ResourceMap<FoodTempData> foodData = FHDataManager.get(Food);
         if (data != null) {
             return new CupTempAdjustProxy(data.getEfficiency(), foodData.get(RegistryUtils.getRegistryName(is.getItem())));
         }
@@ -204,25 +203,22 @@ public class FHDataManager {
     }
 
     public static Float getWorldTemp(World w) {
-        WorldTempData data = FHDataManager.<WorldTempData>get(FHDataType.World).get(w.getDimensionKey().getLocation());
+        WorldTempData data = FHDataManager.get(World).get(w.getDimensionKey().getLocation());
         if (data != null)
             return data.getTemp();
         return null;
     }
 
-    @SuppressWarnings("unchecked")
-    public static void load(FHDataType type, List<DataReference> entries) {
-    	ResourceMap<Object> map=((ResourceMap<Object>)ALL_DATA.get(type));
+    public static <T> void load(DataType<T> type, List<DataReference<?>> entries) {
+    	ResourceMap<Object> map=(ALL_DATA.get(type));
     	map.clear();
-        for (DataReference de : entries) {
-            //System.out.println("registering "+dt.type.location+": "+jdh.getId());
+        for (DataReference<?> de : entries) {
         	map.put(de.getId(), de.getObj());
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public static void register(FHDataType dt, JsonObject data) {
-    	DataReference<?> jdh = dt.type.create(data);
+    public static <T> void register(DataType<T> dt, JsonObject data) {
+    	DataReference<T> jdh = dt.create(data);
         //System.out.println("registering "+dt.type.location+": "+jdh.getId());
     	((ResourceMap<Object>)ALL_DATA.get(dt)).put(jdh.getId(), jdh.getObj());
         synched = false;
@@ -234,11 +230,10 @@ public class FHDataManager {
             rm.clear();
     }
 
-    @SuppressWarnings("rawtypes")
-    public static List<DataReference> save(FHDataType type) {
-    	List<DataReference> entries = new ArrayList<>();
+    public static <T> List<DataReference<?>> save(DataType<T> type) {
+    	List<DataReference<?>> entries = new ArrayList<>();
         for (Entry<ResourceLocation, ?> jdh : ALL_DATA.get(type).entrySet()) {
-            entries.add(new DataReference(jdh.getKey(), jdh.getValue()));
+            entries.add(new DataReference<>(jdh.getKey(), jdh.getValue()));
         }
         return entries;
     }

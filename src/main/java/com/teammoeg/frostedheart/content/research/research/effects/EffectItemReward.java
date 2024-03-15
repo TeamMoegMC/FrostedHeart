@@ -58,7 +58,7 @@ public class EffectItemReward extends Effect {
 
     public EffectItemReward(PacketBuffer pb) {
         super(pb);
-        rewards = SerializeUtil.readListNullable(pb, PacketBuffer::readItemStack);
+        rewards = SerializeUtil.readList(pb, PacketBuffer::readItemStack);
     }
 
     @Override
@@ -130,6 +130,6 @@ public class EffectItemReward extends Effect {
     @Override
     public void write(PacketBuffer buffer) {
         super.write(buffer);
-        SerializeUtil.writeListNullable2(buffer, rewards, PacketBuffer::writeItemStack);
+        SerializeUtil.writeList2(buffer, rewards, PacketBuffer::writeItemStack);
     }
 }

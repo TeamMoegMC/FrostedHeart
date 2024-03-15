@@ -63,7 +63,7 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishe
         public ShapelessCopyDataRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
 
             NonNullList<Ingredient> nonnulllist = NonNullList.from(Ingredient.EMPTY,
-                    SerializeUtil.readListNullable(buffer, Ingredient::read).toArray(new Ingredient[0]));
+                    SerializeUtil.readList(buffer, Ingredient::read).toArray(new Ingredient[0]));
             ItemStack itemstack = buffer.readItemStack();
             return new ShapelessCopyDataRecipe(recipeId, itemstack, nonnulllist);
         }
@@ -82,7 +82,7 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishe
 
         public void write(PacketBuffer buffer, ShapelessCopyDataRecipe recipe) {
 
-            SerializeUtil.writeListNullable(buffer, recipe.getIngredients(), Ingredient::write);
+            SerializeUtil.writeList(buffer, recipe.getIngredients(), Ingredient::write);
             buffer.writeItemStack(recipe.getRecipeOutput());
         }
     }

@@ -61,7 +61,7 @@ public abstract class PolicyGroup implements Writeable {
 
     public PolicyGroup(PacketBuffer pb) {
         super();
-        conditions = SerializeUtil.readListNullable(pb, Conditions::deserialize);
+        conditions = SerializeUtil.readList(pb, Conditions::deserialize);
     }
 
     public void CollectPolicies(PolicySnapshot policy, FHVillagerData ve) {
@@ -81,6 +81,6 @@ public abstract class PolicyGroup implements Writeable {
 
     @Override
     public void write(PacketBuffer buffer) {
-        SerializeUtil.writeListNullable(buffer, conditions, Conditions::write);
+        SerializeUtil.writeList(buffer, conditions, Conditions::write);
     }
 }

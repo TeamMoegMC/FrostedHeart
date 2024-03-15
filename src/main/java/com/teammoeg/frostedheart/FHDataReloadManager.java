@@ -25,7 +25,7 @@ import java.io.InputStreamReader;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.teammoeg.frostedheart.FHDataManager.FHDataType;
+import com.teammoeg.frostedheart.FHDataManager.DataType;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.util.mixin.StructureUtils;
 
@@ -45,8 +45,8 @@ public class FHDataReloadManager implements IResourceManagerReloadListener {
         FHDataManager.reset();
         StructureUtils.addBanedBlocks();
         WorldTemperature.clear();
-        for (FHDataType dat : FHDataType.values()) {
-            for (ResourceLocation rl : manager.getAllResourceLocations(dat.type.getLocation(), (s) -> s.endsWith(".json"))) {
+        for (DataType dat : DataType.types) {
+            for (ResourceLocation rl : manager.getAllResourceLocations(dat.getLocation(), (s) -> s.endsWith(".json"))) {
                 try {
                     try (IResource rc = manager.getResource(rl);
                          InputStream stream = rc.getInputStream();

@@ -1,10 +1,8 @@
 package com.teammoeg.frostedheart.content.climate.data;
 
 import com.mojang.serialization.MapCodec;
-import com.teammoeg.frostedheart.FHDataManager.FHDataType;
 import com.teammoeg.frostedheart.util.io.JointCodec;
 
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
 public class DataReference<T> {

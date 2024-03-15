@@ -98,7 +98,7 @@ public class EffectCrafting extends Effect {
         if (item == null) {
             itemStack = SerializeUtil.readOptional(pb, PacketBuffer::readItemStack).orElse(null);
             if (itemStack == null) {
-                unlocks = SerializeUtil.readListNullable(pb, p -> FHTeamDataManager.getRecipeManager().getRecipe(p.readResourceLocation()).orElse(null));
+                unlocks = SerializeUtil.readList(pb, p -> FHTeamDataManager.getRecipeManager().getRecipe(p.readResourceLocation()).orElse(null));
                 unlocks.removeIf(Objects::isNull);
             } else initStack();
         } else initItem();
@@ -259,7 +259,7 @@ public class EffectCrafting extends Effect {
         if (item == null) {
             SerializeUtil.writeOptional2(buffer, itemStack, PacketBuffer::writeItemStack);
             if (itemStack == null)
-                SerializeUtil.writeListNullable(buffer, unlocks, (o, b) -> b.writeResourceLocation(o.getId()));
+                SerializeUtil.writeList(buffer, unlocks, (o, b) -> b.writeResourceLocation(o.getId()));
         }
     }
 

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.FHDataManager;
-import com.teammoeg.frostedheart.FHDataManager.FHDataType;
+import com.teammoeg.frostedheart.FHDataManager.DataType;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.climate.data.DataReference;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
@@ -32,9 +32,9 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FHDatapackSyncPacket implements FHMessage {
-    List<DataReference> entries;
-    FHDataType type;
-    public FHDatapackSyncPacket(FHDataType type) {
+    List<DataReference<?>> entries;
+    DataType<?> type;
+    public FHDatapackSyncPacket(DataType<?> type) {
         entries = FHDataManager.save(type);
         this.type=type;
     }
@@ -44,13 +44,13 @@ public class FHDatapackSyncPacket implements FHMessage {
     }
 
     public void decode(PacketBuffer buffer) {
-    	type = FHDataType.values()[buffer.readByte()];
-        entries = SerializeUtil.readListNullable(buffer,t->type.type.read(buffer));
+    	type = DataType.types.get(buffer.readByte());
+        entries = SerializeUtil.readList(buffer,type::read);
     }
 
     public void encode(PacketBuffer buffer) {
-    	buffer.writeByte(type.ordinal());
-        SerializeUtil.writeListNullable(buffer, entries, type.type::write);
+    	buffer.writeByte(type.getId());
+        SerializeUtil.writeList(buffer, (List)entries, type::write);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {

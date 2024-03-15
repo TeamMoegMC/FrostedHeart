@@ -86,7 +86,7 @@ public class FHIcons {
         }
 
         public FHAnimatedIcon(PacketBuffer buffer) {
-            icons = SerializeUtil.readListNullable(buffer, FHIcons::readIcon);
+            icons = SerializeUtil.readList(buffer, FHIcons::readIcon);
         }
 
         @Override
@@ -110,7 +110,7 @@ public class FHIcons {
         @Override
         public void write(PacketBuffer buffer) {
             super.write(buffer);
-            SerializeUtil.writeListNullable(buffer, icons, FHIcons::write);
+            SerializeUtil.writeList(buffer, icons, FHIcons::write);
         }
     }
 

@@ -38,7 +38,7 @@ import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.FHTeamDataManager;
-import com.teammoeg.frostedheart.FHDataManager.FHDataType;
+import com.teammoeg.frostedheart.FHDataManager.DataType;
 import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
@@ -869,7 +869,7 @@ public class CommonEvents {
             ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
             PacketTarget currentPlayer=PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer());
             FHResearch.sendSyncPacket(currentPlayer);
-            for(FHDataType type:FHDataType.values())
+            for(DataType type:DataType.types)
             	FHNetwork.send(currentPlayer,new FHDatapackSyncPacket(type));
             FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayerEntity) event.getEntity())));
             FHCapabilities.CLIMATE_DATA.getCapability(serverWorld).ifPresent((cap) -> FHNetwork.send(currentPlayer,new FHClimatePacket(cap)));
