@@ -33,27 +33,7 @@ public interface ITemperatureAdjust {
 		PillarTemperatureAdjust.class
 	}, CubicTemperatureAdjust.CODEC, PillarTemperatureAdjust.CODEC);
 
-
-    /**
-     * Get center X.
-     *
-     * @return center X<br>
-     */
-    int getCenterX();
-
-    /**
-     * Get center Y.
-     *
-     * @return center Y<br>
-     */
-    int getCenterY();
-
-    /**
-     * Get center Z.
-     *
-     * @return center Z<br>
-     */
-    int getCenterZ();
+    BlockPos getCenter();
 
     int getRadius();
 

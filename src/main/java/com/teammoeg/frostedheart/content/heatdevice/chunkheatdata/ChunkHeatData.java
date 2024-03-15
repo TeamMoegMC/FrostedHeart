@@ -22,34 +22,32 @@ package com.teammoeg.frostedheart.content.heatdevice.chunkheatdata;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.NBTDynamicOps;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.chunk.IChunk;
-import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class ChunkHeatData implements NBTSerializable {
-	public static final Codec<ChunkHeatData> CODEC=RecordCodecBuilder.create(t->t.group(Codec.list(ITemperatureAdjust.CODEC).fieldOf("adjs").forGetter(o->o.adjusters)).apply(t, ChunkHeatData::new));
-    private List<ITemperatureAdjust> adjusters = new LinkedList<>();
+	public static final Codec<ChunkHeatData> CODEC=RecordCodecBuilder.create(t->t.group(Codec.list(ITemperatureAdjust.CODEC).fieldOf("adjs").forGetter(o->o.adjusters.values().stream().collect(Collectors.toList()))).apply(t, ChunkHeatData::new));
+    private Map<BlockPos,ITemperatureAdjust> adjusters = new LinkedHashMap<>();
 
 
     /**
@@ -62,9 +60,8 @@ public class ChunkHeatData implements NBTSerializable {
             IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
             ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
             if (data != null) {
-                data.adjusters.removeIf(adj -> adj.getCenterX() == adjx.getCenterX()
-                        && adj.getCenterY() == adjx.getCenterY() && adj.getCenterZ() == adjx.getCenterZ());
-                data.adjusters.add(adjx);
+                data.adjusters.remove(adjx.getCenter());
+                data.adjusters.put(adjx.getCenter(),adjx);
             }
         }
     }
@@ -143,8 +140,8 @@ public class ChunkHeatData implements NBTSerializable {
      */
     public static void addTempAdjust(IWorld world, ITemperatureAdjust adj) {
 
-        int sourceX = adj.getCenterX(), sourceZ = adj.getCenterZ();
-        removeTempAdjust(world, new BlockPos(sourceX, adj.getCenterY(), sourceZ));
+        int sourceX = adj.getCenter().getX(), sourceZ = adj.getCenter().getZ();
+        removeTempAdjust(world, new BlockPos(sourceX, adj.getCenter().getY(), sourceZ));
         // these are block position offset
         int offsetN = sourceZ - adj.getRadius();
         int offsetS = sourceZ + adj.getRadius() + 1;
@@ -266,8 +263,7 @@ public class ChunkHeatData implements NBTSerializable {
             ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
             // TODO: should use isPresent some how
             if (data != null)
-                data.adjusters.removeIf(adj -> adj.getCenterX() == src.getX() && adj.getCenterY() == src.getY()
-                        && adj.getCenterZ() == src.getZ());
+                data.adjusters.remove(src);
         }
     }
 
@@ -322,7 +318,7 @@ public class ChunkHeatData implements NBTSerializable {
      * @param adj   adjust
      */
     public static void removeTempAdjust(IWorld world, ITemperatureAdjust adj) {
-        int sourceX = adj.getCenterX(), sourceZ = adj.getCenterZ();
+        int sourceX = adj.getCenter().getX(), sourceZ = adj.getCenter().getZ();
 
         // these are block position offset
         int offsetN = sourceZ - adj.getRadius();
@@ -367,7 +363,7 @@ public class ChunkHeatData implements NBTSerializable {
     float getAdditionTemperatureAtBlock(IWorldReader world, BlockPos pos) {
         if (adjusters.isEmpty()) return 0;
         float ret = 0, tmp;
-        for (ITemperatureAdjust adj : adjusters) {
+        for (ITemperatureAdjust adj : adjusters.values()) {
             if (adj.isEffective(pos)) {
                 tmp = adj.getValueAt(pos);
                 if (tmp > ret)
@@ -378,15 +374,11 @@ public class ChunkHeatData implements NBTSerializable {
     }
 
     public ITemperatureAdjust getAdjustAt(BlockPos pos) {
-        for (ITemperatureAdjust adj : adjusters) {
-            if (adj.getCenterX() == pos.getX() && adj.getCenterY() == pos.getY() && adj.getCenterZ() == pos.getZ())
-                return adj;
-        }
-        return null;
+        return adjusters.get(pos);
     }
 
     public Collection<ITemperatureAdjust> getAdjusters() {
-        return adjusters;
+        return adjusters.values();
     }
 
 
@@ -401,7 +393,7 @@ public class ChunkHeatData implements NBTSerializable {
     float getTemperatureAtBlock(IWorldReader world, BlockPos pos) {
         if (adjusters.isEmpty()) return WorldTemperature.getTemperature(world, pos);
         float ret = 0, tmp;
-        for (ITemperatureAdjust adj : adjusters) {
+        for (ITemperatureAdjust adj : adjusters.values()) {
             if (adj.isEffective(pos)) {
                 tmp = adj.getValueAt(pos);
                 if (tmp > ret)
@@ -418,11 +410,12 @@ public class ChunkHeatData implements NBTSerializable {
     public ChunkHeatData(List<ITemperatureAdjust> adjusters) {
 		super();
 		reset();
-		this.adjusters.addAll(adjusters);
+		setAdjusters(adjusters);
 	}
 
 	public void setAdjusters(List<ITemperatureAdjust> adjusters) {
-        this.adjusters.addAll(adjusters);
+		for(ITemperatureAdjust adjust:adjusters)
+			this.adjusters.put(adjust.getCenter(), adjust);
     }
 
 	@Override

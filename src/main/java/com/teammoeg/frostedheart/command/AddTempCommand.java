@@ -56,7 +56,7 @@ public class AddTempCommand {
                     } else {
                         ct.getSource().sendFeedback(TranslateUtils.str("Active Adjusts:"), true);
                         for (ITemperatureAdjust adj : adjs) {
-                            ct.getSource().sendFeedback(TranslateUtils.str("center:" + adj.getCenterX() + " " + adj.getCenterY() + " " + adj.getCenterZ() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(ct.getSource().asPlayer().getPosition())), true);
+                            ct.getSource().sendFeedback(TranslateUtils.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(ct.getSource().asPlayer().getPosition())), true);
                         }
                     }
                     return Command.SINGLE_SUCCESS;
@@ -69,7 +69,7 @@ public class AddTempCommand {
                             } else {
                                 ct.getSource().sendFeedback(TranslateUtils.str("Active Adjusts:"), true);
                                 for (ITemperatureAdjust adj : adjs) {
-                                    ct.getSource().sendFeedback(TranslateUtils.str("center:" + adj.getCenterX() + " " + adj.getCenterY() + " " + adj.getCenterZ() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(BlockPosArgument.getBlockPos(ct, "position"))), true);
+                                    ct.getSource().sendFeedback(TranslateUtils.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(BlockPosArgument.getBlockPos(ct, "position"))), true);
                                 }
                             }
                             return Command.SINGLE_SUCCESS;

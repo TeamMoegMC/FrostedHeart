@@ -87,4 +87,11 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
         this.value = value;
     }
 
+
+	@Override
+	public BlockPos getCenter() {
+		// TODO Auto-generated method stub
+		return center;
+	}
+
 }
