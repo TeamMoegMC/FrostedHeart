@@ -48,7 +48,7 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class ChunkHeatData implements NBTSerializable {
-	public static final MapCodec<ChunkHeatData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Codec.list(ITemperatureAdjust.CODEC).fieldOf("adjs").forGetter(o->o.adjusters)).apply(t, ChunkHeatData::new));
+	public static final Codec<ChunkHeatData> CODEC=RecordCodecBuilder.create(t->t.group(Codec.list(ITemperatureAdjust.CODEC).fieldOf("adjs").forGetter(o->o.adjusters)).apply(t, ChunkHeatData::new));
     private List<ITemperatureAdjust> adjusters = new LinkedList<>();
 
 
@@ -427,12 +427,12 @@ public class ChunkHeatData implements NBTSerializable {
 
 	@Override
 	public void save(CompoundNBT nbt, boolean isPacket) {
-		CODEC.encode(this, NBTDynamicOps.INSTANCE, NBTDynamicOps.INSTANCE.mapBuilder());
+		CODEC.encode(this, NBTDynamicOps.INSTANCE, nbt);
 	}
 
 	@Override
 	public void load(CompoundNBT nbt, boolean isPacket) {
-		CODEC.decode(NBTDynamicOps.INSTANCE, NBTDynamicOps.INSTANCE.getMap(nbt).resultOrPartial(t->{}).get());
+		CODEC.decode(NBTDynamicOps.INSTANCE, nbt);
 	}
 
 }
