@@ -227,7 +227,7 @@ public class FHResearch {
         File rf = new File(folder, "fhresearches");
         rf.mkdirs();
         File f = new File(rf, r.getId() + ".json");
-        int iid = r.getRId();
+        int iid = FHResearch.researches.getIntId(r);
         try {
             JsonElement je = new JsonParser().parse(FileUtil.readString(f));
             if (je.isJsonObject()) {

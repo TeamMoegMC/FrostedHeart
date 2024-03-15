@@ -22,33 +22,6 @@ package com.teammoeg.frostedheart.content.research;
 /**
  * Our own registry.
  */
-public abstract class FHRegisteredItem {
-    private int id = 0;
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        FHRegisteredItem other = (FHRegisteredItem) obj;
-        return id == other.id;
-    }
-
-    public abstract String getLId();
-
-    public int getRId() {
-        return id;
-    }
-
-    @Override
-    public int hashCode() {
-        return id;
-    }
-
-    protected void setRId(int id) {
-        this.id = id;
-    }
+public interface FHRegisteredItem {
+    public String getId() ;
 }

@@ -346,11 +346,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     public void onClose() {
         e.name = name.getText();
         e.hidden = sd.getSelection();
-        if (e.getRId() != 0) {
-            e.setNewId(nonce.getText());
-        } else {
-            e.nonce = nonce.getText();
-        }
+        e.setNewId(nonce.getText());
         cb.accept(e);
 
     }

@@ -407,7 +407,7 @@ public class ResearchListeners {
                     }
                     return new ItemStack(FHItems.rubbing_pad.get());
                 }
-                trd.getCurrentResearch().ifPresent(r -> RubbingTool.setResearch(i, r.getLId()));
+                trd.getCurrentResearch().ifPresent(r -> RubbingTool.setResearch(i, r.getId()));
             }
             for (InspireRecipe ir : FHUtils.filterRecipes(s.getServerWorld().getRecipeManager(), InspireRecipe.TYPE)) {
                 if (ir.item.test(i)) {

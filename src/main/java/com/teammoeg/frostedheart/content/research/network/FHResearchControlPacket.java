@@ -46,7 +46,7 @@ public class FHResearchControlPacket implements FHMessage {
     public FHResearchControlPacket(Operator status, Research research) {
         super();
         this.status = status;
-        this.researchID = research.getRId();
+        this.researchID = FHResearch.researches.getIntId(research);
     }
 
     public FHResearchControlPacket(PacketBuffer buffer) {

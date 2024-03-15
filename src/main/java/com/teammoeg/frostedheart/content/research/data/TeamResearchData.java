@@ -153,13 +153,14 @@ public class TeamResearchData implements NBTSerializable{
      * @param r the r<br>
      */
     public void clearCurrentResearch(Research r) {
-        if (activeResearchId == r.getRId())
+        if (activeResearchId == FHResearch.researches.getIntId(r))
             clearCurrentResearch(true);
     }
 
     public void clearData(Research r) {
-        if (r.getRId() <= this.rdata.size()) {
-            this.rdata.set(r.getRId() - 1, null);
+    	int index=FHResearch.researches.getIntId(r);
+        if (index <= this.rdata.size()) {
+            this.rdata.set(index - 1, null);
             for (Clue c : r.getClues()) {
                 this.setClueTriggered(c, false);
                 c.sendProgressPacket(holder);
@@ -253,7 +254,7 @@ public class TeamResearchData implements NBTSerializable{
      */
     public ResearchData getData(Research rs) {
         if (rs == null) return ResearchData.EMPTY;
-        return getData(rs.getRId());
+        return getData(FHResearch.researches.getIntId(rs));
     }
 
     /**
@@ -299,7 +300,7 @@ public class TeamResearchData implements NBTSerializable{
      * @param player the player, only useful when player manually click "claim awards" or do similar things.<br>
      */
     public void grantEffect(Effect e, @Nullable ServerPlayerEntity player) {
-        int id = e.getRId();
+        int id = FHResearch.effects.getIntId(e);
         ensureEffect(id);
         if (id > 0)
             if (!grantedEffects.get(id - 1)) {
@@ -323,7 +324,7 @@ public class TeamResearchData implements NBTSerializable{
      * @return if is clue triggered,true.
      */
     public boolean isClueTriggered(Clue clue) {
-        return isClueTriggered(clue.getRId());
+        return isClueTriggered(FHResearch.clues.getIntId(clue));
     }
 
     /**
@@ -357,7 +358,7 @@ public class TeamResearchData implements NBTSerializable{
      * @return if is effect granted,true.
      */
     public boolean isEffectGranted(Effect e) {
-        return isEffectGranted(e.getRId());
+        return isEffectGranted(FHResearch.effects.getIntId(e));
     }
 
     /**
@@ -397,8 +398,9 @@ public class TeamResearchData implements NBTSerializable{
      * @param r the r<br>
      */
     public void resetData(Research r, boolean causeUpdate) {
-        if (r.getRId() <= this.rdata.size()) {
-            this.rdata.set(r.getRId() - 1, null);
+    	int index=FHResearch.researches.getIntId(r);
+        if (index <= this.rdata.size()) {
+            this.rdata.set(index - 1, null);
             for (Clue c : r.getClues()) {
                 this.setClueTriggered(c, false);
                 if (causeUpdate)
@@ -412,7 +414,7 @@ public class TeamResearchData implements NBTSerializable{
                 }
             }
             if (causeUpdate) {
-                FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(r.getRId());
+                FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(index);
                 holder.sendToOnline(packet);
             }
         }
@@ -432,7 +434,7 @@ public class TeamResearchData implements NBTSerializable{
      * @param trig the trig<br>
      */
     public void setClueTriggered(Clue clue, boolean trig) {
-        setClueTriggered(clue.getRId(), trig);
+        setClueTriggered(FHResearch.clues.getIntId(clue), trig);
     }
 
     /**
@@ -469,11 +471,12 @@ public class TeamResearchData implements NBTSerializable{
      */
     public void setCurrentResearch(Research r) {
         ResearchData rd = this.getData(r);
+        int index=FHResearch.researches.getIntId(r);
         if (rd.active && !rd.finished) {
-            if (this.activeResearchId != r.getRId()) {
+            if (this.activeResearchId != index) {
                 if (this.activeResearchId != 0)
                     clearCurrentResearch(false);
-                this.activeResearchId = r.getRId();
+                this.activeResearchId = index;
                 FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket(r);
                 holder.sendToOnline(packet);
                 for (Clue c : r.getClues())
@@ -493,7 +496,7 @@ public class TeamResearchData implements NBTSerializable{
      * @param flag operation flag
      */
     public void setGrant(Effect e, boolean flag) {
-        int id = e.getRId();
+        int id = FHResearch.effects.getIntId(e);
         ensureEffect(id);
         grantedEffects.set(id - 1, flag);
 
@@ -507,7 +510,7 @@ public class TeamResearchData implements NBTSerializable{
      * @param clue the clue<br>
      */
     public void triggerClue(Clue clue) {
-        triggerClue(clue.getRId());
+        triggerClue(FHResearch.clues.getIntId(clue));
     }
 
     /**

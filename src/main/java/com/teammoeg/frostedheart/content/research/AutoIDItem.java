@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research;
 
-public abstract class AutoIDItem extends FHRegisteredItem {
+public abstract class AutoIDItem implements FHRegisteredItem {
     private String AssignedID;
 
     public void addID(String id, int index) {
@@ -27,7 +27,7 @@ public abstract class AutoIDItem extends FHRegisteredItem {
     }
 
     @Override
-    public String getLId() {
+    public String getId() {
         return AssignedID + "_" + getNonce();
     }
 
@@ -35,7 +35,4 @@ public abstract class AutoIDItem extends FHRegisteredItem {
 
     public abstract String getType();
 
-    public void setRId(int id) {
-        super.setRId(id);
-    }
 }

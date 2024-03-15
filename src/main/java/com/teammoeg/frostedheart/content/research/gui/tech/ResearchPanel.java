@@ -20,6 +20,8 @@
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.FHRegistrate;
+import com.teammoeg.frostedheart.content.research.FHRegistry;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ClientResearchData;
@@ -81,7 +83,7 @@ public abstract class ResearchPanel extends Panel {
         detailframe = new ResearchDetailPanel(this);
         //TODO default select on progress research
         Research cr = null;
-        if (ClientResearchData.last != null && ClientResearchData.last.getRId() > 0)
+        if (ClientResearchData.last != null && FHResearch.researches.getIntId(ClientResearchData.last) > 0)
             cr = ClientResearchData.last;
         else
             cr = ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);

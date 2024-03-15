@@ -136,7 +136,7 @@ public abstract class Clue extends AutoIDItem implements Writeable{
     }
 
     public ITextComponent getDescription() {
-        return FHTextUtil.getOptional(desc, "clue", () -> this.getLId() + ".desc");
+        return FHTextUtil.getOptional(desc, "clue", () -> this.getId() + ".desc");
     }
 
     public String getDescriptionString() {
@@ -146,13 +146,13 @@ public abstract class Clue extends AutoIDItem implements Writeable{
     }
 
     public ITextComponent getHint() {
-        return FHTextUtil.getOptional(hint, "clue", () -> this.getLId() + ".hint");
+        return FHTextUtil.getOptional(hint, "clue", () -> this.getId() + ".hint");
     }
 
     public abstract String getId();
 
     public ITextComponent getName() {
-        return FHTextUtil.get(name, "clue", () -> this.getLId() + ".name");
+        return FHTextUtil.get(name, "clue", () -> this.getId() + ".name");
     }
 
     @Override

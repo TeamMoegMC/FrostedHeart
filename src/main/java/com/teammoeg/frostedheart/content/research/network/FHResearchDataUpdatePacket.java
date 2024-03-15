@@ -49,7 +49,7 @@ public class FHResearchDataUpdatePacket extends NullableNBTMessage{
 
     public FHResearchDataUpdatePacket(ResearchData rd) {
         super(Optional.of(rd.serialize()));
-        this.id = rd.getResearch().getRId();
+        this.id = FHResearch.researches.getIntId(rd.getResearch());
     }
 
     public void encode(PacketBuffer buffer) {

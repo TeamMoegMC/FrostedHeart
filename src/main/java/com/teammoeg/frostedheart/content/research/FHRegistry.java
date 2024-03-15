@@ -98,15 +98,15 @@ public class FHRegistry<T extends FHRegisteredItem> {
         }
         T r = s.get();
         if (r != null)
-            return r.getLId();
+            return r.getId();
         return "";
     }
 
-    public static <T extends FHRegisteredItem> void writeSupplier(PacketBuffer pb, Supplier<T> s) {
+    public <T extends FHRegisteredItem> void writeSupplier(PacketBuffer pb, Supplier<T> s) {
         if (s != null) {
             T t = s.get();
             if (t != null) {
-                pb.writeVarInt(t.getRId());
+                pb.writeVarInt(rnames.get(t.getId()));
                 return;
             }
         }
@@ -158,7 +158,6 @@ public class FHRegistry<T extends FHRegisteredItem> {
         if (!temp.isEmpty()) {//reset registries
             ensure();
             for (T t : temp) {
-                t.setRId(0);
                 register(t);
             }
         }
@@ -196,6 +195,9 @@ public class FHRegistry<T extends FHRegisteredItem> {
         return new RegisteredSupplier<>(id, strLazyGetter);
     }
 
+    public int getIntId(T obj) {
+    	return rnames.getOrDefault(obj.getId(), 0);
+    }
     /**
      * Get by numeric id.
      *
@@ -256,36 +258,24 @@ public class FHRegistry<T extends FHRegisteredItem> {
      * @param item the item<br>
      */
     public void register(T item) {
-        if (item.getRId() == 0) {
-            //System.out.println("trying to register "+item.getLId());
-            String lid = item.getLId();
-            int index = rnames.getOrDefault(lid, -1);
-            ensure();
-            if (index == -1) {
-                //System.out.println("new entry");
-                item.setRId(rnamesl.size() + 1);
-
-                rnames.put(item.getLId(), rnamesl.size());
-                rnamesl.add(item.getLId());
-                items.add(item);
-
-            } else {
-                //System.out.println("existed!");
-                item.setRId(index + 1);
-                items.set(index, item);
-            }
+        String lid = item.getId();
+        int index = rnames.getOrDefault(lid, -1);
+        ensure();
+        if (index == -1) {
+            rnames.put(item.getId(), rnamesl.size());
+            rnamesl.add(item.getId());
+            items.add(item);
+        } else {
+            items.set(index, item);
         }
     }
 
     public void remove(T item) {
-        if (item.getRId() != 0) {
-            String lid = item.getLId();
-            int index = rnames.getOrDefault(lid, -1);
-            ensure();
-            if (index != -1 && index + 1 == item.getRId()) {
-                items.set(index, null);
-            }
-            item.setRId(0);
+        String lid = item.getId();
+        int index = rnames.getOrDefault(lid, -1);
+        ensure();
+        if (index != -1) {
+            items.set(index, null);
         }
     }
 

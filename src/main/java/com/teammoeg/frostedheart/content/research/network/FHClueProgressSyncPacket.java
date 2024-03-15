@@ -44,7 +44,7 @@ public class FHClueProgressSyncPacket implements FHMessage {
     public FHClueProgressSyncPacket(TeamDataHolder team, Clue rs) {
         TeamResearchData rd = team.getData(SpecialDataTypes.RESEARCH_DATA);
         this.data = rd.isClueTriggered(rs);
-        this.id = rs.getRId();
+        this.id = FHResearch.clues.getIntId(rs);
     }
 
     public void encode(PacketBuffer buffer) {

@@ -197,7 +197,8 @@ public abstract class Effect extends AutoIDItem implements Writeable{
 
     private void deleteInTree() {
         FHTeamDataManager.INSTANCE.getAllData().forEach(t -> {
-            if (this.getRId() != 0) {
+        	int iid=FHResearch.effects.getIntId(this);
+            if (iid != 0) {
             	TeamResearchData trd=t.getData(SpecialDataTypes.RESEARCH_DATA);
                 revoke(trd);
 
@@ -271,7 +272,7 @@ public abstract class Effect extends AutoIDItem implements Writeable{
     public final IFormattableTextComponent getName() {
         if (name.isEmpty())
             return getDefaultName();
-        return (IFormattableTextComponent) FHTextUtil.get(name, "effect", this::getLId);
+        return (IFormattableTextComponent) FHTextUtil.get(name, "effect", this::getId);
     }
 
     /**
@@ -292,7 +293,7 @@ public abstract class Effect extends AutoIDItem implements Writeable{
     public final List<ITextComponent> getTooltip() {
         if (tooltip.isEmpty())
             return getDefaultTooltip();
-        return FHTextUtil.get(tooltip, "effect", this::getLId);
+        return FHTextUtil.get(tooltip, "effect", this::getId);
     }
 
     /**

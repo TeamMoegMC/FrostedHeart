@@ -45,7 +45,7 @@ public class FHEffectProgressSyncPacket implements FHMessage {
     public FHEffectProgressSyncPacket(TeamDataHolder team, Effect rs) {
         TeamResearchData rd = team.getData(SpecialDataTypes.RESEARCH_DATA);
         this.data = rd.isEffectGranted(rs);
-        this.id = rs.getRId();
+        this.id = FHResearch.effects.getIntId(rs);
     }
 
 

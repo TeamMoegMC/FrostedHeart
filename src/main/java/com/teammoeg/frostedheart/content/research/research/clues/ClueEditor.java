@@ -267,11 +267,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         e.desc = desc.getText();
         e.hint = hint.getText();
         e.contribution = (float) cont.getNum() / 100f;
-        if (e.getRId() != 0) {
-            e.setNewId(nonce.getText());
-        } else {
-            e.nonce = nonce.getText();
-        }
+        e.setNewId(nonce.getText());
         e.required = req.getSelection();
         cb.accept(e);
 

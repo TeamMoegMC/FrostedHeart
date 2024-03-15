@@ -153,8 +153,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
     @Override
     public void onClose() {
         if (removed) {
-            if (r.getRId() != 0)
-                r.delete();
+            r.delete();
 
         } else {
             r.name = name.getText();
@@ -167,14 +166,11 @@ public class ResearchEditorDialog extends BaseEditDialog {
             r.infinite = inf.getSelection();
             r.setInCompletable(locked.getSelection());
 
-            if (r.getRId() == 0) {//creating new research
-                if (!id.getText().isEmpty()) {
-                    r.setId(id.getText());
-                    FHResearch.register(r);
-                }
-            } else {//modify old research
-                r.setNewId(id.getText());
+            if (!id.getText().isEmpty()) {
+                r.setId(id.getText());
+                FHResearch.register(r);
             }
+
             EditUtils.saveResearch(r);
         }
         FHResearch.reindex();

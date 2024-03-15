@@ -75,7 +75,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  *
  * @author khjxiaogu
  */
-public class Research extends FHRegisteredItem implements Writeable {
+public class Research implements Writeable, FHRegisteredItem {
 
     private String id;// id of this research
 
@@ -315,14 +315,12 @@ public class Research extends FHRegisteredItem implements Writeable {
         effects.removeIf(Objects::isNull);
         clues.removeIf(Objects::isNull);
         for (Effect e : effects) {
-            e.addID(this.getLId(), i);
             e.parent = getSupplier();
             FHResearch.effects.register(e);
             i++;
         }
         i = 0;
         for (Clue c : clues) {
-            c.addID(this.getLId(), i);
             c.parent = getSupplier();
             FHResearch.clues.register(c);
             i++;
@@ -449,15 +447,6 @@ public class Research extends FHRegisteredItem implements Writeable {
         return id;
     }
 
-    /**
-     * Get l id.
-     *
-     * @return l id<br>
-     */
-    @Override
-    public String getLId() {
-        return id;
-    }
 
     /**
      * Get name.
@@ -520,7 +509,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @return supplier<br>
      */
     public Supplier<Research> getSupplier() {
-        return FHResearch.getResearch(this.getLId());
+        return FHResearch.getResearch(this.getId());
 
     }
 
@@ -845,8 +834,8 @@ public class Research extends FHRegisteredItem implements Writeable {
             FHResearch.register(this);
 
             this.getChildren().forEach(e -> e.addParent(this.getSupplier()));
-            this.getEffects().forEach(e -> e.setRId(0));
-            this.getClues().forEach(e -> e.setRId(0));
+            this.getEffects().forEach(e -> FHResearch.effects.remove(e));
+            this.getClues().forEach(e -> FHResearch.clues.remove(e));
             this.doIndex();
         }
     }
@@ -895,7 +884,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         SerializeUtil.writeList2(buffer, fdesc, PacketBuffer::writeString);
         FHIcons.write(icon, buffer);
         buffer.writeResourceLocation(category.getId());
-        SerializeUtil.writeList2(buffer, parents, FHRegistry::writeSupplier);
+        SerializeUtil.writeList2(buffer, parents, FHResearch.researches::writeSupplier);
         SerializeUtil.writeList2(buffer, clues, Clues::write);
         SerializeUtil.writeList(buffer, requiredItems, IngredientWithSize::write);
         SerializeUtil.writeList(buffer, effects, Effects::write);

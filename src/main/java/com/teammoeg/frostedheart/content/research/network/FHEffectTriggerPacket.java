@@ -40,7 +40,7 @@ public class FHEffectTriggerPacket implements FHMessage {
     }
 
     public FHEffectTriggerPacket(Research r) {
-        this.researchID = r.getRId();
+        this.researchID = FHResearch.researches.getIntId(r);
     }
 
     public void encode(PacketBuffer buffer) {
