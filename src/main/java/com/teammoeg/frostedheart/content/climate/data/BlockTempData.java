@@ -29,9 +29,9 @@ public class BlockTempData{
 	boolean level;
 	boolean lit;
 	public static final MapCodec<BlockTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		SerializeUtil.defCodecValue(Codec.FLOAT,"temperature", 0f).forGetter(o->o.temperature),
-		SerializeUtil.defCodecValue(Codec.BOOL,"level", false).forGetter(o->o.level),
-		SerializeUtil.defCodecValue(Codec.BOOL,"lit", false).forGetter(o->o.lit)).apply(t, BlockTempData::new));
+		SerializeUtil.nullableCodecValue(Codec.FLOAT,0f).fieldOf("temperature").forGetter(o->o.temperature),
+		SerializeUtil.nullableCodecValue(Codec.BOOL,false).fieldOf("level").forGetter(o->o.level),
+		SerializeUtil.nullableCodecValue(Codec.BOOL,false).fieldOf("lit").forGetter(o->o.lit)).apply(t, BlockTempData::new));
     
 
     public BlockTempData(float temperature, boolean level, boolean lit) {

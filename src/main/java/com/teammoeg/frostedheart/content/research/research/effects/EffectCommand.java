@@ -58,7 +58,7 @@ public class EffectCommand extends Effect {
 
     public EffectCommand(PacketBuffer pb) {
         super(pb);
-        rewards = SerializeUtil.readList(pb, PacketBuffer::readString);
+        rewards = SerializeUtil.readListNullable(pb, PacketBuffer::readString);
     }
 
     public EffectCommand(String... cmds) {
@@ -142,6 +142,6 @@ public class EffectCommand extends Effect {
     @Override
     public void write(PacketBuffer buffer) {
         super.write(buffer);
-        SerializeUtil.writeList2(buffer, rewards, PacketBuffer::writeString);
+        SerializeUtil.writeListNullable2(buffer, rewards, PacketBuffer::writeString);
     }
 }

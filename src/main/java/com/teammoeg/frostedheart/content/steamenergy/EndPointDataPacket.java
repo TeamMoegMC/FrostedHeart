@@ -39,11 +39,11 @@ public class EndPointDataPacket implements FHMessage {
     }
 
     public EndPointDataPacket(PacketBuffer buffer) {
-        data = SerializeUtil.readList(buffer, EndPointData::readNetwork);
+        data = SerializeUtil.readListNullable(buffer, EndPointData::readNetwork);
     }
 
     public void encode(PacketBuffer buffer) {
-        SerializeUtil.writeList(buffer, data, EndPointData::writeNetwork);
+        SerializeUtil.writeListNullable(buffer, data, EndPointData::writeNetwork);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {

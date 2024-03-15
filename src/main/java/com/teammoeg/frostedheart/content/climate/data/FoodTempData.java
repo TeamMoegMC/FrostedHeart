@@ -32,9 +32,9 @@ public class FoodTempData implements ITempAdjustFood {
 
 
 	public static final MapCodec<FoodTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		SerializeUtil.defCodecValue(Codec.FLOAT,"heat", 0f).forGetter(o->o.heat),
-		SerializeUtil.defCodecValue(Codec.FLOAT,"min", -15f).forGetter(o->o.min),
-		SerializeUtil.defCodecValue(Codec.FLOAT,"max", 15f).forGetter(o->o.max)).apply(t, FoodTempData::new));
+		SerializeUtil.nullableCodecValue(Codec.FLOAT,0f).fieldOf("heat").forGetter(o->o.heat),
+		SerializeUtil.nullableCodecValue(Codec.FLOAT,-15f).fieldOf("min").forGetter(o->o.min),
+		SerializeUtil.nullableCodecValue(Codec.FLOAT,15f).fieldOf("max").forGetter(o->o.max)).apply(t, FoodTempData::new));
 
     float heat;
     float min;

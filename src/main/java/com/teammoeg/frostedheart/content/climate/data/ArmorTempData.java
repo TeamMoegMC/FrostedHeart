@@ -26,9 +26,9 @@ import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 public class ArmorTempData {
 	public static final MapCodec<ArmorTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		SerializeUtil.defCodecValue(Codec.FLOAT, "factor", 0f).forGetter(o->o.insulation),
-		SerializeUtil.defCodecValue(Codec.FLOAT, "heat_proof", 0f).forGetter(o->o.heat_proof),
-		SerializeUtil.defCodecValue(Codec.FLOAT, "wind_proof", 0f).forGetter(o->o.wind_proof)).apply(t, ArmorTempData::new));
+		SerializeUtil.nullableCodecValue(Codec.FLOAT,0f).fieldOf("factor").forGetter(o->o.insulation),
+		SerializeUtil.nullableCodecValue(Codec.FLOAT,0f).fieldOf("heat_proof").forGetter(o->o.heat_proof),
+		SerializeUtil.nullableCodecValue(Codec.FLOAT,0f).fieldOf("wind_proof").forGetter(o->o.wind_proof)).apply(t, ArmorTempData::new));
 	float insulation;
 	float heat_proof;
 	float wind_proof;

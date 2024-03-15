@@ -65,7 +65,7 @@ public class EffectUse extends Effect {
 
     public EffectUse(PacketBuffer pb) {
         super(pb);
-        blocks = SerializeUtil.readList(pb, p -> p.readRegistryIdUnsafe(ForgeRegistries.BLOCKS));
+        blocks = SerializeUtil.readListNullable(pb, p -> p.readRegistryIdUnsafe(ForgeRegistries.BLOCKS));
 
     }
 
@@ -123,6 +123,6 @@ public class EffectUse extends Effect {
     @Override
     public void write(PacketBuffer buffer) {
         super.write(buffer);
-        SerializeUtil.writeList(buffer, blocks, (b, p) -> p.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS, b));
+        SerializeUtil.writeListNullable(buffer, blocks, (b, p) -> p.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS, b));
     }
 }

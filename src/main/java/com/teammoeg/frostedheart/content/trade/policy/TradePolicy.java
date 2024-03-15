@@ -55,7 +55,7 @@ public class TradePolicy extends IESerializableRecipe {
         @Override
         public TradePolicy read(ResourceLocation recipeId, PacketBuffer buffer) {
             ResourceLocation name = SerializeUtil.readOptional(buffer, PacketBuffer::readResourceLocation).orElse(null);
-            List<PolicyGroup> groups = SerializeUtil.readList(buffer, PolicyGroup::read);
+            List<PolicyGroup> groups = SerializeUtil.readListNullable(buffer, PolicyGroup::read);
             int root = buffer.readVarInt();
             VillagerProfession vp = buffer.readRegistryIdUnsafe(ForgeRegistries.PROFESSIONS);
             return new TradePolicy(recipeId, name, groups, root, vp, buffer.readVarIntArray());
@@ -81,7 +81,7 @@ public class TradePolicy extends IESerializableRecipe {
         @Override
         public void write(PacketBuffer buffer, TradePolicy recipe) {
             SerializeUtil.writeOptional2(buffer, recipe.name, PacketBuffer::writeResourceLocation);
-            SerializeUtil.writeList(buffer, recipe.groups, PolicyGroup::write);
+            SerializeUtil.writeListNullable(buffer, recipe.groups, PolicyGroup::write);
             buffer.writeVarInt(recipe.weight);
             buffer.writeRegistryIdUnsafe(ForgeRegistries.PROFESSIONS, recipe.vp);
             buffer.writeVarIntArray(recipe.expBar);

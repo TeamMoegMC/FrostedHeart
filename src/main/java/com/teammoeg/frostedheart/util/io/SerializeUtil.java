@@ -145,19 +145,13 @@ public class SerializeUtil {
         }
         return ItemStack.EMPTY;
     }
-    public static <A> MapCodec<A> defCodecValue(Codec<A> val,String name,A def){
-    	return defCodec(val, name, ()->def);
-    }
-    public static <A> MapCodec<A> defCodec(Codec<A> val,String name,Supplier<A> def){
-    	return new DefaultValueCodec<A>(name,val,def);
-    }
-    public static <A> Codec<A> nullableCodecValue(Codec<A> val){
+    public static <A> NullableCodec<A> nullableCodecValue(Codec<A> val){
     	return new NullableCodec<A>(val);
     }
-    public static <A> Codec<A> nullableCodecValue(Codec<A> val,A def){
+    public static <A> NullableCodec<A> nullableCodecValue(Codec<A> val,A def){
     	return nullableCodec(val, ()->def);
     }
-    public static <A> Codec<A> nullableCodec(Codec<A> val, Supplier<A> def){
+    public static <A> NullableCodec<A> nullableCodec(Codec<A> val, Supplier<A> def){
     	return new NullableCodec<A>(val, def);
     }
     public static <A> Codec<Stream<A>> streamCodec(Codec<A> codec){
@@ -202,16 +196,18 @@ public class SerializeUtil {
         return ret;
     }
 
-    public static <T> List<T> readList(PacketBuffer buffer, Function<PacketBuffer, T> func) {
+    public static <T> List<T> readListNullable(PacketBuffer buffer, Function<PacketBuffer, T> func) {
         if (!buffer.readBoolean())
             return null;
+        return readList(buffer,func);
+    }
+    public static <T> List<T> readList(PacketBuffer buffer, Function<PacketBuffer, T> func) {
         int cnt = buffer.readVarInt();
         List<T> nums = new ArrayList<>(cnt);
         for (int i = 0; i < cnt; i++)
             nums.add(func.apply(buffer));
         return nums;
     }
-
     public static <K, V> Map<K, V> readMap(PacketBuffer buffer, Map<K, V> map, Function<PacketBuffer, K> keyreader, Function<PacketBuffer, V> valuereader) {
         map.clear();
         if (!buffer.readBoolean())
@@ -221,7 +217,13 @@ public class SerializeUtil {
             map.put(keyreader.apply(buffer), valuereader.apply(buffer));
         return map;
     }
-
+    public static <K, V> Map<K, V> readEntry(PacketBuffer buffer, Map<K, V> map, BiConsumer<PacketBuffer, BiConsumer<K,V>> reader) {
+        map.clear();
+        int cnt = buffer.readVarInt();
+        for (int i = 0; i < cnt; i++)
+        	reader.accept(buffer, map::put);
+        return map;
+    }
     public static <T> Optional<T> readOptional(PacketBuffer buffer, Function<PacketBuffer, T> func) {
         if (buffer.readBoolean())
             return Optional.ofNullable(func.apply(buffer));
@@ -292,28 +294,37 @@ public class SerializeUtil {
         buffer.writeByte(b);
     }
 
-    public static <T> void writeList(PacketBuffer buffer, Collection<T> elms, BiConsumer<T, PacketBuffer> func) {
+    public static <T> void writeListNullable(PacketBuffer buffer, Collection<T> elms, BiConsumer<T, PacketBuffer> func) {
         if (elms == null) {
             buffer.writeBoolean(false);
             return;
         }
         buffer.writeBoolean(true);
+        writeList(buffer,elms,func);
+    }
+
+    public static <T> void writeListNullable2(PacketBuffer buffer, Collection<T> elms, BiConsumer<PacketBuffer, T> func) {
+        if (elms == null) {
+            buffer.writeBoolean(false);
+            return;
+        }
+        buffer.writeBoolean(true);
+        writeList2(buffer,elms,func);
+    }
+    public static <T> void writeList(PacketBuffer buffer, Collection<T> elms, BiConsumer<T, PacketBuffer> func) {
         buffer.writeVarInt(elms.size());
         elms.forEach(e -> func.accept(e, buffer));
     }
-
+    public static <K,V> void writeEntry(PacketBuffer buffer, Map<K,V> elms, BiConsumer<Map.Entry<K,V>, PacketBuffer> func) {
+        buffer.writeVarInt(elms.size());
+        elms.entrySet().forEach(e -> func.accept(e, buffer));
+    }
     public static <T> void writeList2(PacketBuffer buffer, Collection<T> elms, BiConsumer<PacketBuffer, T> func) {
-        if (elms == null) {
-            buffer.writeBoolean(false);
-            return;
-        }
-        buffer.writeBoolean(true);
         buffer.writeVarInt(elms.size());
         elms.forEach(e -> func.accept(buffer, e));
     }
-
     public static <K, V> void writeMap(PacketBuffer buffer, Map<K, V> elms, BiConsumer<K, PacketBuffer> keywriter, BiConsumer<V, PacketBuffer> valuewriter) {
-        writeList(buffer, elms.entrySet(), (p, b) -> {
+        writeListNullable(buffer, elms.entrySet(), (p, b) -> {
             keywriter.accept(p.getKey(), b);
             valuewriter.accept(p.getValue(), b);
         });
@@ -355,74 +366,13 @@ public class SerializeUtil {
     public static <T> void writeCodec(PacketBuffer pb, Codec<T> codec, T obj) {
     	DataResult<Object> ob=codec.encodeStart(DataOps.COMPRESSED, obj);
     	Optional<Object> ret=ob.resultOrPartial(EncoderException::new);
-    	writeObject(pb,ret.get());
+    	ObjectWriter.writeObject(pb,ret.get());
     }
     public static <T> T readCodec(PacketBuffer pb, Codec<T> codec) {
-    	DataResult<Pair<T, Object>> ob=codec.decode(DataOps.COMPRESSED, readObject(pb));
+    	Object readed=ObjectWriter.readObject(pb);
+    	DataResult<Pair<T, Object>> ob=codec.decode(DataOps.COMPRESSED, readed);
     	Optional<Pair<T, Object>> ret=ob.resultOrPartial(DecoderException::new);
     	return ret.get().getFirst();
-    }
-    public static void writeObject(PacketBuffer pb,Object input) {
-		if(input instanceof Byte) {
-			pb.writeByte(1);
-			pb.writeByte((Byte)input);
-		}else if(input instanceof Short) {
-			pb.writeByte(2);
-			pb.writeShort((Short) input);
-		}else if(input instanceof Integer) {
-			pb.writeByte(3);
-			pb.writeVarInt((Integer) input);
-		}else if(input instanceof Long) {
-			pb.writeByte(4);
-			pb.writeLong((Long) input);
-		}else if(input instanceof Float) {
-			pb.writeByte(5);
-			pb.writeFloat((Float) input);
-		}else if(input instanceof Double) {
-			pb.writeByte(6);
-			pb.writeDouble((Double) input);
-		}else if(input instanceof String) {
-			pb.writeByte(7);
-			pb.writeString((String) input);
-		}else if(input instanceof Map) {
-			pb.writeByte(8);
-			SerializeUtil.writeList(pb, ((Map<Object,Object>)input).entrySet(),(t,p)->{writeObject(pb,t.getKey());writeObject(pb,t.getValue());});
-		}else if(input instanceof List) {
-			Class<?> cls=DataOps.getElmClass(((List<Object>)input));
-			if(cls==Byte.class) {
-				pb.writeByte(9);
-				byte[] bs=DataOps.INSTANCE.getByteArray(input).result().get();
-				pb.writeVarInt(bs.length);
-				pb.writeBytes(bs);
-			}else if(cls==Integer.class) {
-				pb.writeByte(10);
-				SerializeUtil.writeList(pb, ((List<Integer>)input), (t,p)->p.writeVarInt(t));
-			}else if(cls==Long.class) {
-				pb.writeByte(11);
-				SerializeUtil.writeList(pb, ((List<Long>)input), (t,p)->p.writeLong(t));
-			}else {
-				pb.writeByte(12);
-				SerializeUtil.writeList2(pb, ((List<Object>)input), SerializeUtil::writeObject);
-			}
-		}
-		pb.writeByte(0);
-    }
-    public static Object readObject(PacketBuffer pb) {
-    	switch(pb.readByte()) {
-    	case 1:return pb.readByte();
-    	case 2:return pb.readShort();
-    	case 3:return pb.readVarInt();
-    	case 4:return pb.readLong();
-    	case 5:return pb.readFloat();
-    	case 6:return pb.readDouble();
-    	case 7:return pb.readString();
-    	case 8:return SerializeUtil.readMap(pb, new HashMap<>(), SerializeUtil::readObject, SerializeUtil::readObject);
-    	case 9:return pb.readBytes(pb.readVarInt());
-    	case 10:return SerializeUtil.readList(pb, PacketBuffer::readVarInt);
-    	case 11:return SerializeUtil.readList(pb, PacketBuffer::readLong);
-    	case 12:return SerializeUtil.readList(pb, SerializeUtil::readObject);
-    	}
-    	return null;
     }
     private static final Map<Class<?>,Marshaller> marshallers=new HashMap<>();
     private static boolean isBasicInitialized=false;

@@ -44,7 +44,7 @@ public class BasicPolicyGroup extends PolicyGroup {
 
     public BasicPolicyGroup(PacketBuffer pb) {
         super(pb);
-        bdata = SerializeUtil.readList(pb, BaseData::read);
+        bdata = SerializeUtil.readListNullable(pb, BaseData::read);
     }
 
     @Override
@@ -63,6 +63,6 @@ public class BasicPolicyGroup extends PolicyGroup {
     public void write(PacketBuffer buffer) {
         buffer.writeBoolean(false);
         super.write(buffer);
-        SerializeUtil.writeList(buffer, bdata, BaseData::write);
+        SerializeUtil.writeListNullable(buffer, bdata, BaseData::write);
     }
 }

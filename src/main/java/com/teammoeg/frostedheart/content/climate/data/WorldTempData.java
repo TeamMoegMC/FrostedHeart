@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 public class WorldTempData{
 	public static final MapCodec<WorldTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		SerializeUtil.defCodecValue(Codec.FLOAT,"temperature", 0f).forGetter(o->o.temperature)).apply(t, WorldTempData::new));
+		SerializeUtil.nullableCodecValue(Codec.FLOAT,0f).fieldOf("temperature").forGetter(o->o.temperature)).apply(t, WorldTempData::new));
 	float temperature;
     public WorldTempData(float temperature) {
 		super();

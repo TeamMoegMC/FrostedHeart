@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 public class BiomeTempData {
 	public static final MapCodec<BiomeTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		SerializeUtil.defCodecValue(Codec.FLOAT,"temperature", 0f).forGetter(o->o.temperature)).apply(t, BiomeTempData::new));
+		SerializeUtil.nullableCodecValue(Codec.FLOAT,0f).fieldOf("temperature").forGetter(o->o.temperature)).apply(t, BiomeTempData::new));
     float temperature;
 
     public BiomeTempData(float temperature) {

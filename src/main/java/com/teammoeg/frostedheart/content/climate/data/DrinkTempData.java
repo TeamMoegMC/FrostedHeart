@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 public class DrinkTempData {
 	public static final MapCodec<DrinkTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		SerializeUtil.defCodecValue(Codec.FLOAT,"heat", 0f).forGetter(o->o.heat)).apply(t, DrinkTempData::new));
+		SerializeUtil.nullableCodecValue(Codec.FLOAT,0f).fieldOf("heat").forGetter(o->o.heat)).apply(t, DrinkTempData::new));
 	float heat;
 	public DrinkTempData(float heat) {
 		super();

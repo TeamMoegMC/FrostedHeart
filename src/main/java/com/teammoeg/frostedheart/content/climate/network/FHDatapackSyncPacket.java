@@ -45,12 +45,12 @@ public class FHDatapackSyncPacket implements FHMessage {
 
     public void decode(PacketBuffer buffer) {
     	type = FHDataType.values()[buffer.readByte()];
-        entries = SerializeUtil.readList(buffer,t->type.type.read(buffer));
+        entries = SerializeUtil.readListNullable(buffer,t->type.type.read(buffer));
     }
 
     public void encode(PacketBuffer buffer) {
     	buffer.writeByte(type.ordinal());
-        SerializeUtil.writeList(buffer, entries, type.type::write);
+        SerializeUtil.writeListNullable(buffer, entries, type.type::write);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {

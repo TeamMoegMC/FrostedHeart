@@ -172,16 +172,16 @@ public class Research extends FHRegisteredItem implements Writeable {
         id = data.readString();
         //System.out.println("read "+id);
         name = data.readString();
-        desc = SerializeUtil.readList(data, PacketBuffer::readString);
-        fdesc = SerializeUtil.readList(data, PacketBuffer::readString);
+        desc = SerializeUtil.readListNullable(data, PacketBuffer::readString);
+        fdesc = SerializeUtil.readListNullable(data, PacketBuffer::readString);
         icon = FHIcons.readIcon(data);
         categoryRL = data.readResourceLocation();
-        parentIds = SerializeUtil.readList(data, PacketBuffer::readVarInt);
+        parentIds = SerializeUtil.readListNullable(data, PacketBuffer::readVarInt);
         //System.out.println("category "+rl.toString());
 
-        clues.addAll(SerializeUtil.readList(data, Clues::read));
-        requiredItems = SerializeUtil.readList(data, IngredientWithSize::read);
-        effects = SerializeUtil.readList(data, Effects::read);
+        clues.addAll(SerializeUtil.readListNullable(data, Clues::read));
+        requiredItems = SerializeUtil.readListNullable(data, IngredientWithSize::read);
+        effects = SerializeUtil.readListNullable(data, Effects::read);
         points = data.readVarLong();
         boolean[] bools = SerializeUtil.readBooleans(data);
         showfdesc = bools[0];
@@ -891,14 +891,14 @@ public class Research extends FHRegisteredItem implements Writeable {
         SpecialResearch.writeId(this, buffer);
         buffer.writeString(id);
         buffer.writeString(name);
-        SerializeUtil.writeList2(buffer, desc, PacketBuffer::writeString);
-        SerializeUtil.writeList2(buffer, fdesc, PacketBuffer::writeString);
+        SerializeUtil.writeListNullable2(buffer, desc, PacketBuffer::writeString);
+        SerializeUtil.writeListNullable2(buffer, fdesc, PacketBuffer::writeString);
         FHIcons.write(icon, buffer);
         buffer.writeResourceLocation(category.getId());
-        SerializeUtil.writeList2(buffer, parents, FHRegistry::writeSupplier);
-        SerializeUtil.writeList2(buffer, clues, Clues::write);
-        SerializeUtil.writeList(buffer, requiredItems, IngredientWithSize::write);
-        SerializeUtil.writeList(buffer, effects, Effects::write);
+        SerializeUtil.writeListNullable2(buffer, parents, FHRegistry::writeSupplier);
+        SerializeUtil.writeListNullable2(buffer, clues, Clues::write);
+        SerializeUtil.writeListNullable(buffer, requiredItems, IngredientWithSize::write);
+        SerializeUtil.writeListNullable(buffer, effects, Effects::write);
         buffer.writeVarLong(points);
         SerializeUtil.writeBooleans(buffer, showfdesc, hideEffects, isHidden, inCompletable, alwaysShow, infinite);
     }

@@ -131,7 +131,16 @@ public class FHDataManager {
     	System.out.println(bb.writerIndex());
     	bb.resetReaderIndex();
     	for(int i=0;i<bb.writerIndex();i++)
-    		System.out.print(bb.readByte()+" ");
+    		System.out.print(String.format("%2x", bb.readByte())+" ");
+    	bb.resetReaderIndex();
+    	System.out.println();
+    	for(int i=0;i<bb.writerIndex();i++) {
+    		byte data=bb.readByte();
+    		if(data!='\r'&&data!='\n')
+    			System.out.print(String.format(" %c", data)+" ");
+    		else
+    			System.out.print("   ");
+    	}
     	System.out.println();
     	bb.resetReaderIndex();
     	System.out.println(FHDataType.Armor.type.read(pb));

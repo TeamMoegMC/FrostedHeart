@@ -126,7 +126,7 @@ public abstract class Effect extends AutoIDItem implements Writeable{
      */
     Effect(PacketBuffer pb) {
         name = pb.readString();
-        tooltip = SerializeUtil.readList(pb, PacketBuffer::readString);
+        tooltip = SerializeUtil.readListNullable(pb, PacketBuffer::readString);
         icon = SerializeUtil.readOptional(pb, FHIcons::readIcon).orElse(null);
         nonce = pb.readString();
         hidden = pb.readBoolean();
@@ -424,7 +424,7 @@ public abstract class Effect extends AutoIDItem implements Writeable{
      */
     public void write(PacketBuffer buffer) {
         buffer.writeString(name);
-        SerializeUtil.writeList2(buffer, tooltip, PacketBuffer::writeString);
+        SerializeUtil.writeListNullable2(buffer, tooltip, PacketBuffer::writeString);
         SerializeUtil.writeOptional(buffer, icon, FHIcons::write);
         buffer.writeString(nonce);
         buffer.writeBoolean(isHidden());

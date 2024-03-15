@@ -281,7 +281,7 @@ public class FHResearch {
     }
 
     public static void readAll(PacketBuffer pb) {
-        List<Research> rss = SerializeUtil.readList(pb, SpecialResearch::deserialize);
+        List<Research> rss = SerializeUtil.readListNullable(pb, SpecialResearch::deserialize);
 
         for (Research r : rss) {
             researches.register(r);
@@ -338,7 +338,7 @@ public class FHResearch {
     }
 
     public static void saveAll(PacketBuffer pb) {
-        SerializeUtil.writeList(pb, getAllResearch(), Research::write);
+        SerializeUtil.writeListNullable(pb, getAllResearch(), Research::write);
     }
 
 	public static void sendSyncPacket(PacketTarget target) {

@@ -42,7 +42,7 @@ public class NullableCodec<A> implements Codec<A> {
 	}
 
 	@Override
-	public MapCodec<A> fieldOf(String name) {
+	public DefaultValueCodec<A> fieldOf(String name) {
 		return new DefaultValueCodec<A>(name,original,defVal);
 	}
 

@@ -80,9 +80,9 @@ public abstract class BaseData implements Writeable {
         maxstore = pb.readVarInt();
         recover = pb.readFloat();
         price = pb.readVarInt();
-        this.actions = SerializeUtil.readList(pb, Actions::deserialize);
-        this.soldactions = SerializeUtil.readList(pb, Actions::deserialize);
-        this.restockconditions = SerializeUtil.readList(pb, Conditions::deserialize);
+        this.actions = SerializeUtil.readListNullable(pb, Actions::deserialize);
+        this.soldactions = SerializeUtil.readListNullable(pb, Actions::deserialize);
+        this.restockconditions = SerializeUtil.readListNullable(pb, Conditions::deserialize);
         hideStockout = pb.readBoolean();
     }
 
@@ -148,9 +148,9 @@ public abstract class BaseData implements Writeable {
         buffer.writeVarInt(maxstore);
         buffer.writeFloat(recover);
         buffer.writeVarInt(price);
-        SerializeUtil.writeList(buffer, actions, Actions::write);
-        SerializeUtil.writeList(buffer, soldactions, Actions::write);
-        SerializeUtil.writeList(buffer, restockconditions, Conditions::write);
+        SerializeUtil.writeListNullable(buffer, actions, Actions::write);
+        SerializeUtil.writeListNullable(buffer, soldactions, Actions::write);
+        SerializeUtil.writeListNullable(buffer, restockconditions, Conditions::write);
         buffer.writeBoolean(hideStockout);
     }
 }
