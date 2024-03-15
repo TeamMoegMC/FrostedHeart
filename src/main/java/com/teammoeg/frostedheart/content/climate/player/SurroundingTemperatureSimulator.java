@@ -165,9 +165,9 @@ public class SurroundingTemperatureSimulator {
             	Chunk cnk=world.getChunk(x, z);
                 ChunkSection[] css = cnk.getSections();
                 maps[i/2]=cnk.getHeightmap(Type.MOTION_BLOCKING_NO_LEAVES);
-                if(css.length>chunkOffsetD)
+                if(css.length>chunkOffsetD&&chunkOffsetD>0)
                 	sections[i]=css[chunkOffsetD];
-                if(css.length>chunkOffsetD+1)
+                if(css.length>chunkOffsetD+1&&chunkOffsetD+1>0)
                 	sections[i + 1]=css[chunkOffsetD + 1];
                 i += 2;
             }
