@@ -84,7 +84,7 @@ public class EffectExperience extends Effect {
         if (triggerPlayer == null || isload)
             return false;
 
-        triggerPlayer.giveExperiencePoints(getRId());
+        triggerPlayer.giveExperiencePoints(exp);
 
         return true;
     }
