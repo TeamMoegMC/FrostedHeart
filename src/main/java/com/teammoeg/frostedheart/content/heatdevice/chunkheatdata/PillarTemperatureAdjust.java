@@ -19,15 +19,20 @@
 
 package com.teammoeg.frostedheart.content.heatdevice.chunkheatdata;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
 import net.minecraft.util.math.BlockPos;
 
 /**
  * Pillar Temperature Adjust, would adjust temperature in a pillar.
  */
 public class PillarTemperatureAdjust extends CubicTemperatureAdjust {
-
+	public static Codec<PillarTemperatureAdjust> CODEC=RecordCodecBuilder.create(t->t.group(BlockPos.CODEC.fieldOf("pos").forGetter(o->o.center),
+		Codec.INT.fieldOf("r").forGetter(o->o.r),
+		Codec.INT.fieldOf("u").forGetter(o->o.upper),
+		Codec.INT.fieldOf("d").forGetter(o->o.lower),
+		Codec.INT.fieldOf("v").forGetter(o->o.value)).apply(t,PillarTemperatureAdjust::new));
     long r2;
     int upper;
     int lower;
@@ -39,60 +44,11 @@ public class PillarTemperatureAdjust extends CubicTemperatureAdjust {
         this.lower = d;
     }
 
-    public PillarTemperatureAdjust(CompoundNBT nc) {
-        super(nc);
-        r2 = (long) r * r;
-
-    }
-
-    public PillarTemperatureAdjust(int cx, int cy, int cz, int r, int upper, int lower, int value) {
-        super(cx, cy, cz, r, value);
-        r2 = (long) r * r;
-        this.upper = upper;
-        this.lower = lower;
-    }
-
-    public PillarTemperatureAdjust(PacketBuffer buffer) {
-        super(buffer);
-        r2 = (long) r * r;
-        this.upper = buffer.readVarInt();
-        this.lower = buffer.readVarInt();
-    }
-
     @Override
     public boolean isEffective(int x, int y, int z) {
-        if (y > upper + cy || y < cy - lower) return false;
-        long l = (long) Math.pow(x - cx, 2);
-        l += (long) Math.pow(z - cz , 2);
+        if (y > upper + getCenterY() || y < getCenterY() - lower) return false;
+        long l = (long) Math.pow(x - getCenterX(), 2);
+        l += (long) Math.pow(z - getCenterZ() , 2);
         return l <= r2;
     }
-
-    @Override
-    public void serialize(PacketBuffer buffer) {
-        buffer.writeByte(2);
-        serializeData(buffer);
-    }
-
-    @Override
-    protected void serializeData(PacketBuffer buffer) {
-        super.serializeData(buffer);
-        buffer.writeVarInt(upper);
-        buffer.writeVarInt(lower);
-    }
-
-
-	@Override
-	public void save(CompoundNBT nbt, boolean isPacket) {
-		super.save(nbt, isPacket);
-        nbt.putInt("upper", upper);
-        nbt.putInt("lower", lower);
-	}
-
-	@Override
-	public void load(CompoundNBT nbt, boolean isPacket) {
-		super.load(nbt, isPacket);
-        this.upper = nbt.getInt("upper");
-        this.lower = nbt.getInt("lower");
-	}
-
 }

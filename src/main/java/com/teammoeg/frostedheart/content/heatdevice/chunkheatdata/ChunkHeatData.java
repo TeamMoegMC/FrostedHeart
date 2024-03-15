@@ -28,6 +28,9 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
@@ -35,6 +38,7 @@ import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.NBTDynamicOps;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
@@ -44,7 +48,7 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class ChunkHeatData implements NBTSerializable {
-
+	public static final MapCodec<ChunkHeatData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Codec.list(ITemperatureAdjust.CODEC).fieldOf("adjs").forGetter(o->o.adjusters)).apply(t, ChunkHeatData::new));
     private List<ITemperatureAdjust> adjusters = new LinkedList<>();
 
 
@@ -411,24 +415,24 @@ public class ChunkHeatData implements NBTSerializable {
         adjusters.clear();
 
     }
-    public void setAdjusters(List<ITemperatureAdjust> adjusters) {
+    public ChunkHeatData(List<ITemperatureAdjust> adjusters) {
+		super();
+		reset();
+		this.adjusters.addAll(adjusters);
+	}
+
+	public void setAdjusters(List<ITemperatureAdjust> adjusters) {
         this.adjusters.addAll(adjusters);
     }
 
 	@Override
 	public void save(CompoundNBT nbt, boolean isPacket) {
-        ListNBT nl = new ListNBT();
-        for (ITemperatureAdjust adj : adjusters)
-            nl.add(adj.serializeNBT());
-        nbt.put("temperature", nl);
+		CODEC.encode(this, NBTDynamicOps.INSTANCE, NBTDynamicOps.INSTANCE.mapBuilder());
 	}
 
 	@Override
 	public void load(CompoundNBT nbt, boolean isPacket) {
-        ListNBT nl = nbt.getList("temperature", Constants.NBT.TAG_COMPOUND);
-        for (INBT nc : nl) {
-            adjusters.add(ITemperatureAdjust.valueOf((CompoundNBT) nc));
-        }
+		CODEC.decode(NBTDynamicOps.INSTANCE, NBTDynamicOps.INSTANCE.getMap(nbt).resultOrPartial(t->{}).get());
 	}
 
 }

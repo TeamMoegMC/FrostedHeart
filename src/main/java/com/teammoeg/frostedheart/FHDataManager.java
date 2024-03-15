@@ -81,10 +81,10 @@ public class FHDataManager {
     public enum FHDataType {
         Armor(new DataType<>(ArmorTempData.class, "temperature", "armor", ArmorTempData.CODEC)),
         Biome(new DataType<>(BiomeTempData.class, "temperature", "biome", BiomeTempData.CODEC)),
-        Food(new DataType<>(FoodTempData.class, "temperature", "food", FoodTempData.CODEC)),
+        Food (new DataType<>(FoodTempData.class , "temperature", "food" , FoodTempData.CODEC )),
         Block(new DataType<>(BlockTempData.class, "temperature", "block", BlockTempData.CODEC)),
         Drink(new DataType<>(DrinkTempData.class, "temperature", "drink", DrinkTempData.CODEC)),
-        Cup(new DataType<>(CupData.class, "temperature", "cup", CupData.CODEC)),
+        Cup  (new DataType<>(CupData.class      , "temperature", "cup"  , CupData.CODEC      )),
         World(new DataType<>(WorldTempData.class, "temperature", "world", WorldTempData.CODEC));
 
         public static class DataType<T> {

@@ -63,6 +63,7 @@ import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.LongArrayNBT;
 import net.minecraft.nbt.LongNBT;
+import net.minecraft.nbt.NBTDynamicOps;
 import net.minecraft.nbt.ShortNBT;
 import net.minecraft.nbt.StringNBT;
 import net.minecraft.network.PacketBuffer;
@@ -166,6 +167,13 @@ public class SerializeUtil {
 	}
 	public static <K,V> Codec<Map<K,V>> mapCodec(String nkey,Codec<K> keyCodec,String nval,Codec<V> valueCodec){
 		return Codec.list(SerializeUtil.pairCodec(nkey, keyCodec, nval, valueCodec)).xmap(pl->pl.stream().collect(Collectors.toMap(Pair::getFirst,Pair::getSecond)),pl->pl.entrySet().stream().map(ent->Pair.of(ent.getKey(), ent.getValue())).collect(Collectors.toList())); 
+	}
+	public static <A> Codec<A> dispatchCodec(Class[] clazz,Codec...func){
+		Map<Class,Integer> map=new HashMap<>();
+		int o=0;
+		for(Class claz:clazz)
+			map.put(claz, o++);
+		return Codec.INT.dispatch(v->map.get(v.getClass()),i->func[i]);
 	}
 
     public static <T> List<T> parseJsonElmList(JsonElement elm, Function<JsonElement, T> mapper) {
@@ -372,6 +380,17 @@ public class SerializeUtil {
     	Object readed=ObjectWriter.readObject(pb);
     	DataResult<Pair<T, Object>> ob=codec.decode(DataOps.COMPRESSED, readed);
     	Optional<Pair<T, Object>> ret=ob.resultOrPartial(DecoderException::new);
+    	return ret.get().getFirst();
+    }
+    public static <T> void writeCodecNBT(PacketBuffer pb, Codec<T> codec, T obj) {
+    	DataResult<INBT> ob=codec.encodeStart(NBTDynamicOps.INSTANCE, obj);
+    	Optional<INBT> ret=ob.resultOrPartial(EncoderException::new);
+    	pb.writeCompoundTag((CompoundNBT) ret.get());
+    }
+    public static <T> T readCodecNBT(PacketBuffer pb, Codec<T> codec) {
+    	INBT readed=pb.readCompoundTag();
+    	DataResult<Pair<T, INBT>> ob=codec.decode(NBTDynamicOps.INSTANCE, readed);
+    	Optional<Pair<T, INBT>> ret=ob.resultOrPartial(DecoderException::new);
     	return ret.get().getFirst();
     }
     private static final Map<Class<?>,Marshaller> marshallers=new HashMap<>();

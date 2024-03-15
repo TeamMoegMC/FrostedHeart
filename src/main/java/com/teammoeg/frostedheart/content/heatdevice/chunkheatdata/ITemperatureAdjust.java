@@ -19,54 +19,20 @@
 
 package com.teammoeg.frostedheart.content.heatdevice.chunkheatdata;
 
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.mojang.serialization.Codec;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 
 /**
  * Interface to adjust temperature
  */
-public interface ITemperatureAdjust extends NBTSerializable {
+public interface ITemperatureAdjust {
+	public static final Codec<ITemperatureAdjust> CODEC=SerializeUtil.dispatchCodec(new Class[] {
+		CubicTemperatureAdjust.class,
+		PillarTemperatureAdjust.class
+	}, CubicTemperatureAdjust.CODEC, PillarTemperatureAdjust.CODEC);
 
-    /**
-     * Factory construct temperature adjust from NBT<br>
-     *
-     * @param nc the nbt compound<br>
-     * @return returns adjust
-     */
-    static ITemperatureAdjust valueOf(CompoundNBT nc) {
-        switch (nc.getInt("type")) {
-            case 2:
-                return new PillarTemperatureAdjust(nc);
-            default:
-                return new CubicTemperatureAdjust(nc);
-        }
-    }
-
-    /**
-     * Factory construct temperature adjust from packet buffer.<br>
-     *
-     * @param buffer the buffer<br>
-     * @return returns adjust
-     */
-    static ITemperatureAdjust valueOf(PacketBuffer buffer) {
-        int packetId = buffer.readByte();
-        switch (packetId) {
-            case 2:
-                return new PillarTemperatureAdjust(buffer);
-            default:
-                return new CubicTemperatureAdjust(buffer);
-        }
-    }
-
-    /**
-     * Deserialize.
-     *
-     * @param buffer the buffer<br>
-     */
-    void deserialize(PacketBuffer buffer);
 
     /**
      * Get center X.
@@ -138,13 +104,6 @@ public interface ITemperatureAdjust extends NBTSerializable {
      * @return if this adjust is effective for location, true.
      */
     boolean isEffective(int x, int y, int z);
-
-    /**
-     * Serialize.
-     *
-     * @param buffer the buffer<br>
-     */
-    void serialize(PacketBuffer buffer);
 
     void setValue(int value);
 }
