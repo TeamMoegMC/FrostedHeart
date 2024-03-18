@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -42,8 +41,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import com.mojang.serialization.DynamicOps;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
@@ -68,35 +65,8 @@ import net.minecraft.nbt.ShortNBT;
 import net.minecraft.nbt.StringNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Util;
 
 public class SerializeUtil {
-    public static class CompoundBuilder {
-        CompoundNBT nbt = new CompoundNBT();
-
-        public static CompoundBuilder create() {
-            return new CompoundBuilder();
-        }
-
-        public CompoundNBT build() {
-            return nbt;
-        }
-
-        public CompoundBuilder put(String key, INBT val) {
-            nbt.put(key, val);
-            return this;
-        }
-
-        public CompoundBuilder put(String key, int val) {
-            nbt.putInt(key, val);
-            return this;
-        }
-
-        public CompoundBuilder put(String key, UUID val) {
-            nbt.putUniqueId(key, val);
-            return this;
-        }
-    }
 
     public static class Deserializer<T extends JsonElement, U extends Writeable> {
         private int id;
@@ -126,7 +96,6 @@ public class SerializeUtil {
             obj.write(packet);
         }
     }
-
 
     public static ItemStack fromJson(JsonElement elm) {
         if (elm.isJsonPrimitive())

@@ -25,14 +25,14 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.FHDataManager.DataType;
 import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.content.climate.data.DataReference;
+import com.teammoeg.frostedheart.util.io.IdDataPair;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FHDatapackSyncPacket implements FHMessage {
-    List<DataReference<?>> entries;
+    List<IdDataPair<?>> entries;
     DataType<?> type;
     public FHDatapackSyncPacket(DataType<?> type) {
         entries = FHDataManager.save(type);

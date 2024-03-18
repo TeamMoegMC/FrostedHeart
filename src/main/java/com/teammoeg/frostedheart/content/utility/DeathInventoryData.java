@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.climate.data;
+package com.teammoeg.frostedheart.content.utility;
 
 import javax.annotation.Nullable;
 

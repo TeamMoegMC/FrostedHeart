@@ -29,8 +29,8 @@ import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.clues.ClueDatas;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
+import com.teammoeg.frostedheart.util.io.CompoundBuilder;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
-import com.teammoeg.frostedheart.util.io.SerializeUtil.CompoundBuilder;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -331,7 +331,7 @@ public class ResearchData implements IEnvironment {
         cnbt.putBoolean("finished", finished);
         if (level > 0)
             cnbt.putInt("level", level);
-        cnbt.put("clues", SerializeUtil.toNBTList(data.entrySet(), t -> CompoundBuilder.create().put("id", t.getKey()).put("data", ClueDatas.write(t.getValue())).build()));
+        cnbt.put("clues", SerializeUtil.toNBTList(data.entrySet(), t -> CompoundBuilder.create().putInt("id", t.getKey()).put("data", ClueDatas.write(t.getValue())).build()));
         // cnbt.putInt("research",getResearch().getRId());
         return cnbt;
 

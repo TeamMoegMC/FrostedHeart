@@ -7,7 +7,6 @@ import java.util.List;
 
 import com.teammoeg.frostedheart.base.capability.FHCapability;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
-import com.teammoeg.frostedheart.content.climate.data.DeathInventoryData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.foods.dailykitchen.WantedFoodCapability;
 import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
@@ -15,6 +14,7 @@ import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
 import com.teammoeg.frostedheart.content.town.ChunkTownResourceCapability;
+import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraftforge.common.util.NonNullSupplier;

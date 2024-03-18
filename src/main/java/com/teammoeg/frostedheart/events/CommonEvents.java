@@ -33,7 +33,6 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHDataManager;
-import com.teammoeg.frostedheart.FHDataReloadManager;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
@@ -54,7 +53,6 @@ import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
-import com.teammoeg.frostedheart.content.climate.data.DeathInventoryData;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
@@ -73,6 +71,7 @@ import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.town.TeamTownDataS2CPacket;
+import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
@@ -269,7 +268,7 @@ public class CommonEvents {
         // IReloadableResourceManager resourceManager = (IReloadableResourceManager)
         // dataPackRegistries.getResourceManager();
         event.addListener(new FHRecipeReloadListener(dataPackRegistries));
-        event.addListener(FHDataReloadManager.INSTANCE);
+        event.addListener(FHDataManager.INSTANCE);
 //            resourceManager.addReloadListener(ChunkCacheInvalidationReloaderListener.INSTANCE);
     }
 
