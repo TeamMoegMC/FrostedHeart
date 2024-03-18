@@ -72,19 +72,9 @@ public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializab
 	@Override
 	public void save(CompoundNBT nbt, boolean isPacket) {
 		nbt.put("pipes",
-		SerializeUtil.toNBTList(propagated.entrySet(),k->{
-			 CompoundNBT cnbt=new CompoundNBT();
-			 cnbt.putLong("pos",k.getKey().toLong());
-			 cnbt.putInt("len", k.getValue());
-			return cnbt;
-		}));
+		SerializeUtil.toNBTList(propagated.entrySet(),(t,p)->p.compound().putLong("pos",t.getKey().toLong()).putInt("len", t.getValue())));
 		nbt.put("endpoints",
-		SerializeUtil.toNBTList(data.entrySet(),k->{
-			 CompoundNBT cnbt=new CompoundNBT();
-			 cnbt.putLong("pos",k.getValue().pos.toLong());
-			 cnbt.putString("blk", RegistryUtils.getRegistryName(k.getValue().blk).toString());
-			return cnbt;
-		}));
+		SerializeUtil.toNBTList(data.entrySet(),(t,p)->p.compound().putLong("pos",t.getValue().pos.toLong()).putString("blk", RegistryUtils.getRegistryName(t.getValue().blk).toString())));
 	}
 
 	@Override

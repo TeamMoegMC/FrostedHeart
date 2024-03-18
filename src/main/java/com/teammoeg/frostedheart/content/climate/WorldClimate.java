@@ -42,6 +42,7 @@ import com.teammoeg.frostedheart.content.climate.DayTemperatureData.HourData;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.events.CommonEvents;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
@@ -859,41 +860,20 @@ public class WorldClimate implements NBTSerializable {
         updateFrames();
         return true;
     }
-
 	@Override
 	public void save(CompoundNBT nbt, boolean isPacket) {
         clockSource.serialize(nbt);
-
-        ListNBT list1 = new ListNBT();
-        for (ClimateEvent event : tempEventStream) {
-            list1.add(event.serialize(new CompoundNBT()));
-        }
-        nbt.put("tempEventStream", list1);
-
-        ListNBT list2 = new ListNBT();
-        for (DayTemperatureData temp : dailyTempData) {
-            list2.add(temp.serialize());
-        }
-        nbt.put("hourlyTempStream", list2);
+        nbt.put("tempEventStream", SerializeUtil.toNBTList(tempEventStream, ClimateEvent.CODEC));
+        nbt.put("hourlyTempStream", SerializeUtil.toNBTList(dailyTempData, DayTemperatureData.CODEC));
 	}
 
 	@Override
 	public void load(CompoundNBT nbt, boolean isPacket) {
         clockSource.deserialize(nbt);
-        ListNBT list1 = nbt.getList("tempEventStream", Constants.NBT.TAG_COMPOUND);
         tempEventStream.clear();
-        for (int i = 0; i < list1.size(); i++) {
-            ClimateEvent event = new ClimateEvent();
-            event.deserialize(list1.getCompound(i));
-            tempEventStream.add(event);
-        }
-
-        ListNBT list2 = nbt.getList("hourlyTempStream", Constants.NBT.TAG_COMPOUND);
+        tempEventStream.addAll(SerializeUtil.fromNBTList(nbt.getList("tempEventStream", Constants.NBT.TAG_COMPOUND), ClimateEvent.CODEC));
         dailyTempData.clear();
-        for (int i = 0; i < list2.size(); i++) {
-            dailyTempData.add(DayTemperatureData.read(list2.getCompound(i)));
-        }
-
+        dailyTempData.addAll(SerializeUtil.fromNBTList(nbt.getList("hourlyTempStream", Constants.NBT.TAG_COMPOUND), DayTemperatureData.CODEC));
         readCache();
 	}
 }

@@ -35,6 +35,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.TypedCodecRegistry;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTDynamicOps;
@@ -46,7 +47,13 @@ import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class ChunkHeatData implements NBTSerializable {
-	public static final Codec<ChunkHeatData> CODEC=RecordCodecBuilder.create(t->t.group(Codec.list(ITemperatureAdjust.CODEC).fieldOf("adjs").forGetter(o->o.adjusters.values().stream().collect(Collectors.toList()))).apply(t, ChunkHeatData::new));
+	public static final TypedCodecRegistry<ITemperatureAdjust> type=new TypedCodecRegistry<>();
+	static {
+		type.register(CubicTemperatureAdjust.class, "cubic", CubicTemperatureAdjust.CODEC);
+		type.register(PillarTemperatureAdjust.class, "pillar", PillarTemperatureAdjust.CODEC);
+	}
+
+	public static final Codec<ChunkHeatData> CODEC=RecordCodecBuilder.create(t->t.group(Codec.list(type.byIntCodec()).fieldOf("adjs").forGetter(o->o.adjusters.values().stream().collect(Collectors.toList()))).apply(t, ChunkHeatData::new));
     private Map<BlockPos,ITemperatureAdjust> adjusters = new LinkedHashMap<>();
 
 

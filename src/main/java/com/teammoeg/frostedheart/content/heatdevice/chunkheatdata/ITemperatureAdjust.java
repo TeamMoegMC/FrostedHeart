@@ -19,19 +19,13 @@
 
 package com.teammoeg.frostedheart.content.heatdevice.chunkheatdata;
 
-import com.mojang.serialization.Codec;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
-
 import net.minecraft.util.math.BlockPos;
 
 /**
  * Interface to adjust temperature
  */
 public interface ITemperatureAdjust {
-	public static final Codec<ITemperatureAdjust> CODEC=SerializeUtil.dispatchCodec(new Class[] {
-		CubicTemperatureAdjust.class,
-		PillarTemperatureAdjust.class
-	}, CubicTemperatureAdjust.CODEC, PillarTemperatureAdjust.CODEC);
+	
 
     BlockPos getCenter();
 

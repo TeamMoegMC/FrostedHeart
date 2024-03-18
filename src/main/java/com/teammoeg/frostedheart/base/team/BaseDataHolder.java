@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.base.team;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
 
@@ -35,9 +35,7 @@ public class BaseDataHolder<T extends BaseDataHolder<T>> implements SpecialDataH
 
 	@Override
 	public void save(CompoundNBT nbt, boolean isPacket) {
-        for(Entry<String, NBTSerializable> ent:data.entrySet()) {
-        	nbt.put(ent.getKey(), ent.getValue().serialize(isPacket));
-        }
+		SerializeUtil.toNBTMap(data.entrySet(), (t,p)->p.put(t.getKey(), t.getValue().serialize(isPacket)));
 	}
 
 	@Override

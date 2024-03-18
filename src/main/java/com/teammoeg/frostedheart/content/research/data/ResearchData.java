@@ -331,7 +331,7 @@ public class ResearchData implements IEnvironment {
         cnbt.putBoolean("finished", finished);
         if (level > 0)
             cnbt.putInt("level", level);
-        cnbt.put("clues", SerializeUtil.toNBTList(data.entrySet(), t -> CompoundBuilder.create().putInt("id", t.getKey()).put("data", ClueDatas.write(t.getValue())).build()));
+        cnbt.put("clues", SerializeUtil.toNBTList(data.entrySet(), (t,c) -> c.compound().putInt("id", t.getKey()).put("data", ClueDatas.write(t.getValue()))));
         // cnbt.putInt("research",getResearch().getRId());
         return cnbt;
 

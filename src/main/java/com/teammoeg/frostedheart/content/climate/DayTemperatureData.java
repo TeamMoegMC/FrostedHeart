@@ -21,10 +21,15 @@ package com.teammoeg.frostedheart.content.climate;
 
 import java.util.Arrays;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
+
 import net.minecraft.nbt.CompoundNBT;
 
 public class DayTemperatureData {
     public static class HourData {
+    	public static final Codec<HourData> CODEC=Codec.INT.xmap(HourData::new,HourData::pack);
         private float temp = 0;
 
         private ClimateType type = ClimateType.NONE;
@@ -97,7 +102,11 @@ public class DayTemperatureData {
 
 
     }
-
+    public static final Codec<DayTemperatureData> CODEC=RecordCodecBuilder.create(t->t.group(
+    	SerializeUtil.array(HourData.CODEC,o->new HourData[o]).fieldOf("ndata").forGetter(o->o.hourData),
+    	Codec.FLOAT.fieldOf("humidity").forGetter(o->o.dayHumidity),
+    	Codec.FLOAT.fieldOf("noise").forGetter(o->o.dayNoise),
+    	Codec.LONG.fieldOf("day").forGetter(o->o.day)).apply(t, DayTemperatureData::new));
     HourData[] hourData = new HourData[24];
     float dayHumidity;
     float dayNoise;
@@ -109,7 +118,15 @@ public class DayTemperatureData {
         return dtd;
     }
 
-    public DayTemperatureData() {
+    public DayTemperatureData(HourData[] hourData, float dayHumidity, float dayNoise, long day) {
+		super();
+		this.hourData = hourData;
+		this.dayHumidity = dayHumidity;
+		this.dayNoise = dayNoise;
+		this.day = day;
+	}
+
+	public DayTemperatureData() {
         for (int i = 0; i < 24; i++)
             hourData[i] = new HourData();
     }
@@ -117,7 +134,6 @@ public class DayTemperatureData {
     public DayTemperatureData(long day) {
         this();
         this.day = day;
-
     }
 
     public void deserialize(CompoundNBT cnbt) {

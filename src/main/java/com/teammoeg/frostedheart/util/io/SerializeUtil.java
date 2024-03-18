@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.util.io;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -164,15 +166,16 @@ public class SerializeUtil {
     }
 
     public static boolean[] readBooleans(PacketBuffer buffer) {
+        return readBooleans(buffer.readByte());
+    }
+    public static boolean[] readBooleans(byte in) {
         boolean[] ret = new boolean[8];
-        byte in = buffer.readByte();
         for (int i = ret.length - 1; i >= 0; i--) {
             ret[i] = (in & 1) != 0;
             in >>= 1;
         }
         return ret;
     }
-
     public static <T> List<T> readListNullable(PacketBuffer buffer, Function<PacketBuffer, T> func) {
         if (!buffer.readBoolean())
             return null;
@@ -245,19 +248,37 @@ public class SerializeUtil {
         li.stream().map(mapper).map(B::toString).forEach(ja::add);
         return ja;
     }
-
-    public static <T> ListNBT toNBTList(Collection<T> stacks, Function<T, INBT> mapper) {
-        ListNBT nbt = new ListNBT();
-        stacks.stream().map(mapper).forEach(nbt::add);
-        return nbt;
+    public static <T> ListNBT toNBTList(Collection<T> stacks,Codec<T> codec) {
+        ArrayBuilder<Void> arrayBuilder=ArrayBuilder.create();
+        stacks.stream().forEach(t->arrayBuilder.add(encodeOrThrow(codec.encodeStart(NBTDynamicOps.INSTANCE, t))));
+        return arrayBuilder.build();
     }
-
+    public static <T> List<T> fromNBTList(ListNBT list,Codec<T> codec) {
+        List<T> al=new ArrayList<>();
+    	for(INBT nbt:list) {
+        	al.add(decodeOrThrow(codec.decode(NBTDynamicOps.INSTANCE, nbt)));
+        }
+    	return al;
+    }
+    public static <T> ListNBT toNBTList(Collection<T> stacks, BiConsumer<T, ArrayBuilder<Void>> mapper) {
+        ArrayBuilder<Void> arrayBuilder=ArrayBuilder.create();
+        stacks.stream().forEach(t->mapper.accept(t, arrayBuilder));
+        return arrayBuilder.build();
+    }
+    public static <T> CompoundNBT toNBTMap(Collection<T> stacks, BiConsumer<T, CompoundBuilder<Void>> mapper) {
+    	CompoundBuilder<Void> compoundBuilder=CompoundBuilder.create();
+        stacks.stream().forEach(t->mapper.accept(t, compoundBuilder));
+        return compoundBuilder.build();
+    }
     /**
      * Write boolean as a byte into buffer
      *
      * @param elms elements to write, 8 elements max
      */
     public static void writeBooleans(PacketBuffer buffer, boolean... elms) {
+        buffer.writeByte(writeBooleans(elms));
+    }
+    public static byte writeBooleans(boolean... elms) {
         if (elms.length > 8) {
             throw new IllegalArgumentException("count of boolean must not excess 8");
         }
@@ -268,9 +289,12 @@ public class SerializeUtil {
             b |= (byte) (bl ? 1 : 0);
 
         }
-        buffer.writeByte(b);
+        return b;
     }
-
+    public static final Codec<boolean[]> BOOLEANS=Codec.BYTE.xmap(SerializeUtil::readBooleans, SerializeUtil::writeBooleans);
+    public static final <T> Codec<T[]> array(Codec<T> codec,IntFunction<T[]> creator){
+    	return Codec.list(codec).xmap(l->l.toArray(o->creator.apply(o)), Arrays::asList);
+    }
     public static <T> void writeListNullable(PacketBuffer buffer, Collection<T> elms, BiConsumer<T, PacketBuffer> func) {
         if (elms == null) {
             buffer.writeBoolean(false);
@@ -361,6 +385,12 @@ public class SerializeUtil {
     	DataResult<Pair<T, INBT>> ob=codec.decode(NBTDynamicOps.INSTANCE, readed);
     	Optional<Pair<T, INBT>> ret=ob.resultOrPartial(DecoderException::new);
     	return ret.get().getFirst();
+    }
+    public static <T> T encodeOrThrow(DataResult<T> result) {
+    	return result.getOrThrow(false, EncoderException::new);
+    }
+    public static <T,A> T decodeOrThrow(DataResult<Pair<T,A>> result) {
+    	return result.getOrThrow(false, DecoderException::new).getFirst();
     }
     private static final Map<Class<?>,Marshaller> marshallers=new HashMap<>();
     private static boolean isBasicInitialized=false;

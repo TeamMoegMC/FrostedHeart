@@ -24,6 +24,9 @@ import static com.teammoeg.frostedheart.content.climate.WorldTemperature.*;
 import java.util.Random;
 
 import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
 
@@ -194,19 +197,17 @@ public class ClimateEvent {
         this.calmEndTime = calmEndTime;
         this.isBlizzard = isBlizzard;
     }
-
-    public void deserialize(CompoundNBT cnbt) {
-        startTime = cnbt.getLong("startTime");
-        peakTime = cnbt.getLong("peakTime");
-        peakTemp = cnbt.getFloat("peakTemp");
-        bottomTime = cnbt.getLong("bottomTime");
-        bottomTemp = cnbt.getFloat("bottomTemp");
-        endTime = cnbt.getLong("endTime");
-        isCold = cnbt.getBoolean("isCold");
-        isBlizzard = cnbt.getBoolean("isBlizzard");
-        calmEndTime = cnbt.getLong("calmEndTime");
-    }
-
+    public static final Codec<ClimateEvent> CODEC=RecordCodecBuilder.create(t->t.group(
+    	Codec.LONG .fieldOf("startTime").forGetter(o->o.startTime),
+    	Codec.LONG .fieldOf("peakTime").forGetter(o->o.peakTime),
+    	Codec.FLOAT.fieldOf("peakTemp").forGetter(o->o.peakTemp),
+    	Codec.LONG.fieldOf("bottomTime").forGetter(o->o.bottomTime),
+    	Codec.FLOAT.fieldOf("bottomTemp").forGetter(o->o.bottomTemp),
+    	Codec.LONG.fieldOf("endTime").forGetter(o->o.endTime),
+    	Codec.LONG.fieldOf("calmEndTime").forGetter(o->o.calmEndTime),
+    	Codec.BOOL.fieldOf("isCold").forGetter(o->o.isCold),
+    	Codec.BOOL.fieldOf("isBlizzard").forGetter(o->o.isBlizzard)
+    	).apply(t, ClimateEvent::new));
     public Pair<Float, ClimateType> getHourClimate(long t) {
         ClimateType type = ClimateType.NONE;
         float temp = getHourTemp(t);
@@ -277,19 +278,6 @@ public class ClimateEvent {
         float P2 = (float) Math.pow(F2, 2);
 
         return T0 * (1 + 2 * F2) * P1 + T1 * (1 + 2 * F1) * P2 + dT0 * D1 * P1 + dT1 * D3 * P2;
-    }
-
-    public CompoundNBT serialize(CompoundNBT cnbt) {
-        cnbt.putLong("startTime", startTime);
-        cnbt.putLong("peakTime", peakTime);
-        cnbt.putFloat("peakTemp", peakTemp);
-        cnbt.putLong("bottomTime", bottomTime); // not used when not is cold
-        cnbt.putFloat("bottomTemp", bottomTemp); // not used when not is cold
-        cnbt.putLong("endTime", endTime);
-        cnbt.putBoolean("isCold", isCold);
-        cnbt.putBoolean("isBlizzard", isBlizzard);
-        cnbt.putLong("calmEndTime", calmEndTime);
-        return cnbt;
     }
 
     @Override

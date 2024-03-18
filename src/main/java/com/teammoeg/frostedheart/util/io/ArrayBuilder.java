@@ -119,4 +119,7 @@ public class ArrayBuilder<P> {
 		nbt.add(ByteNBT.valueOf(value));
         return this;
 	}
+	public ListNBT build() {
+		return nbt;
+	}
 }
