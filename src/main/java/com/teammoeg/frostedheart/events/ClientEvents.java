@@ -263,6 +263,7 @@ public class ClientEvents {
                     event.getToolTip()
                             .add(TranslateUtils.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
         }
+        event.getToolTip().addAll(JEICompat.research.get(i).values());
     }
 
     @SubscribeEvent

@@ -449,5 +449,6 @@
   "tooltip.frostedheart.rubbing.current.empty": "Examine in drawing desk to select research",
   "tooltip.frostedheart.rubbing.points": "Points: %s",
   "tooltip.frostedheart.rubbing.points.hint": "Examine in drawing desk to obtain research points",
+  "tooltip.frostedheart.research_unlockable": "Required Research: %s",
   "manual.frostedheart.main": "Generators"
 }

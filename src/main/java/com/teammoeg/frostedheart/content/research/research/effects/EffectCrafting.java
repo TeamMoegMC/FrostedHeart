@@ -91,7 +91,7 @@ public class EffectCrafting extends Effect {
             unlocks.removeIf(Objects::isNull);
         }
     }
-
+    
     public EffectCrafting(PacketBuffer pb) {
         super(pb);
         item = SerializeUtil.readOptional(pb, p -> p.readRegistryIdUnsafe(ForgeRegistries.ITEMS)).orElse(null);
@@ -262,5 +262,17 @@ public class EffectCrafting extends Effect {
                 SerializeUtil.writeList(buffer, unlocks, (o, b) -> b.writeResourceLocation(o.getId()));
         }
     }
+
+	public List<IRecipe<?>> getUnlocks() {
+		return unlocks;
+	}
+
+	public ItemStack getItemStack() {
+		return itemStack;
+	}
+
+	public Item getItem() {
+		return item;
+	}
 
 }

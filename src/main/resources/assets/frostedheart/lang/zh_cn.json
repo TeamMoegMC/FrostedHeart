@@ -415,5 +415,6 @@
   "tooltip.frostedheart.weather_radar": "随身携带以获取早晚天气预报",
   "tooltip.frostedheart.weather_helmet": "穿着以获取早晚天气预报",
   "tooltip.frostedheart.inspire_item": "在绘图台检验可以获得灵感",
+  "tooltip.frostedheart.research_unlockable": "所需研究：%s",
   "manual.frostedheart.main": "能量塔"
 }

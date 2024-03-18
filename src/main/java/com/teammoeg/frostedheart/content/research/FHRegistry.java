@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.research;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -41,7 +42,7 @@ import net.minecraft.network.PacketBuffer;
  * @param <T> the generic type of registry
  * @author khjxiaogu
  */
-public class FHRegistry<T extends FHRegisteredItem> {
+public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
     private static final class RegisteredSupplier<T extends FHRegisteredItem> implements Supplier<T> {
         private final String key;
         private final Function<String, T> getter;
@@ -308,4 +309,9 @@ public class FHRegistry<T extends FHRegisteredItem> {
             return get(s);
         return () -> null;
     }
+
+	@Override
+	public Iterator<T> iterator() {
+		return items.stream().filter(Objects::nonNull).iterator();
+	}
 }

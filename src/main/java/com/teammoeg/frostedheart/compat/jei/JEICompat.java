@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -62,8 +63,11 @@ import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.recipes.ModifyDamageRecipe;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
+import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
+import com.teammoeg.frostedheart.content.research.research.effects.Effect;
+import com.teammoeg.frostedheart.content.research.research.effects.EffectCrafting;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
 import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
@@ -121,7 +125,7 @@ public class JEICompat implements IModPlugin {
     public static Map<ResourceLocation, IRecipe<?>> overrides = new HashMap<>();
 
     private static Map<Item, List<IngredientInfoRecipe<ItemStack>>> infos = new HashMap<>();
-
+    public static Map<Item, Map<String,ITextComponent>> research=new HashMap<>();
     public static void addInfo() {
         if (man == null) {
             cachedInfoAdd = true;
@@ -255,6 +259,22 @@ public class JEICompat implements IModPlugin {
                 man.hideRecipeCategory(rl);
             else
                 man.unhideRecipeCategory(rl);
+        }
+        research.clear();
+        for(Effect effect:FHResearch.effects) {
+        	if(effect.isGranted()&&effect instanceof EffectCrafting) {
+        		Set<Item> item=new HashSet<>();
+        		EffectCrafting crafting=(EffectCrafting) effect;
+        		if(crafting.getItem()!=null)
+        			item.add(crafting.getItem());
+        		else if(crafting.getItemStack()!=null)
+        			item.add(crafting.getItemStack().getItem());
+        		else if(crafting.getUnlocks()!=null)
+        			crafting.getUnlocks().stream().map(IRecipe::getRecipeOutput).filter(t->t!=null&&!t.isEmpty()).map(ItemStack::getItem).forEach(item::add);
+        		for(Item ix:item) {
+        			research.computeIfAbsent(ix, i->new LinkedHashMap<>()).put(effect.parent.get().getId(), TranslateUtils.translateTooltip("research_unlockable", effect.parent.get().getName()));
+        		}
+        	}
         }
     }
 

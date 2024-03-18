@@ -28,6 +28,8 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
@@ -62,36 +64,37 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * @date 2022/09/02
  */
 public abstract class Effect extends AutoIDItem implements Writeable{
-
-    /**
-     * The name.<br>
-     */
+	public static class EffectData{
+	    String name = "";
+	    List<String> tooltip;
+	    FHIcon icon;
+	    String nonce;
+	    boolean hidden;
+		public EffectData(String name, List<String> tooltip, FHIcon icon, String nonce, boolean hidden) {
+			super();
+			this.name = name;
+			this.tooltip = tooltip;
+			this.icon = icon;
+			this.nonce = nonce;
+			this.hidden = hidden;
+		}
+	    
+	}
+	/*public static final Codec<EffectData> CODEC=RecordCodecBuilder.create(t->
+	t.group(SerializeUtil.nullableCodecValue(Codec.STRING).fieldOf("name").forGetter(o->o.name),
+		SerializeUtil.nullableCodec(Codec.list(Codec.STRING),ArrayList::new).fieldOf("tooltip").forGetter(o->o.tooltip),
+		Codec));*/
     String name = "";
 
-    /**
-     * The nonce.<br>
-     */
-    String nonce;
-
-    /**
-     * The tooltip.<br>
-     */
     List<String> tooltip;
 
-    /**
-     * The parent.<br>
-     */
-    public Supplier<Research> parent;
-
-    /**
-     * The icon.<br>
-     */
     FHIcon icon;
 
-    /**
-     * The hidden.<br>
-     */
+    String nonce;
+
     boolean hidden;
+
+    public transient Supplier<Research> parent;
 
     /**
      * Instantiates a new Effect.<br>
