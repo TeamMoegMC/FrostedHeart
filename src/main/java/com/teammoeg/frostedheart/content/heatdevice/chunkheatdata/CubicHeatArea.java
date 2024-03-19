@@ -94,4 +94,10 @@ public class CubicHeatArea implements IHeatArea {
 		return center;
 	}
 
+
+	@Override
+	public String toString() {
+		return "CubicHeatArea [center=" + center + ", r=" + r + ", value=" + value + "]";
+	}
+
 }

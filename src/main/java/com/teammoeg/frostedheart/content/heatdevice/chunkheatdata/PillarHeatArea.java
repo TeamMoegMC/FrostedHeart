@@ -51,4 +51,9 @@ public class PillarHeatArea extends CubicHeatArea {
         l += (long) Math.pow(z - getCenterZ() , 2);
         return l <= r2;
     }
+
+	@Override
+	public String toString() {
+		return "PillarHeatArea [center=" + center + ", r=" + r + ", value=" + value + ", upper=" + upper + ", lower=" + lower + "]";
+	}
 }

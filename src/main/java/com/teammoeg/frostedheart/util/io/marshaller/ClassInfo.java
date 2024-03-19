@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import com.google.gson.internal.UnsafeAllocator;
+
+import io.netty.util.internal.shaded.org.jctools.util.UnsafeAccess;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 public class ClassInfo implements Marshaller{
@@ -34,42 +37,34 @@ public class ClassInfo implements Marshaller{
 	}
 	public static ClassInfo valueOf(Class<?> cls) {
 		if(cls==Object.class)return null;
-		return clss.computeIfAbsent(cls, ClassInfo::new);
+		//System.out.println("clazz "+cls.getSimpleName());
+		ClassInfo ret= clss.computeIfAbsent(cls, ClassInfo::new);
+		ret.init();
+		return ret;
 		
 	}
-	
-	private ClassInfo(Class<?> cls) {
-		super();
-		this.cls = cls;
-		ObjectStreamClass osc=ObjectStreamClass.lookupAny(cls);
-		if(nis!=null) {
-			factory=()->{
-				try {
-					return nis.invoke(osc);
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-					e.printStackTrace();
-				}
-				return null;
-			};
-		}else {
-			try {
-				Constructor<?> ctor=cls.getConstructor();
-				ctor.setAccessible(true);
-				factory=()->{
-					try {
-						return ctor.newInstance();
-					} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-							| InvocationTargetException e) {
-						e.printStackTrace();
-					}
-					return null;
-				};
-			} catch (NoSuchMethodException | SecurityException e) {
-				e.printStackTrace();
-				throw new RuntimeException("Can not serialize a class without empty constructor");
-			}
+	public static final UnsafeAllocator unsafe=UnsafeAllocator.create();
+	public static <T> T createInstance(Class<T> clazz){
+		try {
+			return unsafe.newInstance(clazz);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		return null;
+	}
+	boolean inited=false;
+	private void init() {
+		if(inited)return;
+		inited=true;
+		
+		factory=()->createInstance(cls);
 		superClass=valueOf(cls.getSuperclass());
+		/*if(superClass!=null) {
+			System.out.println("sup class:"+superClass.cls.getSimpleName());
+			for(FieldInfo fi:superClass.infos)
+				System.out.println(fi.name);
+		}*/
 		for(Field f:cls.getDeclaredFields()) {
 			if(!Modifier.isTransient(f.getModifiers())&&!Modifier.isStatic(f.getModifiers())) {
 				f.setAccessible(true);
@@ -77,13 +72,24 @@ public class ClassInfo implements Marshaller{
 			}
 		}
 	}
+	private ClassInfo(Class<?> cls) {
+		super();
+		this.cls = cls;
+
+	}
 	@Override
 	public INBT toNBT(Object o) {
 		CompoundNBT cnbt=new CompoundNBT();
+		saveNBT(o,cnbt);
+		return cnbt;
+	}
+	public void saveNBT(Object o,CompoundNBT cnbt) {
+		if(superClass!=null) {
+			superClass.saveNBT(o, cnbt);
+		}
 		for(FieldInfo fi:infos) {
 			fi.save(cnbt, o);
 		}
-		return cnbt;
 	}
 	@Override
 	public Object fromNBT(INBT nbt) {
@@ -93,6 +99,7 @@ public class ClassInfo implements Marshaller{
 			Object o=factory.get();
 			if(o!=null) {
 				loadNBT(o,cnbt);
+				return o;
 			}
 			
 		}
