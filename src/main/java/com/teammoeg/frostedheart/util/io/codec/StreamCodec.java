@@ -1,4 +1,9 @@
-package com.teammoeg.frostedheart.util.io;
+package com.teammoeg.frostedheart.util.io.codec;
+import java.util.Objects;
+import java.util.stream.Stream;
+
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.datafixers.util.Unit;
@@ -7,11 +12,6 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.Lifecycle;
 import com.mojang.serialization.ListBuilder;
-import org.apache.commons.lang3.mutable.MutableObject;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
 
 public final class StreamCodec<A> implements Codec<Stream<A>> {
     private final Codec<A> elementCodec;

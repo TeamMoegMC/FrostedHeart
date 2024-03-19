@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.research.research.clues;
 import java.util.function.Function;
 
 import com.teammoeg.frostedheart.content.research.data.IClueData;
-import com.teammoeg.frostedheart.util.io.NBTSerializerRegistry;
+import com.teammoeg.frostedheart.util.io.registry.NBTSerializerRegistry;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;

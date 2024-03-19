@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.util.io;
+package com.teammoeg.frostedheart.util.io.marshaller;
 
 import java.io.ObjectStreamClass;
 import java.lang.reflect.Constructor;

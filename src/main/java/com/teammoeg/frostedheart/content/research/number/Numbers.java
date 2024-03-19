@@ -24,7 +24,7 @@ import java.util.function.Function;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.teammoeg.frostedheart.util.io.JsonSerializerRegistry;
+import com.teammoeg.frostedheart.util.io.registry.JsonSerializerRegistry;
 
 import net.minecraft.network.PacketBuffer;
 

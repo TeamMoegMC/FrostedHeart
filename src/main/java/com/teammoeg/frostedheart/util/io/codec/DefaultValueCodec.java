@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.util.io;
+package com.teammoeg.frostedheart.util.io.codec;
 
 import java.util.Objects;
 import java.util.function.Supplier;

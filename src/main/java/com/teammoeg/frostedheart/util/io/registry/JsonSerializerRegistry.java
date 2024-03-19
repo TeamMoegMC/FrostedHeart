@@ -17,12 +17,13 @@
  *
  */
 
-package com.teammoeg.frostedheart.util.io;
+package com.teammoeg.frostedheart.util.io.registry;
 
 import java.util.function.Function;
 
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
+import com.teammoeg.frostedheart.util.io.Writeable;
 
 import net.minecraft.network.PacketBuffer;
 

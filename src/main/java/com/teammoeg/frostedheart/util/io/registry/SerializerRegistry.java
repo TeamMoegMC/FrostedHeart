@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.util.io;
+package com.teammoeg.frostedheart.util.io.registry;
 
 import java.util.HashMap;
 import java.util.Map;

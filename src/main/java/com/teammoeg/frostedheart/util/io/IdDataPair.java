@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.util.io;
 
 import com.mojang.serialization.MapCodec;
+import com.teammoeg.frostedheart.util.io.codec.JointCodec;
 
 import net.minecraft.util.ResourceLocation;
 
@@ -24,6 +25,6 @@ public class IdDataPair<T> {
 	}
 	@Override
 	public String toString() {
-		return "DataReference [id=" + id + ", obj=" + obj + "]";
+		return "IdDataPair [id=" + id + ", obj=" + obj + "]";
 	} 
 }

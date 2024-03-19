@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.content.trade.policy.conditions.LevelCondition;
 import com.teammoeg.frostedheart.content.trade.policy.conditions.NotCondition;
 import com.teammoeg.frostedheart.content.trade.policy.conditions.TotalTradeCondition;
 import com.teammoeg.frostedheart.content.trade.policy.conditions.WithFlagCondition;
-import com.teammoeg.frostedheart.util.io.JsonSerializerRegistry;
+import com.teammoeg.frostedheart.util.io.registry.JsonSerializerRegistry;
 
 import net.minecraft.network.PacketBuffer;
 

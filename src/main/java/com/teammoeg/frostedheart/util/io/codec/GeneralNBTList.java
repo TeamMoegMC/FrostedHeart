@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.util.io;
+package com.teammoeg.frostedheart.util.io.codec;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -10,7 +10,6 @@ import java.util.List;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.nbt.CollectionNBT;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.INBTType;
 import net.minecraft.nbt.NBTSizeTracker;

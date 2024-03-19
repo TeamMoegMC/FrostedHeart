@@ -1,6 +1,8 @@
-package com.teammoeg.frostedheart.util.io;
+package com.teammoeg.frostedheart.util.io.marshaller;
 
 import java.lang.reflect.Field;
+
+import com.teammoeg.frostedheart.util.io.SerializeName;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -20,7 +22,7 @@ public class FieldInfo {
 		if(data.contains(name)) {
 			INBT nbt=data.get(name);
 			try {
-				field.set(o,SerializeUtil.deserialize(field.getType(), nbt));
+				field.set(o,MarshallUtil.deserialize(field.getType(), nbt));
 			} catch (IllegalArgumentException | IllegalAccessException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -31,7 +33,7 @@ public class FieldInfo {
 	public void save(CompoundNBT data,Object o) {
 		try {
 			Object f=field.get(o);
-			INBT nbt=SerializeUtil.serialize(f);
+			INBT nbt=MarshallUtil.serialize(f);
 			if(nbt!=null)
 			data.put(name,nbt);
 		} catch (IllegalArgumentException | IllegalAccessException e) {

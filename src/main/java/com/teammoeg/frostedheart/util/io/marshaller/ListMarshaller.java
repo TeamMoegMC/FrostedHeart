@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.util.io;
+package com.teammoeg.frostedheart.util.io.marshaller;
 
 import java.util.function.Function;
 
@@ -23,7 +23,7 @@ public class ListMarshaller<T> implements Marshaller {
 		ListNBT nbt=new ListNBT();
 		IList<T> list=wrapper.apply(o);
 		for(int i=0;i<list.size();i++) {
-			nbt.add(SerializeUtil.serialize(list.get(i)));
+			nbt.add(MarshallUtil.serialize(list.get(i)));
 		}
 		return nbt;
 	}
@@ -34,7 +34,7 @@ public class ListMarshaller<T> implements Marshaller {
 		if(nbt instanceof ListNBT) {
 			IList<T> list=factory.apply(((ListNBT)nbt).size());
 			for(INBT n:(ListNBT)nbt) {
-				list.add(SerializeUtil.deserialize(elmType, n));
+				list.add(MarshallUtil.deserialize(elmType, n));
 			}
 			return list.getInstance();
 		}

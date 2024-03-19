@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.util.io;
+package com.teammoeg.frostedheart.util.io.registry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DynamicOps;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.network.PacketBuffer;
 

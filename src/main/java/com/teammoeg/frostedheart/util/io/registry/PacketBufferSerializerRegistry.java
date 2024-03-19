@@ -17,12 +17,13 @@
  *
  */
 
-package com.teammoeg.frostedheart.util.io;
+package com.teammoeg.frostedheart.util.io.registry;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Pair;
+import com.teammoeg.frostedheart.util.io.PacketWritable;
 
 import net.minecraft.network.PacketBuffer;
 

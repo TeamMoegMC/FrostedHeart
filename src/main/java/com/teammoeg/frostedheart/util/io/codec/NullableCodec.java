@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.util.io;
+package com.teammoeg.frostedheart.util.io.codec;
 
 import java.util.function.Supplier;
 
@@ -6,7 +6,6 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
-import com.mojang.serialization.MapCodec;
 
 public class NullableCodec<A> implements Codec<A> {
 	Codec<A> original;

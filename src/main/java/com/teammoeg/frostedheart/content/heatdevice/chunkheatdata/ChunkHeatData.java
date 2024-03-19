@@ -34,8 +34,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.util.io.DispatchCodecUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.codec.DispatchCodecUtils;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTDynamicOps;

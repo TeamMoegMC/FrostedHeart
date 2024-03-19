@@ -1,10 +1,12 @@
-package com.teammoeg.frostedheart.util.io;
+package com.teammoeg.frostedheart.util.io.codec;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.PacketBuffer;

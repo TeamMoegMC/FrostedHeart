@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.util.io;
+package com.teammoeg.frostedheart.util.io.codec;
 
 import java.nio.ByteBuffer;
 import java.util.List;
