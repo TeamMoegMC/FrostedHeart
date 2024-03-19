@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.events;
 import static net.minecraft.util.text.TextFormatting.*;
 
 import java.util.List;
+import java.util.Map;
 
 import org.lwjgl.glfw.GLFW;
 
@@ -78,6 +79,7 @@ import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.IFormattableTextComponent;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.event.ClickEvent;
@@ -263,7 +265,9 @@ public class ClientEvents {
                     event.getToolTip()
                             .add(TranslateUtils.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
         }
-        event.getToolTip().addAll(JEICompat.research.get(i).values());
+        Map<String,ITextComponent> rstooltip=JEICompat.research.get(i);
+        if(rstooltip!=null)
+        	event.getToolTip().addAll(rstooltip.values());
     }
 
     @SubscribeEvent
