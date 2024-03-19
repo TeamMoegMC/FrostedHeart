@@ -27,7 +27,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ITemperatureAdjust;
+import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.IHeatArea;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.command.CommandSource;
@@ -50,12 +50,12 @@ public class AddTempCommand {
                         }))));
         LiteralArgumentBuilder<CommandSource> get = Commands.literal("get")
                 .executes((ct) -> {
-                    Collection<ITemperatureAdjust> adjs = ChunkHeatData.getAdjust(ct.getSource().getWorld(), ct.getSource().asPlayer().getPosition());
+                    Collection<IHeatArea> adjs = ChunkHeatData.getAdjust(ct.getSource().getWorld(), ct.getSource().asPlayer().getPosition());
                     if (adjs.isEmpty()) {
                         ct.getSource().sendFeedback(TranslateUtils.str("No Active Adjust!"), true);
                     } else {
                         ct.getSource().sendFeedback(TranslateUtils.str("Active Adjusts:"), true);
-                        for (ITemperatureAdjust adj : adjs) {
+                        for (IHeatArea adj : adjs) {
                             ct.getSource().sendFeedback(TranslateUtils.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(ct.getSource().asPlayer().getPosition())), true);
                         }
                     }
@@ -63,12 +63,12 @@ public class AddTempCommand {
                 })
                 .then(Commands.argument("position", BlockPosArgument.blockPos())
                         .executes((ct) -> {
-                            Collection<ITemperatureAdjust> adjs = ChunkHeatData.getAdjust(ct.getSource().getWorld(), BlockPosArgument.getBlockPos(ct, "position"));
+                            Collection<IHeatArea> adjs = ChunkHeatData.getAdjust(ct.getSource().getWorld(), BlockPosArgument.getBlockPos(ct, "position"));
                             if (adjs.isEmpty()) {
                                 ct.getSource().sendFeedback(TranslateUtils.str("No Active Adjust!"), true);
                             } else {
                                 ct.getSource().sendFeedback(TranslateUtils.str("Active Adjusts:"), true);
-                                for (ITemperatureAdjust adj : adjs) {
+                                for (IHeatArea adj : adjs) {
                                     ct.getSource().sendFeedback(TranslateUtils.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(BlockPosArgument.getBlockPos(ct, "position"))), true);
                                 }
                             }

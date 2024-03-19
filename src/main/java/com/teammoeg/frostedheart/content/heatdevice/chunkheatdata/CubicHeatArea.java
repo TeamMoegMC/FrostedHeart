@@ -27,16 +27,16 @@ import net.minecraft.util.math.BlockPos;
 /**
  * Cubic Temperature Adjust, would adjust temperature in a cube
  */
-public class CubicTemperatureAdjust implements ITemperatureAdjust {
-	public static Codec<CubicTemperatureAdjust> CODEC=RecordCodecBuilder.create(t->t.group(BlockPos.CODEC.fieldOf("pos").forGetter(o->o.center),
+public class CubicHeatArea implements IHeatArea {
+	public static Codec<CubicHeatArea> CODEC=RecordCodecBuilder.create(t->t.group(BlockPos.CODEC.fieldOf("pos").forGetter(o->o.center),
 		Codec.INT.fieldOf("r").forGetter(o->o.r),
-		Codec.INT.fieldOf("v").forGetter(o->o.value)).apply(t,CubicTemperatureAdjust::new));
+		Codec.INT.fieldOf("v").forGetter(o->o.value)).apply(t,CubicHeatArea::new));
     BlockPos center;
     int r;
     int value;
 
 
-    public CubicTemperatureAdjust(BlockPos center, int range, int tempMod) {
+    public CubicHeatArea(BlockPos center, int range, int tempMod) {
         this.center = center;
         this.r = range;
         this.value = tempMod;

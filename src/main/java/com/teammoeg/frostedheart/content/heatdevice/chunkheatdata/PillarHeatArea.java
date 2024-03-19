@@ -27,17 +27,17 @@ import net.minecraft.util.math.BlockPos;
 /**
  * Pillar Temperature Adjust, would adjust temperature in a pillar.
  */
-public class PillarTemperatureAdjust extends CubicTemperatureAdjust {
-	public static Codec<PillarTemperatureAdjust> CODEC=RecordCodecBuilder.create(t->t.group(BlockPos.CODEC.fieldOf("pos").forGetter(o->o.center),
+public class PillarHeatArea extends CubicHeatArea {
+	public static Codec<PillarHeatArea> CODEC=RecordCodecBuilder.create(t->t.group(BlockPos.CODEC.fieldOf("pos").forGetter(o->o.center),
 		Codec.INT.fieldOf("r").forGetter(o->o.r),
 		Codec.INT.fieldOf("u").forGetter(o->o.upper),
 		Codec.INT.fieldOf("d").forGetter(o->o.lower),
-		Codec.INT.fieldOf("v").forGetter(o->o.value)).apply(t,PillarTemperatureAdjust::new));
+		Codec.INT.fieldOf("v").forGetter(o->o.value)).apply(t,PillarHeatArea::new));
     long r2;
     int upper;
     int lower;
 
-    public PillarTemperatureAdjust(BlockPos heatPos, int range, int u, int d, int tempMod) {
+    public PillarHeatArea(BlockPos heatPos, int range, int u, int d, int tempMod) {
         super(heatPos, range, tempMod);
         r2 = (long) r * r;
         this.upper = u;

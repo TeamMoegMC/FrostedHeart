@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -138,13 +139,6 @@ public class SerializeUtil {
 	}
 	public static <K,V> Codec<Map<K,V>> mapCodec(String nkey,Codec<K> keyCodec,String nval,Codec<V> valueCodec){
 		return Codec.list(SerializeUtil.pairCodec(nkey, keyCodec, nval, valueCodec)).xmap(pl->pl.stream().collect(Collectors.toMap(Pair::getFirst,Pair::getSecond)),pl->pl.entrySet().stream().map(ent->Pair.of(ent.getKey(), ent.getValue())).collect(Collectors.toList())); 
-	}
-	public static <A> Codec<A> dispatchCodec(Class[] clazz,Codec...func){
-		Map<Class,Integer> map=new HashMap<>();
-		int o=0;
-		for(Class claz:clazz)
-			map.put(claz, o++);
-		return Codec.INT.dispatch(v->map.get(v.getClass()),i->func[i]);
 	}
 
     public static <T> List<T> parseJsonElmList(JsonElement elm, Function<JsonElement, T> mapper) {
@@ -293,7 +287,7 @@ public class SerializeUtil {
     }
     public static final Codec<boolean[]> BOOLEANS=Codec.BYTE.xmap(SerializeUtil::readBooleans, SerializeUtil::writeBooleans);
     public static final <T> Codec<T[]> array(Codec<T> codec,IntFunction<T[]> creator){
-    	return Codec.list(codec).xmap(l->l.toArray(o->creator.apply(o)), Arrays::asList);
+    	return Codec.list(codec).xmap(l->l.toArray(creator.apply(0)), Arrays::asList);
     }
     public static <T> void writeListNullable(PacketBuffer buffer, Collection<T> elms, BiConsumer<T, PacketBuffer> func) {
         if (elms == null) {

@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHItems;

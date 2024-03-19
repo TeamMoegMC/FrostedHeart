@@ -24,7 +24,7 @@ import net.minecraft.util.math.BlockPos;
 /**
  * Interface to adjust temperature
  */
-public interface ITemperatureAdjust {
+public interface IHeatArea {
 	
 
     BlockPos getCenter();
