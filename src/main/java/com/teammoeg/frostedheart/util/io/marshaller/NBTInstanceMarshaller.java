@@ -24,6 +24,7 @@ public class NBTInstanceMarshaller<T> implements Marshaller {
 
 	@Override
 	public Object fromNBT(INBT nbt) {
+		if(!(nbt instanceof CompoundNBT))return null;
 		T ret=ClassInfo.createInstance(objcls);
 		from.accept(ret, (CompoundNBT) nbt);
 		return ret;

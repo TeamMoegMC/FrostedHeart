@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.util.io;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -281,8 +282,17 @@ public class SerializeUtil {
         return b;
     }
     public static final Codec<boolean[]> BOOLEANS=Codec.BYTE.xmap(SerializeUtil::readBooleans, SerializeUtil::writeBooleans);
-    public static final <T> Codec<T[]> array(Codec<T> codec,IntFunction<T[]> creator){
-    	return Codec.list(codec).xmap(l->l.toArray(creator.apply(0)), Arrays::asList);
+    public static final <T> Codec<T[]> array(Codec<T> codec,T[] arr){
+    	return Codec.list(codec).xmap(l->l.toArray(arr), Arrays::asList);
+    }
+    public static final <T> Codec<T> array(Codec<Object> codec,IntFunction<T> arr){
+    	return Codec.list(codec).xmap(l->{
+    		Object[] obj=l.toArray();
+    		T ar=arr.apply(obj.length);
+    		for(int i=0;i<obj.length;i++)
+    			Array.set(ar, i, obj[i]);
+    		return ar;
+    	}, Arrays::asList);
     }
     public static <T> void writeListNullable(PacketBuffer buffer, Collection<T> elms, BiConsumer<T, PacketBuffer> func) {
         if (elms == null) {

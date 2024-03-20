@@ -1,11 +1,18 @@
 package com.teammoeg.frostedheart.util.io.marshaller;
 
+import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.CubicHeatArea;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.codec.NBTCodec;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.ByteArrayNBT;
@@ -25,40 +32,81 @@ import net.minecraft.util.math.BlockPos;
 public class MarshallUtil {
 
     private static final Map<Class<?>,Marshaller> marshallers=new HashMap<>();
+    private static final Map<Class<?>,Codec<?>> codecs=new HashMap<>();
     private static boolean isBasicInitialized=false;
+    public static <R extends INBT,T> void basicMarshaller(Class<T> val,Class<R> cls,Function<R, T> from, Function<T, R> to, T def){
+    	marshallers.put(val,new BasicMarshaller<>(cls,from,to,def));
+    }
+    public static <R extends INBT,T> void basicMarshaller(Class<T> val,Class<R> cls,Function<R, T> from, Function<T, R> to){
+    	basicMarshaller(val, cls, from, to, null);
+    }
+    public static <T> void nbtMarshaller(Class<T> val,Function<CompoundNBT, T> from, Function<T, CompoundNBT> to){
+    	marshallers.put(val, new NBTRWMarshaller<>(from,to));
+    }
+    public static <T> void nbtInstanceMarshaller(Class<T> val,BiConsumer<T, CompoundNBT> from, Function<T, CompoundNBT> to){
+    	marshallers.put(val, new NBTInstanceMarshaller<>(val,from,to));
+    }
+    public static <T> void addCodec(Class<T> clazz,Codec<T> codec) {
+    	codecs.put(clazz, codec);
+    }
     public static void initializeMarshallers() {
     	if(isBasicInitialized)return;
     		isBasicInitialized=true;
-	    	marshallers.put(byte.class, new BasicMarshaller<>(ByteNBT.class,ByteNBT::getByte,ByteNBT::valueOf,(byte)0));
-	    	marshallers.put(Byte.class, new BasicMarshaller<>(ByteNBT.class,ByteNBT::getByte,ByteNBT::valueOf));
+    		basicMarshaller(byte.class, ByteNBT.class,ByteNBT::getByte,ByteNBT::valueOf,(byte)0);
+    		basicMarshaller(Byte.class, ByteNBT.class,ByteNBT::getByte,ByteNBT::valueOf);
+    		addCodec(byte.class, Codec.BYTE);
+    		addCodec(Byte.class, Codec.BYTE);
 	    	
-	    	marshallers.put(double.class, new BasicMarshaller<>(DoubleNBT.class,DoubleNBT::getDouble,DoubleNBT::valueOf,0d));
-	    	marshallers.put(Double.class, new BasicMarshaller<>(DoubleNBT.class,DoubleNBT::getDouble,DoubleNBT::valueOf));
+	    	basicMarshaller(double.class,DoubleNBT.class,DoubleNBT::getDouble,DoubleNBT::valueOf,0d);
+	    	basicMarshaller(Double.class,DoubleNBT.class,DoubleNBT::getDouble,DoubleNBT::valueOf);
+    		addCodec(double.class, Codec.DOUBLE);
+    		addCodec(Double.class, Codec.DOUBLE);
 	    	
-	    	marshallers.put(float.class, new BasicMarshaller<>(FloatNBT.class,FloatNBT::getFloat,FloatNBT::valueOf,0f));
-	    	marshallers.put(Float.class, new BasicMarshaller<>(FloatNBT.class,FloatNBT::getFloat,FloatNBT::valueOf));
+	    	basicMarshaller(float.class, FloatNBT.class,FloatNBT::getFloat,FloatNBT::valueOf,0f);
+	    	basicMarshaller(Float.class, FloatNBT.class,FloatNBT::getFloat,FloatNBT::valueOf);
+    		addCodec(float.class, Codec.FLOAT);
+    		addCodec(Float.class, Codec.FLOAT);
 	    	
-	    	marshallers.put(int.class, new BasicMarshaller<>(IntNBT.class,IntNBT::getInt,IntNBT::valueOf,0));
-	    	marshallers.put(Integer.class, new BasicMarshaller<>(IntNBT.class,IntNBT::getInt,IntNBT::valueOf));
+	    	basicMarshaller(int.class, IntNBT.class,IntNBT::getInt,IntNBT::valueOf,0);
+	    	basicMarshaller(Integer.class, IntNBT.class,IntNBT::getInt,IntNBT::valueOf);
+    		addCodec(int.class, Codec.INT);
+    		addCodec(Integer.class, Codec.INT);
 	    	
-	    	marshallers.put(long.class, new BasicMarshaller<>(LongNBT.class,LongNBT::getLong,LongNBT::valueOf, 0L));
-	    	marshallers.put(Long.class, new BasicMarshaller<>(LongNBT.class,LongNBT::getLong,LongNBT::valueOf));
+	    	basicMarshaller(long.class, LongNBT.class,LongNBT::getLong,LongNBT::valueOf, 0L);
+	    	basicMarshaller(Long.class, LongNBT.class,LongNBT::getLong,LongNBT::valueOf);
+	    	addCodec(long.class, Codec.LONG);
+    		addCodec(Long.class, Codec.LONG);
 	    	
-	       	marshallers.put(short.class, new BasicMarshaller<>(ShortNBT.class,ShortNBT::getShort,ShortNBT::valueOf,(short)0));
-	    	marshallers.put(Short.class, new BasicMarshaller<>(ShortNBT.class,ShortNBT::getShort,ShortNBT::valueOf));
+	       	basicMarshaller(short.class, ShortNBT.class,ShortNBT::getShort,ShortNBT::valueOf,(short)0);
+	    	basicMarshaller(Short.class, ShortNBT.class,ShortNBT::getShort,ShortNBT::valueOf);
+	    	addCodec(short.class, Codec.SHORT);
+    		addCodec(Short.class, Codec.SHORT);
 	    	
-	       	marshallers.put(String.class, new BasicMarshaller<>(StringNBT.class,StringNBT::getString,StringNBT::valueOf));
+	       	basicMarshaller(String.class, StringNBT.class,StringNBT::getString,StringNBT::valueOf);
+	       	addCodec(String.class, Codec.STRING);
 	    	
-	    	marshallers.put(byte[].class, new BasicMarshaller<>(ByteArrayNBT.class,ByteArrayNBT::getByteArray,ByteArrayNBT::new));
-	    	marshallers.put(int[].class, new BasicMarshaller<>(IntArrayNBT.class,IntArrayNBT::getIntArray,IntArrayNBT::new));
-	    	marshallers.put(long[].class, new BasicMarshaller<>(LongArrayNBT.class,LongArrayNBT::getAsLongArray,LongArrayNBT::new));
-	    	marshallers.put(BlockPos.class, new BasicMarshaller<LongNBT,BlockPos>(LongNBT.class,o->BlockPos.fromLong(o.getLong()),o->LongNBT.valueOf(o.toLong())));
+	    	basicMarshaller(byte[].class, ByteArrayNBT.class,ByteArrayNBT::getByteArray,ByteArrayNBT::new);
+	    	basicMarshaller(int[].class, IntArrayNBT.class,IntArrayNBT::getIntArray,IntArrayNBT::new);
+	    	basicMarshaller(long[].class, LongArrayNBT.class,LongArrayNBT::getAsLongArray,LongArrayNBT::new);
+	    	basicMarshaller(BlockPos.class,LongNBT.class,o->BlockPos.fromLong(o.getLong()),o->LongNBT.valueOf(o.toLong()));
 	    	
-	    	marshallers.put(ItemStack.class, new NBTRWMarshaller<>(ItemStack::read,o->o.write(new CompoundNBT())));
+	    	nbtMarshaller(ItemStack.class,ItemStack::read,o->o.write(new CompoundNBT()));
 	    	
 	    	
     }
+    private static <T> Codec<T> createCodec(Class<T> type) {
+    	//System.out.println(type.getSimpleName());
+    	if(NBTSerializable.class.isAssignableFrom(type)) {
+    		return new NBTCodec<>((Class)type);
+    	}else if(type.isArray()) {
+    		return (Codec<T>) SerializeUtil.array((Codec<Object>)createCodec(type.getComponentType()), t->(T)Array.newInstance(type.getComponentType(), t));
+    	}
+    	return new ReflectionCodec<T>(type).codec();
+    }
     
+    public static <T> Codec<T> getOrCreateCodec(Class<T> type) {
+    	return (Codec<T>) codecs.computeIfAbsent(type,MarshallUtil::createCodec);
+    }
     private static <T> Marshaller create(Class<T> type) {
     	//System.out.println(type.getSimpleName());
     	if(NBTSerializable.class.isAssignableFrom(type)) {

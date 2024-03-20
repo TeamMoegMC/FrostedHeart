@@ -103,7 +103,7 @@ public class DayTemperatureData {
 
     }
     public static final Codec<DayTemperatureData> CODEC=RecordCodecBuilder.create(t->t.group(
-    	SerializeUtil.array(HourData.CODEC,o->new HourData[o]).fieldOf("ndata").forGetter(o->o.hourData),
+    	SerializeUtil.array(HourData.CODEC,new HourData[0]).fieldOf("ndata").forGetter(o->o.hourData),
     	Codec.FLOAT.fieldOf("humidity").forGetter(o->o.dayHumidity),
     	Codec.FLOAT.fieldOf("noise").forGetter(o->o.dayNoise),
     	Codec.LONG.fieldOf("day").forGetter(o->o.day)).apply(t, DayTemperatureData::new));
