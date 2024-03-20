@@ -54,7 +54,7 @@ public class MarshallUtil {
 	    	marshallers.put(long[].class, new BasicMarshaller<>(LongArrayNBT.class,LongArrayNBT::getAsLongArray,LongArrayNBT::new));
 	    	marshallers.put(BlockPos.class, new BasicMarshaller<>(LongNBT.class,o->BlockPos.fromLong(o.getLong()),o->LongNBT.valueOf(o.toLong())));
 	    	
-	    	marshallers.put(ItemStack.class, new NBTRWMarshaller<>(ItemStack.class,ItemStack::read,o->o.write(new CompoundNBT())));
+	    	marshallers.put(ItemStack.class, new NBTRWMarshaller<>(ItemStack::read,o->o.write(new CompoundNBT())));
 	    	
 	    	
     }
