@@ -10,8 +10,6 @@ import net.minecraft.util.registry.Registry;
 public class CompressDifferCodec<A> implements Codec<A> {
 	Codec<A> uncompressed;
 	Codec<A> compressed;
-
-
 	public CompressDifferCodec(Codec<A> uncompressed, Codec<A> compressed) {
 		super();
 		this.uncompressed = uncompressed;
@@ -33,5 +31,11 @@ public class CompressDifferCodec<A> implements Codec<A> {
 		}
 		return uncompressed.decode(ops, input);
 	}
+
+	@Override
+	public String toString() {
+		return "CompressDifferCodec [uncompressed=" + uncompressed + ", compressed=" + compressed + "]";
+	}
+	
 
 }

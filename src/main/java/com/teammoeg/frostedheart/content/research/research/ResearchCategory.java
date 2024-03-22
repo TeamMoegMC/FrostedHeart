@@ -39,12 +39,15 @@ public enum ResearchCategory {
     EXPLORATION("exploration");
 	
     public static final Map<ResourceLocation, ResearchCategory> ALL = new HashMap<>();
-    public static final Codec<ResearchCategory> CODEC=new CompressDifferCodec<>(ResourceLocation.CODEC.xmap(ALL::get, ResearchCategory::getId),
-    	Codec.BYTE.xmap(i->ResearchCategory.values()[i], i->(byte)i.ordinal()));
     static {
         for (ResearchCategory rc : ResearchCategory.values())
             ResearchCategory.ALL.put(rc.id, rc);
     }
+    public static final Codec<ResearchCategory> CODEC=new CompressDifferCodec<>(ResourceLocation.CODEC.xmap(
+    		o->ALL.get(o),
+    		o->o.getId()),
+    	Codec.BYTE.xmap(i->ResearchCategory.values()[i], i->(byte)i.ordinal()));
+
     private final ResourceLocation id;
     private final TranslationTextComponent name;
     private final TranslationTextComponent desc;

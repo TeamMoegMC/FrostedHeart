@@ -79,7 +79,7 @@ public abstract class Effect extends AutoIDItem{
 	    
 	}
 	public static final MapCodec<BaseData> BASE_CODEC=RecordCodecBuilder.mapCodec(t->
-	t.group(SerializeUtil.nullableCodecValue(Codec.STRING).fieldOf("name").forGetter(o->o.name),
+	t.group(SerializeUtil.nullableCodecValue(Codec.STRING,"").fieldOf("name").forGetter(o->o.name),
 		SerializeUtil.nullableCodec(Codec.list(Codec.STRING),ArrayList::new).fieldOf("tooltip").forGetter(o->o.tooltip),
 		FHIcons.CODEC.fieldOf("icon").forGetter(o->o.icon),
 		Codec.STRING.fieldOf("id").forGetter(o->o.nonce),

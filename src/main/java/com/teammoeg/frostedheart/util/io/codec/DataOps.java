@@ -73,7 +73,7 @@ public class DataOps implements DynamicOps<Object> {
 	private <T> DataResult<T> cast(Class<T> type,Object input) {
 		if(type.isInstance(input))
 			return DataResult.success((T)input);
-		return DataResult.error("Not a "+type.getSimpleName());
+		return DataResult.error(input+" can not be casted to "+type.getSimpleName());
 	}
 	public static Class<?> getElmClass(List<Object> objs){
 		if(!objs.isEmpty()) {
@@ -164,9 +164,8 @@ public class DataOps implements DynamicOps<Object> {
 					bs[i]=(Byte)res.get(i);
 				return DataResult.success(bs);
 			}
-			return DataResult.error("Not a byte array");
 		}
-		return DataResult.error("Not a List");
+		return DataResult.error("Not a byte array");
 	}
 	
 	@Override
@@ -185,9 +184,9 @@ public class DataOps implements DynamicOps<Object> {
 					bs[i]=(Integer)res.get(i);
 				return DataResult.success(bs);
 			}
-			return DataResult.error("Not a int array");
+			
 		}
-		return DataResult.error("Not a List");
+		return DataResult.error("Not a int array");
 	}
 
 	@Override
@@ -206,9 +205,9 @@ public class DataOps implements DynamicOps<Object> {
 					bs[i]=(Long)res.get(i);
 				return DataResult.success(bs);
 			}
-			return DataResult.error("Not a long array");
+			
 		}
-		return DataResult.error("Not a List");
+		return DataResult.error("Not a long array");
 	}
 	
 	@Override
@@ -240,12 +239,14 @@ public class DataOps implements DynamicOps<Object> {
 
 			@Override
 			public Object get(Object key) {
-				return o.get(key);
+				//System.out.println(key);
+				return o.getOrDefault(key,NULLTAG);
 			}
 
 			@Override
 			public Object get(String key) {
-				return o.get(key);
+				//System.out.println(key);
+				return o.getOrDefault(key,NULLTAG);
 			}
 
 			@Override

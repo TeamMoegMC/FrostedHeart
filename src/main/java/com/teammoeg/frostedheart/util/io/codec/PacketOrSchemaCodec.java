@@ -45,7 +45,8 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 		if(ops.compressMaps()) {
 			return ops.getByteBuffer(input).map(ByteBuffer::array).map(Unpooled::wrappedBuffer).map(PacketBuffer::new).map(bufferDeserialize).map(k->Pair.of(k, input));
 		}
-		return schemaCodec.decode(ops, input).map(o->o.mapFirst(schemaDeserialize));
+		DataResult<Pair<S, T>> obj=schemaCodec.decode(ops, input);
+		return obj.map(o->o.mapFirst(schemaDeserialize));
 	}
 
 }

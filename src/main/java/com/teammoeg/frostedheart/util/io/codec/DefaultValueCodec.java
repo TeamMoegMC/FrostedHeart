@@ -37,11 +37,8 @@ public class DefaultValueCodec<A> extends MapCodec<A> {
     public <T> RecordBuilder<T> encode(final A input, final DynamicOps<T> ops, RecordBuilder<T> prefix) {
         System.out.println(name);
     	if (input!=null) {
-    		System.out.println(elementCodec);
         	DataResult<T> result=elementCodec.encodeStart(ops, input);
-        	System.out.println(result);
             prefix=prefix.add(name, result);
-            System.out.println("ended");
         }
         return prefix;
     }

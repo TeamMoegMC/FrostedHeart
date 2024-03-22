@@ -70,13 +70,13 @@ public class Research implements FHRegisteredItem {
     public static Codec<Research> CODEC=RecordCodecBuilder.create(t->t.group(
     	FHIcons.CODEC.fieldOf("icon").forGetter(o->o.icon),
     	ResearchCategory.CODEC.fieldOf("category").forGetter(o->o.category),
-    	Codec.list(FHResearch.researches.SUPPLIER_CODEC).fieldOf("parents").forGetter(o->new ArrayList<>(o.parents)),
+    	SerializeUtil.nullableCodecValue(Codec.list(FHResearch.researches.SUPPLIER_CODEC),Arrays.asList()).fieldOf("parents").forGetter(o->new ArrayList<>(o.parents)),
     	Codec.list(Clue.CODEC).fieldOf("clues").forGetter(o->o.clues),
     	Codec.list(SerializeUtil.INGREDIENT_SIZE_CODEC).fieldOf("ingredients").forGetter(o->o.requiredItems),
     	Codec.list(Effect.CODEC).fieldOf("effects").forGetter(o->o.effects),
     	SerializeUtil.nullableCodecValue(Codec.STRING, "").fieldOf("name").forGetter(o->o.name),
-    	SerializeUtil.nullableCodecValue(Codec.list(Codec.STRING)).fieldOf("desc").forGetter(o->o.desc),
-    	SerializeUtil.nullableCodecValue(Codec.list(Codec.STRING)).fieldOf("descAlt").forGetter(o->o.fdesc),
+    	SerializeUtil.nullableCodecValue(Codec.list(Codec.STRING),Arrays.asList()).fieldOf("desc").forGetter(o->o.desc),
+    	SerializeUtil.nullableCodecValue(Codec.list(Codec.STRING),Arrays.asList()).fieldOf("descAlt").forGetter(o->o.fdesc),
     	new BooleansCodec("flags","showAltDesc","hideEffects","locked","hidden","keepShow","infinite").forGetter(o->new boolean[] {
     		o.showfdesc, o.hideEffects, o.inCompletable, o.isHidden, o.alwaysShow, o.infinite}),
     	Codec.LONG.fieldOf("points").forGetter(o->o.points)
@@ -86,7 +86,8 @@ public class Research implements FHRegisteredItem {
 		super();
 		this.icon = icon;
 		this.category = category;
-		this.parents.addAll(parents);
+		if(parents!=null)
+			this.parents.addAll(parents);
 		this.clues.addAll(clues);
 		this.requiredItems.addAll(requiredItems);
 		this.effects.addAll(effects);
@@ -113,7 +114,7 @@ public class Research implements FHRegisteredItem {
      * The icon for this research.<br>
      */
     FHIcon icon;
-    private ResearchCategory category;
+    private ResearchCategory category=ResearchCategory.RESCUE;
     private HashSet<Supplier<Research>> parents = new HashSet<>();// parent researches
     private HashSet<Supplier<Research>> children = new HashSet<>();// child researches, this is set automatically,
     // should not set manually.
@@ -171,8 +172,6 @@ public class Research implements FHRegisteredItem {
      * The is infinite.<br>
      */
     boolean infinite;
-
-    private List<Integer> parentIds;
 
     /**
      * Instantiates a new Research.<br>
@@ -629,7 +628,6 @@ public class Research implements FHRegisteredItem {
      */
     public void packetInit() {
         parents.clear();
-        parentIds.stream().map(FHResearch.researches::get).forEach(parents::add);
     }
 
     /**

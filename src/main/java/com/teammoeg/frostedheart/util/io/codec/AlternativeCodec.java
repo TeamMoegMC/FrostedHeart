@@ -35,17 +35,19 @@ public class AlternativeCodec<A> implements Codec<A> {
 					return result;
 			}
 		}
-		return DataResult.error("No matching codec present");
+		return DataResult.error("No matching encodec present for "+input);
 	}
 
 	@Override
 	public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
 		for(Pair<Class<? extends A>, Codec<A>> codec:codecs) {
 			DataResult<Pair<A, T>> result=codec.getSecond().decode(ops, input);
+			
 			if(result.result().isPresent())
 				return result;
+			System.out.println("getClass "+codec.getFirst()+" Result "+result);
 		}
-		return DataResult.error("No matching codec present");
+		return DataResult.error("No matching decodec present for "+input);
 	}
 
 }

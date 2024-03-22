@@ -128,10 +128,6 @@ public class SerializeUtil {
 		return ItemStack.EMPTY;
 	}
 
-	public static <A> NullableCodec<A> nullableCodecValue(Codec<A> val) {
-		return new NullableCodec<A>(val);
-	}
-
 	public static <A> NullableCodec<A> nullableCodecValue(Codec<A> val, A def) {
 		return nullableCodec(val, () -> def);
 	}
@@ -163,7 +159,18 @@ public class SerializeUtil {
 		return Codec.INT.xmap(registry::getByValue, registry::getId);
 	}
 	private static <K> Codec<K> scCodec(DynamicOps<K> op){
-		return Codec.PASSTHROUGH.comapFlatMap(o->DataResult.success(o.convert(op).getValue()), o-> new Dynamic<>(op, o));
+		return new Codec<K>(){
+			@Override
+			public <T> DataResult<T> encode(K input, DynamicOps<T> ops, T prefix) {
+				return DataResult.success(op.convertTo(ops, input));
+			}
+
+			@Override
+			public <T> DataResult<Pair<K, T>> decode(DynamicOps<T> ops, T input) {
+				return DataResult.success(Pair.of(ops.convertTo(op, input), input));
+			}
+			
+		};
 	}
 	private static final Function<DynamicOps<?>, Codec<?>> schCodec=cached(SerializeUtil::scCodec);
 	public static <I> Codec<I> convertSchema(DynamicOps<I> op){
@@ -173,7 +180,7 @@ public class SerializeUtil {
 	public static final Codec<ItemStack> ITEMSTACK_CODEC = RecordCodecBuilder.create(t -> 
 		t.group(registryCodec(Registry.ITEM).fieldOf("id").forGetter(ItemStack::getItem),
 		Codec.INT.fieldOf("Count").forGetter(ItemStack::getCount),
-		nullableCodecValue(CompoundNBT.CODEC).fieldOf("tag").forGetter(ItemStack::getTag)).apply(t, ItemStack::new));
+		nullableCodec(CompoundNBT.CODEC,()->new CompoundNBT()).fieldOf("tag").forGetter(ItemStack::getTag)).apply(t, ItemStack::new));
 	
 	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(JsonOps.INSTANCE,Ingredient::serialize,Ingredient::deserialize,Ingredient::write,Ingredient::read);
 	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=new PacketOrSchemaCodec<>(JsonOps.INSTANCE,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
@@ -472,7 +479,6 @@ public class SerializeUtil {
 
 	public static <T> T readCodec(PacketBuffer pb, Codec<T> codec) {
 		Object readed = ObjectWriter.readObject(pb);
-		System.out.println(readed);
 		DataResult<Pair<T, Object>> ob = codec.decode(DataOps.COMPRESSED, readed);
 		
 		Optional<Pair<T, Object>> ret = ob.resultOrPartial(t->{throw new DecoderException(t);});

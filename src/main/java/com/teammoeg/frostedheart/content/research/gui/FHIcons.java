@@ -46,6 +46,7 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.io.codec.AlternativeCodec;
+import com.teammoeg.frostedheart.util.io.codec.NopCodec;
 import com.teammoeg.frostedheart.util.io.registry.TypedCodecRegistry;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -227,11 +228,8 @@ public class FHIcons {
     private static class FHNopIcon extends FHIcon {
        
         public static final FHNopIcon INSTANCE = new FHNopIcon();
-        private static final Codec<FHNopIcon> CODEC=Codec.unit(INSTANCE);
+        private static final Codec<FHNopIcon> CODEC=new NopCodec<>(INSTANCE);
 
-        public static FHNopIcon get(PacketBuffer e) {
-            return INSTANCE;
-        }
 
         private FHNopIcon() {
         }
