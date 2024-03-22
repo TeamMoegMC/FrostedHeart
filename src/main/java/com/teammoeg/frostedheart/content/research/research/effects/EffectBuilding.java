@@ -23,7 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
@@ -40,7 +41,6 @@ import blusunrize.lib.manual.ManualEntry;
 import blusunrize.lib.manual.gui.ManualScreen;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
@@ -52,7 +52,9 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * Allows forming multiblock
  */
 public class EffectBuilding extends Effect {
-
+	public static final Codec<EffectBuilding> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	ResourceLocation.CODEC.xmap(MultiblockHandler::getByUniqueName, IMultiblock::getUniqueName).fieldOf("multiblock").forGetter(o->o.multiblock))
+	.apply(t,EffectBuilding::new));
     IMultiblock multiblock;
 
     EffectBuilding() {
@@ -67,15 +69,10 @@ public class EffectBuilding extends Effect {
 
     }
 
-    public EffectBuilding(JsonObject jo) {
-        super(jo);
-        multiblock = MultiblockHandler.getByUniqueName(new ResourceLocation(jo.get("multiblock").getAsString()));
-    }
-
-    public EffectBuilding(PacketBuffer pb) {
-        super(pb);
-        multiblock = MultiblockHandler.getByUniqueName(pb.readResourceLocation());
-    }
+    public EffectBuilding(BaseData data, IMultiblock multiblock) {
+		super(data);
+		this.multiblock = multiblock;
+	}
 
     @Override
     public String getBrief() {
@@ -147,19 +144,6 @@ public class EffectBuilding extends Effect {
     @Override
     public void revoke(TeamResearchData team) {
         team.building.remove(multiblock);
-    }
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.addProperty("multiblock", multiblock.getUniqueName().toString());
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        buffer.writeResourceLocation(multiblock.getUniqueName());
     }
 
 }

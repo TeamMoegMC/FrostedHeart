@@ -19,28 +19,29 @@
 
 package com.teammoeg.frostedheart.content.research.research.clues;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
-
-import net.minecraft.network.PacketBuffer;
 
 /**
  * Very Custom Clue trigger by code or manually.
  */
 public class CustomClue extends Clue {
+	public static final Codec<CustomClue> CODEC=RecordCodecBuilder.create(t->t.group(
+		Clue.BASE_CODEC.forGetter(o->o.getData())
+		).apply(t,CustomClue::new));
     public CustomClue() {
         super();
     }
 
-    public CustomClue(JsonObject jo) {
-        super(jo);
-    }
 
-    public CustomClue(PacketBuffer pb) {
-        super(pb);
-    }
+    public CustomClue(BaseData data) {
+		super(data);
+		// TODO Auto-generated constructor stub
+	}
 
-    public CustomClue(String name, float contribution) {
+
+	public CustomClue(String name, float contribution) {
         super(name, contribution);
     }
 

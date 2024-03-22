@@ -26,9 +26,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.mojang.datafixers.util.Either;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
@@ -36,7 +38,6 @@ import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -45,21 +46,27 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.IItemProvider;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class EffectCrafting extends Effect {
+	public static final Codec<EffectCrafting> CODEC=RecordCodecBuilder.create(t->t.group(
+		Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+		SerializeUtil.<EffectCrafting,Item,Either<ItemStack,List<ResourceLocation>>>either(SerializeUtil.registryCodec(Registry.ITEM).fieldOf("item"),
+			SerializeUtil.either(SerializeUtil.ITEMSTACK_CODEC.fieldOf("item"),
+				Codec.list(ResourceLocation.CODEC).fieldOf("recipes")
+				),o->o.item, SerializeUtil.leftRight(o->o.itemStack, o->o.unlocks.stream().map(IRecipe::getId).collect(Collectors.toList())))
+		)
+	.apply(t,EffectCrafting::new));
     List<IRecipe<?>> unlocks = new ArrayList<>();
     ItemStack itemStack = null;
     Item item = null;
-
     EffectCrafting() {
     }
 
@@ -75,34 +82,15 @@ public class EffectCrafting extends Effect {
         this.itemStack = item;
     }
 
-    public EffectCrafting(JsonObject jo) {
-        super(jo);
-        if (jo.has("item")) {
-            JsonElement je = jo.get("item");
-            if (je.isJsonPrimitive()) {
-                item = RegistryUtils.getItem(new ResourceLocation(je.getAsString()));
-                initItem();
-            } else {
-                itemStack = SerializeUtil.fromJson(je);
-                initStack();
-            }
-        } else if (jo.has("recipes")) {
-            unlocks = SerializeUtil.parseJsonElmList(jo.get("recipes"), e -> FHTeamDataManager.getRecipeManager().getRecipe(new ResourceLocation(e.getAsString())).orElse(null));
-            unlocks.removeIf(Objects::isNull);
-        }
-    }
-    
-    public EffectCrafting(PacketBuffer pb) {
-        super(pb);
-        item = SerializeUtil.readOptional(pb, p -> p.readRegistryIdUnsafe(ForgeRegistries.ITEMS)).orElse(null);
-        if (item == null) {
-            itemStack = SerializeUtil.readOptional(pb, PacketBuffer::readItemStack).orElse(null);
-            if (itemStack == null) {
-                unlocks = SerializeUtil.readList(pb, p -> FHTeamDataManager.getRecipeManager().getRecipe(p.readResourceLocation()).orElse(null));
-                unlocks.removeIf(Objects::isNull);
-            } else initStack();
-        } else initItem();
-    }
+    public EffectCrafting(BaseData data,Either<Item,Either<ItemStack,List<ResourceLocation>>> unlocks) {
+		super(data);
+		unlocks.ifLeft(t->{this.item=t;initItem();});
+		unlocks.ifRight(t->{
+			t.ifLeft(o->{this.itemStack=o;initStack();});
+			t.ifRight(o->o.stream().map(FHTeamDataManager.getRecipeManager()::getRecipe).filter(Optional::isPresent).map(Optional::get).forEach(this.unlocks::add));
+		});
+
+	}
 
     public EffectCrafting(ResourceLocation recipe) {
         super("@gui." + FHMain.MODID + ".effect.crafting", new ArrayList<>());
@@ -229,37 +217,12 @@ public class EffectCrafting extends Effect {
         team.crafting.removeAll(unlocks);
     }
 
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        if (item != null)
-            jo.addProperty("item", RegistryUtils.getRegistryName(item).toString());
-        else if (itemStack != null)
-            jo.add("item", SerializeUtil.toJson(itemStack));
-        else if (unlocks.size() == 1)
-            jo.addProperty("recipes", unlocks.get(1).getId().toString());
-        else if (unlocks.size() > 1)
-            jo.add("recipes", SerializeUtil.toJsonStringList(unlocks, IRecipe<?>::getId));
-        return jo;
-    }
-
     public void setList(Collection<String> ls) {
         unlocks.clear();
         for (String s : ls) {
             Optional<? extends IRecipe<?>> r = FHTeamDataManager.getRecipeManager().getRecipe(new ResourceLocation(s));
 
             r.ifPresent(iRecipe -> unlocks.add(iRecipe));
-        }
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        SerializeUtil.writeOptional(buffer, item, (o, b) -> b.writeRegistryIdUnsafe(ForgeRegistries.ITEMS, o));
-        if (item == null) {
-            SerializeUtil.writeOptional2(buffer, itemStack, PacketBuffer::writeItemStack);
-            if (itemStack == null)
-                SerializeUtil.writeList(buffer, unlocks, (o, b) -> b.writeResourceLocation(o.getId()));
         }
     }
 

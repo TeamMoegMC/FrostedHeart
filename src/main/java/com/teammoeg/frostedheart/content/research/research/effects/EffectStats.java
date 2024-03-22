@@ -23,14 +23,14 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 
@@ -39,28 +39,25 @@ import net.minecraft.util.text.ITextComponent;
  */
 public class EffectStats extends Effect {
     private static FHIcon addIcon = FHIcons.getDelegateIcon("plus");
-    String vars;
+	public static final Codec<EffectStats> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	Codec.STRING.fieldOf("vars").forGetter(o->o.vars),
+	Codec.DOUBLE.fieldOf("val").forGetter(o->o.val),
+	Codec.BOOL.fieldOf("percent").forGetter(o->o.isPercentage)
+	).apply(t,EffectStats::new));
+    public EffectStats(BaseData data, String vars, double val, boolean isPercentage) {
+		super(data);
+		this.vars = vars;
+		this.val = val;
+		this.isPercentage = isPercentage;
+	}
+
+	String vars;
     double val;
     boolean isPercentage = false;
 
     EffectStats() {
         this.vars = "";
         this.val = 0;
-    }
-
-    public EffectStats(JsonObject jo) {
-        super(jo);
-        vars = jo.get("vars").getAsString();
-        val = jo.get("val").getAsDouble();
-        if (jo.has("percent"))
-            isPercentage = jo.get("percent").getAsBoolean();
-    }
-
-    public EffectStats(PacketBuffer pb) {
-        super(pb);
-        vars = pb.readString();
-        val = pb.readDouble();
-        isPercentage = pb.readBoolean();
     }
 
     public EffectStats(String vars, double add) {
@@ -129,24 +126,6 @@ public class EffectStats extends Effect {
         else
             var -= val;
         team.getVariants().putDouble(vars, var);
-    }
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.addProperty("vars", vars);
-        jo.addProperty("val", val);
-        if (isPercentage)
-            jo.addProperty("percent", true);
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        buffer.writeString(vars);
-        buffer.writeDouble(val);
-        buffer.writeBoolean(isPercentage);
     }
 
 }

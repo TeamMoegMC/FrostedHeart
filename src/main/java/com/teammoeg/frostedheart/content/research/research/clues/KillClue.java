@@ -19,22 +19,25 @@
 
 package com.teammoeg.frostedheart.content.research.research.clues;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class KillClue extends ListenerClue {
+	public static final Codec<KillClue> CODEC=RecordCodecBuilder.create(t->t.group(
+		ListenerClue.BASE_CODEC.forGetter(o->o.getData()),
+		SerializeUtil.registryCodec(Registry.ENTITY_TYPE).fieldOf("entity").forGetter(o->o.type)
+		).apply(t,KillClue::new));
     EntityType<?> type;
 
     KillClue() {
@@ -46,15 +49,10 @@ public class KillClue extends ListenerClue {
         super("", "", "", contribution);
     }
 
-    public KillClue(JsonObject jo) {
-        super(jo);
-        type = RegistryUtils.getEntity(new ResourceLocation(jo.get("entity").getAsString()));
-    }
-
-    public KillClue(PacketBuffer pb) {
-        super(pb);
-        type = pb.readRegistryIdUnsafe(ForgeRegistries.ENTITIES);
-    }
+    public KillClue(BaseData data, EntityType<?> type) {
+		super(data);
+		this.type = type;
+	}
 
     @Override
     public String getBrief() {
@@ -97,20 +95,5 @@ public class KillClue extends ListenerClue {
     public void removeListener(TeamDataHolder t) {
         ResearchListeners.getKillClues().remove(this, t.getId());
     }
-
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.addProperty("entity", RegistryUtils.getRegistryName(type).toString());
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        buffer.writeRegistryIdUnsafe(ForgeRegistries.ENTITIES, type);
-    }
-
 
 }

@@ -22,7 +22,8 @@ package com.teammoeg.frostedheart.content.research.research.effects;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
@@ -32,7 +33,6 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
@@ -43,22 +43,23 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * Allows the research team to use certain machines
  */
 public class EffectShowCategory extends Effect {
-
+	public static final Codec<EffectShowCategory> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	ResourceLocation.CODEC.fieldOf("category").forGetter(o->o.cate))
+	.apply(t,EffectShowCategory::new));
     ResourceLocation cate;
 
-    EffectShowCategory() {
+    public EffectShowCategory(BaseData data, ResourceLocation cate) {
+		super(data);
+		this.cate = cate;
+	}
+
+	public EffectShowCategory(String name, List<String> tooltip, ResourceLocation cate) {
+		super(name, tooltip);
+		this.cate = cate;
+	}
+
+	EffectShowCategory() {
         super();
-    }
-
-    public EffectShowCategory(JsonObject jo) {
-        super(jo);
-        cate = new ResourceLocation(jo.get("category").getAsString());
-    }
-
-    public EffectShowCategory(PacketBuffer pb) {
-        super(pb);
-        cate = pb.readResourceLocation();
-
     }
 
     public EffectShowCategory(ResourceLocation cat) {
@@ -109,18 +110,5 @@ public class EffectShowCategory extends Effect {
     @Override
     public void revoke(TeamResearchData team) {
         team.categories.remove(cate);
-    }
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.addProperty("category", cate.toString());
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        buffer.writeResourceLocation(cate);
     }
 }

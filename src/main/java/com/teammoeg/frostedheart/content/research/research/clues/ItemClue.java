@@ -19,37 +19,39 @@
 
 package com.teammoeg.frostedheart.content.research.research.clues;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.ITextComponent;
 
 public class ItemClue extends Clue {
+	public static final Codec<ItemClue> CODEC=RecordCodecBuilder.create(t->t.group(
+		Clue.BASE_CODEC.forGetter(o->o.getData()),
+		SerializeUtil.nullableCodecValue(Codec.BOOL, false).fieldOf("consume").forGetter(o->o.consume),
+		SerializeUtil.INGREDIENT_SIZE_CODEC.fieldOf("item").forGetter(o->o.stack)
+		).apply(t,ItemClue::new));
+	
     boolean consume;
     IngredientWithSize stack;
-
+    
     ItemClue() {
         super();
     }
 
-    public ItemClue(JsonObject jo) {
-        super(jo);
-        stack = IngredientWithSize.deserialize(jo.get("item"));
-        if (jo.has("consume"))
-            consume = jo.get("consume").getAsBoolean();
-    }
+    public ItemClue(BaseData data, boolean consume, IngredientWithSize stack) {
+		super(data);
+		this.consume = consume;
+		this.stack = stack;
+	}
 
-    public ItemClue(PacketBuffer pb) {
-        super(pb);
-        stack = IngredientWithSize.read(pb);
-        consume = pb.readBoolean();
-    }
+
 
     public ItemClue(String name, String desc, String hint, float contribution, IngredientWithSize stack) {
         super(name, desc, hint, contribution);
@@ -97,15 +99,6 @@ public class ItemClue extends Clue {
     }
 
     @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.add("item", stack.serialize());
-        if (consume)
-            jo.addProperty("consume", consume);
-        return jo;
-    }
-
-    @Override
     public void start(TeamDataHolder team) {
     }
 
@@ -118,12 +111,5 @@ public class ItemClue extends Clue {
                     return this.stack.getCount();
             }
         return 0;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        stack.write(buffer);
-        buffer.writeBoolean(consume);
     }
 }

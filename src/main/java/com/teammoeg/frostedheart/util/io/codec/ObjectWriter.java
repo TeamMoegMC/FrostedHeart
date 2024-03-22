@@ -23,6 +23,7 @@ public class ObjectWriter {
 		public TypedValue(int type) {
 			super();
 			this.type = type;
+			this.value=DataOps.NULLTAG;
 		}
 	}
 	public ObjectWriter() {
@@ -134,7 +135,7 @@ public class ObjectWriter {
 			return obj;
 		}
     	}
-    	return null;
+    	return DataOps.NULLTAG;
     }
     public static void writeObject(PacketBuffer pb,Object input) {
     	TypedValue value=getTyped(input);

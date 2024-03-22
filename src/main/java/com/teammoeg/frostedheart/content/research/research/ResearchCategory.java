@@ -22,8 +22,10 @@ package com.teammoeg.frostedheart.content.research.research;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -35,7 +37,10 @@ public enum ResearchCategory {
     PRODUCTION("production"),
     ARS("ars"),
     EXPLORATION("exploration");
+	
     public static final Map<ResourceLocation, ResearchCategory> ALL = new HashMap<>();
+    public static final Codec<ResearchCategory> CODEC=new CompressDifferCodec<>(ResourceLocation.CODEC.xmap(ALL::get, ResearchCategory::getId),
+    	Codec.BYTE.xmap(i->ResearchCategory.values()[i], i->(byte)i.ordinal()));
     static {
         for (ResearchCategory rc : ResearchCategory.values())
             ResearchCategory.ALL.put(rc.id, rc);

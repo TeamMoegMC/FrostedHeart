@@ -8,6 +8,7 @@ import java.util.Map;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DynamicOps;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
 
 import net.minecraft.network.PacketBuffer;
 
@@ -23,6 +24,9 @@ public class TypedCodecRegistry<T> extends TypeRegistry<T> {
 	}
 	public Codec<T> byNameCodec(){
 		return byName;
+	}
+	public Codec<T> codec(){
+		return new CompressDifferCodec<>(byName,byInt);
 	}
 	public Codec<T> byIntCodec(){
 		return byInt;

@@ -23,31 +23,36 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * Allows the research team to use certain machines
  */
 public class EffectUse extends Effect {
-
+	public static final Codec<EffectUse> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	Codec.list(SerializeUtil.registryCodec(Registry.BLOCK)).fieldOf("blocks").forGetter(o->o.blocks))
+	.apply(t,EffectUse::new));
     List<Block> blocks;
 
-    EffectUse() {
+    public EffectUse(BaseData data, List<Block> blocks) {
+		super(data);
+		this.blocks = new ArrayList<>(blocks);
+	}
+
+	EffectUse() {
         super();
         this.blocks = new ArrayList<>();
     }
@@ -56,17 +61,6 @@ public class EffectUse extends Effect {
         super();
         this.blocks = new ArrayList<>();
         this.blocks.addAll(Arrays.asList(blocks));
-    }
-
-    public EffectUse(JsonObject jo) {
-        super(jo);
-        blocks = SerializeUtil.parseJsonElmList(jo.get("blocks"), e -> RegistryUtils.getBlock(new ResourceLocation(e.getAsString())));
-    }
-
-    public EffectUse(PacketBuffer pb) {
-        super(pb);
-        blocks = SerializeUtil.readList(pb, p -> p.readRegistryIdUnsafe(ForgeRegistries.BLOCKS));
-
     }
 
     @Override
@@ -111,18 +105,5 @@ public class EffectUse extends Effect {
     @Override
     public void revoke(TeamResearchData team) {
         team.block.removeAll(blocks);
-    }
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.add("blocks", SerializeUtil.toJsonStringList(blocks, RegistryUtils::getRegistryName));
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        SerializeUtil.writeList(buffer, blocks, (b, p) -> p.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS, b));
     }
 }

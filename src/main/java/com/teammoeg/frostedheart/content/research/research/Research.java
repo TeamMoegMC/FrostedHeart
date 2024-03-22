@@ -31,17 +31,13 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.FHRegisteredItem;
-import com.teammoeg.frostedheart.content.research.FHRegistry;
 import com.teammoeg.frostedheart.content.research.FHResearch;
-import com.teammoeg.frostedheart.content.research.SpecialResearch;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
@@ -51,20 +47,15 @@ import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.content.research.number.IResearchNumber;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
-import com.teammoeg.frostedheart.content.research.research.clues.Clues;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.frostedheart.content.research.research.effects.Effects;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
-import com.teammoeg.frostedheart.util.io.Writeable;
+import com.teammoeg.frostedheart.util.io.codec.BooleansCodec;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.IItemProvider;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponent;
 import net.minecraftforge.api.distmarker.Dist;
@@ -75,9 +66,48 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  *
  * @author khjxiaogu
  */
-public class Research implements Writeable, FHRegisteredItem {
-
-    private String id;// id of this research
+public class Research implements FHRegisteredItem {
+    public static Codec<Research> CODEC=RecordCodecBuilder.create(t->t.group(
+    	FHIcons.CODEC.fieldOf("icon").forGetter(o->o.icon),
+    	ResearchCategory.CODEC.fieldOf("category").forGetter(o->o.category),
+    	Codec.list(FHResearch.researches.SUPPLIER_CODEC).fieldOf("parents").forGetter(o->new ArrayList<>(o.parents)),
+    	Codec.list(Clue.CODEC).fieldOf("clues").forGetter(o->o.clues),
+    	Codec.list(SerializeUtil.INGREDIENT_SIZE_CODEC).fieldOf("ingredients").forGetter(o->o.requiredItems),
+    	Codec.list(Effect.CODEC).fieldOf("effects").forGetter(o->o.effects),
+    	SerializeUtil.nullableCodecValue(Codec.STRING, "").fieldOf("name").forGetter(o->o.name),
+    	SerializeUtil.nullableCodecValue(Codec.list(Codec.STRING)).fieldOf("desc").forGetter(o->o.desc),
+    	SerializeUtil.nullableCodecValue(Codec.list(Codec.STRING)).fieldOf("descAlt").forGetter(o->o.fdesc),
+    	new BooleansCodec("flags","showAltDesc","hideEffects","locked","hidden","keepShow","infinite").forGetter(o->new boolean[] {
+    		o.showfdesc, o.hideEffects, o.inCompletable, o.isHidden, o.alwaysShow, o.infinite}),
+    	Codec.LONG.fieldOf("points").forGetter(o->o.points)
+    	).apply(t,Research::new));
+    public Research(FHIcon icon, ResearchCategory category, List<Supplier<Research>> parents, List<Clue> clues, List<IngredientWithSize> requiredItems, List<Effect> effects, String name,
+		List<String> desc, List<String> fdesc, boolean[] flags, long points) {
+		super();
+		this.icon = icon;
+		this.category = category;
+		this.parents.addAll(parents);
+		this.clues.addAll(clues);
+		this.requiredItems.addAll(requiredItems);
+		this.effects.addAll(effects);
+		this.name = name;
+		if(desc==null)
+			this.desc=new ArrayList<>();
+		else
+			this.desc = new ArrayList<>(desc);
+		if(fdesc==null)
+			this.fdesc = new ArrayList<>();
+		else
+			this.fdesc = new ArrayList<>(fdesc);
+		this.showfdesc = flags[0];
+		this.hideEffects = flags[1];
+		this.inCompletable = flags[2];
+		this.isHidden = flags[3];
+		this.alwaysShow = flags[4];
+		this.points = points;
+		this.infinite = flags[5];
+	}
+	private String id;// id of this research
 
     /**
      * The icon for this research.<br>
@@ -142,8 +172,6 @@ public class Research implements Writeable, FHRegisteredItem {
      */
     boolean infinite;
 
-    private ResourceLocation categoryRL;
-
     private List<Integer> parentIds;
 
     /**
@@ -154,54 +182,6 @@ public class Research implements Writeable, FHRegisteredItem {
         this.icon = FHIcons.nop();
         desc = new ArrayList<>();
         fdesc = new ArrayList<>();
-    }
-    /*public static final Codec<Research> CODEC=RecordCodecBuilder.create(t->t.group(
-    	Codec.STRING.fieldOf("id").forGetter(o->o.id),
-    	Codec.STRING.fieldOf("name").forGetter(o->o.name),
-    	Codec.list(Codec.STRING).fieldOf("desc").forGetter(o->o.desc),
-    	Codec.list(Codec.STRING).fieldOf("fdesc").forGetter(o->o.fdesc)
-    	));*/
-    /**
-     * Instantiates a new Research with a PacketBuffer object.<br>
-     * This would be called before research registry and category init.
-     * Shouldn't call methods provide by these in this method.
-     *
-     * @param data the packet<br>
-     */
-    public Research(PacketBuffer data) {
-        id = data.readString();
-        //System.out.println("read "+id);
-        name = data.readString();
-        desc = SerializeUtil.readList(data, PacketBuffer::readString);
-        fdesc = SerializeUtil.readList(data, PacketBuffer::readString);
-        icon = FHIcons.readIcon(data);
-        categoryRL = data.readResourceLocation();
-        parentIds = SerializeUtil.readList(data, PacketBuffer::readVarInt);
-        //System.out.println("category "+rl.toString());
-
-        clues.addAll(SerializeUtil.readList(data, Clues::read));
-        requiredItems = SerializeUtil.readList(data, IngredientWithSize::read);
-        effects = SerializeUtil.readList(data, Effects::read);
-        points = data.readVarLong();
-        boolean[] bools = SerializeUtil.readBooleans(data);
-        showfdesc = bools[0];
-        hideEffects = bools[1];
-        isHidden = bools[2];
-        inCompletable = bools[3];
-        alwaysShow = bools[4];
-        infinite = bools[5];
-    }
-
-    /**
-     * Instantiates a new Research read from json.<br>
-     *
-     * @param id the id<br>
-     * @param jo the json<br>
-     */
-    public Research(String id, JsonObject jo) {
-        this.id = id;
-        load(jo);
-
     }
 
     /**
@@ -642,65 +622,12 @@ public class Research implements Writeable, FHRegisteredItem {
         return true;
     }
 
-    /**
-     * Load from json
-     *
-     * @param jo the jo<br>
-     */
-    public void load(JsonObject jo) {
-        if (jo.has("name"))
-            name = jo.get("name").getAsString();
-        if (jo.has("desc"))
-            desc = SerializeUtil.parseJsonElmList(jo.get("desc"), JsonElement::getAsString);
-        else
-            desc = new ArrayList<>();
-        if (jo.has("descAlt"))
-            fdesc = SerializeUtil.parseJsonElmList(jo.get("descAlt"), JsonElement::getAsString);
-        else
-            fdesc = new ArrayList<>();
-        icon = FHIcons.getIcon(jo.get("icon"));
-        setCategory(ResearchCategory.ALL.get(new ResourceLocation(jo.get("category").getAsString())));
 
-        if (jo.has("parents"))
-            parents.addAll(
-                    SerializeUtil.parseJsonElmList(jo.get("parents"), p -> FHResearch.researches.get(p.getAsString())));
-        else
-            parents.clear();
-        clues = SerializeUtil.parseJsonList(jo.get("clues"), Clues::read);
-        requiredItems = SerializeUtil.parseJsonElmList(jo.get("ingredients"), IngredientWithSize::deserialize);
-        effects = SerializeUtil.parseJsonList(jo.get("effects"), Effects::deserialize);
-        points = jo.get("points").getAsInt();
-        if (jo.has("showAltDesc"))
-            showfdesc = jo.get("showAltDesc").getAsBoolean();
-        else
-            showfdesc = false;
-        if (jo.has("hideEffects"))
-            hideEffects = jo.get("hideEffects").getAsBoolean();
-        else
-            hideEffects = false;
-        if (jo.has("hidden"))
-            isHidden = jo.get("hidden").getAsBoolean();
-        else
-            isHidden = false;
-        if (jo.has("locked"))
-            inCompletable = jo.get("locked").getAsBoolean();
-        else
-            inCompletable = false;
-        if (jo.has("keepShow"))
-            alwaysShow = jo.get("keepShow").getAsBoolean();
-        else
-            alwaysShow = false;
-        if (jo.has("infinite"))
-            infinite = jo.get("infinite").getAsBoolean();
-        else
-            infinite = false;
-    }
 
     /**
      * Packet init, this would be call after everything is ready and packet is taking effect.
      */
     public void packetInit() {
-        setCategory(ResearchCategory.ALL.get(categoryRL));
         parents.clear();
         parentIds.stream().map(FHResearch.researches::get).forEach(parents::add);
     }
@@ -755,44 +682,6 @@ public class Research implements Writeable, FHRegisteredItem {
         FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(rd);
         team.sendToOnline(packet);
     }
-
-    /**
-     * Serialize to json.<br>
-     *
-     * @return returns serialize
-     */
-    @Override
-    public JsonElement serialize() {
-        JsonObject jo = new JsonObject();
-        if (!name.isEmpty())
-            jo.addProperty("name", name);
-        if (!desc.isEmpty())
-            jo.add("desc", SerializeUtil.toJsonStringList(desc, e -> e));
-        if (!fdesc.isEmpty())
-            jo.add("descAlt", SerializeUtil.toJsonStringList(fdesc, e -> e));
-        jo.add("icon", FHIcons.save(icon));
-        jo.addProperty("category", category.getId().toString());
-        if (!parents.isEmpty())
-            jo.add("parents", SerializeUtil.toJsonStringList(parents, FHRegistry::serializeSupplier));
-        jo.add("clues", SerializeUtil.toJsonList(clues, Clues::write));
-        jo.add("ingredients", SerializeUtil.toJsonList(requiredItems, IngredientWithSize::serialize));
-        jo.add("effects", SerializeUtil.toJsonList(effects, Effects::write));
-        jo.addProperty("points", points);
-        if (showfdesc)
-            jo.addProperty("showAltDesc", true);
-        if (hideEffects)
-            jo.addProperty("hideEffects", true);
-        if (isHidden)
-            jo.addProperty("hidden", true);
-        if (inCompletable)
-            jo.addProperty("locked", true);
-        if (alwaysShow)
-            jo.addProperty("keepShow", true);
-        if (infinite)
-            jo.addProperty("infinite", true);
-        return jo;
-    }
-
     /**
      * set category.
      *
@@ -870,25 +759,4 @@ public class Research implements Writeable, FHRegisteredItem {
         return "Research[" + id + "]";
     }
 
-    /**
-     * Write to packet.
-     *
-     * @param buffer the packet<br>
-     */
-    @Override
-    public void write(PacketBuffer buffer) {
-        SpecialResearch.writeId(this, buffer);
-        buffer.writeString(id);
-        buffer.writeString(name);
-        SerializeUtil.writeList2(buffer, desc, PacketBuffer::writeString);
-        SerializeUtil.writeList2(buffer, fdesc, PacketBuffer::writeString);
-        FHIcons.write(icon, buffer);
-        buffer.writeResourceLocation(category.getId());
-        SerializeUtil.writeList2(buffer, parents, FHResearch.researches::writeSupplier);
-        SerializeUtil.writeList2(buffer, clues, Clues::write);
-        SerializeUtil.writeList(buffer, requiredItems, IngredientWithSize::write);
-        SerializeUtil.writeList(buffer, effects, Effects::write);
-        buffer.writeVarLong(points);
-        SerializeUtil.writeBooleans(buffer, showfdesc, hideEffects, isHidden, inCompletable, alwaysShow, infinite);
-    }
 }

@@ -31,6 +31,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.JsonOps;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.FHTeamDataManager;
@@ -69,6 +71,7 @@ public class FHResearch {
     private static OptionalLazy<List<Research>> allResearches = OptionalLazy.of(() -> researches.all());
     public static boolean editor = false;
 
+    
     public static void clearAll() {
         clues.clear();
         researches.clear();
@@ -231,7 +234,7 @@ public class FHResearch {
         try {
             JsonElement je = new JsonParser().parse(FileUtil.readString(f));
             if (je.isJsonObject()) {
-                r.load(je.getAsJsonObject());
+            	Research.CODEC.decode(JsonOps.INSTANCE, je).result().map(Pair::getFirst).map(o->{o.setId(r.getId());return o;}).ifPresent(researches::replace);;
             }
         } catch (IOException e) {
             FHMain.LOGGER.error("Cannot load research " + f.getName() + ": " + e.getMessage());
@@ -250,9 +253,12 @@ public class FHResearch {
                 JsonElement je = jp.parse(FileUtil.readString(f));
                 if (je.isJsonObject()) {
                     String id = f.getName();
-                    Research r=SpecialResearch.deserialize(id.substring(0, id.length() - 5), je.getAsJsonObject());
-                    //r.packetInit();
-                    researches.register(r);
+                    id=id.substring(0, id.length() - 5);
+                    Research r=Research.CODEC.decode(JsonOps.INSTANCE, je).result().map(Pair::getFirst).orElse(null);
+                    if(r!=null) {
+                    	r.setId(id);
+                    	researches.register(r);
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -280,13 +286,6 @@ public class FHResearch {
         }
     }
 
-    public static void readAll(PacketBuffer pb) {
-        List<Research> rss = SerializeUtil.readList(pb, SpecialResearch::deserialize);
-
-        for (Research r : rss) {
-            researches.register(r);
-        }
-    }
 
     //register for after init
     public static void register(Research t) {
@@ -294,7 +293,7 @@ public class FHResearch {
         clearCache();
     }
 
-    //called after reload
+    //called after reload	
     public static void reindex() {
         allResearches.orElse(Collections.emptyList()).forEach(Research::doReindex);
         allResearches.orElse(Collections.emptyList()).forEach(Research::doIndex);
@@ -314,7 +313,7 @@ public class FHResearch {
         Gson gs = new GsonBuilder().setPrettyPrinting().create();
         File out = new File(rf, r.getId() + ".json");
         try {
-            FileUtil.transfer(gs.toJson(r.serialize()), out);
+            FileUtil.transfer(gs.toJson(SerializeUtil.encodeOrThrow(Research.CODEC.encodeStart(JsonOps.INSTANCE, r))), out);
         } catch (IOException e) {
 
             throw new RuntimeException("Cannot save research " + r.getId() + ": " + e.getMessage());
@@ -329,7 +328,7 @@ public class FHResearch {
         for (Research r : getAllResearch()) {
             File out = new File(rf, r.getId() + ".json");
             try {
-                FileUtil.transfer(gs.toJson(r.serialize()), out);
+                FileUtil.transfer(gs.toJson(SerializeUtil.encodeOrThrow(Research.CODEC.encodeStart(JsonOps.INSTANCE, r))), out);
             } catch (IOException e) {
                 throw new RuntimeException("Cannot save research " + r.getId() + ": " + e.getMessage());
             }
@@ -337,9 +336,6 @@ public class FHResearch {
         }
     }
 
-    public static void saveAll(PacketBuffer pb) {
-        SerializeUtil.writeList(pb, getAllResearch(), Research::write);
-    }
 
 	public static void sendSyncPacket(PacketTarget target) {
         FHNetwork.send(target,new FHResearchRegistrtySyncPacket());

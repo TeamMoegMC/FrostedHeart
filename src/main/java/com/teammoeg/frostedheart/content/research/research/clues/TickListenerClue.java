@@ -19,13 +19,11 @@
 
 package com.teammoeg.frostedheart.content.research.research.clues;
 
-import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
 
 public abstract class TickListenerClue extends ListenerClue {
 
@@ -33,15 +31,16 @@ public abstract class TickListenerClue extends ListenerClue {
         super();
     }
 
-    public TickListenerClue(JsonObject jo) {
-        super(jo);
-    }
 
-    public TickListenerClue(PacketBuffer pb) {
-        super(pb);
-    }
 
-    public TickListenerClue(String name, float contribution) {
+    public TickListenerClue(BaseData data) {
+		super(data);
+		// TODO Auto-generated constructor stub
+	}
+
+
+
+	public TickListenerClue(String name, float contribution) {
         super(name, contribution);
     }
 
