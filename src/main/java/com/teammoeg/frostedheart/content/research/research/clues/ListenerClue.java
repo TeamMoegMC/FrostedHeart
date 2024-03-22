@@ -19,32 +19,49 @@
 
 package com.teammoeg.frostedheart.content.research.research.clues;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
-
-import net.minecraft.network.PacketBuffer;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 /**
  * Clue with listener trigger
  */
 public abstract class ListenerClue extends Clue {
     public boolean alwaysOn;
+    public static class BaseData extends Clue.BaseData{
+    	public BaseData(String name, String desc, String hint, String nonce, boolean required, float contribution, boolean alwaysOn) {
+			super(name, desc, hint, nonce, required, contribution);
+			this.alwaysOn = alwaysOn;
+		}
 
+		boolean alwaysOn;
+    }
+	public static final MapCodec<BaseData> BASE_CODEC=RecordCodecBuilder.mapCodec(t->
+	t.group(
+		SerializeUtil.nullableCodecValue(Codec.STRING,"").fieldOf("name").forGetter(o->o.name),
+		SerializeUtil.nullableCodecValue(Codec.STRING,"").fieldOf("desc").forGetter(o->o.desc),
+		SerializeUtil.nullableCodecValue(Codec.STRING,"").fieldOf("hint").forGetter(o->o.hint),
+		Codec.STRING.fieldOf("id").forGetter(o->o.nonce),
+		Codec.BOOL.fieldOf("required").forGetter(o->o.required),
+		Codec.FLOAT.fieldOf("value").forGetter(o->o.contribution),
+		Codec.BOOL.fieldOf("always").forGetter(o->o.alwaysOn)).apply(t, BaseData::new));
     public ListenerClue() {
         super();
     }
 
-    public ListenerClue(JsonObject jo) {
-        super(jo);
-        alwaysOn = jo.get("always").getAsBoolean();
+
+    public ListenerClue(BaseData data) {
+		super(data);
+		this.alwaysOn=data.alwaysOn;
+	}
+    
+    public BaseData getData() {
+    	return new BaseData(name, desc, hint, nonce, required, contribution, alwaysOn);
     }
 
-    public ListenerClue(PacketBuffer pb) {
-        super(pb);
-        alwaysOn = pb.readBoolean();
-    }
-
-    public ListenerClue(String name, float contribution) {
+	public ListenerClue(String name, float contribution) {
         super(name, contribution);
     }
 
@@ -68,24 +85,12 @@ public abstract class ListenerClue extends Clue {
 
     public abstract void removeListener(TeamDataHolder t);
 
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.addProperty("always", alwaysOn);
-        return jo;
-    }
 
     @Override
     public void start(TeamDataHolder team) {
         if (!alwaysOn)
             initListener(team);
 
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        buffer.writeBoolean(alwaysOn);
     }
 
 }

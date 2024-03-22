@@ -23,7 +23,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
@@ -33,7 +34,6 @@ import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 
@@ -41,25 +41,23 @@ import net.minecraft.util.text.ITextComponent;
  * Reward the research team item rewards
  */
 public class EffectItemReward extends Effect {
-
+	public static final Codec<EffectItemReward> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	Codec.list(SerializeUtil.ITEMSTACK_CODEC).fieldOf("rewards").forGetter(o->o.rewards))
+	.apply(t,EffectItemReward::new));
     List<ItemStack> rewards;
 
-    public EffectItemReward(ItemStack... stacks) {
+    public EffectItemReward(BaseData data, List<ItemStack> rewards) {
+		super(data);
+		this.rewards = new ArrayList<>(rewards);
+	}
+
+	public EffectItemReward(ItemStack... stacks) {
         super();
         rewards = new ArrayList<>();
 
         rewards.addAll(Arrays.asList(stacks));
     }
 
-    public EffectItemReward(JsonObject jo) {
-        super(jo);
-        rewards = SerializeUtil.parseJsonElmList(jo.get("rewards"), SerializeUtil::fromJson);
-    }
-
-    public EffectItemReward(PacketBuffer pb) {
-        super(pb);
-        rewards = SerializeUtil.readList(pb, PacketBuffer::readItemStack);
-    }
 
     @Override
     public String getBrief() {
@@ -118,18 +116,5 @@ public class EffectItemReward extends Effect {
     @Override
     public void revoke(TeamResearchData team) {
 
-    }
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.add("rewards", SerializeUtil.toJsonList(rewards, SerializeUtil::toJson));
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        SerializeUtil.writeList2(buffer, rewards, PacketBuffer::writeItemStack);
     }
 }

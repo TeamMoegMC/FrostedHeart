@@ -26,9 +26,8 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
@@ -43,11 +42,10 @@ import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.content.research.network.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
-import com.teammoeg.frostedheart.util.io.Writeable;
+import com.teammoeg.frostedheart.util.io.registry.TypedCodecRegistry;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.IItemProvider;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
@@ -63,14 +61,14 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * file: Effect.java
  * @date 2022/09/02
  */
-public abstract class Effect extends AutoIDItem implements Writeable{
-	public static class EffectData{
+public abstract class Effect extends AutoIDItem{
+	public static class BaseData{
 	    String name = "";
 	    List<String> tooltip;
 	    FHIcon icon;
 	    String nonce;
 	    boolean hidden;
-		public EffectData(String name, List<String> tooltip, FHIcon icon, String nonce, boolean hidden) {
+		public BaseData(String name, List<String> tooltip, FHIcon icon, String nonce, boolean hidden) {
 			super();
 			this.name = name;
 			this.tooltip = tooltip;
@@ -80,10 +78,28 @@ public abstract class Effect extends AutoIDItem implements Writeable{
 		}
 	    
 	}
-	/*public static final Codec<EffectData> CODEC=RecordCodecBuilder.create(t->
-	t.group(SerializeUtil.nullableCodecValue(Codec.STRING).fieldOf("name").forGetter(o->o.name),
+	public static final MapCodec<BaseData> BASE_CODEC=RecordCodecBuilder.mapCodec(t->
+	t.group(SerializeUtil.nullableCodecValue(Codec.STRING,"").fieldOf("name").forGetter(o->o.name),
 		SerializeUtil.nullableCodec(Codec.list(Codec.STRING),ArrayList::new).fieldOf("tooltip").forGetter(o->o.tooltip),
-		Codec));*/
+		FHIcons.CODEC.fieldOf("icon").forGetter(o->o.icon),
+		Codec.STRING.fieldOf("id").forGetter(o->o.nonce),
+		Codec.BOOL.fieldOf("hidden").forGetter(o->o.hidden)).apply(t, BaseData::new));
+    private static TypedCodecRegistry<Effect> registry = new TypedCodecRegistry<>();
+    public static final Codec<Effect> CODEC=registry.codec();
+    static {
+    	registerEffectType(EffectBuilding.class, "multiblock", EffectBuilding.CODEC);
+        registerEffectType(EffectCrafting.class, "recipe", EffectCrafting.CODEC);
+        registerEffectType(EffectItemReward.class, "item", EffectItemReward.CODEC);
+        registerEffectType(EffectStats.class, "stats", EffectStats.CODEC);
+        registerEffectType(EffectUse.class, "use", EffectUse.CODEC);
+        registerEffectType(EffectShowCategory.class, "category", EffectShowCategory.CODEC);
+        registerEffectType(EffectCommand.class, "command", EffectCommand.CODEC);
+        registerEffectType(EffectExperience.class, "experience", EffectExperience.CODEC);
+    }
+    public static <T extends Effect> void registerEffectType(Class<T> cls, String type, Codec<T> json) {
+        registry.register(cls, type, json);
+    }
+
     String name = "";
 
     List<String> tooltip;
@@ -108,33 +124,16 @@ public abstract class Effect extends AutoIDItem implements Writeable{
      *
      * @param jo the jo<br>
      */
-    public Effect(JsonObject jo) {
-        if (jo.has("name"))
-            name = jo.get("name").getAsString();
-        if (jo.has("tooltip"))
-            tooltip = SerializeUtil.parseJsonElmList(jo.get("tooltip"), JsonElement::getAsString);
-        else
-            tooltip = new ArrayList<>();
-        if (jo.has("icon"))
-            icon = FHIcons.getIcon(jo.get("icon"));
-        nonce = jo.get("id").getAsString();
-        if (jo.has("hidden"))
-            hidden = jo.get("hidden").getAsBoolean();
+    public Effect(BaseData data) {
+    	name=data.name;
+    	tooltip=data.tooltip;
+    	icon=data.icon;
+    	nonce=data.nonce;
+    	hidden=data.hidden;
     }
-
-    /**
-     * Instantiates a new Effect with a PacketBuffer object.<br>
-     *
-     * @param pb the pb<br>
-     */
-    Effect(PacketBuffer pb) {
-        name = pb.readString();
-        tooltip = SerializeUtil.readList(pb, PacketBuffer::readString);
-        icon = SerializeUtil.readOptional(pb, FHIcons::readIcon).orElse(null);
-        nonce = pb.readString();
-        hidden = pb.readBoolean();
+    public BaseData getBaseData() {
+    	return new BaseData(name, tooltip, icon, nonce, hidden);
     }
-
     /**
      * Instantiates a new Effect.<br>
      *
@@ -372,24 +371,6 @@ public abstract class Effect extends AutoIDItem implements Writeable{
         team.sendToOnline(packet);
     }
 
-    /**
-     * Serialize.<br>
-     *
-     * @return returns serialize
-     */
-    public JsonObject serialize() {
-        JsonObject jo = new JsonObject();
-        if (!name.isEmpty())
-            jo.addProperty("name", name);
-        if (!tooltip.isEmpty())
-            jo.add("tooltip", SerializeUtil.toJsonStringList(tooltip, e -> e));
-        if (icon != null)
-            jo.add("icon", FHIcons.save(icon));
-        jo.addProperty("id", nonce);
-        if (isHidden())
-            jo.addProperty("hidden", true);
-        return jo;
-    }
 
     /**
      * set granted.
@@ -421,16 +402,4 @@ public abstract class Effect extends AutoIDItem implements Writeable{
         }
     }
 
-    /**
-     * Write.
-     *
-     * @param buffer the buffer<br>
-     */
-    public void write(PacketBuffer buffer) {
-        buffer.writeString(name);
-        SerializeUtil.writeList2(buffer, tooltip, PacketBuffer::writeString);
-        SerializeUtil.writeOptional(buffer, icon, FHIcons::write);
-        buffer.writeString(nonce);
-        buffer.writeBoolean(isHidden());
-    }
 }

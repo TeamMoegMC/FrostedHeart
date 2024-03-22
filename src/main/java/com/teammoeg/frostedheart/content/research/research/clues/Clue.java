@@ -22,7 +22,9 @@ package com.teammoeg.frostedheart.content.research.research.clues;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
@@ -33,9 +35,9 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.content.research.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.io.Writeable;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.registry.TypedCodecRegistry;
 
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -45,44 +47,67 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * researches.6
  * Clue can be trigger if any research is researchable(finished item commit)
  */
-public abstract class Clue extends AutoIDItem implements Writeable{
+public abstract class Clue extends AutoIDItem{
+	public static class BaseData{
+	    float contribution;// percentage, range (0,1]
+	    String name = "";
+	    String desc = "";
+	    String hint = "";
+	    String nonce;
+	    boolean required = false;
+		public BaseData(String name, String desc, String hint, String nonce, boolean required, float contribution) {
+			super();
+			this.name = name;
+			this.desc = desc;
+			this.hint = hint;
+			this.nonce = nonce;
+			this.required = required;
+			this.contribution = contribution;
+		}
+	}
+	public static final MapCodec<BaseData> BASE_CODEC=RecordCodecBuilder.mapCodec(t->
+	t.group(
+		SerializeUtil.nullableCodecValue(Codec.STRING,"").fieldOf("name").forGetter(o->o.name),
+		SerializeUtil.nullableCodecValue(Codec.STRING,"").fieldOf("desc").forGetter(o->o.desc),
+		SerializeUtil.nullableCodecValue(Codec.STRING,"").fieldOf("hint").forGetter(o->o.hint),
+		Codec.STRING.fieldOf("id").forGetter(o->o.nonce),
+		Codec.BOOL.fieldOf("required").forGetter(o->o.required),
+		Codec.FLOAT.fieldOf("value").forGetter(o->o.contribution)).apply(t, BaseData::new));
+    private static TypedCodecRegistry<Clue> registry = new TypedCodecRegistry<>();
+
+    static {
+        register(CustomClue.class, "custom", CustomClue.CODEC);
+        register(AdvancementClue.class, "advancement", AdvancementClue.CODEC);
+        register(ItemClue.class, "item", ItemClue.CODEC);
+        register(KillClue.class, "kill", KillClue.CODEC);
+        register(MinigameClue.class, "game", MinigameClue.CODEC);
+    }
+    public static <T extends Clue> void register(Class<T> cls, String id, Codec<T> j) {
+        registry.register(cls, id, j);
+    }
+    public final static Codec<Clue> CODEC=registry.codec();
     float contribution;// percentage, range (0,1]
     String name = "";
     String desc = "";
     String hint = "";
     String nonce;
-    boolean showContribute;
     public Supplier<Research> parent;
     boolean required = false;
 
     public Clue() {
         this.nonce = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
     }
-
-    public Clue(JsonObject jo) {
-        super();
-        if (jo.has("name"))
-            this.name = jo.get("name").getAsString();
-        if (jo.has("desc"))
-            this.desc = jo.get("desc").getAsString();
-        if (jo.has("hint"))
-            this.hint = jo.get("hint").getAsString();
-        this.contribution = jo.get("value").getAsFloat();
-        this.nonce = jo.get("id").getAsString();
-        if (jo.has("required"))
-            this.required = jo.get("required").getAsBoolean();
+    public Clue(BaseData data) {
+    	this.name=data.name;
+    	this.desc=data.desc;
+    	this.hint=data.hint;
+    	this.nonce=data.nonce;
+    	this.required=data.required;
+    	this.contribution=data.contribution;
     }
-
-    public Clue(PacketBuffer pb) {
-        super();
-        this.name = pb.readString();
-        this.desc = pb.readString();
-        this.hint = pb.readString();
-        this.contribution = pb.readFloat();
-        this.nonce = pb.readString();
-        this.required = pb.readBoolean();
+    public BaseData getData() {
+    	return new BaseData(name, desc, hint, nonce, required, contribution);
     }
-
     public Clue(String name, float contribution) {
         this(name, "", "", contribution);
     }
@@ -201,21 +226,6 @@ public abstract class Clue extends AutoIDItem implements Writeable{
         team.sendToOnline(packet);
     }
 
-	public JsonObject serialize() {
-        JsonObject jo = new JsonObject();
-        if (!name.isEmpty())
-            jo.addProperty("name", name);
-        if (!desc.isEmpty())
-            jo.addProperty("desc", desc);
-        if (!hint.isEmpty())
-            jo.addProperty("hint", hint);
-        jo.addProperty("value", contribution);
-        jo.addProperty("id", nonce);
-        if (required)
-            jo.addProperty("required", true);
-        return jo;
-    }
-
     @OnlyIn(Dist.CLIENT)
     public void setCompleted(boolean trig) {
     	ClientResearchDataAPI.getData().setClueTriggered(this, trig);
@@ -260,12 +270,4 @@ public abstract class Clue extends AutoIDItem implements Writeable{
      */
     public abstract void start(TeamDataHolder team);
 
-    public void write(PacketBuffer buffer) {
-        buffer.writeString(name);
-        buffer.writeString(desc);
-        buffer.writeString(hint);
-        buffer.writeFloat(contribution);
-        buffer.writeString(nonce);
-        buffer.writeBoolean(required);
-    }
 }

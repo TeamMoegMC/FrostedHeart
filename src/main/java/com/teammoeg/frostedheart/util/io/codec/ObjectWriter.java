@@ -23,6 +23,7 @@ public class ObjectWriter {
 		public TypedValue(int type) {
 			super();
 			this.type = type;
+			this.value=DataOps.NULLTAG;
 		}
 	}
 	public ObjectWriter() {
@@ -79,7 +80,7 @@ public class ObjectWriter {
 			writeTyped(pb,key);
 			writeTyped(pb,value);
 		});break;
-		case 9:byte[] bs=DataOps.INSTANCE.getByteArray(input).result().get();
+		case 9:byte[] bs=DataOps.INSTANCE.getByteArray(input.value).result().get();
 		pb.writeByteArray(bs);break;
 		case 10:SerializeUtil.writeList(pb, ((List<Integer>)input.value), (t,p)->p.writeVarInt(t));break;
 		case 11:SerializeUtil.writeList(pb, ((List<Long>)input.value), (t,p)->p.writeLong(t));break;
@@ -89,7 +90,6 @@ public class ObjectWriter {
 			List<Object> obj=(List<Object>) input.value;
 			List<TypedValue> typed=obj.stream().map(o->getTyped(o)).collect(Collectors.toList());
 			pb.writeVarInt(typed.size());
-			
 			if(typed.size()%2==1)
 				typed.add(new TypedValue(0));
 			for(int i=0;i<(typed.size())/2;i++) {
@@ -128,13 +128,13 @@ public class ObjectWriter {
 				if(i%2==1) {
 					obj.add(readWithType(crnbytes.getByte(i/2)&15,pb));
 				}else {
-					obj.add(readWithType(crnbytes.getByte(i/2)>>4,pb));
+					obj.add(readWithType((crnbytes.getByte(i/2)>>4)&15,pb));
 				}
 			}
 			return obj;
 		}
     	}
-    	return null;
+    	return DataOps.NULLTAG;
     }
     public static void writeObject(PacketBuffer pb,Object input) {
     	TypedValue value=getTyped(input);

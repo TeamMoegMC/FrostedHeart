@@ -26,13 +26,12 @@ public class NullableCodec<A> implements Codec<A> {
 	@Override
 	public <T> DataResult<T> encode(A input, DynamicOps<T> ops, T prefix) {
 		if(input==null)
-			return DataResult.success(prefix);
+			return DataResult.success(ops.empty());
 		return original.encode(input, ops, prefix);
 	}
 
 	@Override
 	public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
-		System.out.println(input);
 		DataResult<Pair<A, T>> actual= original.decode(ops, input);
 		if(actual.result().isPresent()) {
 			return actual;

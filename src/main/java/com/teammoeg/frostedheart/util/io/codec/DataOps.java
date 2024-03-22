@@ -1,8 +1,13 @@
 package com.teammoeg.frostedheart.util.io.codec;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
@@ -11,11 +16,18 @@ import java.util.stream.Stream;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.ListBuilder;
+import com.mojang.serialization.MapLike;
+import com.mojang.serialization.RecordBuilder;
 
 public class DataOps implements DynamicOps<Object> {
 	public static final DataOps INSTANCE=new DataOps(false);
 	public static final DataOps COMPRESSED=new DataOps(true);
-
+	public static final Object NULLTAG=new Object() {
+		public String toString() {
+			return "nulltag";
+		}
+	};
 	public DataOps(boolean compress) {
 		super();
 		this.compress = compress;
@@ -23,7 +35,7 @@ public class DataOps implements DynamicOps<Object> {
 
 	@Override
 	public Object empty() {
-		return null;
+		return NULLTAG;
 	}
 
 	@Override
@@ -61,7 +73,7 @@ public class DataOps implements DynamicOps<Object> {
 	private <T> DataResult<T> cast(Class<T> type,Object input) {
 		if(type.isInstance(input))
 			return DataResult.success((T)input);
-		return DataResult.error("Not a "+type.getSimpleName());
+		return DataResult.error(input+" can not be casted to "+type.getSimpleName());
 	}
 	public static Class<?> getElmClass(List<Object> objs){
 		if(!objs.isEmpty()) {
@@ -96,7 +108,8 @@ public class DataOps implements DynamicOps<Object> {
 
 	@Override
 	public DataResult<Object> mergeToList(Object list, Object value) {
-		if(list==null) {
+		//System.out.println(list);
+		if(list==NULLTAG||list==null) {
 			return DataResult.success(Stream.of(value).collect(Collectors.toList()));
 		};
 		DataResult<List> ret=cast(List.class,list);
@@ -106,7 +119,7 @@ public class DataOps implements DynamicOps<Object> {
 
 	@Override
 	public DataResult<Object> mergeToMap(Object map, Object key, Object value) {
-		if(map==null) {
+		if(map==NULLTAG||map==null) {
 			return DataResult.success(Stream.of(Pair.of(key,value)).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
 		};
 		DataResult<Map> ret=cast(Map.class,map);
@@ -131,12 +144,13 @@ public class DataOps implements DynamicOps<Object> {
 
 	@Override
 	public Object createList(Stream<Object> input) {
+		//System.out.println("crlist");
 		return input.collect(Collectors.toList());
 	}
 
 	@Override
 	public Object remove(Object input, String key) {
-		return cast(Map.class,input).result().map(t->t.remove(key)).orElse(null);
+		return cast(Map.class,input).result().map(t->t.remove(key)).orElse(NULLTAG);
 	}
 	
 	public DataResult<byte[]> getByteArray(Object input) {
@@ -150,9 +164,8 @@ public class DataOps implements DynamicOps<Object> {
 					bs[i]=(Byte)res.get(i);
 				return DataResult.success(bs);
 			}
-			return DataResult.error("Not a byte array");
 		}
-		return DataResult.error("Not a List");
+		return DataResult.error("Not a byte array");
 	}
 	
 	@Override
@@ -171,9 +184,9 @@ public class DataOps implements DynamicOps<Object> {
 					bs[i]=(Integer)res.get(i);
 				return DataResult.success(bs);
 			}
-			return DataResult.error("Not a int array");
+			
 		}
-		return DataResult.error("Not a List");
+		return DataResult.error("Not a int array");
 	}
 
 	@Override
@@ -192,9 +205,9 @@ public class DataOps implements DynamicOps<Object> {
 					bs[i]=(Long)res.get(i);
 				return DataResult.success(bs);
 			}
-			return DataResult.error("Not a long array");
+			
 		}
-		return DataResult.error("Not a List");
+		return DataResult.error("Not a long array");
 	}
 	
 	@Override
@@ -206,6 +219,104 @@ public class DataOps implements DynamicOps<Object> {
 	public boolean compressMaps() {
 		return compress;
 	}
-	
 
+	@Override
+	public Number getNumberValue(Object input, Number defaultValue) {
+		// TODO Auto-generated method stub
+		return DynamicOps.super.getNumberValue(input, defaultValue);
+	}
+
+	@Override
+	public DataResult<Consumer<BiConsumer<Object, Object>>> getMapEntries(Object input) {
+		// TODO Auto-generated method stub
+		return DynamicOps.super.getMapEntries(input);
+	}
+
+	@Override
+	public DataResult<MapLike<Object>> getMap(Object input) {
+		// TODO Auto-generated method stub
+		return cast(Map.class,input).map(o->new MapLike<Object>(){
+
+			@Override
+			public Object get(Object key) {
+				//System.out.println(key);
+				return o.getOrDefault(key,NULLTAG);
+			}
+
+			@Override
+			public Object get(String key) {
+				//System.out.println(key);
+				return o.getOrDefault(key,NULLTAG);
+			}
+
+			@Override
+			public Stream<Pair<Object, Object>> entries() {
+				// TODO Auto-generated method stub
+				return ((Map<Object,Object>)o).entrySet().stream().map(t->Pair.of(t.getKey(), t.getValue()));
+			}
+			
+		});
+	}
+
+	@Override
+	public DataResult<Consumer<Consumer<Object>>> getList(Object input) {
+		return cast(List.class,input).map(t->t::forEach);
+	}
+
+	@Override
+	public Object emptyMap() {
+		return new HashMap<>();
+	}
+
+	@Override
+	public Object emptyList() {
+		// TODO Auto-generated method stub
+		return new ArrayList<>();
+	}
+
+	@Override
+	public ListBuilder<Object> listBuilder() {
+		ListBuilder<Object> normal=DynamicOps.super.listBuilder();
+		return new ListBuilder<Object>() {
+
+			@Override
+			public DynamicOps<Object> ops() {
+				return normal.ops();
+			}
+
+			@Override
+			public DataResult<Object> build(Object prefix) {
+				DataResult<Object> reslt=normal.build(prefix);
+				return reslt.map(t->(t==NULLTAG||t==null)?ops().emptyList():t);
+			}
+
+			@Override
+			public ListBuilder<Object> add(Object value) {
+				return normal.add(value);
+			}
+
+			@Override
+			public ListBuilder<Object> add(DataResult<Object> value) {
+				return normal.add(value);
+			}
+
+			@Override
+			public ListBuilder<Object> withErrorsFrom(DataResult<?> result) {
+				return normal.withErrorsFrom(result);
+			}
+
+			@Override
+			public ListBuilder<Object> mapError(UnaryOperator<String> onError) {
+				return normal.mapError(onError);
+			}
+			
+		};
+	}
+
+	@Override
+	public RecordBuilder<Object> mapBuilder() {
+		// TODO Auto-generated method stub
+		return DynamicOps.super.mapBuilder();
+	}
+	
 }

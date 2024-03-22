@@ -25,21 +25,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
@@ -48,20 +45,18 @@ import net.minecraft.util.text.ITextComponent;
  * Reward the research team executes command
  */
 public class EffectCommand extends Effect {
+	public static final Codec<EffectCommand> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	Codec.list(Codec.STRING).fieldOf("rewards").forGetter(o->o.rewards))
+	.apply(t,EffectCommand::new));
 
     List<String> rewards;
 
-    public EffectCommand(JsonObject jo) {
-        super(jo);
-        rewards = SerializeUtil.parseJsonElmList(jo.get("rewards"), JsonElement::getAsString);
-    }
+    public EffectCommand(BaseData data, List<String> rewards) {
+		super(data);
+		this.rewards = new ArrayList<>(rewards);
+	}
 
-    public EffectCommand(PacketBuffer pb) {
-        super(pb);
-        rewards = SerializeUtil.readList(pb, PacketBuffer::readString);
-    }
-
-    public EffectCommand(String... cmds) {
+	public EffectCommand(String... cmds) {
         super();
         rewards = new ArrayList<>();
 
@@ -132,16 +127,4 @@ public class EffectCommand extends Effect {
 
     }
 
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.add("rewards", SerializeUtil.toJsonList(rewards, JsonPrimitive::new));
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        SerializeUtil.writeList2(buffer, rewards, PacketBuffer::writeString);
-    }
 }

@@ -22,7 +22,8 @@ package com.teammoeg.frostedheart.content.research.research.effects;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
@@ -30,7 +31,6 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 
@@ -38,23 +38,22 @@ import net.minecraft.util.text.ITextComponent;
  * Reward the research team executes command
  */
 public class EffectExperience extends Effect {
-
+	public static final Codec<EffectExperience> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	Codec.INT.fieldOf("experience").forGetter(o->o.exp))
+	.apply(t,EffectExperience::new));
     int exp;
 
-    public EffectExperience(int xp) {
+    public EffectExperience(BaseData data, int exp) {
+		super(data);
+		this.exp = exp;
+	}
+
+
+	public EffectExperience(int xp) {
         super();
         exp = xp;
     }
 
-    public EffectExperience(JsonObject jo) {
-        super(jo);
-        exp = jo.get("experience").getAsInt();
-    }
-
-    public EffectExperience(PacketBuffer pb) {
-        super(pb);
-        exp = pb.readVarInt();
-    }
 
     @Override
     public String getBrief() {
@@ -99,16 +98,4 @@ public class EffectExperience extends Effect {
 
     }
 
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.addProperty("experience", exp);
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        buffer.writeVarInt(exp);
-    }
 }

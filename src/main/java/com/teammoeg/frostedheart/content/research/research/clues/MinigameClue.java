@@ -19,32 +19,31 @@
 
 package com.teammoeg.frostedheart.content.research.research.clues;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.ITextComponent;
 
 public class MinigameClue extends CustomClue {
+	public static final Codec<MinigameClue> CODEC=RecordCodecBuilder.create(t->t.group(
+		Clue.BASE_CODEC.forGetter(o->o.getData()),
+		Codec.INT.fieldOf("level").forGetter(o->o.level)
+		).apply(t,MinigameClue::new));
     private int level = 0;
 
     MinigameClue() {
         super();
     }
 
-    public MinigameClue(float contribution) {
+    public MinigameClue(BaseData data, int level) {
+		super(data);
+		this.level = level;
+	}
+
+	public MinigameClue(float contribution) {
         super("", contribution);
-    }
-
-    public MinigameClue(JsonObject jo) {
-        super(jo);
-        setLevel(jo.get("level").getAsInt());
-    }
-
-    public MinigameClue(PacketBuffer pb) {
-        super(pb);
-        setLevel(pb.readByte());
     }
 
     @Override
@@ -69,21 +68,8 @@ public class MinigameClue extends CustomClue {
         return TranslateUtils.translate("clue." + FHMain.MODID + ".minigame.t" + level);
     }
 
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.addProperty("level", getLevel());
-        return jo;
-    }
-
     public void setLevel(int level) {
         this.level = Math.min(Math.max(level, 0), 3);
     }
 
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        buffer.writeByte(getLevel());
-
-    }
 }

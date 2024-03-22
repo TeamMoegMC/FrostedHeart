@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.util.io;
 
 import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.util.io.codec.JointCodec;
 
 import net.minecraft.util.ResourceLocation;
@@ -21,7 +22,10 @@ public class IdDataPair<T> {
 	}
 
 	public static <A> MapCodec<IdDataPair<A>> createCodec(MapCodec<A> original){
-		return new JointCodec<ResourceLocation,A,IdDataPair<A>>(ResourceLocation.CODEC.fieldOf("id"), original, IdDataPair::new, IdDataPair::getId, IdDataPair::getObj);
+		return RecordCodecBuilder.mapCodec(t->t.group(
+			ResourceLocation.CODEC.fieldOf("id").forGetter(IdDataPair::getId),
+			original.forGetter(IdDataPair::getObj)).apply(t, IdDataPair::new));
+
 	}
 	@Override
 	public String toString() {

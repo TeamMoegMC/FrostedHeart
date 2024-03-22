@@ -27,7 +27,7 @@ public class DispatchCodecUtils {
 			return this;
 		}
 		public Codec<A> buildByName(){
-			return Codec.STRING.dispatch(ImmutableMap.copyOf(classes)::get, ImmutableMap.copyOf(codecs)::get);
+			return Codec.STRING.dispatch(o->ImmutableMap.copyOf(classes).get(o.getClass()), ImmutableMap.copyOf(codecs)::get);
 		}
 		public Codec<A> buildByInt(){
 			List<Class<? extends A>> classes=new ArrayList<>();
@@ -36,7 +36,7 @@ public class DispatchCodecUtils {
 				classes.add(name.getKey());
 				codecs.add(this.codecs.get(name.getValue()));
 			}
-			return Codec.INT.dispatch(ImmutableList.copyOf(classes)::indexOf, ImmutableList.copyOf(codecs)::get);
+			return Codec.INT.dispatch(o->ImmutableList.copyOf(classes).indexOf(o.getClass()), ImmutableList.copyOf(codecs)::get);
 		}
 	}
 	public static <A> DispatchNameCodecBuilder<A> create(){

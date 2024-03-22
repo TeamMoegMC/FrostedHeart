@@ -19,22 +19,28 @@
 
 package com.teammoeg.frostedheart.content.research.research.clues;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.advancements.CriterionProgress;
 import net.minecraft.client.multiplayer.ClientAdvancementManager;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
 public class AdvancementClue extends TickListenerClue {
+	public static final Codec<AdvancementClue> CODEC=RecordCodecBuilder.create(t->t.group(
+		ListenerClue.BASE_CODEC.forGetter(o->o.getData()),
+		ResourceLocation.CODEC.fieldOf("advancement").forGetter(o->o.advancement),
+		SerializeUtil.nullableCodecValue(Codec.STRING, "").fieldOf("criterion").forGetter(o->o.criterion)
+		).apply(t,AdvancementClue::new));
     ResourceLocation advancement = new ResourceLocation("minecraft:story/root");
     String criterion = "";
 
@@ -42,18 +48,11 @@ public class AdvancementClue extends TickListenerClue {
         super();
     }
 
-    public AdvancementClue(JsonObject jo) {
-        super(jo);
-        advancement = new ResourceLocation(jo.get("advancement").getAsString());
-        if (jo.has("criterion"))
-            criterion = jo.get("criterion").getAsString();
-    }
-
-    public AdvancementClue(PacketBuffer pb) {
-        super(pb);
-        advancement = pb.readResourceLocation();
-        criterion = pb.readString();
-    }
+    public AdvancementClue(BaseData data, ResourceLocation advancement, String criterion) {
+		super(data);
+		this.advancement = advancement;
+		this.criterion = criterion;
+	}
 
     public AdvancementClue(String name, float contribution) {
         super(name, contribution);
@@ -108,22 +107,4 @@ public class AdvancementClue extends TickListenerClue {
         CriterionProgress criterionProgress = progress.getCriterionProgress(criterion);
         return criterionProgress != null && criterionProgress.isObtained();
     }
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.addProperty("advancement", advancement.toString());
-        if (!criterion.isEmpty())
-            jo.addProperty("criterion", criterion);
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        buffer.writeResourceLocation(advancement);
-        buffer.writeString(criterion);
-    }
-
-
 }

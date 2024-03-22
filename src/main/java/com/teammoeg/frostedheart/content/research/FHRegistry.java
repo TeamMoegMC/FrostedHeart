@@ -29,6 +29,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.mojang.serialization.Codec;
+import com.teammoeg.frostedheart.content.research.research.Research;
+import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import net.minecraft.nbt.INBT;
@@ -88,7 +91,9 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
     private Map<String, Integer> rnames = new HashMap<>();//registry mappings
     private ArrayList<String> rnamesl = new ArrayList<>();//reverse mappings
     private Map<String, OptionalLazy<T>> cache = new HashMap<>();//object cache
-
+    public Codec<Supplier<T>> SUPPLIER_CODEC=new CompressDifferCodec<Supplier<T>>(Codec.STRING.xmap(this::get,o->((RegisteredSupplier<T>)o).key),
+    	Codec.INT.xmap(this::get, o->this.getIntId(((RegisteredSupplier<T>)o).key)));
+    
     private final Function<String, OptionalLazy<T>> cacheGen = (n) -> OptionalLazy.of(() -> getByName(n));
 
     private Function<String, T> strLazyGetter = x -> lazyGet(x).orElse(null);
@@ -195,7 +200,13 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
     public Supplier<T> get(String id) {
         return new RegisteredSupplier<>(id, strLazyGetter);
     }
-
+    public int getIntId(String obj) {
+    	return rnames.getOrDefault(obj, 0);
+    }
+    public void replace(T research) {
+    	cache.remove(research.getId());
+    	items.set(this.getIntId(research) - 1,research);
+    }
     public int getIntId(T obj) {
     	return rnames.getOrDefault(obj.getId(), 0);
     }
