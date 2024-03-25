@@ -158,7 +158,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
         } else {
             r.name = name.getText();
             r.setCategory(cat.getSelection());
-            r.points = pts.getNum();
+            r.points = (int)pts.getNum();
             r.alwaysShow = showed.getSelection();
             r.hideEffects = hide.getSelection();
             r.showfdesc = alt.getSelection();

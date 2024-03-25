@@ -48,7 +48,9 @@ public class LabeledSelection<R> extends LabeledPane<Button> {
     public static LabeledSelection<Boolean> createBool(Panel p, String lab, boolean val) {
         return new LabeledSelection<>(p, lab, val, Arrays.asList(true, false), String::valueOf);
     }
-
+    public static <T extends Enum<T>> LabeledSelection<T> createEnum(Panel p, String lab, Class<T> en, T val) {
+        return new LabeledSelection<>(p, lab, val, Arrays.asList(en.getEnumConstants()), Enum::name);
+    }
     public static LabeledSelection<String> createCriterion(Panel p, String lab, ResourceLocation adv, String val, Consumer<String> cb) {
         ClientAdvancementManager cam = ClientUtils.mc().player.connection.getAdvancementManager();
         Advancement advx = cam.getAdvancementList().getAdvancement(adv);

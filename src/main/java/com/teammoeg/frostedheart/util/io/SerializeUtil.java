@@ -55,6 +55,8 @@ import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.codec.AlternativeCodec;
 import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
 import com.teammoeg.frostedheart.util.io.codec.DataOps;
+import com.teammoeg.frostedheart.util.io.codec.DispatchCodecUtils;
+import com.teammoeg.frostedheart.util.io.codec.DispatchCodecUtils.DispatchNameCodecBuilder;
 import com.teammoeg.frostedheart.util.io.codec.IntOrIdCodec;
 import com.teammoeg.frostedheart.util.io.codec.NullableCodec;
 import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
@@ -198,8 +200,9 @@ public class SerializeUtil {
 		return (Codec<K>) regCodec.apply(func);
 	}
 
-	public static <T extends Enum> Codec<T> enumCodec(T[] values){
+	public static <T extends Enum<T>> Codec<T> enumCodec(Class<T> en){
 		Map<String,T> maps=new HashMap<>();
+		T[] values=en.getEnumConstants();
 		for(T val:values)
 			maps.put(val.name().toLowerCase(), val);
 		return new CompressDifferCodec<>(Codec.STRING.xmap(maps::get, v->v.name().toLowerCase()),Codec.BYTE.xmap(o->values[o], v->(byte)v.ordinal()));

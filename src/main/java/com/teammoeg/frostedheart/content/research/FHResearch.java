@@ -311,10 +311,15 @@ public class FHResearch {
 
 		}
 		PacketBuffer pb=new PacketBuffer(Unpooled.buffer());
-		Object prein=Research.CODEC.encodeStart(DataOps.COMPRESSED, new Research()).result().get();
+		Object prein=Research.CODEC.encodeStart(DataOps.COMPRESSED, new Research()).resultOrPartial(System.out::println).get();
 		System.out.println(prein);
 		ObjectWriter.writeObject(pb,prein);
 		System.out.println();
+		System.out.println(pb.writerIndex());
+		for(int i=0;i<pb.writerIndex();i++) {
+			System.out.print(String.format("%2x ", pb.getByte(i)));
+		}
+		pb.resetReaderIndex();
 		Object in=ObjectWriter.readObject(pb);
 		System.out.println();
 		System.out.println(in);

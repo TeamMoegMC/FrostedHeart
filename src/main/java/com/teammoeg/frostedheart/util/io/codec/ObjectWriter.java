@@ -69,7 +69,7 @@ public class ObjectWriter {
 		case 1:pb.writeByte((Byte)input.value);break;
 		case 2:pb.writeShort((Short) input.value);break;
 		case 3:pb.writeVarInt((Integer) input.value);break;
-		case 4:pb.writeLong((Long) input.value);break;
+		case 4:pb.writeVarLong((Long) input.value);break;
 		case 5:pb.writeFloat((Float) input.value);break;
 		case 6:pb.writeDouble((Double) input.value);break;
 		case 7:pb.writeString((String) input.value);break;
@@ -104,7 +104,7 @@ public class ObjectWriter {
     	case 1:return pb.readByte();
     	case 2:return pb.readShort();
     	case 3:return pb.readVarInt();
-    	case 4:return pb.readLong();
+    	case 4:return pb.readVarLong();
     	case 5:return pb.readFloat();
     	case 6:return pb.readDouble();
     	case 7:return pb.readString();

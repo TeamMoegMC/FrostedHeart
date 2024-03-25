@@ -79,55 +79,27 @@ public class Research implements FHRegisteredItem {
     	SerializeUtil.nullableCodecValue(Codec.list(Codec.STRING),Arrays.asList()).fieldOf("descAlt").forGetter(o->o.fdesc),
     	new BooleansCodec("flags","showAltDesc","hideEffects","locked","hidden","keepShow","infinite").forGetter(o->new boolean[] {
     		o.showfdesc, o.hideEffects, o.inCompletable, o.isHidden, o.alwaysShow, o.infinite}),
-    	Codec.LONG.fieldOf("points").forGetter(o->o.points)
+    	Codec.INT.fieldOf("points").forGetter(o->o.points)
     	).apply(t,Research::new));
-    public Research(FHIcon icon, ResearchCategory category, List<Supplier<Research>> parents, List<Clue> clues, List<IngredientWithSize> requiredItems, List<Effect> effects, String name,
-		List<String> desc, List<String> fdesc, boolean[] flags, long points) {
-		super();
-		this.icon = icon;
-		this.category = category;
-		if(parents!=null)
-			this.parents.addAll(parents);
-		this.clues.addAll(clues);
-		this.requiredItems.addAll(requiredItems);
-		this.effects.addAll(effects);
-		this.name = name;
-		if(desc==null)
-			this.desc=new ArrayList<>();
-		else
-			this.desc = new ArrayList<>(desc);
-		if(fdesc==null)
-			this.fdesc = new ArrayList<>();
-		else
-			this.fdesc = new ArrayList<>(fdesc);
-		this.showfdesc = flags[0];
-		this.hideEffects = flags[1];
-		this.inCompletable = flags[2];
-		this.isHidden = flags[3];
-		this.alwaysShow = flags[4];
-		this.points = points;
-		this.infinite = flags[5];
-	}
-	private String id;// id of this research
-
-    /**
+    private String id;// id of this research
+	/**
      * The icon for this research.<br>
      */
     FHIcon icon;
+
     private ResearchCategory category=ResearchCategory.RESCUE;
     private HashSet<Supplier<Research>> parents = new HashSet<>();// parent researches
     private HashSet<Supplier<Research>> children = new HashSet<>();// child researches, this is set automatically,
     // should not set manually.
-
     private List<Clue> clues = new ArrayList<>();// research clues
 
     /**
      * The required items.<br>
      */
     List<IngredientWithSize> requiredItems = new ArrayList<>();
+
     List<IResearchNumber> requiredItemsCountOverride = new ArrayList<>();
     private List<Effect> effects = new ArrayList<>();// effects of this research
-
     /**
      * The name.<br>
      */
@@ -136,12 +108,12 @@ public class Research implements FHRegisteredItem {
     /**
      * The desc.<br>
      */
-    List<String> desc;
+    List<String> desc=new ArrayList<>();
 
     /**
      * The fdesc.<br>
      */
-    List<String> fdesc;
+    List<String> fdesc = new ArrayList<>();
 
     /**
      * The showfdesc.<br>
@@ -152,8 +124,8 @@ public class Research implements FHRegisteredItem {
      * The hide effects.<br>
      */
     boolean hideEffects;
-    private boolean inCompletable = false;
 
+    private boolean inCompletable = false;
     /**
      * The is hidden.<br>
      */
@@ -163,11 +135,11 @@ public class Research implements FHRegisteredItem {
      * The always show.<br>
      */
     boolean alwaysShow = false;
+
     /**
      * The points.<br>
      */
-    long points = 1000;// research point
-
+    int points = 1000;// research point
     /**
      * The is infinite.<br>
      */
@@ -179,9 +151,29 @@ public class Research implements FHRegisteredItem {
     public Research() {
         this.id = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
         this.icon = FHIcons.nop();
-        desc = new ArrayList<>();
-        fdesc = new ArrayList<>();
     }
+
+    public Research(FHIcon icon, ResearchCategory category, List<Supplier<Research>> parents, List<Clue> clues, List<IngredientWithSize> requiredItems, List<Effect> effects, String name,
+		List<String> desc, List<String> fdesc, boolean[] flags, int points) {
+		super();
+		this.icon = icon;
+		this.category = category;
+		if(parents!=null)
+			this.parents.addAll(parents);
+		this.clues.addAll(clues);
+		this.requiredItems.addAll(requiredItems);
+		this.effects.addAll(effects);
+		this.name = name;
+		this.desc.addAll(desc);
+		this.fdesc.addAll(fdesc);
+		this.showfdesc = flags[0];
+		this.hideEffects = flags[1];
+		this.inCompletable = flags[2];
+		this.isHidden = flags[3];
+		this.alwaysShow = flags[4];
+		this.infinite = flags[5];
+		this.points = points;
+	}
 
     /**
      * Instantiates a new Research.<br>
@@ -210,7 +202,6 @@ public class Research implements FHRegisteredItem {
         this.parents.addAll(Arrays.asList(parents));
         this.icon = FHIcons.getIcon(icon);
         this.setCategory(category);
-        desc = new ArrayList<>();
     }
 
     /**
