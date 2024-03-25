@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
@@ -16,26 +17,170 @@ import java.util.stream.Stream;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.Lifecycle;
 import com.mojang.serialization.ListBuilder;
 import com.mojang.serialization.MapLike;
 import com.mojang.serialization.RecordBuilder;
 
 public class DataOps implements DynamicOps<Object> {
+	private static class LBuilder implements ListBuilder<Object> {
+        private DataResult<List<Object>> list=DataResult.success(new ArrayList<>());
+        DataOps ops;
+        public LBuilder(final DataOps ops) {
+            this.ops = ops;
+        }
+
+        @Override
+        public LBuilder add(final DataResult<Object> value) {
+        	list.apply2stable(List::add, value);
+            return this;
+        }
+
+        @Override
+        public LBuilder add(final Object value) {
+        	list.map(t->t.add(value));
+            return this;
+        }
+
+        @Override
+        public DataResult<Object> build(final Object prefix) {
+            final DataResult<Object> result = list.flatMap(b -> ops.mergeToList(prefix, b));
+            list = DataResult.success(new ArrayList<>(), Lifecycle.stable());
+            return result;
+        }
+
+        @Override
+        public LBuilder mapError(final UnaryOperator<String> onError) {
+        	list = list.mapError(onError);
+            return this;
+        }
+
+        @Override
+        public DataOps ops() {
+            return ops;
+        }
+
+        @Override
+        public LBuilder withErrorsFrom(final DataResult<?> result) {
+        	list = list.flatMap(r -> result.map(v -> r));
+            return this;
+        }
+    }
+	private static class MBuilder implements RecordBuilder<Object>{
+		DataOps ops;
+		DataResult<Map<Object,Object>> map;
+		public MBuilder(DataOps ops) {
+			super();
+			this.ops = ops;
+			map=DataResult.success(new HashMap<>());
+		}
+
+		@Override
+		public MBuilder add(DataResult<Object> key, DataResult<Object> value) {
+			map.ap(key.apply2stable((k, v) -> b -> b.put(k, v), value));
+			return this;
+		}
+		@Override
+		public MBuilder add(Object key, DataResult<Object> value) {
+			map.apply2stable((o,r)->o.put(key,r), value);
+			return this;
+		}
+
+		@Override
+		public MBuilder add(Object key, Object value) {
+			map.map(o->o.put(key, value));
+			return this;
+		}
+
+		@Override
+		public DataResult<Object> build(Object prefix) {
+            final DataResult<Object> result = map.flatMap(b -> ops.mergeToMap(prefix, b));
+            map = DataResult.success(new HashMap<>(), Lifecycle.stable());
+            return result;
+		}
+       @Override
+	public MBuilder mapError(final UnaryOperator<String> onError) {
+		map = map.mapError(onError);
+	    return this;
+	}
+
+        @Override
+		public DynamicOps<Object> ops() {
+			return ops;
+		}
+
+        @Override
+        public MBuilder setLifecycle(final Lifecycle lifecycle) {
+            map = map.setLifecycle(lifecycle);
+            return this;
+        }
+
+		@Override
+		    public MBuilder withErrorsFrom(final DataResult<?> result) {
+		        map.flatMap(v -> result.map(r -> v));
+		        return this;
+		    }
+		
+	}
+	private static class MLike implements MapLike<Object>{
+		Map<Object,Object> map;
+		
+		public MLike(Map<Object, Object> map) {
+			super();
+			this.map = map;
+		}
+
+		@Override
+		public Stream<Pair<Object, Object>> entries() {
+			return map.entrySet().stream().map(t->Pair.of(t.getKey(), t.getValue()));
+		}
+
+		@Override
+		public Object get(Object key) {
+			return map.get(key);
+		}
+
+		@Override
+		public Object get(String key) {
+			return map.get(key);
+		}
+		
+	}
 	public static final DataOps INSTANCE=new DataOps(false);
+
 	public static final DataOps COMPRESSED=new DataOps(true);
+
 	public static final Object NULLTAG=new Object() {
 		public String toString() {
 			return "nulltag";
 		}
 	};
+	boolean compress;
+	public static Class<?> getElmClass(List<Object> objs){
+		if(!objs.isEmpty()) {
+			Class<?> cls=objs.get(0).getClass();
+			for(Object obj:objs) {
+				if(!cls.isInstance(obj))
+					return null;
+			}
+			return cls;
+		}
+		return null;
+	}
 	public DataOps(boolean compress) {
 		super();
 		this.compress = compress;
 	}
 
+	private <T> DataResult<T> cast(Class<T> type,Object input) {
+		if(type.isInstance(input))
+			return DataResult.success((T)input);
+		return DataResult.error("Not a "+type.getSimpleName());
+	}
+
 	@Override
-	public Object empty() {
-		return NULLTAG;
+	public boolean compressMaps() {
+		return compress;
 	}
 
 	@Override
@@ -70,66 +215,15 @@ public class DataOps implements DynamicOps<Object> {
 		}
 		return outOps.empty();
 	}
-	private <T> DataResult<T> cast(Class<T> type,Object input) {
-		if(type.isInstance(input))
-			return DataResult.success((T)input);
-		return DataResult.error(input+" can not be casted to "+type.getSimpleName());
-	}
-	public static Class<?> getElmClass(List<Object> objs){
-		if(!objs.isEmpty()) {
-			Class<?> cls=objs.get(0).getClass();
-			for(Object obj:objs) {
-				if(!cls.isInstance(obj))
-					return null;
-			}
-			return cls;
-		}
-		return null;
-	}
 	@Override
-	public DataResult<Number> getNumberValue(Object input) {
-		return cast(Number.class,input);
+	public Object createList(Stream<Object> input) {
+		//System.out.println("crlist");
+		return input.collect(Collectors.toList());
 	}
 
 	@Override
-	public Object createNumeric(Number i) {
-		return i;
-	}
-
-	@Override
-	public DataResult<String> getStringValue(Object input) {
-		return cast(String.class,input);
-	}
-
-	@Override
-	public Object createString(String value) {
-		return value;
-	}
-
-	@Override
-	public DataResult<Object> mergeToList(Object list, Object value) {
-		//System.out.println(list);
-		if(list==NULLTAG||list==null) {
-			return DataResult.success(Stream.of(value).collect(Collectors.toList()));
-		};
-		DataResult<List> ret=cast(List.class,list);
-		ret.result().ifPresent(t->t.add(value));
-		return (DataResult)ret;
-	}
-
-	@Override
-	public DataResult<Object> mergeToMap(Object map, Object key, Object value) {
-		if(map==NULLTAG||map==null) {
-			return DataResult.success(Stream.of(Pair.of(key,value)).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
-		};
-		DataResult<Map> ret=cast(Map.class,map);
-		ret.result().ifPresent(t->t.put(key, value));
-		return (DataResult)ret;
-	}
-
-	@Override
-	public DataResult<Stream<Pair<Object, Object>>> getMapValues(Object input) {
-		return ((DataResult<Map<Object,Object>>)(DataResult)cast(Map.class,input)).map(t->t.entrySet().stream().map(o->Pair.of(o.getKey(), o.getValue())));
+	public Object createMap(Map<Object, Object> map) {
+		return new HashMap<>(map);
 	}
 
 	@Override
@@ -138,21 +232,31 @@ public class DataOps implements DynamicOps<Object> {
 	}
 
 	@Override
-	public DataResult<Stream<Object>> getStream(Object input) {
-		return cast(List.class,input).map(t->t.stream());
+	public Object createNumeric(Number i) {
+		return i;
 	}
 
 	@Override
-	public Object createList(Stream<Object> input) {
-		//System.out.println("crlist");
-		return input.collect(Collectors.toList());
+	public Object createString(String value) {
+		return value;
+	}
+
+
+	@Override
+	public Object empty() {
+		return NULLTAG;
 	}
 
 	@Override
-	public Object remove(Object input, String key) {
-		return cast(Map.class,input).result().map(t->t.remove(key)).orElse(NULLTAG);
+	public Object emptyList() {
+		return new ArrayList<>();
 	}
-	
+
+	@Override
+	public Object emptyMap() {
+		return new HashMap<>();
+	}
+
 	public DataResult<byte[]> getByteArray(Object input) {
 		DataResult<List> dr=cast(List.class,input);
 		if(dr.result().isPresent()) {
@@ -188,10 +292,15 @@ public class DataOps implements DynamicOps<Object> {
 		}
 		return DataResult.error("Not a int array");
 	}
-
+	
 	@Override
 	public DataResult<IntStream> getIntStream(Object input) {
 		return getIntArray(input).map(IntStream::of);
+	}
+
+	@Override
+	public DataResult<Consumer<Consumer<Object>>> getList(Object input) {
+		return cast(List.class,input).map(t->t::forEach);
 	}
 
 	public DataResult<long[]> getLongArray(Object input) {
@@ -214,109 +323,109 @@ public class DataOps implements DynamicOps<Object> {
 	public DataResult<LongStream> getLongStream(Object input) {
 		return getLongArray(input).map(LongStream::of);
 	}
-	boolean compress;
-	@Override
-	public boolean compressMaps() {
-		return compress;
-	}
-
-	@Override
-	public Number getNumberValue(Object input, Number defaultValue) {
-		// TODO Auto-generated method stub
-		return DynamicOps.super.getNumberValue(input, defaultValue);
-	}
-
-	@Override
-	public DataResult<Consumer<BiConsumer<Object, Object>>> getMapEntries(Object input) {
-		// TODO Auto-generated method stub
-		return DynamicOps.super.getMapEntries(input);
-	}
-
 	@Override
 	public DataResult<MapLike<Object>> getMap(Object input) {
-		// TODO Auto-generated method stub
-		return cast(Map.class,input).map(o->new MapLike<Object>(){
-
-			@Override
-			public Object get(Object key) {
-				//System.out.println(key);
-				return o.getOrDefault(key,NULLTAG);
-			}
-
-			@Override
-			public Object get(String key) {
-				//System.out.println(key);
-				return o.getOrDefault(key,NULLTAG);
-			}
-
-			@Override
-			public Stream<Pair<Object, Object>> entries() {
-				// TODO Auto-generated method stub
-				return ((Map<Object,Object>)o).entrySet().stream().map(t->Pair.of(t.getKey(), t.getValue()));
-			}
-			
-		});
+		return cast(Map.class,input).map(o->new MLike(o));
+	}
+	@Override
+	public DataResult<Consumer<BiConsumer<Object, Object>>> getMapEntries(Object input) {
+		return ((DataResult<Map<Object,Object>>)(DataResult)cast(Map.class,input))
+			.map(s -> (c -> s.entrySet().forEach(p -> c.accept(p.getKey(), p.getValue()))));
 	}
 
 	@Override
-	public DataResult<Consumer<Consumer<Object>>> getList(Object input) {
-		return cast(List.class,input).map(t->t::forEach);
+	public DataResult<Stream<Pair<Object, Object>>> getMapValues(Object input) {
+		return ((DataResult<Map<Object,Object>>)(DataResult)cast(Map.class,input)).map(t->t.entrySet().stream().map(o->Pair.of(o.getKey(), o.getValue())));
 	}
 
 	@Override
-	public Object emptyMap() {
-		return new HashMap<>();
+	public DataResult<Number> getNumberValue(Object input) {
+		return cast(Number.class,input);
+	}
+	
+	@Override
+	public Number getNumberValue(Object input, Number defaultValue) {
+		return cast(Number.class,input).result().orElse(defaultValue);
 	}
 
 	@Override
-	public Object emptyList() {
-		// TODO Auto-generated method stub
-		return new ArrayList<>();
+	public DataResult<Stream<Object>> getStream(Object input) {
+		return cast(List.class,input).map(t->t.stream());
 	}
 
+
+	@Override
+	public DataResult<String> getStringValue(Object input) {
+		return cast(String.class,input);
+	}
 	@Override
 	public ListBuilder<Object> listBuilder() {
-		ListBuilder<Object> normal=DynamicOps.super.listBuilder();
-		return new ListBuilder<Object>() {
-
-			@Override
-			public DynamicOps<Object> ops() {
-				return normal.ops();
-			}
-
-			@Override
-			public DataResult<Object> build(Object prefix) {
-				DataResult<Object> reslt=normal.build(prefix);
-				return reslt.map(t->(t==NULLTAG||t==null)?ops().emptyList():t);
-			}
-
-			@Override
-			public ListBuilder<Object> add(Object value) {
-				return normal.add(value);
-			}
-
-			@Override
-			public ListBuilder<Object> add(DataResult<Object> value) {
-				return normal.add(value);
-			}
-
-			@Override
-			public ListBuilder<Object> withErrorsFrom(DataResult<?> result) {
-				return normal.withErrorsFrom(result);
-			}
-
-			@Override
-			public ListBuilder<Object> mapError(UnaryOperator<String> onError) {
-				return normal.mapError(onError);
-			}
-			
-		};
+		return new LBuilder(this);
+	}
+	@Override
+	public RecordBuilder<Object> mapBuilder() {
+		return new MBuilder(this);
+	}
+	@Override
+	public DataResult<Object> mergeToList(Object list, List<Object> values) {
+		if(list instanceof List) {
+			List<Object> li=(List<Object>) list;
+			li.addAll(values);
+		}else if(list==NULLTAG||list==null) {
+			return DataResult.success(values);
+		}
+		return DataResult.error("Not a Map or Empty");
 	}
 
 	@Override
-	public RecordBuilder<Object> mapBuilder() {
-		// TODO Auto-generated method stub
-		return DynamicOps.super.mapBuilder();
+	public DataResult<Object> mergeToList(Object list, Object value) {
+		//System.out.println(list);
+		if(list==NULLTAG||list==null) {
+			return DataResult.success(Stream.of(value).collect(Collectors.toList()));
+		};
+		DataResult<List> ret=cast(List.class,list);
+		ret.result().ifPresent(t->t.add(value));
+		return (DataResult)ret;
+	}
+
+	@Override
+	public DataResult<Object> mergeToMap(Object map, Map<Object, Object> values) {
+		if(map instanceof Map) {
+			Map<Object, Object> li=(Map<Object, Object>) map;
+			li.putAll(values);
+		}else if(map==NULLTAG||map==null) {
+			return DataResult.success(values);
+		}
+		return DataResult.error("Not a Map or Empty");
+	}
+
+	@Override
+	public DataResult<Object> mergeToMap(Object map, MapLike<Object> values) {
+		if(values instanceof MLike) {
+			return this.mergeToMap(map, ((MLike)values).map);
+		}
+		return DynamicOps.super.mergeToMap(map, values);
+	}
+
+	@Override
+	public DataResult<Object> mergeToMap(Object map, Object key, Object value) {
+		if(map==NULLTAG||map==null) {
+			return DataResult.success(Stream.of(Pair.of(key,value)).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
+		};
+		DataResult<Map> ret=cast(Map.class,map);
+		ret.result().ifPresent(t->t.put(key, value));
+		return (DataResult)ret;
+	}
+	@Override
+	public DataResult<Object> mergeToPrimitive(Object prefix, Object value) {
+        if (prefix==NULLTAG||prefix==null) {
+            return DataResult.error("Do not know how to append a primitive value " + value + " to " + prefix, value);
+        }
+        return DataResult.success(value);
+	}
+	@Override
+	public Object remove(Object input, String key) {
+		return cast(Map.class,input).result().map(t->t.remove(key)).orElse(NULLTAG);
 	}
 	
 }
