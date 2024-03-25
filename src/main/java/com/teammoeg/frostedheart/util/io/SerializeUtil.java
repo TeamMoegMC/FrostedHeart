@@ -234,6 +234,26 @@ public class SerializeUtil {
 		}
 		return ret;
 	}
+	
+	public static boolean[] readLongBooleans(long in,int size) {
+		boolean[] ret = new boolean[size];
+		for (int i = ret.length - 1; i >= 0; i--) {
+			ret[i] = (in & 1) != 0;
+			in >>= 1;
+		}
+		return ret;
+	}
+	
+	public static long writeLongBooleans(boolean... elms) {
+		long b = 0;
+		for (int i = 0; i < elms.length; i++) {
+			boolean bl = elms[i];
+			b <<= 1;
+			b |= (long) (bl ? 1 : 0);
+
+		}
+		return b;
+	}
 
 	public static <T> List<T> readListNullable(PacketBuffer buffer, Function<PacketBuffer, T> func) {
 		if (!buffer.readBoolean())

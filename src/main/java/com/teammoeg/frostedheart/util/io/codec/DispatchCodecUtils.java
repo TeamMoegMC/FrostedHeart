@@ -38,6 +38,9 @@ public class DispatchCodecUtils {
 			}
 			return Codec.INT.dispatch(o->ImmutableList.copyOf(classes).indexOf(o.getClass()), ImmutableList.copyOf(codecs)::get);
 		}
+		public Codec<A> build(){
+			return new CompressDifferCodec<>(buildByName(),buildByInt());
+		}
 	}
 	public static <A> DispatchNameCodecBuilder<A> create(){
 		return new DispatchNameCodecBuilder<A>();
