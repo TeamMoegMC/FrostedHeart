@@ -19,6 +19,11 @@
 
 package com.teammoeg.frostedheart.content.heatdevice.generator;
 
+import java.util.List;
+import java.util.Optional;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
@@ -26,6 +31,8 @@ import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEn
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.codec.BooleansCodec;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.fluid.Fluid;
@@ -71,12 +78,12 @@ public class GeneratorData implements NBTSerializable{
     }
 
     public boolean consumesFuel(World w) {
-        if (currentItem != null) {
+        if (!currentItem.isEmpty()) {
             if (!inventory.get(OUTPUT_SLOT).isEmpty() && ItemHandlerHelper.canItemStacksStack(inventory.get(OUTPUT_SLOT), currentItem))
                 inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
             else if (inventory.get(OUTPUT_SLOT).isEmpty())
                 inventory.set(OUTPUT_SLOT, currentItem);
-            currentItem = null;
+            currentItem = ItemStack.EMPTY;
         }
         GeneratorRecipe recipe = getRecipe(w);
         if (recipe != null) {
@@ -226,7 +233,50 @@ public class GeneratorData implements NBTSerializable{
     public int getMaxOverdrive() {
     	return 240400;
     }
+    public static final Codec<GeneratorData> CODEC=RecordCodecBuilder.create(t->t.group(
+    	Codec.INT.fieldOf("process").forGetter(o->o.process),
+    	Codec.INT.fieldOf("processMax").forGetter(o->o.processMax),
+    	Codec.INT.fieldOf("steamProcess").forGetter(o->o.steamProcess),
+    	Codec.INT.fieldOf("overdriveLevel").forGetter(o->o.overdriveLevel),
+    	new BooleansCodec("flag","isWorking","isOverdrive","isActive","isBroken").forGetter(o->new boolean[] {o.isWorking,o.isOverdrive,o.isActive,o.isBroken}),
+    	Codec.FLOAT.fieldOf("steamLevel").forGetter(o->o.steamLevel),
+    	Codec.FLOAT.fieldOf("powerLevel").forGetter(o->o.power),
+    	Codec.INT.fieldOf("heated").forGetter(o->o.heated),
+    	Codec.INT.fieldOf("ranged").forGetter(o->o.ranged),
+    	SerializeUtil.registryCodec(Registry.FLUID).optionalFieldOf("steamFluid").forGetter(o->Optional.ofNullable(o.fluid)),
+    	Codec.FLOAT.fieldOf("tempLevel").forGetter(o->o.TLevel),
+    	Codec.FLOAT.fieldOf("rangeLevel").forGetter(o->o.RLevel),
+    	Codec.list(SerializeUtil.ITEMSTACK_CODEC).fieldOf("inv").forGetter(o->o.inventory),
+    	SerializeUtil.ITEMSTACK_CODEC.fieldOf("res").forGetter(o->o.currentItem),
+    	BlockPos.CODEC.fieldOf("actualPos").forGetter(o->o.actualPos),
+    	Codec.optionalField("dim",ResourceLocation.CODEC).forGetter(o->o.dimension==null?Optional.empty():Optional.of(o.dimension.getLocation()))
+    	).apply(t,GeneratorData::new));
     
+    
+	public GeneratorData(int process, int processMax, int steamProcess, int overdriveLevel, boolean[] flags, float steamLevel, float power, int heated, int ranged, Optional<Fluid> fluid, float tLevel, float rLevel, List<ItemStack> inventory, ItemStack currentItem, BlockPos actualPos, Optional<ResourceLocation> dimension) {
+		super();
+		this.process = process;
+		this.processMax = processMax;
+		this.overdriveLevel = overdriveLevel;
+		this.steamLevel = steamLevel;
+		this.steamProcess = steamProcess;
+		this.heated = heated;
+		this.ranged = ranged;
+		this.power = power;
+		this.fluid = fluid.orElse(null);
+		this.isWorking = flags[0];
+		this.isOverdrive = flags[1];
+		this.isActive = flags[2];
+		this.isBroken = flags[3];
+		this.TLevel = tLevel;
+		this.RLevel = rLevel;
+		for(int i=0;i<inventory.size();i++)
+		this.inventory.set(i, inventory.get(i));
+			this.currentItem = currentItem;
+		this.actualPos = actualPos;
+		this.dimension = dimension.map(t->RegistryKey.getOrCreateKey(Registry.WORLD_KEY, t)).orElse(null);
+	}
+
 	@Override
 	public void save(CompoundNBT result, boolean isPacket) {
 		// TODO Auto-generated method stub
@@ -281,7 +331,7 @@ public class GeneratorData implements NBTSerializable{
         if (data.contains("res"))
             currentItem = ItemStack.read(data.getCompound("res"));
         else
-            currentItem = null;
+            currentItem = ItemStack.EMPTY;
         actualPos = BlockPos.fromLong(data.getLong("actualPos"));
         if (data.contains("dim")) {
             dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(data.getString("dim")));

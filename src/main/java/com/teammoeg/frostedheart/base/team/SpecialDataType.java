@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.base.team;
 import java.util.Objects;
 import java.util.function.Function;
 
+import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 /**
@@ -34,6 +35,7 @@ public class SpecialDataType<T extends NBTSerializable,U extends SpecialDataHold
 	
 	private String id;
 	private Function<U,T> factory;
+	private Codec<T> codec;
 	
 	/**
 	 * Instantiates and register a new special data type.
