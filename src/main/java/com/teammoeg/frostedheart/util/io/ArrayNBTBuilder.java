@@ -18,104 +18,104 @@ import net.minecraft.nbt.NBTUtil;
 import net.minecraft.nbt.ShortNBT;
 import net.minecraft.nbt.StringNBT;
 
-public class ArrayBuilder<P> {
+public class ArrayNBTBuilder<P> {
 	private ListNBT nbt;
 	private P parent;
 	
-    public ArrayBuilder(ListNBT nbt, P parent) {
+    public ArrayNBTBuilder(ListNBT nbt, P parent) {
 		super();
 		this.nbt = nbt;
 		this.parent = parent;
 	}
-	public static ArrayBuilder<Void> create() {
-        return new ArrayBuilder<>(new ListNBT(),null);
+	public static ArrayNBTBuilder<Void> create() {
+        return new ArrayNBTBuilder<>(new ListNBT(),null);
     }
-    public ArrayBuilder<ArrayBuilder<P>> array() {
+    public ArrayNBTBuilder<ArrayNBTBuilder<P>> array() {
     	ListNBT data=new ListNBT();
     	nbt.add(data);
-    	return new ArrayBuilder<>(data,this);
+    	return new ArrayNBTBuilder<>(data,this);
     }
-	public CompoundBuilder<ArrayBuilder<P>> compound() {
+	public CompoundNBTBuilder<ArrayNBTBuilder<P>> compound() {
 		CompoundNBT data=new CompoundNBT();
 		nbt.add(data);
-        return new CompoundBuilder<>(data,this);
+        return new CompoundNBTBuilder<>(data,this);
     }
     
     public P end() {
     	return parent;
     }
 	
-	public ArrayBuilder<P> add(INBT value) {
+	public ArrayNBTBuilder<P> add(INBT value) {
 		nbt.add(value);
         return this;
 	}
 
-	public ArrayBuilder<P> addByte(byte value) {
+	public ArrayNBTBuilder<P> addByte(byte value) {
 		nbt.add(ByteNBT.valueOf(value));
         return this;
 	}
 
-	public ArrayBuilder<P> addShort(short value) {
+	public ArrayNBTBuilder<P> addShort(short value) {
 		nbt.add(ShortNBT.valueOf(value));
         return this;
 	}
 
-	public ArrayBuilder<P> addInt(int value) {
+	public ArrayNBTBuilder<P> addInt(int value) {
 		nbt.add(IntNBT.valueOf(value));
         return this;
 	}
 
-	public ArrayBuilder<P> addLong(long value) {
+	public ArrayNBTBuilder<P> addLong(long value) {
 		nbt.add(LongNBT.valueOf(value));
         return this;
 	}
 
-	public ArrayBuilder<P> addUniqueId(UUID value) {
+	public ArrayNBTBuilder<P> addUniqueId(UUID value) {
 		nbt.add(NBTUtil.func_240626_a_(value));
         return this;
 	}
 
-	public ArrayBuilder<P> addFloat(float value) {
+	public ArrayNBTBuilder<P> addFloat(float value) {
 		nbt.add(FloatNBT.valueOf(value));
         return this;
 	}
 
-	public ArrayBuilder<P> addDouble(double value) {
+	public ArrayNBTBuilder<P> addDouble(double value) {
 		nbt.add(DoubleNBT.valueOf(value));
         return this;
 	}
 
-	public ArrayBuilder<P> addString(String value) {
+	public ArrayNBTBuilder<P> addString(String value) {
 		nbt.add(StringNBT.valueOf(value));
         return this;
 	}
 
-	public ArrayBuilder<P> addByteArray(byte[] value) {
+	public ArrayNBTBuilder<P> addByteArray(byte[] value) {
 		nbt.add(new ByteArrayNBT(value));
         return this;
 	}
 
-	public ArrayBuilder<P> addIntArray(int[] value) {
+	public ArrayNBTBuilder<P> addIntArray(int[] value) {
 		nbt.add(new IntArrayNBT(value));
         return this;
 	}
 
-	public ArrayBuilder<P> addIntArray(List<Integer> value) {
+	public ArrayNBTBuilder<P> addIntArray(List<Integer> value) {
 		nbt.add(new IntArrayNBT(value));
         return this;
 	}
 
-	public ArrayBuilder<P> addLongArray(long[] value) {
+	public ArrayNBTBuilder<P> addLongArray(long[] value) {
 		nbt.add(new LongArrayNBT(value));
         return this;
 	}
 
-	public ArrayBuilder<P> addLongArray(List<Long> value) {
+	public ArrayNBTBuilder<P> addLongArray(List<Long> value) {
 		nbt.add(new LongArrayNBT(value));
         return this;
 	}
 
-	public ArrayBuilder<P> addBoolean(boolean value) {
+	public ArrayNBTBuilder<P> addBoolean(boolean value) {
 		nbt.add(ByteNBT.valueOf(value));
         return this;
 	}

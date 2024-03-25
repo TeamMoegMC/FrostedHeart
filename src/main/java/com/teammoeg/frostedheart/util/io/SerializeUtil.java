@@ -313,7 +313,7 @@ public class SerializeUtil {
 	}
 
 	public static <T> ListNBT toNBTList(Collection<T> stacks, Codec<T> codec) {
-		ArrayBuilder<Void> arrayBuilder = ArrayBuilder.create();
+		ArrayNBTBuilder<Void> arrayBuilder = ArrayNBTBuilder.create();
 		stacks.stream().forEach(t -> arrayBuilder.add(encodeOrThrow(codec.encodeStart(NBTDynamicOps.INSTANCE, t))));
 		return arrayBuilder.build();
 	}
@@ -326,14 +326,14 @@ public class SerializeUtil {
 		return al;
 	}
 
-	public static <T> ListNBT toNBTList(Collection<T> stacks, BiConsumer<T, ArrayBuilder<Void>> mapper) {
-		ArrayBuilder<Void> arrayBuilder = ArrayBuilder.create();
+	public static <T> ListNBT toNBTList(Collection<T> stacks, BiConsumer<T, ArrayNBTBuilder<Void>> mapper) {
+		ArrayNBTBuilder<Void> arrayBuilder = ArrayNBTBuilder.create();
 		stacks.stream().forEach(t -> mapper.accept(t, arrayBuilder));
 		return arrayBuilder.build();
 	}
 
-	public static <T> CompoundNBT toNBTMap(Collection<T> stacks, BiConsumer<T, CompoundBuilder<Void>> mapper) {
-		CompoundBuilder<Void> compoundBuilder = CompoundBuilder.create();
+	public static <T> CompoundNBT toNBTMap(Collection<T> stacks, BiConsumer<T, CompoundNBTBuilder<Void>> mapper) {
+		CompoundNBTBuilder<Void> compoundBuilder = CompoundNBTBuilder.create();
 		stacks.stream().forEach(t -> mapper.accept(t, compoundBuilder));
 		return compoundBuilder.build();
 	}

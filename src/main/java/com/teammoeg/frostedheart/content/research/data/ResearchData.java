@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.clues.ClueDatas;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
-import com.teammoeg.frostedheart.util.io.CompoundBuilder;
+import com.teammoeg.frostedheart.util.io.CompoundNBTBuilder;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
