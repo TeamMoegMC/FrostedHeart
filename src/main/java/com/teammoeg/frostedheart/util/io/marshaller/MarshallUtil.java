@@ -8,7 +8,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.CubicHeatArea;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;

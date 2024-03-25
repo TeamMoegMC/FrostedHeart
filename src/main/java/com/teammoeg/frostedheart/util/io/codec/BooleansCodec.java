@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.util.io.codec;
 
-import java.util.List;
 import java.util.stream.Stream;
 
 import com.mojang.serialization.Codec;

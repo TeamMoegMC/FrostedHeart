@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.util.io.codec;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import com.mojang.serialization.DataResult.PartialResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapLike;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
