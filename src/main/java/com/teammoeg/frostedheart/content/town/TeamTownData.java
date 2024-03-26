@@ -29,6 +29,8 @@ import java.util.UUID;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.base.team.SpecialData;
+import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
@@ -52,7 +54,7 @@ import net.minecraftforge.common.util.Constants;
  * <p>
  * Everything permanent should be saved in this class.
  */
-public class TeamTownData implements NBTSerializable{
+public class TeamTownData implements SpecialData{
 	public static final Codec<TeamTownData> CODEC=RecordCodecBuilder.create(t->t.group(
 			Codec.STRING.fieldOf("name").forGetter(o->o.name),
 			SerializeUtil.toMap(Codec.compoundList(TownResourceType.CODEC, Codec.INT)).fieldOf("resource").forGetter(o->o.resources),
@@ -79,10 +81,6 @@ public class TeamTownData implements NBTSerializable{
      * Town blocks and their worker data
      */
     Map<BlockPos, TownWorkerData> blocks = new LinkedHashMap<>();
-    /**
-     * The team data pointer
-     */
-    TeamDataHolder teamData;
     
 	public TeamTownData(String name, Map<TownResourceType, Integer> resources, Map<TownResourceType, Integer> backupResources, Map<BlockPos, TownWorkerData> blocks) {
 		super();
@@ -91,38 +89,15 @@ public class TeamTownData implements NBTSerializable{
 		this.backupResources.putAll(backupResources);;
 		this.blocks.putAll(blocks);
 	}
-
-	@Override
-	public void save(CompoundNBT nbt, boolean isPacket) {
-        ListNBT list = new ListNBT();
-        for (TownWorkerData v : blocks.values()) {
-            list.add(v.serialize());
-        }
-        nbt.put("blocks", list);
-        
-        CompoundNBT list2 = new CompoundNBT();
-        for (Entry<TownResourceType, Integer> v : resources.entrySet()) {
-            if (v.getValue() != null && v.getValue() != 0)
-                list2.putInt(v.getKey().getKey(), v.getValue());
-
-        }
-        nbt.put("resource", list2);
-        CompoundNBT list3 = new CompoundNBT();
-        for (Entry<TownResourceType, Integer> v : backupResources.entrySet()) {
-            if (v.getValue() != null && v.getValue() != 0)
-                list3.putInt(v.getKey().getKey(), v.getValue());
-        }
-        nbt.put("backupResource", list3);
-        nbt.putString("name", name);
-	}
-
-    public TeamTownData(TeamDataHolder teamData) {
+    public TeamTownData(SpecialDataHolder teamData) {
         super();
-        this.teamData = teamData;
-        if (teamData.getTeam().isPresent()) {
-            this.name = teamData.getTeam().get().getDisplayName() + "'s Town";
-        } else {
-            this.name = teamData.getOwnerName() + "'s Town";
+        if(teamData instanceof TeamDataHolder) {
+        	TeamDataHolder data=(TeamDataHolder) teamData;
+	        if (data.getTeam().isPresent()) {
+	            this.name = data.getTeam().get().getDisplayName() + "'s Town";
+	        } else {
+	            this.name = data.getOwnerName() + "'s Town";
+        }
         }
     }
 
@@ -168,26 +143,9 @@ public class TeamTownData implements NBTSerializable{
         }
         itt.finishWork();
     }
-
-
-
-
 	@Override
-	public void load(CompoundNBT data, boolean isPacket) {
-        for (INBT i : data.getList("blocks", Constants.NBT.TAG_COMPOUND)) {
-            CompoundNBT nbt = (CompoundNBT) i;
-            TownWorkerData t = new TownWorkerData(nbt);
-            blocks.put(t.getPos(), t);
-        }
-        CompoundNBT rec = data.getCompound("resource");
-        for (String i : rec.keySet()) {
-            resources.put(TownResourceType.from(i), rec.getInt(i));
-        }
-        CompoundNBT rec2 = data.getCompound("backupResource");
-        for (String i : rec2.keySet()) {
-            backupResources.put(TownResourceType.from(i), rec2.getInt(i));
-        }
-        name = data.getString("name");
+	public void setHolder(SpecialDataHolder holder) {
+
 	}
 
 

@@ -288,6 +288,7 @@ public class FHResearch {
 	}
 
 	public static void main(String[] args) {
+		System.out.println(Research.CODEC);
 		File rf = new File("run/config/fhresearches");
 		rf.mkdirs();
 		JsonParser jp = new JsonParser();

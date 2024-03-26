@@ -27,5 +27,9 @@ public class NopCodec<A> implements Codec<A> {
 	public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
 		return DataResult.success(Pair.of(generator.get(), input));
 	}
+	@Override
+	public String toString() {
+		return "NopCodec[" + generator + "]";
+	}
 	
 }

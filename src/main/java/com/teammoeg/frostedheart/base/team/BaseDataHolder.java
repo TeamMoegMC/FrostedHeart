@@ -27,6 +27,8 @@ import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.NBTDynamicOps;
 
 public class BaseDataHolder<T extends BaseDataHolder<T>> implements SpecialDataHolder<T>, NBTSerializable {
 
@@ -35,30 +37,41 @@ public class BaseDataHolder<T extends BaseDataHolder<T>> implements SpecialDataH
 
 	@Override
 	public void save(CompoundNBT nbt, boolean isPacket) {
-		SerializeUtil.toNBTMap(data.entrySet(), (t,p)->p.put(t.getKey(), t.getValue().serialize(isPacket)));
+		SerializeUtil.toNBTMap(data.entrySet(), (t,p)->p.put(t.getKey().getId(),(INBT)t.getKey().saveData(NBTDynamicOps.INSTANCE, t.getValue())));
 	}
 
 	@Override
 	public void load(CompoundNBT data, boolean isPacket) {
-		for(SpecialDataType<?,?> tc:SpecialDataTypes.TYPE_REGISTRY) {
+		for(SpecialDataType<?> tc:SpecialDataTypes.TYPE_REGISTRY) {
         	if(data.contains(tc.getId())) {
-        		getDataRaw(tc).deserialize(data.getCompound(tc.getId()),isPacket);
+        		SpecialData raw=tc.loadData(NBTDynamicOps.INSTANCE, data.get(tc.getId()));
+        		raw.setHolder(this);
+        		data.put(tc.getId(), data);
         	}
         }
 	}
 	
-	Map<String,NBTSerializable> data=new HashMap<>();
+	Map<SpecialDataType,SpecialData> data=new HashMap<>();
 	@SuppressWarnings("unchecked")
-	public <U extends NBTSerializable> U getData(SpecialDataType<U,T> cap){
-		return (U) data.computeIfAbsent(cap.getId(),s->cap.create((T) this));
+	public <U extends SpecialData> U getData(SpecialDataType<U> cap){
+		U ret= (U) data.computeIfAbsent(cap,s->cap.create((T) this));
+		ret.setHolder(this);
+		return ret;
 	}
-	public NBTSerializable getDataRaw(SpecialDataType<?,?> cap){
-		return data.computeIfAbsent(cap.getId(),s->cap.createRaw(this));
+	public <U extends SpecialData> U setData(SpecialDataType<U> cap, U data){
+		this.data.put(cap, data);
+		data.setHolder(this);
+		return data;
+	}
+	public SpecialData getDataRaw(SpecialDataType<?> cap){
+		SpecialData ret= data.computeIfAbsent(cap,s->cap.createRaw(this));
+		ret.setHolder(this);
+		return ret;
 	}
 
 	@Override
-	public <U extends NBTSerializable> Optional<U> getOptional(SpecialDataType<U, T> cap) {
+	public <U extends SpecialData> Optional<U> getOptional(SpecialDataType<U> cap) {
 		
-		return Optional.ofNullable((U)data.get(cap.getId()));
+		return Optional.ofNullable((U)data.get(cap));
 	}
 }

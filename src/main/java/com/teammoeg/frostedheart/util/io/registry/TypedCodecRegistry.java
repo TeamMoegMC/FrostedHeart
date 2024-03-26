@@ -14,12 +14,12 @@ import net.minecraft.network.PacketBuffer;
 
 public class TypedCodecRegistry<T> extends TypeRegistry<T> {
 	Map<String,Codec<? extends T>> codecs=new HashMap<>();
-	List<Codec<? extends T>> codecI=new ArrayList<>();
+	List<Codec<? extends T>> codecList=new ArrayList<>();
 	Codec<T> byName=Codec.STRING.dispatch(o->this.typeOf(o.getClass()),this.codecs::get);
-	Codec<T> byInt=Codec.INT.dispatch(this::idOf,codecI::get);
+	Codec<T> byInt=Codec.INT.dispatch(this::idOf,codecList::get);
 	public <A extends T> void register(Class<A> cls, String type,Codec<A> codec) {
 		codecs.put(type, codec);
-		codecI.add(codec);
+		codecList.add(codec);
 		super.register(cls, type);
 	}
 	public Codec<T> byNameCodec(){

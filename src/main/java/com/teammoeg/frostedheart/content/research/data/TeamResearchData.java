@@ -23,13 +23,13 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.LongStream;
-import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.base.team.SpecialData;
+import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchListeners.BlockUnlockList;
@@ -43,18 +43,13 @@ import com.teammoeg.frostedheart.content.research.network.FHResearchDataUpdatePa
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.common.util.Constants.NBT;
 
 // TODO: Auto-generated Javadoc
 
@@ -67,7 +62,7 @@ import net.minecraftforge.common.util.Constants.NBT;
  * @author khjxiaogu
  * @date 2022/9/2
  */
-public class TeamResearchData implements NBTSerializable{
+public class TeamResearchData implements SpecialData{
     /**
      * The clue complete.<br>
      */
@@ -116,8 +111,9 @@ public class TeamResearchData implements NBTSerializable{
     public CategoryUnlockList categories = new CategoryUnlockList();
 
     TeamDataHolder holder;
-    public TeamResearchData(TeamDataHolder team) {
-    	holder=team;
+    public TeamResearchData(SpecialDataHolder team) {
+    	if(team instanceof TeamDataHolder)
+    		holder=(TeamDataHolder) team;
     }
 
     /**
@@ -427,7 +423,7 @@ public class TeamResearchData implements NBTSerializable{
     }
 
     public void sendUpdate() {
-        FHResearchDataSyncPacket packet = new FHResearchDataSyncPacket(this.serialize(true));
+        FHResearchDataSyncPacket packet = new FHResearchDataSyncPacket(this);
         holder.sendToOnline(packet);
  
     }
@@ -540,7 +536,7 @@ public class TeamResearchData implements NBTSerializable{
 	public void setVariants(CompoundNBT variants) {
 		this.variants = variants;
 	}
-	public static Codec<TeamResearchData> data=RecordCodecBuilder.create(t->
+	public static final Codec<TeamResearchData> CODEC=RecordCodecBuilder.create(t->
 	t.group(SerializeUtil.LONG_ARRAY_CODEC.fieldOf("clues").forGetter(o->o.clueComplete.toLongArray()),
 		SerializeUtil.LONG_ARRAY_CODEC.fieldOf("effects").forGetter(o->o.grantedEffects.toLongArray()),
 		CompoundNBT.CODEC.fieldOf("vars").forGetter(o->o.variants),
@@ -557,12 +553,16 @@ public class TeamResearchData implements NBTSerializable{
 		this.clueComplete = BitSet.valueOf(clueComplete);
 		this.grantedEffects = BitSet.valueOf(grantedEffects);
 		this.rdata.addAll(rdata);
+        for (int i = 0; i < rdata.size(); i++) {
+            rdata.get(i).setParent(FHResearch.getResearch(i + 1), this);
+        }
 		this.activeResearchId = activeResearchId;
 		this.variants = variants;
         for (int i = 0; i < this.grantedEffects.length(); i++) {
             if (this.grantedEffects.get(i))
                 FHResearch.effects.runIfPresent(i + 1, e -> e.grant(this, null, true));
         }
+        
         if (activeResearchId != 0) {
             Research r = FHResearch.researches.getById(activeResearchId);
            
@@ -571,80 +571,7 @@ public class TeamResearchData implements NBTSerializable{
             
         }
 	}
-	@Override
-	public void save(CompoundNBT nbt, boolean isPacket) {
-        nbt.putLongArray("clues", clueComplete.toLongArray());
-        nbt.putLongArray("effects", grantedEffects.toLongArray());
-        nbt.put("vars", variants);
 
-        ListNBT rs = new ListNBT();
-        rdata.stream().map(e -> e != null ? e.serialize() : new CompoundNBT()).forEach(rs::add);
-        nbt.put("researches", rs);
-        nbt.putInt("active", activeResearchId);
-        
-        
-        //nbt.put("town", townData.serialize(updatePacket));
-        //nbt.put("generator", generatorData.serialize(updatePacket));
-        // these data does not send to client
-        //if (!updatePacket) {
-        //nbt.put("crafting", crafting.serialize());
-        //nbt.put("building", building.serialize());
-        //nbt.put("block", block.serialize());
-        //}
-	}
-
-	@Override
-	public void load(CompoundNBT data, boolean updatePacket) {
-	    clueComplete.clear();
-        rdata.clear();
-        crafting.clear();
-        building.clear();
-        block.clear();
-        categories.clear();
-        if (data.contains("clues", NBT.TAG_BYTE_ARRAY)) {
-            byte[] ba = data.getByteArray("clues");
-            ensureClue(ba.length);
-            for (int i = 0; i < ba.length; i++)
-                clueComplete.set(i, ba[i] != 0);
-        } else
-            clueComplete = BitSet.valueOf(data.getLongArray("clues"));
-        if (data.contains("effects", NBT.TAG_BYTE_ARRAY)) {
-            byte[] bd = data.getByteArray("effects");
-            ensureEffect(bd.length);
-            for (int i = 0; i < bd.length; i++) {
-                boolean state = bd[i] != 0;
-                grantedEffects.set(i, state);
-            }
-        } else
-            grantedEffects = BitSet.valueOf(data.getLongArray("effects"));
-
-        for (int i = 0; i < grantedEffects.length(); i++) {
-            if (grantedEffects.get(i))
-                FHResearch.effects.runIfPresent(i + 1, e -> e.grant(this, null, true));
-        }
-
-        setVariants(data.getCompound("vars"));
-
-        ListNBT li = data.getList("researches", Constants.NBT.TAG_COMPOUND);
-        activeResearchId = data.getInt("active");
-        
-        
-        for (int i = 0; i < li.size(); i++) {
-            INBT e = li.get(i);
-            rdata.add(new ResearchData(FHResearch.getResearch(i + 1), (CompoundNBT) e, this));
-        }
-
-        if (!updatePacket) {
-            if (activeResearchId != 0) {
-                Research r = FHResearch.researches.getById(activeResearchId);
-               
-                for (Clue c : r.getClues())
-                    c.start(holder);
-                
-            }
-        }
-		
-	}
 	public TeamDataHolder getHolder() {
 		return holder;
 	}
@@ -659,4 +586,9 @@ public class TeamResearchData implements NBTSerializable{
     public void putVariantLong(String name, long val) {
         variants.putLong(name, val);
     }
+
+	@Override
+	public void setHolder(SpecialDataHolder holder) {
+		this.holder=(TeamDataHolder) holder;
+	}
 }

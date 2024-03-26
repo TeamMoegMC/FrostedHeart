@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.NBTDynamicOps;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 /**
@@ -76,7 +77,7 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 		super.load(nbt, isPacket);
 		//Compatible migration from old data folder
 		if(nbt.contains("researches")) {
-			this.getData(SpecialDataTypes.RESEARCH_DATA).deserialize(nbt, isPacket);
+			this.setData(SpecialDataTypes.RESEARCH_DATA, SpecialDataTypes.RESEARCH_DATA.loadData(NBTDynamicOps.INSTANCE, nbt));
 		}
         if (nbt.contains("owner"))
             ownerName = nbt.getString("owner");

@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.util.io.codec;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.stream.Stream;
 
@@ -74,6 +75,11 @@ public class BooleansCodec extends MapCodec<boolean[]> {
 		if(ops.compressMaps())
 			return Stream.of(altkey).map(ops::createString);
 		return Stream.of(keys).map(ops::createString);
+	}
+
+	@Override
+	public String toString() {
+		return "Booleans:" + altkey + "" + Arrays.toString(keys) + "";
 	}
 
 }

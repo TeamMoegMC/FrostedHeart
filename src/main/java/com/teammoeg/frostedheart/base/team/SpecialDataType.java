@@ -23,7 +23,10 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DynamicOps;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.codec.DataOps;
 
 /**
  * Type of special data
@@ -31,10 +34,10 @@ import com.teammoeg.frostedheart.util.io.NBTSerializable;
  * @param <T> the data component data type
  * @param <U> the data holder actual type
  */
-public class SpecialDataType<T extends NBTSerializable,U extends SpecialDataHolder<U>>{
+public class SpecialDataType<T extends SpecialData>{
 	
 	private String id;
-	private Function<U,T> factory;
+	private Function<SpecialDataHolder,T> factory;
 	private Codec<T> codec;
 	
 	/**
@@ -43,10 +46,11 @@ public class SpecialDataType<T extends NBTSerializable,U extends SpecialDataHold
 	 * @param id the id
 	 * @param factory the factory
 	 */
-	public SpecialDataType(String id, Function<U, T> factory) {
+	public  SpecialDataType(String id, Function<SpecialDataHolder, T> factory, Codec<T> codec) {
 		super();
 		this.id = id;
 		this.factory = factory;
+		this.codec=codec;
 		SpecialDataTypes.TYPE_REGISTRY.add(this);
 	}
 	
@@ -56,7 +60,7 @@ public class SpecialDataType<T extends NBTSerializable,U extends SpecialDataHold
 	 * @param data the data holder
 	 * @return created data component
 	 */
-	public T create(U data) {
+	public <U extends SpecialDataHolder> T create(U data) {
 		return factory.apply(data);
 	}
 	
@@ -66,8 +70,14 @@ public class SpecialDataType<T extends NBTSerializable,U extends SpecialDataHold
 	 * @param data the data holder
 	 * @return created data component
 	 */
-	public NBTSerializable createRaw(SpecialDataHolder data) {
-		return factory.apply((U) data);
+	public <T extends SpecialDataHolder> SpecialData createRaw(T data) {
+		return factory.apply(data);
+	}
+	public <U> T loadData(DynamicOps<U> ops,U data) {
+		return SerializeUtil.decodeOrThrow(codec.decode(ops, data));
+	}
+	public <U> U saveData(DynamicOps<U> ops,T data) {
+		return SerializeUtil.encodeOrThrow(codec.encodeStart(ops, data));
 	}
 	
 	/**
@@ -76,7 +86,7 @@ public class SpecialDataType<T extends NBTSerializable,U extends SpecialDataHold
 	 * @param data the data holder
 	 * @return data component
 	 */
-	public T getOrCreate(SpecialDataHolder<U> data) {
+	public <U extends SpecialDataHolder<U>> T getOrCreate(U data) {
 		return data.getData(this);
 	}
 	
@@ -94,7 +104,7 @@ public class SpecialDataType<T extends NBTSerializable,U extends SpecialDataHold
 		if (this == obj) return true;
 		if (obj == null) return false;
 		if (getClass() != obj.getClass()) return false;
-		SpecialDataType<?,?> other = (SpecialDataType<?,?>) obj;
+		SpecialDataType<?> other = (SpecialDataType<?>) obj;
 		return Objects.equals(id, other.id);
 	}
 }

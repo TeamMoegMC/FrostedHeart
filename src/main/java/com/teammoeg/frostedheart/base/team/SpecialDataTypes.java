@@ -28,10 +28,10 @@ import com.teammoeg.frostedheart.content.town.TeamTownData;
 
 public class SpecialDataTypes {
 
-	public static final Set<SpecialDataType<?,?>> TYPE_REGISTRY=new HashSet<>();
-	public static final SpecialDataType<TeamResearchData,TeamDataHolder> RESEARCH_DATA=new SpecialDataType<>("research",TeamResearchData::new);
-	public static final SpecialDataType<GeneratorData,TeamDataHolder> GENERATOR_DATA=new SpecialDataType<>("generator",GeneratorData::new);
-	public static final SpecialDataType<TeamTownData,TeamDataHolder> TOWN_DATA=new SpecialDataType<>("town",TeamTownData::new);
+	public static final Set<SpecialDataType<?>> TYPE_REGISTRY=new HashSet<>();
+	public static final SpecialDataType<TeamResearchData> RESEARCH_DATA=new SpecialDataType<>("research",TeamResearchData::new,TeamResearchData.CODEC);
+	public static final SpecialDataType<GeneratorData> GENERATOR_DATA=new SpecialDataType<>("generator",GeneratorData::new,GeneratorData.CODEC);
+	public static final SpecialDataType<TeamTownData> TOWN_DATA=new SpecialDataType<>("town",TeamTownData::new,TeamTownData.CODEC);
 
 	public static void init() {}
 }

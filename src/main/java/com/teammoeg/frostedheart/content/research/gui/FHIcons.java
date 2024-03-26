@@ -65,7 +65,7 @@ import net.minecraft.util.ResourceLocation;
 
 public class FHIcons {
     private static TypedCodecRegistry<FHIcon> serializers = new TypedCodecRegistry<>();
-	public static Codec<FHIcon> CODEC=new AlternativeCodec<FHIcon>()
+	public static final Codec<FHIcon> CODEC=new AlternativeCodec<FHIcon>()
 		.add(FHNopIcon.class ,FHNopIcon.CODEC)
 		.add(FHItemIcon.class, FHItemIcon.ICON_CODEC)
 		.add(FHItemIcon.class,FHItemIcon.CODEC)

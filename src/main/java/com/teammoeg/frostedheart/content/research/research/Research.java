@@ -67,7 +67,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * @author khjxiaogu
  */
 public class Research implements FHRegisteredItem {
-    public static Codec<Research> CODEC=RecordCodecBuilder.create(t->t.group(
+    public static final Codec<Research> CODEC=RecordCodecBuilder.create(t->t.group(
     	FHIcons.CODEC.fieldOf("icon").forGetter(o->o.icon),
     	ResearchCategory.CODEC.fieldOf("category").forGetter(o->o.category),
     	SerializeUtil.nullableCodecValue(Codec.list(FHResearch.researches.SUPPLIER_CODEC),Arrays.asList()).fieldOf("parents").forGetter(o->new ArrayList<>(o.parents)),

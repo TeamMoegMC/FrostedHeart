@@ -21,38 +21,43 @@ package com.teammoeg.frostedheart.content.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.NBTMessage;
+import com.teammoeg.frostedheart.FHClientTeamDataManager;
+import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
-import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.util.io.codec.DataOps;
+import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
 
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when player join
-public class FHResearchDataSyncPacket extends NBTMessage {
+public class FHResearchDataSyncPacket implements FHMessage {
+	Object dat;
 
-    public FHResearchDataSyncPacket(CompoundNBT data) {
-        super(data);
-    }
 
-    public FHResearchDataSyncPacket(PacketBuffer buffer) {
-        super(buffer);
+	public FHResearchDataSyncPacket(PacketBuffer buffer) {
+		this.dat = (ObjectWriter.readObject(buffer));
     }
 
     public FHResearchDataSyncPacket(TeamResearchData team) {
-        super(team.serialize(true));
+    	this.dat = (SpecialDataTypes.RESEARCH_DATA.saveData(DataOps.COMPRESSED, team));
     }
 
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            ClientResearchDataAPI.getData().deserialize(this.getTag(), true);
+        	FHClientTeamDataManager.INSTANCE.getInstance().setData(SpecialDataTypes.RESEARCH_DATA, SpecialDataTypes.RESEARCH_DATA.loadData(DataOps.COMPRESSED, dat));
             DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::syncJEI);
         });
         context.get().setPacketHandled(true);
     }
+
+	@Override
+	public void encode(PacketBuffer buffer) {
+		ObjectWriter.writeObject(buffer, dat);
+	}
 }

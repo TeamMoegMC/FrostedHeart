@@ -67,6 +67,6 @@ public class DefaultValueCodec<A> extends MapCodec<A> {
 
     @Override
     public String toString() {
-        return "defaultValueCodec[" + name + ": " + elementCodec + ']';
+        return name + ":" + defVal.get() + " " + elementCodec;
     }
 }

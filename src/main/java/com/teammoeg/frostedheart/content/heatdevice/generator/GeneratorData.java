@@ -24,6 +24,8 @@ import java.util.Optional;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.base.team.SpecialData;
+import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
@@ -48,7 +50,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemHandlerHelper;
 
-public class GeneratorData implements NBTSerializable{
+public class GeneratorData implements SpecialData{
 	public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
     public int process = 0, processMax = 0;
@@ -63,7 +65,7 @@ public class GeneratorData implements NBTSerializable{
     protected NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
 
     public ItemStack currentItem;
-    private TeamDataHolder teamData;
+    private SpecialDataHolder<? extends SpecialDataHolder> teamData;
     public BlockPos actualPos = BlockPos.ZERO;
     public HeatProviderEndPoint ep=new HeatProviderEndPoint(200);
     public LazyOptional<HeatProviderEndPoint> epcap=LazyOptional.of(()->ep);
@@ -73,7 +75,7 @@ public class GeneratorData implements NBTSerializable{
     
     
     
-    public GeneratorData(TeamDataHolder teamResearchData) {
+    public GeneratorData(SpecialDataHolder teamResearchData) {
         teamData = teamResearchData;
     }
 
@@ -276,65 +278,8 @@ public class GeneratorData implements NBTSerializable{
 		this.actualPos = actualPos;
 		this.dimension = dimension.map(t->RegistryKey.getOrCreateKey(Registry.WORLD_KEY, t)).orElse(null);
 	}
-
 	@Override
-	public void save(CompoundNBT result, boolean isPacket) {
-		// TODO Auto-generated method stub
-        result.putInt("process", process);
-        result.putInt("processMax", processMax);
-        result.putInt("steamProcess", steamProcess);
-        result.putInt("overdriveLevel", overdriveLevel);
-        result.putBoolean("isWorking", isWorking);
-        result.putBoolean("isOverdrive", isOverdrive);
-        result.putBoolean("isActive", isActive);
-        result.putBoolean("isBroken", isBroken);
-        result.putFloat("steamLevel",steamLevel);
-        result.putFloat("powerLevel", power);
-        result.putInt("heated", heated);
-        result.putInt("ranged", ranged);
-        result.putFloat("tempLevel", TLevel);
-        result.putFloat("rangeLevel",RLevel);
-        if (fluid != null)
-            result.putString("steamFluid", RegistryUtils.getRegistryName(fluid).toString());
-        CompoundNBT inv = new CompoundNBT();
-        ItemStackHelper.saveAllItems(inv, inventory);
-        result.put("inv", inv);
-        if (currentItem != null)
-            result.put("res", currentItem.serializeNBT());
-        result.putLong("actualPos", actualPos.toLong());
-        if (dimension != null)
-            result.putString("dim", dimension.getLocation().toString());
-	}
-
-	@Override
-	public void load(CompoundNBT data, boolean isPacket) {
-        process = data.getInt("process");
-        processMax = data.getInt("processMax");
-        steamProcess=data.getInt("steamProcess");
-        overdriveLevel = data.getInt("overdriveLevel");
-        isWorking = data.getBoolean("isWorking");
-        isOverdrive = data.getBoolean("isOverdrive");
-        isActive = data.getBoolean("isActive");
-        isBroken = data.getBoolean("isBroken");
-        steamLevel = data.getFloat("steamLevel");
-        power = data.getFloat("powerLevel");
-        heated=data.getInt("heated");
-        ranged=data.getInt("ranged");
-        TLevel=data.getFloat("tempLevel");
-        RLevel=data.getFloat("rangeLevel");
-        if (data.contains("steamFluid"))
-            fluid = RegistryUtils.getFluid(new ResourceLocation(data.getString("steamFluid")));
-        else
-            fluid = null;
-        
-        ItemStackHelper.loadAllItems(data.getCompound("inv"), inventory);
-        if (data.contains("res"))
-            currentItem = ItemStack.read(data.getCompound("res"));
-        else
-            currentItem = ItemStack.EMPTY;
-        actualPos = BlockPos.fromLong(data.getLong("actualPos"));
-        if (data.contains("dim")) {
-            dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(data.getString("dim")));
-        }
+	public void setHolder(SpecialDataHolder holder) {
+		this.teamData=holder;
 	}
 }

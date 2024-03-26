@@ -18,7 +18,7 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 	Function<S,A> schemaDeserialize;
 	BiConsumer<A,PacketBuffer> bufferSerialize;
 	Function<PacketBuffer,A> bufferDeserialize;
-	Codec<S> schemaCodec;
+	DynamicOps<S> schemaCodec;
 
 	public PacketOrSchemaCodec(DynamicOps<S> schema, Function<A, S> schemaSerialize, Function<S, A> schemaDeserialize, BiConsumer<A, PacketBuffer> bufferSerialize, Function<PacketBuffer, A> bufferDeserialize) {
 		super();
@@ -26,7 +26,7 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 		this.schemaDeserialize = schemaDeserialize;
 		this.bufferSerialize = bufferSerialize;
 		this.bufferDeserialize = bufferDeserialize;
-		schemaCodec=SerializeUtil.convertSchema(schema);
+		schemaCodec=schema;
 	}
 
 	@Override
@@ -37,7 +37,7 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 			T result=ops.createByteList(ByteBuffer.wrap(buffer.array()));
 			return DataResult.success(result);
 		}
-		return schemaCodec.encode(schemaSerialize.apply(input), ops, prefix);
+		return SerializeUtil.convertSchema(schemaCodec).encode(schemaSerialize.apply(input), ops, prefix);
 	}
 
 	@Override
@@ -45,8 +45,13 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 		if(ops.compressMaps()) {
 			return ops.getByteBuffer(input).map(ByteBuffer::array).map(Unpooled::wrappedBuffer).map(PacketBuffer::new).map(bufferDeserialize).map(k->Pair.of(k, input));
 		}
-		DataResult<Pair<S, T>> obj=schemaCodec.decode(ops, input);
+		DataResult<Pair<S, T>> obj=SerializeUtil.convertSchema(schemaCodec).decode(ops, input);
 		return obj.map(o->o.mapFirst(schemaDeserialize));
+	}
+
+	@Override
+	public String toString() {
+		return "PacketOrSchema["+schemaCodec+"]";
 	}
 
 }

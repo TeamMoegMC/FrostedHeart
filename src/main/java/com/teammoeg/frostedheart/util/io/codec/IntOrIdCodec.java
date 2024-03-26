@@ -29,4 +29,9 @@ public class IntOrIdCodec<A> implements Codec<A> {
 		return reg.decode(ops, input);
 	}
 
+	@Override
+	public String toString() {
+		return "Registry[reg=" + reg + "]";
+	}
+
 }

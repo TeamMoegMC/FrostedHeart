@@ -491,4 +491,9 @@ public class DataOps implements DynamicOps<Object> {
 		return ret;
 	}
 
+	@Override
+	public String toString() {
+		return "Data" + (compress?"Compressed":"");
+	}
+
 }

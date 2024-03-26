@@ -38,6 +38,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.io.FileUtils;
 
 import com.mojang.authlib.GameProfile;
+import com.teammoeg.frostedheart.base.team.SpecialData;
 import com.teammoeg.frostedheart.base.team.SpecialDataType;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -97,7 +98,7 @@ public class FHTeamDataManager {
      * @param <T> the type
      * @return the data stream
      */
-    public <T extends NBTSerializable> Stream<T> getAllData(SpecialDataType<T,TeamDataHolder> type) {
+    public <T extends SpecialData> Stream<T> getAllData(SpecialDataType<T> type) {
         return dataByFhId.values().stream().map(t->t.getOptional(type)).filter(Optional::isPresent).map(Optional::get);
     }
 

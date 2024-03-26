@@ -49,5 +49,17 @@ public class AlternativeCodec<A> implements Codec<A> {
 		}
 		return DataResult.error("No matching decodec present for "+input);
 	}
+	@Override
+	public String toString() {
+		StringBuilder sb=new StringBuilder("AlternativeCodec[");
+		for(Pair<Class<? extends A>, Codec<A>> cod:codecs) {
+			sb.append(cod.getFirst().getSimpleName());
+			sb.append("-");
+			sb.append(cod.getSecond());
+			
+		}
+		sb.append("]");
+		return sb.toString();
+	}
 
 }
