@@ -19,35 +19,25 @@
 
 package com.teammoeg.frostedheart.content.research.research.clues;
 
-import java.util.function.Function;
-
+import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.content.research.data.IClueData;
-import com.teammoeg.frostedheart.util.io.registry.NBTSerializerRegistry;
+import com.teammoeg.frostedheart.util.io.registry.TypedCodecRegistry;
 
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.nbt.NBTDynamicOps;
 
 public class ClueDatas {
-    public static NBTSerializerRegistry<IClueData> registry = new NBTSerializerRegistry<>();
-
+    public static final TypedCodecRegistry<IClueData> registry = new TypedCodecRegistry<>();
+    public static final Codec<IClueData> CODEC=registry.codec();
     public ClueDatas() {
     }
-    public static void write(PacketBuffer pb,IClueData fromObj) {
-		registry.write(pb, fromObj);
+	public <A extends IClueData> void register(Class<A> cls, String type,Codec<A> codec) {
+		registry.register(cls, type,codec);
 	}
-    public static CompoundNBT write(IClueData fromObj) {
-		return registry.write(fromObj);
+	public static IClueData read(CompoundNBT nbt) {
+		return registry.read(NBTDynamicOps.INSTANCE, nbt);
 	}
-
-	public static IClueData read(CompoundNBT jo) {
-        return registry.read(jo);
-    }
-
-    public static IClueData read(PacketBuffer pb) {
-        return registry.read(pb);
-    }
-
-    public static void register(Class<? extends IClueData> cls, String id, Function<CompoundNBT, IClueData> j, Function<IClueData,CompoundNBT> o, Function<PacketBuffer, IClueData> p) {
-        registry.register(cls, id, j,o, p);
-    }
+	public static CompoundNBT write(IClueData nbt) {
+		return (CompoundNBT) registry.write(NBTDynamicOps.INSTANCE, nbt);
+	}
 }

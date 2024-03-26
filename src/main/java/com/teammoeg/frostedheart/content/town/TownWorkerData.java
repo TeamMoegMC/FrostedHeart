@@ -19,8 +19,13 @@
 
 package com.teammoeg.frostedheart.content.town;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
+
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.NBTDynamicOps;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
@@ -38,6 +43,12 @@ import net.minecraft.world.server.ServerWorld;
  * There can be multiple worker data with the same worker type.
  */
 public class TownWorkerData {
+	public static final Codec<TownWorkerData> CODEC=RecordCodecBuilder.create(t->
+	t.group(SerializeUtil.enumCodec(TownWorkerType.class).fieldOf("type").forGetter(o->o.type),
+		BlockPos.CODEC.fieldOf("pos").forGetter(o->o.pos),
+		CompoundNBT.CODEC.fieldOf("data").forGetter(o->o.workData),
+		Codec.INT.fieldOf("priority").forGetter(o->o.priority)
+		).apply(t,TownWorkerData::new));
     private TownWorkerType type;
     private BlockPos pos;
     private CompoundNBT workData;
@@ -49,7 +60,15 @@ public class TownWorkerData {
         this.pos = pos;
     }
 
-    public TownWorkerData(CompoundNBT data) {
+    public TownWorkerData(TownWorkerType type, BlockPos pos, CompoundNBT workData, int priority) {
+		super();
+		this.type = type;
+		this.pos = pos;
+		this.workData = workData;
+		this.priority = priority;
+	}
+
+	public TownWorkerData(CompoundNBT data) {
         super();
         this.pos = BlockPos.fromLong(data.getLong("pos"));
         this.type = TownWorkerType.valueOf(data.getString("type"));

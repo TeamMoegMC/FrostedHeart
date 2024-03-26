@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -79,7 +80,54 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.SimpleRegistry;
 
 public class SerializeUtil {
+	public static final Codec<long[]> LONG_ARRAY_CODEC=new Codec<long[]>() {
 
+		@Override
+		public <T> DataResult<T> encode(long[] input, DynamicOps<T> ops, T prefix) {
+			DataResult<T> dr=DataResult.success(prefix);
+			for(long inp:input)
+				dr.flatMap(v->ops.mergeToList(v, ops.createLong(inp)));
+			return dr;
+		}
+
+		@Override
+		public <T> DataResult<Pair<long[], T>> decode(DynamicOps<T> ops, T input) {
+			return ops.getLongStream(input).map(t->Pair.of(t.toArray(), input));
+		}
+		
+	};
+	public static final Codec<int[]> INT_ARRAY_CODEC=new Codec<int[]>() {
+
+		@Override
+		public <T> DataResult<T> encode(int[] input, DynamicOps<T> ops, T prefix) {
+			DataResult<T> dr=DataResult.success(prefix);
+			for(int inp:input)
+				dr.flatMap(v->ops.mergeToList(v, ops.createInt(inp)));
+			return dr;
+		}
+
+		@Override
+		public <T> DataResult<Pair<int[], T>> decode(DynamicOps<T> ops, T input) {
+			return ops.getIntStream(input).map(t->Pair.of(t.toArray(), input));
+		}
+		
+	};
+	public static final Codec<byte[]> BYTE_ARRAY_CODEC=new Codec<byte[]>() {
+
+		@Override
+		public <T> DataResult<T> encode(byte[] input, DynamicOps<T> ops, T prefix) {
+			DataResult<T> dr=DataResult.success(prefix);
+			for(byte inp:input)
+				dr.flatMap(v->ops.mergeToList(v, ops.createByte(inp)));
+			return dr;
+		}
+
+		@Override
+		public <T> DataResult<Pair<byte[], T>> decode(DynamicOps<T> ops, T input) {
+			return ops.getByteBuffer(input).map(t->Pair.of(t.array(), input));
+		}
+		
+	};
 	public static class Deserializer<T extends JsonElement, U extends Writeable> {
 		private int id;
 		public Function<T, U> fromJson;
@@ -154,7 +202,9 @@ public class SerializeUtil {
 		return Codec.list(SerializeUtil.pairCodec(nkey, keyCodec, nval, valueCodec)).xmap(pl -> pl.stream().collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)),
 			pl -> pl.entrySet().stream().map(ent -> Pair.of(ent.getKey(), ent.getValue())).collect(Collectors.toList()));
 	}
-
+	public static <A,B> Codec<Map<A,B>> toMap(Codec<List<Pair<A,B>>> codec){
+		return codec.xmap(l->l.stream().collect(Collectors.toMap(Pair::getFirst, Pair::getSecond,(k1,k2)->k2,LinkedHashMap::new)), l->l.entrySet().stream().map(t->Pair.of(t.getKey(), t.getValue())).collect(Collectors.toList()));
+	}
 	public static <A> Codec<A> createIntCodec(SimpleRegistry<A> registry) {
 		return Codec.INT.xmap(registry::getByValue, registry::getId);
 	}

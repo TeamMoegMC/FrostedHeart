@@ -21,10 +21,15 @@ package com.teammoeg.frostedheart.content.research.data;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchListeners.BlockUnlockList;
@@ -39,6 +44,7 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -534,7 +540,37 @@ public class TeamResearchData implements NBTSerializable{
 	public void setVariants(CompoundNBT variants) {
 		this.variants = variants;
 	}
-
+	public static Codec<TeamResearchData> data=RecordCodecBuilder.create(t->
+	t.group(SerializeUtil.LONG_ARRAY_CODEC.fieldOf("clues").forGetter(o->o.clueComplete.toLongArray()),
+		SerializeUtil.LONG_ARRAY_CODEC.fieldOf("effects").forGetter(o->o.grantedEffects.toLongArray()),
+		CompoundNBT.CODEC.fieldOf("vars").forGetter(o->o.variants),
+		Codec.list(ResearchData.CODEC).fieldOf("researches").forGetter(o->o.rdata),
+		Codec.INT.fieldOf("active").forGetter(o->o.activeResearchId)
+		).apply(t, TeamResearchData::new));
+	
+	public TeamResearchData(long[] clueComplete, long[] grantedEffects, CompoundNBT variants, List<ResearchData> rdata, int activeResearchId) {
+		super();
+        crafting.clear();
+        building.clear();
+        block.clear();
+        categories.clear();
+		this.clueComplete = BitSet.valueOf(clueComplete);
+		this.grantedEffects = BitSet.valueOf(grantedEffects);
+		this.rdata.addAll(rdata);
+		this.activeResearchId = activeResearchId;
+		this.variants = variants;
+        for (int i = 0; i < this.grantedEffects.length(); i++) {
+            if (this.grantedEffects.get(i))
+                FHResearch.effects.runIfPresent(i + 1, e -> e.grant(this, null, true));
+        }
+        if (activeResearchId != 0) {
+            Research r = FHResearch.researches.getById(activeResearchId);
+           
+            for (Clue c : r.getClues())
+                c.start(holder);
+            
+        }
+	}
 	@Override
 	public void save(CompoundNBT nbt, boolean isPacket) {
         nbt.putLongArray("clues", clueComplete.toLongArray());
@@ -609,7 +645,6 @@ public class TeamResearchData implements NBTSerializable{
         }
 		
 	}
-
 	public TeamDataHolder getHolder() {
 		return holder;
 	}

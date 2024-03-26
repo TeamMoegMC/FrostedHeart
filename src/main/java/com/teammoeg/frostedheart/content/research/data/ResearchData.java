@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.research.events.ResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
@@ -31,6 +33,7 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
 import com.teammoeg.frostedheart.util.io.CompoundNBTBuilder;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.codec.BooleansCodec;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -152,16 +155,34 @@ public class ResearchData implements IEnvironment {
     boolean finished;
     private Supplier<Research> rs;
     int level;
-    private long committed;// points committed
-    final TeamResearchData parent;
+    private int committed;// points committed
+    TeamResearchData parent;
 
     private Map<Integer, IClueData> data = new HashMap<>();
-
+    public static final Codec<ResearchData> CODEC=RecordCodecBuilder.create(t->t.group(
+    	Codec.INT.fieldOf("committed").forGetter(o->o.committed),
+    	new BooleansCodec("flags","active","finished").forGetter(o->new boolean[] {o.active,o.finished}),
+    	SerializeUtil.nullableCodecValue(Codec.INT, 0).fieldOf("level").forGetter(o->o.level),
+    	SerializeUtil.toMap(Codec.list(SerializeUtil.pairCodec("id",Codec.INT, "data", ClueDatas.CODEC))).fieldOf("clues").forGetter(o->o.data)
+    	).apply(t, ResearchData::new));
+    
+    public ResearchData(int committed, boolean[] flags, int level, Map<Integer, IClueData> data) {
+		super();
+		this.active = flags[0];
+		this.finished = flags[1];
+		this.level = level;
+		this.committed = committed;
+		this.data.putAll(data);
+	}
+    public void setParent(Supplier<Research> r, TeamResearchData parent) {
+        this.rs = r;
+        this.parent = parent;
+    }
     public ResearchData(Supplier<Research> r, CompoundNBT nc, TeamResearchData parent) {
         this(r, parent);
         deserialize(nc);
     }
-
+    
     public ResearchData(Supplier<Research> r, TeamResearchData parent) {
         this.rs = r;
         this.parent = parent;
@@ -236,7 +257,7 @@ public class ResearchData implements IEnvironment {
     }
 
     public void deserialize(CompoundNBT cn) {
-        committed = cn.getLong("committed");
+        committed = cn.getInt("committed");
         active = cn.getBoolean("active");
         finished = cn.getBoolean("finished");
         if (cn.contains("level"))
@@ -314,7 +335,7 @@ public class ResearchData implements IEnvironment {
     }
 
     public void read(PacketBuffer pb) {
-        committed = pb.readVarLong();
+        committed = pb.readVarInt();
         boolean[] bs = SerializeUtil.readBooleans(pb);
         active = bs[0];
         finished = bs[1];
@@ -360,7 +381,7 @@ public class ResearchData implements IEnvironment {
     }
 
     public void write(PacketBuffer pb) {
-        pb.writeVarLong(committed);
+        pb.writeVarInt(committed);
         SerializeUtil.writeBooleans(pb, active, finished);
     }
 
