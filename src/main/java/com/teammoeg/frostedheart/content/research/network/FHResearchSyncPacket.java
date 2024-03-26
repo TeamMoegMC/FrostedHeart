@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
@@ -37,12 +37,12 @@ public class FHResearchSyncPacket implements FHMessage {
     }
 
     public FHResearchSyncPacket(PacketBuffer buffer) {
-        r = SerializeUtil.readCodec(buffer, Research.CODEC);
+        r = CodecUtil.readCodec(buffer, Research.CODEC);
         r.setId(buffer.readString());
     }
 
     public void encode(PacketBuffer buffer) {
-        SerializeUtil.writeCodec(buffer, Research.CODEC, r);
+        CodecUtil.writeCodec(buffer, Research.CODEC, r);
         buffer.writeString(r.getId());
     }
 

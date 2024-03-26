@@ -43,7 +43,7 @@ import com.teammoeg.frostedheart.content.research.network.FHResearchDataUpdatePa
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -537,8 +537,8 @@ public class TeamResearchData implements SpecialData{
 		this.variants = variants;
 	}
 	public static final Codec<TeamResearchData> CODEC=RecordCodecBuilder.create(t->
-	t.group(SerializeUtil.LONG_ARRAY_CODEC.fieldOf("clues").forGetter(o->o.clueComplete.toLongArray()),
-		SerializeUtil.LONG_ARRAY_CODEC.fieldOf("effects").forGetter(o->o.grantedEffects.toLongArray()),
+	t.group(CodecUtil.LONG_ARRAY_CODEC.fieldOf("clues").forGetter(o->o.clueComplete.toLongArray()),
+		CodecUtil.LONG_ARRAY_CODEC.fieldOf("effects").forGetter(o->o.grantedEffects.toLongArray()),
 		CompoundNBT.CODEC.fieldOf("vars").forGetter(o->o.variants),
 		Codec.list(ResearchData.CODEC).fieldOf("researches").forGetter(o->o.rdata),
 		Codec.INT.fieldOf("active").forGetter(o->o.activeResearchId)

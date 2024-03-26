@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.content.town.resident;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
 import net.minecraft.nbt.CompoundNBT;
 
 /**
@@ -28,7 +31,11 @@ import net.minecraft.nbt.CompoundNBT;
  * For the actual entity, see {@link ResidentEntity}.
  */
 public class Resident {
-
+	public static final Codec<Resident> CODEC=RecordCodecBuilder.create(t->t.group(
+		Codec.STRING.fieldOf("firstName").forGetter(o->o.firstName),
+		Codec.STRING.fieldOf("lastName").forGetter(o->o.lastName)
+		).apply(t, Resident::new));
+	
     private String firstName = "Steve";
     private String lastName = "Alexander";
     /** Stats range from 0 to 100 */

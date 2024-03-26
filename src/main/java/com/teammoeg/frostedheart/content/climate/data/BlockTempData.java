@@ -22,16 +22,16 @@ package com.teammoeg.frostedheart.content.climate.data;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 public class BlockTempData{
 	float temperature;
 	boolean level;
 	boolean lit;
 	public static final MapCodec<BlockTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		SerializeUtil.nullableCodecValue(Codec.FLOAT,0f).fieldOf("temperature").forGetter(o->o.temperature),
-		SerializeUtil.nullableCodecValue(Codec.BOOL,false).fieldOf("level").forGetter(o->o.level),
-		SerializeUtil.nullableCodecValue(Codec.BOOL,false).fieldOf("lit").forGetter(o->o.lit)).apply(t, BlockTempData::new));
+		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("temperature").forGetter(o->o.temperature),
+		CodecUtil.defaultValue(Codec.BOOL,false).fieldOf("level").forGetter(o->o.level),
+		CodecUtil.defaultValue(Codec.BOOL,false).fieldOf("lit").forGetter(o->o.lit)).apply(t, BlockTempData::new));
     
 
     public BlockTempData(float temperature, boolean level, boolean lit) {

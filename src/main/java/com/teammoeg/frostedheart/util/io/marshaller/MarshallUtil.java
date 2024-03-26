@@ -9,8 +9,8 @@ import java.util.function.Function;
 
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.CubicHeatArea;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.io.codec.NBTCodec;
 
 import net.minecraft.item.ItemStack;
@@ -98,7 +98,7 @@ public class MarshallUtil {
     	if(NBTSerializable.class.isAssignableFrom(type)) {
     		return new NBTCodec<>((Class)type);
     	}else if(type.isArray()) {
-    		return (Codec<T>) SerializeUtil.array((Codec<Object>)createCodec(type.getComponentType()), t->(T)Array.newInstance(type.getComponentType(), t));
+    		return (Codec<T>) CodecUtil.array((Codec<Object>)createCodec(type.getComponentType()), t->(T)Array.newInstance(type.getComponentType(), t));
     	}
     	return new ReflectionCodec<T>(type).codec();
     }

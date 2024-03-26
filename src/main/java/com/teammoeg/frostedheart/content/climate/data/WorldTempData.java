@@ -22,11 +22,11 @@ package com.teammoeg.frostedheart.content.climate.data;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 public class WorldTempData{
 	public static final MapCodec<WorldTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		SerializeUtil.nullableCodecValue(Codec.FLOAT,0f).fieldOf("temperature").forGetter(o->o.temperature)).apply(t, WorldTempData::new));
+		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("temperature").forGetter(o->o.temperature)).apply(t, WorldTempData::new));
 	float temperature;
     public WorldTempData(float temperature) {
 		super();

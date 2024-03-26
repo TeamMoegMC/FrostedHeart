@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.item.ItemStack;
@@ -34,8 +34,8 @@ import net.minecraft.util.text.ITextComponent;
 public class ItemClue extends Clue {
 	public static final Codec<ItemClue> CODEC=RecordCodecBuilder.create(t->t.group(
 		Clue.BASE_CODEC.forGetter(o->o.getData()),
-		SerializeUtil.nullableCodecValue(Codec.BOOL, false).fieldOf("consume").forGetter(o->o.consume),
-		SerializeUtil.INGREDIENT_SIZE_CODEC.fieldOf("item").forGetter(o->o.stack)
+		CodecUtil.defaultValue(Codec.BOOL, false).fieldOf("consume").forGetter(o->o.consume),
+		CodecUtil.INGREDIENT_SIZE_CODEC.fieldOf("item").forGetter(o->o.stack)
 		).apply(t,ItemClue::new));
 	
     boolean consume;

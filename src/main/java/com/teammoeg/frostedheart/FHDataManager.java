@@ -45,8 +45,8 @@ import com.teammoeg.frostedheart.content.climate.data.FoodTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.IdDataPair;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.mixin.StructureUtils;
 
 import io.netty.buffer.ByteBuf;
@@ -105,11 +105,11 @@ public class FHDataManager implements IResourceManagerReloadListener {
 
 		public void write(IdDataPair<T> obj, PacketBuffer pb) {
 
-			SerializeUtil.writeCodec(pb, codec, obj);
+			CodecUtil.writeCodec(pb, codec, obj);
 		};
 
 		public IdDataPair<T> read(PacketBuffer pb) {
-			return SerializeUtil.readCodec(pb, codec);
+			return CodecUtil.readCodec(pb, codec);
 		};
 
 		public String getLocation() {

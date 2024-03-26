@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -36,7 +36,7 @@ import net.minecraft.util.text.ITextComponent;
 public class KillClue extends ListenerClue {
 	public static final Codec<KillClue> CODEC=RecordCodecBuilder.create(t->t.group(
 		ListenerClue.BASE_CODEC.forGetter(o->o.getData()),
-		SerializeUtil.registryCodec(Registry.ENTITY_TYPE).fieldOf("entity").forGetter(o->o.type)
+		CodecUtil.registryCodec(Registry.ENTITY_TYPE).fieldOf("entity").forGetter(o->o.type)
 		).apply(t,KillClue::new));
     EntityType<?> type;
 

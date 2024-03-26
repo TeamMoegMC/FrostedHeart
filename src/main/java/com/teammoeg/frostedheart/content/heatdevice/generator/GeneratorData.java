@@ -32,8 +32,8 @@ import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.io.codec.BooleansCodec;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -240,16 +240,20 @@ public class GeneratorData implements SpecialData{
     	Codec.INT.fieldOf("processMax").forGetter(o->o.processMax),
     	Codec.INT.fieldOf("steamProcess").forGetter(o->o.steamProcess),
     	Codec.INT.fieldOf("overdriveLevel").forGetter(o->o.overdriveLevel),
-    	new BooleansCodec("flag","isWorking","isOverdrive","isActive","isBroken").forGetter(o->new boolean[] {o.isWorking,o.isOverdrive,o.isActive,o.isBroken}),
+    	CodecUtil.<GeneratorData>booleans("flags")
+    	.flag("isWorking", o->o.isWorking)
+    	.flag("isOverdrive", o->o.isOverdrive)
+    	.flag("isActive", o->o.isActive)
+    	.flag("isBroken", o->o.isBroken).build(),
     	Codec.FLOAT.fieldOf("steamLevel").forGetter(o->o.steamLevel),
     	Codec.FLOAT.fieldOf("powerLevel").forGetter(o->o.power),
     	Codec.INT.fieldOf("heated").forGetter(o->o.heated),
     	Codec.INT.fieldOf("ranged").forGetter(o->o.ranged),
-    	SerializeUtil.registryCodec(Registry.FLUID).optionalFieldOf("steamFluid").forGetter(o->Optional.ofNullable(o.fluid)),
+    	CodecUtil.registryCodec(Registry.FLUID).optionalFieldOf("steamFluid").forGetter(o->Optional.ofNullable(o.fluid)),
     	Codec.FLOAT.fieldOf("tempLevel").forGetter(o->o.TLevel),
     	Codec.FLOAT.fieldOf("rangeLevel").forGetter(o->o.RLevel),
-    	Codec.list(SerializeUtil.ITEMSTACK_CODEC).fieldOf("inv").forGetter(o->o.inventory),
-    	SerializeUtil.ITEMSTACK_CODEC.fieldOf("res").forGetter(o->o.currentItem),
+    	Codec.list(CodecUtil.ITEMSTACK_CODEC).fieldOf("inv").forGetter(o->o.inventory),
+    	CodecUtil.ITEMSTACK_CODEC.fieldOf("res").forGetter(o->o.currentItem),
     	BlockPos.CODEC.fieldOf("actualPos").forGetter(o->o.actualPos),
     	Codec.optionalField("dim",ResourceLocation.CODEC).forGetter(o->o.dimension==null?Optional.empty():Optional.of(o.dimension.getLocation()))
     	).apply(t,GeneratorData::new));

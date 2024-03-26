@@ -22,13 +22,13 @@ package com.teammoeg.frostedheart.content.climate.data;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 public class ArmorTempData {
 	public static final MapCodec<ArmorTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		SerializeUtil.nullableCodecValue(Codec.FLOAT,0f).fieldOf("factor").forGetter(o->o.insulation),
-		SerializeUtil.nullableCodecValue(Codec.FLOAT,0f).fieldOf("heat_proof").forGetter(o->o.heat_proof),
-		SerializeUtil.nullableCodecValue(Codec.FLOAT,0f).fieldOf("wind_proof").forGetter(o->o.wind_proof)).apply(t, ArmorTempData::new));
+		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("factor").forGetter(o->o.insulation),
+		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("heat_proof").forGetter(o->o.heat_proof),
+		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("wind_proof").forGetter(o->o.wind_proof)).apply(t, ArmorTempData::new));
 	float insulation;
 	float heat_proof;
 	float wind_proof;

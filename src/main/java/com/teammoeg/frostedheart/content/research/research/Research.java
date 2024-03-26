@@ -48,7 +48,7 @@ import com.teammoeg.frostedheart.content.research.network.FHResearchDataUpdatePa
 import com.teammoeg.frostedheart.content.research.number.IResearchNumber;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.codec.BooleansCodec;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -70,15 +70,20 @@ public class Research implements FHRegisteredItem {
     public static final Codec<Research> CODEC=RecordCodecBuilder.create(t->t.group(
     	FHIcons.CODEC.fieldOf("icon").forGetter(o->o.icon),
     	ResearchCategory.CODEC.fieldOf("category").forGetter(o->o.category),
-    	SerializeUtil.nullableCodecValue(Codec.list(FHResearch.researches.SUPPLIER_CODEC),Arrays.asList()).fieldOf("parents").forGetter(o->new ArrayList<>(o.parents)),
+    	CodecUtil.defaultValue(Codec.list(FHResearch.researches.SUPPLIER_CODEC),Arrays.asList()).fieldOf("parents").forGetter(o->new ArrayList<>(o.parents)),
     	Codec.list(Clue.CODEC).fieldOf("clues").forGetter(o->o.clues),
-    	Codec.list(SerializeUtil.INGREDIENT_SIZE_CODEC).fieldOf("ingredients").forGetter(o->o.requiredItems),
+    	Codec.list(CodecUtil.INGREDIENT_SIZE_CODEC).fieldOf("ingredients").forGetter(o->o.requiredItems),
     	Codec.list(Effect.CODEC).fieldOf("effects").forGetter(o->o.effects),
-    	SerializeUtil.nullableCodecValue(Codec.STRING, "").fieldOf("name").forGetter(o->o.name),
-    	SerializeUtil.nullableCodecValue(Codec.list(Codec.STRING),Arrays.asList()).fieldOf("desc").forGetter(o->o.desc),
-    	SerializeUtil.nullableCodecValue(Codec.list(Codec.STRING),Arrays.asList()).fieldOf("descAlt").forGetter(o->o.fdesc),
-    	new BooleansCodec("flags","showAltDesc","hideEffects","locked","hidden","keepShow","infinite").forGetter(o->new boolean[] {
-    		o.showfdesc, o.hideEffects, o.inCompletable, o.isHidden, o.alwaysShow, o.infinite}),
+    	CodecUtil.defaultValue(Codec.STRING, "").fieldOf("name").forGetter(o->o.name),
+    	CodecUtil.defaultValue(Codec.list(Codec.STRING),Arrays.asList()).fieldOf("desc").forGetter(o->o.desc),
+    	CodecUtil.defaultValue(Codec.list(Codec.STRING),Arrays.asList()).fieldOf("descAlt").forGetter(o->o.fdesc),
+    	CodecUtil.<Research>booleans("flags")
+    	.flag("showAltDesc", o->o.showfdesc)
+    	.flag("hideEffects", o->o.hideEffects)
+    	.flag("locked", o->o.inCompletable)
+    	.flag("hidden", o->o.isHidden)
+    	.flag("keepShow", o->o.alwaysShow)
+    	.flag("infinite", o->o.infinite).build(),
     	Codec.INT.fieldOf("points").forGetter(o->o.points)
     	).apply(t,Research::new));
     private String id;// id of this research

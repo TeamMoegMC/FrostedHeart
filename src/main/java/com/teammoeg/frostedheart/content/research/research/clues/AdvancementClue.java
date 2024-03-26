@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
@@ -39,7 +39,7 @@ public class AdvancementClue extends TickListenerClue {
 	public static final Codec<AdvancementClue> CODEC=RecordCodecBuilder.create(t->t.group(
 		ListenerClue.BASE_CODEC.forGetter(o->o.getData()),
 		ResourceLocation.CODEC.fieldOf("advancement").forGetter(o->o.advancement),
-		SerializeUtil.nullableCodecValue(Codec.STRING, "").fieldOf("criterion").forGetter(o->o.criterion)
+		CodecUtil.defaultValue(Codec.STRING, "").fieldOf("criterion").forGetter(o->o.criterion)
 		).apply(t,AdvancementClue::new));
     ResourceLocation advancement = new ResourceLocation("minecraft:story/root");
     String criterion = "";

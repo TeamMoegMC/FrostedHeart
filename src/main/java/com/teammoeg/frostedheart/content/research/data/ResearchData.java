@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.clues.ClueDatas;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.io.codec.BooleansCodec;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
@@ -160,9 +161,11 @@ public class ResearchData implements IEnvironment {
     private Map<Integer, IClueData> data = new HashMap<>();
     public static final Codec<ResearchData> CODEC=RecordCodecBuilder.create(t->t.group(
     	Codec.INT.fieldOf("committed").forGetter(o->o.committed),
-    	new BooleansCodec("flags","active","finished").forGetter(o->new boolean[] {o.active,o.finished}),
-    	SerializeUtil.nullableCodecValue(Codec.INT, 0).fieldOf("level").forGetter(o->o.level),
-    	SerializeUtil.toMap(Codec.list(SerializeUtil.pairCodec("id",Codec.INT, "data", ClueDatas.CODEC))).fieldOf("clues").forGetter(o->o.data)
+    	CodecUtil.<ResearchData>booleans("flags")
+    	.flag("active", o->o.active)
+    	.flag("finished", o->o.finished).build(),
+    	CodecUtil.defaultValue(Codec.INT, 0).fieldOf("level").forGetter(o->o.level),
+    	CodecUtil.mapCodec("id", Codec.INT, "data", ClueDatas.CODEC).fieldOf("clues").forGetter(o->o.data)
     	).apply(t, ResearchData::new));
     
     public ResearchData(int committed, boolean[] flags, int level, Map<Integer, IClueData> data) {

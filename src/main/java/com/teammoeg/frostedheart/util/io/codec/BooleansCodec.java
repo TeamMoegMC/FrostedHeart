@@ -1,19 +1,40 @@
 package com.teammoeg.frostedheart.util.io.codec;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
+import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.MapLike;
 import com.mojang.serialization.RecordBuilder;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 public class BooleansCodec extends MapCodec<boolean[]> {
+	public static class BooleanCodecBuilder<O>{
+		String flag;
+		List<Pair<String,Function<O, Boolean>>> flags=new ArrayList<>();
+		public BooleanCodecBuilder(String flag) {
+			super();
+			this.flag = flag;
+		}
+		public BooleanCodecBuilder<O> flag(String key,Function<O, Boolean> getter){
+			flags.add(Pair.of(key, getter));
+			return this;
+		}
+	    public RecordCodecBuilder<O, boolean[]> build() {
+	        return new BooleansCodec(flag,flags.stream().map(t->t.getFirst()).toArray(String[]::new))
+	        	.forGetter(flags.stream().map(t->t.getSecond()).toArray(Function[]::new));
+	    }
+	}
 	String altkey;
 	String[] keys;
 
@@ -22,7 +43,24 @@ public class BooleansCodec extends MapCodec<boolean[]> {
 		this.altkey = altkey;
 		this.keys = keys;
 	}
-
+    public <O> RecordCodecBuilder<O, boolean[]> forGetter(Function<O, Boolean> f1,Function<O, Boolean> f2) {
+        return RecordCodecBuilder.of(o->new boolean[] {f1.apply(o),f2.apply(o)}, this);
+    }
+    public <O> RecordCodecBuilder<O, boolean[]> forGetter(Function<O, Boolean> f1,Function<O, Boolean> f2,Function<O, Boolean> f3) {
+        return RecordCodecBuilder.of(o->new boolean[] {f1.apply(o),f2.apply(o),f3.apply(o)}, this);
+    }
+    public <O> RecordCodecBuilder<O, boolean[]> forGetter(Function<O, Boolean> f1,Function<O, Boolean> f2,Function<O, Boolean> f3,Function<O, Boolean> f4) {
+        return RecordCodecBuilder.of(o->new boolean[] {f1.apply(o),f2.apply(o),f3.apply(o),f4.apply(o)}, this);
+    }
+    public <O> RecordCodecBuilder<O, boolean[]> forGetter(Function<O, Boolean>... fs) {
+        return RecordCodecBuilder.of(o->{
+        	boolean[] bools=new boolean[fs.length];
+        	for(int i=0;i<bools.length;i++) {
+        		bools[i]=fs[i].apply(o);
+        	}
+        	return bools;
+        }, this);
+    }
 	@Override
 	public <T> DataResult<boolean[]> decode(DynamicOps<T> ops, MapLike<T> input) {
 		if(ops.compressMaps()) {

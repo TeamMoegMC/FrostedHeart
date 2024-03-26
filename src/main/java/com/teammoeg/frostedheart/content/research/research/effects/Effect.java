@@ -41,7 +41,7 @@ import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.content.research.network.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.registry.TypedCodecRegistry;
 
 import net.minecraft.entity.player.PlayerEntity;
@@ -79,8 +79,8 @@ public abstract class Effect extends AutoIDItem{
 	    
 	}
 	public static final MapCodec<BaseData> BASE_CODEC=RecordCodecBuilder.mapCodec(t->
-	t.group(SerializeUtil.nullableCodecValue(Codec.STRING,"").fieldOf("name").forGetter(o->o.name),
-		SerializeUtil.nullableCodec(Codec.list(Codec.STRING),ArrayList::new).fieldOf("tooltip").forGetter(o->o.tooltip),
+	t.group(CodecUtil.defaultValue(Codec.STRING,"").fieldOf("name").forGetter(o->o.name),
+		CodecUtil.defaultSupply(Codec.list(Codec.STRING),ArrayList::new).fieldOf("tooltip").forGetter(o->o.tooltip),
 		FHIcons.CODEC.fieldOf("icon").forGetter(o->o.icon),
 		Codec.STRING.fieldOf("id").forGetter(o->o.nonce),
 		Codec.BOOL.fieldOf("hidden").forGetter(o->o.hidden)).apply(t, BaseData::new));

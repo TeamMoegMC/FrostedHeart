@@ -39,7 +39,7 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -58,10 +58,10 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 public class EffectCrafting extends Effect {
 	public static final Codec<EffectCrafting> CODEC=RecordCodecBuilder.create(t->t.group(
 		Effect.BASE_CODEC.forGetter(Effect::getBaseData),
-		SerializeUtil.<EffectCrafting,Item,Either<ItemStack,List<ResourceLocation>>>either(SerializeUtil.registryCodec(Registry.ITEM).fieldOf("item"),
-			SerializeUtil.either(SerializeUtil.ITEMSTACK_CODEC.fieldOf("item"),
+		CodecUtil.<EffectCrafting,Item,Either<ItemStack,List<ResourceLocation>>>either(CodecUtil.registryCodec(Registry.ITEM).fieldOf("item"),
+			CodecUtil.either(CodecUtil.ITEMSTACK_CODEC.fieldOf("item"),
 				Codec.list(ResourceLocation.CODEC).fieldOf("recipes")
-				),o->o.item, SerializeUtil.leftRight(o->o.itemStack, o->o.unlocks.stream().map(IRecipe::getId).collect(Collectors.toList())))
+				),o->o.item, CodecUtil.leftRight(o->o.itemStack, o->o.unlocks.stream().map(IRecipe::getId).collect(Collectors.toList())))
 		)
 	.apply(t,EffectCrafting::new));
     List<IRecipe<?>> unlocks = new ArrayList<>();

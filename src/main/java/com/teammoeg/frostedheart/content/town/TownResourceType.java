@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.town;
 import java.util.function.Function;
 
 import com.mojang.serialization.Codec;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 public enum TownResourceType {
     /**
@@ -48,7 +48,7 @@ public enum TownResourceType {
     TOOL(t -> 250D + 100 * t.get(STORAGE)),
     RAW_FOOD(t -> 250D + 100 * t.get(STORAGE)),
     PREP_FOOD(t -> 250D + 100 * t.get(STORAGE));
-	public static final Codec<TownResourceType> CODEC=SerializeUtil.enumCodec(TownResourceType.class);
+	public static final Codec<TownResourceType> CODEC=CodecUtil.enumCodec(TownResourceType.class);
 	
     final Function<Town, Double> maxStorage;
 

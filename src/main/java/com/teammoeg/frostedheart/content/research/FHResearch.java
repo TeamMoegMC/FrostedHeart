@@ -46,8 +46,8 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.FileUtil;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.io.codec.DataOps;
 import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
@@ -373,7 +373,7 @@ public class FHResearch {
 		Gson gs = new GsonBuilder().setPrettyPrinting().create();
 		File out = new File(rf, r.getId() + ".json");
 		try {
-			FileUtil.transfer(gs.toJson(SerializeUtil.encodeOrThrow(Research.CODEC.encodeStart(JsonOps.INSTANCE, r))),
+			FileUtil.transfer(gs.toJson(CodecUtil.encodeOrThrow(Research.CODEC.encodeStart(JsonOps.INSTANCE, r))),
 					out);
 		} catch (IOException e) {
 
@@ -390,7 +390,7 @@ public class FHResearch {
 			File out = new File(rf, r.getId() + ".json");
 			try {
 				FileUtil.transfer(
-						gs.toJson(SerializeUtil.encodeOrThrow(Research.CODEC.encodeStart(JsonOps.INSTANCE, r))), out);
+						gs.toJson(CodecUtil.encodeOrThrow(Research.CODEC.encodeStart(JsonOps.INSTANCE, r))), out);
 			} catch (IOException e) {
 				throw new RuntimeException("Cannot save research " + r.getId() + ": " + e.getMessage());
 			}

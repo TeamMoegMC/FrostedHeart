@@ -35,7 +35,7 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.content.research.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.registry.TypedCodecRegistry;
 
 import net.minecraft.util.text.ITextComponent;
@@ -67,9 +67,9 @@ public abstract class Clue extends AutoIDItem{
 	}
 	public static final MapCodec<BaseData> BASE_CODEC=RecordCodecBuilder.mapCodec(t->
 	t.group(
-		SerializeUtil.nullableCodecValue(Codec.STRING,"").fieldOf("name").forGetter(o->o.name),
-		SerializeUtil.nullableCodecValue(Codec.STRING,"").fieldOf("desc").forGetter(o->o.desc),
-		SerializeUtil.nullableCodecValue(Codec.STRING,"").fieldOf("hint").forGetter(o->o.hint),
+		CodecUtil.defaultValue(Codec.STRING,"").fieldOf("name").forGetter(o->o.name),
+		CodecUtil.defaultValue(Codec.STRING,"").fieldOf("desc").forGetter(o->o.desc),
+		CodecUtil.defaultValue(Codec.STRING,"").fieldOf("hint").forGetter(o->o.hint),
 		Codec.STRING.fieldOf("id").forGetter(o->o.nonce),
 		Codec.BOOL.fieldOf("required").forGetter(o->o.required),
 		Codec.FLOAT.fieldOf("value").forGetter(o->o.contribution)).apply(t, BaseData::new));

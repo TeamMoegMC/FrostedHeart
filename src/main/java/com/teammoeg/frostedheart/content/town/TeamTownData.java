@@ -33,8 +33,8 @@ import com.teammoeg.frostedheart.base.team.SpecialData;
 import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.BlockState;
@@ -42,6 +42,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.UUIDCodec;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.Constants;
@@ -57,9 +58,10 @@ import net.minecraftforge.common.util.Constants;
 public class TeamTownData implements SpecialData{
 	public static final Codec<TeamTownData> CODEC=RecordCodecBuilder.create(t->t.group(
 			Codec.STRING.fieldOf("name").forGetter(o->o.name),
-			SerializeUtil.toMap(Codec.compoundList(TownResourceType.CODEC, Codec.INT)).fieldOf("resource").forGetter(o->o.resources),
-			SerializeUtil.toMap(Codec.compoundList(TownResourceType.CODEC, Codec.INT)).fieldOf("backupResource").forGetter(o->o.backupResources),
-			SerializeUtil.toMap(Codec.list(SerializeUtil.pairCodec("pos", BlockPos.CODEC, "data", TownWorkerData.CODEC))).fieldOf("blocks").forGetter(o->o.blocks)
+			CodecUtil.mapCodec(TownResourceType.CODEC, Codec.INT).fieldOf("resource").forGetter(o->o.resources),
+			CodecUtil.mapCodec(TownResourceType.CODEC, Codec.INT).fieldOf("backupResource").forGetter(o->o.backupResources),
+			CodecUtil.mapCodec("pos", BlockPos.CODEC, "data", TownWorkerData.CODEC).fieldOf("blocks").forGetter(o->o.blocks),
+			CodecUtil.mapCodec("uuid",UUIDCodec.CODEC,"data",Resident.CODEC).fieldOf("residents").forGetter(o->o.residents)
 		).apply(t, TeamTownData::new));
     /**
      * The town name.
@@ -82,12 +84,13 @@ public class TeamTownData implements SpecialData{
      */
     Map<BlockPos, TownWorkerData> blocks = new LinkedHashMap<>();
     
-	public TeamTownData(String name, Map<TownResourceType, Integer> resources, Map<TownResourceType, Integer> backupResources, Map<BlockPos, TownWorkerData> blocks) {
+	public TeamTownData(String name, Map<TownResourceType, Integer> resources, Map<TownResourceType, Integer> backupResources, Map<BlockPos, TownWorkerData> blocks, Map<UUID, Resident> residents) {
 		super();
 		this.name = name;
 		this.resources.putAll(resources);;
 		this.backupResources.putAll(backupResources);;
 		this.blocks.putAll(blocks);
+		this.residents.putAll(residents);
 	}
     public TeamTownData(SpecialDataHolder teamData) {
         super();

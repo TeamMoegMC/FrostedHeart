@@ -29,7 +29,6 @@ import com.google.gson.JsonElement;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.simibubi.create.foundation.utility.Pair;
 import com.teammoeg.frostedheart.content.research.gui.editor.BaseEditDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditListDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditPrompt;
@@ -44,8 +43,8 @@ import com.teammoeg.frostedheart.content.research.gui.editor.SelectDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectItemStackDialog;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
-import com.teammoeg.frostedheart.util.io.codec.AlternativeCodec;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.frostedheart.util.io.codec.AlternativeCodecBuilder;
 import com.teammoeg.frostedheart.util.io.codec.NopCodec;
 import com.teammoeg.frostedheart.util.io.registry.TypedCodecRegistry;
 
@@ -59,19 +58,19 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.IItemProvider;
 import net.minecraft.util.ResourceLocation;
 
 public class FHIcons {
-    private static TypedCodecRegistry<FHIcon> serializers = new TypedCodecRegistry<>();
-	public static final Codec<FHIcon> CODEC=new AlternativeCodec<FHIcon>()
+    private static final TypedCodecRegistry<FHIcon> serializers = new TypedCodecRegistry<>();
+	public static final Codec<FHIcon> CODEC=new AlternativeCodecBuilder<FHIcon>(FHIcon.class)
 		.add(FHNopIcon.class ,FHNopIcon.CODEC)
 		.add(FHItemIcon.class, FHItemIcon.ICON_CODEC)
 		.add(FHItemIcon.class,FHItemIcon.CODEC)
 		.add(FHAnimatedIcon.class,FHAnimatedIcon.ICON_CODEC)
-		.add(FHIcon.class,serializers.codec())
-		.add(FHNopIcon.class ,FHNopIcon.CODEC);
+		.add(serializers.codec())
+		.add(FHNopIcon.CODEC)
+		.build();
     private static class FHAnimatedIcon extends FHIcon {
         private static final Codec<FHAnimatedIcon> CODEC=RecordCodecBuilder.create(t->t.group(
         	Codec.list(FHIcons.CODEC).fieldOf("icons").forGetter(o->o.icons)
@@ -166,7 +165,7 @@ public class FHIcons {
 
     private static class FHIngredientIcon extends FHAnimatedIcon {
         private static final Codec<FHIngredientIcon> CODEC=RecordCodecBuilder.create(t->t.group(
-        	SerializeUtil.INGREDIENT_CODEC.fieldOf("ingredient").forGetter(o->o.igd)
+        	CodecUtil.INGREDIENT_CODEC.fieldOf("ingredient").forGetter(o->o.igd)
         	).apply(t, FHIngredientIcon::new));
         Ingredient igd;
 
@@ -183,10 +182,10 @@ public class FHIcons {
 
     private static class FHItemIcon extends FHIcon {
         private static final Codec<FHItemIcon> CODEC=RecordCodecBuilder.create(t->t.group(
-        	SerializeUtil.ITEMSTACK_CODEC.fieldOf("item").forGetter(o->o.stack)
+        	CodecUtil.ITEMSTACK_CODEC.fieldOf("item").forGetter(o->o.stack)
         	).apply(t, FHItemIcon::new));
         private static final Codec<FHItemIcon> ICON_CODEC=
-        	SerializeUtil.ITEMSTACK_CODEC.xmap(FHItemIcon::new, o->o.stack);
+        	CodecUtil.ITEMSTACK_CODEC.xmap(FHItemIcon::new, o->o.stack);
         ItemStack stack;
 
         public FHItemIcon(IItemProvider item2) {

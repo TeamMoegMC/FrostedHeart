@@ -24,8 +24,8 @@ import java.util.function.Function;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DynamicOps;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.io.codec.DataOps;
 
 /**
@@ -74,10 +74,10 @@ public class SpecialDataType<T extends SpecialData>{
 		return factory.apply(data);
 	}
 	public <U> T loadData(DynamicOps<U> ops,U data) {
-		return SerializeUtil.decodeOrThrow(codec.decode(ops, data));
+		return CodecUtil.decodeOrThrow(codec.decode(ops, data));
 	}
 	public <U> U saveData(DynamicOps<U> ops,T data) {
-		return SerializeUtil.encodeOrThrow(codec.encodeStart(ops, data));
+		return CodecUtil.encodeOrThrow(codec.encodeStart(ops, data));
 	}
 	
 	/**

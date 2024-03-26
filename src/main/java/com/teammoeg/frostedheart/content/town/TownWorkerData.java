@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.town;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
@@ -44,7 +44,7 @@ import net.minecraft.world.server.ServerWorld;
  */
 public class TownWorkerData {
 	public static final Codec<TownWorkerData> CODEC=RecordCodecBuilder.create(t->
-	t.group(SerializeUtil.enumCodec(TownWorkerType.class).fieldOf("type").forGetter(o->o.type),
+	t.group(CodecUtil.enumCodec(TownWorkerType.class).fieldOf("type").forGetter(o->o.type),
 		BlockPos.CODEC.fieldOf("pos").forGetter(o->o.pos),
 		CompoundNBT.CODEC.fieldOf("data").forGetter(o->o.workData),
 		Codec.INT.fieldOf("priority").forGetter(o->o.priority)

@@ -41,8 +41,8 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.DayTemperatureData.HourData;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.events.CommonEvents;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
@@ -863,17 +863,17 @@ public class WorldClimate implements NBTSerializable {
 	@Override
 	public void save(CompoundNBT nbt, boolean isPacket) {
         clockSource.serialize(nbt);
-        nbt.put("tempEventStream", SerializeUtil.toNBTList(tempEventStream, ClimateEvent.CODEC));
-        nbt.put("hourlyTempStream", SerializeUtil.toNBTList(dailyTempData, DayTemperatureData.CODEC));
+        nbt.put("tempEventStream", CodecUtil.toNBTList(tempEventStream, ClimateEvent.CODEC));
+        nbt.put("hourlyTempStream", CodecUtil.toNBTList(dailyTempData, DayTemperatureData.CODEC));
 	}
 
 	@Override
 	public void load(CompoundNBT nbt, boolean isPacket) {
         clockSource.deserialize(nbt);
         tempEventStream.clear();
-        tempEventStream.addAll(SerializeUtil.fromNBTList(nbt.getList("tempEventStream", Constants.NBT.TAG_COMPOUND), ClimateEvent.CODEC));
+        tempEventStream.addAll(CodecUtil.fromNBTList(nbt.getList("tempEventStream", Constants.NBT.TAG_COMPOUND), ClimateEvent.CODEC));
         dailyTempData.clear();
-        dailyTempData.addAll(SerializeUtil.fromNBTList(nbt.getList("hourlyTempStream", Constants.NBT.TAG_COMPOUND), DayTemperatureData.CODEC));
+        dailyTempData.addAll(CodecUtil.fromNBTList(nbt.getList("hourlyTempStream", Constants.NBT.TAG_COMPOUND), DayTemperatureData.CODEC));
         readCache();
 	}
 }

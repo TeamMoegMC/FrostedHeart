@@ -23,7 +23,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 /**
  * Clue with listener trigger
@@ -40,9 +40,9 @@ public abstract class ListenerClue extends Clue {
     }
 	public static final MapCodec<BaseData> BASE_CODEC=RecordCodecBuilder.mapCodec(t->
 	t.group(
-		SerializeUtil.nullableCodecValue(Codec.STRING,"").fieldOf("name").forGetter(o->o.name),
-		SerializeUtil.nullableCodecValue(Codec.STRING,"").fieldOf("desc").forGetter(o->o.desc),
-		SerializeUtil.nullableCodecValue(Codec.STRING,"").fieldOf("hint").forGetter(o->o.hint),
+		CodecUtil.defaultValue(Codec.STRING,"").fieldOf("name").forGetter(o->o.name),
+		CodecUtil.defaultValue(Codec.STRING,"").fieldOf("desc").forGetter(o->o.desc),
+		CodecUtil.defaultValue(Codec.STRING,"").fieldOf("hint").forGetter(o->o.hint),
 		Codec.STRING.fieldOf("id").forGetter(o->o.nonce),
 		Codec.BOOL.fieldOf("required").forGetter(o->o.required),
 		Codec.FLOAT.fieldOf("value").forGetter(o->o.contribution),

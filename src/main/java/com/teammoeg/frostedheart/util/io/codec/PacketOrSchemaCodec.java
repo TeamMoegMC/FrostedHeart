@@ -8,7 +8,7 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.PacketBuffer;
@@ -37,7 +37,7 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 			T result=ops.createByteList(ByteBuffer.wrap(buffer.array()));
 			return DataResult.success(result);
 		}
-		return SerializeUtil.convertSchema(schemaCodec).encode(schemaSerialize.apply(input), ops, prefix);
+		return CodecUtil.convertSchema(schemaCodec).encode(schemaSerialize.apply(input), ops, prefix);
 	}
 
 	@Override
@@ -45,7 +45,7 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 		if(ops.compressMaps()) {
 			return ops.getByteBuffer(input).map(ByteBuffer::array).map(Unpooled::wrappedBuffer).map(PacketBuffer::new).map(bufferDeserialize).map(k->Pair.of(k, input));
 		}
-		DataResult<Pair<S, T>> obj=SerializeUtil.convertSchema(schemaCodec).decode(ops, input);
+		DataResult<Pair<S, T>> obj=CodecUtil.convertSchema(schemaCodec).decode(ops, input);
 		return obj.map(o->o.mapFirst(schemaDeserialize));
 	}
 

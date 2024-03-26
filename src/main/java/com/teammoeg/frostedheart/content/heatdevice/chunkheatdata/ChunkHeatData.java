@@ -34,8 +34,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
-import com.teammoeg.frostedheart.util.io.codec.DispatchCodecUtils;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTDynamicOps;
@@ -49,7 +49,7 @@ import net.minecraftforge.common.util.LazyOptional;
 public class ChunkHeatData implements NBTSerializable {
 
 	public static final Codec<ChunkHeatData> CODEC=RecordCodecBuilder.create(t->t.group(Codec.list(
-		DispatchCodecUtils.create(IHeatArea.class)
+		CodecUtil.dispatch(IHeatArea.class)
 		.type("cubic", CubicHeatArea.class,CubicHeatArea.CODEC)
 		.type("pillar", PillarHeatArea.class, PillarHeatArea.CODEC)
 		.buildByInt()

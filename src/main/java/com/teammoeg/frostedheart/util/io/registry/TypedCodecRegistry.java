@@ -7,7 +7,7 @@ import java.util.Map;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DynamicOps;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
 
 import net.minecraft.network.PacketBuffer;
@@ -32,15 +32,15 @@ public class TypedCodecRegistry<T> extends TypeRegistry<T> {
 		return byInt;
 	}
 	public void write(T obj,PacketBuffer buffer) {
-		SerializeUtil.writeCodec(buffer, byInt, obj);
+		CodecUtil.writeCodec(buffer, byInt, obj);
 	}
 	public T read(PacketBuffer buffer) {
-		return SerializeUtil.readCodec(buffer, byInt);
+		return CodecUtil.readCodec(buffer, byInt);
 	}
 	public <A> A write(DynamicOps<A> op,T obj) {
-		return SerializeUtil.encodeOrThrow(byName.encodeStart(op, obj));
+		return CodecUtil.encodeOrThrow(byName.encodeStart(op, obj));
 	}
 	public <A> T read(DynamicOps<A> op,A obj) {
-		return SerializeUtil.decodeOrThrow(byName.decode(op, obj));
+		return CodecUtil.decodeOrThrow(byName.decode(op, obj));
 	}
 }

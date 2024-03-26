@@ -12,14 +12,14 @@ import java.util.stream.Stream;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 
 public class WorldMarker {
 	public static class ChunkMarker{
-		public static final Codec<ChunkMarker> CODEC=RecordCodecBuilder.create(t->t.group(Codec.list(SerializeUtil.nullableCodecValue(Codec.LONG_STREAM.xmap(LongStream::toArray, LongStream::of), null)).fieldOf("data").forGetter(o->o.getList())).apply(t, ChunkMarker::new));
+		public static final Codec<ChunkMarker> CODEC=RecordCodecBuilder.create(t->t.group(Codec.list(CodecUtil.defaultValue(Codec.LONG_STREAM.xmap(LongStream::toArray, LongStream::of), null)).fieldOf("data").forGetter(o->o.getList())).apply(t, ChunkMarker::new));
 		BitSet[] sections=new BitSet[16];
 		
 		public ChunkMarker() {
@@ -59,7 +59,7 @@ public class WorldMarker {
 		}
 	}
 	public static final Codec<WorldMarker> CODEC=RecordCodecBuilder.create(t->t.group(
-			SerializeUtil.mapCodec("pos", Codec.LONG.xmap(ChunkPos::new, ChunkPos::asLong), "data", ChunkMarker.CODEC).fieldOf("data").forGetter(o->o.poss)
+			CodecUtil.mapCodec("pos", Codec.LONG.xmap(ChunkPos::new, ChunkPos::asLong), "data", ChunkMarker.CODEC).fieldOf("data").forGetter(o->o.poss)
 			).apply(t, WorldMarker::new));
 	Map<ChunkPos,ChunkMarker> poss=new HashMap<>();
 	Function<ChunkPos,ChunkMarker> getter=t->poss.computeIfAbsent(t, o->new ChunkMarker());

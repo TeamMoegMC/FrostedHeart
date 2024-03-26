@@ -73,6 +73,6 @@ public final class StreamCodec<A> implements Codec<Stream<A>> {
 
     @Override
     public String toString() {
-        return "ListCodec[" + elementCodec + ']';
+        return "StreamCodec[" + elementCodec + ']';
     }
 }
