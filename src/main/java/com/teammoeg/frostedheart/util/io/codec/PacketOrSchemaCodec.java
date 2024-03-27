@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.util.io.codec;
 
-import java.nio.ByteBuffer;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -17,7 +16,7 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 	Function<A,S> schemaSerialize;
 	Function<S,A> schemaDeserialize;
 	BiConsumer<A,PacketBuffer> bufferSerialize;
-	Function<PacketBuffer,A> bufferDeserialize;
+	Function<byte[],A> bufferDeserialize;
 	DynamicOps<S> schemaCodec;
 
 	public PacketOrSchemaCodec(DynamicOps<S> schema, Function<A, S> schemaSerialize, Function<S, A> schemaDeserialize, BiConsumer<A, PacketBuffer> bufferSerialize, Function<PacketBuffer, A> bufferDeserialize) {
@@ -25,7 +24,7 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 		this.schemaSerialize = schemaSerialize;
 		this.schemaDeserialize = schemaDeserialize;
 		this.bufferSerialize = bufferSerialize;
-		this.bufferDeserialize = bufferDeserialize;
+		this.bufferDeserialize = bs->bufferDeserialize.apply(new PacketBuffer(Unpooled.wrappedBuffer(bs)));
 		schemaCodec=schema;
 	}
 
@@ -34,8 +33,9 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 		if(ops.compressMaps()) {
 			PacketBuffer buffer=new PacketBuffer(Unpooled.buffer());
 			bufferSerialize.accept(input, buffer);
-			T result=ops.createByteList(ByteBuffer.wrap(buffer.array()));
-			return DataResult.success(result);
+			byte[] ba=new byte[buffer.writerIndex()];
+			buffer.getBytes(0, ba);
+			return CodecUtil.BYTE_ARRAY_CODEC.encode(ba, ops, prefix);
 		}
 		return CodecUtil.convertSchema(schemaCodec).encode(schemaSerialize.apply(input), ops, prefix);
 	}
@@ -43,7 +43,7 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 	@Override
 	public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
 		if(ops.compressMaps()) {
-			return ops.getByteBuffer(input).map(ByteBuffer::array).map(Unpooled::wrappedBuffer).map(PacketBuffer::new).map(bufferDeserialize).map(k->Pair.of(k, input));
+			return CodecUtil.BYTE_ARRAY_CODEC.decode(ops, input).map(t->t.mapFirst(bufferDeserialize));
 		}
 		DataResult<Pair<S, T>> obj=CodecUtil.convertSchema(schemaCodec).decode(ops, input);
 		return obj.map(o->o.mapFirst(schemaDeserialize));

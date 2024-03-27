@@ -53,6 +53,8 @@ import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import io.netty.buffer.Unpooled;
+import net.minecraft.item.Items;
+import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.network.PacketBuffer;
@@ -311,6 +313,7 @@ public class FHResearch {
 			}
 
 		}
+		System.out.println(CodecUtil.INGREDIENT_CODEC.encodeStart(DataOps.COMPRESSED, Ingredient.fromItems(Items.ACACIA_BOAT)));
 		PacketBuffer pb=new PacketBuffer(Unpooled.buffer());
 		Object prein=Research.CODEC.encodeStart(DataOps.COMPRESSED, new Research()).resultOrPartial(System.out::println).get();
 		System.out.println(prein);

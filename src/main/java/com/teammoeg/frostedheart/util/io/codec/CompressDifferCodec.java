@@ -32,7 +32,7 @@ public class CompressDifferCodec<A> implements Codec<A> {
 
 	@Override
 	public String toString() {
-		return "CompressDiff[UC " + uncompressed + " C" + compressed + "]";
+		return "CompressDiff[U " + uncompressed + " C " + compressed + "]";
 	}
 	
 

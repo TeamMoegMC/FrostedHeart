@@ -130,11 +130,13 @@ public class CodecUtil {
 		}
 		
 	};
-	public static final Codec<ItemStack> ITEMSTACK_CODEC = RecordCodecBuilder.create(t -> t.group(
+	public static final Codec<ItemStack>  ITEMSTACK_CODEC = RecordCodecBuilder.create(t -> t.group(
 			CodecUtil.registryCodec(Registry.ITEM).fieldOf("id").forGetter(ItemStack::getItem),
 			Codec.INT.fieldOf("Count").forGetter(ItemStack::getCount),
 			CodecUtil.defaultSupply(CompoundNBT.CODEC,()->new CompoundNBT()).fieldOf("tag").forGetter(ItemStack::getTag))
 		.apply(t, ItemStack::new));
+	public static final Codec<Integer> POSITIVE_INT = Codec.intRange(0, Integer.MAX_VALUE);
+	
 	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(JsonOps.INSTANCE,Ingredient::serialize,Ingredient::deserialize,Ingredient::write,Ingredient::read);
 	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=new PacketOrSchemaCodec<>(JsonOps.INSTANCE,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
 	static final Function<DynamicOps<?>, Codec<?>> schCodec=SerializeUtil.cached(CodecUtil::scCodec);
