@@ -543,7 +543,7 @@ public class TeamResearchData implements SpecialData{
 		Codec.list(ResearchData.CODEC).fieldOf("researches").forGetter(o->o.rdata),
 		Codec.INT.fieldOf("active").forGetter(o->o.activeResearchId)
 		).apply(t, TeamResearchData::new));
-	
+	boolean isInited;
 	public TeamResearchData(long[] clueComplete, long[] grantedEffects, CompoundNBT variants, List<ResearchData> rdata, int activeResearchId) {
 		super();
         crafting.clear();

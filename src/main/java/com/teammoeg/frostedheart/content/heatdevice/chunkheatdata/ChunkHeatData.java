@@ -31,12 +31,14 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
+import io.netty.handler.codec.DecoderException;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTDynamicOps;
 import net.minecraft.util.math.BlockPos;
@@ -47,13 +49,15 @@ import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class ChunkHeatData implements NBTSerializable {
-
-	public static final Codec<ChunkHeatData> CODEC=RecordCodecBuilder.create(t->t.group(Codec.list(
+	public static final MapCodec<List<IHeatArea>> LIST_CODEC=Codec.list(
 		CodecUtil.dispatch(IHeatArea.class)
 		.type("cubic", CubicHeatArea.class,CubicHeatArea.CODEC)
 		.type("pillar", PillarHeatArea.class, PillarHeatArea.CODEC)
 		.buildByInt()
-		).fieldOf("adjs").forGetter(o->o.adjusters.values().stream().collect(Collectors.toList()))).apply(t, ChunkHeatData::new));
+		).fieldOf("adjs");
+	public static final Codec<ChunkHeatData> CODEC=RecordCodecBuilder.create(t->t.group(
+		LIST_CODEC.forGetter(o->o.adjusters.values().stream().collect(Collectors.toList()))).apply(t, ChunkHeatData::new));
+
     private Map<BlockPos,IHeatArea> adjusters = new LinkedHashMap<>();
 
 
@@ -427,12 +431,12 @@ public class ChunkHeatData implements NBTSerializable {
 
 	@Override
 	public void save(CompoundNBT nbt, boolean isPacket) {
-		CODEC.encode(this, NBTDynamicOps.INSTANCE, nbt);
+		LIST_CODEC.codec().encode(new ArrayList<>(this.adjusters.values()), NBTDynamicOps.INSTANCE, nbt);
 	}
 
 	@Override
 	public void load(CompoundNBT nbt, boolean isPacket) {
-		CODEC.decode(NBTDynamicOps.INSTANCE, nbt);
+		setAdjusters(LIST_CODEC.decode(NBTDynamicOps.INSTANCE, NBTDynamicOps.INSTANCE.getMap(nbt).getOrThrow(false, t->{throw new DecoderException(t);})).getOrThrow(false, t->{throw new DecoderException(t);}));
 	}
 
 }

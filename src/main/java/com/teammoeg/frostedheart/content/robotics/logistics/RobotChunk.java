@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.robotics;
+package com.teammoeg.frostedheart.content.robotics.logistics;
 
 import java.util.ArrayList;
 import java.util.List;

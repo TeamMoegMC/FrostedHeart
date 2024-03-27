@@ -150,6 +150,11 @@ public class DataOps implements DynamicOps<Object> {
 		public Object get(String key) {
 			return map.get(key);
 		}
+
+		@Override
+		public String toString() {
+			return "MLike [" + map + "]";
+		}
 	}
 
 	public static final DataOps INSTANCE = new DataOps(false);
@@ -180,19 +185,19 @@ public class DataOps implements DynamicOps<Object> {
 		this.compress = compress;
 	}
 
-	private <T> DataResult<T> cast(Class<T> type, Object input) {
+	private static <T> DataResult<T> cast(Class<T> type, Object input) {
 		if (type.isInstance(input))
 			return DataResult.success((T) input);
 		return DataResult.error("Not a " + type.getSimpleName());
 	}
 
-	private DataResult<Map<Object, Object>> castToMap(Object input) {
+	private static DataResult<Map<Object, Object>> castToMap(Object input) {
 		if (input instanceof Map)
 			return DataResult.success((Map<Object, Object>) input);
 		return DataResult.error("Not a Map");
 	}
 
-	private DataResult<List<Object>> castToList(Object input) {
+	private static DataResult<List<Object>> castToList(Object input) {
 		if (input instanceof List)
 			return DataResult.success((List<Object>) input);
 		return DataResult.error("Not a List");
@@ -494,6 +499,43 @@ public class DataOps implements DynamicOps<Object> {
 	@Override
 	public String toString() {
 		return "Data" + (compress?"Compressed":"");
+	}
+
+	@Override
+	public Object createByteList(ByteBuffer input) {
+		List<Byte> list=new ArrayList<>();
+		for(int i=0;i<input.capacity();i++)
+			list.add(input.get(i));
+		return list;
+	}
+
+	@Override
+	public Object createIntList(IntStream input) {
+		return input.boxed().collect(Collectors.toList());
+	}
+
+	@Override
+	public Object createLongList(LongStream input) {
+		return input.boxed().collect(Collectors.toList());
+	}
+
+	@Override
+	public <U> U convertList(DynamicOps<U> outOps, Object input) {
+		DataResult<List<Object>> result=castToList(input);
+		if(!result.result().isPresent())
+			return outOps.emptyList();
+		List<Object> list=result.result().get();
+		Class<?> clazz=getElmClass(list);
+		if(clazz==Byte.class) {
+			ByteBuffer bb=ByteBuffer.allocate(list.size());
+			list.stream().forEach(b->bb.put((Byte)b));
+			return outOps.createByteList(bb);
+		}else if(clazz==Integer.class) {
+			return outOps.createIntList(list.stream().mapToInt(t->(int)t));
+		}else if(clazz==Long.class) {
+			return outOps.createLongList(list.stream().mapToLong(t->(long)t));
+		}
+		return outOps.createList(list.stream().map(t->convertList(outOps, t)));
 	}
 
 }

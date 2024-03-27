@@ -1,11 +1,15 @@
 package com.teammoeg.frostedheart.util.io.codec;
 
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.MapLike;
+import com.mojang.serialization.RecordBuilder;
 
 public class DefaultValueCodec<A> implements Codec<A> {
 	Codec<A> original;
@@ -40,8 +44,39 @@ public class DefaultValueCodec<A> implements Codec<A> {
 	}
 
 	@Override
-	public DefaultValueMapCodec<A> fieldOf(String name) {
-		return new DefaultValueMapCodec<A>(name,original,defVal);
+	public MapCodec<A> fieldOf(String name) {
+		return new MapCodec<A> (){
+		    @Override
+		    public <T> DataResult<A> decode(final DynamicOps<T> ops, final MapLike<T> input) {
+		        final T value = input.get(name);
+		        if (value != null) {
+			        final DataResult<A> parsed = original.parse(ops, value);
+			        if (parsed.result().isPresent()) {
+			            return parsed;
+			        }
+			    }
+		        return DataResult.success(defVal.get());
+		    }
+
+		    @Override
+		    public <T> RecordBuilder<T> encode(final A input, final DynamicOps<T> ops, RecordBuilder<T> prefix) {
+		    	if (input!=null) {
+		        	DataResult<T> result=original.encodeStart(ops, input);
+		            prefix=prefix.add(name, result);
+		        }
+		        return prefix;
+		    }
+
+		    @Override
+		    public <T> Stream<T> keys(final DynamicOps<T> ops) {
+		        return Stream.of(ops.createString(name));
+		    }
+
+		    @Override
+		    public String toString() {
+		        return name + ":" + defVal.get() + " " + original;
+		    }
+		};
 	}
 
 }

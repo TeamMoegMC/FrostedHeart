@@ -251,7 +251,7 @@ public class FHResearch {
 		try {
 			JsonElement je = new JsonParser().parse(FileUtil.readString(f));
 			if (je.isJsonObject()) {
-				Research.CODEC.decode(JsonOps.INSTANCE, je).result().map(Pair::getFirst).map(o -> {
+				Research.CODEC.parse(JsonOps.INSTANCE, je).result().map(o -> {
 					o.setId(r.getId());
 					return o;
 				}).ifPresent(researches::replace);
@@ -275,7 +275,7 @@ public class FHResearch {
 				if (je.isJsonObject()) {
 					String id = f.getName();
 					id = id.substring(0, id.length() - 5);
-					Research r = Research.CODEC.decode(JsonOps.INSTANCE, je).result().map(Pair::getFirst).orElse(null);
+					Research r = Research.CODEC.parse(JsonOps.INSTANCE, je).result().orElse(null);
 					if (r != null) {
 						r.setId(id);
 						researches.register(r);
@@ -301,7 +301,7 @@ public class FHResearch {
 				if (je.isJsonObject()) {
 					String id = f.getName();
 					id = id.substring(0, id.length() - 5);
-					Research r = Research.CODEC.decode(JsonOps.INSTANCE, je).result().map(Pair::getFirst).orElse(null);
+					Research r = Research.CODEC.parse(JsonOps.INSTANCE, je).result().orElse(null);
 					if (r != null) {
 						r.setId(id);
 						researches.register(r);
@@ -327,7 +327,7 @@ public class FHResearch {
 		Object in=ObjectWriter.readObject(pb);
 		System.out.println();
 		System.out.println(in);
-		System.out.println(Research.CODEC.decode(DataOps.COMPRESSED,in));
+		System.out.println(Research.CODEC.parse(DataOps.COMPRESSED,in));
 	}
 
 	// called before reload

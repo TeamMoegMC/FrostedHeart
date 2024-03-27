@@ -58,10 +58,13 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 public class EffectCrafting extends Effect {
 	public static final Codec<EffectCrafting> CODEC=RecordCodecBuilder.create(t->t.group(
 		Effect.BASE_CODEC.forGetter(Effect::getBaseData),
-		CodecUtil.<EffectCrafting,Item,Either<ItemStack,List<ResourceLocation>>>either(CodecUtil.registryCodec(Registry.ITEM).fieldOf("item"),
-			CodecUtil.either(CodecUtil.ITEMSTACK_CODEC.fieldOf("item"),
-				Codec.list(ResourceLocation.CODEC).fieldOf("recipes")
-				),o->o.item, CodecUtil.leftRight(o->o.itemStack, o->o.unlocks.stream().map(IRecipe::getId).collect(Collectors.toList())))
+		CodecUtil.<EffectCrafting,Item,ItemStack,List<ResourceLocation>>either3(
+			CodecUtil.registryCodec(Registry.ITEM).fieldOf("item"),
+			CodecUtil.ITEMSTACK_CODEC.fieldOf("item"),
+			Codec.list(ResourceLocation.CODEC).fieldOf("recipes"),
+			o->o.item,
+			o->o.itemStack,
+			o->o.unlocks.stream().map(IRecipe::getId).collect(Collectors.toList()))
 		)
 	.apply(t,EffectCrafting::new));
     List<IRecipe<?>> unlocks = new ArrayList<>();

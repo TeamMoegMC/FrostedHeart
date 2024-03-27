@@ -204,7 +204,9 @@ public class CodecUtil {
 	public static <O> BooleanCodecBuilder<O> booleans(String flag){
 		return new BooleanCodecBuilder<O>(flag);
 	}
-	public static <S,A,B> RecordCodecBuilder<S, Either<A, B>> either(MapCodec<A> a,MapCodec<B> b,Function<S,A> fa,Function<S,B> fb){
+	public static <S,A,B> RecordCodecBuilder<S, Either<A, B>> either2(
+			MapCodec<A> a,MapCodec<B> b,
+			Function<S,A> fa,Function<S,B> fb){
 		return new EitherMapCodec<>(a,b).forGetter(o->{
 			A va=fa.apply(o);
 			if(va!=null)
@@ -212,12 +214,48 @@ public class CodecUtil {
 			return Either.right(fb.apply(o));
 		});
 	}
+	public static <O,A,B,C> RecordCodecBuilder<O, Either<A, Either<B, C>>> either3(
+			MapCodec<A> a,MapCodec<B> b,MapCodec<C> c,
+			Function<O,A> fa,Function<O,B> fb,Function<O,C> fc){
+		return either(a,either(b,c))
+			.forGetter(leftRight(fa,leftRight(fb,fc)));
+	}
+	public static <O,A,B,C,D> RecordCodecBuilder<O, Either<A, Either<B, Either<C, D>>>> either4(
+			MapCodec<A> a,MapCodec<B> b,MapCodec<C> c,MapCodec<D> d,
+			Function<O,A> fa,Function<O,B> fb,Function<O,C> fc,Function<O,D> fd){
+		return either(a,either(b,either(c,d)))
+			.forGetter(leftRight(fa,leftRight(fb,leftRight(fc,fd))));
+	}
+	public static <O,A,B,C,D,E> RecordCodecBuilder<O, Either<A, Either<B, Either<C, Either<D, E>>>>> either5(
+			MapCodec<A> a,MapCodec<B> b,MapCodec<C> c,MapCodec<D> d,MapCodec<E> e,
+			Function<O,A> fa,Function<O,B> fb,Function<O,C> fc,Function<O,D> fd,Function<O,E> fe){
+		return either(a,either(b,either(c,either(d,e))))
+			.forGetter(leftRight(fa,leftRight(fb,leftRight(fc,leftRight(fd,fe)))));
+	}
+	public static <O, A, B, C, D, E, F> RecordCodecBuilder<O, Either<A, Either<B, Either<C, Either<D, Either<E, F>>>>>> either6(
+	        MapCodec<A> a, MapCodec<B> b, MapCodec<C> c, MapCodec<D> d, MapCodec<E> e, MapCodec<F> f,
+	        Function<O, A> fa, Function<O, B> fb, Function<O, C> fc, Function<O, D> fd, Function<O, E> fe, Function<O, F> ff) {
+	    return either(a, either(b, either(c, either(d, either(e, f)))))
+	    	.forGetter(leftRight(fa, leftRight(fb, leftRight(fc, leftRight(fd, leftRight(fe, ff))))));
+	}
+	
+	public static <O, A, B, C, D, E, F, G> RecordCodecBuilder<O, Either<A, Either<B, Either<C, Either<D, Either<E, Either<F, G>>>>>>> either7(
+	        MapCodec<A> a, MapCodec<B> b, MapCodec<C> c, MapCodec<D> d, MapCodec<E> e, MapCodec<F> f, MapCodec<G> g,
+	        Function<O, A> fa, Function<O, B> fb, Function<O, C> fc, Function<O, D> fd, Function<O, E> fe, Function<O, F> ff, Function<O, G> fg) {
+	    return either(a, either(b, either(c, either(d, either(e, either(f, g))))))
+	    	.forGetter(leftRight(fa, leftRight(fb, leftRight(fc, leftRight(fd, leftRight(fe, leftRight(ff, fg)))))));
+	}
+	
+	public static <O, A, B, C, D, E, F, G, H> RecordCodecBuilder<O, Either<A, Either<B, Either<C, Either<D, Either<E, Either<F, Either<G, H>>>>>>>> either8(
+	        MapCodec<A> a, MapCodec<B> b, MapCodec<C> c, MapCodec<D> d, MapCodec<E> e, MapCodec<F> f, MapCodec<G> g, MapCodec<H> h,
+	        Function<O, A> fa, Function<O, B> fb, Function<O, C> fc, Function<O, D> fd, Function<O, E> fe, Function<O, F> ff, Function<O, G> fg, Function<O, H> fh) {
+	    return either(a, either(b, either(c, either(d, either(e, either(f, either(g, h)))))))
+	    	.forGetter(leftRight(fa, leftRight(fb, leftRight(fc, leftRight(fd, leftRight(fe, leftRight(ff, leftRight(fg, fh))))))));
+	}
 	public static <O,A,B> Function<O,Either<A,B>> leftRight(Function<O,A> a,Function<O,B> b){
 		return o->{
-		A va=a.apply(o);
-		if(va!=null)
-			return Either.left(va);
-		return Either.right(b.apply(o));
+			A va=a.apply(o);
+			return va!=null?Either.left(va):Either.right(b.apply(o));
 		};
 	}
 	public static <A,B> MapCodec<Either<A,B>> either(MapCodec<A> a,MapCodec<B> b){
@@ -242,10 +280,10 @@ public class CodecUtil {
 	}
 	public static <T> T readCodec(PacketBuffer pb, Codec<T> codec) {
 		Object readed = ObjectWriter.readObject(pb);
-		DataResult<Pair<T, Object>> ob = codec.decode(DataOps.COMPRESSED, readed);
+		DataResult<T> ob = codec.parse(DataOps.COMPRESSED, readed);
 		
-		Optional<Pair<T, Object>> ret = ob.resultOrPartial(t->{throw new DecoderException(t);});
-		return ret.get().getFirst();
+		Optional<T> ret = ob.resultOrPartial(t->{throw new DecoderException(t);});
+		return ret.get();
 	}
 	public static <T> void writeCodecNBT(PacketBuffer pb, Codec<T> codec, T obj) {
 		DataResult<INBT> ob = codec.encodeStart(NBTDynamicOps.INSTANCE, obj);
@@ -254,9 +292,9 @@ public class CodecUtil {
 	}
 	public static <T> T readCodecNBT(PacketBuffer pb, Codec<T> codec) {
 		INBT readed = pb.readCompoundTag();
-		DataResult<Pair<T, INBT>> ob = codec.decode(NBTDynamicOps.INSTANCE, readed);
-		Optional<Pair<T, INBT>> ret = ob.resultOrPartial(DecoderException::new);
-		return ret.get().getFirst();
+		DataResult<T> ob = codec.parse(NBTDynamicOps.INSTANCE, readed);
+		Optional<T> ret = ob.resultOrPartial(DecoderException::new);
+		return ret.get();
 	}
 	public static <T> T encodeOrThrow(DataResult<T> result) {
 		return result.getOrThrow(false, EncoderException::new);
