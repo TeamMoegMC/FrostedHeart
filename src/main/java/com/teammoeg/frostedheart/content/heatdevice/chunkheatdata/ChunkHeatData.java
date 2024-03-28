@@ -48,7 +48,7 @@ import net.minecraft.world.IWorldReader;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class ChunkHeatData implements NBTSerializable {
+public class ChunkHeatData{
 	public static final MapCodec<List<IHeatArea>> LIST_CODEC=Codec.list(
 		CodecUtil.dispatch(IHeatArea.class)
 		.type("cubic", CubicHeatArea.class,CubicHeatArea.CODEC)
@@ -428,15 +428,5 @@ public class ChunkHeatData implements NBTSerializable {
 		for(IHeatArea adjust:adjusters)
 			this.adjusters.put(adjust.getCenter(), adjust);
     }
-
-	@Override
-	public void save(CompoundNBT nbt, boolean isPacket) {
-		LIST_CODEC.codec().encode(new ArrayList<>(this.adjusters.values()), NBTDynamicOps.INSTANCE, nbt);
-	}
-
-	@Override
-	public void load(CompoundNBT nbt, boolean isPacket) {
-		setAdjusters(LIST_CODEC.decode(NBTDynamicOps.INSTANCE, NBTDynamicOps.INSTANCE.getMap(nbt).getOrThrow(false, t->{throw new DecoderException(t);})).getOrThrow(false, t->{throw new DecoderException(t);}));
-	}
 
 }

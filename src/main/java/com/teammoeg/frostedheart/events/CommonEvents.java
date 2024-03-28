@@ -405,10 +405,10 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void death(PlayerEvent.Clone ev) {
-        FHUtils.copyPlayerCapability(FHCapabilities.WANTED_FOOD.capability(),ev.getOriginal(),ev.getPlayer());
-        FHUtils.copyPlayerCapability(FHCapabilities.ENERGY,ev.getOriginal(),ev.getPlayer());
+        FHUtils.clonePlayerCapability(FHCapabilities.WANTED_FOOD.capability(),ev.getOriginal(),ev.getPlayer());
+        FHUtils.clonePlayerCapability(FHCapabilities.ENERGY,ev.getOriginal(),ev.getPlayer());
         FHUtils.clonePlayerCapability(FHCapabilities.SCENARIO,ev.getOriginal(),ev.getPlayer());
-        //FHUtils.copyPlayerCapability(PlayerTemperatureData.CAPABILITY,ev.getOriginal(),ev.getPlayer());
+        //FHUtils.clonePlayerCapability(PlayerTemperatureData.CAPABILITY,ev.getOriginal(),ev.getPlayer());
         //FHMain.LOGGER.info("clone");
         if (!ev.getPlayer().world.isRemote) {
             DeathInventoryData orig = DeathInventoryData.get(ev.getOriginal());

@@ -12,11 +12,11 @@ import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.common.util.NonNullSupplier;
 
-public class FHCapability<C extends NBTSerializable> {
+public class FHNBTCapability<C extends NBTSerializable> implements IFHCapability{
 	private Class<C> capClass;
 	private Capability<C> capability;
 	private NonNullSupplier<C> factory;
-	public FHCapability(Class<C> capClass, NonNullSupplier<C> factory) {
+	public FHNBTCapability(Class<C> capClass, NonNullSupplier<C> factory) {
 		super();
 		this.capClass = capClass;
 		this.factory = factory;
@@ -33,7 +33,7 @@ public class FHCapability<C extends NBTSerializable> {
             }
         }, ()->factory.get());
         capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(capClass.getName().intern());
-    }
+	}
 	public ICapabilityProvider provider() {
 		return new FHCapabilityProvider<>(this);
 	}

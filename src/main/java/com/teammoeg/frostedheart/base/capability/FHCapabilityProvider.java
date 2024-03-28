@@ -10,8 +10,8 @@ import net.minecraftforge.common.util.LazyOptional;
 
 public class FHCapabilityProvider<C extends NBTSerializable> implements ICapabilitySerializable<CompoundNBT>{
 	LazyOptional<C> lazyCap;
-	FHCapability<C> capability;
-	public FHCapabilityProvider(FHCapability<C> capability) {
+	FHNBTCapability<C> capability;
+	public FHCapabilityProvider(FHNBTCapability<C> capability) {
 		super();
 		this.capability = capability;
 		this.lazyCap=capability.createCapability();
