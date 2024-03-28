@@ -37,7 +37,6 @@ public class LogisticNetwork {
 	public World getWorld() {
 		return world;
 	}
-	
 	public void updateSlot(ILogisticsStorage storage,int slot,ItemStack stack) {
 		updateSlot(new LogisticSlot(storage,slot),stack);
 	}
@@ -120,8 +119,9 @@ public class LogisticNetwork {
 		}
 		if(!item1.hasTag()) {
 			list.add(0,Pair.of(item1, new LinkedHashSet<>()));
-		}else
+		}else {
 			list.add(Pair.of(item1, new LinkedHashSet<>()));
+		}
 		
 	}
 	public void updateSlot(LogisticSlot sl,ItemStack newItem) {
@@ -163,8 +163,8 @@ public class LogisticNetwork {
 									it.remove();
 								}else {
 									actual.grow(cnt);
-									cnt=0;
 									crnstack.shrink(cnt);
+									cnt=0;
 								}
 							}
 							if(cnt<=0)break;
@@ -194,8 +194,8 @@ public class LogisticNetwork {
 								it.remove();
 							}else {
 								actual.grow(cnt);
-								cnt=0;
 								crnstack.shrink(cnt);
+								cnt=0;
 							}
 						}
 						if(cnt<=0)break;
@@ -205,7 +205,6 @@ public class LogisticNetwork {
 			return actual;
 		}
 		return ItemStack.EMPTY;
-		
 	}
 	public void setWorld(World world) {
 		this.world = world;
