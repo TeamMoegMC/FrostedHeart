@@ -19,27 +19,10 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
-
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.BlockPos;
-
-public class RobotChunk implements NBTSerializable {
-    List<BlockPos> poss = new ArrayList<>();
-
-	@Override
-	public void save(CompoundNBT nbt, boolean isPacket) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void load(CompoundNBT nbt, boolean isPacket) {
-		// TODO Auto-generated method stub
-		
-	}
+public class RobotChunk {
+    Map<ChunkSectionPos,LogisticNetwork> networks = new HashMap<>();
 
 }

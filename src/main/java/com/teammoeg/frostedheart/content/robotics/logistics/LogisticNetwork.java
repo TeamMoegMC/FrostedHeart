@@ -10,29 +10,44 @@ import java.util.Map;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
+
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 
 public class LogisticNetwork {
 	Map<Item,LinkedList<Pair<ItemStack,LinkedHashSet<LogisticSlot>>>> slots=new HashMap<>();
-	Function<Item,LinkedList<Pair<ItemStack,LinkedHashSet<LogisticSlot>>>> islots=t->new LinkedList<>();
+	transient Function<Item,LinkedList<Pair<ItemStack,LinkedHashSet<LogisticSlot>>>> islots=t->new LinkedList<>();
 	Map<LogisticSlot,Item> slotsi=new HashMap<>();
-	List<LogisticEnvolop> envolops=new ArrayList<>();
+	//List<LogisticEnvolop> envolops=new ArrayList<>();
 	List<ILogisticsStorage> storages=new ArrayList<>();
+	List<ILogisticsStorage> endpoints=new ArrayList<>();
 	World world;
+	BlockPos centerPos;
 	public LogisticNetwork() {
 	}
 	public World getWorld() {
 		return world;
 	}
 	
-	public <T extends TileEntity&ILogisticsStorage> void updateSlot(T storage,int slot,ItemStack stack) {
+	public void updateSlot(ILogisticsStorage storage,int slot,ItemStack stack) {
 		updateSlot(new LogisticSlot(storage,slot),stack);
+	}
+	public void register(ILogisticsStorage storage) {
+		endpoints.add(storage);
+		ItemStackHandler inv=storage.getInventory();
+		for(int i=0;i<inv.getSlots();i++) {
+			if(!inv.getStackInSlot(i).isEmpty())
+				updateSlot(storage,i,inv.getStackInSlot(i));
+		}
 	}
 	public LogisticSlot getFirstEmptySlotFor(ItemStack stack) {
 		LinkedList<Pair<ItemStack, LinkedHashSet<LogisticSlot>>> list=slots.get(stack.getItem());
@@ -115,9 +130,9 @@ public class LogisticNetwork {
 		
 		slotsi.put(sl, newItem.getItem());
 	}
-	public void tick() {
+	/*public void tick() {
 		envolops.removeIf(LogisticEnvolop::tick);
-	}
+	}*/
 	public ItemStack fetchItem(World w,ItemStack filter,boolean useNBT,int maxcnt) {
 		LinkedList<Pair<ItemStack, LinkedHashSet<LogisticSlot>>> lslot=slots.get(filter.getItem());
 		List<LogisticSlot> using=new ArrayList<>();
@@ -194,5 +209,11 @@ public class LogisticNetwork {
 	}
 	public void setWorld(World world) {
 		this.world = world;
+	}
+	public BlockPos getCenterPos() {
+		return centerPos;
+	}
+	public void setCenterPos(BlockPos centerPos) {
+		this.centerPos = centerPos;
 	}
 }

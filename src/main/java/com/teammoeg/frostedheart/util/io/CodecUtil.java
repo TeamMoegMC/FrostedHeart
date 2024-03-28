@@ -30,6 +30,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.util.io.codec.AlternativeCodecBuilder;
 import com.teammoeg.frostedheart.util.io.codec.BooleansCodec.BooleanCodecBuilder;
 import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
+import com.teammoeg.frostedheart.util.io.codec.CustomListCodec;
 import com.teammoeg.frostedheart.util.io.codec.DataOps;
 import com.teammoeg.frostedheart.util.io.codec.IntOrIdCodec;
 import com.teammoeg.frostedheart.util.io.codec.DefaultValueCodec;
@@ -148,6 +149,9 @@ public class CodecUtil {
 	}
 	public static <A> DefaultValueCodec<A> defaultSupply(Codec<A> val, Supplier<A> def) {
 		return new DefaultValueCodec<A>(val, def);
+	}
+	public static <T,A extends List<T>> Codec<A> list(Codec<T> codec,Supplier<A> createList){
+		return new CustomListCodec<>(codec,createList);
 	}
 	public static <A> Codec<Stream<A>> streamCodec(Codec<A> codec) {
 		return new StreamCodec<>(codec);
