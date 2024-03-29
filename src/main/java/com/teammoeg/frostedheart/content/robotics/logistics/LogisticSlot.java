@@ -7,58 +7,48 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class LogisticSlot {
-	public static final Codec<LogisticSlot> CODEC=RecordCodecBuilder.create(t->t.group(
-		BlockPos.CODEC.fieldOf("pos").forGetter(o->o.pos),
-		Codec.INT.fieldOf("slot").forGetter(o->o.slot))
-		.apply(t,LogisticSlot::new));
 	public int slot;
-	public BlockPos pos;
-	public World w;
-	public LogisticSlot(ILogisticsStorage storage, int slot) {
+	public TileEntityLogisticsStorage storage;
+	public LogisticSlot(ILogisticsStorage storage,TileEntity te, int slot) {
 		super();
 		this.slot = slot;
-		this.pos = storage.getActualPos();
+		this.storage = new TileEntityLogisticsStorage(storage,te);
 	}
-	public LogisticSlot(BlockPos pos, int slot) {
+	public LogisticSlot(TileEntityLogisticsStorage storage, int slot) {
 		super();
-		this.pos = pos;
+		this.storage = storage;
 		this.slot = slot;
 	}
-	public void init(World w) {
-		this.w=w;
+	public <T extends TileEntity&ILogisticsStorage> LogisticSlot(T storage, int slot) {
+		this.slot = slot;
+		this.storage = new TileEntityLogisticsStorage(storage);
 	}
 	public ItemStack getItem() {
-		if(w!=null) {
-			ILogisticsStorage storage=FHUtils.getExistingTileEntity(w, pos, ILogisticsStorage.class);
-			if(storage!=null)
-				return storage.getInventory().getStackInSlot(slot);
-		}
-		return ItemStack.EMPTY;
+		return storage.getInventory().getStackInSlot(slot);
+	}
+	public ItemStack insert(ItemStack stack) {
+		return storage.getInventory().insertItem(slot, stack, false);
+	}
+	public ItemStack extract(int amt) {
+		return storage.getInventory().extractItem(slot, amt, false);
 	}
 	public void setItem(ItemStack item) {
-		if(w!=null) {
-			ILogisticsStorage storage=FHUtils.getExistingTileEntity(w, pos, ILogisticsStorage.class);
-			if(storage!=null) {
-				storage.getInventory().setStackInSlot(slot, item);
-			}
-		}
+		storage.getInventory().setStackInSlot(slot, item);
+	}
+	public boolean exists() {
+		return !storage.isRemoved();
 	}
 	public boolean hasSize(ItemStack stack) {
-		if(w!=null) {
-			ILogisticsStorage storage=FHUtils.getExistingTileEntity(w, pos, ILogisticsStorage.class);
-			if(storage!=null) {
-				return Math.min(stack.getMaxDamage()-getItem().getCount(),storage.getInventory().getSlotLimit(slot)-getItem().getCount())>0;
-			}
-		}
-		return false;
+		return Math.min(stack.getMaxDamage()-getItem().getCount(),storage.getInventory().getSlotLimit(slot)-getItem().getCount())>0;
 	}
 	@Override
 	public int hashCode() {
-		return Objects.hash(pos, slot);
+		return Objects.hash(storage.getActualPos(), slot);
 	}
 	@Override
 	public boolean equals(Object obj) {
@@ -66,6 +56,6 @@ public class LogisticSlot {
 		if (obj == null) return false;
 		if (getClass() != obj.getClass()) return false;
 		LogisticSlot other = (LogisticSlot) obj;
-		return Objects.equals(pos, other.pos) && slot == other.slot;
+		return Objects.equals(storage.getActualPos(), other.storage.getActualPos()) && slot == other.slot;
 	}
 }

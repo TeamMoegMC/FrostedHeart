@@ -8,6 +8,4 @@ import net.minecraftforge.items.ItemStackHandler;
 public interface ILogisticsStorage {
 	ItemStackHandler getInventory();
 	boolean isValidFor(ItemStack stack);
-	BlockPos getActualPos();
-	World getActualWorld();
 }
