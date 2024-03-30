@@ -36,9 +36,9 @@ public class WarehouseBlock extends FHTownBuildingCoreBlock {
             }
             player.sendStatusMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
             player.sendStatusMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.sendStatusMessage(new StringTextComponent("Volume: " + (te.volume)), false);
-            player.sendStatusMessage(new StringTextComponent("Area: " + (te.area)), false);
-            player.sendStatusMessage(new StringTextComponent("Capacity: " + BigDecimal.valueOf(te.capacity)
+            player.sendStatusMessage(new StringTextComponent("Volume: " + (te.getVolume())), false);
+            player.sendStatusMessage(new StringTextComponent("Area: " + (te.getArea())), false);
+            player.sendStatusMessage(new StringTextComponent("Capacity: " + BigDecimal.valueOf(te.getCapacity())
                     .setScale(2, RoundingMode.HALF_UP).doubleValue()), false);
             return ActionResultType.SUCCESS;
         }

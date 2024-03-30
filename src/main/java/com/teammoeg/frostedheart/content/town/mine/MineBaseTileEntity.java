@@ -6,10 +6,13 @@ import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.content.town.TownTileEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
-import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlockScanner;
+import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.LongNBT;
+import net.minecraft.nbt.NBTUtil;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
@@ -21,16 +24,22 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import static com.teammoeg.frostedheart.content.town.house.HouseTileEntity.*;
 import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHouseBlock;
+import static java.lang.Math.exp;
+import static net.minecraftforge.common.util.Constants.NBT.TAG_LONG;
 
 public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEntity, ITickableTileEntity,
         FHBlockInterfaces.IActiveState{
     public Set<BlockPos> linkedMines = new HashSet<>();
-    public int volume;
-    public int area;
-    public int rack;
-    public int chest;
-    public Set<ColumnPos> occupiedArea;
+    private int volume;
+    private int area;
+    private int rack;
+    private int chest;
+    public Set<ColumnPos> occupiedArea = new HashSet<>();
+    private double temperature;
+    private double rating;
+    private byte isValid = -1;//-1:not init;0:false;1:true
 
     public MineBaseTileEntity(){
         super(FHTileTypes.MINE_BASE.get());
@@ -60,10 +69,19 @@ public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEnti
                 this.chest = scanner.chest;
                 this.linkedMines = scanner.linkedMines;
                 this.occupiedArea = scanner.occupiedArea;
+                this.temperature = scanner.getTemperature();
                 return true;
             }
         }
         return false;
+    }
+
+    public double computeRating() {
+        double rackRating = 1 - exp(-this.rack);
+        double chestRating = 1 - exp(-this.chest * 0.4);
+        double spaceRating = HouseTileEntity.calculateSpaceRating(this.volume, this.area);
+        double temperatureRating = HouseTileEntity.calculateTemperatureRating(this.temperature);
+        return this.rating = spaceRating*0.15 + temperatureRating*0.15 + chestRating*0.35 + rackRating*0.35;
     }
 
     @Override
@@ -88,22 +106,82 @@ public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEnti
 
     @Override
     public boolean isWorkValid() {
-        return this.isStructureValid();
+        if(this.isValid == -1) this.refresh();
+        return this.isValid == 1;
     }
 
     @Override
     public CompoundNBT getWorkData() {
-        return null;
+        CompoundNBT nbt = new CompoundNBT();
+        nbt.putByte("isValid", this.isValid);
+        if(this.isValid == 1) {
+            nbt.putInt("volume", this.volume);
+            nbt.putInt("area", this.area);
+            nbt.putInt("rack", this.rack);
+            nbt.putInt("chest", this.chest);
+            ListNBT list = new ListNBT();
+            for (BlockPos pos : this.linkedMines) {
+                list.add(LongNBT.valueOf(pos.toLong()));
+            }
+            nbt.put("linkedMines", list);
+            nbt.putDouble("temperature", this.temperature);
+            nbt.putDouble("rating", this.rating);
+            nbt.put(TAG_NAME_OCCUPIED_AREA, serializeOccupiedArea(this.occupiedArea));
+        }
+        return nbt;
     }
 
     @Override
     public void setWorkData(CompoundNBT data) {
-
+        this.isValid = data.getByte("isValid");
+        if(isValid == 1) {
+            this.volume = data.getInt("volume");
+            this.area = data.getInt("area");
+            this.rack = data.getInt("rack");
+            this.chest = data.getInt("chest");
+            this.linkedMines.clear();
+            ListNBT list = data.getList("linkedMines", TAG_LONG);
+            list.forEach(nbt->{
+                this.linkedMines.add( BlockPos.fromLong( ((LongNBT)nbt).getLong() ));
+            });
+            this.occupiedArea = deserializeOccupiedArea(data);
+        }
     }
 
     @Override
     public Collection<ColumnPos> getOccupiedArea() {
+        this.isWorkValid();
         return this.occupiedArea;
+    }
+    public double getRating(){
+        if(isWorkValid()) {
+            if (this.rating == 0) return this.computeRating();
+            return this.rating;
+        }
+        return 0;
+    }
+    public int getVolume(){
+        return this.isWorkValid()?this.volume:0;
+    }
+    public Set<BlockPos> getLinkedMines() {
+        return this.linkedMines;
+    }
+    public int getArea() {
+        return this.isWorkValid() ? this.area : 0;
+    }
+    public int getRack() {
+        return this.isWorkValid() ? this.rack : 0;
+    }
+    public int getChest() {
+        return this.isWorkValid() ? this.chest : 0;
+    }
+    public double getTemperature() {
+        return this.isWorkValid() ? this.temperature : 0;
+    }
+
+
+    public void refresh() {
+        this.isValid = (byte)(this.isStructureValid()?1:0);
     }
 
     @Override

@@ -72,15 +72,15 @@ public class HouseBlock extends FHTownBuildingCoreBlock {
             player.sendStatusMessage(new StringTextComponent(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
             player.sendStatusMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
             player.sendStatusMessage(new StringTextComponent("Raw temperature: " +
-                    MathUtils.round(te.temperature, 2)), false);
+                    MathUtils.round(te.getTemperature(), 2)), false);
             player.sendStatusMessage(new StringTextComponent("Temperature modifier: " +
-                    MathUtils.round(te.temperatureModifier, 2)), false);
+                    MathUtils.round(te.getTemperatureModifier(), 2)), false);
             player.sendStatusMessage(new StringTextComponent("Effective temperature: " +
                     MathUtils.round(te.getEffectiveTemperature(), 2)), false);
-            player.sendStatusMessage(new StringTextComponent("Volume: " + (te.volume)), false);
-            player.sendStatusMessage(new StringTextComponent("Area: " + (te.area)), false);
+            player.sendStatusMessage(new StringTextComponent("Volume: " + (te.getVolume())), false);
+            player.sendStatusMessage(new StringTextComponent("Area: " + (te.getArea())), false);
             player.sendStatusMessage(new StringTextComponent("Rating: " +
-                    MathUtils.round(te.rating, 2)), false);
+                    MathUtils.round(te.getRating(), 2)), false);
             return ActionResultType.SUCCESS;
         }
         return ActionResultType.PASS;

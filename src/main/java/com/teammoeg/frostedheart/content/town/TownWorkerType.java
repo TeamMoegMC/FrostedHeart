@@ -23,6 +23,8 @@ import com.teammoeg.frostedheart.FHBlocks;
 
 import net.minecraft.block.Block;
 
+import static java.lang.Math.abs;
+
 /**
  * The second-lowest level town processing function.
  * <p>
@@ -40,9 +42,9 @@ public enum TownWorkerType {
      */
     DUMMY(null, null, -1),
     HOUSE(FHBlocks.house.get(), (town, workData) -> {
-        double cost = 1;
-        double actualCost = town.cost(TownResourceType.PREP_FOOD, cost, false);
-        return cost == actualCost;
+        double residentNum = workData.getList("residents", 10).size();
+        double actualCost = town.cost(TownResourceType.PREP_FOOD, residentNum, false);
+        return Math.abs(residentNum - actualCost) < 0.01;
     }, 0),
     WAREHOUSE(FHBlocks.warehouse.get(), null, 0),
     MINE(FHBlocks.mine.get(), (town, workDate) -> {

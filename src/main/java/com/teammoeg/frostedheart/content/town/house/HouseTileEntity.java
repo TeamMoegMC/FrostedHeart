@@ -30,7 +30,9 @@ import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.IntNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.LongNBT;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
@@ -45,6 +47,7 @@ import javax.annotation.Nonnull;
 import java.util.*;
 
 import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHouseBlock;
+import static net.minecraftforge.common.util.Constants.NBT.TAG_LONG;
 
 
 /**
@@ -61,21 +64,23 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
         FHBlockInterfaces.IActiveState {
 
     /** The temperature at which the house is comfortable. */
-    private static final double COMFORTABLE_TEMP_HOUSE = 24;
+    public static final double COMFORTABLE_TEMP_HOUSE = 24;
     public static final int MAX_TEMP_HOUSE = 50;
     public static final int MIN_TEMP_HOUSE = 0;
+    public static final String TAG_NAME_OCCUPIED_AREA = "occupiedArea";
 
     /** Work data, stored in town. */
-    public int size = 0; // how many resident can live here
+    private byte isValid = -1;
+    private int maxResident = -1; // how many resident can live here
     public List<Resident> residents = new ArrayList<>();
-    public int volume = 0;
-    public int decoration = 0;
-    public int area = 0;
-    public double temperature = 0;
-    public Map<String, Integer> decorations = new HashMap<>();
-    public double rating = 0;
-    public Set<ColumnPos> occupiedArea;
-    public double temperatureModifier = 0;
+    private int volume = -1;
+    //private int decoration = -1;
+    private int area = -1;
+    private double temperature = -1;
+    private Map<String, Integer> decorations = new HashMap<>();
+    private double rating = -1;
+    private Set<ColumnPos> occupiedArea;
+    private double temperatureModifier = 0;
 
     /** Tile data, stored in tile entity. */
     HeatConsumerEndpoint endpoint = new HeatConsumerEndpoint(99,10,1);
@@ -105,45 +110,109 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
      */
     @Override
     public boolean isWorkValid() {
-        return isStructureValid() && isTemperatureValid();
+        if(this.isValid == -1) this.refresh();
+        return this.isValid == 1;
+    }
+
+    public void refresh(){
+        this.isValid = isStructureValid() && isStructureValid() ? (byte) 1 : (byte) 0;
+    }
+
+    public static ListNBT serializeOccupiedArea(Set<ColumnPos> occupiedArea) {
+        ListNBT list = new ListNBT();
+        for (ColumnPos pos : occupiedArea) {
+            long posLong = BlockPos.pack(pos.x, 0, pos.z);
+            list.add(LongNBT.valueOf(posLong));
+        }
+        return list;
+    }
+    public static Set<ColumnPos> deserializeOccupiedArea(CompoundNBT data) {
+        Set<ColumnPos> occupiedArea = new HashSet<>();
+        ListNBT list = data.getList(TAG_NAME_OCCUPIED_AREA, TAG_LONG);
+        list.forEach(nbt -> {
+            occupiedArea.add(new ColumnPos(BlockPos.unpackX(((LongNBT) nbt).getLong()), BlockPos.unpackZ(((LongNBT) nbt).getLong())));
+        });
+        return occupiedArea;
     }
 
     @Override
     public CompoundNBT getWorkData() {
         CompoundNBT data = new CompoundNBT();
-        ListNBT residentList = new ListNBT();
-        for (Resident resident : residents) {
-            residentList.add(resident.serialize());
+        data.putByte("isValid", isValid);
+        if(this.isValid == 1) {
+            ListNBT residentList = new ListNBT();
+            for (Resident resident : residents) {
+                residentList.add(resident.serialize());
+            }
+            data.put("residents", residentList);
+            data.putInt("maxResident", maxResident);
+            data.putDouble("temperature", temperature);
+            data.putInt("volume", volume);
+            data.putInt("area", area);
+            //data.putInt("decoration", decoration);
+            data.putDouble("rating", rating);
+            data.putDouble("temperatureModifier", temperatureModifier);
+            data.put(TAG_NAME_OCCUPIED_AREA, serializeOccupiedArea(occupiedArea));
         }
-        data.put("residents", residentList);
-        data.putInt("size", size);
-        data.putDouble("temperature", temperature);
-        data.putInt("volume", volume);
-        data.putInt("decoration", decoration);
-        data.putDouble("rating", rating);
-        data.putDouble("temperatureModifier", temperatureModifier);
         return data;
     }
 
     @Override
     public void setWorkData(CompoundNBT data) {
-        residents = new ArrayList<>();
-        ListNBT residentList = data.getList("residents", 10);
-        for (int i = 0; i < residentList.size(); i++) {
-            residents.add(new Resident().deserialize(residentList.getCompound(i)));
+        isValid = data.getByte("isValid");
+        if(isValid == 1) {
+            residents = new ArrayList<>();
+            ListNBT residentList = data.getList("residents", 10);
+            for (int i = 0; i < residentList.size(); i++) {
+                residents.add(new Resident().deserialize(residentList.getCompound(i)));
+            }
+            maxResident = data.getInt("maxResident");
+            temperature = data.getDouble("temperature");
+            volume = data.getInt("volume");
+            area = data.getInt("area");
+            //decoration = data.getInt("decoration");
+            rating = data.getDouble("rating");
+            temperatureModifier = data.getDouble("temperatureModifier");
+            occupiedArea = deserializeOccupiedArea(data);
         }
-        size = data.getInt("size");
-        temperature = data.getDouble("temperature");
-        volume = data.getInt("volume");
-        decoration = data.getInt("decoration");
-        rating = data.getDouble("rating");
-        temperatureModifier = data.getDouble("temperatureModifier");
     }
 
     @Override
     public Collection<ColumnPos> getOccupiedArea() {
+        this.isWorkValid();
         return this.occupiedArea;
     }
+
+    public int getMaxResident() {
+        return isWorkValid() ? this.maxResident : 0;
+    }
+
+    public int getVolume() {
+        return isWorkValid() ? this.volume : 0;
+    }
+
+    public int getArea() {
+        return isWorkValid() ? this.area : 0;
+    }
+
+    public double getTemperature() {
+        return isWorkValid() ? this.temperature : 0;
+    }
+
+    public double getRating() {
+        if(this.isWorkValid()){
+            if(this.rating == -1){
+                return rating = this.computeRating();
+            }
+            return this.rating;
+        }
+        return 0;
+    }
+
+    public double getTemperatureModifier() {
+        return isWorkValid() ? this.temperatureModifier : 0;
+    }
+
 
     /**
      * Determine whether the house structure is well-defined.
@@ -213,16 +282,13 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
      * @return a rating in range of zero to one
      */
     private double computeRating() {
-        return (calculateDecorationRating(this.decorations, this.area)
-                + calculateSpaceRating(this.volume, this.area)
+        return (calculateSpaceRating(this.volume, this.area) * (1+calculateDecorationRating(this.decorations, this.area))
                 + calculateTemperatureRating(this.temperature + this.temperatureModifier)) / 3;
     }
-
-    private static double calculateTemperatureRating(double temperature) {
+    public static double calculateTemperatureRating(double temperature) {
         double tempDiff = Math.abs(COMFORTABLE_TEMP_HOUSE - temperature);
         return 0.017 + 1 / (1 + Math.exp(0.4 * (tempDiff - 10)));
     }
-
     private static double calculateDecorationRating(Map<?, Integer> decorations, int area) {
         double score = 0;
         for (Integer num : decorations.values()) {
@@ -236,9 +302,7 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
         }
         return Math.min(1, score / (6 + area / 16.0f));
     }
-
-
-    private static double calculateSpaceRating(int volume, int area) {
+    public static double calculateSpaceRating(int volume, int area) {
         double height = volume / (float) area;
         double score = area * (1.55 + Math.log(height - 1.6) * 0.6);
         return 1 - Math.exp(-0.024 * Math.pow(score, 1.11));

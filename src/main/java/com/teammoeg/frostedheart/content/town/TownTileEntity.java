@@ -69,5 +69,10 @@ public interface TownTileEntity {
      */
     void setWorkData(CompoundNBT data);
 
+    /**
+     * Get the occupied area of the entire structure.
+     * Occupied area should be counted when scanning the structure.
+     * @return the occupied area of the entire structure.
+     */
     Collection<ColumnPos> getOccupiedArea();
 }

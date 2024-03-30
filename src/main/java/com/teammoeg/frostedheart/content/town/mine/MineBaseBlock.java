@@ -35,10 +35,10 @@ public class MineBaseBlock extends FHTownBuildingCoreBlock {
             }
             player.sendStatusMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
             player.sendStatusMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.sendStatusMessage(new StringTextComponent("Area: " + (te.area)), false);
-            player.sendStatusMessage(new StringTextComponent("Volume: " + (te.volume)), false);
-            player.sendStatusMessage(new StringTextComponent("Chest: " + (te.chest)), false);
-            player.sendStatusMessage(new StringTextComponent("Rack: " + (te.rack)), false);
+            player.sendStatusMessage(new StringTextComponent("Area: " + (te.getArea())), false);
+            player.sendStatusMessage(new StringTextComponent("Volume: " + (te.getVolume())), false);
+            player.sendStatusMessage(new StringTextComponent("Chest: " + (te.getChest())), false);
+            player.sendStatusMessage(new StringTextComponent("Rack: " + (te.getRack())), false);
             player.sendStatusMessage(new StringTextComponent("Linked mines: " + (te.linkedMines)), false);
             return ActionResultType.SUCCESS;
         }

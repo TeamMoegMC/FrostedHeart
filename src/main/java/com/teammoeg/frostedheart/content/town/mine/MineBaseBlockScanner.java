@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.content.town.mine;
 
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
@@ -16,6 +17,7 @@ import se.mickelus.tetra.blocks.rack.RackBlock;
 
 import java.util.AbstractMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Set;
 
 import static net.minecraft.block.PlantBlockHelper.isAir;
@@ -30,6 +32,8 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
     public int volume;
     public int chest = 0;
     public int rack = 0;
+    public double temperature = 0;
+    private final LinkedList<Float> temperatureList = new LinkedList<>();
     public Set<BlockPos> linkedMines = new HashSet<>();
     public Set<ColumnPos> occupiedArea = new HashSet<>();
 
@@ -44,7 +48,6 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
         if(!isFloorBlock(pos)){
             return false;
         }
-        FHMain.LOGGER.info("isFloorBlock " + pos);
         AbstractMap.SimpleEntry<Integer, Boolean> floorInformation = countBlocksAbove(pos,(pos1)->{
             if(isFloorBlock(pos1)) return true;
             if(world.getBlockState(pos1).isIn(Tags.Blocks.CHESTS)){
@@ -55,12 +58,26 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
                 rack++;
                 return false;
             }
+            if(isAir(world.getBlockState(pos1))){
+                this.temperatureList.add(ChunkHeatData.getTemperature(world, pos1));
+                return false;
+            }
             return false;
         });
         if(floorInformation.getValue() && floorInformation.getKey() >= 2){
             volume += floorInformation.getKey();
             return true;
         } else return false;
+    }
+
+    public double getTemperature(){
+        double average = 0;
+        int count = 0;
+        for(Float f:temperatureList){
+            average += f;
+            count++;
+        }
+        return average/count;
     }
 
     public boolean scan(){

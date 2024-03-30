@@ -94,13 +94,7 @@ public class HouseBlockScanner extends BlockScanner {
         Block block = blockState.getBlock();
         if (blockState.isIn(FHTags.Blocks.DECORATIONS) || Objects.requireNonNull(block.getRegistryName()).getNamespace().equals("cfm")) {
             String name = block.toString();
-            // If not in the map, add it with a value of 1
-            if (decorations.get(name) == null || decorations.get(name) == 0) {
-                decorations.put(name, 1);
-            } else {
-                // If in the map, increment the value
-                decorations.put(name, decorations.get(name) + 1);
-            }
+            decorations.merge(name, 1, Integer::sum);
         }
     }
 
