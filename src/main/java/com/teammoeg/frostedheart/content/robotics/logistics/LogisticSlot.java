@@ -44,7 +44,7 @@ public class LogisticSlot {
 		return !storage.isRemoved();
 	}
 	public boolean hasSize(ItemStack stack) {
-		return Math.min(stack.getMaxDamage()-getItem().getCount(),storage.getInventory().getSlotLimit(slot)-getItem().getCount())>0;
+		return exists()&&Math.min(stack.getMaxDamage()-getItem().getCount(),storage.getInventory().getSlotLimit(slot)-getItem().getCount())>0;
 	}
 	@Override
 	public int hashCode() {

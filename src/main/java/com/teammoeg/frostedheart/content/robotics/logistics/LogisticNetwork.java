@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.teammoeg.frostedheart.util.ResultCacheIterator;
+
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -24,19 +26,59 @@ public class LogisticNetwork {
 	Map<LogisticSlot, Item> slotsi = new HashMap<>();
 	// List<LogisticEnvolop> envolops=new ArrayList<>();
 	List<TileEntityLogisticsStorage> storages = new ArrayList<>();
-	LinkedHashMap<BlockPos, TileEntityLogisticsStorage> endpoints = new LinkedHashMap<>();
 	World world;
 	BlockPos centerPos;
-
+	int order=0;
+	int task=0;
+	LogisticTaskIterator iterator=new LogisticTaskIterator();
+	class LogisticTaskIterator extends ResultCacheIterator<LogisticTask>{
+		protected LogisticTask internalNext() {
+			if(storages.isEmpty())
+				return null;
+			if(order>=storages.size()) {
+				order=0;
+			}
+			int lastOrder=order-1;
+			if(lastOrder<0)
+				lastOrder=storages.size()+lastOrder;
+			TileEntityLogisticsStorage storage=storages.get(order);
+			while(true) {
+				if(storage.isRemoved()) {
+					storages.remove(order);
+					if(order<lastOrder)
+						lastOrder--;
+					task=0;
+					if(order>=storages.size()){
+						order=0;
+					}
+					storage=storages.get(order);
+					continue;
+				}
+				if(storage instanceof RequestingLogisticStorage) {
+					RequestingLogisticStorage rls=(RequestingLogisticStorage) storage;
+					LogisticTask[] lt=rls.getTasks();
+					while(task<lt.length) {
+						LogisticTask curtask=lt[task];
+						task++;
+						if(curtask!=null)
+							return curtask;
+					}
+				}
+				order++;
+				task=0;
+				if(order>=storages.size())
+					order=0;
+				if(lastOrder==order)
+					return null;
+				storage=storages.get(order);
+			}
+		}
+	}
 	public LogisticNetwork() {
 	}
 
 	public World getWorld() {
 		return world;
-	}
-
-	public void updateSlot(BlockPos pos, int slot, ItemStack stack) {
-		updateSlot(new LogisticSlot(endpoints.get(pos), slot), stack);
 	}
 
 	public void updateSlot(TileEntityLogisticsStorage storage, int slot, ItemStack stack) {
@@ -45,7 +87,7 @@ public class LogisticNetwork {
 
 	public <T extends TileEntity & ILogisticsStorage> void update(T tile) {
 		TileEntityLogisticsStorage storage = new TileEntityLogisticsStorage(tile);
-		endpoints.put(tile.getPos(), storage);
+		storages.add(storage);
 		ItemStackHandler inv = storage.getInventory();
 		for (int i = 0; i < inv.getSlots(); i++) {
 			if (!inv.getStackInSlot(i).isEmpty())
@@ -54,8 +96,6 @@ public class LogisticNetwork {
 	}
 
 	public void invalidCheck() {
-		endpoints.values().removeIf(t -> t.isRemoved());
-		storages.removeIf(t -> t.isRemoved());
 		slotsi.keySet().removeIf(t -> !t.exists());
 		indexedSlot.values().forEach(t -> t.forEach(t1 -> t1.removeIf(t2 -> !t2.exists())));
 	}
@@ -72,7 +112,7 @@ public class LogisticNetwork {
 			}
 		}
 		for (TileEntityLogisticsStorage storage : storages) {
-			if (storage.isValidFor(stack)) {
+			if (!storage.isRemoved()&&storage.isValidFor(stack)) {
 				ItemStackHandler inv = storage.getInventory();
 				for (int i = 0; i < inv.getSlots(); i++) {
 					if (inv.getStackInSlot(i).isEmpty())
@@ -82,14 +122,29 @@ public class LogisticNetwork {
 		}
 		return null;
 	}
-
+	public List<LogisticTask> getTasks(int num){
+		List<LogisticTask> task=new ArrayList<>();
+		for(int i=0;i<num;i++) {
+			if(!iterator.hasNext())return task;
+			task.add(iterator.next());
+		}
+		return task;
+	}
+	public void tick() {
+		for(LogisticTask wrapper:getTasks(10)) {
+			wrapper.work(this, 4);
+		}
+	}
 	public void internalTransit(LogisticSlot src, LogisticSlot dest, int transitSize) {
 		ItemStack extracted = src.extract(transitSize);
+		boolean destEmpty=dest.getItem().isEmpty();
 		extracted = dest.insert(extracted);
 		src.insert(extracted);
 		if (src.getItem().isEmpty()) {
 			remove(src);
 		}
+		if(destEmpty&&!extracted.isEmpty())
+			this.updateSlot(dest, extracted);
 	}
 
 	public void importTransit(LogisticSlot src, int transitSize) {
@@ -97,7 +152,13 @@ public class LogisticNetwork {
 		if (dest != null)
 			internalTransit(src, dest, transitSize);
 	}
-
+	public ItemStack receiveItem(ItemStack stack) {
+		LogisticSlot dest = getFirstEmptySlotFor(stack);
+		if (dest != null)
+			return dest.insert(stack);
+		return stack;
+		
+	}
 	public void exportTransit(ILogisticsStorage storage, ItemStack filter, int transitSize) {
 		ItemHandlerHelper.insertItemStacked(storage.getInventory(), fetchItem(filter, false, transitSize), false);
 	}
@@ -161,7 +222,22 @@ public class LogisticNetwork {
 		}
 		return actual.getStackInSlot(0);
 	}
-
+	public int fetchItemInto(ItemStack filter,ItemStackHandler handler, boolean useNBT, int maxcnt) {
+		Iterator<LogisticSlot> it = findSlotsFor(filter,useNBT).iterator();
+		int curcnt=0;
+		while (it.hasNext()) {
+			LogisticSlot csl = it.next();
+			ItemStack cur=csl.extract(maxcnt-curcnt);
+			curcnt+=cur.getCount();
+			ItemStack reminder=ItemHandlerHelper.insertItem(handler, cur, false);
+			if(!reminder.isEmpty()) {
+				curcnt-=reminder.getCount();
+				csl.insert(reminder);
+				break;
+			}
+		}
+		return curcnt;
+	}
 	public void setWorld(World world) {
 		this.world = world;
 	}
