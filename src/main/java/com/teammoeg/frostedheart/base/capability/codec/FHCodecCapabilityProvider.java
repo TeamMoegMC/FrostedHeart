@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.base.capability;
+package com.teammoeg.frostedheart.base.capability.codec;
 
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import net.minecraft.nbt.CompoundNBT;

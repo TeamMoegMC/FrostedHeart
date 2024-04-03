@@ -1,14 +1,17 @@
-package com.teammoeg.frostedheart.content.robotics.logistics;
+package com.teammoeg.frostedheart.content.robotics.logistics.tasks;
+
+import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 
 public class LogisticRequestTask implements LogisticTask {
 	ItemStack filter;
 	int size;
 	boolean fetchNBT;
-	ILogisticsStorage storage;
+	TileEntity storage;
 
-	public LogisticRequestTask(ItemStack filter, int size, boolean fetchNBT, ILogisticsStorage storage) {
+	public LogisticRequestTask(ItemStack filter, int size, boolean fetchNBT, TileEntity storage) {
 		super();
 		this.filter = filter;
 		this.size = size;
@@ -24,7 +27,7 @@ public class LogisticRequestTask implements LogisticTask {
 
 	@Override
 	public void work(LogisticNetwork network,int msize) {
-		int rets= network.fetchItemInto(filter, storage.getInventory(), fetchNBT, Math.min(msize, size));
+		int rets= network.fetchItemInto(filter, network.getStorage(storage.getPos()).getInventory(), fetchNBT, Math.min(msize, size));
 		size-=rets;
 	}
 

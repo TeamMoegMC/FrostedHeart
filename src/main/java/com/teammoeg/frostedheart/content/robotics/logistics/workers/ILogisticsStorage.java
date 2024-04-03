@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.robotics.logistics;
+package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;

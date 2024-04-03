@@ -1,5 +1,6 @@
-package com.teammoeg.frostedheart.base.capability;
+package com.teammoeg.frostedheart.base.capability.nbt;
 
+import com.teammoeg.frostedheart.base.capability.IFHCapability;
 import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
@@ -35,7 +36,7 @@ public class FHNBTCapability<C extends NBTSerializable> implements IFHCapability
         capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(capClass.getName().intern());
 	}
 	public ICapabilityProvider provider() {
-		return new FHCapabilityProvider<>(this);
+		return new FHNBTCapabilityProvider<>(this);
 	}
 	LazyOptional<C> createCapability(){
 		return LazyOptional.of(factory);

@@ -68,7 +68,6 @@ public class AttachCapabilityEvents {
     }
     @SubscribeEvent
     public static void attachToItem(AttachCapabilitiesEvent<ItemStack> event) {
-        // only attach to dimension with skylight (i.e. overworld)
     	ArmorTempData amd=FHDataManager.getArmor(event.getObject());
         if (amd!=null) {
             event.addCapability(new ResourceLocation(FHMain.MODID, "armor_warmth"),new CurioCapabilityProvider(()->new ArmorTempCurios(amd)));
@@ -79,6 +78,7 @@ public class AttachCapabilityEvents {
         // only attach to dimension with skylight (i.e. overworld)
         if (!event.getObject().getDimensionType().doesFixedTimeExist()) {
             event.addCapability(new ResourceLocation(FHMain.MODID, "climate_data"),FHCapabilities.CLIMATE_DATA.provider());
+            event.addCapability(new ResourceLocation(FHMain.MODID, "logistic_data"),FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.provider());
         }
     }
 

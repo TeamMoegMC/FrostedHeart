@@ -3,12 +3,15 @@ package com.teammoeg.frostedheart.content.robotics.logistics;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.ILogisticsStorage;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.TaskableLogisticStorage;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.TileEntityLogisticsStorage;
 import com.teammoeg.frostedheart.util.ResultCacheIterator;
 
 import net.minecraft.item.Item;
@@ -26,6 +29,7 @@ public class LogisticNetwork {
 	Map<LogisticSlot, Item> slotsi = new HashMap<>();
 	// List<LogisticEnvolop> envolops=new ArrayList<>();
 	List<TileEntityLogisticsStorage> storages = new ArrayList<>();
+	Map<BlockPos,TileEntityLogisticsStorage> storageList=new HashMap<>();
 	World world;
 	BlockPos centerPos;
 	int order=0;
@@ -54,8 +58,8 @@ public class LogisticNetwork {
 					storage=storages.get(order);
 					continue;
 				}
-				if(storage instanceof RequestingLogisticStorage) {
-					RequestingLogisticStorage rls=(RequestingLogisticStorage) storage;
+				if(storage instanceof TaskableLogisticStorage) {
+					TaskableLogisticStorage rls=(TaskableLogisticStorage) storage;
 					LogisticTask[] lt=rls.getTasks();
 					while(task<lt.length) {
 						LogisticTask curtask=lt[task];
@@ -84,17 +88,22 @@ public class LogisticNetwork {
 	public void updateSlot(TileEntityLogisticsStorage storage, int slot, ItemStack stack) {
 		updateSlot(new LogisticSlot(storage, slot), stack);
 	}
-
+	
 	public <T extends TileEntity & ILogisticsStorage> void update(T tile) {
 		TileEntityLogisticsStorage storage = new TileEntityLogisticsStorage(tile);
-		storages.add(storage);
-		ItemStackHandler inv = storage.getInventory();
-		for (int i = 0; i < inv.getSlots(); i++) {
-			if (!inv.getStackInSlot(i).isEmpty())
-				updateSlot(storage, i, inv.getStackInSlot(i));
+		TileEntityLogisticsStorage ostor=storageList.put(tile.getPos(), storage);
+		if(ostor.getTe()!=tile) {
+			storages.add(storage);		
+			ItemStackHandler inv = storage.getInventory();
+			for (int i = 0; i < inv.getSlots(); i++) {
+				if (!inv.getStackInSlot(i).isEmpty())
+					updateSlot(storage, i, inv.getStackInSlot(i));
+			}
 		}
 	}
-
+	public TileEntityLogisticsStorage getStorage(BlockPos pos) {
+		return storageList.get(pos);
+	}
 	public void invalidCheck() {
 		slotsi.keySet().removeIf(t -> !t.exists());
 		indexedSlot.values().forEach(t -> t.forEach(t1 -> t1.removeIf(t2 -> !t2.exists())));
@@ -160,7 +169,7 @@ public class LogisticNetwork {
 		
 	}
 	public void exportTransit(ILogisticsStorage storage, ItemStack filter, int transitSize) {
-		ItemHandlerHelper.insertItemStacked(storage.getInventory(), fetchItem(filter, false, transitSize), false);
+		ItemHandlerHelper.insertItem(storage.getInventory(), fetchItem(filter, false, transitSize), false);
 	}
 
 	private void remove(LogisticSlot slot) {

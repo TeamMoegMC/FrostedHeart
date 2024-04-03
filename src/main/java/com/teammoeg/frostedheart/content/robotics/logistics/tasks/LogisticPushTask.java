@@ -1,4 +1,6 @@
-package com.teammoeg.frostedheart.content.robotics.logistics;
+package com.teammoeg.frostedheart.content.robotics.logistics.tasks;
+
+import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
