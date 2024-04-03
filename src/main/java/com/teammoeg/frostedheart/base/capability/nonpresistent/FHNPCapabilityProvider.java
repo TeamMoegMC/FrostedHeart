@@ -1,6 +1,4 @@
-package com.teammoeg.frostedheart.base.capability;
-
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
+package com.teammoeg.frostedheart.base.capability.nonpresistent;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
@@ -8,10 +6,10 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class FHCapabilityProvider<C extends NBTSerializable> implements ICapabilitySerializable<CompoundNBT>{
+public class FHNPCapabilityProvider<C> implements ICapabilitySerializable<CompoundNBT>{
 	LazyOptional<C> lazyCap;
-	FHNBTCapability<C> capability;
-	public FHCapabilityProvider(FHNBTCapability<C> capability) {
+	FHNPCapability<C> capability;
+	public FHNPCapabilityProvider(FHNPCapability<C> capability) {
 		super();
 		this.capability = capability;
 		this.lazyCap=capability.createCapability();
@@ -27,12 +25,11 @@ public class FHCapabilityProvider<C extends NBTSerializable> implements ICapabil
 
 	@Override
 	public CompoundNBT serializeNBT() {
-		return lazyCap.map(NBTSerializable::serializeNBT).orElseGet(CompoundNBT::new);
+		return new CompoundNBT();
 	}
 
 	@Override
 	public void deserializeNBT(CompoundNBT nbt) {
-		lazyCap.ifPresent(c->c.deserializeNBT(nbt));
 	}
 
 }

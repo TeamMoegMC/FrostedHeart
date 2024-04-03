@@ -35,7 +35,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.capability.FHNBTCapability;
+import com.teammoeg.frostedheart.base.capability.nbt.FHNBTCapability;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;

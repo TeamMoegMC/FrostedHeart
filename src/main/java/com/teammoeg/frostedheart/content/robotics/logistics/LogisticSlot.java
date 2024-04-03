@@ -4,6 +4,8 @@ import java.util.Objects;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.ILogisticsStorage;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.TileEntityLogisticsStorage;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.item.ItemStack;
@@ -44,7 +46,7 @@ public class LogisticSlot {
 		return !storage.isRemoved();
 	}
 	public boolean hasSize(ItemStack stack) {
-		return Math.min(stack.getMaxDamage()-getItem().getCount(),storage.getInventory().getSlotLimit(slot)-getItem().getCount())>0;
+		return exists()&&Math.min(stack.getMaxDamage()-getItem().getCount(),storage.getInventory().getSlotLimit(slot)-getItem().getCount())>0;
 	}
 	@Override
 	public int hashCode() {

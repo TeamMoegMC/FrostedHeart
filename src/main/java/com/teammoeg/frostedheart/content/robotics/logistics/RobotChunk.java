@@ -22,7 +22,11 @@ package com.teammoeg.frostedheart.content.robotics.logistics;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RobotChunk {
-    Map<ChunkSectionPos,LogisticNetwork> networks = new HashMap<>();
+import net.minecraft.util.math.BlockPos;
 
+public class RobotChunk {
+    Map<ChunkSectionPos,BlockPos> networks = new HashMap<>();
+    public BlockPos getNetworkCoreFor(BlockPos actual) {
+    	return networks.get(new ChunkSectionPos(actual));
+    };
 }
