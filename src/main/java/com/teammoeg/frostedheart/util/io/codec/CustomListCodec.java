@@ -38,7 +38,7 @@ public class CustomListCodec<A,L extends Collection<A>> implements Codec<L> {
         		Pair<A,T> at=a.getOrThrow(true, sb::append);
         		obj.add(at.getFirst());
         	});
-        	if(sb.isEmpty())
+        	if(sb.length()!=0)
         		return DataResult.success(Pair.of(obj, input));
         	return DataResult.error(sb.toString(),Pair.of(obj, input));
         });

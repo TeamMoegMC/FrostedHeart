@@ -44,7 +44,7 @@ public class TeamTownDataS2CPacket implements FHMessage {
 	}
 
 	public TeamTownDataS2CPacket(TeamTownData townData) {
-		data=SpecialDataTypes.TOWN_DATA.loadData(DataOps.COMPRESSED, data);
+		data=SpecialDataTypes.TOWN_DATA.saveData(DataOps.COMPRESSED, townData);
     }
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {

@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.heatdevice.generator;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,20 +28,15 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.SpecialData;
 import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
-import com.teammoeg.frostedheart.util.io.codec.BooleansCodec;
+import com.teammoeg.frostedheart.util.io.codec.DecreteListCodec;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
@@ -247,17 +243,16 @@ public class GeneratorData implements SpecialData{
     	.flag("isBroken", o->o.isBroken).build(),
     	Codec.FLOAT.fieldOf("steamLevel").forGetter(o->o.steamLevel),
     	Codec.FLOAT.fieldOf("powerLevel").forGetter(o->o.power),
-    	Codec.INT.fieldOf("heated").forGetter(o->o.heated),
-    	Codec.INT.fieldOf("ranged").forGetter(o->o.ranged),
-    	CodecUtil.registryCodec(Registry.FLUID).optionalFieldOf("steamFluid").forGetter(o->Optional.ofNullable(o.fluid)),
+    	CodecUtil.defaultValue(Codec.INT,0).fieldOf("heated").forGetter(o->o.heated),
+    	CodecUtil.defaultValue(Codec.INT,0).fieldOf("ranged").forGetter(o->o.ranged),
+    	CodecUtil.registryCodec(()->Registry.FLUID).optionalFieldOf("steamFluid").forGetter(o->Optional.ofNullable(o.fluid)),
     	Codec.FLOAT.fieldOf("tempLevel").forGetter(o->o.TLevel),
     	Codec.FLOAT.fieldOf("rangeLevel").forGetter(o->o.RLevel),
-    	Codec.list(CodecUtil.ITEMSTACK_CODEC).fieldOf("inv").forGetter(o->o.inventory),
-    	CodecUtil.ITEMSTACK_CODEC.fieldOf("res").forGetter(o->o.currentItem),
-    	BlockPos.CODEC.fieldOf("actualPos").forGetter(o->o.actualPos),
-    	Codec.optionalField("dim",ResourceLocation.CODEC).forGetter(o->o.dimension==null?Optional.empty():Optional.of(o.dimension.getLocation()))
+    	CodecUtil.path(new DecreteListCodec<>(CodecUtil.ITEMSTACK_CODEC,ItemStack::isEmpty,()->ItemStack.EMPTY,"Slot"),"inv","Items").forGetter(o->o.inventory),
+    	CodecUtil.defaultValue(CodecUtil.ITEMSTACK_CODEC, ItemStack.EMPTY).fieldOf("res").forGetter(o->o.currentItem),
+    	CodecUtil.BLOCKPOS.fieldOf("actualPos").forGetter(o->o.actualPos),
+    	ResourceLocation.CODEC.optionalFieldOf("dim").forGetter(o->o.dimension==null?Optional.empty():Optional.of(o.dimension.getLocation()))
     	).apply(t,GeneratorData::new));
-    
     
 	public GeneratorData(int process, int processMax, int steamProcess, int overdriveLevel, boolean[] flags, float steamLevel, float power, int heated, int ranged, Optional<Fluid> fluid, float tLevel, float rLevel, List<ItemStack> inventory, ItemStack currentItem, BlockPos actualPos, Optional<ResourceLocation> dimension) {
 		super();
@@ -277,8 +272,8 @@ public class GeneratorData implements SpecialData{
 		this.TLevel = tLevel;
 		this.RLevel = rLevel;
 		for(int i=0;i<inventory.size();i++)
-		this.inventory.set(i, inventory.get(i));
-			this.currentItem = currentItem;
+			this.inventory.set(i, inventory.get(i));
+		this.currentItem = currentItem;
 		this.actualPos = actualPos;
 		this.dimension = dimension.map(t->RegistryKey.getOrCreateKey(Registry.WORLD_KEY, t)).orElse(null);
 	}

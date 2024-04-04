@@ -286,6 +286,8 @@ public class DataOps implements DynamicOps<Object> {
 		DataResult<List<Object>> dr = castToList(input);
 		if (dr.result().isPresent()) {
 			List<Object> res = dr.result().get();
+			if(res.isEmpty())
+				return DataResult.success(new byte[0]);
 			if (getElmClass(res) == Byte.class) {
 				int siz = res.size();
 				byte[] bs = new byte[siz];
@@ -306,6 +308,8 @@ public class DataOps implements DynamicOps<Object> {
 		DataResult<List<Object>> dr = castToList(input);
 		if (dr.result().isPresent()) {
 			List<Object> res = dr.result().get();
+			if(res.isEmpty())
+				return DataResult.success(new int[0]);
 			if (getElmClass(res) == Integer.class) {
 				int siz = res.size();
 				int[] bs = new int[siz];
@@ -332,6 +336,8 @@ public class DataOps implements DynamicOps<Object> {
 		DataResult<List<Object>> dr = castToList(input);
 		if (dr.result().isPresent()) {
 			List<Object> res = dr.result().get();
+			if(res.isEmpty())
+				return DataResult.success(new long[0]);
 			if (getElmClass(res) == Long.class) {
 				int siz = res.size();
 				long[] bs = new long[siz];

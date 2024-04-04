@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.town;
 
+import java.util.function.Supplier;
+
 import com.teammoeg.frostedheart.FHBlocks;
 
 import net.minecraft.block.Block;
@@ -39,24 +41,24 @@ public enum TownWorkerType {
      * The dummy.
      */
     DUMMY(null, null, -1),
-    HOUSE(FHBlocks.house.get(), (town, workData) -> {
+    HOUSE(FHBlocks.house, (town, workData) -> {
         double cost = 1;
         double actualCost = town.cost(TownResourceType.PREP_FOOD, cost, false);
         return cost == actualCost;
     }, 0),
-    WAREHOUSE(FHBlocks.warehouse.get(), null, 0),
-    MINE(FHBlocks.mine.get(), (town, workDate) -> {
+    WAREHOUSE(FHBlocks.warehouse, null, 0),
+    MINE(FHBlocks.mine, (town, workDate) -> {
         double add = 1;
         double actualAdd = town.add(TownResourceType.STONE, add, false);/*日后再说*/
         return add == actualAdd;
     }, 0),
-    MINE_BASE(FHBlocks.mine_base.get(), null, 0)//日后再说
+    MINE_BASE(FHBlocks.mine_base, null, 0)//日后再说
     ;
 
     /**
      * Town block.
      */
-    private final Block block;
+    private final Supplier<Block> block;
 
     /**
      * The worker.
@@ -75,7 +77,7 @@ public enum TownWorkerType {
      * @param worker           the worker
      * @param internalPriority the internal priority
      */
-    TownWorkerType(Block workerBlock, TownWorker worker, int internalPriority) {
+    TownWorkerType(Supplier<Block> workerBlock, TownWorker worker, int internalPriority) {
         this.block = workerBlock;
         this.worker = worker;
         this.priority = internalPriority;
@@ -87,7 +89,7 @@ public enum TownWorkerType {
      * @return the block
      */
     public Block getBlock() {
-        return block;
+        return block==null?null:block.get();
     }
 
     /**
