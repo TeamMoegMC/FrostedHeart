@@ -19,11 +19,17 @@
 
 package com.teammoeg.frostedheart.events;
 
+import static com.teammoeg.frostedheart.content.tips.client.TipHandler.loadUnlockedFromFile;
 import static net.minecraft.util.text.TextFormatting.*;
 
 import java.util.List;
 import java.util.Map;
 
+import com.teammoeg.frostedheart.content.tips.client.TipElement;
+import com.teammoeg.frostedheart.content.tips.client.TipHandler;
+import net.minecraft.client.gui.screen.OptionsSoundsScreen;
+import net.minecraftforge.client.event.*;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -85,13 +91,8 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent.LoggedInEvent;
-import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.InputEvent.KeyInputEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderPlayerEvent;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.TickEvent;
@@ -557,6 +558,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void unloadWorld(Unload event) {
         ClientUtils.applyspg = false;
+        TipHandler.clearRenderQueue();
     }
 
     @SuppressWarnings({"resource", "unchecked", "rawtypes"})
@@ -650,4 +652,44 @@ public class ClientEvents {
      * }
      * }
      */
+
+    @SubscribeEvent
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        loadUnlockedFromFile();
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        TipHandler.clearRenderQueue();
+        TipHandler.addToRenderQueue("_default", false);
+        TipHandler.addToRenderQueue("_default2", false);
+        if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) == 0) {
+            TipHandler.addToRenderQueue("_music_warning", false);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onGUIOpen(GuiOpenEvent event) {
+        if (event.getGui() instanceof MainMenuScreen) {
+            if (TipHandler.readError) {
+                TipElement ele = new TipElement();
+                ele.replaceToError(TipHandler.UNLOCKED_FILEPATH, "read");
+                TipHandler.addToRenderQueue(ele, true);
+                TipHandler.readError = false;
+            }
+
+//            if (...如果有新版本) {
+//              TipHandler.addToRenderQueue("update", false);
+//            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onGUIRender(GuiScreenEvent event) {
+        if (event.getGui() instanceof OptionsSoundsScreen) {
+            if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) <= 0) {
+                TipHandler.addToRenderQueue("_music_warning", false);
+            }
+        }
+    }
 }

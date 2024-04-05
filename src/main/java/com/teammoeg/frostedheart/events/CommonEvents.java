@@ -41,12 +41,7 @@ import com.teammoeg.frostedheart.FHDataManager.DataType;
 import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
-import com.teammoeg.frostedheart.command.AddTempCommand;
-import com.teammoeg.frostedheart.command.ClimateCommand;
-import com.teammoeg.frostedheart.command.DebugCommand;
-import com.teammoeg.frostedheart.command.ResearchCommand;
-import com.teammoeg.frostedheart.command.ScenarioCommand;
-import com.teammoeg.frostedheart.command.TownCommand;
+import com.teammoeg.frostedheart.command.*;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
@@ -654,6 +649,7 @@ public class CommonEvents {
         DebugCommand.register(dispatcher);
         ScenarioCommand.register(dispatcher);
         TownCommand.register(dispatcher);
+        TipCommand.register(dispatcher);
     }
 
     @SubscribeEvent

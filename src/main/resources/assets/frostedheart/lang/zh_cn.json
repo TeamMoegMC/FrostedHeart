@@ -416,5 +416,33 @@
   "tooltip.frostedheart.weather_helmet": "穿着以获取早晚天气预报",
   "tooltip.frostedheart.inspire_item": "在绘图台检验可以获得灵感",
   "tooltip.frostedheart.research_unlockable": "所需研究：%s",
-  "manual.frostedheart.main": "能量塔"
+  "manual.frostedheart.main": "能量塔",
+
+  "tips.frostedheart.error.load": "错误： 文件读取失败",
+  "tips.frostedheart.error.save": "错误： 文件保存失败",
+  "tips.frostedheart.error.save_desc": "保存文件时出现了未知错误",
+  "tips.frostedheart.error.empty": "错误： 没有文本可供显示",
+  "tips.frostedheart.error.invalid": "错误： 无效的Json文件",
+  "tips.frostedheart.error.not_exists": "错误： 文件不存在",
+  "tips.frostedheart.error.desc": "请检查整合包是否安装成功或反馈这个bug",
+  "tips.frostedheart.too_long": "这条提示好像有些太长了，请查看已解锁的提示列表",
+
+  "tips.frostedheart.gui.close": "关闭",
+  "tips.frostedheart.gui.pin": "固定到右侧HUD",
+
+  "tips.frostedheart.empty.title": "哇，这里什么都没有",
+
+  "tips.frostedheart._default.title": "欢迎来到冬季救援!",
+  "tips.frostedheart._default.desc1": "当你游玩时这里会显示各类提示，记得仔细阅读!",
+  "tips.frostedheart._default.desc2": "右上角为关闭按钮，按下§6[TAB]§r使用鼠标来选择.",
+
+  "tips.frostedheart._default2.title": "有提示没看清楚?",
+  "tips.frostedheart._default2.desc1": "打开聊天栏，右下角的按钮可以查看所有已解锁的提示哦.",
+
+  "tips.frostedheart.update.title": "冬季救援有新版本!",
+  "tips.frostedheart.update.desc1": "点击左侧的按钮前往整合包发布网站下载更新!",
+
+  "tips.frostedheart._music_warning.title": "等一下!",
+  "tips.frostedheart._music_warning.desc1": "将音乐关闭可能无法体验我们为冬季救援提供的音乐",
+  "tips.frostedheart._music_warning.desc2": "原版的音乐已经被禁用，如果您希望重新打开请修改配置文件: '&7$configPath$\\frostedheart-client.toml&r'"
 }
