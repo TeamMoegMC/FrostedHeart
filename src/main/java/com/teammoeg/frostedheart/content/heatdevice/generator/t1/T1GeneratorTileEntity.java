@@ -44,48 +44,22 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3i;
 
 public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1GeneratorTileEntity> {
-    GeneratorDriveHandler generatorDriveHandler;
     private static BlockPos lastSupportPos;
+
     public T1GeneratorTileEntity() {
         super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR_T1.get(), false);
-        this.generatorDriveHandler = new GeneratorDriveHandler(world);
         lastSupportPos = new BlockPos(0,0,0);
     }
-    public boolean isExistNeighborTileEntity() {
-        Vector3i vec = this.multiblockInstance.getSize(world);
-        int xLow = -1, xHigh = vec.getX(), yLow = 0, yHigh = vec.getY(), zLow = -1, zHigh = vec.getZ();
-        int blastBlockCount = 0, alloySmelterCount = 0;
-        for (int x = xLow; x <= xHigh; ++x)
-            for (int y = yLow; y < yHigh; ++y)
-                for (int z = zLow; z <= zHigh; ++z) {
-                    BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
-                    // Enum a seamless NoUpandDown hollow cube
-                    if ( ( (z>zLow && z<zHigh) && ((x==xLow) || (x==xHigh)) ) || ((z==zLow || z==zHigh) && (x>xLow && x<xHigh)) ) {
-                        TileEntity te = Utils.getExistingTileEntity(world, actualPos);
-                        if (te instanceof BlastFurnaceTileEntity) {
-                            if (++blastBlockCount == 9) {
-                            	BlastFurnaceTileEntity master=((BlastFurnaceTileEntity) te).master();
-                                lastSupportPos = master.getPos();
-                                return true;
-                            }
-                        }
-                        if (te instanceof AlloySmelterTileEntity) {
-                            if (++alloySmelterCount == 4) {
-                                lastSupportPos = actualPos;
-                                return true;
-                            }
-                        }
-                    }
-                }
-        return false;
-    }
+
     @Override
     protected void callBlockConsumerWithTypeCheck(Consumer<T1GeneratorTileEntity> consumer, TileEntity te) {
         if (te instanceof T1GeneratorTileEntity)
             consumer.accept((T1GeneratorTileEntity) te);
     }
 
-
+    public IETemplateMultiblock getMultiblockInstance() {
+        return this.multiblockInstance;
+    }
 
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
@@ -109,9 +83,11 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
     }
     @Override
     protected void tickDrives(boolean isActive) {
+        GeneratorDriveHandler generatorDriveHandler = new GeneratorDriveHandler(this.getWorld(), this.master(), this.lastSupportPos);
         if (isActive) {
-            if (isExistNeighborTileEntity()) {
-                this.generatorDriveHandler.checkExistOreAndUpdate(lastSupportPos);
+            if (! generatorDriveHandler.hasSupported() ) {
+                generatorDriveHandler.isExistNeighborTileEntity();
+                this.lastSupportPos = generatorDriveHandler.lastSupportPos;
             }
         }
     }
