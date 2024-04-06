@@ -146,7 +146,7 @@ public class TipHandler {
             }
         }
 
-        LOGGER.debug("Loading unlocked tips from file");
+        LOGGER.debug("Loading unlocked tips");
         try {
             String content = new String(Files.readAllBytes(Paths.get(String.valueOf(UNLOCKED_FILEPATH))));
             unlockedTipFile = GSON.fromJson(content, JsonElement.class).getAsJsonObject();
@@ -167,20 +167,7 @@ public class TipHandler {
             UNLOCKED_FILEPATH.renameTo(newName);
             LOGGER.warn("File corrupted, trying to recreate file: '" + UNLOCKED_FILEPATH);
             LOGGER.warn("Old file has been renamed to '" + newName.getName() + "'");
-
-            try {
-                String content = new String(Files.readAllBytes(Paths.get(String.valueOf(UNLOCKED_FILEPATH))));
-                unlockedTipFile = GSON.fromJson(content, JsonElement.class).getAsJsonObject();
-                unlockedTips = GSON.fromJson(unlockedTipFile.getAsJsonArray("unlocked"), new TypeToken<List<String>>() {}.getType());
-                return true;
-
-            } catch (Exception e1) {
-                e1.printStackTrace();
-                LOGGER.error("Unable to load file: '" + UNLOCKED_FILEPATH + "'");
-                readError = true;
-                unlockedTips = new ArrayList<>();
-                return false;
-            }
+            return false;
         }
     }
 
@@ -217,14 +204,16 @@ public class TipHandler {
         if (!unlockedTips.contains(ID)) {
             unlockedTips.add(ID);
             array.add(ID);
-            saveUnlockedToFile();
 
         } else if (remove) {
             unlockedTips.remove(ID);
             for (int i = 0; i < array.size(); i++) {
-                if (array.get(i).toString().equals(ID)) {
+                String s = array.get(i).toString();
+                if (s.length() > 2) {
+                    s = s.substring(1, s.length()-1);
+                }
+                if (s.equals(ID)) {
                     array.remove(i);
-                    saveUnlockedToFile();
                     break;
                 }
             }
@@ -234,6 +223,7 @@ public class TipHandler {
         JsonObject newObj = new JsonObject();
         newObj.add("unlocked", array);
         unlockedTipFile = newObj;
+        saveUnlockedToFile();
     }
 
     public static void resetTipAnimation() {

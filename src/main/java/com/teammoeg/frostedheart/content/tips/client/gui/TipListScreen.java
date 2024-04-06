@@ -204,8 +204,8 @@ public class TipListScreen extends Screen {
             tipList.remove(select);
             listHeight = tipList.size()*16;
             setSelect("");
+            TipHandler.unlockOrRemove(selectEle.ID, true);
             selectEle = null;
-            TipHandler.unlockOrRemove(select, true);
             return;
         }
 
