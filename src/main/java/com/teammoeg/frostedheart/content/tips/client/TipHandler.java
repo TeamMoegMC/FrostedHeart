@@ -112,7 +112,7 @@ public class TipHandler {
 
     public static boolean isUnlocked(String ID) {
         if (unlockedTipFile == null) {
-            if (!loadUnlockedFromFile()) {
+            if (!loadUnlockedFromFile() || readError) {
                 return false;
             }
         }
@@ -124,7 +124,9 @@ public class TipHandler {
             return CACHE.get(ID);
         } else {
             TipElement newElement = new TipElement(ID);
-            CACHE.put(ID, newElement);
+            if (newElement.addToCache) {
+                CACHE.put(ID, newElement);
+            }
             return newElement;
         }
     }
@@ -195,7 +197,7 @@ public class TipHandler {
 
     public static void unlockOrRemove(String ID, boolean remove) {
         if (unlockedTipFile == null) {
-            if (!loadUnlockedFromFile()) {
+            if (!loadUnlockedFromFile() || readError) {
                 return;
             }
         }
