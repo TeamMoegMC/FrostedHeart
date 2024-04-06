@@ -432,17 +432,17 @@
 
   "tips.frostedheart.empty.title": "哇，这里什么都没有",
 
-  "tips.frostedheart._default.title": "欢迎来到冬季救援!",
-  "tips.frostedheart._default.desc1": "当你游玩时这里会显示各类提示，记得仔细阅读!",
-  "tips.frostedheart._default.desc2": "右上角为关闭按钮，按下§6[TAB]§r使用鼠标来选择.",
+  "tips.frostedheart.default.title": "欢迎来到冬季救援!",
+  "tips.frostedheart.default.desc1": "当你游玩时这里会显示各类提示，记得仔细阅读!",
+  "tips.frostedheart.default.desc2": "右上角为关闭按钮，按下§6[TAB]§r使用鼠标来选择.",
 
-  "tips.frostedheart._default2.title": "有提示没看清楚?",
-  "tips.frostedheart._default2.desc1": "打开聊天栏，右下角的按钮可以查看所有已解锁的提示哦.",
+  "tips.frostedheart.default2.title": "有提示没看清楚?",
+  "tips.frostedheart.default2.desc1": "打开聊天栏，右下角的按钮可以查看所有已解锁的提示哦.",
 
   "tips.frostedheart.update.title": "冬季救援有新版本!",
   "tips.frostedheart.update.desc1": "点击左侧的按钮前往整合包发布网站下载更新!",
 
-  "tips.frostedheart._music_warning.title": "等一下!",
-  "tips.frostedheart._music_warning.desc1": "将音乐关闭可能无法体验我们为冬季救援提供的音乐",
-  "tips.frostedheart._music_warning.desc2": "原版的音乐已经被禁用，如果您希望重新打开请修改配置文件: '&7$configPath$\\frostedheart-client.toml&r'"
+  "tips.frostedheart.music_warning.title": "等一下!",
+  "tips.frostedheart.music_warning.desc1": "将音乐关闭可能无法体验我们为冬季救援提供的音乐",
+  "tips.frostedheart.music_warning.desc2": "原版的音乐已经被禁用，如果您希望重新打开请修改配置文件: '&7$configPath$\\frostedheart-client.toml&r'"
 }

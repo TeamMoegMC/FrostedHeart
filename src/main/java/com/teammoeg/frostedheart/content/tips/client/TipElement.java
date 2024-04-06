@@ -21,7 +21,7 @@ public class TipElement implements Cloneable {
     public boolean alwaysVisible = false;
     public boolean onceOnly = false;
     public boolean hide = false;
-    public boolean addToCache = false;
+    public boolean fromFile = false;
     public int visibleTime = 30000;
     public int fontColor = 0xFFC6FCFF;
     public int BGColor = 0xFF000000;
@@ -38,8 +38,6 @@ public class TipElement implements Cloneable {
 
         LOGGER.debug("Loading tip '" + ID);
         this.ID = ID;
-        onceOnly = ID.startsWith("_");
-
         readFromJsonFile(filePath);
     }
 
@@ -72,9 +70,10 @@ public class TipElement implements Cloneable {
             if (jsonObject.has("fontColor"      )) {fontColor = Integer.parseUnsignedInt(jsonObject.get("fontColor").getAsString(), 16);}
             if (jsonObject.has("backgroundColor")) {BGColor = Integer.parseUnsignedInt(jsonObject.get("backgroundColor").getAsString(), 16);}
             if (jsonObject.has("alwaysVisible"  )) {alwaysVisible = jsonObject.get("alwaysVisible").getAsBoolean();}
+            if (jsonObject.has("onceOnly"     )) {onceOnly = jsonObject.get("onceOnly").getAsBoolean();}
             if (jsonObject.has("hide"           )) {hide = jsonObject.get("hide").getAsBoolean();}
             if (jsonObject.has("visibleTime"    )) {visibleTime = Math.max(jsonObject.get("visibleTime").getAsInt(), 0);}
-            addToCache = true;
+            fromFile = true;
 
         } catch (JsonSyntaxException e) {
             LOGGER.error("Invalid JSON file format '" + filePath + "'");

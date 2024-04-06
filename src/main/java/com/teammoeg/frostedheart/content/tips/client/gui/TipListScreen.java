@@ -49,7 +49,7 @@ public class TipListScreen extends Screen {
             TipHandler.forceAdd(select, true);
         }));
 
-        tipList = TipHandler.getUnlockedTips();
+        tipList = TipHandler.getVisibleUnlocked();
 
         if (tipList.isEmpty()) {
             tipList.add("empty");
@@ -58,11 +58,7 @@ public class TipListScreen extends Screen {
         GuiHeight = (int)(height*0.8F);
         listHeight = tipList.size()*16;
         textHeight = 0;
-        if (select.equals("empty")) {
-            setSelect("");
-        } else {
-            setSelect(select);
-        }
+        setSelect(select);
 
         super.init();
     }
@@ -179,7 +175,6 @@ public class TipListScreen extends Screen {
 
                 String text = "tips." + FHMain.MODID + "." + list.get(i) + ".title";
                 text = I18n.format(text);
-
                 if (font.getStringWidth(text) > BGWidth) {
                     text = text.substring(0, Math.min(text.length(), BGWidth/6)) + "...";
                 }
@@ -201,10 +196,10 @@ public class TipListScreen extends Screen {
 
         //移除不应该存在的提示
         if (selectEle.hide) {
+            TipHandler.removeUnlocked(selectEle.ID);
             tipList.remove(select);
-            listHeight = tipList.size()*16;
             setSelect("");
-            TipHandler.unlockOrRemove(selectEle.ID, true);
+            listHeight = tipList.size()*16;
             selectEle = null;
             return;
         }
