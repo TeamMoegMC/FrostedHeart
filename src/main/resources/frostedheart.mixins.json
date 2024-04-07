@@ -97,7 +97,6 @@
     "minecraft.ServerPlayNetHandlerMixin",
     "minecraft.NewChatGuiAccessor",
     "minecraft.EntitySpawbPlacementRegistryMixin",
-	
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",

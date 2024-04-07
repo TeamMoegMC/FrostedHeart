@@ -450,5 +450,34 @@
   "tooltip.frostedheart.rubbing.points": "Points: %s",
   "tooltip.frostedheart.rubbing.points.hint": "Examine in drawing desk to obtain research points",
   "tooltip.frostedheart.research_unlockable": "Required Research: %s",
-  "manual.frostedheart.main": "Generators"
+  "manual.frostedheart.main": "Generators",
+
+  "tips.frostedheart.error.load": "[Error] Unable to load file",
+  "tips.frostedheart.error.save": "[Error] Unable to save file",
+  "tips.frostedheart.error.save_desc": "An unknown error occurred while saving the file",
+  "tips.frostedheart.error.empty": "[Error] No content to display",
+  "tips.frostedheart.error.invalid": "[Error] Invalid JSON file format",
+  "tips.frostedheart.error.not_exists": "[Error] File does not exists",
+  "tips.frostedheart.error.desc": "Please verify whether the Modpack has been installed successfully or report this issue",
+  "tips.frostedheart.too_long": "This tip appears excessively long, please review the list of unlocked tips",
+
+  "tips.frostedheart.gui.close": "Close",
+  "tips.frostedheart.gui.pin": "Pinned to the right HUD",
+
+  "tips.frostedheart.empty.title": "Oops, there's nothing here",
+
+  "tips.frostedheart.default.title": "Welcome to The Winter Rescue!",
+  "tips.frostedheart.default.desc1": "Tips will appear here as you play, be sure to read them carefully!",
+  "tips.frostedheart.default.desc2": "To close, click the button in the top right corner. You can also use §6[TAB]§r and the mouse to select.",
+
+  "tips.frostedheart.default2.title": "Missed any tips?",
+  "tips.frostedheart.default2.desc1": "Open the chat screen, the button in the bottom right corner allows you to view all unlocked tips.",
+
+  "tips.frostedheart.update.title": "The Winter Rescue has a new update!",
+  "tips.frostedheart.update.desc1": "Click the button on the left to visit CurseForge and download the update.",
+
+  "tips.frostedheart.music_warning.title": "Wait!",
+  "tips.frostedheart.music_warning.desc1": "Turning off the music may affect your experience of the music we provide for The Winter Rescue.",
+  "tips.frostedheart.music_warning.desc2": "The vanilla music has already been disabled, If you want to re-enable it, please change it in the configuration file: '&7$configPath$\\frostedheart-client.toml&r'"
+
 }

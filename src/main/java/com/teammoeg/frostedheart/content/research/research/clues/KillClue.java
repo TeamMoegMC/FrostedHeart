@@ -36,7 +36,7 @@ import net.minecraft.util.text.ITextComponent;
 public class KillClue extends ListenerClue {
 	public static final Codec<KillClue> CODEC=RecordCodecBuilder.create(t->t.group(
 		ListenerClue.BASE_CODEC.forGetter(o->o.getData()),
-		CodecUtil.registryCodec(Registry.ENTITY_TYPE).fieldOf("entity").forGetter(o->o.type)
+		CodecUtil.registryCodec(()->Registry.ENTITY_TYPE).fieldOf("entity").forGetter(o->o.type)
 		).apply(t,KillClue::new));
     EntityType<?> type;
 

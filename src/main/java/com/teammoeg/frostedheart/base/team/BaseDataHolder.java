@@ -44,6 +44,7 @@ public class BaseDataHolder<T extends BaseDataHolder<T>> implements SpecialDataH
 	public void load(CompoundNBT data, boolean isPacket) {
 		for(SpecialDataType<?> tc:SpecialDataTypes.TYPE_REGISTRY) {
         	if(data.contains(tc.getId())) {
+        		System.out.println(tc.getId());
         		SpecialData raw=tc.loadData(NBTDynamicOps.INSTANCE, data.get(tc.getId()));
         		raw.setHolder(this);
         		data.put(tc.getId(), data);

@@ -46,7 +46,7 @@ public class AlternativeCodecBuilder<A>{
 					
 					if(result.result().isPresent())
 						return result;
-					System.out.println("getClass "+codec.getFirst()+" Result "+result);
+					//System.out.println("getClass "+codec.getFirst()+" Result "+result);
 				}
 				return DataResult.error("No matching decodec present for "+input);
 			}

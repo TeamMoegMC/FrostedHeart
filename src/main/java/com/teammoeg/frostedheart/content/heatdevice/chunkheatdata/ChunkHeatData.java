@@ -36,11 +36,6 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
-
-import io.netty.handler.codec.DecoderException;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTDynamicOps;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
@@ -49,12 +44,12 @@ import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class ChunkHeatData{
-	public static final MapCodec<List<IHeatArea>> LIST_CODEC=Codec.list(
+	public static final MapCodec<List<IHeatArea>> LIST_CODEC=CodecUtil.fieldOfs(Codec.list(
 		CodecUtil.dispatch(IHeatArea.class)
 		.type("cubic", CubicHeatArea.class,CubicHeatArea.CODEC)
 		.type("pillar", PillarHeatArea.class, PillarHeatArea.CODEC)
 		.buildByInt()
-		).fieldOf("adjs");
+		),"adjs","temperature");
 	public static final Codec<ChunkHeatData> CODEC=RecordCodecBuilder.create(t->t.group(
 		LIST_CODEC.forGetter(o->o.adjusters.values().stream().collect(Collectors.toList()))).apply(t, ChunkHeatData::new));
 
