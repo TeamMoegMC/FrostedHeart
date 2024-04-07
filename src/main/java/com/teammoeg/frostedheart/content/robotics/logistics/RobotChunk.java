@@ -22,11 +22,18 @@ package com.teammoeg.frostedheart.content.robotics.logistics;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.INetworkCore;
+import com.teammoeg.frostedheart.util.FHUtils;
+
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 public class RobotChunk {
     Map<ChunkSectionPos,BlockPos> networks = new HashMap<>();
-    public BlockPos getNetworkCoreFor(BlockPos actual) {
-    	return networks.get(new ChunkSectionPos(actual));
+    public LogisticNetwork getNetworkFor(World world,BlockPos actual) {
+    	INetworkCore core = FHUtils.getExistingTileEntity(world, networks.get(new ChunkSectionPos(actual)), INetworkCore.class);
+    	if(core==null)
+    		return null;
+    	return core.getNetwork();
     };
 }
