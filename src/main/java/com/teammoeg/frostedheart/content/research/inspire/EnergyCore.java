@@ -46,13 +46,36 @@ import top.theillusivec4.diet.api.DietCapability;
 import top.theillusivec4.diet.api.IDietTracker;
 
 public class EnergyCore implements NBTSerializable {
-    long energy;
+    /*long energy;
     long cenergy;
-    long penergy;
+    long penergy;*/
+	int level;
+	float exp;
+	float persistExp;
+	float persistExpCapacity;
+	int maxLevel;
+	int researchPoint;
     long lastsleepdate;
     long lastsleep;
     double utbody;
-    
+    protected void addPersistExp(float value) {
+    	persistExp+=value;
+    	while(persistExp>=3000) {
+    		researchPoint++;
+    		persistExp-=3000;
+    	}
+    }
+    protected void addTemperalExp(float tempValue) {
+    	exp+=tempValue;
+    	while(exp>=(level*100+2000)) {
+    		exp-=level*100+2000;
+    		level++;
+    	}
+		if(level>=maxLevel) {
+			researchPoint+=level-maxLevel;
+			maxLevel=level;
+		}
+    }
     public static void addEnergy(ServerPlayerEntity player, int val) {
         TeamResearchData trd = ResearchDataAPI.getData(player);
         long M = (long) trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY.getToken()) + 30000;
