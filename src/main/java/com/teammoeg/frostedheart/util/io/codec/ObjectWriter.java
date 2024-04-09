@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.util.io.codec;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +58,8 @@ public class ObjectWriter {
 				return new TypedValue(12,input);
 			}else if(cls==Map.class) {
 				return new TypedValue(13,input);
+			}else if(((List<Object>)input).isEmpty()){
+				return new TypedValue(15,input);
 			}else {
 				return new TypedValue(14,input);
 			}
@@ -115,7 +118,7 @@ public class ObjectWriter {
     		c.accept(key, value);
     	})
     	;
-    	case 9:return pb.readByteArray();
+    	case 9:return DataOps.INSTANCE.createByteList(ByteBuffer.wrap(pb.readByteArray()));
     	case 10:return SerializeUtil.readList(pb, PacketBuffer::readVarInt);
     	case 11:return SerializeUtil.readList(pb, PacketBuffer::readLong);
     	case 12:return SerializeUtil.readList(pb, PacketBuffer::readString);
@@ -133,6 +136,7 @@ public class ObjectWriter {
 			}
 			return obj;
 		}
+    	case 15:return new ArrayList<>();
     	}
     	return DataOps.NULLTAG;
     }

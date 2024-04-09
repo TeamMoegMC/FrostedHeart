@@ -1,6 +1,9 @@
 package com.teammoeg.frostedheart.util.io;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,15 +27,20 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
+import com.mojang.serialization.ListBuilder;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.EitherMapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
+import com.teammoeg.frostedheart.content.heatdevice.generator.GeneratorData;
 import com.teammoeg.frostedheart.util.io.codec.AlternativeCodecBuilder;
 import com.teammoeg.frostedheart.util.io.codec.BooleansCodec.BooleanCodecBuilder;
 import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
 import com.teammoeg.frostedheart.util.io.codec.CustomListCodec;
 import com.teammoeg.frostedheart.util.io.codec.DataOps;
 import com.teammoeg.frostedheart.util.io.codec.IntOrIdCodec;
+import com.teammoeg.frostedheart.util.io.codec.KeysCodec;
+import com.teammoeg.frostedheart.util.io.codec.MapPathCodec;
 import com.teammoeg.frostedheart.util.io.codec.DefaultValueCodec;
 import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
 import com.teammoeg.frostedheart.util.io.codec.PacketOrSchemaCodec;
@@ -48,6 +56,7 @@ import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.NBTDynamicOps;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.SimpleRegistry;
 
@@ -87,10 +96,10 @@ public class CodecUtil {
 	
 		@Override
 		public <T> DataResult<T> encode(long[] input, DynamicOps<T> ops, T prefix) {
-			DataResult<T> dr=DataResult.success(prefix);
+			ListBuilder<T> builder=ops.listBuilder();
 			for(long inp:input)
-				dr.flatMap(v->ops.mergeToList(v, ops.createLong(inp)));
-			return dr;
+				builder.add(ops.createLong(inp));
+			return builder.build(prefix);
 		}
 	
 		@Override
@@ -103,10 +112,10 @@ public class CodecUtil {
 	
 		@Override
 		public <T> DataResult<T> encode(int[] input, DynamicOps<T> ops, T prefix) {
-			DataResult<T> dr=DataResult.success(prefix);
+			ListBuilder<T> builder=ops.listBuilder();
 			for(int inp:input)
-				dr.flatMap(v->ops.mergeToList(v, ops.createInt(inp)));
-			return dr;
+				builder.add(ops.createInt(inp));
+			return builder.build(prefix);
 		}
 	
 		@Override
@@ -119,10 +128,10 @@ public class CodecUtil {
 	
 		@Override
 		public <T> DataResult<T> encode(byte[] input, DynamicOps<T> ops, T prefix) {
-			DataResult<T> dr=DataResult.success(prefix);
+			ListBuilder<T> builder=ops.listBuilder();
 			for(byte inp:input)
-				dr.flatMap(v->ops.mergeToList(v, ops.createByte(inp)));
-			return dr;
+				builder.add(ops.createByte(inp));
+			return builder.build(prefix);
 		}
 	
 		@Override
@@ -132,20 +141,23 @@ public class CodecUtil {
 		
 	};
 	public static final Codec<ItemStack>  ITEMSTACK_CODEC = RecordCodecBuilder.create(t -> t.group(
-			CodecUtil.registryCodec(Registry.ITEM).fieldOf("id").forGetter(ItemStack::getItem),
+			CodecUtil.registryCodec(()->Registry.ITEM).fieldOf("id").forGetter(ItemStack::getItem),
 			Codec.INT.fieldOf("Count").forGetter(ItemStack::getCount),
-			CodecUtil.defaultSupply(CompoundNBT.CODEC,()->new CompoundNBT()).fieldOf("tag").forGetter(ItemStack::getTag))
+			CodecUtil.defaultSupply(CompoundNBT.CODEC,CompoundNBT::new).fieldOf("tag").forGetter(ItemStack::getTag))
 		.apply(t, ItemStack::new));
 	public static final Codec<Integer> POSITIVE_INT = Codec.intRange(0, Integer.MAX_VALUE);
+	public static final Codec<BlockPos> BLOCKPOS = alternative(BlockPos.class).add(BlockPos.CODEC).add(Codec.LONG.xmap(BlockPos::fromLong, BlockPos::toLong)).build();
 	
 	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(JsonOps.INSTANCE,Ingredient::serialize,Ingredient::deserialize,Ingredient::write,Ingredient::read);
 	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=new PacketOrSchemaCodec<>(JsonOps.INSTANCE,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
 	static final Function<DynamicOps<?>, Codec<?>> schCodec=SerializeUtil.cached(CodecUtil::scCodec);
-	private static final Function<Registry<?>, Codec<?>> regCodec = SerializeUtil.cached(IntOrIdCodec::new);
 	public static final Codec<boolean[]> BOOLEANS = Codec.BYTE.xmap(SerializeUtil::readBooleans, SerializeUtil::writeBooleans);
 
 	public static <A> DefaultValueCodec<A> defaultValue(Codec<A> val, A def) {
 		return defaultSupply(val, () -> def);
+	}
+	public static <A> MapCodec<A> fieldOfs(Codec<A> val, String...keys) {
+		return new KeysCodec<>(val,keys);
 	}
 	public static <A> DefaultValueCodec<A> defaultSupply(Codec<A> val, Supplier<A> def) {
 		return new DefaultValueCodec<A>(val, def);
@@ -195,8 +207,8 @@ public class CodecUtil {
 	public static <S> AlternativeCodecBuilder<S> alternative(Class<S> type){
 		return new AlternativeCodecBuilder<>(type);
 	}
-	public static <K> Codec<K> registryCodec(Registry<K> func) {
-		return (Codec<K>) regCodec.apply(func);
+	public static <K> Codec<K> registryCodec(Supplier<Registry<K>> func) {
+		return new IntOrIdCodec<>(func);
 	}
 	public static <T extends Enum<T>> Codec<T> enumCodec(Class<T> en){
 		Map<String,T> maps=new HashMap<>();
@@ -277,13 +289,23 @@ public class CodecUtil {
 			return ar;
 		}, Arrays::asList);
 	}
+	public static <T> MapCodec<T> path(Codec<T> codec,String... path){
+		String path0=path[0];
+		if(path.length>1) {
+			return new MapPathCodec<>(codec,Arrays.copyOfRange(path, 1, path.length)).fieldOf(path0);
+		}
+		return codec.fieldOf(path0);
+	}
 	public static <T> void writeCodec(PacketBuffer pb, Codec<T> codec, T obj) {
 		DataResult<Object> ob = codec.encodeStart(DataOps.COMPRESSED, obj);
 		Optional<Object> ret = ob.resultOrPartial(t->{throw new EncoderException(t);});
+		System.out.println(ret.get());
 		ObjectWriter.writeObject(pb, ret.get());
 	}
 	public static <T> T readCodec(PacketBuffer pb, Codec<T> codec) {
+		
 		Object readed = ObjectWriter.readObject(pb);
+		System.out.println(readed);
 		DataResult<T> ob = codec.parse(DataOps.COMPRESSED, readed);
 		
 		Optional<T> ret = ob.resultOrPartial(t->{throw new DecoderException(t);});
@@ -301,10 +323,10 @@ public class CodecUtil {
 		return ret.get();
 	}
 	public static <T> T encodeOrThrow(DataResult<T> result) {
-		return result.getOrThrow(false, EncoderException::new);
+		return result.getOrThrow(true, s->{});
 	}
 	public static <T, A> T decodeOrThrow(DataResult<Pair<T, A>> result) {
-		return result.getOrThrow(false, DecoderException::new).getFirst();
+		return result.getOrThrow(true, s->{}).getFirst();
 	}
 	public static <T> ListNBT toNBTList(Collection<T> stacks, Codec<T> codec) {
 		ArrayNBTBuilder<Void> arrayBuilder = ArrayNBTBuilder.create();
@@ -324,5 +346,25 @@ public class CodecUtil {
 	public static <A> DispatchNameCodecBuilder<A> dispatch(Class<A> clazz){
 		return new DispatchNameCodecBuilder<A>();
 	}
+	public static class Test{
+		public int test;
 
+		public Test(int test) {
+			super();
+			this.test = test;
+		}
+
+		public int getTest() {
+			return test;
+		}
+
+		@Override
+		public String toString() {
+			return "Test [test=" + test + "]";
+		}
+		
+	}
+	public static void main(String[] args) throws Exception {
+		System.out.println(GeneratorData.CODEC.encodeStart(NBTDynamicOps.INSTANCE, new GeneratorData((SpecialDataHolder)null)));
+	}
 }

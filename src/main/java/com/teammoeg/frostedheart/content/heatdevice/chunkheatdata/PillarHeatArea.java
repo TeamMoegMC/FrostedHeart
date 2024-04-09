@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.heatdevice.chunkheatdata;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import net.minecraft.util.math.BlockPos;
 
@@ -28,7 +29,7 @@ import net.minecraft.util.math.BlockPos;
  * Pillar Temperature Adjust, would adjust temperature in a pillar.
  */
 public class PillarHeatArea extends CubicHeatArea {
-	public static Codec<PillarHeatArea> CODEC=RecordCodecBuilder.create(t->t.group(BlockPos.CODEC.fieldOf("pos").forGetter(o->o.center),
+	public static Codec<PillarHeatArea> CODEC=RecordCodecBuilder.create(t->t.group(CodecUtil.BLOCKPOS.fieldOf("pos").forGetter(o->o.center),
 		Codec.INT.fieldOf("r").forGetter(o->o.r),
 		Codec.INT.fieldOf("u").forGetter(o->o.upper),
 		Codec.INT.fieldOf("d").forGetter(o->o.lower),

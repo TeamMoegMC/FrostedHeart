@@ -34,10 +34,16 @@ public class ItemHandlerListener implements IItemHandler, IItemHandlerModifiable
 
 	@Override
 	public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-		boolean flag=handler.getStackInSlot(slot).isEmpty();
+		int oldCount=handler.getStackInSlot(slot).getCount();
 		ItemStack reminder=handler.insertItem(slot, stack, simulate);
-		if(!simulate&&flag&&!handler.getStackInSlot(slot).isEmpty())
-			listener.onSlotChange(slot, handler.getStackInSlot(slot));
+		int newCount=handler.getStackInSlot(slot).getCount();
+		
+		if(!simulate&&oldCount!=newCount) {
+			if(oldCount!=0) 
+				listener.onCountChange(slot, oldCount, newCount);
+			else
+				listener.onSlotChange(slot, handler.getStackInSlot(slot));
+		}
 		return reminder;
 	}
 
@@ -46,8 +52,12 @@ public class ItemHandlerListener implements IItemHandler, IItemHandlerModifiable
 		int origCount=handler.getStackInSlot(slot).getCount();
 		ItemStack reminder=handler.extractItem(slot, amount, simulate);
 		int newCount=handler.getStackInSlot(slot).getCount();
-		if(origCount!=newCount)
-			listener.onCountChange(slot, origCount, newCount);
+		if(!simulate&&origCount!=newCount) {
+			if(newCount==0)
+				listener.onSlotClear(slot);
+			else 
+				listener.onCountChange(slot, origCount, newCount);
+		}
 		return reminder;
 	}
 

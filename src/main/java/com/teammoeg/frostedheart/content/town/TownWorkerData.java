@@ -45,7 +45,7 @@ import net.minecraft.world.server.ServerWorld;
 public class TownWorkerData {
 	public static final Codec<TownWorkerData> CODEC=RecordCodecBuilder.create(t->
 	t.group(CodecUtil.enumCodec(TownWorkerType.class).fieldOf("type").forGetter(o->o.type),
-		BlockPos.CODEC.fieldOf("pos").forGetter(o->o.pos),
+		CodecUtil.BLOCKPOS.fieldOf("pos").forGetter(o->o.pos),
 		CompoundNBT.CODEC.fieldOf("data").forGetter(o->o.workData),
 		Codec.INT.fieldOf("priority").forGetter(o->o.priority)
 		).apply(t,TownWorkerData::new));
