@@ -19,6 +19,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.util.Either;
@@ -38,10 +39,11 @@ import com.teammoeg.frostedheart.util.io.codec.BooleansCodec.BooleanCodecBuilder
 import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
 import com.teammoeg.frostedheart.util.io.codec.CustomListCodec;
 import com.teammoeg.frostedheart.util.io.codec.DataOps;
-import com.teammoeg.frostedheart.util.io.codec.IntOrIdCodec;
+import com.teammoeg.frostedheart.util.io.codec.RegistryCodec;
 import com.teammoeg.frostedheart.util.io.codec.KeysCodec;
 import com.teammoeg.frostedheart.util.io.codec.MapPathCodec;
 import com.teammoeg.frostedheart.util.io.codec.DefaultValueCodec;
+import com.teammoeg.frostedheart.util.io.codec.DiscreteListCodec;
 import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
 import com.teammoeg.frostedheart.util.io.codec.PacketOrSchemaCodec;
 import com.teammoeg.frostedheart.util.io.codec.StreamCodec;
@@ -165,6 +167,9 @@ public class CodecUtil {
 	public static <T,A extends List<T>> Codec<A> list(Codec<T> codec,Supplier<A> createList){
 		return new CustomListCodec<>(codec,createList);
 	}
+	public static <A> Codec<List<A>> discreteList(Codec<A> codec){
+		return new DiscreteListCodec<>(codec,t->t==null,()->null,"i");
+	}
 	public static <A> Codec<Stream<A>> streamCodec(Codec<A> codec) {
 		return new StreamCodec<>(codec);
 	}
@@ -208,7 +213,7 @@ public class CodecUtil {
 		return new AlternativeCodecBuilder<>(type);
 	}
 	public static <K> Codec<K> registryCodec(Supplier<Registry<K>> func) {
-		return new IntOrIdCodec<>(func);
+		return new RegistryCodec<>(func);
 	}
 	public static <T extends Enum<T>> Codec<T> enumCodec(Class<T> en){
 		Map<String,T> maps=new HashMap<>();
