@@ -23,6 +23,7 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
+import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHNetwork;
@@ -33,7 +34,9 @@ import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.network.FHEnergyDataSyncPacket;
 import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.util.utility.LeveledValue;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -49,62 +52,49 @@ public class EnergyCore implements NBTSerializable {
     /*long energy;
     long cenergy;
     long penergy;*/
-	int level;
-	float exp;
-	float persistExp;
-	float persistExpCapacity;
+	private static final Codec<LeveledValue> LEVELED_CODEC=LeveledValue.createCodec(l->(Math.min(60f, l)*25+2000));
+	LeveledValue level;
+	private static final Codec<LeveledValue> PERSIST_LEVELED_CODEC=LeveledValue.createCodec(l->(l*100f+2000));
+	LeveledValue persistLevel;
 	int maxLevel;
+	int maxPesistLevel;
 	int researchPoint;
     long lastsleepdate;
     long lastsleep;
     double utbody;
-    protected void addPersistExp(float value) {
-    	persistExp+=value;
-    	while(persistExp>=3000) {
-    		researchPoint++;
-    		persistExp-=3000;
-    	}
+    public EnergyCore() {
+    	level=CodecUtil.initEmpty(LEVELED_CODEC);
+    	persistLevel=CodecUtil.initEmpty(PERSIST_LEVELED_CODEC);
     }
-    protected void addTemperalExp(float tempValue) {
-    	exp+=tempValue;
-    	while(exp>=(level*100+2000)) {
-    		exp-=level*100+2000;
-    		level++;
-    	}
-		if(level>=maxLevel) {
-			researchPoint+=level-maxLevel;
-			maxLevel=level;
+    protected void addPersistExp(ServerPlayerEntity player, float value) {
+    	persistLevel.addValue(value*getModifier(player));
+    	int pLvl=persistLevel.getLevel();
+    	if(pLvl>=maxPesistLevel) {
+			researchPoint+=pLvl-maxPesistLevel;
+			maxPesistLevel=pLvl;
+		}
+    }
+    protected void addTemperalExp(ServerPlayerEntity player, float value) {
+    	level.addValue(value*getModifier(player));
+    	int lvl=level.getLevel();
+		if(lvl>=maxLevel) {
+			researchPoint+=lvl-maxLevel;
+			maxLevel=lvl;
 		}
     }
     public static void addEnergy(ServerPlayerEntity player, int val) {
-        TeamResearchData trd = ResearchDataAPI.getData(player);
-        long M = (long) trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY.getToken()) + 30000;
-        M *= (long) (1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
-        double n = trd.getHolder().getOnlineMembers().size();
-        n = 1 + 0.8 * (n - 1);
-        EnergyCore data=getCapability(player).orElse(null);
-        if (val > 0) {
-            double rv = val / n;
-            double frac = MathHelper.frac(rv);
-            val = (int) rv;
-            if (frac > 0 && Math.random() < frac)
-                val++;
-
-        }
-        data.energy = Math.min(data.energy + val, M);
-
+    	getCapability(player).ifPresent(t->t.addTemperalExp(player,val));
         FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(player));
-    }
-
-    public static void addExtraEnergy(ServerPlayerEntity player, int val) {
-    	getCapability(player).ifPresent(t->t.cenergy+=val);
     }
 
     public static void addPersistentEnergy(ServerPlayerEntity player, int val) {
-    	getCapability(player).ifPresent(t->t.penergy+=val);
+    	getCapability(player).ifPresent(t->t.addPersistExp(player,val));
         FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(player));
     }
-
+    public static void addPoint(ServerPlayerEntity player, int val) {
+    	getCapability(player).ifPresent(t->t.researchPoint+=val);
+        FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(player));
+    }
     public static void applySleep(ServerPlayerEntity player) {
         EnergyCore data=getCapability(player).orElse(null);
         long lsd = data.lastsleepdate;
@@ -119,136 +109,65 @@ public class EnergyCore implements NBTSerializable {
         data.lastsleepdate=csd;
     }
 
-
-
-    public static boolean consumeEnergy(ServerPlayerEntity player, int val) {
-        if (player.abilities.isCreativeMode) return true;
-        EnergyCore data=getCapability(player).orElse(null);
-        if (data.energy >= val) {
-        	data.energy -= val;
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(player));
-            return true;
+    public float getModifier(ServerPlayerEntity player) {
+    	boolean isBodyNotWell = player.getActivePotionEffect(FHEffects.HYPERTHERMIA.get()) != null || player.getActivePotionEffect(FHEffects.HYPOTHERMIA.get()) != null;
+    	if(isBodyNotWell)return 0;
+    	TeamResearchData trd = ResearchDataAPI.getData(player);
+    	double initValue=(1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
+        if ( utbody != 0) {
+            double t = MathHelper.clamp(((int)lastsleep), 1, Integer.MAX_VALUE) / 1200d;
+            initValue *= ( utbody / (t * t * t * t * t * t +  utbody * 2) + 0.5);
+        } else {
+        	initValue *= 0.5;
         }
+        double dietValue = 0;
+        IDietTracker idt = DietCapability.get(player).orElse(null);
+        if (idt != null) {
+            int tdv = 0;
+            for (Entry<String, Float> vs : idt.getValues().entrySet())
+                if (DietGroupCodec.getGroup(vs.getKey()).isBeneficial()) {
+                    dietValue += vs.getValue();
+                    tdv++;
+                }
 
-        if (data.penergy + data.energy >= val) {
-            val -= (int) data.energy;
-            data.penergy -= val;
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(player));
-            return true;
+            if (tdv != 0)
+                dietValue /= tdv;
         }
-        return false;
+        initValue+=(dietValue - 0.4);
+        initValue/=1+(trd.getHolder().getOnlineMembers().size()-1)*0.8f;
+        return (float) initValue;
     }
-
     public static void dT(ServerPlayerEntity player) {
         //System.out.println("dt");
     	EnergyCore data=getCapability(player).orElse(null);
-        final long tenergy = data.energy + 10000;
         data.lastsleep++;
-        boolean isBodyNotWell = player.getActivePotionEffect(FHEffects.HYPERTHERMIA.get()) != null || player.getActivePotionEffect(FHEffects.HYPOTHERMIA.get()) != null;
-        if (!isBodyNotWell) {
-            double m;
-            TeamResearchData trd = ResearchDataAPI.getData(player);
-            long M = (long) trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY.getToken()) + 30000;
-            M *= (long) (1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
-            double dietValue = 0;
-            IDietTracker idt = DietCapability.get(player).orElse(null);
-            if (idt != null) {
-                int tdv = 0;
-                for (Entry<String, Float> vs : idt.getValues().entrySet())
-                    if (DietGroupCodec.getGroup(vs.getKey()).isBeneficial()) {
-                        dietValue += vs.getValue();
-                        tdv++;
-                    }
-
-                if (tdv != 0)
-                    dietValue /= tdv;
-            }
-            if ( data.utbody != 0) {
-                double t = MathHelper.clamp(((int)data.lastsleep), 1, Integer.MAX_VALUE) / 1200d;
-                //System.out.println(t);
-                m = ( data.utbody / (t * t * t * t * t * t +  data.utbody * 2) + 0.5) * M;
-            } else {
-                m = 0.5 * M;
-            }
-            double n = trd.getHolder().getOnlineMembers().size();
-            n = 1 + 0.8 * (n - 1);
-            //System.out.println(m);
-            //System.out.println(dietValue);
-            double nenergy = (0.3934f * (1 - tenergy / m) + 1.3493f * (dietValue - 0.4)) * tenergy / 1200;
-            //System.out.println(nenergy);
-            double cenergy = 5 / n;
-            if (tenergy * 2 < M && nenergy <= 5) {
-                player.addPotionEffect(new EffectInstance(FHEffects.SAD.get(), 200, 0, false, false));
-            }
-            if (tenergy < 13500)
-                nenergy = Math.max(nenergy, 1);
-            double dtenergy = nenergy / n;
-
-            if (dtenergy > 0 || tenergy > 15000) {
-            	data.energy += (long) dtenergy;
-                double frac = MathHelper.frac(dtenergy);
-                if (frac > 0 && Math.random() < frac)
-                	data.energy++;
-
-            }
-            data.cenergy += (int) cenergy;
-            double ff = MathHelper.frac(cenergy);
-            if (ff > 0 && Math.random() < ff)
-            	data.cenergy++;
-            data.cenergy=Math.min(data.cenergy, 12000);
-        }
-        FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(player));
+       // FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(player));
     }
 
-    public static long getEnergy(PlayerEntity player) {
-        return getCapability(player).map(t->t.energy).orElse(0L);
+    public static int getEnergy(PlayerEntity player) {
+        return getCapability(player).map(t->t.researchPoint).orElse(0);
     }
-
-    public static boolean hasEnoughEnergy(PlayerEntity player, int val) {
-        if (player.abilities.isCreativeMode) return true;
-        long touse = getCapability(player).map(t->t.energy+t.penergy).orElse(0L);
-        return touse >= val;
-    }
-
-    public static boolean hasExtraEnergy(PlayerEntity player, int val) {
-        if (player.abilities.isCreativeMode) return true;
-        return getCapability(player).map(t->t.cenergy).orElse(0L) >= val;
+    public static void costEnergy(PlayerEntity player,int val) {
+        getCapability(player).ifPresent(t->t.researchPoint-=val);
     }
 
     public static void reportEnergy(PlayerEntity player) {
-    	
-    	EnergyCore data=getCapability(player).orElse(null);
-        player.sendMessage(TranslateUtils.str("Energy:" + data.energy + ",Persist Energy: " + data.penergy + ",Extra Energy: " + data.cenergy), player.getUniqueID());
+    	getCapability(player).ifPresent(data->player.sendMessage(TranslateUtils.str("Energy:" + data.level + ",Persist Energy: " + data.persistLevel), player.getUniqueID()));
     }
  
-    public static boolean useExtraEnergy(ServerPlayerEntity player, int val) {
-        if (player.abilities.isCreativeMode) return true;
-        EnergyCore data=getCapability(player).orElse(null);
-        long energy = data.cenergy;
-        if (energy >= val) {
-            data.cenergy-=val;
-            return true;
-        }
-        return false;
-    }
 
-    public EnergyCore() {
-    }
+
     public static LazyOptional<EnergyCore> getCapability(@Nullable PlayerEntity player) {
     	return FHCapabilities.ENERGY.getCapability(player);
     }
 
 
-	@Override
-	public void deserializeNBT(CompoundNBT saved) {
-
-	}
 
 	public void onrespawn() {
         utbody=0;
         lastsleep=0;
         lastsleepdate=0;
-        energy=energy/2;
+        level.minPercent(0.1f);
         
 	}
 	public void sendUpdate(ServerPlayerEntity player) {
@@ -258,9 +177,11 @@ public class EnergyCore implements NBTSerializable {
 	@Override
 	public void save(CompoundNBT saved, boolean isPacket) {
 		// TODO Auto-generated method stub
-	    saved.putLong("energy", energy);
-	    saved.putLong("cenergy", cenergy);
-	    saved.putLong("penergy", penergy);
+	    CodecUtil.encodeNBT(LEVELED_CODEC, saved, "lvl", level);
+	    CodecUtil.encodeNBT(PERSIST_LEVELED_CODEC, saved, "plvl", persistLevel);
+	    saved.putInt("lastLvl", maxLevel);
+	    saved.putInt("lastPlvl", maxPesistLevel);
+	    saved.putInt("rp", researchPoint);
 	    if(!isPacket) {
 		    saved.putLong("lastsleepdate", lastsleepdate);
 		    saved.putLong("lastsleep", lastsleep);
@@ -270,9 +191,11 @@ public class EnergyCore implements NBTSerializable {
 
 	@Override
 	public void load(CompoundNBT saved, boolean isPacket) {
-		energy=saved.getLong("energy");
-		cenergy=saved.getLong("cenergy");
-		penergy=saved.getLong("penergy");
+		level=CodecUtil.decodeNBT(LEVELED_CODEC, saved, "lvl");
+		persistLevel=CodecUtil.decodeNBT(PERSIST_LEVELED_CODEC, saved, "plvl");
+		maxLevel=saved.getInt("lastLvl");
+		maxPesistLevel=saved.getInt("lastPlvl");
+		researchPoint=saved.getInt("rp");
 		if(!isPacket) {
 		    lastsleepdate=saved.getLong("lastsleepdate");
 		    lastsleep=saved.getLong("lastsleep");

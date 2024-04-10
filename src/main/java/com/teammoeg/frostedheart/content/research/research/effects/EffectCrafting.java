@@ -58,7 +58,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 public class EffectCrafting extends Effect {
 	public static final Codec<EffectCrafting> CODEC=RecordCodecBuilder.create(t->t.group(
 		Effect.BASE_CODEC.forGetter(Effect::getBaseData),
-		CodecUtil.<EffectCrafting,Item,ItemStack,List<ResourceLocation>>either3(
+		CodecUtil.<EffectCrafting,Item,ItemStack,List<ResourceLocation>>either(
 			CodecUtil.registryCodec(()->Registry.ITEM).fieldOf("item"),
 			CodecUtil.ITEMSTACK_CODEC.fieldOf("item"),
 			Codec.list(ResourceLocation.CODEC).fieldOf("recipes"),

@@ -99,9 +99,9 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
         if (lvl < 0) return;
         Optional<ResearchPaperRecipe> pr = FHUtils.filterRecipes(this.getWorld().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.get(PAPER_SLOT))).findAny();
         if (!pr.isPresent()) return;
-        if (!EnergyCore.hasEnoughEnergy(player, ENERGY_PER_PAPER)) return;
+        if (EnergyCore.getEnergy(player)<=0) return;
         if (!damageInk(player, 5, lvl)) return;
-        EnergyCore.consumeEnergy(player, ENERGY_PER_PAPER);
+        EnergyCore.costEnergy(player, 1);
         inventory.get(PAPER_SLOT).shrink(1);
         game.init(GenerateInfo.all[lvl], new Random());
         game.setLvl(lvl);
@@ -158,11 +158,8 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
         if (pen.getLevel(is, player) < game.getLvl())
             return false;
         return pen.tryDamage(player, is, 1, () -> {
-            if (EnergyCore.hasEnoughEnergy(player, ENERGY_PER_COMBINE)) {
-                if (game.tryCombine(cp1, cp2)) {
-                    EnergyCore.consumeEnergy(player, ENERGY_PER_COMBINE);
-                    return true;
-                }
+            if (game.tryCombine(cp1, cp2)) {
+                return true;
             }
             return false;
         });
