@@ -9,9 +9,9 @@ import com.mojang.serialization.DynamicOps;
 
 import net.minecraft.util.registry.Registry;
 
-public class IntOrIdCodec<A> implements Codec<A> {
+public class RegistryCodec<A> implements Codec<A> {
 	Supplier<Registry<A>> reg;
-	public IntOrIdCodec(Supplier<Registry<A>> registry) {
+	public RegistryCodec(Supplier<Registry<A>> registry) {
 		reg=registry;
 	}
 

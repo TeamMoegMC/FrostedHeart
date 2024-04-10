@@ -1,14 +1,4 @@
 package com.teammoeg.frostedheart.util.io.codec;
-import com.google.common.collect.ImmutableList;
-import com.mojang.datafixers.util.Pair;
-import com.mojang.datafixers.util.Unit;
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
-import com.mojang.serialization.DynamicOps;
-import com.mojang.serialization.Lifecycle;
-import com.mojang.serialization.ListBuilder;
-import org.apache.commons.lang3.mutable.MutableObject;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,7 +6,17 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public final class DecreteListCodec<A> implements Codec<List<A>> {
+import org.apache.commons.lang3.mutable.MutableObject;
+
+import com.mojang.datafixers.util.Pair;
+import com.mojang.datafixers.util.Unit;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.Lifecycle;
+import com.mojang.serialization.ListBuilder;
+
+public final class DiscreteListCodec<A> implements Codec<List<A>> {
     private final Codec<A> elementCodec;
     private final Predicate<A> empty;
     private final Supplier<A> emptyItem;
@@ -24,7 +24,7 @@ public final class DecreteListCodec<A> implements Codec<List<A>> {
     
 
 
-	public DecreteListCodec(Codec<A> elementCodec, Predicate<A> empty, Supplier<A> emptyItem, String index) {
+	public DiscreteListCodec(Codec<A> elementCodec, Predicate<A> empty, Supplier<A> emptyItem, String index) {
 		super();
 		this.elementCodec = elementCodec;
 		this.empty = empty;

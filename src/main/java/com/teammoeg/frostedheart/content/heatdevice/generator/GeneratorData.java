@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.io.codec.DecreteListCodec;
+import com.teammoeg.frostedheart.util.io.codec.DiscreteListCodec;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.fluid.Fluid;
@@ -248,7 +248,7 @@ public class GeneratorData implements SpecialData{
     	CodecUtil.registryCodec(()->Registry.FLUID).optionalFieldOf("steamFluid").forGetter(o->Optional.ofNullable(o.fluid)),
     	Codec.FLOAT.fieldOf("tempLevel").forGetter(o->o.TLevel),
     	Codec.FLOAT.fieldOf("rangeLevel").forGetter(o->o.RLevel),
-    	CodecUtil.path(new DecreteListCodec<>(CodecUtil.ITEMSTACK_CODEC,ItemStack::isEmpty,()->ItemStack.EMPTY,"Slot"),"inv","Items").forGetter(o->o.inventory),
+    	CodecUtil.path(new DiscreteListCodec<>(CodecUtil.ITEMSTACK_CODEC,ItemStack::isEmpty,()->ItemStack.EMPTY,"Slot"),"inv","Items").forGetter(o->o.inventory),
     	CodecUtil.defaultValue(CodecUtil.ITEMSTACK_CODEC, ItemStack.EMPTY).fieldOf("res").forGetter(o->o.currentItem),
     	CodecUtil.BLOCKPOS.fieldOf("actualPos").forGetter(o->o.actualPos),
     	ResourceLocation.CODEC.optionalFieldOf("dim").forGetter(o->o.dimension==null?Optional.empty():Optional.of(o.dimension.getLocation()))

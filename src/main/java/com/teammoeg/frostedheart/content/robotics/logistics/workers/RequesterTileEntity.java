@@ -3,12 +3,16 @@ package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.content.robotics.logistics.FilterSlot;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemChangeListener;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemHandlerListener;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -19,8 +23,18 @@ import net.minecraftforge.items.ItemStackHandler;
 
 public class RequesterTileEntity extends FHBaseTileEntity implements TaskableLogisticStorage,ItemChangeListener,ITickableTileEntity{
 	private static class NumCount{
+		public static final Codec<NumCount> CODEC=RecordCodecBuilder.create(t->t.group(
+			CodecUtil.INT_ARRAY_CODEC.fieldOf("slot").forGetter(o->o.slot.stream().mapToInt(n->n).toArray()),
+			Codec.INT.fieldOf("count").forGetter(o->o.count)
+			).apply(t,NumCount::new));
 		List<Integer> slot=new ArrayList<>();
 		int count;
+		public NumCount(int[] list, int count) {
+			super();
+			IntStream.of(list).forEach(slot::add);
+			this.count = count;
+		}
+		public NumCount() {}
 	}
 	ItemStackHandler container=new ItemStackHandler(27);
 	ItemHandlerListener handler=new ItemHandlerListener(container,this);
@@ -99,7 +113,8 @@ public class RequesterTileEntity extends FHBaseTileEntity implements TaskableLog
 			}
 		}
 		for(int i=0;i<filters.length;i++)
-			tasks[i]=filters[i].createTask(this, sizes[i]);
+			if(sizes[i]>0)
+				tasks[i]=filters[i].createTask(this, sizes[i]);
 	}
 
 
