@@ -3,6 +3,8 @@ package com.teammoeg.frostedheart.content.town.warehouse;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.base.scheduler.ScheduledTaskTileEntity;
+import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.content.town.TownTileEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
@@ -23,12 +25,13 @@ import java.util.Set;
 import static com.teammoeg.frostedheart.content.town.house.HouseTileEntity.TAG_NAME_OCCUPIED_AREA;
 import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHouseBlock;
 
-public class WarehouseTileEntity extends FHBaseTileEntity implements TownTileEntity, ITickableTileEntity, FHBlockInterfaces.IActiveState {
+public class WarehouseTileEntity extends FHBaseTileEntity implements TownTileEntity, ITickableTileEntity, FHBlockInterfaces.IActiveState, ScheduledTaskTileEntity {
     private int volume;//有效体积
     private int area;//占地面积
     private double capacity;//最大容量
     private byte isValid = -1;
     private Set<ColumnPos> occupiedArea = new HashSet<>();
+    private boolean addedToSchedulerQueue = false;
 
     public WarehouseTileEntity() {
         super(FHTileTypes.WAREHOUSE.get());
@@ -132,6 +135,19 @@ public class WarehouseTileEntity extends FHBaseTileEntity implements TownTileEnt
 
     @Override
     public void tick() {
+        if(!this.addedToSchedulerQueue){
+            SchedulerQueue.add(this);
+            this.addedToSchedulerQueue = true;
+        }
+    }
 
+    // ScheduledTaskTileEntity
+    @Override
+    public void executeTask() {
+       this.refresh();
+    }
+    @Override
+    public boolean isStillValid() {
+        return this.isWorkValid();
     }
 }

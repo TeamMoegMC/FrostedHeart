@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.content.town.mine;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import net.minecraft.block.BlockState;
@@ -12,12 +11,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ColumnPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.Tags;
-import se.mickelus.tetra.blocks.TetraBlock;
 import se.mickelus.tetra.blocks.rack.RackBlock;
 
 import java.util.AbstractMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Set;
 
 import static net.minecraft.block.PlantBlockHelper.isAir;
@@ -33,7 +30,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
     public int chest = 0;
     public int rack = 0;
     public double temperature = 0;
-    private final LinkedList<Float> temperatureList = new LinkedList<>();
+    private int counter_for_temperature = 0;//used to calculate average temperature.
     public Set<BlockPos> linkedMines = new HashSet<>();
     public Set<ColumnPos> occupiedArea = new HashSet<>();
 
@@ -59,7 +56,8 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
                 return false;
             }
             if(isAir(world.getBlockState(pos1))){
-                this.temperatureList.add(ChunkHeatData.getTemperature(world, pos1));
+                temperature += ChunkHeatData.getTemperature(world, pos1);
+                counter_for_temperature++;
                 return false;
             }
             return false;
@@ -71,13 +69,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
     }
 
     public double getTemperature(){
-        double average = 0;
-        int count = 0;
-        for(Float f:temperatureList){
-            average += f;
-            count++;
-        }
-        return average/count;
+        return temperature;
     }
 
     public boolean scan(){
@@ -86,6 +78,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
             FHMain.LOGGER.info("Scanning pos: " + blockPos);
             occupiedArea.add(toColumnPos(blockPos));
             }, BlockScanner.PREDICATE_FALSE);
+        temperature /= counter_for_temperature;
         if(!this.rails.isEmpty()){
             RailScanner railScanner = new RailScanner();
             railScanner.scan(512, CONSUMER_NULL, PREDICATE_FALSE);

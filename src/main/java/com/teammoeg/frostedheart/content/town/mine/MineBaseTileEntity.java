@@ -4,6 +4,8 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.base.scheduler.ScheduledTaskTileEntity;
+import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.content.town.TownTileEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
@@ -12,7 +14,6 @@ import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.LongNBT;
-import net.minecraft.nbt.NBTUtil;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
@@ -30,7 +31,7 @@ import static java.lang.Math.exp;
 import static net.minecraftforge.common.util.Constants.NBT.TAG_LONG;
 
 public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEntity, ITickableTileEntity,
-        FHBlockInterfaces.IActiveState{
+        FHBlockInterfaces.IActiveState, ScheduledTaskTileEntity {
     public Set<BlockPos> linkedMines = new HashSet<>();
     private int volume;
     private int area;
@@ -40,6 +41,7 @@ public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEnti
     private double temperature;
     private double rating;
     private byte isValid = -1;//-1:not init;0:false;1:true
+    private boolean addedToSchedulerQueue = false;
 
     public MineBaseTileEntity(){
         super(FHTileTypes.MINE_BASE.get());
@@ -179,6 +181,17 @@ public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEnti
         return this.isWorkValid() ? this.temperature : 0;
     }
 
+    public void setLinkedBaseToAllLinkedMines(){
+        if(this.isWorkValid()) {
+            for(BlockPos minePos:this.linkedMines){
+                assert world != null;
+                MineTileEntity mineTileEntity = (MineTileEntity) world.getTileEntity(minePos);
+                if(mineTileEntity!=null)
+                    mineTileEntity.setLinkedBase(this.getPos(),this.getRating());
+            }
+        }
+    }
+
 
     public void refresh() {
         this.isValid = (byte)(this.isStructureValid()?1:0);
@@ -186,6 +199,20 @@ public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEnti
 
     @Override
     public void tick() {
+        if(!this.addedToSchedulerQueue){
+            SchedulerQueue.add(this);
+            this.addedToSchedulerQueue = true;
+        }
+    }
 
+    // ScheduledTaskTileEntity
+    @Override
+    public void executeTask() {
+        this.refresh();
+        this.setLinkedBaseToAllLinkedMines();
+    }
+    @Override
+    public boolean isStillValid() {
+        return this.isWorkValid();
     }
 }

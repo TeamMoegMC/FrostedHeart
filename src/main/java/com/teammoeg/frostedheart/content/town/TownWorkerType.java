@@ -24,8 +24,13 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.FHBlocks;
 
 import net.minecraft.block.Block;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraftforge.common.util.Constants;
 
-import static java.lang.Math.abs;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * The second-lowest level town processing function.
@@ -49,12 +54,30 @@ public enum TownWorkerType {
         return Math.abs(residentNum - actualCost) < 0.01;
     }, 0),
     WAREHOUSE(FHBlocks.warehouse, null, 0),
-    MINE(FHBlocks.mine, (town, workDate) -> {
-        double add = 1;
-        double actualAdd = town.add(TownResourceType.STONE, add, false);/*日后再说*/
-        return add == actualAdd;
+    MINE(FHBlocks.mine, (town, workData) -> {
+        double rating = workData.getDouble("rating");
+        ListNBT list = workData.getList("resources", Constants.NBT.TAG_COMPOUND);
+        EnumMap<TownResourceType, Double> resources = new EnumMap<>(TownResourceType.class);
+        list.forEach(nbt -> {
+            CompoundNBT nbt_1 = (CompoundNBT) nbt;
+            String key = nbt_1.getString("type");
+            double amount = nbt_1.getDouble("amount");
+            resources.put(TownResourceType.from(key), amount);
+        });
+        Random random = new Random();
+        int add = rating > random.nextFloat() * 10 ? 1 : 0;
+        double randomDouble = random.nextDouble();
+        double counter = 0;
+        for(Map.Entry<TownResourceType, Double> entry : resources.entrySet()){
+            counter += entry.getValue();
+            if(counter >= randomDouble){
+                double actualAdd = town.add(entry.getKey(), add, false);
+                return add == actualAdd;
+            }
+        }
+        return true;
     }, 0),
-    MINE_BASE(FHBlocks.mine_base, null, 0)//日后再说
+    MINE_BASE(FHBlocks.mine_base, null, 0)
     ;
 
     /**

@@ -23,6 +23,8 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.base.scheduler.ScheduledTaskTileEntity;
+import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.content.town.TownTileEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
@@ -30,7 +32,6 @@ import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.IntNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.LongNBT;
 import net.minecraft.tags.BlockTags;
@@ -42,8 +43,6 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nonnull;
-
-
 import java.util.*;
 
 import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHouseBlock;
@@ -61,7 +60,7 @@ import static net.minecraftforge.common.util.Constants.NBT.TAG_LONG;
  * - Compute comfort rating based on the house structure
  */
 public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity, ITickableTileEntity,
-        FHBlockInterfaces.IActiveState {
+        FHBlockInterfaces.IActiveState, ScheduledTaskTileEntity {
 
     /** The temperature at which the house is comfortable. */
     public static final double COMFORTABLE_TEMP_HOUSE = 24;
@@ -81,6 +80,7 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
     private double rating = -1;
     private Set<ColumnPos> occupiedArea;
     private double temperatureModifier = 0;
+    private boolean addedToSchedulerQueue = false;
 
     /** Tile data, stored in tile entity. */
     HeatConsumerEndpoint endpoint = new HeatConsumerEndpoint(99,10,1);
@@ -326,6 +326,10 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
         } else if (getIsActive()) {
             ClientUtils.spawnSteamParticles(world, pos);
         }
+        if(!this.addedToSchedulerQueue){
+            SchedulerQueue.add(this);
+            this.addedToSchedulerQueue = true;
+        }
     }
 
     @Override
@@ -345,5 +349,15 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
             return endpointCap.cast();
         }
         return super.getCapability(capability, facing);
+    }
+
+    // ScheduledTaskTileEntity
+    @Override
+    public void executeTask() {
+        this.refresh();
+    }
+    @Override
+    public boolean isStillValid() {
+        return this.isWorkValid();
     }
 }

@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.util.io.codec.DataOps;
  * Type of special data
  *
  * @param <T> the data component data type
- * @param <U> the data holder actual type
+ * <U>: the data holder actual type
  */
 public class SpecialDataType<T extends SpecialData>{
 	
@@ -74,13 +74,13 @@ public class SpecialDataType<T extends SpecialData>{
 		return factory.apply(data);
 	}
 	public <U> T loadData(DynamicOps<U> ops,U data) {
-		System.out.println(this.getId());
-		System.out.println("=============data element===============");
-		System.out.println(data);
+		//System.out.println(this.getId());
+		//System.out.println("=============data element===============");
+		//System.out.println(data);
 		return CodecUtil.decodeOrThrow(codec.decode(ops, data));
 	}
 	public <U> U saveData(DynamicOps<U> ops,T data) {
-		System.out.println(this.getId());
+		//System.out.println(this.getId());
 		return CodecUtil.encodeOrThrow(codec.encodeStart(ops, data));
 	}
 	

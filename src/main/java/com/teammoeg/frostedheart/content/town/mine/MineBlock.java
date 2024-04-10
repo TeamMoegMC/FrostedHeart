@@ -9,6 +9,9 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.LongNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
@@ -21,7 +24,11 @@ import net.minecraft.world.server.ServerWorld;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static net.minecraftforge.common.util.Constants.NBT.TAG_LONG;
 
 //矿场方块，不是我的方块
 public class MineBlock extends FHTownBuildingCoreBlock {
@@ -57,16 +64,23 @@ public class MineBlock extends FHTownBuildingCoreBlock {
         super.onBlockPlacedBy(world, pos, state, entity, stack);
         MineTileEntity te = (MineTileEntity) Utils.getExistingTileEntity(world, pos);
         if (te != null) {
-            // register the house to the town
             if (entity instanceof ServerPlayerEntity) {
-                if (ChunkHeatData.hasAdjust(world, pos)) {
-                    TeamTown.from((PlayerEntity) entity).addTownBlock(pos, te);
-                    TeamTown.from((PlayerEntity) entity).getTownBlocks().values().stream()
-                            .filter((townWorkerData)->townWorkerData.getType() == TownWorkerType.MINE_BASE)
-                            .map(TownWorkerData::getWorkData)
-                            .map((workData)->workData.getDouble("rating"))
-                            .forEach(te::setLinkedBaseRating);
-                }
+                //if (ChunkHeatData.hasAdjust(world, pos)) { 矿坑的工作不强制要求能量塔在附近
+                TeamTown.from((PlayerEntity) entity).addTownBlock(pos, te);
+
+                //让所在Town的所有MineBase都检查一下连接的矿坑，并且更新矿坑的linkedBaseRating
+                TeamTown.from((PlayerEntity)entity).getTownBlocks().values()
+                        .stream()
+                        .filter(data -> data.getType() == TownWorkerType.MINE_BASE
+                                && data.getWorkData().getByte("isValid") == 1)
+                        .map(data -> (MineBaseTileEntity) Utils.getExistingTileEntity(world, data.getPos()))
+                        .filter(mineBaseTileEntity -> {
+                            mineBaseTileEntity.refresh();
+                            return mineBaseTileEntity.getLinkedMines().contains(pos);
+                        })
+                        .forEach(mineBaseTileEntity -> {
+                            te.setLinkedBase(mineBaseTileEntity.getPos(), mineBaseTileEntity.getRating());
+                        });
             }
         }
     }

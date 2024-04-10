@@ -39,6 +39,7 @@ public class SchedulerQueue {
 
     int lastpos;
     double tasksPerTick = FHConfig.SERVER.taskPerTick.get();
+    double tasksPerTickCounter = 0;//if taskPerTick is not integer, use this to decide when to execute an extra task
 
     public static void add(TileEntity te) {
         queues.computeIfAbsent(te.getWorld().getDimensionKey(), e -> new SchedulerQueue())
@@ -77,8 +78,10 @@ public class SchedulerQueue {
         //count count of tasks
         int taskNum = (int) tasksPerTick;
         double fracNum = MathHelper.frac(tasksPerTick);
-        if (world.getRandom().nextDouble() < fracNum) {
+        tasksPerTickCounter += fracNum;
+        if (tasksPerTickCounter >= 1) {
             taskNum++;
+            tasksPerTickCounter -= 1;
         }
         if (tasks.isEmpty()) return;
         //run tasks
