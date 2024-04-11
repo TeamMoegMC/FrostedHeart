@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static com.teammoeg.frostedheart.content.tips.client.TipHandler.loadUnlockedFromFile;
 import static net.minecraft.util.text.TextFormatting.*;
 
 import java.util.List;
@@ -29,7 +28,6 @@ import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.TipHandler;
 import net.minecraft.client.gui.screen.OptionsSoundsScreen;
 import net.minecraftforge.client.event.*;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -654,18 +652,18 @@ public class ClientEvents {
      */
 
     @SubscribeEvent
-    public static void onClientSetup(FMLClientSetupEvent event) {
-        loadUnlockedFromFile();
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        TipHandler.clearRenderQueue();
+        TipHandler.displayTip("_default", false);
+        TipHandler.displayTip("_default2", false);
+        if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) == 0) {
+            TipHandler.displayTip("_music_warning", false);
+        }
     }
 
     @SubscribeEvent
-    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         TipHandler.clearRenderQueue();
-        TipHandler.addToRenderQueue("_default", false);
-        TipHandler.addToRenderQueue("_default2", false);
-        if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) == 0) {
-            TipHandler.addToRenderQueue("_music_warning", false);
-        }
     }
 
     @SubscribeEvent
@@ -674,12 +672,12 @@ public class ClientEvents {
             if (TipHandler.readError) {
                 TipElement ele = new TipElement();
                 ele.replaceToError(TipHandler.UNLOCKED_FILEPATH, "read");
-                TipHandler.addToRenderQueue(ele, true);
+                TipHandler.displayTip(ele, true);
                 TipHandler.readError = false;
             }
 
 //            if (...如果有新版本) {
-//              TipHandler.addToRenderQueue("update", false);
+//              TipHandler.displayTip("update", false);
 //            }
         }
     }
@@ -688,7 +686,7 @@ public class ClientEvents {
     public static void onGUIRender(GuiScreenEvent event) {
         if (event.getGui() instanceof OptionsSoundsScreen) {
             if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) <= 0) {
-                TipHandler.addToRenderQueue("_music_warning", false);
+                TipHandler.displayTip("_music_warning", false);
             }
         }
     }
