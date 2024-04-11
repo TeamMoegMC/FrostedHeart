@@ -128,7 +128,7 @@ public class FarmBlockTileEntity extends TileEntity implements ITownBlockTE, ISc
     private boolean isUsefulBlock(BlockPos pos){
         assert world != null : "Empty world";
         Block block = world.getBlockState(pos).getBlock();
-        if(block instanceof FenceBlock || block instanceof WallBlock)return true;
+        if(block instanceof FenceBlock || block instanceof WallBlock ||block instanceof FenceGateBlock)return true;
         return false;
     }
 
