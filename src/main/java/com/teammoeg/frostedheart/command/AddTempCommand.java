@@ -26,13 +26,13 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ITemperatureAdjust;
+import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.IHeatArea;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.command.arguments.BlockPosArgument;
-import net.minecraft.util.text.StringTextComponent;
 
 public class AddTempCommand {
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
@@ -50,26 +50,26 @@ public class AddTempCommand {
                         }))));
         LiteralArgumentBuilder<CommandSource> get = Commands.literal("get")
                 .executes((ct) -> {
-                    Collection<ITemperatureAdjust> adjs = ChunkHeatData.getAdjust(ct.getSource().getWorld(), ct.getSource().asPlayer().getPosition());
-                    if (adjs.size() == 0) {
-                        ct.getSource().sendFeedback(new StringTextComponent("No Active Adjust!"), true);
+                    Collection<IHeatArea> adjs = ChunkHeatData.getAdjust(ct.getSource().getWorld(), ct.getSource().asPlayer().getPosition());
+                    if (adjs.isEmpty()) {
+                        ct.getSource().sendFeedback(TranslateUtils.str("No Active Adjust!"), true);
                     } else {
-                        ct.getSource().sendFeedback(new StringTextComponent("Active Adjusts:"), true);
-                        for (ITemperatureAdjust adj : adjs) {
-                            ct.getSource().sendFeedback(new StringTextComponent("center:" + adj.getCenterX() + " " + adj.getCenterY() + " " + adj.getCenterZ() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(ct.getSource().asPlayer().getPosition())), true);
+                        ct.getSource().sendFeedback(TranslateUtils.str("Active Adjusts:"), true);
+                        for (IHeatArea adj : adjs) {
+                            ct.getSource().sendFeedback(TranslateUtils.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(ct.getSource().asPlayer().getPosition())), true);
                         }
                     }
                     return Command.SINGLE_SUCCESS;
                 })
                 .then(Commands.argument("position", BlockPosArgument.blockPos())
                         .executes((ct) -> {
-                            Collection<ITemperatureAdjust> adjs = ChunkHeatData.getAdjust(ct.getSource().getWorld(), BlockPosArgument.getBlockPos(ct, "position"));
-                            if (adjs.size() == 0) {
-                                ct.getSource().sendFeedback(new StringTextComponent("No Active Adjust!"), true);
+                            Collection<IHeatArea> adjs = ChunkHeatData.getAdjust(ct.getSource().getWorld(), BlockPosArgument.getBlockPos(ct, "position"));
+                            if (adjs.isEmpty()) {
+                                ct.getSource().sendFeedback(TranslateUtils.str("No Active Adjust!"), true);
                             } else {
-                                ct.getSource().sendFeedback(new StringTextComponent("Active Adjusts:"), true);
-                                for (ITemperatureAdjust adj : adjs) {
-                                    ct.getSource().sendFeedback(new StringTextComponent("center:" + adj.getCenterX() + " " + adj.getCenterY() + " " + adj.getCenterZ() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(BlockPosArgument.getBlockPos(ct, "position"))), true);
+                                ct.getSource().sendFeedback(TranslateUtils.str("Active Adjusts:"), true);
+                                for (IHeatArea adj : adjs) {
+                                    ct.getSource().sendFeedback(TranslateUtils.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(BlockPosArgument.getBlockPos(ct, "position"))), true);
                                 }
                             }
                             return Command.SINGLE_SUCCESS;

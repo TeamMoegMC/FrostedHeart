@@ -28,58 +28,57 @@ import javax.annotation.Nonnull;
 
 import com.google.common.collect.Sets;
 import com.mojang.brigadier.CommandDispatcher;
+import com.teammoeg.frostedheart.FHAttributes;
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
+import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
-import com.teammoeg.frostedheart.climate.data.FHDataManager;
-import com.teammoeg.frostedheart.climate.data.FHDataReloadManager;
-import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
-import com.teammoeg.frostedheart.climate.network.FHDatapackSyncPacket;
-import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
-import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.command.AddTempCommand;
-import com.teammoeg.frostedheart.command.ClimateCommand;
-import com.teammoeg.frostedheart.command.DebugCommand;
-import com.teammoeg.frostedheart.command.ResearchCommand;
-import com.teammoeg.frostedheart.command.ScenarioCommand;
+import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.FHDataManager.DataType;
+import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.command.*;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
-import com.teammoeg.frostedheart.content.foods.DailyKitchen.DailyKitchen;
+import com.teammoeg.frostedheart.content.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
+import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
+import com.teammoeg.frostedheart.content.climate.network.FHDatapackSyncPacket;
+import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.foods.dailykitchen.DailyKitchen;
+import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
-import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
-import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
-import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
-import com.teammoeg.frostedheart.recipe.FHRecipeCachingReloadListener;
-import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
-import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.ResearchListeners;
-import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
-import com.teammoeg.frostedheart.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.research.inspire.EnergyCore;
-import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
-import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
-import com.teammoeg.frostedheart.research.network.FHResearchSyncEndPacket;
-import com.teammoeg.frostedheart.research.network.FHResearchSyncPacket;
-import com.teammoeg.frostedheart.scenario.FHScenario;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
-import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
+import com.teammoeg.frostedheart.content.research.FHResearch;
+import com.teammoeg.frostedheart.content.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
+import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
+import com.teammoeg.frostedheart.content.scenario.EventTriggerType;
+import com.teammoeg.frostedheart.content.scenario.FHScenario;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
+import com.teammoeg.frostedheart.content.town.TeamTownDataS2CPacket;
+import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
+import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
+import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
+import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -92,9 +91,13 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.fluid.FluidState;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -105,6 +108,7 @@ import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -122,6 +126,7 @@ import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.world.MobSpawnInfoBuilder;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AnvilUpdateEvent;
+import net.minecraftforge.event.ItemAttributeModifierEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -149,7 +154,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.network.PacketDistributor.PacketTarget;
-import net.minecraftforge.registries.ForgeRegistries;
 import se.mickelus.tetra.items.modular.IModularItem;
 import top.theillusivec4.curios.api.event.DropRulesEvent;
 import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
@@ -163,7 +167,7 @@ public class CommonEvents {
     @SubscribeEvent
     public static void checkSleep(SleepingTimeCheckEvent event) {
         if (event.getPlayer().getSleepTimer() >= 100 && !event.getPlayer().getEntityWorld().isRemote) {
-            EnergyCore.applySleep(ChunkHeatData.getTemperature(event.getPlayer().getEntityWorld(), event.getSleepingLocation().orElseGet(event.getPlayer()::getPosition)), (ServerPlayerEntity) event.getPlayer());
+            EnergyCore.applySleep((ServerPlayerEntity) event.getPlayer());
         }
     }
     @SubscribeEvent
@@ -173,6 +177,25 @@ public class CommonEvents {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
             if (!player.isSpectator() && !player.isCreative() && player.ticksExisted % 20 == 0)
                 EnergyCore.dT(player);
+        }
+    }
+    @SubscribeEvent
+    public static void insulationDataAttr(ItemAttributeModifierEvent event) {
+        ArmorTempData data=FHDataManager.getArmor(event.getItemStack());
+
+        if(data!=null) {
+        	EquipmentSlotType es=event.getItemStack().getEquipmentSlot();
+        	if(es!=null) {
+	        	EquipmentCuriosSlotType ecs=EquipmentCuriosSlotType.fromVanilla(es);
+	        	if(event.getSlotType()==es) {
+		        	if(data.getInsulation()!=0)
+		        		event.addModifier(FHAttributes.INSULATION.get(), new AttributeModifier(ecs.getSlotUUID(0), ecs.getKey(0), data.getInsulation(), Operation.ADDITION));
+		        	if(data.getColdProof()!=0)
+		        		event.addModifier(FHAttributes.WIND_PROOF.get(), new AttributeModifier(ecs.getSlotUUID(0), ecs.getKey(0), data.getColdProof(), Operation.ADDITION));
+		        	if(data.getHeatProof()!=0)
+		        		event.addModifier(FHAttributes.HEAT_PROOF.get(), new AttributeModifier(ecs.getSlotUUID(0), ecs.getKey(0), data.getHeatProof(), Operation.ADDITION));
+	        	}
+        	}
         }
     }
     @SubscribeEvent
@@ -188,7 +211,7 @@ public class CommonEvents {
         if (!persistent.contains(FHUtils.FIRST_LOGIN_GIVE_MANUAL)) {
             persistent.putBoolean(FHUtils.FIRST_LOGIN_GIVE_MANUAL, false);
             event.getPlayer().inventory.addItemStackToInventory(
-                    new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation("ftbquests", "book"))));
+                    new ItemStack(RegistryUtils.getItem(new ResourceLocation("ftbquests", "book"))));
             event.getPlayer().inventory.armorInventory.set(3, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_HELMET)
                     .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_head"))));
             event.getPlayer().inventory.armorInventory.set(2, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_CHESTPLATE)
@@ -200,7 +223,7 @@ public class CommonEvents {
             if (event.getPlayer().abilities.isCreativeMode) {
                 event.getPlayer().sendMessage(new TranslationTextComponent("message.frostedheart.creative_help")
                         .setStyle(Style.EMPTY.applyFormatting(TextFormatting.YELLOW)
-                                .setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, GuiUtils.str("Click to use command")))
+                                .setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TranslateUtils.str("Click to use command")))
                                 .setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/frostedheart research complete all"))), event.getPlayer().getUniqueID());
             }
 
@@ -240,7 +263,7 @@ public class CommonEvents {
         // IReloadableResourceManager resourceManager = (IReloadableResourceManager)
         // dataPackRegistries.getResourceManager();
         event.addListener(new FHRecipeReloadListener(dataPackRegistries));
-        event.addListener(FHDataReloadManager.INSTANCE);
+        event.addListener(FHDataManager.INSTANCE);
 //            resourceManager.addReloadListener(ChunkCacheInvalidationReloaderListener.INSTANCE);
     }
 
@@ -253,21 +276,38 @@ public class CommonEvents {
     @SubscribeEvent
     public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
         Block growBlock = event.getState().getBlock();
-
+        BlockPos belowPos=event.getPos().down();
+        Block belowGrowBlock=event.getWorld().getBlockState(belowPos).getBlock();
         float temp = ChunkHeatData.getTemperature(event.getWorld(), event.getPos());
         boolean bz = WorldClimate.isBlizzard(event.getWorld());
         if (bz) {
+        	BlockPos cur=event.getPos();
+
+        	/*if(!(growBlock instanceof IGrowable)) {
+	        	if(belowGrowBlock instanceof IGrowable)
+	        		cur=belowPos;
+	        	else {
+	        		event.setResult(Event.Result.DENY);
+	        		return;
+	        	}
+
+        	}*/
             if (FHUtils.isBlizzardHarming(event.getWorld(), event.getPos())) {
-                event.getWorld().setBlockState(event.getPos(), Blocks.AIR.getDefaultState(), 2);
+            	FluidState curstate=event.getWorld().getFluidState(cur);
+            	if(curstate.isEmpty())
+            		event.getWorld().setBlockState(cur, Blocks.AIR.getDefaultState(), 2);
+            	else
+            		event.getWorld().setBlockState(cur, curstate.getBlockState(), 2);
             } else if (event.getWorld().getRandom().nextInt(3) == 0) {
-                event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
+            	//FluidState curstate=event.getWorld().getFluidState(cur);
+
+                event.getWorld().setBlockState(cur,growBlock.getDefaultState(), 2);
             }
             event.setResult(Event.Result.DENY);
         } else if (growBlock instanceof FHCropBlock) {
-            return;
         } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
             if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE) {
-                if (temp < -6 && event.getWorld().getRandom().nextInt(3) == 0) {
+                if (event.getWorld().getRandom().nextInt(3) == 0) {
                     event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
@@ -279,10 +319,10 @@ public class CommonEvents {
                 }
                 event.setResult(Event.Result.DENY);
             }
-        } else {
-            if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE || bz) {
+        } else if(growBlock instanceof IGrowable){
+            if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE) {
                 // Set back to default state, might not be necessary
-                if ((bz || temp < 0) && event.getWorld().getRandom().nextInt(3) == 0) {
+                if (event.getWorld().getRandom().nextInt(3) == 0) {
                     BlockState cbs = event.getWorld().getBlockState(event.getPos());
                     if (cbs.matchesBlock(growBlock) && cbs != growBlock.getDefaultState())
                         event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
@@ -297,6 +337,9 @@ public class CommonEvents {
                 event.setResult(Event.Result.DENY);
             }
 
+        }else {
+        	if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE)
+        		event.setResult(Event.Result.DENY);
         }
     }
 
@@ -313,8 +356,7 @@ public class CommonEvents {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void doPlayerInteract(PlayerInteractEvent ite) {
     	if(ite.getPlayer() instanceof ServerPlayerEntity&&!(ite.getPlayer() instanceof FakePlayer)) {
-    		ScenarioConductor cond=FHScenario.get(ite.getPlayer());
-    		cond.playerInited=true;
+    		FHScenario.trigVar(ite.getPlayer(), EventTriggerType.PLAYER_INTERACT);
     	}
     }
     @SubscribeEvent
@@ -351,17 +393,17 @@ public class CommonEvents {
         if (!ResearchListeners.canUseBlock(event.getPlayer(), event.getWorld().getBlockState(event.getHitVec().getPos()).getBlock())) {
             event.setUseBlock(Result.DENY);
 
-            event.getPlayer().sendStatusMessage(GuiUtils.translateMessage("research.cannot_use_block"), true);
+            event.getPlayer().sendStatusMessage(TranslateUtils.translateMessage("research.cannot_use_block"), true);
         }
 
     }
 
     @SubscribeEvent
     public static void death(PlayerEvent.Clone ev) {
-        FHUtils.copyPlayerCapability(DailyKitchen.WANTED_FOOD_CAPABILITY,ev.getOriginal(),ev.getPlayer());
-        FHUtils.copyPlayerCapability(EnergyCore.CAPABILITY,ev.getOriginal(),ev.getPlayer());
-        FHUtils.clonePlayerCapability(ScenarioConductor.CAPABILITY,ev.getOriginal(),ev.getPlayer());
-        //FHUtils.copyPlayerCapability(PlayerTemperatureData.CAPABILITY,ev.getOriginal(),ev.getPlayer());
+        FHUtils.clonePlayerCapability(FHCapabilities.WANTED_FOOD.capability(),ev.getOriginal(),ev.getPlayer());
+        FHUtils.clonePlayerCapability(FHCapabilities.ENERGY,ev.getOriginal(),ev.getPlayer());
+        FHUtils.clonePlayerCapability(FHCapabilities.SCENARIO,ev.getOriginal(),ev.getPlayer());
+        //FHUtils.clonePlayerCapability(PlayerTemperatureData.CAPABILITY,ev.getOriginal(),ev.getPlayer());
         //FHMain.LOGGER.info("clone");
         if (!ev.getPlayer().world.isRemote) {
             DeathInventoryData orig = DeathInventoryData.get(ev.getOriginal());
@@ -388,10 +430,10 @@ public class CommonEvents {
                 adj = FHDataManager.getFood(is);
             }
             if (adj != null) {
-                float current = PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(t->t.getBodyTemp()).orElse(0f);
+                float current = PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
-                float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(t->t.getEnvTemp()).orElse(0f));
+                float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(PlayerTemperatureData::getEnvTemp).orElse(0f));
                 if (heat > 1) {
                     event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
                 } else if (heat < -1)
@@ -399,13 +441,13 @@ public class CommonEvents {
                 if (heat > 0) {
                     if (current >= max)
                         return;
-                    current += heat * tspeed;
+                    current += (float) (heat * tspeed);
                     if (current > max)
                         current = max;
                 } else {
                     if (current <= min)
                         return;
-                    current += heat * tspeed;
+                    current += (float) (heat * tspeed);
                     if (current <= min)
                         return;
                 }
@@ -462,7 +504,7 @@ public class CommonEvents {
                     int i = FHUtils.getEnchantmentLevel(Enchantments.UNBREAKING, cnbt);
                     int j = 0;
                     if (i > 0)
-                        for (int k = 0; i > 0 && k < amount; ++k) {
+                        for (int k = 0; k < amount; ++k) {
                             if (UnbreakingEnchantment.negateDamage(itemstack, i, player.getRNG())) {
                                 ++j;
                             }
@@ -514,30 +556,30 @@ public class CommonEvents {
             if (growBlock instanceof IGrowable) {
                 if (growBlock instanceof SaplingBlock) {
                     if (temp < -5) {
-                    	player.sendStatusMessage(GuiUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(-6)), true);
+                    	player.sendStatusMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(-6)), true);
                     }
                 } else if (growBlock instanceof FHCropBlock) {
                     int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
                     if (temp < growTemp) {
                         event.setCanceled(true);
-                        player.sendStatusMessage(GuiUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(growTemp)), true);
+                        player.sendStatusMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(growTemp)), true);
                     }
                 } else if (growBlock instanceof FHBerryBushBlock) {
                     int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature();
                     if (temp < growTemp) {
                         event.setCanceled(true);
-                        player.sendStatusMessage(GuiUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(growTemp)), true);
+                        player.sendStatusMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(growTemp)), true);
                     }
                 } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
                     if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE) {
                         event.setCanceled(true);
-                        player.sendStatusMessage(GuiUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(WorldTemperature.HEMP_GROW_TEMPERATURE)), true);
+                        player.sendStatusMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(WorldTemperature.HEMP_GROW_TEMPERATURE)), true);
                     }
                 } else if (growBlock == Blocks.NETHERRACK) {
 
                 } else if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE) {
                     event.setCanceled(true);
-                    player.sendStatusMessage(GuiUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE)), true);
+                    player.sendStatusMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE)), true);
 
                 }
             }
@@ -551,7 +593,6 @@ public class CommonEvents {
             event.setAmount(event.getAmount() * (0.2f / (ei.getAmplifier() + 1)));
     }
 
-    @SuppressWarnings("resource")
     @SubscribeEvent
     public static void onIEMultiBlockForm(MultiblockFormEvent event) {
         if (event.getPlayer() instanceof FakePlayer) {
@@ -564,7 +605,7 @@ public class CommonEvents {
                     event.setCanceled(true);
                 }
             } else {
-                if (!ResearchDataAPI.getData((ServerPlayerEntity) event.getPlayer()).building.has(event.getMultiblock())) {
+                if (!ResearchDataAPI.getData(event.getPlayer()).building.has(event.getMultiblock())) {
                     //event.getPlayer().sendStatusMessage(GuiUtils.translateMessage("research.multiblock.cannot_build"), true);
                     event.setCanceled(true);
                 }
@@ -581,12 +622,11 @@ public class CommonEvents {
         }
     }
 
-    @SuppressWarnings("resource")
     @SubscribeEvent
     public static void onPlayerKill(LivingDeathEvent event) {
         Entity ent = event.getSource().getTrueSource();
 
-        if (ent == null || !(ent instanceof PlayerEntity) || ent instanceof FakePlayer) return;
+        if (!(ent instanceof PlayerEntity) || ent instanceof FakePlayer) return;
         if (ent.getEntityWorld().isRemote) return;
         ServerPlayerEntity p = (ServerPlayerEntity) ent;
 
@@ -608,6 +648,8 @@ public class CommonEvents {
         ClimateCommand.register(dispatcher);
         DebugCommand.register(dispatcher);
         ScenarioCommand.register(dispatcher);
+        TownCommand.register(dispatcher);
+        TipCommand.register(dispatcher);
     }
 
     @SubscribeEvent
@@ -616,13 +658,17 @@ public class CommonEvents {
             World world = event.world;
             if (!world.isRemote && world instanceof ServerWorld) {
                 ServerWorld serverWorld = (ServerWorld) world;
+
+                // Scheduled checks (e.g. town structures)
                 SchedulerQueue.tickAll(serverWorld);
+
+                // Town logic tick
                 int i = 0;
-                for (TeamResearchData trd : FHResearchDataManager.INSTANCE.getAllData()) {
-                    if (serverWorld.getDimensionKey().equals(trd.generatorData.dimension)) {
+                for (TeamDataHolder trd : FHTeamDataManager.INSTANCE.getAllData()) {
+                    if (serverWorld.getDimensionKey().equals(trd.getData(SpecialDataTypes.GENERATOR_DATA).dimension)) {
                         if (serverWorld.getGameTime() % 20 == i % 20) {//Split town calculations to multiple seconds
                             if (trd.getTeam().map(t -> t.getOnlineMembers().size()).orElse(0) > 0) {
-                                trd.townData.tick(serverWorld);
+                                trd.getData(SpecialDataTypes.TOWN_DATA).tick(serverWorld);
                             }
                         }
                     }
@@ -632,24 +678,12 @@ public class CommonEvents {
                 // Update clock source every second, and check hour data if it needs an update
                 if (serverWorld.getGameTime() % 20 == 0) {
                     WorldClimate data = WorldClimate.get(serverWorld);
-                    data.updateClock(serverWorld);
-                    data.updateCache(serverWorld);
-                    data.trimTempEventStream();
-
-                }
-                if (world.getDayTime() % 24000 == 40) {
-                    for (PlayerEntity spe : world.getPlayers()) {
-                        if (spe instanceof ServerPlayerEntity && !(spe instanceof FakePlayer)) {
-                            ServerPlayerEntity serverPlayer = (ServerPlayerEntity) spe;
-                            long energy = EnergyCore.getEnergy(spe);
-                            if (energy > 10000)
-                                serverPlayer.sendStatusMessage(GuiUtils.translateMessage("energy.full"), false);
-                            else if (energy >= 5000)
-                                serverPlayer.sendStatusMessage(GuiUtils.translateMessage("energy.suit"), false);
-                            else
-                                serverPlayer.sendStatusMessage(GuiUtils.translateMessage("energy.lack"), false);
-                        }
+                    if(data!=null) {
+	                    data.updateClock(serverWorld);
+	                    data.updateCache(serverWorld);
+	                    data.trimTempEventStream();
                     }
+
                 }
             }
 
@@ -661,9 +695,31 @@ public class CommonEvents {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-            ScenarioConductor runner=FHScenario.get(player);
-            runner.tick();
-           // System.out.println(runner.save());
+
+            // Scenario runner
+            ScenarioConductor runner=FHScenario.getNullable(player);
+            if (runner != null && runner.isInited())
+            	runner.tick();
+
+            // Heat network statistics update
+            if (player.openContainer instanceof HeatStatContainer) {
+            	((HeatStatContainer)player.openContainer).tick();
+            }
+
+            // Research energy display
+            if (player.getServerWorld().getDayTime() % 24000 == 40) {
+                long energy = EnergyCore.getEnergy(player);
+                int messageNum = player.getRNG().nextInt(3);
+                if (energy > 10000)
+                    player.sendStatusMessage(TranslateUtils.translateMessage("energy.full." + messageNum), false);
+                else if (energy >= 5000)
+                    player.sendStatusMessage(TranslateUtils.translateMessage("energy.suit." + messageNum), false);
+                else
+                    player.sendStatusMessage(TranslateUtils.translateMessage("energy.lack." + messageNum), false);
+            }
+
+            // Town data sync (currently, every tick for debug)
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new TeamTownDataS2CPacket(player));
         }
     }
     @SubscribeEvent
@@ -683,22 +739,22 @@ public class CommonEvents {
                 int growTemp = ((FHCropBlock) growBlock).getGrowTemperature() + WorldTemperature.BONEMEAL_TEMPERATURE;
                 if (temp < growTemp) {
                     event.setCanceled(true);
-                    player.sendStatusMessage(GuiUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(growTemp)), true);
+                    player.sendStatusMessage(TranslateUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(growTemp)), true);
                 }
             } else if (growBlock instanceof FHBerryBushBlock) {
                 int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature() + WorldTemperature.BONEMEAL_TEMPERATURE;
                 if (temp < growTemp) {
                     event.setCanceled(true);
-                    player.sendStatusMessage(GuiUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(growTemp)), true);
+                    player.sendStatusMessage(TranslateUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(growTemp)), true);
                 }
             } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
                 if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE) {
                     event.setCanceled(true);
-                    player.sendStatusMessage(GuiUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(WorldTemperature.HEMP_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE)), true);
+                    player.sendStatusMessage(TranslateUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(WorldTemperature.HEMP_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE)), true);
                 }
             } else if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE) {
                 event.setCanceled(true);
-                player.sendStatusMessage(GuiUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE)), true);
+                player.sendStatusMessage(TranslateUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE)), true);
             }
         }
     }
@@ -748,7 +804,6 @@ public class CommonEvents {
         }
     }
 
-    @SuppressWarnings("resource")
     @SubscribeEvent
     public static void removeSpawnVillage(WorldEvent.CreateSpawnPosition event) {
         if (event.getWorld() instanceof ServerWorld) {
@@ -757,12 +812,12 @@ public class CommonEvents {
                 serverWorld.getChunkProvider().generator.func_235957_b_().func_236195_a_().keySet()
                         .remove(Structure.VILLAGE);
             } catch (UnsupportedOperationException e) {
+                FHMain.LOGGER.error("Failed to remove vanilla village structures", e);
             }
         }
     }
 
 
-    @SuppressWarnings("resource")
     @SubscribeEvent
     public static void removeVanillaVillages(WorldEvent.Load event) {
         if (event.getWorld() instanceof ServerWorld) {
@@ -771,6 +826,7 @@ public class CommonEvents {
                 serverWorld.getChunkProvider().generator.func_235957_b_().func_236195_a_().keySet()
                         .remove(Structure.VILLAGE);
             } catch (UnsupportedOperationException e) {
+                FHMain.LOGGER.error("Failed to remove vanilla village structures", e);
             }
         }
     }
@@ -788,7 +844,7 @@ public class CommonEvents {
             FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHClimatePacket(WorldClimate.get(serverWorld)));
             EnergyCore.getCapability(event.getPlayer()).ifPresent(t->{t.onrespawn();t.sendUpdate((ServerPlayerEntity) event.getPlayer());});
-            PlayerTemperatureData.getCapability(event.getPlayer()).ifPresent(t->t.reset());
+            PlayerTemperatureData.getCapability(event.getPlayer()).ifPresent(PlayerTemperatureData::reset);
             
         }
     }
@@ -808,12 +864,10 @@ public class CommonEvents {
             ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
             PacketTarget currentPlayer=PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer());
             FHResearch.sendSyncPacket(currentPlayer);
-            FHNetwork.send(currentPlayer,new FHDatapackSyncPacket());
-            FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(
-                            FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer())));
-            serverWorld.getCapability(WorldClimate.CAPABILITY).ifPresent((cap) -> {
-                FHNetwork.send(currentPlayer,new FHClimatePacket(cap));
-            });
+            for(DataType type:DataType.types)
+            	FHNetwork.send(currentPlayer,new FHDatapackSyncPacket(type));
+            FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayerEntity) event.getEntity())));
+            FHCapabilities.CLIMATE_DATA.getCapability(serverWorld).ifPresent((cap) -> FHNetwork.send(currentPlayer,new FHClimatePacket(cap)));
             //System.out.println("=x-x=");
             //System.out.println(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS.getValue(new ResourceLocation(FHMain.MODID,"add_loot")));
         }

@@ -135,11 +135,17 @@ repositories {
     maven {
         name = "BlameJared"
         url = "https://maven.blamejared.com/"
+        content {
+			excludeGroup "curse.maven"
+		}
     }
     // JEI and TC Files
     maven {
         name = "DVS1 Maven FS"
         url = "https://dvs1.progwml6.com/files/maven"
+        content {
+			excludeGroup "curse.maven"
+		}
     }
     // Needed for JEI
     maven {
@@ -147,27 +153,38 @@ repositories {
         url = "https://maven.latmod.com/"
         content {
             includeGroup "mezz.jei"
+            excludeGroup "curse.maven"
         }
     }
-
+	// Location of the maven for Flywheel
     maven {
-        // Location of the maven for Flywheel
         name = "tterrag maven"
         url = "https://maven.tterrag.com/"
+        content {
+			excludeGroup "curse.maven"
+		}
     }
     // Needed for Curios API
     maven {
         name = "theillusivec4 maven"
         url = "https://maven.theillusivec4.top/"
+        content {
+			excludeGroup "curse.maven"
+		}
     }
     maven {
         url "https://maven.architectury.dev/"
+        content {
+        	includeGroup "me.shedaniel"
+        	excludeGroup "curse.maven"
+        }
     }
     maven {
         url "https://maven.saps.dev/minecraft"
         content {
             includeGroup "dev.ftb.mods"
             includeGroup "dev.latvian.mods"
+            excludeGroup "curse.maven"
         }
     }
 //    maven {
@@ -186,13 +203,14 @@ repositories {
             includeGroup "gloridifice.watersource"
             includeGroup "com.alcatrazescapee.primalwinter"
             includeGroup "java.moze_intel"
+            excludeGroup "curse.maven"
         }
     }
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    // compile fileTree(include: ['*.jar'], dir: 'libs')
+//    implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     implementation fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
     implementation fg.deobf("me.shedaniel:architectury-forge:${rootProject.architectury_version}")
@@ -223,7 +241,7 @@ dependencies {
     compileOnly fg.deobf("curse.maven:engineers-decor-313866:3566177")
     compileOnly fg.deobf("curse.maven:projecte-226410:3223221")
     compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2:api")
-    implementation fg.deobf("dev.ftb.mods:ftb-quests-forge:1605.3.6-build.98")
+    compileOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:1605.3.6-build.98")
 
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2")
 

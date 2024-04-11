@@ -23,7 +23,7 @@ package com.teammoeg.frostedheart.effects;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-import com.teammoeg.frostedheart.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;

@@ -5,10 +5,10 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.scenario.FHScenario;
-import com.teammoeg.frostedheart.scenario.runner.ActNamespace;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
-import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
+import com.teammoeg.frostedheart.content.scenario.FHScenario;
+import com.teammoeg.frostedheart.content.scenario.runner.ActNamespace;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
@@ -44,11 +44,10 @@ public class ScenarioCommand {
 					})
 			)).then(Commands.literal("run").then(
 				Commands.argument("script", StringArgumentType.string()).executes(ct->{
-						StringBuilder sb=new StringBuilder(StringArgumentType.getString(ct, "script"));
-						sb.append("\n").append("@return");
+                    String sb = StringArgumentType.getString(ct, "script") + "\n" + "@return";
 						ScenarioConductor cdt=FHScenario.get(ct.getSource().asPlayer());
 						cdt.addCallStack();
-						cdt.run(FHScenario.parser.parseString("<anoymous_command>", sb.toString()));
+						cdt.run(FHScenario.parser.parseString("<anoymous_command>", sb));
 						return Command.SINGLE_SUCCESS;
 					})
 			)).then(Commands.literal("pause").executes(ct->{

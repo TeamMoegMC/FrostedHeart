@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import java.util.Collections;
-import java.util.Map;
 import java.util.Random;
 
 import net.minecraft.inventory.IInventory;
@@ -62,7 +60,7 @@ public class SmokingDefrostRecipe extends SmokingRecipe implements DefrostRecipe
 
     @Override
     public ItemStack getCraftingResult(IInventory inv) {
-        if (iss.length <= 0) return ItemStack.EMPTY;
+        if (iss.length == 0) return ItemStack.EMPTY;
         return iss[recipeRNG.nextInt(getIss().length)].copy();
     }
 

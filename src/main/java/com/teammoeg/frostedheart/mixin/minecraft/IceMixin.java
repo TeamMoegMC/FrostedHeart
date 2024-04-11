@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.IceBlock;
@@ -36,7 +36,7 @@ import net.minecraft.world.server.ServerWorld;
 
 /**
  * Add generator effect for ice (melt)
- * 
+ * <p>
  * */
 @Mixin(IceBlock.class)
 public abstract class IceMixin {

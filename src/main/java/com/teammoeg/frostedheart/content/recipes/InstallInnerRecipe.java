@@ -27,8 +27,8 @@ import javax.annotation.Nullable;
 import com.google.common.base.Optional;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHItems;
-import com.teammoeg.frostedheart.climate.data.JsonHelper;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.io.JsonHelper;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
@@ -147,8 +147,7 @@ public class InstallInnerRecipe extends SpecialRecipe {
 
     @Override
     public NonNullList<ItemStack> getRemainingItems(CraftingInventory inv) {
-        NonNullList<ItemStack> nonnulllist = NonNullList.withSize(inv.getSizeInventory(), ItemStack.EMPTY);
-        return nonnulllist;
+        return NonNullList.withSize(inv.getSizeInventory(), ItemStack.EMPTY);
     }
 
     @Override

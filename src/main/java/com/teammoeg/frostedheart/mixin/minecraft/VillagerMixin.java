@@ -28,8 +28,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.teammoeg.frostedheart.trade.FHVillagerData;
-import com.teammoeg.frostedheart.trade.TradeHandler;
+import com.teammoeg.frostedheart.content.trade.FHVillagerData;
+import com.teammoeg.frostedheart.content.trade.TradeHandler;
 import com.teammoeg.frostedheart.util.mixin.VillagerDataHolder;
 
 import net.minecraft.entity.EntityType;
@@ -63,7 +63,7 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
         fh$data.deserialize(compound.getCompound("fhdata"));
     }
 
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;resetCustomer()V", remap = true, ordinal = 0), method = "updateAITasks", cancellable = true, remap = true, require = 1)
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;resetCustomer()V", ordinal = 0), method = "updateAITasks", cancellable = true, require = 1)
     public void fh$updateTask(CallbackInfo cbi) {
         super.updateAITasks();
         cbi.cancel();

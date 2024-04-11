@@ -24,7 +24,7 @@ import java.util.function.BiPredicate;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
 
 import net.minecraft.loot.ILootSerializer;
 import net.minecraft.loot.LootConditionType;
@@ -45,7 +45,7 @@ public class TemperatureLootCondition implements ILootCondition {
         gt((a, b) -> a > b);
         final BiPredicate<Float, Float> comp;
 
-        private Comp(BiPredicate<Float, Float> comp) {
+        Comp(BiPredicate<Float, Float> comp) {
             this.comp = comp;
         }
 
@@ -84,7 +84,6 @@ public class TemperatureLootCondition implements ILootCondition {
         return TYPE;
     }
 
-    @SuppressWarnings("resource")
     @Override
     public boolean test(LootContext t) {
         if (t.has(LootParameters.ORIGIN)) {

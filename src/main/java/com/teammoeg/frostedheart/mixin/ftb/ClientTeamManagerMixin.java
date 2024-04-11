@@ -28,7 +28,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.util.mixin.FTBFixUtils;
 
 import dev.ftb.mods.ftbteams.data.ClientTeam;
@@ -69,12 +70,12 @@ public abstract class ClientTeamManagerMixin {
                 }
             }
         }
-        for (ServerPlayerEntity p : FHResearchDataManager.server.getPlayerList().getPlayers()) {
+        for (ServerPlayerEntity p : FHTeamDataManager.getServer().getPlayerList().getPlayers()) {
             KnownClientPlayer kcp = knownPlayers.get(p.getUniqueID());
             if (kcp != null)
                 tosendplayer.add(kcp);
         }
-        System.out.println("sending " + tosendteam.size() + " essential teams and " + tosendplayer.size() + " essential players.");
+        FHMain.LOGGER.info("Sending " + tosendteam.size() + " essential teams and " + tosendplayer.size() + " essential players.");
         buffer.writeVarInt(teamMap.size());
 
         for (ClientTeam t : teamMap.values()) {

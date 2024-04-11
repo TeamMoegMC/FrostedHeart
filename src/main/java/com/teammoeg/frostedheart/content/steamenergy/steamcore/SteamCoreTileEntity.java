@@ -2,17 +2,12 @@ package com.teammoeg.frostedheart.content.steamenergy.steamcore;
 
 import java.util.Objects;
 
-import javax.annotation.Nullable;
-
 import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity;
 import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
@@ -21,17 +16,19 @@ import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.world.World;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
 
 public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
-        INetworkConsumer, ITickableTileEntity, IHaveGoggleInformation,
+        ITickableTileEntity, IHaveGoggleInformation,
         FHBlockInterfaces.IActiveState{
     public SteamCoreTileEntity(TileEntityType<?> type) {
         super(type);
         this.setLazyTickRate(20);
     }
 
-    SteamNetworkConsumer network = new SteamNetworkConsumer(FHConfig.COMMON.steamCoreMaxPower.get().floatValue(),FHConfig.COMMON.steamCorePowerIntake.get().floatValue()*1.5f);
-
+    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, FHConfig.COMMON.steamCoreMaxPower.get().floatValue(),FHConfig.COMMON.steamCorePowerIntake.get().floatValue());
+    
     public float getGeneratedSpeed(){
         float speed = FHConfig.COMMON.steamCoreGeneratedSpeed.get().floatValue();
         if(getIsActive()) return speed;
@@ -47,9 +44,6 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
     public void tick() {
         super.tick();
         if (!world.isRemote) {
-            if (network.isValid()) {
-                network.tick();
-            }
             if(network.tryDrainHeat(FHConfig.COMMON.steamCorePowerIntake.get().floatValue())){
                 this.setActive(true);
                 if(this.getSpeed() == 0f){
@@ -68,36 +62,30 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
 
     }
 
-    @Override
-    public boolean connect(Direction to, int dist) {
-        return network.reciveConnection(world, pos, to, dist);
-    }
 
+    LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
     @Override
-    public boolean canConnectAt(Direction dir) {
-        return dir == this.getBlockState().get(BlockStateProperties.FACING).getOpposite();
-    }
+	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
+		if(cap==FHCapabilities.HEAT_EP.capability()&&side==this.getBlockState().get(BlockStateProperties.FACING).getOpposite()) {
+			return heatcap.cast();
+		}
+		return super.getCapability(cap, side);
+	}
 
-    @Nullable
-    @Override
-    public SteamNetworkHolder getHolder() {
-        return network;
-    }
-
-    public Direction getDirection() {
+	public Direction getDirection() {
         return this.getBlockState().get(BlockStateProperties.FACING);
     }
 
     @Override
     protected void fromTag(BlockState state, CompoundNBT tag, boolean client) {
         super.fromTag(state, tag, client);
-        network.load(tag);
+        network.load(tag, client);
     }
 
     @Override
     protected void write(CompoundNBT tag, boolean client) {
         super.write(tag, client);
-        network.save(tag);
+        network.save(tag, client);
     }
 
     @Override
@@ -113,6 +101,6 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
     }
 
     public World getWorldNonnull() {
-        return (World) Objects.requireNonNull(super.getWorld());
+        return Objects.requireNonNull(super.getWorld());
     }
 }

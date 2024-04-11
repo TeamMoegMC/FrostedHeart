@@ -55,7 +55,6 @@ public abstract class MixinGantryContraptionEntity extends AbstractContraptionEn
             GantryShaftTileEntity gte = (GantryShaftTileEntity) te;
             ((IGantryShaft) gte).setEntity(this);
             gte.networkDirty = true;
-            return;
         }
     }
 

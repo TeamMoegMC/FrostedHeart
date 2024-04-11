@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.contraptions.components.crank.HandCrankBlock;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -42,14 +42,14 @@ public class HandCrankBlockMixin {
      * @author khjxiaogu
      * @reason Disable fake player from making energy
      */
-    @Inject(at = @At("INVOKE"), method = "onBlockActivated", cancellable = true, remap = true)
+    @Inject(at = @At("INVOKE"), method = "onBlockActivated", cancellable = true)
     public void onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit, CallbackInfoReturnable<ActionResultType> ci) {
         if (player instanceof FakePlayer) {
             worldIn.destroyBlock(pos, true);
             ci.setReturnValue(ActionResultType.FAIL);
         } else if (player.getFoodStats().getFoodLevel() < 4) {
             if (player.getEntityWorld().isRemote)
-                player.sendStatusMessage(GuiUtils.translateMessage("crank.feel_hunger"), true);
+                player.sendStatusMessage(TranslateUtils.translateMessage("crank.feel_hunger"), true);
             ci.setReturnValue(ActionResultType.FAIL);
         }
     }

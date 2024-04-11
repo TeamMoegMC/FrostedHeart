@@ -19,8 +19,10 @@
 
 package com.teammoeg.frostedheart;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.contraptions.base.HalfShaftInstance;
@@ -28,16 +30,16 @@ import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.repack.registrate.util.entry.TileEntityEntry;
 import com.teammoeg.frostedheart.client.renderer.HalfShaftRenderer;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
-import com.teammoeg.frostedheart.content.decoration.oilburner.GasVentTileEntity;
-import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerTileEntity;
-import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
-import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.heatdevice.generator.t1.T1GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.heatdevice.generator.t2.T2GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.heatdevice.radiator.RadiatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
-import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterTileEntity;
+import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
+import com.teammoeg.frostedheart.content.research.blocks.MechCalcTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
-import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorTileEntity;
+import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEntity;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
@@ -45,6 +47,13 @@ import com.teammoeg.frostedheart.research.machines.MechCalcTileEntity;
 
 import com.teammoeg.frostedheart.town.Farm.FarmBlockTileEntity;
 import com.teammoeg.frostedheart.town.house.HouseTileEntity;
+import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
+import com.teammoeg.frostedheart.content.town.mine.MineBaseTileEntity;
+import com.teammoeg.frostedheart.content.town.mine.MineTileEntity;
+import com.teammoeg.frostedheart.content.town.warehouse.WarehouseTileEntity;
+import com.teammoeg.frostedheart.content.utility.incinerator.GasVentTileEntity;
+import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerTileEntity;
+
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
@@ -117,13 +126,26 @@ public class FHTileTypes {
     public static final RegistryObject<TileEntityType<HouseTileEntity>> HOUSE = REGISTER.register(
             "house", makeType(HouseTileEntity::new, FHBlocks.house)
     );
+    public static final RegistryObject<TileEntityType<WarehouseTileEntity>> WAREHOUSE = REGISTER.register(
+            "warehouse", makeType(WarehouseTileEntity::new, FHBlocks.warehouse)
+    );
+    public static final RegistryObject<TileEntityType<MineTileEntity>> MINE = REGISTER.register(
+            "mine", makeType(MineTileEntity::new, FHBlocks.mine)
+    );
+    public static final RegistryObject<TileEntityType<MineBaseTileEntity>> MINE_BASE = REGISTER.register(
+            "mine_base", makeType(MineBaseTileEntity::new, FHBlocks.mine_base)
+    );
+
     public static final RegistryObject<TileEntityType<FarmBlockTileEntity>> FARM = REGISTER.register(
             "farm_block", makeType(FarmBlockTileEntity::new, FHBlocks.farm)
     );
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }
-
+    @SafeVarargs
+    private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block>... valid) {
+        return makeTypeMultipleBlocks(create, () -> Arrays.stream(valid).map(Supplier::get).collect(Collectors.toList()));
+    }
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeTypeMultipleBlocks(Supplier<T> create, Supplier<Collection<Block>> valid) {
         return () -> new TileEntityType<>(create, ImmutableSet.copyOf(valid.get()), null);
     }

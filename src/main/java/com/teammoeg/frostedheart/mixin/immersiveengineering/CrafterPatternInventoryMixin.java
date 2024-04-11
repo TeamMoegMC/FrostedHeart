@@ -21,11 +21,12 @@ package com.teammoeg.frostedheart.mixin.immersiveengineering;
 
 import java.util.UUID;
 
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.metal.AssemblerTileEntity;
@@ -39,9 +40,11 @@ import net.minecraft.util.NonNullList;
 @Mixin(CrafterPatternInventory.class)
 public class CrafterPatternInventoryMixin {
     @Shadow(remap = false)
-    NonNullList<ItemStack> inv;
+    public NonNullList<ItemStack> inv;
+    @SuppressWarnings("rawtypes")
     @Shadow(remap = false)
-    IRecipe recipe;
+    public IRecipe recipe;
+    @Final
     @Shadow(remap = false)
     AssemblerTileEntity tile;
 

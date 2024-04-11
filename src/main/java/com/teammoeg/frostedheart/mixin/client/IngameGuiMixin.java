@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
@@ -31,7 +32,6 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IngameGui;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 
 @Mixin(IngameGui.class)
@@ -50,7 +50,7 @@ public class IngameGuiMixin extends AbstractGui {
 
         mc.getProfiler().startSection("selectedItemName");
         if (access.getRemainingHighlightTicks() > 0 && !access.getHighlightingItemStack().isEmpty()) {
-            IFormattableTextComponent iformattabletextcomponent = (new StringTextComponent("")).appendSibling(access.getHighlightingItemStack().getDisplayName()).mergeStyle(access.getHighlightingItemStack().getRarity().color);
+            IFormattableTextComponent iformattabletextcomponent = (TranslateUtils.str("")).appendSibling(access.getHighlightingItemStack().getDisplayName()).mergeStyle(access.getHighlightingItemStack().getRarity().color);
             if (access.getHighlightingItemStack().hasDisplayName()) {
                 iformattabletextcomponent.mergeStyle(TextFormatting.ITALIC);
             }

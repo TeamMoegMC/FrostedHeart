@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.compat.jei.category;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.EmptyBackground;
@@ -93,7 +94,7 @@ public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
 
     @Override
     public void setIngredients(ChargerRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.input.getMatchingStacks())));
+        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.input.getMatchingStacks())));
         ingredients.setOutput(VanillaTypes.ITEM, recipe.output);
     }
 

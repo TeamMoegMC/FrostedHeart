@@ -19,50 +19,45 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
+import javax.annotation.Nonnull;
+
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
 
-public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INetworkConsumer {
-    SteamNetworkConsumer network = new SteamNetworkConsumer(80, 5);
+public class HeatIncubatorTileEntity extends IncubatorTileEntity{
+    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 80, 5);
 
     public HeatIncubatorTileEntity() {
         super(FHTileTypes.INCUBATOR2.get());
     }
 
 
-    @Override
-    public boolean canConnectAt(Direction to) {
-        return to == this.getBlockState().get(IncubatorBlock.HORIZONTAL_FACING);
+    LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
+    @Nonnull
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
+		if(capability==FHCapabilities.HEAT_EP.capability()&&facing == this.getBlockState().get(IncubatorBlock.HORIZONTAL_FACING)) {
+			return heatcap.cast();
+		}
+		return super.getCapability(capability, facing);
     }
-
-    @Override
-    public boolean connect(Direction to, int dist) {
-        return network.reciveConnection(world, pos, to, dist);
-    }
-
     @Override
     protected boolean fetchFuel() {
 
 
-        if (network.tryDrainHeat(10)) {
+        if (network.tryDrainHeat(5)) {
             fuel = fuelMax = 400;
             return true;
         }
 
         return false;
     }
-
-    @Override
-    public SteamNetworkHolder getHolder() {
-        return network;
-    }
-
     @Override
     protected float getMaxEfficiency() {
         return 2f;
@@ -78,17 +73,12 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
     @Override
     public void readCustomNBT(CompoundNBT compound, boolean client) {
         super.readCustomNBT(compound, client);
-        network.load(compound);
+        network.load(compound,client);
     }
 
 
     @Override
     public void tick() {
-
-        if (network.tick()) {
-            this.markDirty();
-            this.markContainingBlockForUpdate(null);
-        }
         super.tick();
 
     }
@@ -97,7 +87,7 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
     @Override
     public void writeCustomNBT(CompoundNBT compound, boolean client) {
         super.writeCustomNBT(compound, client);
-        network.save(compound);
+        network.save(compound,client);
     }
 
 

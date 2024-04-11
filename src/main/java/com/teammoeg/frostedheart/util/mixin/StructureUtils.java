@@ -24,12 +24,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.teammoeg.frostedheart.util.RegistryUtils;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.gen.feature.template.Template;
 import net.minecraft.world.gen.feature.template.Template.BlockInfo;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class StructureUtils {
     static List<Block> baned = new ArrayList<>();
@@ -46,7 +47,7 @@ public class StructureUtils {
     }
 
     public static Block getChest() {
-        Block b = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("stone_age", "stone_chest"));
+        Block b = RegistryUtils.getBlock(new ResourceLocation("stone_age", "stone_chest"));
         if (b == null || b == Blocks.AIR)
             return Blocks.TRAPPED_CHEST;
         return b;
@@ -70,6 +71,6 @@ public class StructureUtils {
     }
 
     public static void RemapRL(Block org, ResourceLocation dest) {
-        remap.put(org, ForgeRegistries.BLOCKS.getValue(dest));
+        remap.put(org, RegistryUtils.getBlock(dest));
     }
 }

@@ -36,7 +36,7 @@ import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ServerWorld;
 /**
  * Reduces chance for big tree
- * 
+ * <p>
  * */
 @Mixin(BigTree.class)
 public abstract class BigTreeMixin extends Tree {

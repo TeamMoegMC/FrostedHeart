@@ -28,6 +28,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
+import com.teammoeg.frostedheart.FHMain;
+
 public class FileUtil {
     public static byte[] readAll(File f) throws IOException {
         try (FileInputStream fis = new FileInputStream(f)) {
@@ -45,8 +47,7 @@ public class FileUtil {
                 ba.write(data, 0, nRead);
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            throw e;
+            FHMain.LOGGER.error("Error reading input stream", e);
         }
 
         return ba.toByteArray();
@@ -93,8 +94,7 @@ public class FileUtil {
                 os.write(data, 0, nRead);
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            throw e;
+            throw new RuntimeException("Error transferring input stream", e);
         }
     }
 

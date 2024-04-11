@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.compat.jei.category;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -29,6 +30,7 @@ import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
@@ -45,6 +47,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
 public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRecipe> {
@@ -55,9 +58,6 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
     private IDrawable animatedFlame;
     private IDrawableStatic staticFlame;
 
-    /**
-     * @param guiHelper
-     */
     public SmokingDefrostCategory(IGuiHelper guiHelper) {
         this.ICON = new DoubleItemIcon(() -> new ItemStack(Blocks.SMOKER), () -> new ItemStack(FHItems.frozen_seeds.get()));
         this.BACKGROUND = guiHelper.drawableBuilder(Constants.RECIPE_GUI_VANILLA, 0, 186, 82, 34)
@@ -88,7 +88,8 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
         int cookTime = recipe.getCookTime();
         if (cookTime > 0) {
             int cookTimeSeconds = cookTime / 20;
-            TranslationTextComponent timeString = new TranslationTextComponent("gui.jei.category.smelting.time.seconds", cookTimeSeconds);
+            
+            ITextComponent timeString = TranslateUtils.translate("gui.jei.category.smelting.time.seconds", cookTimeSeconds);
             Minecraft minecraft = Minecraft.getInstance();
             FontRenderer fontRenderer = minecraft.fontRenderer;
             int stringWidth = fontRenderer.getStringPropertyWidth(timeString);
@@ -131,8 +132,8 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
 
     @Override
     public void setIngredients(SmokingDefrostRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.getIngredient().getMatchingStacks())));
-        ingredients.setOutputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.getIss())));
+        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.getIngredient().getMatchingStacks())));
+        ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.getIss())));
     }
 
 

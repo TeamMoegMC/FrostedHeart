@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import javax.annotation.Nullable;
-
 import net.minecraft.util.Direction;
 
 /**
@@ -46,15 +44,8 @@ public interface INetworkConsumer {
      * @param distance the distance<br>
      * @return true, if connected
      */
-    boolean connect(Direction d, int distance);
+    boolean connect(HeatEnergyNetwork network,Direction d, int distance);
 
-    /**
-     * Get network holder, for debug propose only
-     *
-     * @return holder<br>
-     */
-    @Nullable
-    SteamNetworkHolder getHolder();
 
     /**
      * Try to connect at.<br>
@@ -64,9 +55,9 @@ public interface INetworkConsumer {
      * @param distance the distance<br>
      * @return true, if
      */
-    default boolean tryConnectAt(Direction d, int distance) {
+    default boolean tryConnectAt(HeatEnergyNetwork network,Direction d, int distance) {
         if (canConnectAt(d))
-            return connect(d, distance);
+            return connect(network,d, distance);
         return false;
     }
 }

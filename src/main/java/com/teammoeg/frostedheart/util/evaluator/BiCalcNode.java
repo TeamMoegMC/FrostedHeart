@@ -25,12 +25,12 @@ import java.util.function.DoubleBinaryOperator;
 
 class BiCalcNode extends BiNode {
     public static Map<DoubleBinaryOperator, String> toStr = new HashMap<>();
-    public static DoubleBinaryOperator add = (v1, v2) -> v1 + v2;
+    public static DoubleBinaryOperator add = Double::sum;
     public static DoubleBinaryOperator min = (v1, v2) -> v1 - v2;
     public static DoubleBinaryOperator mul = (v1, v2) -> v1 * v2;
     public static DoubleBinaryOperator div = (v1, v2) -> v1 / v2;
     public static DoubleBinaryOperator sdiv = (v1, v2) -> v2 == 0 ? 0 : v1 / v2;
-    public static DoubleBinaryOperator pow = (v1, v2) -> Math.pow(v1, v2);
+    public static DoubleBinaryOperator pow = Math::pow;
     public static DoubleBinaryOperator mod = (v1, v2) -> v1 % v2;
     static {
         toStr.put(add, "+");

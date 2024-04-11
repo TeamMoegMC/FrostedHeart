@@ -27,16 +27,16 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHEffects;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
@@ -68,27 +68,23 @@ import net.minecraftforge.fml.network.NetworkHooks;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-public class SaunaTileEntity extends IEBaseTileEntity implements
-        INetworkConsumer, ITickableTileEntity, FHBlockInterfaces.IActiveState, IIEInventory, IInteractionObjectIE {
+public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEntity, FHBlockInterfaces.IActiveState, IIEInventory, IInteractionObjectIE {
 
-    private static final float POWER_CAP = 400;
-    private static final float REFILL_THRESHOLD = 200;
     private static final int RANGE = 5;
     private static final int WALL_HEIGHT = 3;
     private static final Direction[] HORIZONTALS =
             new Direction[]{Direction.EAST, Direction.WEST, Direction.SOUTH, Direction.NORTH};
 
-    private float power = 0;
     private int remainTime = 0;
     private int maxTime = 0;
     private Effect effect = null;
     private int effectDuration = 0;
     private int effectAmplifier = 0;
-    private boolean refilling = false;
     private boolean formed = false;
+    private int workPeriod;
     Set<BlockPos> floor = new HashSet<>();
     Set<BlockPos> edges = new HashSet<>();
-    SteamNetworkHolder network = new SteamNetworkHolder();
+    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 10,1);
 
     protected NonNullList<ItemStack> inventory;
     private LazyOptional<IItemHandler> insertionCap;
@@ -100,19 +96,10 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     }
 
     @Override
-    public boolean canConnectAt(Direction to) {
-        return to == Direction.DOWN;
-    }
-
-    @Override
     public boolean canUseGui(PlayerEntity playerEntity) {
         return true;
     }
 
-    @Override
-    public boolean connect(Direction to, int dist) {
-        return network.reciveConnection(world, pos, to, dist);
-    }
 
     private boolean dist(BlockPos crn, BlockPos orig) {
         return MathHelper.abs(crn.getX() - orig.getX()) <= RANGE && MathHelper.abs(crn.getZ() - orig.getZ()) <= RANGE;
@@ -140,10 +127,15 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
             }
         }
     }
-
+    LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
     @Nonnull
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
-        return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY ? this.insertionCap.cast() : super.getCapability(capability, facing);
+    	if(capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
+    		return this.insertionCap.cast();
+		if(capability==FHCapabilities.HEAT_EP.capability()&&facing==Direction.DOWN) {
+			return heatcap.cast();
+		}
+		return super.getCapability(capability, facing);
     }
 
     public EffectInstance getEffectInstance() {
@@ -164,11 +156,6 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         return this;
     }
 
-    @Override
-    public SteamNetworkHolder getHolder() {
-        return network;
-    }
-
     @Nullable
     @Override
     public NonNullList<ItemStack> getInventory() {
@@ -176,7 +163,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     }
 
     public float getPowerFraction() {
-        return power / POWER_CAP;
+        return network.getPower() / network.getMaxPower();
     }
 
     @Override
@@ -191,7 +178,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         }
         UUID owner = IOwnerTile.getOwner(this);
         if (owner == null) return;
-        UUID t = ResearchDataAPI.getData(p).getId();
+        UUID t = FHTeamDataManager.get(p).getId();
         if (t == null || !t.equals(owner)) return;
         // add wet effect
         if (world.getGameTime() % 200L == 0L) {
@@ -222,7 +209,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     }
 
     public boolean isWorking() {
-        return formed && power > 0;
+        return getIsActive();
     }
 
     public ActionResultType onClick(PlayerEntity player) {
@@ -231,7 +218,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
                 // player.sendStatusMessage(GuiUtils.translateMessage("structure_formed"), true);
                 NetworkHooks.openGui((ServerPlayerEntity) player, this, this.getPos());
             } else {
-                player.sendStatusMessage(GuiUtils.translateMessage("structure_not_formed"), true);
+                player.sendStatusMessage(TranslateUtils.translateMessage("structure_not_formed"), true);
             }
         }
         return ActionResultType.SUCCESS;
@@ -239,7 +226,6 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
 
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        power = nbt.getFloat("power");
         remainTime = nbt.getInt("time");
         maxTime = nbt.getInt("maxTime");
         if (nbt.contains("effect")) {
@@ -251,7 +237,6 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
             effectDuration = 0;
             effectAmplifier = 0;
         }
-        refilling = nbt.getBoolean("refilling");
         formed = nbt.getBoolean("formed");
         ListNBT floorNBT = nbt.getList("floor", Constants.NBT.TAG_COMPOUND);
         floor.clear();
@@ -261,6 +246,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         }
         this.inventory = NonNullList.withSize(1, ItemStack.EMPTY);
         ItemStackHelper.loadAllItems(nbt, this.inventory);
+        network.load(nbt, descPacket);
     }
 
     @Override
@@ -304,41 +290,26 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     public void tick() {
         // server side logic
         if (!world.isRemote) {
+        	//Check formed
+        	workPeriod--;
+            if(workPeriod<0) {
+            	workPeriod=200;
+            	formed=this.structureIsValid();
+            }
+        	
             // power logic
-            if (network.isValid()) {
-                network.tick();
-                // start refill if power is below REFILL_THRESHOLD
-                // keep refill until network is full
-                if (refilling || power < REFILL_THRESHOLD) {
-                    float actual = network.drainHeat(Math.min(200, (POWER_CAP - power) / 0.8F));
-                    // during refill, grow power and show steam
-                    if (actual > 0) {
-                        refilling = true;
-                        power += actual * 0.8F;
-                        this.setActive(true);
-                    }
-                    // finished refill, check structure, grant effects, happens every 200 ticks
-                    else {
-                        formed = structureIsValid();
-                        refilling = false;
-                        this.setActive(false);
-                    }
-                }
-                // if not refilling, consume power
-                else {
-                    power--;
-                }
+            if (formed&&network.tryDrainHeat(1)) {
+            	this.setActive(true);
                 markDirty();
-                this.markContainingBlockForUpdate(null);
             } else this.setActive(false);
 
             // grant player effect if structure is valid
-            if (formed && power > 0) {
+            if (getIsActive()) {
                 // consume medcine time
-                remainTime = Math.max(0, remainTime - 1);
-                // refill time if medicine exists
-                ItemStack medicine = this.inventory.get(0);
-                if (remainTime == 0) {
+            	if(remainTime>0) {
+            		remainTime -= 1;
+            	}else{
+            		ItemStack medicine = this.inventory.get(0);
                     effect = null;
                     effectDuration = 0;
                     effectAmplifier = 0;
@@ -356,7 +327,6 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
                 }
 
                 markDirty();
-                this.markContainingBlockForUpdate(null);
 
                 for (PlayerEntity p : this.getWorld().getPlayers()) {
                     if (floor.contains(p.getPosition().down()) || floor.contains(p.getPosition())) {
@@ -373,7 +343,6 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
 
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        nbt.putFloat("power", power);
         nbt.putInt("time", remainTime);
         nbt.putInt("maxTime", maxTime);
         if (effect != null) {
@@ -385,7 +354,6 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
             nbt.remove("effectDuration");
             nbt.remove("effectAmplifier");
         }
-        nbt.putBoolean("refilling", refilling);
         nbt.putBoolean("formed", formed);
         ListNBT floorNBT = new ListNBT();
         for (BlockPos pos : floor) {
@@ -394,5 +362,6 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         }
         ItemStackHelper.saveAllItems(nbt, this.inventory);
         nbt.put("floor", floorNBT);
+        network.save(nbt, descPacket);
     }
 }

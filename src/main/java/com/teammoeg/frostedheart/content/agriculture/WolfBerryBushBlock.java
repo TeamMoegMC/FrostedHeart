@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.agriculture;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -36,7 +37,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class WolfBerryBushBlock extends FHBerryBushBlock {
     public static final IntegerProperty AGE = BlockStateProperties.AGE_0_3;
@@ -58,7 +58,7 @@ public class WolfBerryBushBlock extends FHBerryBushBlock {
     }
     ResourceLocation wolfBerries=new ResourceLocation(FHMain.MODID,"wolfberries");
     public ItemStack getItem(IBlockReader worldIn, BlockPos pos, BlockState state) {
-        return new ItemStack(ForgeRegistries.ITEMS.getValue(wolfBerries));
+        return new ItemStack(RegistryUtils.getItem(wolfBerries));
     }
 
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
@@ -68,8 +68,8 @@ public class WolfBerryBushBlock extends FHBerryBushBlock {
             return ActionResultType.PASS;
         } else if (i > 2) {
             int j = 1 + worldIn.rand.nextInt(2);
-            spawnAsEntity(worldIn, pos, new ItemStack(ForgeRegistries.ITEMS.getValue(wolfBerries), j + (flag ? 1 : 0)));
-            worldIn.playSound((PlayerEntity) null, pos, SoundEvents.ITEM_SWEET_BERRIES_PICK_FROM_BUSH, SoundCategory.BLOCKS, 1.0F, 0.8F + worldIn.rand.nextFloat() * 0.4F);
+            spawnAsEntity(worldIn, pos, new ItemStack(RegistryUtils.getItem(wolfBerries), j + (flag ? 1 : 0)));
+            worldIn.playSound(null, pos, SoundEvents.ITEM_SWEET_BERRIES_PICK_FROM_BUSH, SoundCategory.BLOCKS, 1.0F, 0.8F + worldIn.rand.nextFloat() * 0.4F);
             worldIn.setBlockState(pos, state.with(AGE, 1), 2);
             return ActionResultType.func_233537_a_(worldIn.isRemote);
         } else {

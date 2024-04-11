@@ -20,45 +20,30 @@
 package com.teammoeg.frostedheart;
 
 import java.io.File;
-import java.io.InputStreamReader;
 
 import javax.annotation.Nonnull;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.alcatrazescapee.primalwinter.common.ModBlocks;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.repack.registrate.util.NonNullLazyValue;
-import com.teammoeg.frostedheart.client.DynamicModelSetup;
-import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
-import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatDataCapabilityProvider;
-import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
-import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.climate.player.SurroundingTemperatureSimulator;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
-import com.teammoeg.frostedheart.content.foods.DailyKitchen.DailyKitchen;
-import com.teammoeg.frostedheart.crash.ClimateCrash;
-import com.teammoeg.frostedheart.events.ClientRegistryEvents;
+import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
+import com.teammoeg.frostedheart.content.research.FHResearch;
+import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
+import com.teammoeg.frostedheart.events.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
 import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
-import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
-import com.teammoeg.frostedheart.research.inspire.EnergyCore;
-import com.teammoeg.frostedheart.scenario.FHScenario;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
-import com.teammoeg.frostedheart.util.BlackListPredicate;
-import com.teammoeg.frostedheart.util.FHProps;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.VersionRemap;
+import com.teammoeg.frostedheart.util.constants.FHProps;
+import com.teammoeg.frostedheart.util.constants.VersionRemap;
+import com.teammoeg.frostedheart.util.utility.BlackListPredicate;
 import com.teammoeg.frostedheart.util.version.FHRemote;
 import com.teammoeg.frostedheart.util.version.FHVersion;
 import com.teammoeg.frostedheart.world.FHBiomes;
@@ -68,7 +53,6 @@ import com.teammoeg.frostedheart.world.FHStructures;
 import dev.ftb.mods.ftbteams.event.TeamEvent;
 import net.minecraft.advancements.criterion.ItemPredicate;
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
@@ -82,7 +66,6 @@ import net.minecraftforge.event.RegistryEvent.MissingMappings;
 import net.minecraftforge.event.RegistryEvent.MissingMappings.Mapping;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.CrashReportExtender;
 import net.minecraftforge.fml.DeferredWorkQueue;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
@@ -94,7 +77,6 @@ import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.ForgeRegistries;
 
 @Mod(FHMain.MODID)
 public class FHMain {
@@ -127,7 +109,7 @@ public class FHMain {
         remote = new FHRemote();
         if (local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal().contains("pre"))
             pre = new FHRemote.FHPreRemote();
-        System.out.println(local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
+        FHMain.LOGGER.info("TWR Version: " + local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
         CreateCompat.init();
 
         IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
@@ -136,11 +118,12 @@ public class FHMain {
         mod.addListener(this::processIMC);
         mod.addListener(this::enqueueIMC);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> DynamicModelSetup::setup);
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> DynamicModelSetup::addListener);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> KGlyphProvider::addListener);
         mod.addListener(this::modification);
         FHConfig.register();
         TetraCompat.init();
         FHProps.init();
+        SpecialDataTypes.init();
         FHItems.registry.register(mod);
         FHBlocks.registry.register(mod);
         FHBlocks.init();
@@ -163,16 +146,6 @@ public class FHMain {
         ItemPredicate.register(new ResourceLocation(MODID, "blacklist"), BlackListPredicate::new);
         DeferredWorkQueue.runLater(FHRecipes::registerRecipeTypes);
         JsonParser gs = new JsonParser();
-        JsonObject jo = gs
-                .parse(new InputStreamReader(
-                        ClientRegistryEvents.class.getClassLoader().getResourceAsStream(FHMain.MODID + ".mixins.json")))
-                .getAsJsonObject();
-        JsonArray mixins = jo.get("mixins").getAsJsonArray();
-
-        if (!mixins.contains(new JsonPrimitive("projecte.MixinPhilosopherStone"))
-                || !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationStone"))
-                || !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationTablet")))
-            throw new RuntimeException("Unsupported projecte");
         // remove primal winter blocks not to temper rankine world
         //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
         //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
@@ -188,7 +161,7 @@ public class FHMain {
         ResourceLocation hw = new ResourceLocation(MODID, "hot_water");
         for (Mapping<Fluid> i : miss.getAllMappings()) {
             if (i.key.equals(hw))
-                i.remap(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("thermopolium", "nail_soup")));
+                i.remap(RegistryUtils.getFluid(new ResourceLocation("thermopolium", "nail_soup")));
         }
     }
 
@@ -196,7 +169,7 @@ public class FHMain {
         for (Mapping<Block> i : miss.getAllMappings()) {
             ResourceLocation rl = VersionRemap.remaps.get(i.key);
             if (rl != null)
-                i.remap(ForgeRegistries.BLOCKS.getValue(rl));
+                i.remap(RegistryUtils.getBlock(rl));
         }
     }
 
@@ -204,12 +177,12 @@ public class FHMain {
         for (Mapping<Item> i : miss.getAllMappings()) {
             ResourceLocation rl = VersionRemap.remaps.get(i.key);
             if (rl != null)
-                i.remap(ForgeRegistries.ITEMS.getValue(rl));
+                i.remap(RegistryUtils.getItem(rl));
         }
     }
 
     public void modification(FMLLoadCompleteEvent event) {
-        for (Item i : ForgeRegistries.ITEMS.getValues()) {
+        for (Item i : RegistryUtils.getItems()) {
             if (i.isFood()) {
                 if (RegistryUtils.getRegistryName(i).getNamespace().equals("crockpot")) {
                     ((FoodAccess) i.getFood()).getEffectsSuppliers().removeIf(t -> t.getFirst().get().getPotion().isBeneficial());
@@ -225,23 +198,23 @@ public class FHMain {
 
     @SuppressWarnings("unused")
     private void serverSave(final WorldEvent.Save event) {
-        if (FHResearchDataManager.INSTANCE != null) {
-            FHResearchDataManager.INSTANCE.save();
+        if (FHTeamDataManager.INSTANCE != null) {
+        	FHResearch.save();
+            FHTeamDataManager.INSTANCE.save();
             //FHScenario.save();
         }
     }
 
     private void serverStart(final FMLServerAboutToStartEvent event) {
-        new FHResearchDataManager(event.getServer());
-
-        FHResearchDataManager.INSTANCE.load();
+        new FHTeamDataManager(event.getServer());
+        FHResearch.load();
+        FHTeamDataManager.INSTANCE.load();
 
     }
 
     @SuppressWarnings("unused")
     private void serverStop(final FMLServerStoppedEvent event) {
-        FHResearchDataManager.server = null;
-        FHResearchDataManager.INSTANCE = null;
+        FHTeamDataManager.INSTANCE = null;
     }
 
     @SuppressWarnings("unused")
@@ -263,21 +236,15 @@ public class FHMain {
                 MinecraftForge.EVENT_BUS.addListener(PlayerEvents::onRC);
             } catch (Throwable ignored) {
             }
-        ChunkHeatDataCapabilityProvider.setup();
-        CrashReportExtender.registerCrashCallable(new ClimateCrash());
+        //CrashReportExtender.registerCrashCallable(new ClimateCrash());
         FHNetwork.register();
-        WorldClimate.setup();
-        DeathInventoryData.setup();
-        PlayerTemperatureData.setup();
-        EnergyCore.setup();
-        ScenarioConductor.setup();
-        FHBiomes.Biomes();
+        FHCapabilities.setup();
+        FHBiomes.biomes();
         FHStructures.registerStructureGenerate();
         FHFeatures.initFeatures();
         SurroundingTemperatureSimulator.init();
         // modify default value
         GameRules.GAME_RULES.put(GameRules.SPAWN_RADIUS, IntegerValue.create(0));
-        DailyKitchen.setupWantedFoodCapability();
 
     }
 }

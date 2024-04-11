@@ -37,7 +37,7 @@ import net.minecraft.world.server.ServerWorld;
 /**
  * To fix an issue that forge event is not properly fired which causes our event mechanic breaks.
  * e.g. kelp breaking everything/growing even when cold
- * 
+ * <p>
  * */
 @Mixin(AbstractTopPlantBlock.class)
 public abstract class AbstractTopPlantBlockMixin extends AbstractPlantBlock {
@@ -57,11 +57,11 @@ public abstract class AbstractTopPlantBlockMixin extends AbstractPlantBlock {
      * @reason fix forge event bug
      * @author khjxiaogu
      */
-    @Inject(at = @At("HEAD"), method = "randomTick", cancellable = true, remap = true)
+    @Inject(at = @At("HEAD"), method = "randomTick", cancellable = true)
 
     public void fh$randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random, CallbackInfo cbi) {
         if (state.get(AbstractTopPlantBlock.AGE) < 25 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn,
-                pos.offset(this.growthDirection), state,
+                pos, state,
                 random.nextDouble() < this.growthChance)) {
             BlockPos blockpos = pos.offset(this.growthDirection);
             if (this.canGrowIn(worldIn.getBlockState(blockpos))) {

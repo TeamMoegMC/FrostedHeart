@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.compat.jei.category;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -94,7 +95,7 @@ public class CuttingCategory implements IRecipeCategory<CuttingRecipe> {
     @Override
     public void setIngredients(CuttingRecipe recipe, IIngredients ingredients) {
         ArrayList<List<ItemStack>> als = new ArrayList<>(2);
-        als.add(Arrays.asList(recipe.in));
+        als.add(Collections.singletonList(recipe.in));
         if (matching != null)
             als.add(matching.stream().map(ItemStack::new).collect(Collectors.toList()));
         ingredients.setInputLists(VanillaTypes.ITEM, als);

@@ -27,8 +27,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.contraptions.components.crafter.MechanicalCrafterBlock;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.IETileProviderBlock;
@@ -49,7 +49,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 /**
  * Mark machine owner for research
- * 
+ * <p>
  * */
 @SuppressWarnings("unused")
 @Mixin({IETileProviderBlock.class, MechanicalCrafterBlock.class, SaunaBlock.class})
@@ -65,9 +65,9 @@ public class BlockMixin extends Block {
         if (!worldIn.isRemote && !(player instanceof FakePlayer)) {
             TileEntity te = Utils.getExistingTileEntity(worldIn, pos);
             if (te instanceof MultiblockPartTileEntity) {
-                te = ((MultiblockPartTileEntity) te).master();
+                te = ((MultiblockPartTileEntity<?>) te).master();
             }
-            IOwnerTile.trySetOwner(te, ResearchDataAPI.getData(player).getId());
+            IOwnerTile.trySetOwner(te, FHTeamDataManager.get(player).getId());
         }
     }
 
@@ -76,7 +76,7 @@ public class BlockMixin extends Block {
     public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
 
-        if (placer != null && placer instanceof ServerPlayerEntity && !(placer instanceof FakePlayer))
-            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(worldIn, pos),ResearchDataAPI.getData((PlayerEntity) placer).getId());
+        if (placer instanceof ServerPlayerEntity && !(placer instanceof FakePlayer))
+            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(worldIn, pos), FHTeamDataManager.get((PlayerEntity) placer).getId());
     }
 }

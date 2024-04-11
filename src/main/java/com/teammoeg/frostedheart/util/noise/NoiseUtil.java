@@ -156,11 +156,11 @@ public final class NoiseUtil {
     }
 
     public static float fastMax(float a, float b) {
-        return a > b ? a : b;
+        return Math.max(a, b);
     }
 
     public static float fastMin(float a, float b) {
-        return a < b ? a : b;
+        return Math.min(a, b);
     }
 
     public static int fastRound(float f) {

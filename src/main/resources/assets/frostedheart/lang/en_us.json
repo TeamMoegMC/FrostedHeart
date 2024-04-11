@@ -1,4 +1,7 @@
 {
+  "attribute.frostedheart.insulation": "Insulation",
+  "attribute.frostedheart.windproof": "Water Proof",
+  "attribute.frostedheart.heatproof": "Heat Proof",
   "biome.frostedheart.volcanic": "Geology Active Area",
   "block.frostedheart.burning_chamber": "Burning Chamber",
   "block.frostedheart.burning_chamber_core": "Burning Chamber Core",
@@ -37,6 +40,7 @@
   "block.frostedheart.pebble_block": "Pebble",
   "block.frostedheart.odd_mark": "Odd Mark",
   "block.frostedheart.wooden_box": "Wooden Box",
+  "block.frostedheart.house": "House",
   
    "tetra/schematic/single/head/core_spade/basic_core_spade.name": "Core Spade Head",
   
@@ -85,6 +89,7 @@
   "tetra.module.double/basic_pro_pick.material_name": "%s Prospector Pick",
   "tetra.variant.basic_pro_pick.item_name":"Prospector Pick",
   "tetra.module.double/basic_pro_pick.prefix": "%s",
+  "tetra.module.single/basic_shovel.prefix": "%s",
   
   "tetra/schematic/single/head/geo_hammer/basic_geo_hammer.name": "Geologists Hammer Head",
   
@@ -150,6 +155,10 @@
   "fluid.frostedheart.steam": "Any Steam",
   "fluid.frostedheart.sulfur_dioxide": "Sulfur Dioxide",
   "fluid.frostedheart.wolfberry_tea": "Wolfberry Tea",
+  "gui.frostedheart.generator.no_enough_space": "No enough space, there must be space of %s x %s x %s around the generator",
+  "gui.frostedheart.generator.upgrade_material": "Upgrade material",
+  "gui.frostedheart.generator.repair_material": "Repair material",
+  "gui.frostedheart.generator.incomplete_research": "More study required",
   "gui.frostedheart.draw_desk.examine": "Examine item",
   "gui.frostedheart.draw_desk.unable_examine": "Unable to examine this now",
   "gui.frostedheart.draw_desk.help": "Help",
@@ -173,6 +182,7 @@
   "gui.frostedheart.generator.overdrive.on": "Turn On Overdrive",
   "gui.frostedheart.generator.power.level": "Power: ",
   "gui.frostedheart.generator.range.level": "Range: ",
+  "gui.frostedheart.generator.over.level": "Overdrive: %s%%",
   "gui.frostedheart.generator.temperature.level": "Temperature Increment: ",
   "gui.frostedheart.minigame.display": "Game Rules(Hover on text to magnify)",
   "gui.frostedheart.minigame.match": "Matching Combinations",
@@ -366,9 +376,15 @@
   "message.frostedheart.forecast.clear_tomorrow": " Sunny Tomorrow :D",
   "message.frostedheart.forecast.blizzard_warning": "Blizzard Warning",
   "message.frostedheart.forecast.blizzard_retreating": "Blizzard Retreating",
-  "message.frostedheart.energy.full": "I feel energetic, and ready to conquer the academia.",
-  "message.frostedheart.energy.suit": "Today is fine, making progress is just well.",
-  "message.frostedheart.energy.lack": "I feel very sad, maybe I should treat myself.",
+  "message.frostedheart.energy.full.0": "I feel energetic, curious, and ready to solve hard problems.",
+  "message.frostedheart.energy.full.1": "Clear mind, full of energy, ready to work.",
+  "message.frostedheart.energy.full.2": "My mind is crystal clear, eager to learn new things.",
+  "message.frostedheart.energy.suit.0": "Today is fine, making progress is just well.",
+  "message.frostedheart.energy.suit.1": "Normal snow, normal day... I wonder what I can do today.",
+  "message.frostedheart.energy.suit.2": "I feel a little tired, but I can still work.",
+  "message.frostedheart.energy.lack.0": "Exhausted today... I miss delicious foods.",
+  "message.frostedheart.energy.lack.1": "My curiosity is fainting... I wonder about the unknown lands.",
+  "message.frostedheart.energy.lack.2": "Nature always heals a tiring soul. I should walk around.",
   "message.frostedheart.structure_formed": "Structure is formed.",
   "message.frostedheart.structure_not_formed": "Structure not formed.",
   "message.frostedheart.temperature_help": "If your locale use fahrenheit, you can change display in frostedheart client config",
@@ -433,5 +449,35 @@
   "tooltip.frostedheart.rubbing.current.empty": "Examine in drawing desk to select research",
   "tooltip.frostedheart.rubbing.points": "Points: %s",
   "tooltip.frostedheart.rubbing.points.hint": "Examine in drawing desk to obtain research points",
-  "manual.frostedheart.main": "Generators"
+  "tooltip.frostedheart.research_unlockable": "Required Research: %s",
+  "manual.frostedheart.main": "Generators",
+
+  "tips.frostedheart.error.load": "[Error] Unable to load file",
+  "tips.frostedheart.error.save": "[Error] Unable to save file",
+  "tips.frostedheart.error.save_desc": "An unknown error occurred while saving the file",
+  "tips.frostedheart.error.empty": "[Error] No content to display",
+  "tips.frostedheart.error.invalid": "[Error] Invalid JSON file format",
+  "tips.frostedheart.error.not_exists": "[Error] File does not exists",
+  "tips.frostedheart.error.desc": "Please verify whether the Modpack has been installed successfully or report this issue",
+  "tips.frostedheart.too_long": "This tip appears excessively long, please review the list of unlocked tips",
+
+  "tips.frostedheart.gui.close": "Close",
+  "tips.frostedheart.gui.pin": "Pinned to the right HUD",
+
+  "tips.frostedheart.empty.title": "Oops, there's nothing here",
+
+  "tips.frostedheart.default.title": "Welcome to The Winter Rescue!",
+  "tips.frostedheart.default.desc1": "Tips will appear here as you play, be sure to read them carefully!",
+  "tips.frostedheart.default.desc2": "To close, click the button in the top right corner. You can also use §6[TAB]§r and the mouse to select.",
+
+  "tips.frostedheart.default2.title": "Missed any tips?",
+  "tips.frostedheart.default2.desc1": "Open the chat screen, the button in the bottom right corner allows you to view all unlocked tips.",
+
+  "tips.frostedheart.update.title": "The Winter Rescue has a new update!",
+  "tips.frostedheart.update.desc1": "Click the button on the left to visit CurseForge and download the update.",
+
+  "tips.frostedheart.music_warning.title": "Wait!",
+  "tips.frostedheart.music_warning.desc1": "Turning off the music may affect your experience of the music we provide for The Winter Rescue.",
+  "tips.frostedheart.music_warning.desc2": "The vanilla music has already been disabled, If you want to re-enable it, please change it in the configuration file: '&7$configPath$\\frostedheart-client.toml&r'"
+
 }

@@ -54,6 +54,11 @@ hs_err_pid*
 .AppleDouble
 .LSOverride
 
+# NixOS Configuration file
+
+/flake.lock
+/flake.nix
+
 # Icon must end with two \r
 Icon
 
@@ -122,3 +127,5 @@ run/
 /src/generated/resources/.cache/
 /bin/
 /run1/
+/libs/
+/logs/

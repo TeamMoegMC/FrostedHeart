@@ -41,15 +41,15 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.clues.Clue;
-import com.teammoeg.frostedheart.research.effects.Effect;
-import com.teammoeg.frostedheart.research.research.Research;
-import com.teammoeg.frostedheart.research.research.ResearchCategory;
-import com.teammoeg.frostedheart.util.ReferenceValue;
+import com.teammoeg.frostedheart.content.research.FHResearch;
+import com.teammoeg.frostedheart.content.research.research.Research;
+import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
+import com.teammoeg.frostedheart.content.research.research.clues.Clue;
+import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.FileUtil;
+import com.teammoeg.frostedheart.util.utility.ReferenceValue;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.thermopolium.items.StewItem;
 
@@ -77,7 +77,6 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class DebugCommand {
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
@@ -99,7 +98,7 @@ public class DebugCommand {
                                     String[] parts = line.split(",");
                                     if (parts.length == 0) break;
                                     ResourceLocation item = new ResourceLocation(parts[0]);
-                                    Item it = ForgeRegistries.ITEMS.getValue(item);
+                                    Item it = RegistryUtils.getItem(item);
 
                                     if (it == null || it == Items.AIR) {
                                         ps.println(item + "," + parts[1]);
@@ -114,7 +113,7 @@ public class DebugCommand {
                                 }
                             }
                         }
-                        for (Item ix : ForgeRegistries.ITEMS) {
+                        for (Item ix : RegistryUtils.getItems()) {
                             if (ix == null || ix == Items.AIR) continue;
                             if (items.contains(ix)) continue;
                             if (!ix.isFood()) continue;
@@ -128,7 +127,7 @@ public class DebugCommand {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
-                    ct.getSource().sendFeedback(GuiUtils.str("Exported " + items.size() + " Foods"), true);
+                    ct.getSource().sendFeedback(TranslateUtils.str("Exported " + items.size() + " Foods"), true);
                     return Command.SINGLE_SUCCESS;
                 }))
 
@@ -292,7 +291,7 @@ public class DebugCommand {
                                 packet.sendToAll(ct.getSource().getServer());
                             }
                         }
-                    ct.getSource().sendFeedback(GuiUtils.str("Fixed " + tchunks.val + " Chunks"), true);
+                    ct.getSource().sendFeedback(TranslateUtils.str("Fixed " + tchunks.val + " Chunks"), true);
                     return Command.SINGLE_SUCCESS;
                 }));
 

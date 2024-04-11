@@ -19,36 +19,48 @@
 
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.climate.network.FHBodyDataSyncPacket;
-import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
-import com.teammoeg.frostedheart.climate.network.FHDatapackSyncPacket;
-import com.teammoeg.frostedheart.climate.network.FHTemperatureDisplayPacket;
-import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
-import com.teammoeg.frostedheart.research.network.FHClueProgressSyncPacket;
-import com.teammoeg.frostedheart.research.network.FHDrawingDeskOperationPacket;
-import com.teammoeg.frostedheart.research.network.FHEffectProgressSyncPacket;
-import com.teammoeg.frostedheart.research.network.FHEffectTriggerPacket;
-import com.teammoeg.frostedheart.research.network.FHEnergyDataSyncPacket;
-import com.teammoeg.frostedheart.research.network.FHResearchAttributeSyncPacket;
-import com.teammoeg.frostedheart.research.network.FHResearchControlPacket;
-import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
-import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
-import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
-import com.teammoeg.frostedheart.research.network.FHResearchSyncEndPacket;
-import com.teammoeg.frostedheart.research.network.FHResearchSyncPacket;
-import com.teammoeg.frostedheart.scenario.network.ClientLinkClickedPacket;
-import com.teammoeg.frostedheart.scenario.network.ClientScenarioResponsePacket;
-import com.teammoeg.frostedheart.scenario.network.FHClientReadyPacket;
-import com.teammoeg.frostedheart.scenario.network.FHClientSettingsPacket;
-import com.teammoeg.frostedheart.scenario.network.ServerScenarioCommandPacket;
-import com.teammoeg.frostedheart.scenario.network.ServerSenarioActPacket;
-import com.teammoeg.frostedheart.scenario.network.ServerSenarioScenePacket;
-import com.teammoeg.frostedheart.trade.network.BargainRequestPacket;
-import com.teammoeg.frostedheart.trade.network.BargainResponse;
-import com.teammoeg.frostedheart.trade.network.TradeCommitPacket;
-import com.teammoeg.frostedheart.trade.network.TradeUpdatePacket;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
-import blusunrize.immersiveengineering.common.network.MessageTileSync;
+import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
+import com.teammoeg.frostedheart.content.climate.network.FHDatapackSyncPacket;
+import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
+import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.FHBodyDataSyncPacket;
+import com.teammoeg.frostedheart.content.heatdevice.generator.GeneratorModifyPacket;
+import com.teammoeg.frostedheart.content.research.network.FHChangeActiveResearchPacket;
+import com.teammoeg.frostedheart.content.research.network.FHClueProgressSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHDrawingDeskOperationPacket;
+import com.teammoeg.frostedheart.content.research.network.FHEffectProgressSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHEffectTriggerPacket;
+import com.teammoeg.frostedheart.content.research.network.FHEnergyDataSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchAttributeSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchControlPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchDataUpdatePacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchRegistrtySyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchSyncEndPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchSyncPacket;
+import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacket;
+import com.teammoeg.frostedheart.content.scenario.network.ClientScenarioResponsePacket;
+import com.teammoeg.frostedheart.content.scenario.network.FHClientReadyPacket;
+import com.teammoeg.frostedheart.content.scenario.network.FHClientSettingsPacket;
+import com.teammoeg.frostedheart.content.scenario.network.ServerScenarioCommandPacket;
+import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioActPacket;
+import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioScenePacket;
+import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
+import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
+import com.teammoeg.frostedheart.content.town.TeamTownDataS2CPacket;
+import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
+import com.teammoeg.frostedheart.content.trade.network.BargainResponse;
+import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
+import com.teammoeg.frostedheart.content.trade.network.TradeUpdatePacket;
+
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -57,103 +69,109 @@ import net.minecraftforge.fml.network.simple.SimpleChannel;
 public class FHNetwork {
 
     private static SimpleChannel CHANNEL;
-
+    private static Map<Class<? extends FHMessage>,ResourceLocation> classesId=new HashMap<>();
     public static SimpleChannel get() {
         return CHANNEL;
     }
-
+    private static int iid=0;
+    /**
+     * Register Message Type, would automatically use method in FHMessage as serializer and <init>(PacketBuffer) as deserializer
+     * */
+    public static synchronized <T extends FHMessage> void registerMessage(String name,Class<T> msg) {
+    	classesId.put(msg,FHMain.rl(name));
+		try {
+			Constructor<T> ctor = msg.getConstructor(PacketBuffer.class);
+	    	CHANNEL.registerMessage(++iid,msg,FHMessage::encode,pb->{
+	    		try {
+					return ctor.newInstance(pb);
+				} catch (IllegalAccessException | IllegalArgumentException | InstantiationException |
+                         InvocationTargetException e) {
+					throw new RuntimeException("Can not create message "+msg.getSimpleName(), e);
+				}
+            },FHMessage::handle);
+		} catch (NoSuchMethodException | SecurityException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+    }
+    /**
+     * Register Message Type, should provide a deserializer
+     * */
+    public static synchronized <T extends FHMessage> void registerMessage(String name,Class<T> msg,Function<PacketBuffer,T> func) {
+    	classesId.put(msg,FHMain.rl(name));
+	    CHANNEL.registerMessage(++iid,msg,FHMessage::encode,func,FHMessage::handle);
+    }
+    public static ResourceLocation getId(Class<? extends FHMessage> cls) {
+    	return classesId.get(cls);
+    }
     public static void register() {
         String VERSION = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
-        System.out.println("[TWR Version Check] FH Network Version: " + VERSION);
-        CHANNEL = NetworkRegistry.newSimpleChannel(FHMain.rl("network"), () -> VERSION,
-                VERSION::equals, VERSION::equals);
-        int id = 0;
+        FHMain.LOGGER.info("FH Network Version: " + VERSION);
+        CHANNEL = NetworkRegistry.newSimpleChannel(FHMain.rl("network"), () -> VERSION, VERSION::equals, VERSION::equals);
 
         // CHANNEL.registerMessage(id++, ChunkWatchPacket.class,
         // ChunkWatchPacket::encode, ChunkWatchPacket::new, ChunkWatchPacket::handle);
         // CHANNEL.registerMessage(id++, ChunkUnwatchPacket.class,
         // ChunkUnwatchPacket::encode, ChunkUnwatchPacket::new,
         // ChunkUnwatchPacket::handle);
-        CHANNEL.registerMessage(id++, MessageTileSync.class, MessageTileSync::toBytes, MessageTileSync::new,
-                (t, ctx) -> {
-                    t.process(ctx);
-                    ctx.get().setPacketHandled(true);
-                });
         // CHANNEL.registerMessage(id++, TemperatureChangePacket.class,
         // TemperatureChangePacket::encode, TemperatureChangePacket::new,
         // TemperatureChangePacket::handle);
         
-        //Climate System
-        CHANNEL.registerMessage(id++, FHBodyDataSyncPacket.class, FHBodyDataSyncPacket::encode, FHBodyDataSyncPacket::new,
-                FHBodyDataSyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHDatapackSyncPacket.class, FHDatapackSyncPacket::encode,
-                FHDatapackSyncPacket::new, FHDatapackSyncPacket::handle);
+        //Climate Messages
+        registerMessage("body_data", FHBodyDataSyncPacket.class);
+        registerMessage("temperature_data", FHDatapackSyncPacket.class);
 
-        CHANNEL.registerMessage(id++, FHClimatePacket.class, FHClimatePacket::encode, FHClimatePacket::new,
-                FHClimatePacket::handle);
-        CHANNEL.registerMessage(id++, FHTemperatureDisplayPacket.class, FHTemperatureDisplayPacket::encode,
-                FHTemperatureDisplayPacket::new, FHTemperatureDisplayPacket::handle);
+        registerMessage("climate_data", FHClimatePacket.class);
+        registerMessage("temperature_display", FHTemperatureDisplayPacket.class);
         
-        //Research System
-        CHANNEL.registerMessage(id++, FHResearchRegistrtySyncPacket.class, FHResearchRegistrtySyncPacket::encode,
-                FHResearchRegistrtySyncPacket::new, FHResearchRegistrtySyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHResearchSyncPacket.class, FHResearchSyncPacket::encode, 
-        	FHResearchSyncPacket::new, FHResearchSyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHResearchSyncEndPacket.class, FHResearchSyncEndPacket::encode, 
-        	FHResearchSyncEndPacket::new, FHResearchSyncEndPacket::handle);
-        CHANNEL.registerMessage(id++, FHResearchDataSyncPacket.class, FHResearchDataSyncPacket::encode,
-                FHResearchDataSyncPacket::new, FHResearchDataSyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHResearchDataUpdatePacket.class, FHResearchDataUpdatePacket::encode,
-                FHResearchDataUpdatePacket::new, FHResearchDataUpdatePacket::handle);
-        CHANNEL.registerMessage(id++, FHClueProgressSyncPacket.class, FHClueProgressSyncPacket::encode,
-                FHClueProgressSyncPacket::new, FHClueProgressSyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHResearchAttributeSyncPacket.class, FHResearchAttributeSyncPacket::encode,
-        		FHResearchAttributeSyncPacket::new, FHResearchAttributeSyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHEffectTriggerPacket.class, FHEffectTriggerPacket::encode,
-                FHEffectTriggerPacket::new, FHEffectTriggerPacket::handle);
-        CHANNEL.registerMessage(id++, FHResearchControlPacket.class, FHResearchControlPacket::encode,
-                FHResearchControlPacket::new, FHResearchControlPacket::handle);
-        CHANNEL.registerMessage(id++, FHChangeActiveResearchPacket.class, FHChangeActiveResearchPacket::encode,
-                FHChangeActiveResearchPacket::new, FHChangeActiveResearchPacket::handle);
-        CHANNEL.registerMessage(id++, FHDrawingDeskOperationPacket.class, FHDrawingDeskOperationPacket::encode,
-                FHDrawingDeskOperationPacket::new, FHDrawingDeskOperationPacket::handle);
-        CHANNEL.registerMessage(id++, FHEffectProgressSyncPacket.class, FHEffectProgressSyncPacket::encode,
-                FHEffectProgressSyncPacket::new, FHEffectProgressSyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHEnergyDataSyncPacket.class, FHEnergyDataSyncPacket::encode,
-                FHEnergyDataSyncPacket::new, FHEnergyDataSyncPacket::handle);
+        //Research Messages
+        registerMessage("research_registry", FHResearchRegistrtySyncPacket.class);
+        registerMessage("research_sync", FHResearchSyncPacket.class);
+        registerMessage("research_sync_end", FHResearchSyncEndPacket.class);
+        registerMessage("research_data", FHResearchDataSyncPacket.class);
+        registerMessage("research_data_update", FHResearchDataUpdatePacket.class);
+        registerMessage("research_clue", FHClueProgressSyncPacket.class);
+        registerMessage("research_attribute", FHResearchAttributeSyncPacket.class);
+        registerMessage("effect_trigger", FHEffectTriggerPacket.class);
+        registerMessage("research_control", FHResearchControlPacket.class);
+        registerMessage("research_select", FHChangeActiveResearchPacket.class);
+        registerMessage("research_drawdesk", FHDrawingDeskOperationPacket.class);
+        registerMessage("research_effect", FHEffectProgressSyncPacket.class);
+        registerMessage("research_energy_data", FHEnergyDataSyncPacket.class);
         
-        //Trade System
-        CHANNEL.registerMessage(id++, BargainRequestPacket.class, BargainRequestPacket::encode,
-                BargainRequestPacket::new, BargainRequestPacket::handle);
-        CHANNEL.registerMessage(id++, BargainResponse.class, BargainResponse::encode,
-                BargainResponse::new, BargainResponse::handle);
-        CHANNEL.registerMessage(id++, TradeCommitPacket.class, TradeCommitPacket::encode,
-                TradeCommitPacket::new, TradeCommitPacket::handle);
-        CHANNEL.registerMessage(id++, TradeUpdatePacket.class, TradeUpdatePacket::encode,
-                TradeUpdatePacket::new, TradeUpdatePacket::handle);
+        //Trade Messages
+        registerMessage("bargain_request", BargainRequestPacket.class);
+        registerMessage("bargain_response", BargainResponse.class);
+        registerMessage("trade_commit", TradeCommitPacket.class);
+        registerMessage("trade_update", TradeUpdatePacket.class);
         
         //Scenario System
-        CHANNEL.registerMessage(id++, ClientScenarioResponsePacket.class, ClientScenarioResponsePacket::encode,
-        	ClientScenarioResponsePacket::new, ClientScenarioResponsePacket::handle);
-        CHANNEL.registerMessage(id++, ServerScenarioCommandPacket.class, ServerScenarioCommandPacket::encode,
-        	ServerScenarioCommandPacket::new, ServerScenarioCommandPacket::handle);
-        CHANNEL.registerMessage(id++, ServerSenarioScenePacket.class, ServerSenarioScenePacket::encode,
-        	ServerSenarioScenePacket::new, ServerSenarioScenePacket::handle);
-        CHANNEL.registerMessage(id++, FHClientReadyPacket.class, FHClientReadyPacket::encode,
-        		FHClientReadyPacket::new, FHClientReadyPacket::handle);
-        CHANNEL.registerMessage(id++, ClientLinkClickedPacket.class, ClientLinkClickedPacket::encode, ClientLinkClickedPacket::new, 
-        		ClientLinkClickedPacket::handle);
-        CHANNEL.registerMessage(id++, ServerSenarioActPacket.class, ServerSenarioActPacket::encode, ServerSenarioActPacket::new, 
-        	ServerSenarioActPacket::handle);
-        CHANNEL.registerMessage(id++, FHClientSettingsPacket.class, FHClientSettingsPacket::encode, FHClientSettingsPacket::new, FHClientSettingsPacket::handle);
+        registerMessage("scenario_client_op", ClientScenarioResponsePacket.class);
+        registerMessage("scenario_server_command", ServerScenarioCommandPacket.class);
+        registerMessage("scenario_scene", ServerSenarioScenePacket.class);
+        registerMessage("scenario_ready", FHClientReadyPacket.class);
+        registerMessage("scenario_link", ClientLinkClickedPacket.class);
+        registerMessage("scenario_act", ServerSenarioActPacket.class);
+        registerMessage("scenario_settings", FHClientSettingsPacket.class);
+
+        // Heat Messages
+        registerMessage("heat_endpoint", EndPointDataPacket.class);
+
+        // Town Messages
+        registerMessage("team_town_data_s2c", TeamTownDataS2CPacket.class);
         
+        // Generator Messages
+        registerMessage("generator_upgrade", GeneratorModifyPacket.class);
+
+        registerMessage("display_tip", DisplayTipPacket.class);
     }
 
-    public static void send(PacketDistributor.PacketTarget target, Object message) {
+    public static void send(PacketDistributor.PacketTarget target, FHMessage message) {
         CHANNEL.send(target, message);
     }
 
-    public static void sendToServer(Object message) {
+    public static void sendToServer(FHMessage message) {
         CHANNEL.sendToServer(message);
     }
 

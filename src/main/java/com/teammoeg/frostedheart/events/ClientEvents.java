@@ -19,53 +19,55 @@
 
 package com.teammoeg.frostedheart.events;
 
+import static com.teammoeg.frostedheart.content.tips.client.TipHandler.loadUnlockedFromFile;
 import static net.minecraft.util.text.TextFormatting.*;
 
 import java.util.List;
+import java.util.Map;
 
+import com.teammoeg.frostedheart.content.tips.client.TipElement;
+import com.teammoeg.frostedheart.content.tips.client.TipHandler;
+import net.minecraft.client.gui.screen.OptionsSoundsScreen;
+import net.minecraftforge.client.event.*;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.FHClientTeamDataManager;
 import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
-import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.client.util.FHGuiHelper;
-import com.teammoeg.frostedheart.client.util.GuiClickedEvent;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.data.BlockTempData;
-import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
-import com.teammoeg.frostedheart.climate.data.FHDataManager;
-import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
-import com.teammoeg.frostedheart.climate.player.IHeatingEquipment;
-import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
-import com.teammoeg.frostedheart.climate.player.IWarmKeepingEquipment;
-import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
+import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
+import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
+import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.heatdevice.generator.MasterGeneratorScreen;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
-import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
-import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
-import com.teammoeg.frostedheart.research.effects.Effect;
-import com.teammoeg.frostedheart.research.effects.EffectCrafting;
-import com.teammoeg.frostedheart.research.effects.EffectShowCategory;
-import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
-import com.teammoeg.frostedheart.research.gui.tech.ResearchToast;
-import com.teammoeg.frostedheart.research.inspire.EnergyCore;
-import com.teammoeg.frostedheart.scenario.client.ClientScene;
-import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
-import com.teammoeg.frostedheart.scenario.client.dialog.HUDDialog;
-import com.teammoeg.frostedheart.scenario.network.ClientLinkClickedPacket;
+import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
+import com.teammoeg.frostedheart.content.research.gui.tech.ResearchToast;
+import com.teammoeg.frostedheart.content.research.research.effects.Effect;
+import com.teammoeg.frostedheart.content.research.research.effects.EffectCrafting;
+import com.teammoeg.frostedheart.content.research.research.effects.EffectShowCategory;
+import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
+import com.teammoeg.frostedheart.content.scenario.client.FHScenarioClient;
+import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
+import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacket;
+import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
+import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
+import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.FHGuiHelper;
+import com.teammoeg.frostedheart.util.client.GuiClickedEvent;
 import com.teammoeg.frostedheart.util.version.FHVersion;
 
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
@@ -75,65 +77,51 @@ import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.BipedRenderer;
-import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.IReorderingProcessor;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.world.GameType;
-import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent.LoggedInEvent;
-import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.InputEvent.KeyInputEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderPlayerEvent;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent.PlayerRespawnEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEvents {
     /**
      * Simulate breath particles when the player is in a cold environment
-     *
-     * @param event
      */
     @SubscribeEvent
     public static void addBreathParticles(TickEvent.PlayerTickEvent event) {
         if (event.side == LogicalSide.CLIENT && event.phase == TickEvent.Phase.START
                 && event.player instanceof ClientPlayerEntity) {
             ClientPlayerEntity player = (ClientPlayerEntity) event.player;
+            if(ClientUtils.mc().currentScreen instanceof MasterGeneratorScreen&&player.ticksExisted%20==0) {
+            	((MasterGeneratorScreen)ClientUtils.mc().currentScreen).fullInit();
+            }
             if (!player.isSpectator() && !player.isCreative() && player.world != null) {
                 if (player.ticksExisted % 60 <= 3) {
                 	 PlayerTemperatureData ptd=PlayerTemperatureData.getCapability(player).orElse(null);
@@ -187,10 +175,10 @@ public class ClientEvents {
         ItemStack stack = event.getItemStack();
         Item i = stack.getItem();
         ITempAdjustFood itf = null;
-        IWarmKeepingEquipment iwe = null;
+        //IWarmKeepingEquipment iwe = null;
         for (InspireRecipe ir : FHUtils.filterRecipes(null, InspireRecipe.TYPE)) {
             if (ir.item.test(stack)) {
-                event.getToolTip().add(GuiUtils.translateTooltip("inspire_item").mergeStyle(TextFormatting.GRAY));
+                event.getToolTip().add(TranslateUtils.translateTooltip("inspire_item").mergeStyle(TextFormatting.GRAY));
                 break;
             }
         }
@@ -200,7 +188,7 @@ public class ClientEvents {
         } else {
             itf = FHDataManager.getFood(stack);
         }
-        if (i instanceof IWarmKeepingEquipment) {
+       /* if (i instanceof IWarmKeepingEquipment) {
             iwe = (IWarmKeepingEquipment) i;
         } else {
             String s = ItemNBTHelper.getString(stack, "inner_cover");
@@ -235,7 +223,7 @@ public class ClientEvents {
                 iwe = FHDataManager.getArmor(s + "_" + aes.getName());
             } else
                 iwe = FHDataManager.getArmor(stack);
-        }
+        }*/
         BlockTempData btd = FHDataManager.getBlockData(stack);
         if (btd != null) {
             float temp = btd.getTemp();
@@ -243,41 +231,44 @@ public class ClientEvents {
             if (temp != 0)
                 if (temp > 0)
                     event.getToolTip()
-                            .add(GuiUtils.translateTooltip("block_temp", TmeperatureDisplayHelper.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.GOLD));
+                            .add(TranslateUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.GOLD));
                 else
                     event.getToolTip()
-                            .add(GuiUtils.translateTooltip("block_temp", TmeperatureDisplayHelper.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.AQUA));
+                            .add(TranslateUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.AQUA));
         }
         if (itf != null) {
             float temp = itf.getHeat(stack,
-                    event.getPlayer() == null ? 37 :PlayerTemperatureData.getCapability(event.getPlayer()).map(t->t.getEnvTemp()).orElse(0f)) * tspeed;
+                    event.getPlayer() == null ? 37 :PlayerTemperatureData.getCapability(event.getPlayer()).map(PlayerTemperatureData::getEnvTemp).orElse(0f)) * tspeed;
             temp = (Math.round(temp * 1000)) / 1000.0F;// round
             if (temp != 0)
                 if (temp > 0) 
                     event.getToolTip()
-                            .add(GuiUtils.translateTooltip("food_temp", "+" + TmeperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
+                            .add(TranslateUtils.translateTooltip("food_temp", "+" + TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
                 else
                     event.getToolTip()
-                            .add(GuiUtils.translateTooltip("food_temp", TmeperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
+                            .add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
         }
-        if (iwe != null) {
+      /*  if (iwe != null) {
             float temp = iwe.getFactor(null, stack);
             temp = Math.round(temp * 100);
             String temps = Float.toString(temp);
             if (temp != 0)
                 event.getToolTip().add(GuiUtils.translateTooltip("armor_warm", temps).mergeStyle(TextFormatting.GOLD));
-        }
+        }*/
         if (i instanceof IHeatingEquipment) {
-            float temp = ((IHeatingEquipment) i).getMax(stack) * tspeed;
+            float temp = ((IHeatingEquipment) i).getEffectiveTempAdded(null, stack,0, 0);
             temp = (Math.round(temp * 2000)) / 1000.0F;
             if (temp != 0)
                 if (temp > 0)
                     event.getToolTip().add(
-                            GuiUtils.translateTooltip("armor_heating", "+" + TmeperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
+                            TranslateUtils.translateTooltip("armor_heating", "+" + TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
                 else
                     event.getToolTip()
-                            .add(GuiUtils.translateTooltip("armor_heating", TmeperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
+                            .add(TranslateUtils.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
         }
+        Map<String,ITextComponent> rstooltip=JEICompat.research.get(i);
+        if(rstooltip!=null)
+        	event.getToolTip().addAll(rstooltip.values());
     }
 
     @SubscribeEvent
@@ -285,7 +276,7 @@ public class ClientEvents {
         ItemStack stack = event.getItemStack();
         Item i = stack.getItem();
         if (i == Items.FLINT) {
-            event.getToolTip().add(GuiUtils.translateTooltip("double_flint_ignition").mergeStyle(GRAY));
+            event.getToolTip().add(TranslateUtils.translateTooltip("double_flint_ignition").mergeStyle(GRAY));
         }
     }
 
@@ -293,17 +284,17 @@ public class ClientEvents {
     public static void addWeatherItemTooltips(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
         if (stack.getItem() == FHItems.temperatureProbe.get()) {
-            event.getToolTip().add(GuiUtils.translateTooltip("temperature_probe").mergeStyle(TextFormatting.GRAY));
+            event.getToolTip().add(TranslateUtils.translateTooltip("temperature_probe").mergeStyle(TextFormatting.GRAY));
         }
         if (stack.getItem() == FHItems.weatherRadar.get()) {
-            event.getToolTip().add(GuiUtils.translateTooltip("weather_radar").mergeStyle(TextFormatting.GRAY));
+            event.getToolTip().add(TranslateUtils.translateTooltip("weather_radar").mergeStyle(TextFormatting.GRAY));
         }
         if (stack.getItem() == FHItems.weatherHelmet.get()) {
-            event.getToolTip().add(GuiUtils.translateTooltip("weather_helmet").mergeStyle(TextFormatting.GRAY));
+            event.getToolTip().add(TranslateUtils.translateTooltip("weather_helmet").mergeStyle(TextFormatting.GRAY));
         }
     }
 
-    @SuppressWarnings({"unchecked", "resource"})
+    @SuppressWarnings({"unchecked"})
     @SubscribeEvent
     public static void drawUpdateReminder(GuiScreenEvent.DrawScreenEvent.Post event) {
         Screen gui = event.getGui();
@@ -323,7 +314,7 @@ public class ClientEvents {
                 FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
                 FontRenderer font = gui.getMinecraft().fontRenderer;
                 if (!stableVersion.isEmpty() && (clientVersion.isEmpty() || !clientVersion.laterThan(stableVersion))) {
-                    List<IReorderingProcessor> list = font.trimStringToWidth(GuiUtils.translateGui("update_recommended")
+                    List<IReorderingProcessor> list = font.trimStringToWidth(TranslateUtils.translateGui("update_recommended")
                             .appendString(stableVersion.getOriginal()).mergeStyle(TextFormatting.BOLD), 70);
                     int l = 0;
                     for (IReorderingProcessor line : list) {
@@ -334,7 +325,7 @@ public class ClientEvents {
                         l += 9;
                     }
                     if (isStable) {
-                        IFormattableTextComponent itxc = new StringTextComponent("CurseForge")
+                        IFormattableTextComponent itxc = TranslateUtils.str("CurseForge")
                                 .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
                                 .mergeStyle(TextFormatting.GOLD);
                         boolean needEvents = true;
@@ -352,7 +343,7 @@ public class ClientEvents {
                             ((List<IGuiEventListener>) gui.getEventListeners()).add(new GuiClickedEvent(1,
                                     (int) (gui.height / 2.0F + l), font.getStringPropertyWidth(itxc) + 1,
                                     (int) (gui.height / 2.0F + l + 9), () -> gui.handleComponentClicked(opencf)));
-                        if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode()
+                        /*if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode()
                                 .equalsIgnoreCase("zh_cn")) {
                             l += 9;
                             Style openmcbbs = Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
@@ -366,7 +357,7 @@ public class ClientEvents {
                                         (int) (gui.height / 2.0F + l + 9),
                                         () -> gui.handleComponentClicked(openmcbbs)));
                             font.drawTextWithShadow(matrixStack, itxm, 1, gui.height / 2.0F + l, 0xFFFFFF);
-                        }
+                        }*/
                     }
                 }
             });
@@ -390,6 +381,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void fireLogin(LoggedInEvent event) {
         FHScenarioClient.sendInitializePacket = true;
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClientTeamDataManager.INSTANCE::reset);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -406,7 +398,6 @@ public class ClientEvents {
         int anchorX = event.getWindow().getScaledWidth() / 2;
         int anchorY = event.getWindow().getScaledHeight();
         float partialTicks = event.getPartialTicks();
-        ;
 
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
         if (FHConfig.CLIENT.enableUI.get()) {
@@ -492,17 +483,17 @@ public class ClientEvents {
                 return;
             FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
             if (!stableVersion.isEmpty() && (clientVersion.isEmpty() || !clientVersion.laterThan(stableVersion))) {
-                event.getPlayer().sendStatusMessage(GuiUtils.translateGui("update_recommended")
+                event.getPlayer().sendStatusMessage(TranslateUtils.translateGui("update_recommended")
                         .appendString(stableVersion.getOriginal()).mergeStyle(TextFormatting.BOLD), false);
                 if (isStable) {
                     event.getPlayer()
-                            .sendStatusMessage(new StringTextComponent("CurseForge")
+                            .sendStatusMessage(TranslateUtils.str("CurseForge")
                                     .setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
                                             "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
                                     .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
                                     .mergeStyle(TextFormatting.GOLD), false);
 
-                    if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode()
+                    /*if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode()
                             .equalsIgnoreCase("zh_cn")) {
                         event.getPlayer()
                                 .sendStatusMessage(new StringTextComponent("MCBBS")
@@ -510,19 +501,19 @@ public class ClientEvents {
                                                 "https://www.mcbbs.net/thread-1227167-1-1.html")))
                                         .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
                                         .mergeStyle(TextFormatting.DARK_RED), false);
-                    }
+                    }*/
                 }
             }
         });
         if (ServerLifecycleHooks.getCurrentServer() != null)
             if (FHMain.saveNeedUpdate) {
                 event.getPlayer().sendStatusMessage(
-                        GuiUtils.translateGui("save_update_needed", FHMain.lastServerConfig.getAbsolutePath())
+                        TranslateUtils.translateGui("save_update_needed", FHMain.lastServerConfig.getAbsolutePath())
                                 .mergeStyle(TextFormatting.RED),
                         false);
             } else if (FHMain.lastbkf != null) {
-                event.getPlayer().sendStatusMessage(GuiUtils.translateGui("save_updated")
-                                .appendSibling(new StringTextComponent(FHMain.lastbkf.getName()).setStyle(Style.EMPTY
+                event.getPlayer().sendStatusMessage(TranslateUtils.translateGui("save_updated")
+                                .appendSibling(TranslateUtils.str(FHMain.lastbkf.getName()).setStyle(Style.EMPTY
                                         .setClickEvent(
                                                 new ClickEvent(ClickEvent.Action.OPEN_FILE, FHMain.lastbkf.getAbsolutePath()))
                                         .applyFormatting(TextFormatting.UNDERLINE))),
@@ -536,7 +527,8 @@ public class ClientEvents {
        // event.addListener(KGlyphProvider.INSTANCE);
 
     }
-    @SubscribeEvent
+    @SuppressWarnings("resource")
+	@SubscribeEvent
     public static void tickClient(ClientTickEvent event) {
 
         if (event.phase == Phase.START) {
@@ -566,11 +558,9 @@ public class ClientEvents {
     @SubscribeEvent
     public static void unloadWorld(Unload event) {
         ClientUtils.applyspg = false;
+        TipHandler.clearRenderQueue();
     }
 
-    /**
-     * @param event
-     */
     @SuppressWarnings({"resource", "unchecked", "rawtypes"})
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
@@ -662,4 +652,44 @@ public class ClientEvents {
      * }
      * }
      */
+
+    @SubscribeEvent
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        loadUnlockedFromFile();
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        TipHandler.clearRenderQueue();
+        TipHandler.addToRenderQueue("_default", false);
+        TipHandler.addToRenderQueue("_default2", false);
+        if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) == 0) {
+            TipHandler.addToRenderQueue("_music_warning", false);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onGUIOpen(GuiOpenEvent event) {
+        if (event.getGui() instanceof MainMenuScreen) {
+            if (TipHandler.readError) {
+                TipElement ele = new TipElement();
+                ele.replaceToError(TipHandler.UNLOCKED_FILEPATH, "read");
+                TipHandler.addToRenderQueue(ele, true);
+                TipHandler.readError = false;
+            }
+
+//            if (...如果有新版本) {
+//              TipHandler.addToRenderQueue("update", false);
+//            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onGUIRender(GuiScreenEvent event) {
+        if (event.getGui() instanceof OptionsSoundsScreen) {
+            if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) <= 0) {
+                TipHandler.addToRenderQueue("_music_warning", false);
+            }
+        }
+    }
 }

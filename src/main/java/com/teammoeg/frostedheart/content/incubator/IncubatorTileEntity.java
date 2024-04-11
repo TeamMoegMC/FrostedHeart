@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.thermopolium.api.ThermopoliumApi;
 import com.teammoeg.thermopolium.items.StewItem;
 
@@ -35,7 +36,6 @@ import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
@@ -48,7 +48,6 @@ import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
@@ -60,7 +59,6 @@ import net.minecraftforge.fluids.capability.templates.FluidTank;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTileEntity,
         FHBlockInterfaces.IActiveState, IIEInventory, IInteractionObjectIE, IEBlockInterfaces.IProcessTile {
@@ -141,7 +139,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
     LazyOptional<IItemHandler> invHandlerDown = registerConstantCap(new IEInventoryHandler(1, this, 3, false, true));
 
     public static Fluid getProtein() {
-        Fluid f = ForgeRegistries.FLUIDS.getValue(pr);
+        Fluid f = RegistryUtils.getFluid(pr);
         return f == Fluids.EMPTY ? Fluids.WATER : f;
     }
 
@@ -249,17 +247,9 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
             return canBeCatalyst(itemStack) || itemStack.getItem() == Items.ROTTEN_FLESH;
         if (i == 2)
             return canBeInput(itemStack) || itemStack.isFood();
-        if (i == 3)
-            return false;
-        return true;
+        return i != 3;
     }
-    @Override
-    public void markBlockForUpdate(BlockPos pos, BlockState newState) {
-        BlockState state = world.getBlockState(pos);
-        if (newState == null)
-            newState = state;
-        world.notifyBlockUpdate(pos, state, newState, 3);
-    }
+
     @Override
     public void readCustomNBT(CompoundNBT compound, boolean client) {
         process = compound.getInt("process");
@@ -309,7 +299,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                     }
                     if ((process / 20 != lprocess) && (d || e)) {
                         if (fluid[0].drain(water, FluidAction.SIMULATE).getAmount() == water) {
-                            efficiency += 0.005;
+                            efficiency += 0.005F;
                             efficiency = Math.min(efficiency, getMaxEfficiency());
                             fluid[0].drain(water, FluidAction.EXECUTE);
                             lprocess = process / 20;
@@ -318,7 +308,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                                 efficiency = 0.2f;
                                 return;
                             } else
-                                efficiency -= 0.005;
+                                efficiency -= 0.005F;
                             this.setActive(false);
                             this.markDirty();
                             this.markContainingBlockForUpdate(null);
@@ -335,13 +325,12 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                         efficiency = 0.2f;
                         return;
                     } else
-                        efficiency -= 0.0005;
+                        efficiency -= 0.0005F;
                     this.setActive(false);
                 }
 
                 this.markDirty();
                 this.markContainingBlockForUpdate(null);
-                return;
             } else if (!out.isEmpty() || !outfluid.isEmpty()) {
                 if (ItemHandlerHelper.canItemStacksStack(out, inventory.get(3))) {
                     ItemStack is = inventory.get(3);
@@ -420,7 +409,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                 }
                 boolean changed = false;
                 if (efficiency > 0) {
-                    efficiency -= 0.0005;
+                    efficiency -= 0.0005F;
                     changed = true;
                 }
                 if (efficiency < 0.005) {

@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.ResearchListeners;
 
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.crafting.IRecipe;
@@ -49,13 +49,9 @@ public abstract class RecipeManagerMixin {
     public <C extends IInventory, T extends IRecipe<C>> Optional<T> getRecipe(IRecipeType<T> recipeTypeIn,
                                                                               C inventoryIn, World worldIn) {
         if (recipeTypeIn == IRecipeType.CRAFTING && ForgeHooks.getCraftingPlayer() != null) {
-            return this.getRecipes(recipeTypeIn).values().stream().flatMap((recipe) -> {
-                return Util.streamOptional(recipeTypeIn.matches(recipe, worldIn, inventoryIn));
-            }).filter(t -> ResearchListeners.canUseRecipe(ForgeHooks.getCraftingPlayer(), t)).findFirst();
+            return this.getRecipes(recipeTypeIn).values().stream().flatMap((recipe) -> Util.streamOptional(recipeTypeIn.matches(recipe, worldIn, inventoryIn))).filter(t -> ResearchListeners.canUseRecipe(ForgeHooks.getCraftingPlayer(), t)).findFirst();
         }
-        return this.getRecipes(recipeTypeIn).values().stream().flatMap((recipe) -> {
-            return Util.streamOptional(recipeTypeIn.matches(recipe, worldIn, inventoryIn));
-        }).findFirst();
+        return this.getRecipes(recipeTypeIn).values().stream().flatMap((recipe) -> Util.streamOptional(recipeTypeIn.matches(recipe, worldIn, inventoryIn))).findFirst();
     }
 
     @Shadow

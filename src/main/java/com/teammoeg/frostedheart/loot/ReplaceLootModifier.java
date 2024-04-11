@@ -38,7 +38,6 @@ import net.minecraft.loot.conditions.ILootCondition;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.common.loot.LootModifier;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class ReplaceLootModifier extends LootModifier {
     static class ReplacePair {
@@ -65,7 +64,7 @@ public class ReplaceLootModifier extends LootModifier {
             List<ReplacePair> changes = new ArrayList<>();
             for (JsonElement je : ja) {
                 if (je.isJsonObject()) {
-                    changes.add(new ReplacePair(Ingredient.deserialize(je.getAsJsonObject().get("from")), ForgeRegistries.ITEMS.getValue(new ResourceLocation(je.getAsJsonObject().get("to").getAsString()))));
+                    changes.add(new ReplacePair(Ingredient.deserialize(je.getAsJsonObject().get("from")), RegistryUtils.getItem(new ResourceLocation(je.getAsJsonObject().get("to").getAsString()))));
                 }
             }
             return new ReplaceLootModifier(conditions, changes);

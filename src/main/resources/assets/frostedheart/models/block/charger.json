@@ -1,7 +1,7 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "particle": "frostedheart:block/multiblocks/crudegeneratorstone"
+    "particle": "frostedheart:block/charger"
   },
   "loader": "forge:obj",
   "model": "frostedheart:models/block/charger.obj",

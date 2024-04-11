@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.AnimalEntity;
@@ -53,9 +53,9 @@ public abstract class MooshroomMixin extends AnimalEntity {
             if (ot.milk <= 0) {
                 if (!world.isRemote) {
                     if (ot.feeded <= 0)
-                        playerIn.sendStatusMessage(GuiUtils.translateMessage("cow.nomilk.hungry"), true);
+                        playerIn.sendStatusMessage(TranslateUtils.translateMessage("cow.nomilk.hungry"), true);
                     else
-                        playerIn.sendStatusMessage(GuiUtils.translateMessage("cow.nomilk.digest"), true);
+                        playerIn.sendStatusMessage(TranslateUtils.translateMessage("cow.nomilk.digest"), true);
                 }
                 cbi.setReturnValue(ActionResultType.PASS);
             }

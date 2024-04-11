@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.utils.GuiHelper;
@@ -33,7 +33,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
 public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
-    private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("incubatorii");
+    private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("incubatorii");
     private HeatIncubatorTileEntity tile;
 
     public IncubatorT2Screen(IncubatorT2Container container, PlayerInventory inv, ITextComponent title) {

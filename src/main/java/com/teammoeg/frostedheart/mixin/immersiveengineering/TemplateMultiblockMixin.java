@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
 
@@ -62,6 +62,11 @@ public abstract class TemplateMultiblockMixin implements IMultiblock, MultiBlock
     @Inject(at = @At("RETURN"), remap = false, method = "form", locals = LocalCapture.CAPTURE_FAILHARD)
     public void fh$on$form(World world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit, CallbackInfo cbi, BlockPos master) {
         if (pe != null)
-            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(world, master),ResearchDataAPI.getData(pe).getId());
+            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(world, master), FHTeamDataManager.get(pe).getId());
     }
+
+	@Override
+	public void setPlayer(ServerPlayerEntity spe) {
+		pe=spe;
+	}
 }

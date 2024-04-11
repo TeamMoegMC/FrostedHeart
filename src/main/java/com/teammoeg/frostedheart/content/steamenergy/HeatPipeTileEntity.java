@@ -19,22 +19,20 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
+import com.simibubi.create.content.contraptions.fluids.pipes.FluidPipeBlock;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.base.block.PipeTileEntity;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
-import blusunrize.immersiveengineering.common.util.Utils;
+import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 
-public class HeatPipeTileEntity extends PipeTileEntity implements EnergyNetworkProvider, ITickableTileEntity, FHBlockInterfaces.IActiveState, INetworkConsumer {
-    private SteamNetworkHolder network = new SteamNetworkHolder();
-    private boolean isPathFinding;
-    private boolean justPropagated;
-
+public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileEntity,EnergyNetworkProvider, INetworkConsumer {
+	HeatEnergyNetwork ntwk;
+	int cnt=1;
     public HeatPipeTileEntity() {
         super(FHTileTypes.HEATPIPE.get());
     }
@@ -44,74 +42,68 @@ public class HeatPipeTileEntity extends PipeTileEntity implements EnergyNetworkP
         return true;
     }
 
-    public boolean connect(Direction to, int ndist) {
-        if (justPropagated) return true;
-        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
-        if (te instanceof EnergyNetworkProvider) {
-            SteamEnergyNetwork newNetwork = ((EnergyNetworkProvider) te).getNetwork();
-            justPropagated = true;
-            this.propagate(to, newNetwork, ndist);
-            return true;
+    public boolean connect(HeatEnergyNetwork network,Direction to, int ndist) {
+        if(ntwk==null||ntwk.getNetworkSize()<network.getNetworkSize()) {
+        	ntwk=network;
         }
-        return false;
+    	if (ntwk.shouldPropagate(getPos(),ndist)) {
+	        this.propagate(to, ntwk, ndist);
+        }
+        return true;
     }
+    public void connectTo(Direction d, HeatEnergyNetwork network, int lengthx) {
+    	BlockPos n = this.getPos().offset(d);
 
-    @Override
-    public SteamNetworkHolder getHolder() {
-        return network;
+        d=d.getOpposite();
+        HeatCapabilities.connect(network, getWorld(), n, d, lengthx+1);
+
     }
-
-    @Override
-    public SteamEnergyNetwork getNetwork() {
-        return network.getNetwork();
-    }
-
-    protected boolean hasNetwork() {
-        return network != null && network.isValid();
-    }
-
-    protected void propagate(Direction from, SteamEnergyNetwork newNetwork, int lengthx) {
-        if (isPathFinding) return;
-        //System.out.println(from);
-        try {
-            isPathFinding = true;
-            network.connect(newNetwork, lengthx);
-            for (Direction d : Direction.values()) {
-                if (from == d) continue;
-                BlockPos n = this.getPos().offset(d);
-                TileEntity te = Utils.getExistingTileEntity(this.getWorld(), n);
-                if (te instanceof INetworkConsumer) {
-                    ((INetworkConsumer) te).tryConnectAt(d.getOpposite(), lengthx + 1);
-                }
-            }
-            return;
-        } finally {
-            isPathFinding = false;
+    protected void propagate(Direction from, HeatEnergyNetwork network, int lengthx) {
+        for (Direction d : Direction.values()) {
+            if (from == d) continue;
+            connectTo(d,network,lengthx);
         }
     }
 
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        if (descPacket) return;
+        if (descPacket) {
+        }
     }
 
     @Override
     public void tick() {
-    	
-        justPropagated = false;
-        if (network.isValid()) {
-            network.tick();
-            if (network.drainHeat(network.getTemperatureLevel() * 0.15F) >= 0.15) {
-                setActive(true);
-                return;
-            }
-        }
         super.tick();
-        setActive(false);
+        if(cnt>0) {
+        	cnt--;
+        }else {
+        	cnt=10;
+        	BlockState bs=this.getBlockState();
+        	for(Direction dir:Direction.values()) {
+        		if(bs.get(FluidPipeBlock.FACING_TO_PROPERTY_MAP.get(dir))) {
+        			onFaceChange(dir,true);
+        		}
+        	}
+        }
     }
 
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        if (descPacket) return;
+        if (descPacket) {
+        }
     }
+
+	@Override
+	public void onFaceChange(Direction dir, boolean isConnect) {
+		if(ntwk==null)return;
+		if(isConnect)
+			ntwk.startPropagation(this, dir);
+		else
+			ntwk.requestUpdate();
+	}
+
+	@Override
+	public HeatEnergyNetwork getNetwork() {
+		return ntwk;
+	}
 }

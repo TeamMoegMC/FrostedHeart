@@ -28,22 +28,22 @@ import com.teammoeg.frostedheart.base.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.foods.CannedFoodItem;
 import com.teammoeg.frostedheart.content.foods.FHSoupItem;
-import com.teammoeg.frostedheart.content.steamenergy.HeatDebugItem;
-import com.teammoeg.frostedheart.content.temperature.GeneratorUpgraderI;
-import com.teammoeg.frostedheart.content.temperature.MushroomBed;
-import com.teammoeg.frostedheart.content.temperature.SoilThermometer;
-import com.teammoeg.frostedheart.content.temperature.SteamBottleItem;
-import com.teammoeg.frostedheart.content.temperature.ThermometerItem;
-import com.teammoeg.frostedheart.content.temperature.ThermosItem;
-import com.teammoeg.frostedheart.content.temperature.handstoves.CoalHandStove;
-import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestItem;
-import com.teammoeg.frostedheart.content.tools.CeramicBucket;
-import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
-import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
-import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
-import com.teammoeg.frostedheart.research.machines.FHBasePen;
-import com.teammoeg.frostedheart.research.machines.FHReusablePen;
-import com.teammoeg.frostedheart.research.machines.RubbingTool;
+import com.teammoeg.frostedheart.content.research.blocks.FHBasePen;
+import com.teammoeg.frostedheart.content.research.blocks.FHReusablePen;
+import com.teammoeg.frostedheart.content.research.blocks.RubbingTool;
+import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
+import com.teammoeg.frostedheart.content.utility.CeramicBucket;
+import com.teammoeg.frostedheart.content.utility.GeneratorUpgraderI;
+import com.teammoeg.frostedheart.content.utility.MushroomBed;
+import com.teammoeg.frostedheart.content.utility.SoilThermometer;
+import com.teammoeg.frostedheart.content.utility.SteamBottleItem;
+import com.teammoeg.frostedheart.content.utility.ThermometerItem;
+import com.teammoeg.frostedheart.content.utility.ThermosItem;
+import com.teammoeg.frostedheart.content.utility.handstoves.CoalHandStove;
+import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestItem;
+import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
+import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
+import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
 
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Food;
@@ -58,10 +58,9 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class FHItems {
 	static final DeferredRegister<Item> registry=DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
 	static <T extends Item> RegistryObject<T> register(String name,Function<String,T> supplier) {
-		return registry.register(name,()->{ 
-			T item=supplier.apply(name);
-			//item.setRegistryName(FHMain.MODID, name);
-			return item;
+		return registry.register(name,()->{
+            //item.setRegistryName(FHMain.MODID, name);
+			return supplier.apply(name);
 		});
 	}
     public static String[] colors = new String[]{"black", "blue", "brown", "cyan", "gray", "green", "light_blue", "light_gray", "lime", "magenta", "orange", "pink", "purple", "red", "white", "yellow"};

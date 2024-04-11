@@ -33,7 +33,7 @@ public class ContraptionCostUtils {
     public static float calculateActorStressApply(Contraption cont) {
         float movecost = 0;
         for (MutablePair<BlockInfo, MovementContext> i : cont.getActors())
-            movecost += BlockStressValues.getImpact(i.left.state.getBlock());
+            movecost += (float) BlockStressValues.getImpact(i.left.state.getBlock());
         return movecost;
     }
 
@@ -46,11 +46,11 @@ public class ContraptionCostUtils {
             double distance = Math.sqrt((dX * dX) + (dZ * dZ) + (dY * dY));
             try {
                 if (bi.state.getCollisionShape(cont.getContraptionWorld(), bi.pos) != VoxelShapes.empty()) {
-                    movecost += 0.125F * 2.56F * distance;
+                    movecost += (float) (0.125F * 2.56F * distance);
                 } else
-                    movecost += 0.075F * 2.56F * distance;
+                    movecost += (float) (0.075F * 2.56F * distance);
             } catch (Throwable t) {
-                movecost += 0.125F * 2.56F * distance;
+                movecost += (float) (0.125F * 2.56F * distance);
             }
         }
 

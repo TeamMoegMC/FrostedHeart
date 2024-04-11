@@ -27,8 +27,8 @@ import java.util.Scanner;
 
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.LazyOptional;
 import com.teammoeg.frostedheart.util.io.FileUtil;
+import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -66,6 +66,7 @@ public class FHRemote {
                         this.stableVersion = parser.parse(fr).getAsJsonObject().get("version").getAsString();
                     }
                 } catch (Throwable e) {
+                    FHMain.LOGGER.error("[TWR Version Check] Error fetching FH local version from curseforge manifest", e);
                 }
             }
         }
@@ -75,6 +76,7 @@ public class FHRemote {
                 String versionWithMC = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
                 this.stableVersion = versionWithMC.substring(versionWithMC.indexOf('-') + 1);
             } catch (Throwable e) {
+                throw new RuntimeException("[TWR Version Check] Error fetching FH local version from mod version", e);
             }
         }
 
@@ -84,6 +86,7 @@ public class FHRemote {
                 try {
                     this.stableVersion = FileUtil.readString(vers);
                 } catch (Throwable e) {
+                    throw new RuntimeException("[TWR Version Check] Error fetching FH local version from .twrlastversion", e);
                 }
             }
         }
@@ -148,12 +151,10 @@ public class FHRemote {
     }
 
     protected void fetch() {
-        new Thread(() -> {
-            doFetch();
-        }).start();
+        new Thread(this::doFetch).start();
     }
 
-    public LazyOptional<FHVersion> fetchVersion() {
-        return LazyOptional.of(() -> this.stableVersion == null ? null : FHVersion.parse(this.stableVersion));
+    public OptionalLazy<FHVersion> fetchVersion() {
+        return OptionalLazy.of(() -> this.stableVersion == null ? null : FHVersion.parse(this.stableVersion));
     }
 }

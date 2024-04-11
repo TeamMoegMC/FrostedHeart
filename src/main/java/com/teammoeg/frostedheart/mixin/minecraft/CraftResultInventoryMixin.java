@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.mixin.minecraft;
 
 import org.spongepowered.asm.mixin.Mixin;
 
-import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.ResearchListeners;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.CraftResultInventory;
@@ -31,7 +31,7 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.world.World;
 /**
  * Limit crafting for unresearched item
- * 
+ * <p>
  * */
 @Mixin(CraftResultInventory.class)
 public abstract class CraftResultInventoryMixin implements IRecipeHolder, IInventory {

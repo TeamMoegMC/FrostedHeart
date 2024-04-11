@@ -27,15 +27,22 @@ public class FHBlockInterfaces {
     public interface IActiveState extends IEBlockInterfaces.BlockstateProvider {
         default boolean getIsActive() {
             BlockState state = this.getState();
-            return state.hasProperty(BlockStateProperties.LIT) ? (Boolean) state.get(BlockStateProperties.LIT) : false;
+            return state.hasProperty(BlockStateProperties.LIT) ? state.get(BlockStateProperties.LIT) : false;
         }
 
-        default void setActive(boolean active) {
+        /**
+         * Set the block to active or inactive.
+         * @param active true if the block should be active, false otherwise
+         * @return true if the state was changed, false otherwise
+         */
+        default boolean setActive(boolean active) {
             BlockState state = this.getState();
             if (state.get(BlockStateProperties.LIT) != active) {
                 BlockState newState = state.with(BlockStateProperties.LIT, active);
                 this.setState(newState);
+                return true;
             }
+            return false;
         }
     }
 

@@ -26,8 +26,7 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
@@ -45,7 +44,7 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
-public class SaunaBlock extends FHBaseBlock implements ISteamEnergyBlock {
+public class SaunaBlock extends FHBaseBlock{
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public SaunaBlock(Properties blockProps) {

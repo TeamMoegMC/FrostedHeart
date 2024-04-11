@@ -21,19 +21,20 @@ package com.teammoeg.frostedheart;
 
 import com.teammoeg.frostedheart.content.decoration.RelicChestContainer;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
-import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorContainer;
-import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
-import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorContainer;
-import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.heatdevice.generator.t1.T1GeneratorContainer;
+import com.teammoeg.frostedheart.content.heatdevice.generator.t1.T1GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.heatdevice.generator.t2.T2GeneratorContainer;
+import com.teammoeg.frostedheart.content.heatdevice.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Container;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Container;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
+import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
+import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskContainer;
+import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
-import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskContainer;
-import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
-import com.teammoeg.frostedheart.trade.gui.TradeContainer;
+import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
 
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import net.minecraft.inventory.container.ContainerType;
@@ -48,9 +49,11 @@ public class FHContainer {
     public static final DeferredRegister<ContainerType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.CONTAINERS,
             FHMain.MODID);
     public static final RegistryObject<ContainerType<TradeContainer>> TRADE_GUI = CONTAINERS.register("trade", () -> IForgeContainerType.create(TradeContainer::new));
+    public static final RegistryObject<ContainerType<HeatStatContainer>> HEAT_STAT = CONTAINERS.register("heat_stat", () -> IForgeContainerType.create(HeatStatContainer::new));
     public static void registerContainers() {
         GuiHandler.register(T1GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorContainer::new);
         GuiHandler.register(T2GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorContainer::new);
+
         GuiHandler.register(RelicChestTileEntity.class, new ResourceLocation(FHMain.MODID, "relic_chest"), RelicChestContainer::new);
         GuiHandler.register(DrawingDeskTileEntity.class, new ResourceLocation(FHMain.MODID, "draw_desk"), DrawDeskContainer::new);
         GuiHandler.register(SaunaTileEntity.class, new ResourceLocation(FHMain.MODID, "sauna_vent"), SaunaContainer::new);

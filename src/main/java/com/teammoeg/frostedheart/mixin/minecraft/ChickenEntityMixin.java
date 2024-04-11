@@ -27,8 +27,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
@@ -107,7 +107,7 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
 
     /**
      * @author khjxiaogu
-     * @reason change to our own milk logic
+     * change to our own milk logic
      */
     @Override
     public ActionResultType getEntityInteractionResult(PlayerEntity playerIn, Hand hand) {

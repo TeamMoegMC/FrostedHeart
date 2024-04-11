@@ -19,9 +19,6 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import java.util.List;
-
-import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
@@ -73,7 +70,7 @@ public class ResearchPaperRecipe extends IESerializableRecipe {
     }
 
     @Override
-    protected IERecipeSerializer getIESerializer() {
+    protected IERecipeSerializer<ResearchPaperRecipe> getIESerializer() {
         return SERIALIZER.get();
     }
 

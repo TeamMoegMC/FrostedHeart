@@ -95,7 +95,7 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
             double rZ = MathHelper.lerp(sizeRatio, maxZ, minZ);
             double genSize = random.nextDouble() * size / 16.0D;
             double genAmount = ((MathHelper.sin((float) Math.PI * sizeRatio) + 1.0F) * genSize + 1.0D) / 2.0D;
-            boxes[k * 4 + 0] = rX;
+            boxes[k * 4] = rX;
             boxes[k * 4 + 1] = rY;
             boxes[k * 4 + 2] = rZ;
             boxes[k * 4 + 3] = genAmount;
@@ -105,7 +105,7 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
             if (boxes[i * 4 + 3] > 0.0D) {//has generation amount
                 for (int j = i + 1; j < size; ++j) {
                     if (boxes[j * 4 + 3] > 0.0D) {//has generation amount
-                        double d12 = boxes[i * 4 + 0] - boxes[j * 4 + 0];//delta X
+                        double d12 = boxes[i * 4] - boxes[j * 4];//delta X
                         double d13 = boxes[i * 4 + 1] - boxes[j * 4 + 1];//delta Y
                         double d14 = boxes[i * 4 + 2] - boxes[j * 4 + 2];//delta Z
                         double d15 = boxes[i * 4 + 3] - boxes[j * 4 + 3];//delta gen amount
@@ -124,7 +124,7 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
         for (int iSlice = 0; iSlice < size; ++iSlice) {
             double genAmount = boxes[iSlice * 4 + 3];//amount
             if (genAmount >= 0D) {
-                double sX = boxes[iSlice * 4 + 0];
+                double sX = boxes[iSlice * 4];
                 double sY = boxes[iSlice * 4 + 1];
                 double sZ = boxes[iSlice * 4 + 2];
                 int genBeginX = Math.max(MathHelper.floor(sX - genAmount), startX);

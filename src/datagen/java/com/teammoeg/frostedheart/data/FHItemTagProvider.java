@@ -1,56 +1,53 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
- * This file is part of Caupona.
+ * This file is part of Frosted Heart.
  *
- * Caupona is free software: you can redistribute it and/or modify
+ * Frosted Heart is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * Caupona is distributed in the hope that it will be useful,
+ * Frosted Heart is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * Specially, we allow this software to be used alongside with closed source software Minecraft(R) and Forge or other modloader.
- * Any mods or plugins can also use apis provided by forge or com.teammoeg.caupona.api without using GPL or open source.
- *
  * You should have received a copy of the GNU General Public License
- * along with Caupona. If not, see <https://www.gnu.org/licenses/>.
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.data;
 
-import java.nio.file.Path;
-
 import com.cannolicatfish.rankine.init.RankineTags;
-import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
+import net.minecraft.data.BlockTagsProvider;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.TagsProvider;
+import net.minecraft.data.ItemTagsProvider;
 import net.minecraft.item.Item;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
 import net.minecraftforge.common.Tags.IOptionalNamedTag;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.fml.RegistryObject;
-import net.minecraftforge.registries.ForgeRegistries;
 
-public class FHItemTagProvider extends TagsProvider<Item> {
+import java.nio.file.Path;
 
-	public FHItemTagProvider(DataGenerator dataGenerator, ExistingFileHelper existingFileHelper) {
-		super(dataGenerator, Registry.ITEM,FHMain.MODID, existingFileHelper);
+public class FHItemTagProvider extends ItemTagsProvider {
+
+	public FHItemTagProvider(DataGenerator dataGenerator, BlockTagsProvider blockTagsProvider, ExistingFileHelper existingFileHelper) {
+		super(dataGenerator, blockTagsProvider, FHMain.MODID, existingFileHelper);
 	}
 
 
 	@Override
 	protected void registerTags() {
-		tag("colored_thermos").add(FHItems.allthermos.stream().map(t->t.get()).toArray(n->new Item[n]));
+		tag("colored_thermos").add((Item[]) FHItems.allthermos.stream().map(t->t.get()).toArray(n->new Item[n]));
 		
-		tag("colored_advanced_thermos").add(FHItems.alladvthermos.stream().map(t->t.get()).toArray(n->new Item[n]));
+		tag("colored_advanced_thermos").add((Item[]) FHItems.alladvthermos.stream().map(t->t.get()).toArray(n->new Item[n]));
 		tag("thermos")
 		.addTag(ItemTags.createOptional(mrl("colored_thermos")))
 		.add(FHItems.thermos.get())
@@ -100,7 +97,7 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 	}
 
 	private Item item(String s) {
-		Item i = ForgeRegistries.ITEMS.getValue(mrl(s));
+		Item i = RegistryUtils.getItem(mrl(s));
 		return i.asItem();// just going to cause trouble if not exists
 	}
 

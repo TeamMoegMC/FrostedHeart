@@ -30,8 +30,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.ResearchListeners;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
 
 import net.minecraft.block.BlockState;
@@ -61,7 +61,7 @@ import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.items.ItemHandlerHelper;
 /**
  * Add time limit for campfire
- * 
+ * <p>
  * */
 @Mixin(CampfireBlock.class)
 public abstract class CampfireBlockMixin extends ContainerBlock {
@@ -97,7 +97,7 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
                             if (itemstack.getItem() == Items.FLINT && player.getHeldItemOffhand().getItem() == Items.FLINT) {
                                 player.swingArm(Hand.MAIN_HAND);
                                 if (rand.nextFloat() < 0.33) {
-                                    worldIn.setBlockState(pos, state.with(BlockStateProperties.LIT, Boolean.valueOf(true)), 3);
+                                    worldIn.setBlockState(pos, state.with(BlockStateProperties.LIT, Boolean.TRUE), 3);
                                 }
 
                                 worldIn.playSound(null, pos, SoundEvents.BLOCK_STONE_STEP, SoundCategory.BLOCKS, 1.0F, 2F + rand.nextFloat() * 0.4F);
@@ -116,11 +116,11 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
                     } else {
                         ICampfireExtra info = (ICampfireExtra) campfiretileentity;
                         if (state.get(CampfireBlock.LIT)) {
-                            player.sendStatusMessage(GuiUtils.translateMessage("campfire.remaining", Integer.toString(info.getLifeTime() / 20)), true);
+                            player.sendStatusMessage(TranslateUtils.translateMessage("campfire.remaining", Integer.toString(info.getLifeTime() / 20)), true);
                         } else if (info.getLifeTime() > 0) {
-                            player.sendStatusMessage(GuiUtils.translateMessage("campfire.ignition"), true);
+                            player.sendStatusMessage(TranslateUtils.translateMessage("campfire.ignition"), true);
                         } else {
-                            player.sendStatusMessage(GuiUtils.translateMessage("campfire.fuel"), true);
+                            player.sendStatusMessage(TranslateUtils.translateMessage("campfire.fuel"), true);
                         }
                         return ActionResultType.SUCCESS;
                     }

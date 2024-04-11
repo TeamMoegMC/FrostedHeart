@@ -38,7 +38,7 @@ public class FHBiomes {
 
 //    public static RegistryObject<Biome> RELIC = BIOME_REGISTER.register("relic", () -> new VolcanicBiome().build());
 
-    public static void Biomes() {
+    public static void biomes() {
         BiomeManager.addBiome(BiomeManager.BiomeType.COOL, new BiomeManager.BiomeEntry(makeKey(VOLCANIC.get()), 5));
     }
 

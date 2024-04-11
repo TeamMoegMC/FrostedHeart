@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
-import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.heatdevice.generator.GeneratorRecipe;
+import com.teammoeg.frostedheart.content.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.DietValueRecipe;
@@ -33,8 +33,8 @@ import com.teammoeg.frostedheart.content.recipes.ShapelessCopyDataRecipe;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
-import com.teammoeg.frostedheart.content.temperature.handstoves.FuelingRecipe;
-import com.teammoeg.frostedheart.trade.policy.TradePolicy;
+import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
+import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
 
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.IRecipeType;

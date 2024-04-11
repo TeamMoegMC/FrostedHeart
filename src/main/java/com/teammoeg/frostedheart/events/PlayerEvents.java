@@ -19,17 +19,17 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static com.teammoeg.frostedheart.content.foods.DailyKitchen.DailyKitchen.*;
 
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.content.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.foods.dailykitchen.DailyKitchen;
+import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
+import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EntityType;
@@ -53,7 +53,6 @@ import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class PlayerEvents {
-    @SuppressWarnings("resource")
     public static void onRC(PlayerInteractEvent.RightClickItem rci) {
         if (!rci.getWorld().isRemote
                 && RegistryUtils.getRegistryName(rci.getItemStack().getItem()).getNamespace().equals("projecte")) {
@@ -71,9 +70,9 @@ public class PlayerEvents {
                     new EffectInstance(Effects.NAUSEA, (int) (1000 * (world.rand.nextDouble() + 0.5)), 5));
 
             serverPlayerEntity.connection.sendPacket(
-                    new STitlePacket(STitlePacket.Type.TITLE, GuiUtils.translateMessage("too_cold_to_transmute")));
+                    new STitlePacket(STitlePacket.Type.TITLE, TranslateUtils.translateMessage("too_cold_to_transmute")));
             serverPlayerEntity.connection.sendPacket(
-                    new STitlePacket(STitlePacket.Type.SUBTITLE, GuiUtils.translateMessage("magical_backslash")));
+                    new STitlePacket(STitlePacket.Type.SUBTITLE, TranslateUtils.translateMessage("magical_backslash")));
 
             double posX = pos.getX() + (world.rand.nextDouble() - world.rand.nextDouble()) * 4.5D;
             double posY = pos.getY() + world.rand.nextInt(3) - 1;
@@ -95,20 +94,20 @@ public class PlayerEvents {
             boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
             if (configAllows && ResearchDataAPI.getVariants(serverPlayer).getDouble("has_forecast")>0) {
                 // Blizzard warning
-                float thisHour = WorldClimate.getTemp(serverPlayer.world);
+                //float thisHour = WorldClimate.getTemp(serverPlayer.world);
                 boolean thisHourB = WorldClimate.isBlizzard(serverPlayer.world);
-                float nextHour = WorldClimate.getFutureTemp(serverPlayer.world, 1);
+                //float nextHour = WorldClimate.getFutureTemp(serverPlayer.world, 1);
                 boolean nextHourB = WorldClimate.isFutureBlizzard(serverPlayer.world, 1);
                 if (!thisHourB) { // not in blizzard yet
                     if (nextHourB) {
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_warning")
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.blizzard_warning")
                                 .mergeStyle(TextFormatting.DARK_RED).mergeStyle(TextFormatting.BOLD), true);
                         // serverPlayer.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE,
                         // GuiUtils.translateMessage("forecast.blizzard_warning")));
                     }
                 } else { // in blizzard now
                     if (!nextHourB) {
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_retreating")
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.blizzard_retreating")
                                 .mergeStyle(TextFormatting.GREEN).mergeStyle(TextFormatting.BOLD), true);
                         // serverPlayer.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE,
                         // GuiUtils.translateMessage("forecast.blizzard_retreating")));
@@ -122,7 +121,7 @@ public class PlayerEvents {
                     float nightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 12) * 10) / 10.0F;
                     float midnightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 18) * 10) / 10.0F;
                     float tomorrowMorningTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 1, 0) * 10) / 10.0F;
-                    TmeperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.morning", false, morningTemp-10, noonTemp-10,
+                    TemperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.morning", false, morningTemp-10, noonTemp-10,
                             nightTemp-10, midnightTemp-10, tomorrowMorningTemp-10);
                     boolean snow = morningTemp < WorldTemperature.SNOW_TEMPERATURE
                             || noonTemp < WorldTemperature.SNOW_TEMPERATURE || nightTemp < WorldTemperature.SNOW_TEMPERATURE
@@ -134,11 +133,11 @@ public class PlayerEvents {
                             || WorldClimate.isFutureBlizzard(serverPlayer.world, 0, 18)
                             || WorldClimate.isFutureBlizzard(serverPlayer.world, 1, 0);
                     if (blizzard)
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_today"), false);
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.blizzard_today"), false);
                     else if (snow)
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.snow_today"), false);
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.snow_today"), false);
                     else
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.clear_today"), false);
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.clear_today"), false);
 
                 }
 
@@ -152,7 +151,7 @@ public class PlayerEvents {
                             / 10.0F;
                     float tomorrowNightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 1, 0) * 10)
                             / 10.0F;
-                    TmeperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.night", false, nightTemp-10, midnightTemp-10,
+                    TemperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.night", false, nightTemp-10, midnightTemp-10,
                             tomorrowMorningTemp-10, tomorrowNoonTemp-10, tomorrowNightTemp-10);
                     boolean snow = nightTemp < WorldTemperature.SNOW_TEMPERATURE
                             || midnightTemp < WorldTemperature.SNOW_TEMPERATURE
@@ -165,16 +164,16 @@ public class PlayerEvents {
                             || WorldClimate.isFutureBlizzard(serverPlayer.world, 0, 18)
                             || WorldClimate.isFutureBlizzard(serverPlayer.world, 1, 0);
                     if (blizzard)
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_tomorrow"), false);
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.blizzard_tomorrow"), false);
                     else if (snow)
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.snow_tomorrow"), false);
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.snow_tomorrow"), false);
                     else
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.clear_tomorrow"), false);
+                        serverPlayer.sendStatusMessage(TranslateUtils.translateMessage("forecast.clear_tomorrow"), false);
                 }
             }
 
             if (serverPlayer.world.getDayTime() % 24000 == 41 && FHConfig.COMMON.enableDailyKitchen.get())
-                generateWantedFood(serverPlayer);//This is daily kitchen thing,not forecast message.
+                DailyKitchen.generateWantedFood(serverPlayer);//This is daily kitchen thing,not forecast message.
         }
     }
 }

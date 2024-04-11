@@ -34,7 +34,7 @@ import net.minecraft.world.gen.feature.template.Template;
 import net.minecraft.world.gen.feature.template.TemplateManager;
 /**
  * Automatically remove specific blocks from structures
- * 
+ * <p>
  * */
 @Mixin(TemplateManager.class)
 public abstract class TemplateManagerMixin {
@@ -48,22 +48,29 @@ public abstract class TemplateManagerMixin {
     @Overwrite
     @Nullable
     public Template getTemplate(ResourceLocation p_200219_1_) {
-        return this.templates.computeIfAbsent(p_200219_1_, (p_209204_1_) -> {
-            Template template = this.loadTemplateFile(p_209204_1_);
 
-            if (template != null) {
-                StructureUtils.handlePalette(((TemplateAccess) template).getBlocks());
-                return template;
-            }
-            template = this.loadTemplateResource(p_209204_1_);
-            if (template != null) {
-                StructureUtils.handlePalette(((TemplateAccess) template).getBlocks());
-                return template;
-            }
-            return null;
-        });
+    	if(templates.containsKey(p_200219_1_))
+    		return this.templates.get(p_200219_1_);
+    	Template no=fh$templFetch(p_200219_1_);
+    	this.templates.put(p_200219_1_, no);
+    	return no;
     }
-
+    private Template fh$templFetch(ResourceLocation p_209204_1_) {
+    	//System.out.println("loading1");
+        Template template = this.loadTemplateFile(p_209204_1_);
+        
+        if (template != null) {
+            StructureUtils.handlePalette(((TemplateAccess) template).getBlocks());
+            return template;
+        }
+        //System.out.println("loading2");
+        template = this.loadTemplateResource(p_209204_1_);
+        if (template != null) {
+            StructureUtils.handlePalette(((TemplateAccess) template).getBlocks());
+            return template;
+        }
+        return null;
+    }
     @Shadow
     @Nullable
     abstract Template loadTemplateFile(ResourceLocation locationIn);

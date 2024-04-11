@@ -37,7 +37,7 @@ public class FHVersion {
             return eq;
         }
 
-        private EqualState(boolean isValid, boolean isLater) {
+        EqualState(boolean isValid, boolean isLater) {
             this.isValid = isValid;
             this.isLater = isLater;
         }
@@ -52,7 +52,7 @@ public class FHVersion {
             if (vers.isEmpty())
                 return empty;
             String[] main = vers.split("\\.");
-            if (main.length <= 0) return empty;
+            if (main.length == 0) return empty;
             int[] majors = new int[main.length];
             int i = -1;
             for (String s : main) {
@@ -227,13 +227,11 @@ public class FHVersion {
         }
         if (other.minors.length > minors.length) {
             return SubType.pre.equals(other.minors[minors.length].getType());
-        } else if (other.minors.length < minors.length && SubType.pre.equals(minors[other.minors.length].getType()))
-            return false;
-        return true;
+        } else return other.minors.length >= minors.length || !SubType.pre.equals(minors[other.minors.length].getType());
     }
 
     @Override
     public String toString() {
-        return "ver " + String.valueOf(majors) + Arrays.toString(minors);
+        return "ver " + majors + Arrays.toString(minors);
     }
 }

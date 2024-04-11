@@ -21,15 +21,16 @@ package com.teammoeg.frostedheart.compat.jei.category;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.cannolicatfish.rankine.init.RankineItems;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
+import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
@@ -78,9 +79,9 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 
         String burnTime;
         if (recipe.time < 1000 || recipe.time % 60 != 0)
-            burnTime = String.valueOf(recipe.time) + " s";
+            burnTime = recipe.time + " s";
         else
-            burnTime = String.valueOf(recipe.time / 60) + " m";
+            burnTime = recipe.time / 60 + " m";
         int width = ClientUtils.mc().fontRenderer.getStringWidth(burnTime);
         ClientUtils.mc().fontRenderer.drawString(transform, burnTime, 162 - width, 62, 0xFFFFFF);
     }
@@ -107,8 +108,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 
     @Override
     public List<ITextComponent> getTooltipStrings(IncubateRecipe recipe, double mouseX, double mouseY) {
-        List<ITextComponent> tooltip = new ArrayList<>();
-        return tooltip;
+        return new ArrayList<>();
     }
 
     @Override
@@ -123,12 +123,12 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 
     @Override
     public void setIngredients(IncubateRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.FLUID, Arrays.asList(Arrays.asList(new FluidStack(Fluids.WATER, recipe.water))));
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(new ItemStack(RankineItems.QUICKLIME.get())), Arrays.asList(recipe.catalyst.getMatchingStacks()), Arrays.asList(recipe.input.getMatchingStacks())));
+        ingredients.setInputLists(VanillaTypes.FLUID, Collections.singletonList(Collections.singletonList(new FluidStack(Fluids.WATER, recipe.water))));
+        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Collections.singletonList(new ItemStack(RankineItems.QUICKLIME.get())), Arrays.asList(recipe.catalyst.getMatchingStacks()), Arrays.asList(recipe.input.getMatchingStacks())));
         if (!recipe.output.isEmpty())
-            ingredients.setOutputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.output)));
+            ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(Collections.singletonList(recipe.output)));
         if (!recipe.output_fluid.isEmpty())
-            ingredients.setOutputLists(VanillaTypes.FLUID, Arrays.asList(Arrays.asList(recipe.output_fluid)));
+            ingredients.setOutputLists(VanillaTypes.FLUID, Collections.singletonList(Collections.singletonList(recipe.output_fluid)));
     }
 
 
@@ -139,9 +139,9 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
         guiFluidStacks.init(0, true, 57, 16, 16, 46, recipe.water * 5, false, null);
         guiFluidStacks.addTooltipCallback((s, o, i, t) -> {
             if (s == 0)
-                t.add(GuiUtils.translateGui("mb_per_sec", recipe.water));
+                t.add(TranslateUtils.translateGui("mb_per_sec", recipe.water));
             if (recipe.isFood && s == 1)
-                t.add(GuiUtils.translateGui("per_food_value", recipe.output_fluid.getAmount()));
+                t.add(TranslateUtils.translateGui("per_food_value", recipe.output_fluid.getAmount()));
         });
         guiFluidStacks.init(1, true, 113, 16, 16, 46, recipe.water * 5, false, null);
         guiFluidStacks.set(ingredients);
@@ -152,9 +152,9 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
         guiItemStacks.init(1, true, 11, 12);
         guiItemStacks.addTooltipCallback((s, o, i, t) -> {
             if (s == 1 && !recipe.consume_catalyst)
-                t.add(GuiUtils.translateGui("not_consume"));
+                t.add(TranslateUtils.translateGui("not_consume"));
             else if (s == 2 && recipe.isFood)
-                t.add(GuiUtils.translateGui("any_food"));
+                t.add(TranslateUtils.translateGui("any_food"));
         });
         guiItemStacks.init(2, true, 29, 12);
         guiItemStacks.init(3, false, 138, 31);

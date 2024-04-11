@@ -20,15 +20,13 @@
 package com.teammoeg.frostedheart.content.incubator;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.ApiUtils;
@@ -46,7 +44,6 @@ import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.RegistryObject;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class IncubateRecipe extends IESerializableRecipe {
     public static class Serializer extends IERecipeSerializer<IncubateRecipe> {
@@ -119,7 +116,7 @@ public class IncubateRecipe extends IESerializableRecipe {
         super(ItemStack.EMPTY, TYPE, IncubatorTileEntity.food);
         isFood = true;
         List<IItemProvider> items = new ArrayList<>();
-        for (Item i : ForgeRegistries.ITEMS.getValues()) {
+        for (Item i : RegistryUtils.getItems()) {
             if (i.isFood())
                 items.add(i);
         }

@@ -20,9 +20,11 @@
 package com.teammoeg.frostedheart.compat;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.function.Predicate;
-
-import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestItem;
+import java.util.stream.IntStream;
+import com.mojang.datafixers.util.Pair;
+import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestItem;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
@@ -33,87 +35,27 @@ import top.theillusivec4.curios.api.SlotTypeMessage;
 import top.theillusivec4.curios.api.SlotTypePreset;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
-import top.theillusivec4.curios.api.type.inventory.IDynamicStackHandler;
 
 public class CuriosCompat {
-    static class CuriosIterator implements Iterator<ItemStack> {
-        static class ItemIterator implements Iterator<ItemStack> {
-            int i = 0;
-            int max;
-            IDynamicStackHandler handler;
+	static class EmptyIterator<T> implements Iterator<T>{
 
-            public ItemIterator(int max, IDynamicStackHandler handler) {
-                this.max = max;
-                this.handler = handler;
-            }
+		@Override
+		public boolean hasNext() {
+			return false;
+		}
 
-            @Override
-            public boolean hasNext() {
-                return i < max;
-            }
-
-            @Override
-            public ItemStack next() {
-                return handler.getStackInSlot(i++);
-            }
-
-        }
-        ItemIterator cur;
-
-        Iterator<ICurioStacksHandler> it;
-
-        public CuriosIterator(Iterator<ICurioStacksHandler> it) {
-            this.it = it;
-        }
-
-        @Override
-        public boolean hasNext() {
-            if (cur != null && cur.hasNext()) return true;
-            ICurioStacksHandler current;
-            while (it.hasNext()) {
-                current = it.next();
-                if (current.isVisible()) {
-                    cur = new ItemIterator(current.getSlots(), current.getStacks());
-                    if (cur.hasNext())
-                        return true;
-                }
-            }
-            return false;
-        }
-
-        @Override
-        public ItemStack next() {
-            if (cur != null && cur.hasNext()) return cur.next();
-            ICurioStacksHandler current;
-            do {
-                current = it.next();
-            } while (!current.isVisible() && it.hasNext());
-            if (current.isVisible()) {
-                cur = new ItemIterator(current.getSlots(), current.getStacks());
-                return cur.next();
-            }
-            return null;
-        }
-    }
-
+		@Override
+		public T next() {
+			throw new NoSuchElementException();
+		}
+		
+		
+	}
     public static Iterable<ItemStack> getAllCuriosIfVisible(LivingEntity el) {
-        return new Iterable<ItemStack>() {
-            @Override
-            public Iterator<ItemStack> iterator() {
-                return CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(h -> new CuriosIterator(h.getCurios().values().iterator())).orElse(new CuriosIterator(null) {
-                    @Override
-                    public boolean hasNext() {
-                        return false;
-                    }
-
-                    @Override
-                    public ItemStack next() {
-                        return null;
-                    }
-
-                });
-            }
-        };
+    	return () -> CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(o->o.getCurios().values().stream().flatMap(t->IntStream.range(0, t.getSlots()).mapToObj(i->t.getStacks().getStackInSlot(i))).iterator()).orElseGet(EmptyIterator::new);
+    }
+    public static Iterable<Pair<String, ItemStack>> getAllCuriosAndSlotsIfVisible(LivingEntity el) {
+        return () -> CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(o->o.getCurios().entrySet().stream().flatMap(t->IntStream.range(0, t.getValue().getSlots()).mapToObj(i->Pair.of(t.getKey(),t.getValue().getStacks().getStackInSlot(i)))).iterator()).orElseGet(EmptyIterator::new);
     }
 
     public static ItemStack getCuriosIfVisible(LivingEntity living, SlotTypePreset slot, Predicate<ItemStack> predicate) {

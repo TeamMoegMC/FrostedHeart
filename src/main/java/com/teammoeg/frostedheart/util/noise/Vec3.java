@@ -28,7 +28,7 @@ public final class Vec3 {
         this.z = z;
     }
 
-    public final float dot(float x, float y, float z) {
+    public float dot(float x, float y, float z) {
         return this.x * x + this.y * y + this.z * z;
     }
 }

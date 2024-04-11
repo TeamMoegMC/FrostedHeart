@@ -26,8 +26,7 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
@@ -45,10 +44,9 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
-public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
+public class ChargerBlock extends FHBaseBlock{
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public ChargerBlock(Properties blockProps) {
@@ -63,12 +61,6 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
         if (stateIn.get(LIT)) {
             ClientUtils.spawnSteamParticles(worldIn, pos);
         }
-    }
-
-    @Override
-    public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
-        Direction bd = state.get(BlockStateProperties.FACING);
-        return dir == bd.getOpposite() || (bd != Direction.DOWN && dir == Direction.UP) || (bd == Direction.UP && dir == Direction.SOUTH) || (bd == Direction.DOWN && dir == Direction.NORTH);
     }
 
     @Nullable

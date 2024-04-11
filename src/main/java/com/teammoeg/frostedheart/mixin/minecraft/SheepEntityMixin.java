@@ -61,7 +61,7 @@ public abstract class SheepEntityMixin extends AnimalEntity implements IFeedStor
         return false;
     }
 
-    @Inject(at = @At("HEAD"), method = "eatGrassBonus", remap = true)
+    @Inject(at = @At("HEAD"), method = "eatGrassBonus")
     public void fh$eatGrass(CallbackInfo cbi) {
         if (feeded < 2)
             feeded++;

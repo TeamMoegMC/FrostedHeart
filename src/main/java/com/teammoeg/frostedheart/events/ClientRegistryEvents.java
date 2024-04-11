@@ -30,25 +30,28 @@ import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHContainer;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.model.LiningFinalizedModel;
 import com.teammoeg.frostedheart.client.model.LiningModel;
 import com.teammoeg.frostedheart.client.particles.BreathParticle;
-import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.client.particles.SteamParticle;
-import com.teammoeg.frostedheart.client.renderer.MechCalcRenderer;
-import com.teammoeg.frostedheart.client.renderer.T1GeneratorRenderer;
-import com.teammoeg.frostedheart.client.renderer.T2GeneratorRenderer;
 import com.teammoeg.frostedheart.compat.tetra.TetraClient;
 import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
-import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
-import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorScreen;
+import com.teammoeg.frostedheart.content.heatdevice.generator.MasterGeneratorScreen;
+import com.teammoeg.frostedheart.content.heatdevice.generator.t1.T1GeneratorRenderer;
+import com.teammoeg.frostedheart.content.heatdevice.generator.t1.T1GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.heatdevice.generator.t2.T2GeneratorRenderer;
+import com.teammoeg.frostedheart.content.heatdevice.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
+import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
+import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskScreen;
+import com.teammoeg.frostedheart.content.steamenergy.HeatStatScreen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
-import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
-import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
-import com.teammoeg.frostedheart.trade.gui.TradeScreen;
+import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
+import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestRenderer;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.ManualHelper;
 import blusunrize.immersiveengineering.client.manual.ManualElementMultiblock;
@@ -67,10 +70,10 @@ import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.renderer.entity.PlayerRenderer;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.model.ModelResourceLocation;
-import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.inventory.container.PlayerContainer;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -83,7 +86,6 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.registries.ForgeRegistries;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientRegistryEvents {
@@ -112,18 +114,16 @@ public class ClientRegistryEvents {
     }
 	public static KeyBinding key_skipDialog = new KeyBinding("key.frostedheart.skip_dialog", 
 		GLFW.GLFW_KEY_Z, "key.categories.frostedheart");
-    /**
-     * @param event
-     */
+
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
         // Register screens
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorScreen::new);
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorScreen::new);
+        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), MasterGeneratorScreen<T1GeneratorTileEntity>::new);
+        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), MasterGeneratorScreen<T2GeneratorTileEntity>::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "relic_chest"), RelicChestScreen::new);
-        ClientRegistryEvents.
-                registerIEScreen(new ResourceLocation(FHMain.MODID, "draw_desk"), FTBScreenFactory(DrawDeskScreen::new));
+        registerIEScreen(new ResourceLocation(FHMain.MODID, "draw_desk"), FTBScreenFactory(DrawDeskScreen::new));
         registerFTBScreen(FHContainer.TRADE_GUI.get(), TradeScreen::new);
+        registerFTBScreen(FHContainer.HEAT_STAT.get(), HeatStatScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "sauna_vent"), SaunaScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "incubator"), IncubatorT1Screen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "heat_incubator"), IncubatorT2Screen::new);
@@ -174,7 +174,7 @@ public class ClientRegistryEvents {
         for (ResourceLocation location : event.getModelRegistry().keySet()) {
             // Now find all armors
             ResourceLocation item = new ResourceLocation(location.getNamespace(), location.getPath());
-            if (ForgeRegistries.ITEMS.getValue(item) instanceof ArmorItem) {
+            if (RegistryUtils.getItem(item) instanceof ArmorItem) {
                 ModelResourceLocation itemModelResourceLocation = new ModelResourceLocation(item, "inventory");
                 IBakedModel model = event.getModelRegistry().get(itemModelResourceLocation);
                 if (model == null) {
@@ -214,16 +214,13 @@ public class ClientRegistryEvents {
 
     @SubscribeEvent
     public static void provideTextures(final TextureStitchEvent.Pre event) {
-        if (AtlasTexture.LOCATION_BLOCKS_TEXTURE.equals(event.getMap().getTextureLocation())) {
+        if (PlayerContainer.LOCATION_BLOCKS_TEXTURE.equals(event.getMap().getTextureLocation())) {
             Minecraft.getInstance().getResourceManager().getAllResourceLocations("textures/item/module", s -> s.endsWith(".png")).stream()
                     .filter(resourceLocation -> FHMain.MODID.equals(resourceLocation.getNamespace()))
                     // 9 is the length of "textures/" & 4 is the length of ".png"
 
                     .map(rl -> new ResourceLocation(rl.getNamespace(), rl.getPath().substring(9, rl.getPath().length() - 4)))
-                    .map(rl -> {
-                        FHMain.LOGGER.info("stitching texture" + rl.toString());
-                        return rl;
-                    })
+                    .peek(rl -> FHMain.LOGGER.info("stitching texture" + rl))
                     .forEach(event::addSprite);
         }
     }
@@ -240,10 +237,6 @@ public class ClientRegistryEvents {
         ScreenManager.registerFactory(type, factory);
     }
 
-    /**
-     * @param event
-     */
-    @SuppressWarnings("resource")
     @SubscribeEvent
     public static void registerParticleFactories(ParticleFactoryRegisterEvent event) {
         Minecraft.getInstance().particles.registerFactory(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);

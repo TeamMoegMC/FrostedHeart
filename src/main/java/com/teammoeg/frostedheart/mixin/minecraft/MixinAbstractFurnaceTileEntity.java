@@ -30,7 +30,7 @@ import net.minecraft.tileentity.LockableTileEntity;
 import net.minecraft.tileentity.TileEntityType;
 /**
  * Fully diable furnace
- * 
+ * <p>
  * */
 @Mixin(AbstractFurnaceTileEntity.class)
 public abstract class MixinAbstractFurnaceTileEntity extends LockableTileEntity implements ITickableTileEntity {
@@ -48,5 +48,4 @@ public abstract class MixinAbstractFurnaceTileEntity extends LockableTileEntity 
         cbi.cancel();
     }
 
-    ;
 }

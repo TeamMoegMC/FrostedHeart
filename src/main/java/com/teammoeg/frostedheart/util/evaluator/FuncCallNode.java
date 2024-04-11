@@ -52,8 +52,8 @@ class FuncCallNode implements Node {
         if (!isDeterministic)
             return false;
         boolean isPrime = true;
-        for (int i = 0; i < nested.length; i++) {
-            isPrime &= nested[i].isPrimary();
+        for (Node node : nested) {
+            isPrime &= node.isPrimary();
         }
         return isPrime;
     }

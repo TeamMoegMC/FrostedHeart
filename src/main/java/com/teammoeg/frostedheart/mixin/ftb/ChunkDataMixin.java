@@ -42,7 +42,7 @@ public class ChunkDataMixin {
     public ChunkDataMixin() {
     }
 
-    @Inject(at = @At("HEAD"), method = "deserializeNBT", remap = false, cancellable = false)
+    @Inject(at = @At("HEAD"), method = "deserializeNBT", remap = false)
     public void fh$deserializeNBT(CompoundNBT tag, CallbackInfo cbi) {
         if (team instanceof PlayerTeam) {
             PlayerTeam pt = (PlayerTeam) team;

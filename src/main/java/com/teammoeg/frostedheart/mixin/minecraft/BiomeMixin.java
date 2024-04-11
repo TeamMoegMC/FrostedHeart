@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.mixin.minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.FlowingFluidBlock;
@@ -34,7 +34,7 @@ import net.minecraft.world.LightType;
 import net.minecraft.world.biome.Biome;
 /**
  * Freeze water when cold
- * 
+ * <p>
  * */
 @Mixin(Biome.class)
 public abstract class BiomeMixin {
@@ -52,9 +52,7 @@ public abstract class BiomeMixin {
 
                 boolean flag = worldIn.hasWater(water.west()) && worldIn.hasWater(water.east())
                         && worldIn.hasWater(water.north()) && worldIn.hasWater(water.south());
-                if (!flag) {
-                    return true;
-                }
+                return !flag;
             }
         }
 

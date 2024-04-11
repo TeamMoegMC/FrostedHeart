@@ -24,10 +24,10 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 import com.teammoeg.frostedheart.util.mixin.IMilkable;
 
@@ -131,9 +131,9 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
             }
             if (!world.isRemote) {
                 if (feeded <= 0)
-                    playerIn.sendStatusMessage(GuiUtils.translateMessage("cow.nomilk.hungry"), true);
+                    playerIn.sendStatusMessage(TranslateUtils.translateMessage("cow.nomilk.hungry"), true);
                 else
-                    playerIn.sendStatusMessage(GuiUtils.translateMessage("cow.nomilk.digest"), true);
+                    playerIn.sendStatusMessage(TranslateUtils.translateMessage("cow.nomilk.digest"), true);
             }
         }
         return super.getEntityInteractionResult(playerIn, hand);

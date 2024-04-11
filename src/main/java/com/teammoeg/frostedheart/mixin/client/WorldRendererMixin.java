@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.teammoeg.frostedheart.climate.BlizzardRenderer;
+import com.teammoeg.frostedheart.content.climate.BlizzardRenderer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
@@ -50,7 +50,6 @@ public abstract class WorldRendererMixin {
     @Shadow
     private int ticks;
 
-    @SuppressWarnings({"deprecation"})
     @Inject(method = "renderRainSnow", at = @At("HEAD"), cancellable = true)
     public void inject$renderWeather(LightTexture manager, float partialTicks, double x, double y, double z, CallbackInfo ci) {
         if (this.mc != null && this.mc.gameRenderer != null) {
