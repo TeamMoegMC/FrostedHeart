@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.town.house;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTags;
 import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
@@ -44,7 +45,7 @@ public class HouseBlockScanner extends BlockScanner {
     private int volume = 0;
     private final Map<String/*block.getName()*/, Integer> decorations = new HashMap<>();
     private double temperature = 0;//average temperature
-    private final HashSet<ColumnPos> occupiedArea = new HashSet<>();
+    private final OccupiedArea occupiedArea = new OccupiedArea();
 
     public int getArea() {
         return this.area;
@@ -62,7 +63,7 @@ public class HouseBlockScanner extends BlockScanner {
         return this.temperature;
     }
 
-    public HashSet<ColumnPos> getOccupiedArea() {
+    public OccupiedArea getOccupiedArea() {
         return this.occupiedArea;
     }
 

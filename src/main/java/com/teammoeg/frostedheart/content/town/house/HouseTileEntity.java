@@ -21,24 +21,21 @@ package com.teammoeg.frostedheart.content.town.house;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.base.scheduler.ScheduledTaskTileEntity;
-import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
-import com.teammoeg.frostedheart.content.town.TownTileEntity;
+import com.teammoeg.frostedheart.content.town.OccupiedArea;
+import com.teammoeg.frostedheart.content.town.TownBuildingCoreBlockTileEntity;
+import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.LongNBT;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ColumnPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
@@ -46,7 +43,6 @@ import javax.annotation.Nonnull;
 import java.util.*;
 
 import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHouseBlock;
-import static net.minecraftforge.common.util.Constants.NBT.TAG_LONG;
 
 
 /**
@@ -59,17 +55,14 @@ import static net.minecraftforge.common.util.Constants.NBT.TAG_LONG;
  * - Check if the house structure is valid
  * - Compute comfort rating based on the house structure
  */
-public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity, ITickableTileEntity,
-        FHBlockInterfaces.IActiveState, ScheduledTaskTileEntity {
+public class HouseTileEntity extends TownBuildingCoreBlockTileEntity{
 
     /** The temperature at which the house is comfortable. */
     public static final double COMFORTABLE_TEMP_HOUSE = 24;
     public static final int MAX_TEMP_HOUSE = 50;
     public static final int MIN_TEMP_HOUSE = 0;
-    public static final String TAG_NAME_OCCUPIED_AREA = "occupiedArea";
 
     /** Work data, stored in town. */
-    private byte isValid = -1;
     private int maxResident = -1; // how many resident can live here
     public List<Resident> residents = new ArrayList<>();
     private int volume = -1;
@@ -78,9 +71,7 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
     private double temperature = -1;
     private Map<String, Integer> decorations = new HashMap<>();
     private double rating = -1;
-    private Set<ColumnPos> occupiedArea;
     private double temperatureModifier = 0;
-    private boolean addedToSchedulerQueue = false;
 
     /** Tile data, stored in tile entity. */
     HeatConsumerEndpoint endpoint = new HeatConsumerEndpoint(99,10,1);
@@ -108,38 +99,22 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
      * Room structure should be valid.
      * Temperature should be within a reasonable range.
      */
-    @Override
-    public boolean isWorkValid() {
-        if(this.isValid == -1) this.refresh();
-        return this.isValid == 1;
-    }
-
     public void refresh(){
-        this.isValid = isStructureValid() && isStructureValid() ? (byte) 1 : (byte) 0;
+        if(this.isOccupiedAreaOverlapped()){
+            this.isStructureValid();
+            this.isTemperatureValid();
+        } else{
+            this.workerState = this.isStructureValid() && this.isTemperatureValid() ? TownWorkerState.VALID : TownWorkerState.NOT_VALID;
+            this.rating = this.computeRating();
+            this.maxResident = this.calculateMaxResidents();
+        }
     }
 
-    public static ListNBT serializeOccupiedArea(Set<ColumnPos> occupiedArea) {
-        ListNBT list = new ListNBT();
-        for (ColumnPos pos : occupiedArea) {
-            long posLong = BlockPos.pack(pos.x, 0, pos.z);
-            list.add(LongNBT.valueOf(posLong));
-        }
-        return list;
-    }
-    public static Set<ColumnPos> deserializeOccupiedArea(CompoundNBT data) {
-        Set<ColumnPos> occupiedArea = new HashSet<>();
-        ListNBT list = data.getList(TAG_NAME_OCCUPIED_AREA, TAG_LONG);
-        list.forEach(nbt -> {
-            occupiedArea.add(new ColumnPos(BlockPos.unpackX(((LongNBT) nbt).getLong()), BlockPos.unpackZ(((LongNBT) nbt).getLong())));
-        });
-        return occupiedArea;
-    }
 
     @Override
     public CompoundNBT getWorkData() {
-        CompoundNBT data = new CompoundNBT();
-        data.putByte("isValid", isValid);
-        if(this.isValid == 1) {
+        CompoundNBT data = getBasicWorkData();
+        if(this.isValid()) {
             ListNBT residentList = new ListNBT();
             for (Resident resident : residents) {
                 residentList.add(resident.serialize());
@@ -152,15 +127,14 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
             //data.putInt("decoration", decoration);
             data.putDouble("rating", rating);
             data.putDouble("temperatureModifier", temperatureModifier);
-            data.put(TAG_NAME_OCCUPIED_AREA, serializeOccupiedArea(occupiedArea));
         }
         return data;
     }
 
     @Override
     public void setWorkData(CompoundNBT data) {
-        isValid = data.getByte("isValid");
-        if(isValid == 1) {
+        setBasicWorkData(data);
+        if(this.isValid()) {
             residents = new ArrayList<>();
             ListNBT residentList = data.getList("residents", 10);
             for (int i = 0; i < residentList.size(); i++) {
@@ -173,12 +147,11 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
             //decoration = data.getInt("decoration");
             rating = data.getDouble("rating");
             temperatureModifier = data.getDouble("temperatureModifier");
-            occupiedArea = deserializeOccupiedArea(data);
         }
     }
 
     @Override
-    public Collection<ColumnPos> getOccupiedArea() {
+    public OccupiedArea getOccupiedArea() {
         this.isWorkValid();
         return this.occupiedArea;
     }
@@ -282,8 +255,11 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
      * @return a rating in range of zero to one
      */
     private double computeRating() {
-        return (calculateSpaceRating(this.volume, this.area) * (1+calculateDecorationRating(this.decorations, this.area))
-                + calculateTemperatureRating(this.temperature + this.temperatureModifier)) / 3;
+        if(this.isValid()){
+            return (calculateSpaceRating(this.volume, this.area) * (1+calculateDecorationRating(this.decorations, this.area))
+                    + calculateTemperatureRating(this.temperature + this.temperatureModifier)) / 3;
+        }
+        else return 0;
     }
     public static double calculateTemperatureRating(double temperature) {
         double tempDiff = Math.abs(COMFORTABLE_TEMP_HOUSE - temperature);
@@ -307,6 +283,12 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
         double score = area * (1.55 + Math.log(height - 1.6) * 0.6);
         return 1 - Math.exp(-0.024 * Math.pow(score, 1.11));
     }
+    private int calculateMaxResidents() {
+        if(this.isValid()){
+            return (int) (calculateSpaceRating(this.volume, this.area) / 16 * this.area);
+        }
+        else return 0;
+    }
 
     @Override
     public void tick() {
@@ -326,10 +308,7 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
         } else if (getIsActive()) {
             ClientUtils.spawnSteamParticles(world, pos);
         }
-        if(!this.addedToSchedulerQueue){
-            SchedulerQueue.add(this);
-            this.addedToSchedulerQueue = true;
-        }
+        this.addToSchedulerQueue();
     }
 
     @Override
@@ -349,15 +328,5 @@ public class HouseTileEntity extends FHBaseTileEntity implements TownTileEntity,
             return endpointCap.cast();
         }
         return super.getCapability(capability, facing);
-    }
-
-    // ScheduledTaskTileEntity
-    @Override
-    public void executeTask() {
-        this.refresh();
-    }
-    @Override
-    public boolean isStillValid() {
-        return this.isWorkValid();
     }
 }

@@ -74,5 +74,17 @@ public interface TownTileEntity {
      * Occupied area should be counted when scanning the structure.
      * @return the occupied area of the entire structure.
      */
-    Collection<ColumnPos> getOccupiedArea();
+    OccupiedArea getOccupiedArea();
+
+    /**
+     * Set the worker state.
+     * see TownBuildingCoreBlockTileEntity.workerState
+     * @param state
+     */
+    void setWorkerState(TownWorkerState state);
+
+    /**
+     * Get the worker state.
+     */
+    TownWorkerState getWorkerState();
 }

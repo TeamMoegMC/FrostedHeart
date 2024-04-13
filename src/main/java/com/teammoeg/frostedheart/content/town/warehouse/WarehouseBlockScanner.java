@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.town.warehouse;
 
+import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import net.minecraft.util.math.BlockPos;
@@ -17,7 +18,7 @@ public class WarehouseBlockScanner extends FloorBlockScanner {
     private int volume = 0;
     private int area = 0;
     private static final int MAX_SCANNING_TIMES = 512;
-    public Set<ColumnPos> occupiedArea = new HashSet<>();
+    private final OccupiedArea occupiedArea = new OccupiedArea();
 
     public WarehouseBlockScanner(World world, BlockPos startPos) {
         super(world, startPos);
@@ -25,6 +26,7 @@ public class WarehouseBlockScanner extends FloorBlockScanner {
 
     public int getVolume(){return this.volume;}
     public int getArea(){return this.area;}
+    public OccupiedArea getOccupiedArea(){return this.occupiedArea;}
 
     @Override
     public boolean isValidFloor(BlockPos pos){

@@ -3,34 +3,23 @@ package com.teammoeg.frostedheart.content.town.mine;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.base.scheduler.ScheduledTaskTileEntity;
 import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
-import com.teammoeg.frostedheart.content.town.ChunkTownResourceCapability;
-import com.teammoeg.frostedheart.content.town.TownResourceType;
-import com.teammoeg.frostedheart.content.town.TownTileEntity;
-import com.teammoeg.frostedheart.content.town.TownWorkerType;
+import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ColumnPos;
 import net.minecraftforge.common.util.Constants;
 
 import java.util.*;
 import java.util.stream.Stream;
 
-public class MineTileEntity extends FHBaseTileEntity implements TownTileEntity, ITickableTileEntity,
-        FHBlockInterfaces.IActiveState, ScheduledTaskTileEntity {
+public class MineTileEntity extends TownBuildingCoreBlockTileEntity{
     private int avgLightLevel;
     private int validStoneOrOre;
     private boolean hasLinkedBase = false;
     private BlockPos linkedBasePos;
     private double linkedBaseRating = 0;
-    private Set<ColumnPos> occupiedArea;
-    private byte isValid = -1;
     private Map<TownResourceType, Double> resources;
     private double temperature;
     private double rating;
@@ -43,10 +32,10 @@ public class MineTileEntity extends FHBaseTileEntity implements TownTileEntity, 
     public boolean isStructureValid(){
         MineBlockScanner scanner = new MineBlockScanner(world, this.getPos().up());
         if(scanner.scan()){
-            this.avgLightLevel = scanner.light;
-            this.validStoneOrOre = scanner.validStone;
-            this.occupiedArea = scanner.occupiedArea;
-            this.temperature = scanner.temperature;
+            this.avgLightLevel = scanner.getLight();
+            this.validStoneOrOre = scanner.getValidStone();
+            this.occupiedArea = scanner.getOccupiedArea();
+            this.temperature = scanner.getTemperature();
             return validStoneOrOre > 0;
         }
         return false;
@@ -96,21 +85,14 @@ public class MineTileEntity extends FHBaseTileEntity implements TownTileEntity, 
     }
 
     @Override
-    public boolean isWorkValid() {
-        if(this.isValid == -1) this.refresh();
-        return this.isValid == 1;
-    }
-
-    @Override
     public CompoundNBT getWorkData() {
-        CompoundNBT nbt = new CompoundNBT();
-        nbt.putByte("isValid", this.isValid);
+        CompoundNBT nbt = getBasicWorkData();
         nbt.putBoolean("hasLinkedBase", this.hasLinkedBase);
         if(this.hasLinkedBase){
             nbt.putLong("linkedBasePos", this.linkedBasePos.toLong());
             nbt.putDouble("linkedBaseRating", this.linkedBaseRating);
         }
-        if(this.isValid == 1){
+        if(this.isValid()){
             nbt.putDouble("temperature", this.temperature);
             nbt.putDouble("rating", this.rating);
             ListNBT list = new ListNBT();
@@ -127,14 +109,14 @@ public class MineTileEntity extends FHBaseTileEntity implements TownTileEntity, 
 
     @Override
     public void setWorkData(CompoundNBT data) {
-        this.isValid = data.getByte("isValid");
+        this.setBasicWorkData(data);
         this.hasLinkedBase = data.getBoolean("hasLinkedBase");
         if(this.hasLinkedBase){
             this.linkedBasePos = BlockPos.fromLong(data.getLong("linkedBasePos"));
             this.linkedBaseRating = data.getDouble("linkedBaseRating");
         }
 
-        if(this.isValid == 1){
+        if(this.isValid()){
             this.rating = data.getDouble("rating");
             ListNBT list = data.getList("resources", Constants.NBT.TAG_COMPOUND);
             this.resources = new EnumMap<>(TownResourceType.class);
@@ -147,14 +129,14 @@ public class MineTileEntity extends FHBaseTileEntity implements TownTileEntity, 
         }
     }
 
-    @Override
-    public Collection<ColumnPos> getOccupiedArea() {
-        return this.occupiedArea;
-    }
 
     public void refresh() {
-        this.isValid = (byte) (this.isStructureValid() ? 1 : 0);
-        if(this.isValid == 1) {
+        if(this.isOccupiedAreaOverlapped()){
+            this.isStructureValid();
+            return;
+        }
+        this.workerState = isStructureValid() ? TownWorkerState.VALID : TownWorkerState.NOT_VALID;
+        if(this.isValid()) {
             assert this.world != null;
             if (this.resources == null || this.resources.isEmpty()) {
                 ChunkTownResourceCapability capability = FHCapabilities.CHUNK_TOWN_RESOURCE.getCapability(this.world.getChunk(pos)).orElseGet(ChunkTownResourceCapability::new);
@@ -196,16 +178,5 @@ public class MineTileEntity extends FHBaseTileEntity implements TownTileEntity, 
     @Override
     public void writeCustomNBT(CompoundNBT compoundNBT, boolean b) {
 
-    }
-
-    // ScheduledTaskTileEntity
-    @Override
-    public void executeTask() {
-        this.refresh();
-        System.out.println("MineTileEntity executeTask");
-    }
-    @Override
-    public boolean isStillValid() {
-        return this.isWorkValid();
     }
 }

@@ -357,14 +357,15 @@ public class BlockScanner {
                 return false;
             }
             scannedBlocks.addAll(scanningBlocks);
-            scanningBlocksNew = new HashSet<>();
+            scanningBlocksNew.clear();
             for(BlockPos scanningBlock : scanningBlocks){
                 if(stopAt.test(scanningBlock) || !this.isValid) return false;
                 operation.accept(scanningBlock);
                 scanTimes++;
                 scanningBlocksNew.addAll(nextScanningBlocks.apply(scanningBlock));
             }
-            scanningBlocks = scanningBlocksNew;
+            scanningBlocks.clear();
+            scanningBlocks.addAll(scanningBlocksNew);
         }
         return this.isValid;
     }

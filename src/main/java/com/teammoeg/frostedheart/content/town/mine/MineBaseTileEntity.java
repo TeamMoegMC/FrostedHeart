@@ -2,11 +2,10 @@ package com.teammoeg.frostedheart.content.town.mine;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.scheduler.ScheduledTaskTileEntity;
-import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
-import com.teammoeg.frostedheart.content.town.TownTileEntity;
+import com.teammoeg.frostedheart.content.town.TownBuildingCoreBlockTileEntity;
+import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
@@ -15,32 +14,25 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.LongNBT;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ColumnPos;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import static com.teammoeg.frostedheart.content.town.house.HouseTileEntity.*;
 import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHouseBlock;
 import static java.lang.Math.exp;
 import static net.minecraftforge.common.util.Constants.NBT.TAG_LONG;
 
-public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEntity, ITickableTileEntity,
-        FHBlockInterfaces.IActiveState, ScheduledTaskTileEntity {
+public class MineBaseTileEntity extends TownBuildingCoreBlockTileEntity {
     public Set<BlockPos> linkedMines = new HashSet<>();
     private int volume;
     private int area;
     private int rack;
     private int chest;
-    public Set<ColumnPos> occupiedArea = new HashSet<>();
     private double temperature;
     private double rating;
-    private byte isValid = -1;//-1:not init;0:false;1:true
     private boolean addedToSchedulerQueue = false;
 
     public MineBaseTileEntity(){
@@ -65,12 +57,12 @@ public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEnti
             FHMain.LOGGER.info("New scanner created; Start pos: " + startPos);
             if(scanner.scan()){
                 FHMain.LOGGER.info("scan successful");
-                this.area = scanner.area;
-                this.volume = scanner.volume;
-                this.rack = scanner.rack;
-                this.chest = scanner.chest;
-                this.linkedMines = scanner.linkedMines;
-                this.occupiedArea = scanner.occupiedArea;
+                this.area = scanner.getArea();
+                this.volume = scanner.getVolume();
+                this.rack = scanner.getRack();
+                this.chest = scanner.getChest();
+                this.linkedMines = scanner.getLinkedMines();
+                this.occupiedArea = scanner.getOccupiedArea();
                 this.temperature = scanner.getTemperature();
                 return true;
             }
@@ -106,17 +98,11 @@ public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEnti
         return null;
     }
 
-    @Override
-    public boolean isWorkValid() {
-        if(this.isValid == -1) this.refresh();
-        return this.isValid == 1;
-    }
 
     @Override
     public CompoundNBT getWorkData() {
-        CompoundNBT nbt = new CompoundNBT();
-        nbt.putByte("isValid", this.isValid);
-        if(this.isValid == 1) {
+        CompoundNBT nbt = getBasicWorkData();
+        if(this.isValid()) {
             nbt.putInt("volume", this.volume);
             nbt.putInt("area", this.area);
             nbt.putInt("rack", this.rack);
@@ -128,15 +114,14 @@ public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEnti
             nbt.put("linkedMines", list);
             nbt.putDouble("temperature", this.temperature);
             nbt.putDouble("rating", this.rating);
-            nbt.put(TAG_NAME_OCCUPIED_AREA, serializeOccupiedArea(this.occupiedArea));
         }
         return nbt;
     }
 
     @Override
     public void setWorkData(CompoundNBT data) {
-        this.isValid = data.getByte("isValid");
-        if(isValid == 1) {
+        setBasicWorkData(data);
+        if(this.isValid()) {
             this.volume = data.getInt("volume");
             this.area = data.getInt("area");
             this.rack = data.getInt("rack");
@@ -146,15 +131,9 @@ public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEnti
             list.forEach(nbt->{
                 this.linkedMines.add( BlockPos.fromLong( ((LongNBT)nbt).getLong() ));
             });
-            this.occupiedArea = deserializeOccupiedArea(data);
         }
     }
 
-    @Override
-    public Collection<ColumnPos> getOccupiedArea() {
-        this.isWorkValid();
-        return this.occupiedArea;
-    }
     public double getRating(){
         if(isWorkValid()) {
             if (this.rating == 0) return this.computeRating();
@@ -194,15 +173,11 @@ public class MineBaseTileEntity extends FHBaseTileEntity implements TownTileEnti
 
 
     public void refresh() {
-        this.isValid = (byte)(this.isStructureValid()?1:0);
-    }
-
-    @Override
-    public void tick() {
-        if(!this.addedToSchedulerQueue){
-            SchedulerQueue.add(this);
-            this.addedToSchedulerQueue = true;
+        if(this.isOccupiedAreaOverlapped()){
+            this.isStructureValid();
+            return;
         }
+        this.workerState = isStructureValid() ? TownWorkerState.VALID : TownWorkerState.NOT_VALID;
     }
 
     // ScheduledTaskTileEntity
