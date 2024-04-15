@@ -36,16 +36,16 @@ public class TipElement implements Cloneable {
     public TipElement(String ID) {
         File filePath = new File(TipHandler.CONFIG_PATH, ID + ".json");
 
-        LOGGER.debug("Loading tip '" + ID);
+        LOGGER.debug("Loading tip '{}", ID);
         this.ID = ID;
         readFromJsonFile(filePath);
     }
 
     public void readFromJsonFile(File filePath) {
         if (!filePath.exists()) {
-            LOGGER.error("File does not exists '" + filePath + "'");
+            LOGGER.error("File does not exists '{}'", filePath);
             replaceToError(filePath, "not_exists");
-            contents.add(new TranslationTextComponent("tip." + FHMain.MODID + ".error.desc"));
+            contents.add(new TranslationTextComponent("tips." + FHMain.MODID + ".error.desc"));
             return;
         }
 
@@ -78,7 +78,7 @@ public class TipElement implements Cloneable {
         } catch (JsonSyntaxException e) {
             LOGGER.error("Invalid JSON file format '" + filePath + "'");
             replaceToError(filePath, "invalid");
-            contents.add(new TranslationTextComponent("tip." + FHMain.MODID + ".error.desc"));
+            contents.add(new TranslationTextComponent("tips." + FHMain.MODID + ".error.desc"));
         } catch (Exception e) {
             LOGGER.error("Unable to load file '" + filePath + "'");
             replaceToError(filePath, "load");

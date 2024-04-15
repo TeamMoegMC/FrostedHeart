@@ -24,7 +24,7 @@ public class DisplayTipPacket implements FHMessage {
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> TipHandler.addToRenderQueue(ID, false));
+        context.get().enqueueWork(() -> TipHandler.displayTip(ID, false));
         context.get().setPacketHandled(true);
     }
 }

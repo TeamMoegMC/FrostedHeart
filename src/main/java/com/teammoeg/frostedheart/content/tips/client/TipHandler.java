@@ -3,17 +3,20 @@ package com.teammoeg.frostedheart.content.tips.client;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.*;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.tips.client.util.AnimationUtil;
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLPaths;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -34,11 +37,11 @@ public class TipHandler {
     private static List<String> unlockedTipsHidden = new ArrayList<>();
     public static boolean readError = false;
 
-    public static void addToRenderQueue(String ID, boolean first) {
-        addToRenderQueue(getTipEle(ID), first);
+    public static void displayTip(String ID, boolean first) {
+        displayTip(getTipEle(ID), first);
     }
 
-    public static void addToRenderQueue(TipElement element, boolean first) {
+    public static void displayTip(TipElement element, boolean first) {
         if (element.ID.isEmpty()) return;
         if (element.onceOnly && TipHandler.isUnlocked(element.ID)) return;
 
@@ -60,6 +63,12 @@ public class TipHandler {
     }
 
     public static void forceAdd(String ID, boolean first) {
+        for (TipElement ele : RenderHUD.renderQueue) {
+            if (ele.ID.equals(ID)) {
+                return;
+            }
+        }
+
         if (first) {
             RenderHUD.renderQueue.add(0, getTipEle(ID));
         } else {
@@ -108,7 +117,7 @@ public class TipHandler {
 
     public static boolean isUnlocked(String ID) {
         if (unlockedTipFile == null) {
-            if (!loadUnlockedFromFile()) {
+            if (!loadUnlocked()) {
                 return false;
             }
         }
@@ -128,97 +137,104 @@ public class TipHandler {
     }
 
     public static List<String> getVisibleUnlocked() {
+        checkUnlocked();
         return new ArrayList<>(unlockedTips);
     }
 
     public static List<String> getHiddenUnlocked() {
+        checkUnlocked();
         return new ArrayList<>(unlockedTipsHidden);
     }
 
-    public static boolean loadUnlockedFromFile() {
+    public static boolean loadUnlocked() {
         if (!UNLOCKED_FILEPATH.exists()) {
             if (CONFIG_PATH.mkdirs()) {
-                LOGGER.info("Path: '" + CONFIG_PATH + "' created");
+                LOGGER.info("Path: '{}' created", CONFIG_PATH);
             }
-            return resetUnlockedFile();
+            return resetUnlocked();
         }
 
         LOGGER.debug("Loading unlocked tips");
         try {
+            Type type = new TypeToken<List<String>>() {}.getType();
             String content = new String(Files.readAllBytes(Paths.get(String.valueOf(UNLOCKED_FILEPATH))));
             unlockedTipFile = GSON.fromJson(content, JsonElement.class).getAsJsonObject();
-            unlockedTips = GSON.fromJson(unlockedTipFile.getAsJsonArray("visible"), new TypeToken<List<String>>() {}.getType());
-            unlockedTipsHidden = GSON.fromJson(unlockedTipFile.getAsJsonArray("hide"), new TypeToken<List<String>>() {}.getType());
+            unlockedTips = GSON.fromJson(unlockedTipFile.getAsJsonArray("visible"), type);
+            unlockedTipsHidden = GSON.fromJson(unlockedTipFile.getAsJsonArray("hide"), type);
 
             if (unlockedTips == null || unlockedTipsHidden == null) {
-                resetUnlockedFile();
-                return loadUnlockedFromFile();
+                resetUnlocked();
+                return loadUnlocked();
             }
             return true;
 
-        } catch (IllegalStateException | JsonSyntaxException e) {
-            return resetUnlockedFile();
+        } catch (IllegalStateException | JsonSyntaxException | NullPointerException e) {
+            e.printStackTrace();
+            return resetUnlocked();
 
         } catch (IOException e) {
-            LOGGER.error("Unable to load file: '" + UNLOCKED_FILEPATH + "'");
+            LOGGER.error("Unable to load file: '{}'", UNLOCKED_FILEPATH);
             readError = true;
             return false;
         }
     }
 
-    public static void saveUnlockedToFile() {
-        if (unlockedTipFile == null || unlockedTipFile.size() == 0) {
+    public static void saveUnlocked() {
+        if (unlockedTipFile.size() == 0 || !checkUnlocked()) {
             return;
         }
 
         LOGGER.debug("Saving unlocked tips");
-        try(FileWriter writer = new FileWriter(UNLOCKED_FILEPATH)) {
+        try {
             String content = GSON.toJson(unlockedTipFile);
-            writer.write(content);
-            LOGGER.debug("Unlocked tips saved");
+            FileUtils.writeStringToFile(UNLOCKED_FILEPATH, content, "UTF-8");
 
         } catch (IOException e) {
-            LOGGER.error("Unable to save file: '" + UNLOCKED_FILEPATH + "'");
+            LOGGER.error("Unable to save file: '{}'", UNLOCKED_FILEPATH);
 
             TipElement ele = new TipElement();
             ele.replaceToError(UNLOCKED_FILEPATH, "save");
             ele.contents.add(new TranslationTextComponent("tips." + FHMain.MODID + ".error.save_desc"));
 
-            addToRenderQueue(ele, true);
+            displayTip(ele, true);
         }
     }
 
-    public static boolean resetUnlockedFile() {
-        try(FileWriter writer = new FileWriter(UNLOCKED_FILEPATH)) {
+    public static boolean checkUnlocked() {
+        if (unlockedTipFile == null) {
+            return loadUnlocked();
+        } else {
+            return true;
+        }
+    }
+
+    public static boolean resetUnlocked() {
+        try {
             if (UNLOCKED_FILEPATH.exists()) {
                 int bak = 1;
-                File newName = new File(CONFIG_PATH, "unlocked_tips.backup" + bak + ".json");
-                while (newName.exists() && bak++ <= 4) {
-                    newName = new File(CONFIG_PATH, "unlocked_tips.backup" + bak + ".json");
+                File newPath = new File(CONFIG_PATH, "unlocked_tips.backup" + bak + ".json");
+                while (newPath.exists()) {
+                    bak++;
+                    newPath = new File(CONFIG_PATH, "unlocked_tips.backup" + bak + ".json");
                 }
-                LOGGER.warn("File corrupted, trying to recreate file: '" + UNLOCKED_FILEPATH);
-                if (UNLOCKED_FILEPATH.renameTo(newName)) {
-                    LOGGER.warn("Old file has been renamed to '" + newName + "'");
-                }
-            }
 
-            writer.write("{\"visible\":[],\"hide\": []}");
+                LOGGER.warn("File corrupted, trying to recreate file: '{}'", UNLOCKED_FILEPATH);
+                FileUtils.moveFile(UNLOCKED_FILEPATH, newPath);
+                LOGGER.warn("Old file has been renamed to '{}'", newPath.getName());
+            }
+            FileUtils.writeStringToFile(UNLOCKED_FILEPATH, "{\"visible\":[],\"hide\": []}", "UTF-8");
             return true;
 
         } catch (IOException e) {
-            LOGGER.error("Unable to create file: '" + UNLOCKED_FILEPATH + "'");
+            LOGGER.error("Unable to create file: '{}'", UNLOCKED_FILEPATH);
             readError = true;
             return false;
         }
     }
 
     public static void unlock(String ID, boolean hide) {
-        if (ID.isEmpty() || TipHandler.isUnlocked(ID)) {
+        if (ID.isEmpty() || TipHandler.isUnlocked(ID) || !checkUnlocked()) {
             return;
-        } else if (unlockedTipFile == null) {
-            if (!loadUnlockedFromFile()) {
-                return;
-            }
         }
 
         JsonArray visible = unlockedTipFile.getAsJsonArray("visible");
@@ -235,10 +251,14 @@ public class TipHandler {
         newObj.add("visible", visible);
         newObj.add("hide", hidden);
         unlockedTipFile = newObj;
-        saveUnlockedToFile();
+        saveUnlocked();
     }
 
     public static void removeUnlocked(String ID) {
+        if (ID.isEmpty() || TipHandler.isUnlocked(ID) || !checkUnlocked()) {
+            return;
+        }
+
         JsonArray visible = unlockedTipFile.getAsJsonArray("visible");
         JsonArray hidden = unlockedTipFile.getAsJsonArray("hide");
 
@@ -268,7 +288,7 @@ public class TipHandler {
         newObj.add("visible", visible);
         newObj.add("hide", hidden);
         unlockedTipFile = newObj;
-        saveUnlockedToFile();
+        saveUnlocked();
     }
 
     public static void resetTipAnimation() {
@@ -285,5 +305,9 @@ public class TipHandler {
 
     public static void clearCache() {
         CACHE.clear();
+    }
+
+    public static void openDebugScreen() {
+        Minecraft.getInstance().displayGuiScreen(new DebugScreen());
     }
 }

@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.tips.client;
 
+import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.tips.client.gui.EmptyScreen;
 import com.teammoeg.frostedheart.content.tips.client.gui.TipListScreen;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
@@ -31,8 +32,10 @@ public class RenderHUD {
             return;
         }
 
-        if (mc.currentScreen != null) {
-            if (!(mc.currentScreen instanceof ChatScreen) && !(mc.currentScreen instanceof EmptyScreen)) {
+        Screen current = mc.currentScreen;
+        if (current != null) {
+            if (!(current instanceof ChatScreen) && !(current instanceof EmptyScreen) && !(current instanceof DebugScreen)) {
+
                 return;
             }
         }
@@ -42,13 +45,13 @@ public class RenderHUD {
         }
 
         if (!currentTip.visible) {
-            if (renderQueue.size() <= 1 && mc.currentScreen instanceof EmptyScreen) {
+            if (renderQueue.size() <= 1 && current instanceof EmptyScreen) {
                 mc.popGuiLayer();
             }
             TipHandler.removeCurrent();
             return;
 
-        } else if (!InputMappings.isKeyDown(mc.getMainWindow().getHandle(), 258) && mc.currentScreen instanceof EmptyScreen) {
+        } else if (!InputMappings.isKeyDown(mc.getMainWindow().getHandle(), 258) && current instanceof EmptyScreen) {
             mc.popGuiLayer();
         }
 
@@ -66,7 +69,12 @@ public class RenderHUD {
             }
         }
 
-        if (renderQueue.isEmpty() || gui instanceof ChatScreen || gui instanceof EmptyScreen || gui instanceof TipListScreen) {
+        if (renderQueue.isEmpty() ||
+                gui instanceof ChatScreen ||
+                gui instanceof EmptyScreen ||
+                gui instanceof TipListScreen ||
+                gui instanceof DebugScreen) {
+
             return;
         }
 

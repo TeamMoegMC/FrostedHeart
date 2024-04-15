@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.content.research.blocks.FHBasePen;
 import com.teammoeg.frostedheart.content.research.blocks.FHReusablePen;
 import com.teammoeg.frostedheart.content.research.blocks.RubbingTool;
 import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
+import com.teammoeg.frostedheart.content.tips.DebugItem;
 import com.teammoeg.frostedheart.content.utility.CeramicBucket;
 import com.teammoeg.frostedheart.content.utility.GeneratorUpgraderI;
 import com.teammoeg.frostedheart.content.utility.MushroomBed;
@@ -66,6 +67,8 @@ public class FHItems {
     public static String[] colors = new String[]{"black", "blue", "brown", "cyan", "gray", "green", "light_blue", "light_gray", "lime", "magenta", "orange", "pink", "purple", "red", "white", "yellow"};
 
     public static RegistryObject<Item> hand_stove = register("hand_stove",n->new CoalHandStove( createProps().defaultMaxDamage(10)));
+
+    public static RegistryObject<Item> debug_item = register("debug_item",n->new DebugItem( createProps()));
 
     public static RegistryObject<Item> coal_stick = register("coal_stick",n->new FHBaseItem( createProps()));
 

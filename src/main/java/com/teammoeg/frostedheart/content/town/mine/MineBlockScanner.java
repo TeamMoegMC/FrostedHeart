@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.town.mine;
 
+import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
@@ -19,6 +20,8 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
     private final int startZ;
     public int validStone = 0;
     public int light = 0;
+    public double temperature = 0;
+    private int volume = 0;//used to calculate temperature
     public Set<ColumnPos> occupiedArea = new HashSet<>();
     public MineBlockScanner(World world, BlockPos startPos) {
         super(world, startPos);
@@ -34,7 +37,7 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
 
     @Override
     protected boolean isValidAir(BlockPos pos){
-        return Math.abs(pos.getZ()-startZ) < 6 && Math.abs(pos.getX()-startX) < 6 && Math.abs(pos.getY()-startY) < 4 && isAir(world.getBlockState(pos));
+        return Math.abs(pos.getZ()-startZ) < 6 && Math.abs(pos.getX()-startX) < 6 && Math.abs(pos.getY()-startY) < 5 && isAir(world.getBlockState(pos));
     }
 
     @Override
@@ -53,7 +56,10 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
     }
 
     public boolean scan(){
-        this.scan(512, CONSUMER_NULL, (pos)->{
+        this.scan(512, (pos)->{
+            this.volume++;
+            this.temperature += ChunkHeatData.getTemperature(world, pos);
+        }, (pos)->{
             if(isStoneOrOre(world, pos)){
                 validStone++;
                 occupiedArea.add(toColumnPos(pos));
@@ -64,10 +70,8 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
             this.isValid = false;
             return false;
         }
-        light = light * 7 / validStone;
-        return this.isValid;
+        light = light * 7 / validStone;//单个光源亮度约为14-15，乘7后约为100.
+        temperature = temperature / volume;
+        return this.isValid && validStone > 5;
     }
-
-
-
 }

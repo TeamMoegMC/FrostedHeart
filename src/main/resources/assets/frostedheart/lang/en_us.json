@@ -461,8 +461,11 @@
   "tips.frostedheart.error.desc": "Please verify whether the Modpack has been installed successfully or report this issue",
   "tips.frostedheart.too_long": "This tip appears excessively long, please review the list of unlocked tips",
 
-  "tips.frostedheart.gui.close": "Close",
-  "tips.frostedheart.gui.pin": "Pinned to the right HUD",
+  "frostedheart.tips.gui.close": "Close",
+  "frostedheart.tips.gui.pin": "Pinned to the right HUD",
+  "frostedheart.tips.gui.clear_cache": "Clear tip cache (Read from the file again)",
+  "frostedheart.tips.gui.clear_queue": "Clear tip render queue",
+  "frostedheart.tips.gui.reset_unlock": "Reset unlocked tip",
 
   "tips.frostedheart.empty.title": "Oops, there's nothing here",
 

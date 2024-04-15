@@ -427,8 +427,11 @@
   "tips.frostedheart.error.desc": "请检查整合包是否安装成功或反馈这个bug",
   "tips.frostedheart.too_long": "这条提示好像有些太长了，请查看已解锁的提示列表",
 
-  "tips.frostedheart.gui.close": "关闭",
-  "tips.frostedheart.gui.pin": "固定到右侧HUD",
+  "frostedheart.tips.gui.close": "关闭",
+  "frostedheart.tips.gui.pin": "固定到右侧HUD",
+  "frostedheart.tips.gui.clear_cache": "清空提示缓存 (重新从文件读取)",
+  "frostedheart.tips.gui.clear_queue": "清空提示显示队列",
+  "frostedheart.tips.gui.reset_unlock": "重置已解锁的提示",
 
   "tips.frostedheart.empty.title": "哇，这里什么都没有",
 

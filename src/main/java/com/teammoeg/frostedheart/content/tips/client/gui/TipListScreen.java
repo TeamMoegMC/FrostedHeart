@@ -42,10 +42,10 @@ public class TipListScreen extends Screen {
     public void init() {
         minecraft.keyboardListener.enableRepeatEvents(true);
 
-        this.addButton(new IconButton(0, 0, IconButton.ICON_CROSS, 0xFFC6FCFF, new TranslationTextComponent("tips." + FHMain.MODID + ".gui.close"), (button) -> {
+        this.addButton(new IconButton(0, 0, IconButton.ICON_CROSS, 0xFFC6FCFF, new TranslationTextComponent(FHMain.MODID + ".tips.gui.close"), (button) -> {
             closeScreen();
         }));
-        this.addButton(new IconButton(0, 0, IconButton.ICON_LOCK, 0xFFC6FCFF, new TranslationTextComponent("tips." + FHMain.MODID + ".gui.pin"), (button) -> {
+        this.addButton(new IconButton(0, 0, IconButton.ICON_LOCK, 0xFFC6FCFF, new TranslationTextComponent(FHMain.MODID + ".tips.gui.pin"), (button) -> {
             TipHandler.forceAdd(select, true);
         }));
 
