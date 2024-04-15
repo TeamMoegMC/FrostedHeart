@@ -6,6 +6,7 @@ import com.teammoeg.frostedheart.content.tips.client.gui.TipListScreen;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.client.hud.TipHUD;
 import com.teammoeg.frostedheart.content.tips.client.util.GuiUtil;
+import com.teammoeg.frostedheart.content.tips.client.util.TipDisplayUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.gui.screen.IngameMenuScreen;
@@ -48,7 +49,7 @@ public class RenderHUD {
             if (renderQueue.size() <= 1 && current instanceof EmptyScreen) {
                 mc.popGuiLayer();
             }
-            TipHandler.removeCurrent();
+            TipDisplayUtil.removeCurrent();
             return;
 
         } else if (!InputMappings.isKeyDown(mc.getMainWindow().getHandle(), 258) && current instanceof EmptyScreen) {
@@ -83,7 +84,7 @@ public class RenderHUD {
         }
 
         if (!currentTip.visible) {
-            TipHandler.removeCurrent();
+            TipDisplayUtil.removeCurrent();
             return;
         }
 

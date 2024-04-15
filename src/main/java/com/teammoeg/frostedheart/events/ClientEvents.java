@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
-import com.teammoeg.frostedheart.content.tips.client.TipHandler;
+import com.teammoeg.frostedheart.content.tips.client.UnlockedTipManager;
+import com.teammoeg.frostedheart.content.tips.client.util.TipDisplayUtil;
 import net.minecraft.client.gui.screen.OptionsSoundsScreen;
 import net.minecraftforge.client.event.*;
 import org.lwjgl.glfw.GLFW;
@@ -556,7 +557,6 @@ public class ClientEvents {
     @SubscribeEvent
     public static void unloadWorld(Unload event) {
         ClientUtils.applyspg = false;
-        TipHandler.clearRenderQueue();
     }
 
     @SuppressWarnings({"resource", "unchecked", "rawtypes"})
@@ -653,27 +653,27 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-        TipHandler.clearRenderQueue();
-        TipHandler.displayTip("_default", false);
-        TipHandler.displayTip("_default2", false);
+        TipDisplayUtil.clearRenderQueue();
+        TipDisplayUtil.displayTip("_default", false);
+        TipDisplayUtil.displayTip("_default2", false);
         if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) == 0) {
-            TipHandler.displayTip("_music_warning", false);
+            TipDisplayUtil.displayTip("_music_warning", false);
         }
     }
 
     @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        TipHandler.clearRenderQueue();
+        TipDisplayUtil.clearRenderQueue();
     }
 
     @SubscribeEvent
     public static void onGUIOpen(GuiOpenEvent event) {
         if (event.getGui() instanceof MainMenuScreen) {
-            if (TipHandler.readError) {
+            if (!UnlockedTipManager.error.isEmpty()) {
                 TipElement ele = new TipElement();
-                ele.replaceToError(TipHandler.UNLOCKED_FILEPATH, "read");
-                TipHandler.displayTip(ele, true);
-                TipHandler.readError = false;
+                ele.replaceToError(UnlockedTipManager.UNLOCKED_FILE, UnlockedTipManager.error);
+                TipDisplayUtil.displayTip(ele, true);
+                UnlockedTipManager.error = "";
             }
 
 //            if (...如果有新版本) {
@@ -686,7 +686,7 @@ public class ClientEvents {
     public static void onGUIRender(GuiScreenEvent event) {
         if (event.getGui() instanceof OptionsSoundsScreen) {
             if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) <= 0) {
-                TipHandler.displayTip("_music_warning", false);
+                TipDisplayUtil.displayTip("_music_warning", false);
             }
         }
     }

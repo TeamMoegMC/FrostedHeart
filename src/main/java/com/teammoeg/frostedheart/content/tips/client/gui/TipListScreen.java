@@ -4,23 +4,26 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
-import com.teammoeg.frostedheart.content.tips.client.TipHandler;
+import com.teammoeg.frostedheart.content.tips.client.UnlockedTipManager;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.client.util.AnimationUtil;
 import com.teammoeg.frostedheart.content.tips.client.util.GuiUtil;
+import com.teammoeg.frostedheart.content.tips.client.util.TipDisplayUtil;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class TipListScreen extends Screen {
     private final boolean background;
-
-    public static String select = "";
+    private final Map<String, List<String>> customTipList = new HashMap<>();
 
     private List<String> tipList;
     private TipElement selectEle = null;
@@ -32,6 +35,8 @@ public class TipListScreen extends Screen {
     private double textScroll = 0;
     private double displayListScroll = 0;
     private double displayTextScroll = 0;
+
+    public static String select = "";
 
     public TipListScreen(boolean background) {
         super(new StringTextComponent(""));
@@ -46,13 +51,17 @@ public class TipListScreen extends Screen {
             closeScreen();
         }));
         this.addButton(new IconButton(0, 0, IconButton.ICON_LOCK, 0xFFC6FCFF, new TranslationTextComponent(FHMain.MODID + ".tips.gui.pin"), (button) -> {
-            TipHandler.forceAdd(select, true);
+            TipDisplayUtil.forceAdd(selectEle, true);
         }));
 
-        tipList = TipHandler.getVisibleUnlocked();
+        tipList = new ArrayList<>(UnlockedTipManager.manager.getVisible());
+        UnlockedTipManager.manager.getCustom().forEach((c) -> {
+            customTipList.put(c.get(0), c);
+            tipList.add(c.get(0));
+        });
 
-        if (tipList.isEmpty()) {
-            tipList.add("empty");
+        if (!tipList.contains(select)) {
+            select = "";
         }
 
         GuiHeight = (int)(height*0.8F);
@@ -173,8 +182,13 @@ public class TipListScreen extends Screen {
                 }
                 fill(ms, BGOutline, BGOutline, BGOutline+1, BGOutline + 10-BGOutline, fontColor);
 
-                String text = "tips." + FHMain.MODID + "." + list.get(i) + ".title";
-                text = I18n.format(text);
+                String text = list.get(i);
+                if (text.startsWith("*custom*")) {
+                    text = text.substring(8);
+                } else {
+                    text = I18n.format("tips." + FHMain.MODID + "." + list.get(i) + ".title");
+                }
+
                 if (font.getStringWidth(text) > BGWidth) {
                     text = text.substring(0, Math.min(text.length(), BGWidth/6)) + "...";
                 }
@@ -190,17 +204,31 @@ public class TipListScreen extends Screen {
     }
 
     private void renderTipContent(MatrixStack ms, int x, int y) { //TODO 搜索和分组
+        boolean custom = select.startsWith("*custom*");
         if (selectEle == null || !selectEle.ID.equals(select)) {
-            selectEle = TipHandler.getTipEle(select);
+            if (custom) {
+                TipElement ele = new TipElement();
+                try {
+                    ele.ID = customTipList.get(select).get(0);
+                    ele.visibleTime = Integer.parseInt(customTipList.get(select).get(1));
+                    for (int i = 2; i < customTipList.get(select).size(); i++) {
+                        ele.contents.add(new StringTextComponent(customTipList.get(select).get(i)));
+                    }
+                    selectEle = ele;
+                } catch (Exception e) {
+                    //移除有问题的自定义提示
+                    remove(customTipList.get(select).get(0));
+                    return;
+                }
+
+            } else {
+                selectEle = TipDisplayUtil.getTipEle(select);
+            }
         }
 
         //移除不应该存在的提示
         if (selectEle.hide) {
-            TipHandler.removeUnlocked(selectEle.ID);
-            tipList.remove(select);
-            setSelect("");
-            listHeight = tipList.size()*16;
-            selectEle = null;
+            remove(selectEle.ID);
             return;
         }
 
@@ -237,6 +265,7 @@ public class TipListScreen extends Screen {
         RenderSystem.disableScissor();
         ms.pop();
 
+        //文本高度超出屏幕时渲染箭头
         if (textHeight > GuiHeight && -displayTextScroll < textHeight-GuiHeight-1) {
             float animation = AnimationUtil.calcBounce(1000, "TipListDownArrow", true)*2;
             ms.push();
@@ -284,6 +313,14 @@ public class TipListScreen extends Screen {
 
         IconButton button = (IconButton)this.buttons.get(1);
         button.visible = !select.isEmpty();
+    }
+
+    private void remove(String ID) {
+        UnlockedTipManager.manager.removeUnlocked(ID);
+        tipList.remove(select);
+        setSelect("");
+        listHeight = tipList.size()*16;
+        selectEle = null;
     }
 
     private void setListScroll(double listScroll) {
@@ -368,7 +405,7 @@ public class TipListScreen extends Screen {
             AnimationUtil.removeAnimation("TipListListSelD" + name);
         });
 
-        TipHandler.resetTipAnimation();
+        TipDisplayUtil.resetTipAnimation();
     }
 
     @Override
