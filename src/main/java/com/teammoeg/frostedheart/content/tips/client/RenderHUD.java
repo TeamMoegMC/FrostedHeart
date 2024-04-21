@@ -29,10 +29,13 @@ public class RenderHUD {
 
     @SubscribeEvent
     public static void renderOnHUD(RenderGameOverlayEvent.Post event) {
-        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL || mc.player == null || renderQueue.isEmpty()) {
+        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL || mc.player == null) {
             return;
         }
 
+        WaypointManager.renderWaypoints(event.getMatrixStack());
+
+        if (renderQueue.isEmpty()) return;
         Screen current = mc.currentScreen;
         if (current != null) {
             if (!(current instanceof ChatScreen) && !(current instanceof EmptyScreen) && !(current instanceof DebugScreen)) {

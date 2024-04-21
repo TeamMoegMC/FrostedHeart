@@ -13,6 +13,11 @@ import java.util.Map;
 public class TipDisplayUtil {
     private static final Map<String, TipElement> CACHE = new HashMap<>();
 
+    /**
+     * 读取并添加一个{@code config\fhtips\tips}目录下的提示到渲染列表中
+     * @param ID 文件名
+     * @param first {@code true}时新添加的提示会被置顶
+     */
     public static void displayTip(String ID, boolean first) {
         displayTip(getTipEle(ID), first);
     }
@@ -42,6 +47,13 @@ public class TipDisplayUtil {
         }
     }
 
+    /**
+     * 在渲染列表中添加一个自定义提示
+     * @param title 标题
+     * @param content 内容，使用 "$" 换行
+     * @param visibleTime 显示时间，单位为 ms
+     * @param history {@code true}保存在已解锁列表中
+     */
     public static void displayCustomTip(String title, String content, int visibleTime, boolean history) {
         TipElement ele = new TipElement();
         ele.ID = "*custom*" + title;
@@ -61,6 +73,9 @@ public class TipDisplayUtil {
         displayTip(ele, false);
     }
 
+    /**
+     * 无视属性直接添加到渲染列表
+     */
     public static void forceAdd(String ID, boolean first) {
         forceAdd(getTipEle(ID), first);
     }
@@ -91,12 +106,18 @@ public class TipDisplayUtil {
         }
     }
 
+    /**
+     * 移除当前显示的提示
+     */
     public static void removeCurrent() {
         RenderHUD.renderQueue.remove(0);
         resetTipAnimation();
         RenderHUD.currentTip = null;
     }
 
+    /**
+     * 固定列表中的某个提示，即 {@code alwaysVisible = true}
+     */
     public static void pinTip(String ID) {
         for (int i = 0; i < RenderHUD.renderQueue.size(); i++) {
             TipElement ele = RenderHUD.renderQueue.get(i);
@@ -114,6 +135,9 @@ public class TipDisplayUtil {
         }
     }
 
+    /**
+     * 置顶列表中的某个提示
+     */
     public static void moveToFirst(String ID) {
         if (RenderHUD.renderQueue.size() <= 1 || RenderHUD.renderQueue.get(0).ID.equals(ID)) {
             return;

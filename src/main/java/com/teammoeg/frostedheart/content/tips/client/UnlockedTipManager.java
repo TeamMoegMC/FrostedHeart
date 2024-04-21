@@ -22,9 +22,9 @@ public class UnlockedTipManager {
     
     private static final Gson GSON = new Gson();
     private static final Logger LOGGER = LogManager.getLogger();
-    private List<String> visible;
-    private List<String> hide;
-    private List<List<String>> custom;
+    private List<String> visible = new ArrayList<>();
+    private List<String> hide = new ArrayList<>();
+    private List<List<String>> custom = new ArrayList<>();
 
     public static final UnlockedTipManager manager = new UnlockedTipManager();
     public static String error = "";
@@ -37,7 +37,6 @@ public class UnlockedTipManager {
     }
 
     private UnlockedTipManager() {
-        reset();
     }
 
     public void loadFromFile() {
@@ -136,11 +135,7 @@ public class UnlockedTipManager {
     }
 
     public boolean isUnlocked(String ID) {
-        if (visible.contains(ID) || hide.contains(ID)) {
-            return true;
-        }
-
-        return custom.stream().anyMatch(l -> l.get(0).equals(ID));
+        return visible.contains(ID) || hide.contains(ID) || custom.stream().anyMatch(l -> l.get(0).equals(ID));
     }
 
     public void reset() {
