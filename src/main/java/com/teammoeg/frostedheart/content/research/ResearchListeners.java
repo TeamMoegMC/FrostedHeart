@@ -236,7 +236,7 @@ public class ResearchListeners {
         if (i.isEmpty()) return false;
         for (InspireRecipe ir : FHUtils.filterRecipes(null, InspireRecipe.TYPE)) {
             if (ir.item.test(i)) {
-                return EnergyCore.hasExtraEnergy(ClientUtils.getPlayer(), ir.inspire);
+                return true;
             }
         }
         return true;
@@ -411,10 +411,9 @@ public class ResearchListeners {
             }
             for (InspireRecipe ir : FHUtils.filterRecipes(s.getServerWorld().getRecipeManager(), InspireRecipe.TYPE)) {
                 if (ir.item.test(i)) {
-                    if (EnergyCore.useExtraEnergy(s, ir.inspire)) {
-                        i.shrink(1);
-                        EnergyCore.addPersistentEnergy(s, ir.inspire);
-                    }
+                    i.shrink(1);
+                    EnergyCore.addPersistentEnergy(s, ir.inspire);
+                    
                     return i;
                 }
             }

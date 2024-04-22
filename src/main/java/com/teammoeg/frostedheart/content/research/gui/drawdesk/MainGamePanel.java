@@ -186,7 +186,7 @@ class MainGamePanel extends Panel {
         }
 
 
-        if (((reset.isMouseOver() || rg.getLevel() == -1) && !EnergyCore.hasEnoughEnergy(ClientUtils.getPlayer(), DrawingDeskTileEntity.ENERGY_PER_PAPER)) || (!EnergyCore.hasEnoughEnergy(ClientUtils.getPlayer(), DrawingDeskTileEntity.ENERGY_PER_COMBINE))) {
+        if ((reset.isMouseOver() || rg.getLevel() == -1) && EnergyCore.getEnergy(ClientUtils.getPlayer())<=0) {
 
             if (lstatus != 1) {
                 status.setText(TranslateUtils.translateGui("minigame.tired_to_research"));

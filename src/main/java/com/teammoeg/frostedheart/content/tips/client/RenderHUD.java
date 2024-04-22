@@ -6,6 +6,7 @@ import com.teammoeg.frostedheart.content.tips.client.gui.TipListScreen;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.client.hud.TipHUD;
 import com.teammoeg.frostedheart.content.tips.client.util.GuiUtil;
+import com.teammoeg.frostedheart.content.tips.client.util.TipDisplayUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.gui.screen.IngameMenuScreen;
@@ -28,10 +29,13 @@ public class RenderHUD {
 
     @SubscribeEvent
     public static void renderOnHUD(RenderGameOverlayEvent.Post event) {
-        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL || mc.player == null || renderQueue.isEmpty()) {
+        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL || mc.player == null) {
             return;
         }
 
+        WaypointManager.renderWaypoints(event.getMatrixStack());
+
+        if (renderQueue.isEmpty()) return;
         Screen current = mc.currentScreen;
         if (current != null) {
             if (!(current instanceof ChatScreen) && !(current instanceof EmptyScreen) && !(current instanceof DebugScreen)) {
@@ -48,7 +52,7 @@ public class RenderHUD {
             if (renderQueue.size() <= 1 && current instanceof EmptyScreen) {
                 mc.popGuiLayer();
             }
-            TipHandler.removeCurrent();
+            TipDisplayUtil.removeCurrent();
             return;
 
         } else if (!InputMappings.isKeyDown(mc.getMainWindow().getHandle(), 258) && current instanceof EmptyScreen) {
@@ -83,7 +87,7 @@ public class RenderHUD {
         }
 
         if (!currentTip.visible) {
-            TipHandler.removeCurrent();
+            TipDisplayUtil.removeCurrent();
             return;
         }
 

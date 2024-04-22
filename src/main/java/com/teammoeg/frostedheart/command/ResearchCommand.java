@@ -95,7 +95,8 @@ public class ResearchCommand {
                     EnergyCore.reportEnergy(ct.getSource().asPlayer());
                     return Command.SINGLE_SUCCESS;
                 }).then(Commands.literal("add").then(Commands.argument("amount", IntegerArgumentType.integer(0)).executes(ct -> {
-                    EnergyCore.addExtraEnergy(ct.getSource().asPlayer(), ct.getArgument("amount", Integer.class));
+                	
+                    EnergyCore.addPoint(ct.getSource().asPlayer(), ct.getArgument("amount", Integer.class));
                     return Command.SINGLE_SUCCESS;
                 }))))
 

@@ -7,11 +7,13 @@ import com.teammoeg.frostedheart.util.client.Point;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.*;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.lwjgl.glfw.GLFW;
@@ -29,6 +31,13 @@ public class GuiUtil {
     private static final Map<String, List<String>> textWrapCache = new HashMap<>();
     private static int leftClicked = 0;
 
+    /**
+     * 直接在屏幕中渲染一个图标按钮
+     * @param icon {@link IconButton}
+     * @param color 图标的颜色
+     * @param BGColor 未被选中时的背景颜色，为 0 时不显示
+     * @return 是否被按下
+     */
     public static boolean renderIconButton(MatrixStack matrixStack, Point icon, int mouseX, int mouseY, int x, int y, int color, int BGColor) {
         if (color != 0 && isMouseIn(mouseX, mouseY, x, y, 10, 10)) {
             AbstractGui.fill(matrixStack, x, y, x+10, y+10, 50 << 24 | color & 0x00FFFFFF);
@@ -59,6 +68,11 @@ public class GuiUtil {
         return isMouseIn(mouseX, mouseY, x, y, w, h) && isLeftClicked();
     }
 
+    /**
+     * 渲染一个图标
+     * @param icon {@link IconButton}
+     * @param color 图标的颜色
+     */
     public static void renderIcon(MatrixStack matrixStack, Point icon, int x, int y, int color) {
         if (color != 0) {
             float alpha = (color >> 24 & 0xFF) / 255F;
@@ -137,6 +151,7 @@ public class GuiUtil {
     }
 
     public static List<String> wrapString(String text, FontRenderer font, int maxWidth) {
+        //因为整不明白原版的方法所以搞了个傻子都会用的换行
         List<String> lines = new ArrayList<>();
         boolean addToCache = false;
         maxWidth = Math.max(1, maxWidth);
@@ -216,6 +231,11 @@ public class GuiUtil {
         return lines;
     }
 
+    /**
+     * 根据 partial 绘制一个圆，如果只想绘制一个完整的圆请使用 {@link GuiUtil#drawPolygon(int, int, double, int, int)}
+     * @param radius 半径
+     * @param partial 圆的完整度 {@code 0.0 ~ 1.0}
+     */
     public static void drawPartialCircle(int x, int y, double radius, float partial, int color) {
         float alpha = (color >> 24 & 0xFF) / 255F;
         float r = (color >> 16 & 0xFF) / 255F;
@@ -245,6 +265,11 @@ public class GuiUtil {
         RenderSystem.disableBlend();
     }
 
+    /**
+     * 绘制一个多边形
+     * @param radius 半径
+     * @param sides 多边形的边数，大部分情况下 50 已经够圆了
+     */
     public static void drawPolygon(int x, int y, double radius, int sides, int color) {
         sides = MathHelper.clamp(sides, 3, 360);
 
@@ -272,5 +297,48 @@ public class GuiUtil {
         tessellator.draw();
 
         RenderSystem.disableBlend();
+    }
+
+    /**
+     * 获取一个世界坐标显示在屏幕中的坐标
+     * @param pos 世界坐标
+     */
+    public static Vector2f worldPosToScreenPos(Vector3f pos) {
+        if (mc.player == null) return Vector2f.ZERO;
+        ActiveRenderInfo info = mc.gameRenderer.getActiveRenderInfo();
+        //摄像机坐标
+        Vector3d cameraPos = info.getProjectedView();
+        //摄像机旋转
+        Quaternion cameraRotation = info.getRotation().copy();
+        //透视矩阵
+        Matrix4f projectionMatrix = mc.gameRenderer.getProjectionMatrix(info, mc.getRenderPartialTicks(), true);
+
+
+        Vector4f finalVector = new Vector4f(pos);
+
+        Matrix4f cameraPosM = new Matrix4f();
+        cameraPosM.setIdentity();
+        //转换为摄像机坐标系
+        cameraPosM.setTranslation((float)-cameraPos.x, (float)-cameraPos.y, (float)-cameraPos.z);
+        //应用摄像机坐标
+        finalVector.transform(cameraPosM);
+
+        //对摄像机旋转进行神必操作
+        cameraRotation.multiply(new Quaternion(Vector3f.YP, 180, true));
+        cameraRotation.conjugate();
+        //应用旋转
+        finalVector.transform(cameraRotation);
+
+        //应用透视矩阵
+        finalVector.transform(projectionMatrix);
+        finalVector.perspectiveDivide();
+
+        //TODO 正确计算超出摄像机范围的坐标
+
+        int screenWidth = mc.getMainWindow().getScaledWidth();
+        int screenHeight = mc.getMainWindow().getScaledHeight();
+        float screenX = (finalVector.getX() * 0.5F + 0.5F) * screenWidth;
+        float screenY = screenHeight - ((finalVector.getY() * 0.5F + 0.5F) * screenHeight);
+        return new Vector2f(screenX, screenY);
     }
 }

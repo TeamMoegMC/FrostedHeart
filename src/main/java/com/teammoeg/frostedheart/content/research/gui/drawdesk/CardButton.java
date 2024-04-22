@@ -47,7 +47,7 @@ public class CardButton extends Button {
     public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         Card c = game.get(card);
         if (c.isShow()) {
-            if (game.isTouchable(card) && EnergyCore.hasEnoughEnergy(ClientUtils.getPlayer(), DrawingDeskTileEntity.ENERGY_PER_COMBINE)) {
+            if (game.isTouchable(card)) {
                 DrawDeskIcons.getIcon(c.getCt(), c.getCard(), true).draw(matrixStack, x, y, 16, 16);
                 if (super.isMouseOver() || (game.getLastSelect() != null && game.getLastSelect().equals(card)))
                     DrawDeskIcons.SELECTED.draw(matrixStack, x, y, 16, 16);
