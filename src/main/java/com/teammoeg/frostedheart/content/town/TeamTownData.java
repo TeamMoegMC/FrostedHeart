@@ -29,6 +29,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.SpecialData;
 import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseTileEntity;
+import com.teammoeg.frostedheart.content.town.hunting.HuntingCampTileEntity;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
@@ -85,8 +87,8 @@ public class TeamTownData implements SpecialData{
 	public TeamTownData(String name, Map<TownResourceType, Integer> resources, Map<TownResourceType, Integer> backupResources, Map<BlockPos, TownWorkerData> blocks, Map<UUID, Resident> residents) {
 		super();
 		this.name = name;
-		this.resources.putAll(resources);;
-		this.backupResources.putAll(backupResources);;
+		this.resources.putAll(resources);
+		this.backupResources.putAll(backupResources);
 		this.blocks.putAll(blocks);
 		this.residents.putAll(residents);
 	}
@@ -109,7 +111,8 @@ public class TeamTownData implements SpecialData{
      * @param world server world instance
      */
     public void tick(ServerWorld world) {
-        if(world.getRandom().nextInt(256)==1){//check if occupied area overlapped
+        int randomInt = world.getRandom().nextInt(64);//used to do some non-urgent check
+        if(randomInt == 1){//check if occupied area overlapped
             checkOccupiedAreaOverlap(world);
         }else removeAllInvalidTiles(world);
         PriorityQueue<TownWorkerData> pq = new PriorityQueue<>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
@@ -211,4 +214,5 @@ public class TeamTownData implements SpecialData{
         }
         blocks.keySet().removeIf(pos -> !((TownTileEntity)Utils.getExistingTileEntity(world, pos)).isWorkValid());
     }
+
 }

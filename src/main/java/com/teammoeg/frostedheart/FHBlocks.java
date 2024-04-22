@@ -59,6 +59,8 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
 import com.teammoeg.frostedheart.content.town.FHTownBuildingCoreBlock;
 import com.teammoeg.frostedheart.content.town.house.HouseBlock;
+import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseBlock;
+import com.teammoeg.frostedheart.content.town.hunting.HuntingCampBlock;
 import com.teammoeg.frostedheart.content.town.mine.MineBaseBlock;
 import com.teammoeg.frostedheart.content.town.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlock;
@@ -186,6 +188,8 @@ public class FHBlocks {
     public static RegistryObject<Block> warehouse = register("warehouse",()->new WarehouseBlock(FHTownBuildingCoreBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
     public static RegistryObject<Block> mine = register("mine",()->new MineBlock(FHTownBuildingCoreBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
     public static RegistryObject<Block> mine_base = register("mine_base", ()->new MineBaseBlock(FHTownBuildingCoreBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
+    public static RegistryObject<Block> hunting_camp = register("hunting_camp", ()->new HuntingCampBlock(FHTownBuildingCoreBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
+    public static RegistryObject<Block> hunting_base = register("hunting_base", ()->new HuntingBaseBlock(FHTownBuildingCoreBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
     public static final BlockEntry<SteamCoreBlock> steam_core = REGISTRATE.block("steam_core", SteamCoreBlock::new)
         .initialProperties(Material.IRON)
         .properties(t->t

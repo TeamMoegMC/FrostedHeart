@@ -21,9 +21,7 @@ package com.teammoeg.frostedheart.content.town.house;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
-import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.content.town.TownBuildingCoreBlockTileEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
@@ -33,7 +31,6 @@ import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
@@ -150,12 +147,6 @@ public class HouseTileEntity extends TownBuildingCoreBlockTileEntity{
         }
     }
 
-    @Override
-    public OccupiedArea getOccupiedArea() {
-        this.isWorkValid();
-        return this.occupiedArea;
-    }
-
     public int getMaxResident() {
         return isWorkValid() ? this.maxResident : 0;
     }
@@ -265,7 +256,7 @@ public class HouseTileEntity extends TownBuildingCoreBlockTileEntity{
         double tempDiff = Math.abs(COMFORTABLE_TEMP_HOUSE - temperature);
         return 0.017 + 1 / (1 + Math.exp(0.4 * (tempDiff - 10)));
     }
-    private static double calculateDecorationRating(Map<?, Integer> decorations, int area) {
+    public static double calculateDecorationRating(Map<?, Integer> decorations, int area) {
         double score = 0;
         for (Integer num : decorations.values()) {
             if (num + 0.32 > 0) { // Ensure the argument for log is positive

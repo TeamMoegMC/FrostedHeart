@@ -267,7 +267,7 @@ public class BlockScanner {
             if(scannedBlocks.contains(possibleBlock) || scanningBlocks.contains(possibleBlock)) continue;
             if(isValidFloor.test(pos)) floorAdjacent.add(possibleBlock);
         }
-        return possibleBlocks;
+        return floorAdjacent;
     }
 
     /**

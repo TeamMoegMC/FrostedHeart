@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.FHBlocks;
 
+import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
@@ -51,7 +52,7 @@ public enum TownWorkerType {
     HOUSE(FHBlocks.house, (town, workData) -> {
         double residentNum = workData.getList("residents", 10).size();
         double actualCost = town.cost(TownResourceType.PREP_FOOD, residentNum, false);
-        return Math.abs(residentNum - actualCost) < 0.01;
+        return Math.abs(residentNum - actualCost) < 0.001;
     }, 0),
     WAREHOUSE(FHBlocks.warehouse, null, 0),
     MINE(FHBlocks.mine, (town, workData) -> {
@@ -72,12 +73,14 @@ public enum TownWorkerType {
             counter += entry.getValue();
             if(counter >= randomDouble){
                 double actualAdd = town.add(entry.getKey(), add, false);
-                return add == actualAdd;
+                return Math.abs(add - actualAdd) < 0.001;
             }
         }
         return true;
     }, 0),
-    MINE_BASE(FHBlocks.mine_base, null, 0)
+    MINE_BASE(FHBlocks.mine_base, null, 0),
+    HUNTING_CAMP(FHBlocks.hunting_camp, null, 0),
+    HUNTING_BASE(FHBlocks.hunting_base, new HuntingBaseTileEntity.HuntingBaseWorker(), 0)
     ;
 
     /**
