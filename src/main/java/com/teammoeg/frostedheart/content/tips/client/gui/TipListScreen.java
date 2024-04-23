@@ -243,7 +243,7 @@ public class TipListScreen extends Screen {
             RenderSystem.enableScissor(0, (int)((int)(height*0.1F+4)*scale), (int)(width*scale), (int)((GuiHeight -8)*scale));
             int line = 0;
             for (int i = 0; i < selectEle.contents.size(); i++) {
-                line += 1 + GuiUtil.formatAndDraw(selectEle.contents.get(i), ms, font, boxWidth + 4, y+4 + line*12,
+                line += 1 + GuiUtil.formatAndDraw(selectEle.contents.get(i), ms, boxWidth + 4, y+4 + line*12,
                         x-8 - boxWidth, textColor, 12, false);
             }
             textHeight = line*12;
@@ -254,7 +254,7 @@ public class TipListScreen extends Screen {
             RenderSystem.enableScissor(0, (int)((int)(height*0.1F+4)*scale), (int)(width*scale), (int)((GuiHeight -8)*scale));
             int line = 0;
             for (int i = 1; i < selectEle.contents.size(); i++) {
-                line += 1 + GuiUtil.formatAndDraw(selectEle.contents.get(i), ms, font, boxWidth + 4, y+4 + line*12,
+                line += 1 + GuiUtil.formatAndDraw(selectEle.contents.get(i), ms, boxWidth + 4, y+4 + line*12,
                         x-8 - boxWidth, textColor, 12, false);
             }
             textHeight = line*12;

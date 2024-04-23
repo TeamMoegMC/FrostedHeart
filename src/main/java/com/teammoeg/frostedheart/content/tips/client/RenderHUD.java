@@ -7,6 +7,7 @@ import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.client.hud.TipHUD;
 import com.teammoeg.frostedheart.content.tips.client.util.GuiUtil;
 import com.teammoeg.frostedheart.content.tips.client.util.TipDisplayUtil;
+import com.teammoeg.frostedheart.content.tips.client.waypoint.WaypointManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.gui.screen.IngameMenuScreen;

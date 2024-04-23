@@ -69,9 +69,8 @@ public class TipHUD extends AbstractGui {
                 if (descLines >= element.contents.size() && x > mainWindow.getX() * 0.5) {
                     extendedWidth += 24;
                 } else {
-                    GuiUtil.drawWrapString(I18n.format("tips." + FHMain.MODID + ".too_long"), ms, mc.fontRenderer,
-                            8, 8, (int)(mainWindow.getX()*0.5F),
-                            element.fontColor, lineSpace, true);
+                    GuiUtil.drawWrapString(I18n.format("tips." + FHMain.MODID + ".too_long"), ms,
+                            8, 8, (int)(mainWindow.getX()*0.5F), element.fontColor, lineSpace, true);
                 }
             }
         }
@@ -154,15 +153,13 @@ public class TipHUD extends AbstractGui {
             descLines = 0;
             //标题
             int t = -1;
-            t += GuiUtil.formatAndDraw(texts.get(0), ms, mc.fontRenderer, x, y,
-                    width-16, fontColor, lineSpace, false);
+            t += GuiUtil.formatAndDraw(texts.get(0), ms, x, y, width-16, fontColor, lineSpace, false);
             descLines += t;
             titleLines = t;
             //内容
             for (int dt = 1; dt < texts.size(); dt++) {
-                descLines += GuiUtil.formatAndDraw(texts.get(dt), ms, mc.fontRenderer,
-                        x, descLines*lineSpace + y+17,
-                        width-8, fontColor, lineSpace, false);
+                descLines += GuiUtil.formatAndDraw(texts.get(dt), ms,
+                        x, descLines*lineSpace + y+17, width-8, fontColor, lineSpace, false);
             }
         } else {//只有标题
             fill(ms, BGPosX, y - 4,
@@ -170,8 +167,7 @@ public class TipHUD extends AbstractGui {
             descLines = 0;
 
             int t = -1;
-            t += GuiUtil.formatAndDraw(texts.get(0), ms, mc.fontRenderer,
-                    x, y, width-16, fontColor, lineSpace, false);
+            t += GuiUtil.formatAndDraw(texts.get(0), ms, x, y, width-16, fontColor, lineSpace, false);
             descLines += t;
             titleLines = t;
         }

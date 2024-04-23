@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.tips.client;
+package com.teammoeg.frostedheart.content.tips.client.waypoint;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class WaypointManager {
-    protected static final Minecraft MC = Minecraft.getInstance();
+    private static final Minecraft MC = Minecraft.getInstance();
     private static final Map<String, Waypoint> WAYPOINTS = new HashMap<>();
 
     public static void renderWaypoints(MatrixStack ms) {
@@ -34,7 +34,7 @@ public class WaypointManager {
 
     public static void create(Vector3f target, int color, String ID, boolean blockPos) {
         if (!exists(ID)) {
-            WAYPOINTS.put(ID, new Waypoint(target, color, ID));
+            WAYPOINTS.put(ID, new RhombusWaypoint(target, color, ID));
             if (blockPos) blockPosOffset(ID);
         }
     }
@@ -43,6 +43,10 @@ public class WaypointManager {
         if (!exists(waypoint.id)) {
             WAYPOINTS.put(waypoint.id, waypoint);
         }
+    }
+
+    public static Waypoint getWaypoint(String id) {
+        return WAYPOINTS.get(id);
     }
 
     public static void setVisible(boolean visible, String ID) {
@@ -83,6 +87,10 @@ public class WaypointManager {
     public static void blockPosOffset(String ID) {
         if (!exists(ID)) return;
         WAYPOINTS.get(ID).target.add(0.5F, 0.5F, 0.5F);
+    }
+
+    public static void blockPosOffset(Waypoint waypoint) {
+        waypoint.target.add(0.5F, 0.5F, 0.5F);
     }
 
     public static boolean exists(String ID) {

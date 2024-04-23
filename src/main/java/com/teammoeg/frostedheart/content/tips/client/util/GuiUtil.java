@@ -10,8 +10,10 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.culling.ClippingHelper;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.*;
 import net.minecraft.util.text.ITextComponent;
@@ -28,6 +30,8 @@ import java.util.regex.Pattern;
 
 public class GuiUtil {
     private static final Minecraft mc = Minecraft.getInstance();
+    private static final FontRenderer font = mc.fontRenderer;
+    private static final ActiveRenderInfo info = mc.gameRenderer.getActiveRenderInfo();
     private static final Map<String, List<String>> textWrapCache = new HashMap<>();
     private static int leftClicked = 0;
 
@@ -96,7 +100,7 @@ public class GuiUtil {
     }
 
     public static boolean isLeftDown() {
-        return GLFW.glfwGetMouseButton(Minecraft.getInstance().getMainWindow().getHandle(), 0) == 1;
+        return GLFW.glfwGetMouseButton(mc.getMainWindow().getHandle(), 0) == 1;
     }
 
     public static boolean isLeftClicked() {
@@ -117,19 +121,19 @@ public class GuiUtil {
         return (int)(mc.mouseHelper.getMouseY() * (double)mc.getMainWindow().getScaledHeight() / (double)mc.getMainWindow().getHeight());
     }
 
-    public static int formatAndDraw(ITextComponent component, MatrixStack ms, FontRenderer font, float x, float y, int maxWidth, int color, int lineSpace, boolean shadow) {
+    public static int formatAndDraw(ITextComponent component, MatrixStack ms, float x, float y, int maxWidth, int color, int lineSpace, boolean shadow) {
         String text = component.getString().replaceAll("&(?!&)", "\u00a7")
                 .replaceAll("\\$configPath\\$", FMLPaths.CONFIGDIR.get().toString().replaceAll("\\\\", "\\\\\\\\"));
 
-        return drawWrapString(text, ms, font, x, y, maxWidth, color, lineSpace, shadow);
+        return drawWrapString(text, ms, x, y, maxWidth, color, lineSpace, shadow);
     }
 
-    public static int drawWrapText(ITextComponent component, MatrixStack ms, FontRenderer font, float x, float y, int maxWidth, int color, int lineSpace, boolean shadow) {
-        return drawWrapString(component.getString(), ms, font, x, y, maxWidth, color, lineSpace, shadow);
+    public static int drawWrapText(ITextComponent component, MatrixStack ms, float x, float y, int maxWidth, int color, int lineSpace, boolean shadow) {
+        return drawWrapString(component.getString(), ms, x, y, maxWidth, color, lineSpace, shadow);
     }
 
-    public static int drawWrapString(String text, MatrixStack ms, FontRenderer font, float x, float y, int maxWidth, int color, int lineSpace, boolean shadow) {
-        List<String> lines = wrapString(text, font, maxWidth);
+    public static int drawWrapString(String text, MatrixStack ms, float x, float y, int maxWidth, int color, int lineSpace, boolean shadow) {
+        List<String> lines = wrapString(text, maxWidth);
 
         for (int i = 0; i < lines.size(); i++) {
             if (i == 0) {
@@ -150,7 +154,7 @@ public class GuiUtil {
         return lines.size();
     }
 
-    public static List<String> wrapString(String text, FontRenderer font, int maxWidth) {
+    public static List<String> wrapString(String text, int maxWidth) {
         //因为整不明白原版的方法所以搞了个傻子都会用的换行
         List<String> lines = new ArrayList<>();
         boolean addToCache = false;
@@ -305,40 +309,73 @@ public class GuiUtil {
      */
     public static Vector2f worldPosToScreenPos(Vector3f pos) {
         if (mc.player == null) return Vector2f.ZERO;
-        ActiveRenderInfo info = mc.gameRenderer.getActiveRenderInfo();
-        //摄像机坐标
-        Vector3d cameraPos = info.getProjectedView();
-        //摄像机旋转
-        Quaternion cameraRotation = info.getRotation().copy();
+
+        int screenWidth = mc.getMainWindow().getScaledWidth();
+        int screenHeight = mc.getMainWindow().getScaledHeight();
         //透视矩阵
         Matrix4f projectionMatrix = mc.gameRenderer.getProjectionMatrix(info, mc.getRenderPartialTicks(), true);
 
-
-        Vector4f finalVector = new Vector4f(pos);
-
+        //摄像机坐标
+        Vector3d cameraPos = info.getProjectedView();
         Matrix4f cameraPosM = new Matrix4f();
         cameraPosM.setIdentity();
         //转换为摄像机坐标系
         cameraPosM.setTranslation((float)-cameraPos.x, (float)-cameraPos.y, (float)-cameraPos.z);
+
+        //摄像机旋转
+        Quaternion cameraRotation = info.getRotation().copy();
+        //对摄像机旋转进行神必操作
+        cameraRotation.multiply(new Quaternion(Vector3f.YN, 180, true));
+        cameraRotation.conjugate();
+
+        Vector4f finalVector = new Vector4f(pos);
         //应用摄像机坐标
         finalVector.transform(cameraPosM);
-
-        //对摄像机旋转进行神必操作
-        cameraRotation.multiply(new Quaternion(Vector3f.YP, 180, true));
-        cameraRotation.conjugate();
-        //应用旋转
+        //应用摄像机旋转
         finalVector.transform(cameraRotation);
+        //当坐标超出摄像机范围时
+        if (!isPointInViewFrustum(pos, cameraRotation, projectionMatrix)) {
+            finalVector.normalize();
+            float screenX, screenY;
+            float halfScreenWidth = screenWidth * 0.5F;
+            float halfScreenHeight = screenHeight * 0.5F;
+            float x = finalVector.getX();
+            float y = finalVector.getY();
 
+            if (x < 0) {
+                screenY = halfScreenHeight + y / x * halfScreenWidth;
+            } else {
+                screenY = halfScreenHeight - y / x * halfScreenWidth;
+            }
+
+            if (y > 0) {
+                screenX = halfScreenWidth + x / y * halfScreenHeight;
+            } else {
+                screenX = halfScreenWidth - x / y * halfScreenHeight;
+            }
+
+            return new Vector2f(screenX, screenY);
+        }
         //应用透视矩阵
         finalVector.transform(projectionMatrix);
         finalVector.perspectiveDivide();
 
-        //TODO 正确计算超出摄像机范围的坐标
-
-        int screenWidth = mc.getMainWindow().getScaledWidth();
-        int screenHeight = mc.getMainWindow().getScaledHeight();
         float screenX = (finalVector.getX() * 0.5F + 0.5F) * screenWidth;
         float screenY = screenHeight - ((finalVector.getY() * 0.5F + 0.5F) * screenHeight);
         return new Vector2f(screenX, screenY);
+    }
+
+    /**
+     *检查一个世界坐标是否在屏幕中。
+     *注意：距离 512 格左右时会因为浮点数精度或溢出之类的问题导致判定始终为 false
+     */
+    public static boolean isPointInViewFrustum(Vector3f pos, Quaternion cameraRotation, Matrix4f projection) {
+        int scale = 1;
+        AxisAlignedBB pointAABB = new AxisAlignedBB(pos.getX()-scale, pos.getY()-scale, pos.getZ()-scale, pos.getX()+scale, pos.getY()+scale, pos.getZ()+scale);
+
+        ClippingHelper clippingHelper = new ClippingHelper(new Matrix4f(cameraRotation), projection);
+        clippingHelper.setCameraPosition(info.getProjectedView().x, info.getProjectedView().y, info.getProjectedView().z);
+
+        return clippingHelper.isBoundingBoxInFrustum(pointAABB);
     }
 }
