@@ -324,7 +324,7 @@ public class GuiUtil {
 
         //摄像机旋转
         Quaternion cameraRotation = info.getRotation().copy();
-        //对摄像机旋转进行神必操作
+        //调整摄像机旋转
         cameraRotation.multiply(new Quaternion(Vector3f.YN, 180, true));
         cameraRotation.conjugate();
 
@@ -334,7 +334,7 @@ public class GuiUtil {
         //应用摄像机旋转
         finalVector.transform(cameraRotation);
         //当坐标超出摄像机范围时
-        if (!isPointInViewFrustum(pos, cameraRotation, projectionMatrix)) {
+        if (!isPosInView(pos, cameraRotation, projectionMatrix)) {
             finalVector.normalize();
             float screenX, screenY;
             float halfScreenWidth = screenWidth * 0.5F;
@@ -366,16 +366,51 @@ public class GuiUtil {
     }
 
     /**
-     *检查一个世界坐标是否在屏幕中。
-     *注意：距离 512 格左右时会因为浮点数精度或溢出之类的问题导致判定始终为 false
+     * 检查一个坐标是否在视野中
+     * @param pos 世界坐标
      */
-    public static boolean isPointInViewFrustum(Vector3f pos, Quaternion cameraRotation, Matrix4f projection) {
-        int scale = 1;
-        AxisAlignedBB pointAABB = new AxisAlignedBB(pos.getX()-scale, pos.getY()-scale, pos.getZ()-scale, pos.getX()+scale, pos.getY()+scale, pos.getZ()+scale);
+    public static boolean isPosInView(Vector3f pos) {
+        Quaternion cameraRotation = info.getRotation().copy();
+        cameraRotation.multiply(new Quaternion(Vector3f.YN, 180, true));
+        cameraRotation.conjugate();
 
+        return isPosInView(pos, cameraRotation, mc.gameRenderer.getProjectionMatrix(info, mc.getRenderPartialTicks(), true));
+    }
+
+    public static boolean isPosInView(Vector3f pos, Quaternion cameraRotation, Matrix4f projection) {
         ClippingHelper clippingHelper = new ClippingHelper(new Matrix4f(cameraRotation), projection);
-        clippingHelper.setCameraPosition(info.getProjectedView().x, info.getProjectedView().y, info.getProjectedView().z);
+        Vector3d cameraPos = info.getProjectedView();
+        AxisAlignedBB pointAABB;
+
+        float distance = (float)cameraPos.distanceTo(new Vector3d(pos));
+        if (distance > 512) {
+            double x = (pos.getX() - cameraPos.x) / distance;
+            double y = (pos.getY() - cameraPos.y) / distance;
+            double z = (pos.getZ() - cameraPos.z) / distance;
+
+            pointAABB = new AxisAlignedBB(x, y, z, x, y, z);
+            clippingHelper.setCameraPosition(0,0, 0);
+        } else {
+            pointAABB = new AxisAlignedBB(pos.getX(), pos.getY(), pos.getZ(), pos.getX(), pos.getY(), pos.getZ());
+            clippingHelper.setCameraPosition(cameraPos.x, cameraPos.y, cameraPos.z);
+        }
 
         return clippingHelper.isBoundingBoxInFrustum(pointAABB);
+    }
+
+    public static float getTheta(Vector3d viewDirection, Vector3f cameraToPoint) {
+        Vector3f viewDirection3f = new Vector3f((float) viewDirection.x, (float) viewDirection.y, (float) viewDirection.z);
+        // 计算两个向量的点积
+        float dotProduct = viewDirection3f.dot(cameraToPoint);
+
+        // 计算两个向量的模
+        float viewDirectionMagnitude = (float) Math.sqrt(viewDirection3f.dot(viewDirection3f));
+        float cameraToPointMagnitude = (float) Math.sqrt(cameraToPoint.dot(cameraToPoint));
+
+        // 计算夹角的余弦值
+        float cosTheta = dotProduct / (viewDirectionMagnitude * cameraToPointMagnitude);
+
+        // 计算夹角（弧度）
+        return (float) Math.acos(cosTheta);
     }
 }
