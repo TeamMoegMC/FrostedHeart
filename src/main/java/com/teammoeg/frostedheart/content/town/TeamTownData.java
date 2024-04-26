@@ -111,12 +111,21 @@ public class TeamTownData implements SpecialData{
      * @param world server world instance
      */
     public void tick(ServerWorld world) {
+        removeNonTownBlocks(world);
         int randomInt = world.getRandom().nextInt(64);//used to do some non-urgent check
         if(randomInt == 1){//check if occupied area overlapped
             checkOccupiedAreaOverlap(world);
-        }else removeAllInvalidTiles(world);
+        }
         PriorityQueue<TownWorkerData> pq = new PriorityQueue<>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
-        pq.addAll(blocks.values());
+        for(TownWorkerData workerData : blocks.values()){
+            if(TownBuildingCoreBlockTileEntity.isValid(workerData)){
+                //由于已经使用了自动刷新城镇方块的功能，已经不需要通过isWorkValid来在获取合法性信息时刷新。
+                //在抽象类TownBuildingCoreBlockTileEntity中已经定义了townWorkerState来确定和保存合法性，因此可以直接使用静态方法isValid判断是否是合法的数据
+                // 不再使用isWorkValid，从而减少获取TileEntity的次数
+                pq.add(workerData);
+            }
+        }
+        //pq.addAll(blocks.values());
         TeamTown itt = new TeamTown(this);
         for (TownWorkerData t : pq) {
             t.firstWork(itt);
@@ -174,45 +183,50 @@ public class TeamTownData implements SpecialData{
 	}
 
     private void checkOccupiedAreaOverlap(ServerWorld world){
-        removeNonTownBlocks(world);
-        List<TownTileEntity> tileEntityList = blocks.keySet().stream().map(pos -> (TownTileEntity)Utils.getExistingTileEntity(world, pos)).collect(Collectors.toList());
-        List<TownTileEntity> tileEntityListCopy = new ArrayList<>(tileEntityList);
-        Set<TownTileEntity> tileEntitiesMightOverlap = new HashSet<>();
-        for (TownTileEntity townTileEntity : tileEntityListCopy) {
-            Iterator<TownTileEntity> subIterator = tileEntityListCopy.iterator();
+        //removeNonTownBlocks(world);
+        Collection<TownWorkerData> workerDataCollection =  new ArrayList<>(blocks.values());
+        List<TownWorkerData> workerDataList = new ArrayList<>(workerDataCollection);
+        Map<TownWorkerData, OccupiedArea> workersMightOverlap = new HashMap<>();
+        for (TownWorkerData workerData : workerDataList) {
+            Iterator<TownWorkerData> subIterator = workerDataList.iterator();
             if (subIterator.hasNext()) {
                 subIterator.next();
                 subIterator.remove();
             }
             while (subIterator.hasNext()) {
-                TownTileEntity comparingTE = subIterator.next();
-                if (townTileEntity.getOccupiedArea().doRectanglesIntersect(comparingTE.getOccupiedArea())) {
-                    tileEntitiesMightOverlap.add(comparingTE);
-                    tileEntitiesMightOverlap.add(townTileEntity);
+                TownWorkerData comparingWorkerData = subIterator.next();
+                OccupiedArea comparingWorkerOccupiedArea = TownBuildingCoreBlockTileEntity.getOccupiedArea(comparingWorkerData);
+                OccupiedArea workerOccupiedArea = TownBuildingCoreBlockTileEntity.getOccupiedArea(workerData);
+                if (workerOccupiedArea.doRectanglesIntersect(comparingWorkerOccupiedArea)) {
+                    workersMightOverlap.put(workerData, workerOccupiedArea);
+                    workersMightOverlap.put(comparingWorkerData, comparingWorkerOccupiedArea);
                 }
             }
         }
-        Map<ColumnPos, TownTileEntity> occupiedAreaCollectingMap = new HashMap<>();
-        Set<TownTileEntity> overlappedTileEntities = new HashSet<>();
+        Map<ColumnPos, TownWorkerData> occupiedAreaCollectingMap = new HashMap<>();
+        Set<TownWorkerData> overlappedWorkers = new HashSet<>();
 
         //利用townTileEntity的OccupiedArea判断是否有重叠
-        for(TownTileEntity townTileEntity : tileEntitiesMightOverlap){
-            for(ColumnPos columnPos : townTileEntity.getOccupiedArea().getOccupiedArea()){
+        for(Map.Entry<TownWorkerData, OccupiedArea> entry : workersMightOverlap.entrySet()){
+            for(ColumnPos columnPos : entry.getValue().getOccupiedArea()){
                 if(occupiedAreaCollectingMap.containsKey(columnPos)){
-                    overlappedTileEntities.add(townTileEntity);
-                    overlappedTileEntities.add(occupiedAreaCollectingMap.get(columnPos));
+                    overlappedWorkers.add(entry.getKey());
+                    overlappedWorkers.add(occupiedAreaCollectingMap.get(columnPos));
                 }
-                occupiedAreaCollectingMap.put(columnPos, townTileEntity);
+                occupiedAreaCollectingMap.put(columnPos, entry.getKey());
             }
         }
-        for(TownTileEntity townTileEntity : tileEntityList){
-            if(overlappedTileEntities.contains(townTileEntity)){
-                townTileEntity.setWorkerState(TownWorkerState.OCCUPIED_AREA_OVERLAPPED);
-            } else if(townTileEntity.getWorkerState() == TownWorkerState.OCCUPIED_AREA_OVERLAPPED){
+        for(TownWorkerData data : workerDataCollection){
+            if(overlappedWorkers.contains(data)){
+                if(TownBuildingCoreBlockTileEntity.getWorkerState(data) != TownWorkerState.OCCUPIED_AREA_OVERLAPPED){
+                    TownTileEntity townTileEntity = (TownTileEntity) Utils.getExistingTileEntity(world, data.getPos());
+                    townTileEntity.setWorkerState(TownWorkerState.OCCUPIED_AREA_OVERLAPPED);
+                }
+            }else if(TownBuildingCoreBlockTileEntity.getWorkerState(data) != TownWorkerState.OCCUPIED_AREA_OVERLAPPED){
+                TownTileEntity townTileEntity = (TownTileEntity) Utils.getExistingTileEntity(world, data.getPos());
                 townTileEntity.setWorkerState(TownWorkerState.NOT_INITIALIZED);
             }
         }
-        blocks.keySet().removeIf(pos -> !((TownTileEntity)Utils.getExistingTileEntity(world, pos)).isWorkValid());
     }
 
 }

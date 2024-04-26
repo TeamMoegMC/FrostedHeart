@@ -30,6 +30,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
 
+import java.util.Objects;
+
 /**
  * Data for a worker (town block) in the town.
  * <p>
@@ -139,4 +141,21 @@ public class TownWorkerData {
     public boolean work(Town resource) {
         return type.getWorker().work(resource, workData);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TownWorkerData)) return false;
+        TownWorkerData that = (TownWorkerData) o;
+        return priority == that.priority &&
+                Objects.equals(type, that.type) &&
+                Objects.equals(pos, that.pos);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, pos, priority);
+    }
+
+
 }

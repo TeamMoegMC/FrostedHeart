@@ -36,6 +36,14 @@ public abstract class TownBuildingCoreBlockTileEntity extends FHBaseTileEntity i
         return OccupiedArea.EMPTY;
     }
 
+    public static OccupiedArea getOccupiedArea(CompoundNBT nbt){
+        return OccupiedArea.fromNBT(nbt.getCompound("occupiedArea"));
+    }
+
+    public static OccupiedArea getOccupiedArea(TownWorkerData data){
+        return getOccupiedArea(data.getWorkData());
+    }
+
     @Override
     public boolean isWorkValid(){
         if(workerState==NOT_INITIALIZED) this.refresh();
@@ -44,11 +52,19 @@ public abstract class TownBuildingCoreBlockTileEntity extends FHBaseTileEntity i
 
     /**
      * doesn't refresh the tile entity if didn't initialize
-     * @return
      */
     public boolean isValid(){
         return this.workerState.isValid();
     }
+
+    public static boolean isValid(CompoundNBT nbt){
+        return TownWorkerState.fromByte(nbt.getByte("workerState")).isValid();
+    }
+
+    public static boolean isValid(TownWorkerData data){
+        return isValid(data.getWorkData());
+    }
+
     public boolean isOccupiedAreaOverlapped(){
         return this.workerState == TownWorkerState.OCCUPIED_AREA_OVERLAPPED;}
 
@@ -68,6 +84,14 @@ public abstract class TownBuildingCoreBlockTileEntity extends FHBaseTileEntity i
     }
     public TownWorkerState getWorkerState() {
         return workerState;
+    }
+
+    public static TownWorkerState getWorkerState(CompoundNBT nbt){
+        return TownWorkerState.fromByte(nbt.getByte("workerState"));
+    }
+
+    public static TownWorkerState getWorkerState(TownWorkerData data){
+        return getWorkerState(data.getWorkData());
     }
 
     public void addToSchedulerQueue(){
