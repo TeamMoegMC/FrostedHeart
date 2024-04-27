@@ -29,6 +29,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.SpecialData;
 import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
 import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseTileEntity;
 import com.teammoeg.frostedheart.content.town.hunting.HuntingCampTileEntity;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
@@ -113,9 +114,8 @@ public class TeamTownData implements SpecialData{
     public void tick(ServerWorld world) {
         removeNonTownBlocks(world);
         int randomInt = world.getRandom().nextInt(64);//used to do some non-urgent check
-        if(randomInt == 1){//check if occupied area overlapped
-            checkOccupiedAreaOverlap(world);
-        }
+        if(randomInt == 1) checkOccupiedAreaOverlap(world);
+        if(randomInt == 2) distributeResidents(world);
         PriorityQueue<TownWorkerData> pq = new PriorityQueue<>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
         for(TownWorkerData workerData : blocks.values()){
             if(TownBuildingCoreBlockTileEntity.isValid(workerData)){
@@ -225,6 +225,42 @@ public class TeamTownData implements SpecialData{
             }else if(TownBuildingCoreBlockTileEntity.getWorkerState(data) != TownWorkerState.OCCUPIED_AREA_OVERLAPPED){
                 TownTileEntity townTileEntity = (TownTileEntity) Utils.getExistingTileEntity(world, data.getPos());
                 townTileEntity.setWorkerState(TownWorkerState.NOT_INITIALIZED);
+            }
+        }
+    }
+
+    //distribute homeless residents to house
+    private void distributeResidents(ServerWorld world) {
+        List<TownWorkerData> availableHouses = new ArrayList<>();
+        //List<Resident> residentsHasHouse = new ArrayList<>();
+        LinkedList<Resident> residentsHomeless = new LinkedList<>(residents.values());//this is a Queue
+        for(TownWorkerData data : blocks.values()){//get all houses that can accommodate more residents
+            if(data.getType() != TownWorkerType.HOUSE) continue;//remove non house blocks
+            CompoundNBT houseNBT = data.getWorkData();
+            if(!TownBuildingCoreBlockTileEntity.isValid(houseNBT)) continue;//remove invalid houses
+            int houseMaxResident = houseNBT.getInt("maxResident");
+            if(houseMaxResident <= 0) continue;//remove houses that can't accommodate residents
+            ListNBT residentListNBT = houseNBT.getList("resident", Constants.NBT.TAG_COMPOUND);
+            for(INBT inbt : residentListNBT){//遍历house中的居民，以判断城镇中的居民是否有房
+                Resident resident = new Resident(inbt);
+                if(!this.residents.containsKey(resident.getUUID())){//检测到错误居民，立即清除
+                    ((HouseTileEntity) Objects.requireNonNull(world.getTileEntity(data.getPos()))).removeResident(resident);
+                }
+                residentsHomeless.remove(resident);
+            }
+            int houseResident = residentListNBT.size();
+            if(houseResident >= houseMaxResident) continue;//remove full houses
+            if(!world.isBlockLoaded(data.getPos())) continue;//remove unloaded houses.对于未加载的房间，我们没法获取TileEntity，也就做不到向其中添加居民
+            availableHouses.add(data);
+        }
+        if(residentsHomeless.isEmpty() || availableHouses.isEmpty()) return;
+        availableHouses.sort(Comparator.comparingDouble(house -> - house.getWorkData().getDouble("rating")));//将用于比较的rating加上了负号，以将rating大的排在前面
+        Iterator<TownWorkerData> availableHousesIterator = availableHouses.iterator();
+        HouseTileEntity currentHouseTileEntity = (HouseTileEntity) Utils.getExistingTileEntity(world, availableHousesIterator.next().getPos());
+        for(Resident resident : residentsHomeless){
+            while(!currentHouseTileEntity.addResident(resident)){
+                if(!availableHousesIterator.hasNext()) return;
+                currentHouseTileEntity = (HouseTileEntity) Utils.getExistingTileEntity(world, availableHousesIterator.next().getPos());
             }
         }
     }

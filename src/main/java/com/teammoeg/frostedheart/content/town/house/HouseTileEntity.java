@@ -34,6 +34,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nonnull;
@@ -133,9 +134,9 @@ public class HouseTileEntity extends TownBuildingCoreBlockTileEntity{
         setBasicWorkData(data);
         if(this.isValid()) {
             residents = new ArrayList<>();
-            ListNBT residentList = data.getList("residents", 10);
+            ListNBT residentList = data.getList("residents", Constants.NBT.TAG_COMPOUND);
             for (int i = 0; i < residentList.size(); i++) {
-                residents.add(new Resident().deserialize(residentList.getCompound(i)));
+                residents.add(new Resident(residentList.getCompound(i)));
             }
             maxResident = data.getInt("maxResident");
             temperature = data.getDouble("temperature");
@@ -319,5 +320,21 @@ public class HouseTileEntity extends TownBuildingCoreBlockTileEntity{
             return endpointCap.cast();
         }
         return super.getCapability(capability, facing);
+    }
+
+    public boolean addResident(Resident resident) {
+        if(!this.isWorkValid()) return false;
+        if (residents.size() < this.maxResident) {
+            residents.add(resident);
+            return true;
+        }
+        return false;
+    }
+
+    public void removeResident(Resident resident) {
+        residents.removeIf(r->r.equals(resident));
+    }
+    public void removeResident(UUID id) {
+        residents.removeIf(r->r.getUUID().equals(id));
     }
 }
