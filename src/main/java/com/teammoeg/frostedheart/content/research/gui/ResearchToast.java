@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.research.gui.tech;
+package com.teammoeg.frostedheart.content.research.gui;
 
 import java.util.List;
 

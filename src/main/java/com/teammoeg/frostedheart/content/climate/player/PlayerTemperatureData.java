@@ -20,7 +20,7 @@ public class PlayerTemperatureData implements NBTSerializable  {
 	
 	public PlayerTemperatureData() {
 	}
-	public void load (CompoundNBT nbt,boolean isPacket) {
+	public void load(CompoundNBT nbt,boolean isPacket) {
 		previousTemp=nbt.getFloat("previous_body_temperature");
 		bodyTemp=nbt.getFloat("bodytemperature");
 		envTemp=nbt.getFloat("envtemperature");

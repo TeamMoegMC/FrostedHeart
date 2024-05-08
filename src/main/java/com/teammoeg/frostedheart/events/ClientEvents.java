@@ -49,7 +49,7 @@ import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.heatdevice.generator.MasterGeneratorScreen;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
-import com.teammoeg.frostedheart.content.research.gui.tech.ResearchToast;
+import com.teammoeg.frostedheart.content.research.gui.ResearchToast;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.frostedheart.content.research.research.effects.EffectCrafting;
 import com.teammoeg.frostedheart.content.research.research.effects.EffectShowCategory;

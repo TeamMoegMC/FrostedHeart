@@ -19,6 +19,10 @@ public class LeveledValue {
 	IntFunction<Float> getMax;
 	int level;
 	float value;
+	public void setValue(int level,int value) {
+		this.level=level;
+		this.value=value;
+	}
 	public LeveledValue(IntFunction<Float> getMax, int level, float value) {
 		super();
 		this.getMax = getMax;

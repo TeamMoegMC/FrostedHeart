@@ -62,6 +62,11 @@ public class EnergyCore implements NBTSerializable {
     long lastsleepdate;
     long lastsleep;
     double utbody;
+    public void update(int level,int exp,int plevel,int pexp,int researchPoint) {
+    	this.level.setValue(level, exp);
+    	this.persistLevel.setValue(plevel, pexp);
+    	this.researchPoint=researchPoint;
+    }
     public EnergyCore() {
     	level=CodecUtil.initEmpty(LEVELED_CODEC);
     	persistLevel=CodecUtil.initEmpty(PERSIST_LEVELED_CODEC);
