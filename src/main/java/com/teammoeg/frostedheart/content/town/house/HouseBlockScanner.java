@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.content.town.house;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTags;
 import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
@@ -32,7 +32,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ColumnPos;
 import net.minecraft.world.World;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 //严格来讲这不是一个正常的BlockScanner，而是一个用于将FloorBlockScanner和ConfinedSpaceScanner结合起来的类
 public class HouseBlockScanner extends BlockScanner {
@@ -40,11 +43,11 @@ public class HouseBlockScanner extends BlockScanner {
     public static final int MINIMUM_VOLUME = 6;
     public static final int MINIMUM_AREA = 3;
     public static final int MAX_SCANNING_TIMES_FLOOR = 512;
-    private int area = 0;
-    private int volume = 0;
-    private final Map<String/*block.getName()*/, Integer> decorations = new HashMap<>();
-    private double temperature = 0;//average temperature
-    private final HashSet<ColumnPos> occupiedArea = new HashSet<>();
+    protected int area = 0;
+    protected int volume = 0;
+    protected final Map<String/*block.getName()*/, Integer> decorations = new HashMap<>();
+    protected double temperature = 0;//average temperature
+    protected final OccupiedArea occupiedArea = new OccupiedArea();
 
     public int getArea() {
         return this.area;
@@ -62,11 +65,11 @@ public class HouseBlockScanner extends BlockScanner {
         return this.temperature;
     }
 
-    public HashSet<ColumnPos> getOccupiedArea() {
+    public OccupiedArea getOccupiedArea() {
         return this.occupiedArea;
     }
 
-    HouseBlockScanner(World world, BlockPos startPos) {
+    public HouseBlockScanner(World world, BlockPos startPos) {
         super(world, startPos);
     }
 
@@ -89,7 +92,7 @@ public class HouseBlockScanner extends BlockScanner {
      *
      * @param pos the position of the block to check
      */
-    void addDecoration(BlockPos pos) {
+    protected void addDecoration(BlockPos pos) {
         BlockState blockState = getBlockState(pos);
         Block block = blockState.getBlock();
         if (blockState.isIn(FHTags.Blocks.DECORATIONS) || Objects.requireNonNull(block.getRegistryName()).getNamespace().equals("cfm")) {
@@ -123,7 +126,7 @@ public class HouseBlockScanner extends BlockScanner {
                     this.temperature += ChunkHeatData.getTemperature(world, pos);
                     this.volume++;
                     this.occupiedArea.add(new ColumnPos(pos.getX(), pos.getZ()));
-                    FHMain.LOGGER.debug("scanning air pos:" + pos);
+                    //FHMain.LOGGER.debug("scanning air pos:" + pos);
                 }, this::addDecoration,
                 (useless) -> !this.isValid);
         temperature /= volume;

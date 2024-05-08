@@ -22,7 +22,12 @@ package com.teammoeg.frostedheart.content.town.resident;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.util.UUIDCodec;
+
+import java.util.UUID;
 
 /**
  * A resident of the town.
@@ -32,10 +37,12 @@ import net.minecraft.nbt.CompoundNBT;
  */
 public class Resident {
 	public static final Codec<Resident> CODEC=RecordCodecBuilder.create(t->t.group(
-		Codec.STRING.fieldOf("firstName").forGetter(o->o.firstName),
-		Codec.STRING.fieldOf("lastName").forGetter(o->o.lastName)
+            Codec.STRING.fieldOf("firstName").forGetter(o->o.firstName),
+            Codec.STRING.fieldOf("lastName").forGetter(o->o.lastName),
+            UUIDCodec.CODEC.fieldOf("uuid").forGetter(o->o.uuid)
 		).apply(t, Resident::new));
-	
+
+    private UUID uuid;
     private String firstName = "Steve";
     private String lastName = "Alexander";
     /** Stats range from 0 to 100 */
@@ -57,9 +64,24 @@ public class Resident {
     public Resident(String firstName, String lastName) {
         this.firstName = firstName;
         this.lastName = lastName;
+        this.uuid = UUID.randomUUID();
     }
 
-    public Resident() {
+    //public Resident() {
+    //}
+
+    public Resident(INBT inbt){
+        this.deserialize((CompoundNBT)inbt);
+    }
+
+    public Resident(String firstName, String lastName, UUID uuid){
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.uuid = uuid;
+    }
+
+    public Resident (String firstName, String lastName, String uuid){
+        this(firstName,lastName,UUID.fromString(uuid));
     }
 
     public String getFirstName() {
@@ -78,6 +100,10 @@ public class Resident {
         this.lastName = lastName;
     }
 
+    public UUID getUUID(){
+        return uuid;
+    }
+
     /**
      * Compute the productivity multiplier of the resident.
      * A linear map from [0,100] to [0.0,2.0].
@@ -91,6 +117,7 @@ public class Resident {
     // serialization
     public CompoundNBT serialize() {
         CompoundNBT data = new CompoundNBT();
+        data.putString("uuid", uuid.toString());
         data.putString("firstName", firstName);
         data.putString("lastName", lastName);
         data.putInt("health", health);
@@ -104,6 +131,7 @@ public class Resident {
     }
 
     public Resident deserialize(CompoundNBT data) {
+        uuid = UUID.fromString(data.getString("uuid"));
         firstName = data.getString("firstName");
         lastName = data.getString("lastName");
         health = data.getInt("health");
@@ -119,5 +147,19 @@ public class Resident {
     @Override
     public String toString() {
         return firstName + " " + lastName;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Resident) {
+            Resident other = (Resident) obj;
+            return other.uuid.equals(uuid);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return uuid.hashCode();
     }
 }

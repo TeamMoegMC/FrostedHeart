@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.content.town.mine;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import net.minecraft.block.BlockState;
@@ -25,14 +26,14 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
         super(world, startPos);
     }
     private final HashSet<BlockPos> rails = new HashSet<>();
-    public int area = 0;
-    public int volume;
-    public int chest = 0;
-    public int rack = 0;
-    public double temperature = 0;
+    private int area = 0;
+    private int volume;
+    private int chest = 0;
+    private int rack = 0;
+    private double temperature = 0;
     private int counter_for_temperature = 0;//used to calculate average temperature.
-    public Set<BlockPos> linkedMines = new HashSet<>();
-    public Set<ColumnPos> occupiedArea = new HashSet<>();
+    private final Set<BlockPos> linkedMines = new HashSet<>();
+    private final OccupiedArea occupiedArea = new OccupiedArea();
 
     @Override
     public boolean isValidFloor(BlockPos pos){
@@ -70,6 +71,24 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
 
     public double getTemperature(){
         return temperature;
+    }
+    public int getArea() {
+        return area;
+    }
+    public int getVolume() {
+        return volume;
+    }
+    public int getChest() {
+        return chest;
+    }
+    public int getRack() {
+        return rack;
+    }
+    public Set<BlockPos> getLinkedMines() {
+        return linkedMines;
+    }
+    public OccupiedArea getOccupiedArea() {
+        return occupiedArea;
     }
 
     public boolean scan(){

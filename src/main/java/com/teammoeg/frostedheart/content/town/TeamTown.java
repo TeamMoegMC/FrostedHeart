@@ -300,7 +300,7 @@ public class TeamTown implements Town {
     }
 
     public void addResident(Resident resident) {
-        data.residents.put(UUID.randomUUID(), resident);
+        data.residents.put(resident.getUUID(), resident);
     }
 
     public void addResident(String firstName, String lastName) {

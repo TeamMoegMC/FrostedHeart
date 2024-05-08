@@ -43,6 +43,8 @@ import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterTileEntity
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEntity;
 import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
+import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseTileEntity;
+import com.teammoeg.frostedheart.content.town.hunting.HuntingCampTileEntity;
 import com.teammoeg.frostedheart.content.town.mine.MineBaseTileEntity;
 import com.teammoeg.frostedheart.content.town.mine.MineTileEntity;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseTileEntity;
@@ -130,7 +132,12 @@ public class FHTileTypes {
     public static final RegistryObject<TileEntityType<MineBaseTileEntity>> MINE_BASE = REGISTER.register(
             "mine_base", makeType(MineBaseTileEntity::new, FHBlocks.mine_base)
     );
-
+    public static final RegistryObject<TileEntityType<HuntingCampTileEntity>> HUNTING_CAMP = REGISTER.register(
+            "hunting_camp", makeType(HuntingCampTileEntity::new, FHBlocks.hunting_camp)
+    );
+    public static final RegistryObject<TileEntityType<HuntingBaseTileEntity>> HUNTING_BASE = REGISTER.register(
+            "hunting_base", makeType(HuntingBaseTileEntity::new, FHBlocks.hunting_base)
+    );
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }

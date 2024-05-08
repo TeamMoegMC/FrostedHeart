@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.town.mine;
 
 import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
@@ -18,17 +19,31 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
     private final int startX;
     private final int startY;
     private final int startZ;
-    public int validStone = 0;
-    public int light = 0;
-    public double temperature = 0;
+    private int validStone = 0;
+    private int light = 0;
+    private double temperature = 0;
     private int volume = 0;//used to calculate temperature
-    public Set<ColumnPos> occupiedArea = new HashSet<>();
+    private final OccupiedArea occupiedArea = new OccupiedArea();
     public MineBlockScanner(World world, BlockPos startPos) {
         super(world, startPos);
         this.startX = startPos.getX();
         this.startY = startPos.getY();
         this.startZ = startPos.getZ();
     }
+
+    public int getValidStone() {
+        return validStone;
+    }
+    public int getLight(){
+        return light;
+    }
+    public double getTemperature(){
+        return temperature;
+    }
+    public OccupiedArea getOccupiedArea() {
+        return occupiedArea;
+    }
+
 
     public static boolean isStoneOrOre(World world, BlockPos pos){
         BlockState state = world.getBlockState(pos);

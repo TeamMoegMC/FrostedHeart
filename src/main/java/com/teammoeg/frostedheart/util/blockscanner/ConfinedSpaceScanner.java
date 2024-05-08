@@ -12,6 +12,8 @@ import net.minecraft.world.World;
 
 /**
  * scan air
+ * 可用于判断一个空间是否密闭。
+ * 如果需要用某些特定的方块包围密闭空间，可以在子类中覆写isValidAir方法
  */
 public class ConfinedSpaceScanner extends BlockScanner {
 
@@ -34,20 +36,26 @@ public class ConfinedSpaceScanner extends BlockScanner {
         HashSet<BlockPos> nextScanningBlocks = new HashSet<>();//这个HashSet暂存下一批的ScanningBlock
         for(Direction direction : Direction.values()){
             BlockPos pos1 = pos.offset(direction);// pos1: 用于存储与pos相邻的方块
-            if (this.getScannedBlocks().contains(pos1.toLong())) continue;
+            if (this.getScannedBlocks().contains(pos1)) continue;
             if (!isValidAir(pos1)) {
                 operation.accept(pos1);
+                scannedBlocks.add(pos1);
                 continue;
             }
             nextScanningBlocks.add(pos1);
             AbstractMap.SimpleEntry<HashSet<BlockPos>, Boolean> airsAbove = getAirsAbove(pos1);
             if(!airsAbove.getValue()){
                 this.isValid = false;
-                return null;
+                return nextScanningBlocks;
             }
             else nextScanningBlocks.addAll(airsAbove.getKey());
         }
         return nextScanningBlocks;
+    }
+
+    @Override
+    protected HashSet<BlockPos> nextScanningBlocks(BlockPos pos){
+        return nextScanningBlocks(pos, CONSUMER_NULL);
     }
 
     //基本上和getBlocksAbove是相同的，为了减少lambda的使用单列一个方法
