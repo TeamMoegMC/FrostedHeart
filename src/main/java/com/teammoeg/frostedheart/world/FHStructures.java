@@ -19,12 +19,15 @@
 
 package com.teammoeg.frostedheart.world;
 
+import java.sql.Struct;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.world.structure.DestroyedGeneratorStructure;
 import com.teammoeg.frostedheart.world.structure.ObservatoryPiece;
 import com.teammoeg.frostedheart.world.structure.ObservatoryStructure;
 
@@ -35,12 +38,71 @@ import net.minecraft.world.gen.feature.structure.IStructurePieceType;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.gen.settings.DimensionStructuresSettings;
 import net.minecraft.world.gen.settings.StructureSeparationSettings;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHStructures {
+    //For now... (Added by Mixxs... please help)
+    public static DeferredRegister<Structure<?>> STRUCTURES = DeferredRegister.create(ForgeRegistries.STRUCTURE_FEATURES, FHMain.MODID);
+
+    public static final RegistryObject<Structure<NoFeatureConfig>> DESTROYED_GENERATOR =
+            STRUCTURES.register("destroyed_generator", DestroyedGeneratorStructure::new);
+
+    public static void setupStructures(){
+        setupMapSpacingAndLand(DESTROYED_GENERATOR.get(),
+                new StructureSeparationSettings(100,50, 841515441),
+                true);
+    }
+
+    public static <F extends Structure<?>> void setupMapSpacingAndLand(F structure, StructureSeparationSettings structureSeparationSettings,
+                                                                       boolean transformSurroundingLand) {
+        Structure.NAME_STRUCTURE_BIMAP.put(structure.getRegistryName().toString(), structure);
+
+        if (transformSurroundingLand) {
+            Structure.field_236384_t_ = ImmutableList.<Structure<?>>builder()
+                    .addAll(Structure.field_236384_t_)
+                    .add(structure)
+                    .build();
+        }
+
+        DimensionStructuresSettings.field_236191_b_ =
+                ImmutableMap.<Structure<?>, StructureSeparationSettings>builder()
+                        .putAll(DimensionStructuresSettings.field_236191_b_)
+                        .put(structure, structureSeparationSettings)
+                        .build();
+
+
+
+        WorldGenRegistries.NOISE_SETTINGS.getEntries().forEach(settings -> {
+            Map<Structure<?>, StructureSeparationSettings> structureMap = settings.getValue().getStructures().func_236195_a_();
+
+            if (structureMap instanceof ImmutableMap) {
+                Map<Structure<?>, StructureSeparationSettings> tempMap = new HashMap<>(structureMap);
+                tempMap.put(structure, structureSeparationSettings);
+                settings.getValue().getStructures().func_236195_a_();
+
+            } else {
+                structureMap.put(structure, structureSeparationSettings);
+            }
+        });
+
+    }
+
+    public static void register(IEventBus eventBus){
+        STRUCTURES.register(eventBus);
+    }
+
+
+
+    // Before
+
+
+
 
     public static final IStructurePieceType OBSERVATORY_PIECE = registerPiece(ObservatoryPiece::new, "observatory");
 //    public static final IStructurePieceType VOLCANIC_VENT_PIECE = registerPiece(VolcanicVentPiece::new, "volcanic_vent");
-
 
     public static final Structure<NoFeatureConfig> OBSERVATORY = new ObservatoryStructure(NoFeatureConfig.CODEC);
 //    public static final Structure<NoFeatureConfig> VOLCANIC_VENT = new VolcanicVentStructure(NoFeatureConfig.CODEC);

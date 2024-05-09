@@ -42,6 +42,9 @@
   "block.frostedheart.wooden_box": "Wooden Box",
   "block.frostedheart.house": "House",
   
+  "block.frostedheart.broken_plate": "Broken Generator Plating",
+  "block.frostedheart.makeshift_generator_broken": "Broken generator core",
+  
    "tetra/schematic/single/head/core_spade/basic_core_spade.name": "Core Spade Head",
   
   "tetra/schematic/single/head/core_spade/basic_core_spade.description": "Make a core spade with given materials, useful in detecting rock and mineral underneath",
@@ -331,6 +334,8 @@
   "item.frostedheart.compressed_biscuits":"Compressed Biscuits",
   "item.frostedheart.packed_nuts":"Daily Nuts",
   "item.frostedheart.dried_vegetables":"Freeze Dried Vegetables",
+  "item.frostedheart.makeshift_core_broken": "Broken Novel Core",
+  "item.frostedheart.handheld_core": "Repaired Novel Core",
   "itemGroup.frostedheart": "Frosted Heart",
   "itemname.frostedheart.start_chest": "Broken Space Suit",
   "itemname.frostedheart.start_foot": "Broken Space Boots",

@@ -205,4 +205,22 @@ public class FHBlocks {
     public static void init() {
     	Create.registrate().addToSection(steam_core, AllSections.KINETICS);
     }
+
+    //Mixxs Section
+    public static RegistryObject<Block> makeshift_generator_broken = register("makeshift_generator_broken",()->new FHBaseBlock( Block.Properties
+        .create(Material.ROCK)
+        .sound(SoundType.STONE)
+        .setRequiresTool()
+        .harvestTool(ToolType.PICKAXE)
+        .hardnessAndResistance(45, 800)
+        .harvestLevel(3)));
+
+    public static RegistryObject<Block> broken_plate = register("broken_plate",()->new FHBaseBlock( Block.Properties
+            .create(Material.IRON)
+            .sound(SoundType.METAL)
+            .setRequiresTool()
+            .harvestTool(ToolType.PICKAXE)
+            .hardnessAndResistance(45, 800)
+            .harvestLevel(3)));
+
 }
