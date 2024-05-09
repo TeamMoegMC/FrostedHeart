@@ -79,6 +79,7 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
+import com.teammoeg.frostedheart.world.gen.FHOreGeneration;
 import com.teammoeg.frostedheart.world.gen.FHStructureGeneration;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
@@ -243,7 +244,7 @@ public class CommonEvents {
         if (event.getName() != null) {
             Biome.Category category = event.getCategory();
             if (category != NETHER && category != THEEND) {
-                generate_overworld_ores(event);
+                FHOreGeneration.generate_overworld_ores(event);
             }
             //else if(category == NETHER) { generate_nether_ores(event);
 
