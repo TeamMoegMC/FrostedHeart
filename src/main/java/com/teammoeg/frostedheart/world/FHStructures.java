@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.world;
 
-import java.sql.Struct;
 import java.util.HashMap;
 import java.util.Map;
 
