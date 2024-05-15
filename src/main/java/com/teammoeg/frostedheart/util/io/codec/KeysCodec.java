@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.util.io.codec;
 
 import java.util.Arrays;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.mojang.serialization.Codec;
@@ -17,7 +18,12 @@ public class KeysCodec<A> extends MapCodec<A> {
 		this.keys=strings;
 		this.codec=codec;
 	}
-
+	Function def;
+	public <T> KeysCodec(Codec<A> codec,Function<DynamicOps<T>,T> def,String...strings) {
+		this.keys=strings;
+		this.codec=codec;
+		this.def=def;
+	}
 	@Override
 	public <T> DataResult<A> decode(DynamicOps<T> ops, MapLike<T> input) {
 		for(String s:keys) {
@@ -26,6 +32,8 @@ public class KeysCodec<A> extends MapCodec<A> {
 				return codec.parse(ops, result);
 			}
 		}
+		if(def!=null)
+			return codec.parse(ops, (T)def.apply(ops));
 		return DataResult.error("No any of "+Arrays.toString(keys)+" present.");
 	}
 

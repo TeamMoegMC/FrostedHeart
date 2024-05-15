@@ -44,12 +44,12 @@ import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class ChunkHeatData{
-	public static final MapCodec<List<IHeatArea>> LIST_CODEC=CodecUtil.fieldOfs(Codec.list(
+	public static final MapCodec<List<IHeatArea>> LIST_CODEC=CodecUtil.optionalFieldOfs(Codec.list(
 		CodecUtil.dispatch(IHeatArea.class)
 		.type("cubic", CubicHeatArea.class,CubicHeatArea.CODEC)
 		.type("pillar", PillarHeatArea.class, PillarHeatArea.CODEC)
 		.buildByInt()
-		),"adjs","temperature");
+		),o->o.emptyList(),"adjs","temperature");
 	public static final Codec<ChunkHeatData> CODEC=RecordCodecBuilder.create(t->t.group(
 		LIST_CODEC.forGetter(o->o.adjusters.values().stream().collect(Collectors.toList()))).apply(t, ChunkHeatData::new));
 

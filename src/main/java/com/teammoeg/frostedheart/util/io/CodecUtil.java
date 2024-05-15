@@ -34,6 +34,7 @@ import com.mojang.serialization.codecs.EitherMapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.content.heatdevice.generator.GeneratorData;
+import com.teammoeg.frostedheart.util.ConstructorCodec;
 import com.teammoeg.frostedheart.util.io.codec.AlternativeCodecBuilder;
 import com.teammoeg.frostedheart.util.io.codec.BooleansCodec.BooleanCodecBuilder;
 import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
@@ -160,6 +161,9 @@ public class CodecUtil {
 	}
 	public static <A> MapCodec<A> fieldOfs(Codec<A> val, String...keys) {
 		return new KeysCodec<>(val,keys);
+	}
+	public static <A,T> MapCodec<A> optionalFieldOfs(Codec<A> val,Function<DynamicOps<T>,T> def, String...keys) {
+		return new KeysCodec<>(val,def,keys);
 	}
 	public static <A> DefaultValueCodec<A> defaultSupply(Codec<A> val, Supplier<A> def) {
 		return new DefaultValueCodec<A>(val, def);
@@ -334,15 +338,22 @@ public class CodecUtil {
 		return result.getOrThrow(true, s->{}).getFirst();
 	}
 	public static <A> A initEmpty(Codec<A> codec) {
+		if(codec instanceof ConstructorCodec)
+			return ((ConstructorCodec<A>) codec).getInstance();
 		return decodeOrThrow(codec.decode(NBTDynamicOps.INSTANCE,new CompoundNBT()));
 	}
 	public static <T> void encodeNBT(Codec<T> codec,CompoundNBT nbt,String key,T value) {
 		codec.encodeStart(NBTDynamicOps.INSTANCE, value).resultOrPartial(System.out::println).ifPresent(t->nbt.put(key,t));
 	}
-	public static <T> T decodeNBT(Codec<T> codec,CompoundNBT nbt,String key) {
+	public static <T> T decodeNBTIfPresent(Codec<T> codec,CompoundNBT nbt,String key) {
 		if(nbt.contains(key))
 			return codec.parse(NBTDynamicOps.INSTANCE, nbt.get(key)).resultOrPartial(System.out::println).orElse(null);
 		return null;
+	}
+	public static <T> T decodeNBT(Codec<T> codec,CompoundNBT nbt,String key) {
+		if(nbt.contains(key))
+			return codec.parse(NBTDynamicOps.INSTANCE, nbt.get(key)).resultOrPartial(System.out::println).orElse(null);
+		return codec.parse(NBTDynamicOps.INSTANCE,NBTDynamicOps.INSTANCE.empty()).resultOrPartial(System.out::println).orElse(null);
 	}
 	public static <T> ListNBT toNBTList(Collection<T> stacks, Codec<T> codec) {
 		ArrayNBTBuilder<Void> arrayBuilder = ArrayNBTBuilder.create();

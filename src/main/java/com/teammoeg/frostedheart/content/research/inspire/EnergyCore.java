@@ -70,6 +70,9 @@ public class EnergyCore implements NBTSerializable {
     public EnergyCore() {
     	level=CodecUtil.initEmpty(LEVELED_CODEC);
     	persistLevel=CodecUtil.initEmpty(PERSIST_LEVELED_CODEC);
+    	//System.out.println("init===============");
+		//System.out.println(level);
+		//System.out.println(persistLevel);
     }
     protected void addPersistExp(ServerPlayerEntity player, float value) {
     	persistLevel.addValue(value*getModifier(player));
@@ -182,6 +185,7 @@ public class EnergyCore implements NBTSerializable {
 	@Override
 	public void save(CompoundNBT saved, boolean isPacket) {
 		// TODO Auto-generated method stub
+
 	    CodecUtil.encodeNBT(LEVELED_CODEC, saved, "lvl", level);
 	    CodecUtil.encodeNBT(PERSIST_LEVELED_CODEC, saved, "plvl", persistLevel);
 	    saved.putInt("lastLvl", maxLevel);
@@ -198,6 +202,9 @@ public class EnergyCore implements NBTSerializable {
 	public void load(CompoundNBT saved, boolean isPacket) {
 		level=CodecUtil.decodeNBT(LEVELED_CODEC, saved, "lvl");
 		persistLevel=CodecUtil.decodeNBT(PERSIST_LEVELED_CODEC, saved, "plvl");
+		//System.out.println("load===============");
+		//System.out.println(level);
+		//System.out.println(persistLevel);
 		maxLevel=saved.getInt("lastLvl");
 		maxPesistLevel=saved.getInt("lastPlvl");
 		researchPoint=saved.getInt("rp");
