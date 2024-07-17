@@ -32,6 +32,16 @@ public class FHSurfaceBuilder {
     public static final ConfiguredSurfaceBuilder<SurfaceBuilderConfig> VOLCANIC = register("volcanic",
             SurfaceBuilder.DEFAULT.func_242929_a(new SurfaceBuilderConfig(RankineBlocks.BASALTIC_TUFF.get().getDefaultState(), Blocks.STONE.getDefaultState(), Blocks.GRAVEL.getDefaultState())));
 
+    public static final ConfiguredSurfaceBuilder<SurfaceBuilderConfig> FROZEN_FOREST = register("frozen_forest",
+            SurfaceBuilder.DEFAULT.func_242929_a(
+                    new SurfaceBuilderConfig(
+                            Blocks.GRASS_BLOCK.getDefaultState(),//表层方块
+                            Blocks.STONE.getDefaultState(),//表层下方块
+                            Blocks.SAND.getDefaultState()//水下方块
+                    )
+            )
+    );
+
     private static <SC extends ISurfaceBuilderConfig> ConfiguredSurfaceBuilder<SC> register(String name, ConfiguredSurfaceBuilder<SC> configuredSurfaceBuilder) {
         return WorldGenRegistries.register(WorldGenRegistries.CONFIGURED_SURFACE_BUILDER, name, configuredSurfaceBuilder);
     }
