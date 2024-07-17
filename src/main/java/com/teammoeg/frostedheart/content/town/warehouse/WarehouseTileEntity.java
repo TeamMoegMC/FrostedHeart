@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.town.warehouse;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
-import com.teammoeg.frostedheart.content.town.TownBuildingCoreBlockTileEntity;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerTileEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
@@ -16,7 +16,7 @@ import java.util.Objects;
 
 import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHouseBlock;
 
-public class WarehouseTileEntity extends TownBuildingCoreBlockTileEntity{
+public class WarehouseTileEntity extends AbstractTownWorkerTileEntity{
     private int volume;//有效体积
     private int area;//占地面积
     private double capacity;//最大容量
@@ -67,7 +67,7 @@ public class WarehouseTileEntity extends TownBuildingCoreBlockTileEntity{
     }
 
     @Override
-    public TownWorkerType getWorker() {
+    public TownWorkerType getWorkerType() {
         return TownWorkerType.WAREHOUSE;
     }
 

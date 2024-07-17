@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.town.hunting;
 
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.content.town.FHTownBuildingCoreBlock;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
 import com.teammoeg.frostedheart.content.town.mine.MineBaseTileEntity;
 import com.teammoeg.frostedheart.util.MathUtils;
@@ -20,7 +20,7 @@ import net.minecraft.world.World;
 import javax.annotation.Nonnull;
 import java.util.Random;
 
-public class HuntingBaseBlock extends FHTownBuildingCoreBlock {
+public class HuntingBaseBlock extends AbstractTownWorkerBlock {
     public HuntingBaseBlock(Properties blockProps) {
         super(blockProps);
     }
@@ -33,7 +33,7 @@ public class HuntingBaseBlock extends FHTownBuildingCoreBlock {
     @Override
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
-        if (stateIn.get(FHTownBuildingCoreBlock.LIT)) {
+        if (stateIn.get(AbstractTownWorkerBlock.LIT)) {
             ClientUtils.spawnSteamParticles(worldIn, pos);
         }
     }

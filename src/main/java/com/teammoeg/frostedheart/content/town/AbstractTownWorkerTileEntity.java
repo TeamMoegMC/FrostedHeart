@@ -11,12 +11,12 @@ import net.minecraft.tileentity.TileEntityType;
 
 import static com.teammoeg.frostedheart.content.town.TownWorkerState.NOT_INITIALIZED;
 
-public abstract class TownBuildingCoreBlockTileEntity extends FHBaseTileEntity implements
+public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity implements
         TownTileEntity, ScheduledTaskTileEntity, ITickableTileEntity, FHBlockInterfaces.IActiveState {
     public TownWorkerState workerState = NOT_INITIALIZED;
     public OccupiedArea occupiedArea;
     protected boolean addedToSchedulerQueue = false;
-    public TownBuildingCoreBlockTileEntity(TileEntityType<? extends TileEntity> type)  {
+    public AbstractTownWorkerTileEntity(TileEntityType<? extends TileEntity> type)  {
         super(type);
     }
     public abstract void refresh();

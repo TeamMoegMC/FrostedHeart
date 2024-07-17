@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.content.town.hunting;
 
-import com.teammoeg.frostedheart.content.town.FHTownBuildingCoreBlock;
-import com.teammoeg.frostedheart.util.MathUtils;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -15,7 +14,7 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 
-public class HuntingCampBlock extends FHTownBuildingCoreBlock {
+public class HuntingCampBlock extends AbstractTownWorkerBlock {
     public HuntingCampBlock(Properties blockProps) {
         super(blockProps);
     }

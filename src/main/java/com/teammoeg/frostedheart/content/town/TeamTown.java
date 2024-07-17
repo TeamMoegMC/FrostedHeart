@@ -19,11 +19,8 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.UUID;
 
 import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
@@ -33,6 +30,7 @@ import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.common.util.LazyOptional;
 
 /**
  * The town for a player team.
@@ -53,6 +51,8 @@ public class TeamTown implements Town {
     Map<TownResourceType, Integer> maxStorage = new EnumMap<>(TownResourceType.class);
     /** The town data, actual data stored on disk. */
     TeamTownData data;
+    /** Workable residents, will be gotten every tick, and consumed by workers in tick. */
+    Collection<Resident> workableResidents;
 
     /**
      * Create a new town based on data.
@@ -93,6 +93,7 @@ public class TeamTown implements Town {
         this.storage = td.resources;
         this.backupStorage = td.backupResources;
         this.data = td;
+        this.workableResidents = new ArrayList<>(data.residents.values());//get all residents from data. maybe there will be a method to get workable residents,idk.
     }
 
     @Override
@@ -283,7 +284,7 @@ public class TeamTown implements Town {
      */
     public void addTownBlock(BlockPos pos, TownTileEntity tile) {
         TownWorkerData workerData = data.blocks.computeIfAbsent(pos, TownWorkerData::new);
-        workerData.fromBlock(tile);
+        workerData.fromTileEntity(tile);
     }
 
     /**
@@ -350,5 +351,21 @@ public class TeamTown implements Town {
     @Override
     public Optional<TeamTownData> getTownData() {
         return Optional.of(data);
+    }
+
+    public LazyOptional<Resident> consumeWorkableResident(TownWorkerType type){
+        Resident bestResident = null;
+        for(Resident resident : workableResidents){
+            if(resident.getWorkProficiency(type) < 0) continue;
+            if(bestResident==null|| bestResident.getWorkProficiency(type) < resident.getWorkProficiency(type)){
+                bestResident=resident;
+            }
+        }
+        Resident finalBestResident = bestResident;
+        if(finalBestResident!=null){
+            workableResidents.remove(finalBestResident);
+            return LazyOptional.of(()-> finalBestResident);
+        }
+        return LazyOptional.empty();
     }
 }

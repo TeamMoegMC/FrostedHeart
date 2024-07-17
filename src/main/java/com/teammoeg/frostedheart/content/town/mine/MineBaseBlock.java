@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.town.mine;
 
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.content.town.FHTownBuildingCoreBlock;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -15,7 +15,7 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 //矿场基地方块，不是矿场的BaseBlock
-public class MineBaseBlock extends FHTownBuildingCoreBlock {
+public class MineBaseBlock extends AbstractTownWorkerBlock {
 
     public MineBaseBlock(Properties blockProps) {
         super(blockProps);

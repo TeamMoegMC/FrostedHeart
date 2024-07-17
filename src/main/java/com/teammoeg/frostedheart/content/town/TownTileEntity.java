@@ -42,7 +42,7 @@ public interface TownTileEntity {
      *
      * @return the worker type
      */
-    TownWorkerType getWorker();
+    TownWorkerType getWorkerType();
 
     /**
      * Check if the work is valid.
@@ -79,7 +79,6 @@ public interface TownTileEntity {
     /**
      * Set the worker state.
      * see TownBuildingCoreBlockTileEntity.workerState
-     * @param state
      */
     void setWorkerState(TownWorkerState state);
 

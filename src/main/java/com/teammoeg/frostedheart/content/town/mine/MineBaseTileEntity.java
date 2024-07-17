@@ -2,9 +2,7 @@ package com.teammoeg.frostedheart.content.town.mine;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.base.scheduler.ScheduledTaskTileEntity;
-import com.teammoeg.frostedheart.content.town.TownBuildingCoreBlockTileEntity;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerTileEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
@@ -25,7 +23,7 @@ import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHo
 import static java.lang.Math.exp;
 import static net.minecraftforge.common.util.Constants.NBT.TAG_LONG;
 
-public class MineBaseTileEntity extends TownBuildingCoreBlockTileEntity {
+public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
     public Set<BlockPos> linkedMines = new HashSet<>();
     private int volume;
     private int area;
@@ -94,7 +92,7 @@ public class MineBaseTileEntity extends TownBuildingCoreBlockTileEntity {
     }
 
     @Override
-    public TownWorkerType getWorker() {
+    public TownWorkerType getWorkerType() {
         return null;
     }
 
@@ -128,9 +126,7 @@ public class MineBaseTileEntity extends TownBuildingCoreBlockTileEntity {
             this.chest = data.getInt("chest");
             this.linkedMines.clear();
             ListNBT list = data.getList("linkedMines", TAG_LONG);
-            list.forEach(nbt->{
-                this.linkedMines.add( BlockPos.fromLong( ((LongNBT)nbt).getLong() ));
-            });
+            list.forEach(nbt-> this.linkedMines.add( BlockPos.fromLong( ((LongNBT)nbt).getLong() )));
         }
     }
 

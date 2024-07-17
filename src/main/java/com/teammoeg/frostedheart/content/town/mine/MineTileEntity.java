@@ -14,7 +14,7 @@ import net.minecraftforge.common.util.Constants;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class MineTileEntity extends TownBuildingCoreBlockTileEntity{
+public class MineTileEntity extends AbstractTownWorkerTileEntity{
     private int avgLightLevel;
     private int validStoneOrOre;
     private boolean hasLinkedBase = false;
@@ -80,7 +80,7 @@ public class MineTileEntity extends TownBuildingCoreBlockTileEntity{
     }
 
     @Override
-    public TownWorkerType getWorker() {
+    public TownWorkerType getWorkerType() {
         return TownWorkerType.MINE;
     }
 

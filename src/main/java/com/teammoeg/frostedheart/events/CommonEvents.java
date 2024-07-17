@@ -671,6 +671,11 @@ public class CommonEvents {
                                 trd.getData(SpecialDataTypes.TOWN_DATA).tick(serverWorld);
                             }
                         }
+                        if(serverWorld.getGameTime() == i + 1000) {
+                            if (trd.getTeam().map(t -> t.getOnlineMembers().size()).orElse(0) > 0) {
+                                trd.getData(SpecialDataTypes.TOWN_DATA).tickMorning(serverWorld);//execute only once a day
+                            }
+                        }
                     }
                     i++;
                 }

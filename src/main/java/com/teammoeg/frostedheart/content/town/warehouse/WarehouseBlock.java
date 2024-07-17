@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.town.warehouse;
 
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.content.town.FHTownBuildingCoreBlock;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -17,7 +17,7 @@ import javax.annotation.Nonnull;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-public class WarehouseBlock extends FHTownBuildingCoreBlock {
+public class WarehouseBlock extends AbstractTownWorkerBlock {
     public WarehouseBlock(Properties blockProps) {
         super(blockProps);
     }

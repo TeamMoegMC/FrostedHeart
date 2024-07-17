@@ -1,14 +1,14 @@
 package com.teammoeg.frostedheart.content.town.hunting;
 
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.content.town.TownBuildingCoreBlockTileEntity;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerTileEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
 import net.minecraft.nbt.CompoundNBT;
 
-public class HuntingCampTileEntity extends TownBuildingCoreBlockTileEntity {
+public class HuntingCampTileEntity extends AbstractTownWorkerTileEntity {
     public HuntingCampTileEntity() {
         super(FHTileTypes.HUNTING_CAMP.get());
     }
@@ -32,7 +32,7 @@ public class HuntingCampTileEntity extends TownBuildingCoreBlockTileEntity {
     }
 
     @Override
-    public TownWorkerType getWorker() {
+    public TownWorkerType getWorkerType() {
         return TownWorkerType.HUNTING_CAMP;
     }
 

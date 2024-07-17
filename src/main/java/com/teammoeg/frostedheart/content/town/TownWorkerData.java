@@ -90,8 +90,8 @@ public class TownWorkerData {
         return type.getWorker().firstWork(resource, workData);
     }
 
-    public void fromBlock(TownTileEntity te) {
-        type = te.getWorker();
+    public void fromTileEntity(TownTileEntity te) {
+        type = te.getWorkerType();
         workData = te.getWorkData();
         priority = te.getPriority();
     }

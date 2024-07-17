@@ -21,7 +21,7 @@ import static com.teammoeg.frostedheart.content.town.house.HouseTileEntity.*;
 import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHouseBlock;
 import static java.util.AbstractMap.SimpleEntry;
 
-public class HuntingBaseTileEntity extends TownBuildingCoreBlockTileEntity {
+public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
     private double rating = 0;
     private int volume;
     private int area;
@@ -175,13 +175,14 @@ public class HuntingBaseTileEntity extends TownBuildingCoreBlockTileEntity {
         }
     }
 
+
     @Override
     public int getPriority() {
         return 0;
     }
 
     @Override
-    public TownWorkerType getWorker() {
+    public TownWorkerType getWorkerType() {
         return TownWorkerType.HUNTING_BASE;
     }
 

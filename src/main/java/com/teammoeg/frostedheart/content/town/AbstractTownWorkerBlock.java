@@ -26,7 +26,7 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ToolType;
 
-public abstract class FHTownBuildingCoreBlock extends FHBaseBlock {
+public abstract class AbstractTownWorkerBlock extends FHBaseBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
     public static final Properties TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY = Block.Properties
             .create(Material.WOOD)
@@ -36,7 +36,7 @@ public abstract class FHTownBuildingCoreBlock extends FHBaseBlock {
             .hardnessAndResistance(2, 6)
             .notSolid();
 
-    public FHTownBuildingCoreBlock(Properties blockProps) {
+    public AbstractTownWorkerBlock(Properties blockProps) {
         super(blockProps);
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING, Direction.SOUTH));
     }

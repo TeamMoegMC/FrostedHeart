@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static net.minecraftforge.common.util.Constants.NBT.TAG_LONG;
 
 //矿场方块，不是我的方块
-public class MineBlock extends FHTownBuildingCoreBlock {
+public class MineBlock extends AbstractTownWorkerBlock {
 
     public MineBlock(Properties blockProps){
         super(blockProps);
@@ -78,9 +78,7 @@ public class MineBlock extends FHTownBuildingCoreBlock {
                             mineBaseTileEntity.refresh();
                             return mineBaseTileEntity.getLinkedMines().contains(pos);
                         })
-                        .forEach(mineBaseTileEntity -> {
-                            te.setLinkedBase(mineBaseTileEntity.getPos(), mineBaseTileEntity.getRating());
-                        });
+                        .forEach(mineBaseTileEntity -> te.setLinkedBase(mineBaseTileEntity.getPos(), mineBaseTileEntity.getRating()));
             }
         }
     }

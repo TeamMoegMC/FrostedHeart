@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.town.house;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
-import com.teammoeg.frostedheart.content.town.TownBuildingCoreBlockTileEntity;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerTileEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
@@ -53,7 +53,7 @@ import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHo
  * - Check if the house structure is valid
  * - Compute comfort rating based on the house structure
  */
-public class HouseTileEntity extends TownBuildingCoreBlockTileEntity{
+public class HouseTileEntity extends AbstractTownWorkerTileEntity{
 
     /** The temperature at which the house is comfortable. */
     public static final double COMFORTABLE_TEMP_HOUSE = 24;
@@ -62,7 +62,7 @@ public class HouseTileEntity extends TownBuildingCoreBlockTileEntity{
 
     /** Work data, stored in town. */
     private int maxResident = -1; // how many resident can live here
-    public List<Resident> residents = new ArrayList<>();
+    //public List<Resident> residents = new ArrayList<>();
     private int volume = -1;
     //private int decoration = -1;
     private int area = -1;
@@ -84,7 +84,7 @@ public class HouseTileEntity extends TownBuildingCoreBlockTileEntity{
     }
 
     @Override
-    public TownWorkerType getWorker() {
+    public TownWorkerType getWorkerType() {
         return TownWorkerType.HOUSE;
     }
 
@@ -114,9 +114,9 @@ public class HouseTileEntity extends TownBuildingCoreBlockTileEntity{
         CompoundNBT data = getBasicWorkData();
         if(this.isValid()) {
             ListNBT residentList = new ListNBT();
-            for (Resident resident : residents) {
-                residentList.add(resident.serialize());
-            }
+            //for (Resident resident : residents) {
+            //    residentList.add(resident.serialize());
+            //}
             data.put("residents", residentList);
             data.putInt("maxResident", maxResident);
             data.putDouble("temperature", temperature);
@@ -133,11 +133,11 @@ public class HouseTileEntity extends TownBuildingCoreBlockTileEntity{
     public void setWorkData(CompoundNBT data) {
         setBasicWorkData(data);
         if(this.isValid()) {
-            residents = new ArrayList<>();
-            ListNBT residentList = data.getList("residents", Constants.NBT.TAG_COMPOUND);
-            for (int i = 0; i < residentList.size(); i++) {
-                residents.add(new Resident(residentList.getCompound(i)));
-            }
+            //residents = new ArrayList<>();
+            //ListNBT residentList = data.getList("residents", Constants.NBT.TAG_COMPOUND);
+            //for (int i = 0; i < residentList.size(); i++) {
+            //    residents.add(new Resident(residentList.getCompound(i)));
+            //}
             maxResident = data.getInt("maxResident");
             temperature = data.getDouble("temperature");
             volume = data.getInt("volume");
@@ -320,21 +320,5 @@ public class HouseTileEntity extends TownBuildingCoreBlockTileEntity{
             return endpointCap.cast();
         }
         return super.getCapability(capability, facing);
-    }
-
-    public boolean addResident(Resident resident) {
-        if(!this.isWorkValid()) return false;
-        if (residents.size() < this.maxResident) {
-            residents.add(resident);
-            return true;
-        }
-        return false;
-    }
-
-    public void removeResident(Resident resident) {
-        residents.removeIf(r->r.equals(resident));
-    }
-    public void removeResident(UUID id) {
-        residents.removeIf(r->r.getUUID().equals(id));
     }
 }

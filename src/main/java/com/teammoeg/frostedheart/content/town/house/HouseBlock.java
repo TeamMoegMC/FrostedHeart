@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.town.house;
 
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.content.town.FHTownBuildingCoreBlock;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 import com.teammoeg.frostedheart.util.MathUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.block.BlockState;
@@ -43,7 +43,7 @@ import java.util.Random;
 /**
  * A house in the town.
  */
-public class HouseBlock extends FHTownBuildingCoreBlock {
+public class HouseBlock extends AbstractTownWorkerBlock {
     public HouseBlock(Properties blockProps) {
         super(blockProps);
     }
@@ -56,7 +56,7 @@ public class HouseBlock extends FHTownBuildingCoreBlock {
     @Override
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
-        if (stateIn.get(FHTownBuildingCoreBlock.LIT)) {
+        if (stateIn.get(AbstractTownWorkerBlock.LIT)) {
             ClientUtils.spawnSteamParticles(worldIn, pos);
         }
     }
