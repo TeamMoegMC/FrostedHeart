@@ -33,7 +33,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.EitherMapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
-import com.teammoeg.frostedheart.content.heatdevice.generator.GeneratorData;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
 import com.teammoeg.frostedheart.util.ConstructorCodec;
 import com.teammoeg.frostedheart.util.io.codec.AlternativeCodecBuilder;
 import com.teammoeg.frostedheart.util.io.codec.BooleansCodec.BooleanCodecBuilder;

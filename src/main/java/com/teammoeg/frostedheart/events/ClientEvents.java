@@ -44,10 +44,10 @@ import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.MasterGeneratorScreen;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.content.heatdevice.generator.MasterGeneratorScreen;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.gui.ResearchToast;
@@ -110,64 +110,6 @@ import net.minecraftforge.fml.server.ServerLifecycleHooks;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEvents {
-    /**
-     * Simulate breath particles when the player is in a cold environment
-     */
-    @SubscribeEvent
-    public static void addBreathParticles(TickEvent.PlayerTickEvent event) {
-        if (event.side == LogicalSide.CLIENT && event.phase == TickEvent.Phase.START
-                && event.player instanceof ClientPlayerEntity) {
-            ClientPlayerEntity player = (ClientPlayerEntity) event.player;
-            if(ClientUtils.mc().currentScreen instanceof MasterGeneratorScreen&&player.ticksExisted%20==0) {
-            	((MasterGeneratorScreen)ClientUtils.mc().currentScreen).fullInit();
-            }
-            if (!player.isSpectator() && !player.isCreative() && player.world != null) {
-                if (player.ticksExisted % 60 <= 3) {
-                	 PlayerTemperatureData ptd=PlayerTemperatureData.getCapability(player).orElse(null);
-                    float envTemp = ptd.getEnvTemp();
-                    if (envTemp < -10.0F) {
-                        // get the player's facing vector and make the particle spawn in front of the player
-                        double x = player.getPosX() + player.getLookVec().x * 0.3D;
-                        double z = player.getPosZ() + player.getLookVec().z * 0.3D;
-                        double y = player.getPosY() + 1.3D;
-                        // the speed of the particle is based on the player's facing, so it looks like it's coming from their mouth
-                        double xSpeed = player.getLookVec().x * 0.03D;
-                        double ySpeed = player.getLookVec().y * 0.03D;
-                        double zSpeed = player.getLookVec().z * 0.03D;
-                        // apply the player's motion to the particle
-                        xSpeed += player.getMotion().x;
-                        ySpeed += player.getMotion().y;
-                        zSpeed += player.getMotion().z;
-                        player.world.addParticle(FHParticleTypes.BREATH.get(), x, y, z, xSpeed, ySpeed, zSpeed);
-                    }
-                }
-            }
-        }
-    }
-    static int forstedSoundCd;
-    /**
-     * Play ice cracking sound when player's body temperature transitions across integer threshold.
-     */
-    @SubscribeEvent
-    public static void playFrostedSound(TickEvent.PlayerTickEvent event) {
-        if (event.side == LogicalSide.CLIENT && event.phase == TickEvent.Phase.START
-                && event.player instanceof ClientPlayerEntity) {
-            ClientPlayerEntity player = (ClientPlayerEntity) event.player;
-            if(forstedSoundCd>0)
-            	forstedSoundCd--;
-            if (!player.isSpectator() && !player.isCreative() && player.world != null&&forstedSoundCd>0) {
-            	
-            	PlayerTemperatureData ptd=PlayerTemperatureData.getCapability(player).orElse(null);
-                float prevTemp = ptd.smoothedBodyPrev;
-                float currTemp = ptd.smoothedBody;
-                // play sound if currTemp transitions across integer threshold
-                if (currTemp <= 0.5F && MathHelper.floor(prevTemp - 0.5F) != MathHelper.floor(currTemp - 0.5F)) {
-                    player.world.playSound(player, player.getPosition(), FHSounds.ICE_CRACKING.get(), SoundCategory.PLAYERS, 1.0F, 1.0F);
-                    forstedSoundCd=20;
-                }
-            }
-        }
-    }
 
     @SubscribeEvent
     public static void addItemTooltip(ItemTooltipEvent event) {
@@ -279,7 +221,7 @@ public class ClientEvents {
         }
     }
 
-    @SubscribeEvent
+    /*@SubscribeEvent
     public static void addWeatherItemTooltips(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
         if (stack.getItem() == FHItems.temperatureProbe.get()) {
@@ -291,7 +233,7 @@ public class ClientEvents {
         if (stack.getItem() == FHItems.weatherHelmet.get()) {
             event.getToolTip().add(TranslateUtils.translateTooltip("weather_helmet").mergeStyle(TextFormatting.GRAY));
         }
-    }
+    }*/
 
     @SuppressWarnings({"unchecked"})
     @SubscribeEvent
@@ -379,8 +321,9 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void fireLogin(LoggedInEvent event) {
-        FHScenarioClient.sendInitializePacket = true;
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClientTeamDataManager.INSTANCE::reset);
+        ClientScene.INSTANCE=new ClientScene();
+    	ClientScene.INSTANCE.sendClientReady();
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -468,7 +411,7 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void sendLoginUpdateReminder(PlayerEvent.PlayerLoggedInEvent event) {
-    	forstedSoundCd=0;
+    	
         FHMain.remote.fetchVersion().ifPresent(stableVersion -> {
             boolean isStable = true;
             if (FHMain.pre != null && FHMain.pre.fetchVersion().isPresent()) {
@@ -570,18 +513,9 @@ public class ClientEvents {
                     ((ArmorStandRenderer) render).addLayer(new HeaterVestRenderer<>((ArmorStandRenderer) render));
             HeaterVestRenderer.rendersAssigned = true;
         }
-    }
+    }    @SuppressWarnings({"resource", "unchecked", "rawtypes"})
 
-    @SubscribeEvent
-    public static void onWorldRender(RenderWorldLastEvent event) {
-        if(FHScenarioClient.sendInitializePacket) {
-        	ClientScene.INSTANCE=new ClientScene();
-        	FHScenarioClient.sendInitializePacket=false;
-        	ClientScene.INSTANCE.sendClientReady();
-        	
-        }
-    }
-
+    
     @SubscribeEvent
     public void onWorldUnLoad(Unload event) {
     	

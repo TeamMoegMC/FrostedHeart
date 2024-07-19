@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.utility;
 
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.content.heatdevice.generator.t1.T1GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
 
 import blusunrize.immersiveengineering.api.utils.DirectionUtils;

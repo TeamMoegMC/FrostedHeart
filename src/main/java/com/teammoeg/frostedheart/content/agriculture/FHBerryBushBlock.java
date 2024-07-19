@@ -23,7 +23,7 @@ import java.util.Random;
 
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SweetBerryBushBlock;

@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.mixin.snow;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;

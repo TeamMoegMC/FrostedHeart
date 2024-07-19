@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.town.hunting;
 
-import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;

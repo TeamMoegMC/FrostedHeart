@@ -28,8 +28,8 @@ import java.util.stream.Collectors;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
-import com.teammoeg.frostedheart.content.heatdevice.generator.GeneratorRecipe;
-import com.teammoeg.frostedheart.content.heatdevice.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 

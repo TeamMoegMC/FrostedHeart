@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.town.house;
 
 import com.teammoeg.frostedheart.FHTags;
-import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate;
 
-import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.noise.INoise1D;
 
 import net.minecraft.util.math.BlockPos;

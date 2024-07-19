@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.town.mine;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.town.*;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;

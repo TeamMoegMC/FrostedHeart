@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.base.team;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.teammoeg.frostedheart.content.heatdevice.generator.GeneratorData;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
 

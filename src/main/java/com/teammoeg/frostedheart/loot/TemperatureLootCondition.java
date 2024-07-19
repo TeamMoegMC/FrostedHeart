@@ -24,7 +24,7 @@ import java.util.function.BiPredicate;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.teammoeg.frostedheart.content.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 
 import net.minecraft.loot.ILootSerializer;
 import net.minecraft.loot.LootConditionType;

@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.content.heatdevice.generator.GeneratorRecipe;
-import com.teammoeg.frostedheart.content.heatdevice.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.DietValueRecipe;

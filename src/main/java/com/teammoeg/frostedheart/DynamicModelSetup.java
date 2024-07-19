@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.content.heatdevice.generator.t1.T1GeneratorRenderer;
-import com.teammoeg.frostedheart.content.heatdevice.generator.t2.T2GeneratorRenderer;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorRenderer;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorRenderer;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
 
 import blusunrize.immersiveengineering.client.render.tile.DynamicModel;

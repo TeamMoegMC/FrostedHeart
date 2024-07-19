@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
-import com.teammoeg.frostedheart.content.heatdevice.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.DietValueRecipe;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;

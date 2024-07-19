@@ -30,7 +30,6 @@ import net.minecraft.util.ResourceLocation;
 
 public class FHScenarioClient {
     static ScenarioExecutor<IClientScene> client = new ScenarioExecutor<>(IClientScene.class);
-    public static boolean sendInitializePacket=false;
     public static void callCommand(String name, IClientScene runner, Map<String, String> params) {
         client.callCommand(name, runner, params);
     }

@@ -25,7 +25,7 @@ import java.util.Collections;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
-import com.teammoeg.frostedheart.content.heatdevice.generator.GeneratorRecipe;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import mezz.jei.api.constants.VanillaTypes;
