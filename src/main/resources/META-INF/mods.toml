@@ -6,9 +6,16 @@ issueTrackerURL = "https://github.com/TeamMoegMC/FrostedHeart/issues"
 modId = "frostedheart" #mandatory
 version = "${file.jarVersion}" #mandatory
 displayName = "TWR Frosted Heart" #mandatory
-authors = "[TeamMoeg] YueSha, dashuaibia, khjxiaogu, duck_egg, Lyuuke, gomou_g, and all Contributors on GitHub"
+authors = "TeamMoegMC and Contributors, see description below."
 description = '''
 The Core Mod for The Winter Rescue Modpack.
+
+Contributors (in the order of first joining, not contribution size):
+YueSha, Evan, duck_egg, dashuaibia, Lyuuke, khjxiaogu, gomou_g,
+Fu_Yang, OEIIO(03110), alphaGem, Jacky_Wang, asdfghjkl, shidi, LetterN,
+collin-marando, sayyidyofa, Whitealbum0, alyashour, AGmouse, Jerzerak, Dsanilin,
+Huaji_Qinmi, Heitao, ceary741, Gugusb, Winged-Hussars, IBlessus, GuardianWorld(Mixxs),
+Keisari, ewoudjie
 '''
 [[dependencies.frostedheart]]
     modId = "forge"
