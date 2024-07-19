@@ -157,4 +157,11 @@ public class FHItems {
     }
     public static void init() {
     }
+
+    //Mixxs section
+    public static RegistryObject<Item> makeshift_core_broken = register("makeshift_core_broken",n->new FHBaseItem( createProps()));
+    public static RegistryObject<Item> handheld_core = register("handheld_core",n->new FHBaseItem( createProps()));
+    //public static RegistryObject<Item> body_lamp = register("heater_vest",n->new HeaterVestItem( createProps().maxStackSize(1).setNoRepair()));
+
+
 }

@@ -19,9 +19,12 @@
 
 package com.teammoeg.frostedheart.events;
 
+import static com.teammoeg.frostedheart.world.gen.FHOreGeneration.generate_overworld_ores;
 import static net.minecraft.entity.EntityType.*;
 import static net.minecraft.world.biome.Biome.Category.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -76,9 +79,12 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
+import com.teammoeg.frostedheart.world.gen.FHOreGeneration;
+import com.teammoeg.frostedheart.world.gen.FHStructureGeneration;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
+import com.teammoeg.frostedheart.world.FHStructures;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -120,6 +126,8 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.structure.Structure;
+import net.minecraft.world.gen.settings.DimensionStructuresSettings;
+import net.minecraft.world.gen.settings.StructureSeparationSettings;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.ToolType;
 import net.minecraftforge.common.util.FakePlayer;
@@ -217,24 +225,26 @@ public class CommonEvents {
         if (event.getName() != null) {
             Biome.Category category = event.getCategory();
             if (category != NETHER && category != THEEND) {
-                // Generate gravel and clay disks
-                if (category == RIVER || category == BEACH) {
-                    for (ConfiguredFeature<?, ?> feature : FHFeatures.FH_DISK)
-                        event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
-                }
-                // Generate rankine ores
-                for (ConfiguredFeature<?, ?> feature : FHFeatures.FH_ORES)
-                    event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
-                // Generate clay and gravel deposit
-                if (category != TAIGA && category != EXTREME_HILLS && category != OCEAN && category != DESERT && category != RIVER) {
-                    event.getGeneration().withFeature(GenerationStage.Decoration.LOCAL_MODIFICATIONS, FHFeatures.clay_deposit);
-                    event.getGeneration().withFeature(GenerationStage.Decoration.LOCAL_MODIFICATIONS, FHFeatures.gravel_deposit);
-                }
+                FHOreGeneration.generate_overworld_ores(event);
             }
+            //else if(category == NETHER) { generate_nether_ores(event);
+
             //Structures
-            if (category == EXTREME_HILLS || category == TAIGA) {
-                event.getGeneration().withStructure(FHStructureFeatures.OBSERVATORY_FEATURE);
-            }
+            FHStructureGeneration.generate_overworld_structures(event);
+        }
+    }
+
+    @SubscribeEvent
+    public static void addDimensionalSpacing(final WorldEvent.Load event){
+        if(event.getWorld() instanceof ServerWorld) {
+            ServerWorld serverWorld = (ServerWorld) event.getWorld();
+
+
+            Map<Structure<?>, StructureSeparationSettings> tempMap =
+                    new HashMap<>(serverWorld.getChunkProvider().generator.func_235957_b_().func_236195_a_());
+            tempMap.putIfAbsent(FHStructures.DESTROYED_GENERATOR.get(),
+                    DimensionStructuresSettings.field_236191_b_.get(FHStructures.DESTROYED_GENERATOR.get()));
+            serverWorld.getChunkProvider().generator.func_235957_b_().field_236193_d_ = tempMap;
         }
     }
 

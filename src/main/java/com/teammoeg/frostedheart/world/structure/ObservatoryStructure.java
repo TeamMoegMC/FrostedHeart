@@ -41,8 +41,8 @@ import net.minecraft.world.gen.feature.template.TemplateManager;
 
 public class ObservatoryStructure extends Structure<NoFeatureConfig> {
     public static class Start extends StructureStart<NoFeatureConfig> {
-        public Start(Structure<NoFeatureConfig> p_i225819_1_, int p_i225819_2_, int p_i225819_3_, MutableBoundingBox boundingBox, int p_i225819_5_, long p_i225819_6_) {
-            super(p_i225819_1_, p_i225819_2_, p_i225819_3_, boundingBox, p_i225819_5_, p_i225819_6_);
+        public Start(Structure<NoFeatureConfig> structureIn, int chunkX, int chunkZ, MutableBoundingBox boundingBox, int referenceIn, long seedIn) {
+            super(structureIn, chunkX, chunkZ, boundingBox, referenceIn, seedIn);
         }
 
         @Override

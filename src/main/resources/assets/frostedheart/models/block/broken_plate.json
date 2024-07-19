@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "up": "frostedheart:block/broken_plate_1",
+    "west": "frostedheart:block/broken_plate_2",
+    "south": "frostedheart:block/broken_plate_3",
+    "down": "frostedheart:block/broken_plate_1",
+    "east": "frostedheart:block/broken_plate_2",
+    "north": "frostedheart:block/broken_plate_3",
+    "particle": "frostedheart:block/broken_plate_1"
+  }
+}
