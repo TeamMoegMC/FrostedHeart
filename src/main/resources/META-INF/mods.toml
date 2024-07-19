@@ -6,9 +6,9 @@ issueTrackerURL = "https://github.com/TeamMoegMC/FrostedHeart/issues"
 modId = "frostedheart" #mandatory
 version = "${file.jarVersion}" #mandatory
 displayName = "TWR Frosted Heart" #mandatory
-authors = "[TeamMoeg] YueSha, dashuaibia, khjxiaogu, duck_egg, Lyuuke, gomou_g"
+authors = "[TeamMoeg] YueSha, dashuaibia, khjxiaogu, duck_egg, Lyuuke, gomou_g, and all Contributors on GitHub"
 description = '''
-Some heat in the cold...
+The Core Mod for The Winter Rescue Modpack.
 '''
 [[dependencies.frostedheart]]
     modId = "forge"
