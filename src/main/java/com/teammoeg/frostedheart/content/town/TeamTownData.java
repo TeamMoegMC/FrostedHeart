@@ -54,8 +54,8 @@ public class TeamTownData implements SpecialData{
 			CodecUtil.mapCodec(TownResourceType.CODEC, Codec.INT).fieldOf("backupResource").forGetter(o->o.backupResources),
 			CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "data", TownWorkerData.CODEC).fieldOf("blocks").forGetter(o->o.blocks),
 			CodecUtil.defaultValue(CodecUtil.mapCodec("uuid",UUIDCodec.CODEC,"data",Resident.CODEC), ImmutableMap.of()).fieldOf("residents").forGetter(o->o.residents),
-            CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "residents", Codec.list(UUIDCodec.CODEC)).fieldOf("workAssignStatus").forGetter(o->o.workAssigningStatus),
-            CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "residents", Codec.list(UUIDCodec.CODEC)).fieldOf("houseAllocatingStatus").forGetter(o->o.houseAllocatingStatus)
+            CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "residents", Codec.list(UUIDCodec.CODEC)), ImmutableMap.of()).fieldOf("workAssignStatus").forGetter(o->o.workAssigningStatus),
+            CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "residents", Codec.list(UUIDCodec.CODEC)), ImmutableMap.of()).fieldOf("houseAllocatingStatus").forGetter(o->o.houseAllocatingStatus)
 
     ).apply(t, TeamTownData::new));
     /**
