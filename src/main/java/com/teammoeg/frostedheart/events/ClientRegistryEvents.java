@@ -24,6 +24,7 @@ import static net.minecraft.inventory.container.PlayerContainer.*;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.teammoeg.frostedheart.client.particles.WetSteamParticle;
 import org.lwjgl.glfw.GLFW;
 
 import com.teammoeg.frostedheart.FHBlocks;
@@ -241,6 +242,7 @@ public class ClientRegistryEvents {
     public static void registerParticleFactories(ParticleFactoryRegisterEvent event) {
         Minecraft.getInstance().particles.registerFactory(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);
         Minecraft.getInstance().particles.registerFactory(FHParticleTypes.BREATH.get(), BreathParticle.Factory::new);
+        Minecraft.getInstance().particles.registerFactory(FHParticleTypes.WET_STEAM.get(), WetSteamParticle.Factory::new);
     }
 
 }

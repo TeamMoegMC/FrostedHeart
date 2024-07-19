@@ -54,6 +54,8 @@ import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskBlock;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcBlock;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
+import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainBlock;
+import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainNozzleBlock;
 import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
@@ -179,6 +181,20 @@ public class FHBlocks {
             .notSolid()));
     public static RegistryObject<Block> sauna = register("sauna_vent",()->new SaunaBlock( Block.Properties
             .create(Material.ROCK)
+            .sound(SoundType.METAL)
+            .setRequiresTool()
+            .harvestTool(ToolType.PICKAXE)
+            .hardnessAndResistance(2, 10)
+            .notSolid()));
+    public static RegistryObject<Block> fountain = register("fountain_base",()-> new FountainBlock(Block.Properties
+            .create(Material.ROCK)
+            .sound(SoundType.METAL)
+            .setRequiresTool()
+            .harvestTool(ToolType.PICKAXE)
+            .hardnessAndResistance(2, 10)
+            .notSolid()));
+    public static RegistryObject<Block> fountain_nozzle = register("fountain_nozzle",()-> new FountainNozzleBlock(Block.Properties
+            .create(Material.IRON)
             .sound(SoundType.METAL)
             .setRequiresTool()
             .harvestTool(ToolType.PICKAXE)
