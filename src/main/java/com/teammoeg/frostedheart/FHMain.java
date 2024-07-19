@@ -138,6 +138,7 @@ public class FHMain {
         FHBiomes.BIOME_REGISTER.register(mod);
         FHAttributes.REGISTER.register(mod);
         FHEffects.EFFECTS.register(mod);
+        FHStructures.register(mod);
         TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
         TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
         TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);
@@ -241,6 +242,7 @@ public class FHMain {
         FHCapabilities.setup();
         FHBiomes.biomes();
         FHStructures.registerStructureGenerate();
+        FHStructures.setupStructures();
         FHFeatures.initFeatures();
         SurroundingTemperatureSimulator.init();
         // modify default value
