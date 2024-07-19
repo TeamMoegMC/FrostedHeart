@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.world;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.world.biome.FrozenForestBiome;
 import com.teammoeg.frostedheart.world.biome.VolcanicBiome;
 
 import net.minecraft.util.RegistryKey;
@@ -36,10 +37,12 @@ public class FHBiomes {
 
     public static RegistryObject<Biome> VOLCANIC = BIOME_REGISTER.register("volcanic", () -> new VolcanicBiome().build());
 
+    public static RegistryObject<Biome> FROZEN_FOREST = BIOME_REGISTER.register("frozen_forest", () -> new FrozenForestBiome().build());
 //    public static RegistryObject<Biome> RELIC = BIOME_REGISTER.register("relic", () -> new VolcanicBiome().build());
 
     public static void biomes() {
         BiomeManager.addBiome(BiomeManager.BiomeType.COOL, new BiomeManager.BiomeEntry(makeKey(VOLCANIC.get()), 5));
+        BiomeManager.addBiome(BiomeManager.BiomeType.COOL, new BiomeManager.BiomeEntry(makeKey(FROZEN_FOREST.get()), 8));
     }
 
     public static RegistryKey<Biome> makeKey(Biome biome) {
