@@ -50,9 +50,9 @@ import net.minecraft.world.server.ServerWorld;
 public class TeamTownData implements SpecialData{
 	public static final Codec<TeamTownData> CODEC=RecordCodecBuilder.create(t->t.group(
 			Codec.STRING.fieldOf("name").forGetter(o->o.name),
-			CodecUtil.mapCodec(TownResourceType.CODEC, Codec.INT).fieldOf("resource").forGetter(o->o.resources),
-			CodecUtil.mapCodec(TownResourceType.CODEC, Codec.INT).fieldOf("backupResource").forGetter(o->o.backupResources),
-			CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "data", TownWorkerData.CODEC).fieldOf("blocks").forGetter(o->o.blocks),
+			CodecUtil.defaultValue(CodecUtil.mapCodec(TownResourceType.CODEC, Codec.INT), ImmutableMap.of()).fieldOf("resource").forGetter(o->o.resources),
+			CodecUtil.defaultValue(CodecUtil.mapCodec(TownResourceType.CODEC, Codec.INT), ImmutableMap.of()).fieldOf("backupResource").forGetter(o->o.backupResources),
+			CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "data", TownWorkerData.CODEC), ImmutableMap.of()).fieldOf("blocks").forGetter(o->o.blocks),
 			CodecUtil.defaultValue(CodecUtil.mapCodec("uuid",UUIDCodec.CODEC,"data",Resident.CODEC), ImmutableMap.of()).fieldOf("residents").forGetter(o->o.residents),
             CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "residents", Codec.list(UUIDCodec.CODEC)), ImmutableMap.of()).fieldOf("workAssignStatus").forGetter(o->o.workAssigningStatus),
             CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "residents", Codec.list(UUIDCodec.CODEC)), ImmutableMap.of()).fieldOf("houseAllocatingStatus").forGetter(o->o.houseAllocatingStatus)
