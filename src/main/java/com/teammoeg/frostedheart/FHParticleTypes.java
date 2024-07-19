@@ -30,4 +30,5 @@ public class FHParticleTypes {
 
     public static final RegistryObject<BasicParticleType> STEAM = REGISTER.register("steam", () -> new BasicParticleType(false));
     public static final RegistryObject<BasicParticleType> BREATH = REGISTER.register("breath", () -> new BasicParticleType(false));
+    public static final RegistryObject<BasicParticleType> WET_STEAM = REGISTER.register("wet_steam", () -> new BasicParticleType(false));
 }

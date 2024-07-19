@@ -1,0 +1,10 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "frostedheart:models/block/fountain/nozzle"
+  },
+  "loader": "forge:obj",
+  "model": "frostedheart:models/block/fountain/nozzle.obj",
+  "detectCullableFaces": false,
+  "flip-v": true
+}

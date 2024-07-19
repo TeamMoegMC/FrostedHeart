@@ -13,9 +13,9 @@ The Core Mod for The Winter Rescue Modpack.
 Contributors (in the order of first joining, not contribution size):
 YueSha, Evan, duck_egg, dashuaibia, Lyuuke, khjxiaogu, gomou_g,
 Fu_Yang, OEIIO(03110), alphaGem, Jacky_Wang, asdfghjkl, shidi, LetterN,
-collin-marando, sayyidyofa, Whitealbum0, alyashour, AGmouse, Jerzerak, Dsanilin,
+collin-marando, nekocrane, Whitealbum0, alyashour, AGmouse, Jerzerak, Dsanilin,
 Huaji_Qinmi, Heitao, ceary741, Gugusb, Winged-Hussars, IBlessus, GuardianWorld(Mixxs),
-Keisari, ewoudjie
+Keisari, ewoudjie, sayyidyofa
 '''
 [[dependencies.frostedheart]]
     modId = "forge"
