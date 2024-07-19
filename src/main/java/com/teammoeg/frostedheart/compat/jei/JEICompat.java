@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHItems;
@@ -60,10 +59,10 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.MasterGene
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
-import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
-import com.teammoeg.frostedheart.content.recipes.ModifyDamageRecipe;
-import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
+import com.teammoeg.frostedheart.recipes.CampfireDefrostRecipe;
+import com.teammoeg.frostedheart.recipes.InstallInnerRecipe;
+import com.teammoeg.frostedheart.recipes.ModifyDamageRecipe;
+import com.teammoeg.frostedheart.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;

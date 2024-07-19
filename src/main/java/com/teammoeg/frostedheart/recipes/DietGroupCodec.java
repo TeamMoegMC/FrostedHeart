@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.recipes;
+package com.teammoeg.frostedheart.recipes;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.Random;
 
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.content.recipes.ResearchPaperRecipe;
+import com.teammoeg.frostedheart.recipes.ResearchPaperRecipe;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardPos;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.GenerateInfo;

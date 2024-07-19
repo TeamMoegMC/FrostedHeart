@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.content.recipes.DietGroupCodec;
-import com.teammoeg.frostedheart.content.recipes.DietValueRecipe;
+import com.teammoeg.frostedheart.recipes.DietGroupCodec;
+import com.teammoeg.frostedheart.recipes.DietValueRecipe;
 
 import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.item.crafting.IRecipeSerializer;

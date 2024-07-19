@@ -29,9 +29,9 @@ import javax.annotation.Nonnull;
 
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
-import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.content.recipes.DietValueRecipe;
-import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
+import com.teammoeg.frostedheart.recipes.CampfireDefrostRecipe;
+import com.teammoeg.frostedheart.recipes.DietValueRecipe;
+import com.teammoeg.frostedheart.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
 
 import blusunrize.immersiveengineering.api.ApiUtils;

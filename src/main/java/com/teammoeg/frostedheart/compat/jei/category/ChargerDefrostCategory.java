@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
-import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
+import com.teammoeg.frostedheart.recipes.CampfireDefrostRecipe;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;

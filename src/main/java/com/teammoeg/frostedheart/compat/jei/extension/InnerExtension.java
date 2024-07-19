@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
+import com.teammoeg.frostedheart.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;

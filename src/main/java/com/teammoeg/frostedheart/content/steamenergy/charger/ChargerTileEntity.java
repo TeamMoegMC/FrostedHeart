@@ -25,7 +25,7 @@ import java.util.List;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
+import com.teammoeg.frostedheart.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.util.FHUtils;

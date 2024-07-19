@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.compat.jei.extension;
 import java.util.Arrays;
 import java.util.Collections;
 
-import com.teammoeg.frostedheart.content.recipes.ModifyDamageRecipe;
+import com.teammoeg.frostedheart.recipes.ModifyDamageRecipe;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.IIngredients;

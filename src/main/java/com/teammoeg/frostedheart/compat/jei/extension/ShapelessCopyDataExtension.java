@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.compat.jei.extension;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.recipes.ShapelessCopyDataRecipe;
+import com.teammoeg.frostedheart.recipes.ShapelessCopyDataRecipe;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.IIngredients;
