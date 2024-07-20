@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.world.feature;
+package com.teammoeg.frostedheart.world.geology.ore;
 
 import java.util.BitSet;
 import java.util.Random;

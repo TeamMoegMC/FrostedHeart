@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.world.structure;
+package com.teammoeg.frostedheart.world.civilization.alliance;
 
 
 import net.minecraft.block.BlockState;

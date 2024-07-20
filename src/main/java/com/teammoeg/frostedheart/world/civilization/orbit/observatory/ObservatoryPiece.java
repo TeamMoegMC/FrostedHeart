@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.world.structure;
+package com.teammoeg.frostedheart.world.civilization.orbit.observatory;
 
 import java.util.Random;
 
@@ -37,19 +37,19 @@ import net.minecraft.world.gen.feature.template.Template;
 import net.minecraft.world.gen.feature.template.TemplateManager;
 
 
-public class ResearchInstitutePiece extends TemplateStructurePiece {
+public class ObservatoryPiece extends TemplateStructurePiece {
     public final ResourceLocation resource;
     public final Rotation rotation;
 
-    public ResearchInstitutePiece(TemplateManager templateManager, BlockPos pos, Rotation rotation) {
+    public ObservatoryPiece(TemplateManager templateManager, BlockPos pos, Rotation rotation) {
         super(FHStructures.OBSERVATORY_PIECE, 0);
-        this.resource = new ResourceLocation(FHMain.MODID, "relic/institute");
+        this.resource = new ResourceLocation(FHMain.MODID, "relic/observatory");
         this.templatePosition = pos;
         this.rotation = rotation;
         this.loadTemplate(templateManager);
     }
 
-    public ResearchInstitutePiece(TemplateManager templateManager, CompoundNBT p_i50566_2_) {
+    public ObservatoryPiece(TemplateManager templateManager, CompoundNBT p_i50566_2_) {
         super(FHStructures.OBSERVATORY_PIECE, p_i50566_2_);
         this.resource = new ResourceLocation(p_i50566_2_.getString("Template"));
         this.rotation = Rotation.valueOf(p_i50566_2_.getString("Rot"));

@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.world.structure;
+package com.teammoeg.frostedheart.world.geology.volcanic;
 
 import java.util.Random;
 

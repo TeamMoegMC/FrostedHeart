@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.world.biome;
+package com.teammoeg.frostedheart.world.geology.volcanic;
 
 import com.teammoeg.frostedheart.world.FHSurfaceBuilder;
 

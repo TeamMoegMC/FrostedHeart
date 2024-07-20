@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.world.feature;
+package com.teammoeg.frostedheart.world.geology.ore;
 
 
 import com.cannolicatfish.rankine.init.RankineBlocks;

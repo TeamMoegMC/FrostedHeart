@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.world;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.world.biome.FrozenForestBiome;
-import com.teammoeg.frostedheart.world.biome.VolcanicBiome;
+import com.teammoeg.frostedheart.world.flora.FrozenForestBiome;
+import com.teammoeg.frostedheart.world.geology.volcanic.VolcanicBiome;
 
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.registry.Registry;

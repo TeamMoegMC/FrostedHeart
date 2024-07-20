@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.world.feature;
+package com.teammoeg.frostedheart.world.civilization.orbit.spacecraft;
 
 import java.util.Random;
 

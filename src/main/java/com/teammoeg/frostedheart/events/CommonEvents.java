@@ -56,8 +56,7 @@ import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.world.gen.FHOreGeneration;
-import com.teammoeg.frostedheart.world.gen.FHStructureGeneration;
+import com.teammoeg.frostedheart.world.FHGeneration;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import com.teammoeg.frostedheart.world.FHStructures;
@@ -178,12 +177,12 @@ public class CommonEvents {
         if (event.getName() != null) {
             Biome.Category category = event.getCategory();
             if (category != NETHER && category != THEEND) {
-                FHOreGeneration.generate_overworld_ores(event);
+                FHGeneration.generate_overworld_ores(event);
             }
             //else if(category == NETHER) { generate_nether_ores(event);
 
             //Structures
-            FHStructureGeneration.generate_overworld_structures(event);
+            FHGeneration.generate_overworld_structures(event);
         }
     }
 

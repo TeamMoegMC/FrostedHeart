@@ -25,10 +25,10 @@ import com.alcatrazescapee.primalwinter.common.ModBlocks;
 import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.world.feature.FHOreFeature;
-import com.teammoeg.frostedheart.world.feature.FHOreFeatureConfig;
-import com.teammoeg.frostedheart.world.feature.FlowerCoveredDepositFeature;
-import com.teammoeg.frostedheart.world.feature.SpacecraftFeature;
+import com.teammoeg.frostedheart.world.geology.ore.FHOreFeature;
+import com.teammoeg.frostedheart.world.geology.ore.FHOreFeatureConfig;
+import com.teammoeg.frostedheart.world.geology.surface.FlowerCoveredDepositFeature;
+import com.teammoeg.frostedheart.world.civilization.orbit.spacecraft.SpacecraftFeature;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;

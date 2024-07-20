@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.world.feature;
+package com.teammoeg.frostedheart.world.geology.surface;
 
 import java.util.Random;
 
