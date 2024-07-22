@@ -138,6 +138,13 @@ public class TownWorkerData {
         this.workData = workData;
     }
 
+    public void setWorkData(ServerWorld w){
+        TileEntity te = Utils.getExistingTileEntity(w, pos);
+        if (te instanceof TownTileEntity) {
+            this.workData = ((AbstractTownWorkerTileEntity) te).getWorkData();
+        }
+    }
+
     public boolean work(Town resource) {
         return type.getWorker().work(resource, workData);
     }

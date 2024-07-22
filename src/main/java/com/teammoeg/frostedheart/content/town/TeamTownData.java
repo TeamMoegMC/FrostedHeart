@@ -81,7 +81,7 @@ public class TeamTownData implements SpecialData{
     /**
      * Saves what residents are working in a worker block
      */
-    Map<BlockPos, List<UUID>> workAssigningStatus = new HashMap<>();
+    public Map<BlockPos, List<UUID>> workAssigningStatus = new HashMap<>();
     /**
      * Saves what residents are living in a house
      */
@@ -119,6 +119,9 @@ public class TeamTownData implements SpecialData{
         removeNonTownBlocks(world);
         PriorityQueue<TownWorkerData> pq = new PriorityQueue<>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
         for(TownWorkerData workerData : blocks.values()){
+            if(world.isAreaLoaded(workerData.getPos(), 1)){
+                workerData.setWorkData(world);
+            }
             if(AbstractTownWorkerTileEntity.isValid(workerData)){
                 //由于已经使用了自动刷新城镇方块的功能，已经不需要通过isWorkValid来在获取合法性信息时刷新。
                 //在抽象类AbstractTownWorkerTileEntity中已经定义了townWorkerState来确定和保存合法性，因此可以直接使用静态方法isValid判断是否是合法的数据

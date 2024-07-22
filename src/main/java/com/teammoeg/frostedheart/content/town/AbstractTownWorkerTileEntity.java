@@ -20,10 +20,15 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
         super(type);
     }
     public abstract void refresh();
-    protected boolean isAddedToSchedulerQueue = false;
+
+    public void refresh_safe(){
+        if(world != null && world.isAreaLoaded(pos,15)){
+            this.refresh();
+        }
+    }
 
     public void executeTask(){
-        this.refresh();
+        this.refresh_safe();
     }
 
     public boolean isStillValid(){
@@ -46,7 +51,7 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
 
     @Override
     public boolean isWorkValid(){
-        if(workerState==NOT_INITIALIZED) this.refresh();
+        if(workerState==NOT_INITIALIZED) this.refresh_safe();
         return workerState.isValid();
     }
 
@@ -70,6 +75,7 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
 
     protected CompoundNBT getBasicWorkData(){
         CompoundNBT nbt = new CompoundNBT();
+        nbt.putLong("pos", this.pos.toLong());
         nbt.putByte("workerState", workerState.getStateNum());
         if(this.occupiedArea != null) nbt.put("occupiedArea", occupiedArea.toNBT());
         return nbt;
