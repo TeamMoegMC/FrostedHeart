@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.content.town.mine;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerTileEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
@@ -52,9 +51,9 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
                 startPos = startPos.down();
             }
             MineBaseBlockScanner scanner = new MineBaseBlockScanner(world, startPos);
-            FHMain.LOGGER.info("New scanner created; Start pos: " + startPos);
+            //FHMain.LOGGER.info("New scanner created; Start pos: " + startPos);
             if(scanner.scan()){
-                FHMain.LOGGER.info("scan successful");
+                //FHMain.LOGGER.info("scan successful");
                 this.area = scanner.getArea();
                 this.volume = scanner.getVolume();
                 this.rack = scanner.getRack();
