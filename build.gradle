@@ -187,6 +187,16 @@ repositories {
             excludeGroup "curse.maven"
         }
     }
+    maven {
+        // location of a maven mirror for JEI files, as a fallback
+        name = "ModMaven"
+        url = "https://modmaven.dev"
+    }
+    maven {
+        //location of the maven for mixed mappings, create, registrate, and flywheel
+        name = "tterrag maven"
+        url = "https://maven.tterrag.com/"
+    }
 //    maven {
 //        name = "teammoeg maven"
 //        url = "http://server.teammoeg.com:8888/releases"
@@ -206,25 +216,37 @@ repositories {
             excludeGroup "curse.maven"
         }
     }
+    maven {
+        name = "ftbMavenReleases"
+        url = "https://maven.ftb.dev/releases"
+    }
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 //    implementation fileTree(include: ['*.jar'], dir: 'libs')
 
-    implementation fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
-    implementation fg.deobf("me.shedaniel:architectury-forge:${rootProject.architectury_version}")
-    implementation fg.deobf("dev.ftb.mods:ftb-library-forge:${rootProject.ftb_library_version}")
-    implementation fg.deobf("dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}")
-    implementation fg.deobf("dev.ftb.mods:ftb-chunks-forge:1605.3.2-build.115")
-    implementation fg.deobf("dev.latvian.mods:item-filters-forge:1605.2.5-build.9")
+    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}")
+    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}:datagen")
+
+    implementation fg.deobf("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }
+    implementation fg.deobf("com.jozufozu.flywheel:flywheel-forge-${minecraft_version}:${flywheel_version}")
+    implementation fg.deobf("com.tterrag.registrate:Registrate:${registrate_version}")
+
+    // compile against the JEI API but do not include it at runtime
+    compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"))
+    compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}"))
+    // at runtime, use the full JEI jar for Forge
+    runtimeOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}"))
+
+    implementation fg.deobf("me.shedaniel:architectury-forge:${architectury_version}")
+    implementation fg.deobf("dev.ftb.mods:ftb-library-forge:${ftb_library_version}")
+    implementation fg.deobf("dev.ftb.mods:ftb-teams-forge:${ftb_teams_version}")
+    implementation fg.deobf("dev.ftb.mods:ftb-chunks-forge:${ftb_chunks_version}")
+
+//    implementation fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
 //    implementation fg.deobf("curse.maven:diet-443570:3756693")
 //    implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5-TWR')
-    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.7-143")
-    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.7-143:datagen")
-//    implementation fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
-    implementation fg.deobf("curse.maven:create-328085:3499718")
-    implementation fg.deobf("curse.maven:flywheel-486392:3459739")
 //    implementation fg.deobf('curse.maven:Project-Rankine-400704:4086553')
 //    implementation fg.deobf("curse.maven:thermopolium-594107:4005647")
 
