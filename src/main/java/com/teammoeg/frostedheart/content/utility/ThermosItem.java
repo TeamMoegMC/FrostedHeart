@@ -70,7 +70,7 @@ import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
@@ -138,7 +138,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
             for (Fluid fluid : tag.getAllElements()) {
                 if (fluid.getTags().contains(hidden)) continue;
                 ItemStack itemStack = new ItemStack(this);
-                itemStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> data.fill(new FluidStack(fluid, data.getTankCapacity(0)), FluidAction.EXECUTE));
+                itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(data -> data.fill(new FluidStack(fluid, data.getTankCapacity(0)), FluidAction.EXECUTE));
                 items.add(itemStack);
             }
         }
@@ -147,7 +147,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     @Override
     public ItemStack getContainerItem(ItemStack itemStack) {
         ItemStack itemStack1 = itemStack.copy();
-        itemStack1.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
+        itemStack1.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(data -> {
             FluidStack fs = data.drain(unit, IFluidHandler.FluidAction.EXECUTE);
         });
 
@@ -256,7 +256,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
             if (worldIn.getFluidState(blockpos).isTagged(FluidTags.WATER)) {
                 if (canFill(itemstack, Fluids.WATER)) {
                     worldIn.playSound(playerIn, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ(), SoundEvents.ITEM_BOTTLE_FILL, SoundCategory.NEUTRAL, 1.0F, 1.0F);
-                    itemstack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> data.fill(new FluidStack(Fluids.WATER, data.getTankCapacity(0)), FluidAction.EXECUTE));
+                    itemstack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(data -> data.fill(new FluidStack(Fluids.WATER, data.getTankCapacity(0)), FluidAction.EXECUTE));
 
                     return ActionResult.resultSuccess(itemstack);
                 }
@@ -270,7 +270,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     @Override
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
         PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
-        stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
+        stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(data -> {
             FluidStack fs = data.drain(unit, IFluidHandler.FluidAction.EXECUTE);
             if (entityplayer != null) {
                 entityplayer.addStat(Stats.ITEM_USED.get(this));
@@ -290,7 +290,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     }
 
     public void updateDamage(ItemStack stack) {
-        stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
+        stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(data -> {
             int i = Math.max(this.capacity - data.getFluidInTank(0).getAmount(), 0);
             stack.setDamage(i);
         });

@@ -52,11 +52,11 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
-import net.minecraftforge.items.CapabilityItemHandler;
+import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 
@@ -176,17 +176,17 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
     @Nonnull
     @Override
     public <C> LazyOptional<C> getCapability(@Nonnull Capability<C> capability, Direction facing) {
-        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
+        if (capability == ForgeCapabilities.FLUID_HANDLER) {
 
             if (!fluidHandler.isPresent()) {
                 LazyOptional<IFluidHandler> old = fluidHandler;
                 fluidHandler = LazyOptional.of(() -> handler);
                 old.invalidate();
             }
-            return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.orEmpty(capability, fluidHandler);
+            return ForgeCapabilities.FLUID_HANDLER.orEmpty(capability, fluidHandler);
         }
         if (facing != null) {
-            if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+            if (capability == ForgeCapabilities.ITEM_HANDLER) {
                 if (facing == Direction.UP)
                     return invHandlerUp.cast();
                 if (facing == Direction.DOWN)

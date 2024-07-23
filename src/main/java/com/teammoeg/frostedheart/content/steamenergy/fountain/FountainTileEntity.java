@@ -45,7 +45,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.CapabilityItemHandler;
+import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 
 import javax.annotation.Nonnull;
 import java.util.UUID;

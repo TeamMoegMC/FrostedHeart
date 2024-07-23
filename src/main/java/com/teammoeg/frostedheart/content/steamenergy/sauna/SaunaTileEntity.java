@@ -65,7 +65,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.network.NetworkHooks;
-import net.minecraftforge.items.CapabilityItemHandler;
+import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
 
 public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEntity, FHBlockInterfaces.IActiveState, IIEInventory, IInteractionObjectIE {
@@ -130,7 +130,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
     LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
     @Nonnull
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
-    	if(capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
+    	if(capability == ForgeCapabilities.ITEM_HANDLER)
     		return this.insertionCap.cast();
 		if(capability==FHCapabilities.HEAT_EP.capability()&&facing==Direction.DOWN) {
 			return heatcap.cast();

@@ -41,7 +41,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.CapabilityItemHandler;
+import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
 
 public class RelicChestTileEntity extends LockableLootTileEntity implements IIEInventory {
@@ -67,7 +67,7 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
 
     @Nonnull
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
-        return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY ? this.insertionCap.cast() : super.getCapability(capability, facing);
+        return capability == ForgeCapabilities.ITEM_HANDLER ? this.insertionCap.cast() : super.getCapability(capability, facing);
     }
 
     @Override

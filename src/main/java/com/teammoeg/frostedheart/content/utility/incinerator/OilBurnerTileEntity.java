@@ -33,7 +33,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
@@ -53,7 +53,7 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
         if (!this.holder.isPresent()) {
             this.refreshCapability();
         }
-        return cap == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY ? holder.cast() : super.getCapability(cap, side);
+        return cap == ForgeCapabilities.FLUID_HANDLER ? holder.cast() : super.getCapability(cap, side);
     }
 
     @Override
@@ -112,7 +112,7 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
         if (this.world != null && !this.world.isRemote) {
             TileEntity down = Utils.getExistingTileEntity(world, pos.offset(Direction.DOWN));
             if (down != null) {
-                LazyOptional<IFluidHandler> cap = down.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, Direction.UP);
+                LazyOptional<IFluidHandler> cap = down.getCapability(ForgeCapabilities.FLUID_HANDLER, Direction.UP);
                 if (cap.isPresent()) {
                     IFluidHandler ifh = cap.resolve().orElse(null);
                     if (ifh != null) {

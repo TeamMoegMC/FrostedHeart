@@ -75,7 +75,7 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
-import net.minecraftforge.items.CapabilityItemHandler;
+import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
 
 public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEntity<T>> extends ZoneHeatingMultiblockTileEntity<T> implements IIEInventory,
@@ -185,7 +185,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     @Nonnull
     @Override
     public <X> LazyOptional<X> getCapability(@Nonnull Capability<X> capability, Direction facing) {
-        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+        if (capability == ForgeCapabilities.ITEM_HANDLER) {
             T master = master();
             if (master != null)
                 return master.invHandler.cast();

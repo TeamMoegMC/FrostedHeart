@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.mixin.engdecor;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -38,7 +39,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fluids.IFluidTank;
 import wile.engineersdecor.blocks.EdFluidFunnel.FluidFunnelTileEntity;
@@ -98,7 +98,7 @@ public abstract class EdFluidFunnelHandler extends TileEntity
     @Inject(at = @At("HEAD"), method = "getCapability", remap = false, cancellable = true)
     public void getCapability(net.minecraftforge.common.capabilities.Capability capability, @Nullable Direction facing,
                               CallbackInfoReturnable<LazyOptional> cbi) {
-        if (capability == CapabilityEnergy.ENERGY && facing != Direction.UP) {
+        if (capability == ForgeCapabilities.ENERGY && facing != Direction.UP) {
 
             cbi.setReturnValue(LazyOptional.of(() -> this));
         }

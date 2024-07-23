@@ -51,7 +51,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStackSimple;
 
@@ -70,7 +70,7 @@ public class CeramicBucket extends FHBaseItem {
             return stack;
         }
         ItemStack emptyStack = stack.copy();
-        emptyStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(handler -> handler.drain(Integer.MAX_VALUE, IFluidHandler.FluidAction.EXECUTE));
+        emptyStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(handler -> handler.drain(Integer.MAX_VALUE, IFluidHandler.FluidAction.EXECUTE));
         return emptyStack;
     }
 
@@ -79,7 +79,7 @@ public class CeramicBucket extends FHBaseItem {
             return emptyBuckets;
         }
         ItemStack filledStack = emptyBuckets.split(1);
-        filledStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(handler -> handler.fill(new FluidStack(fillFluid, 1000), IFluidHandler.FluidAction.EXECUTE));
+        filledStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(handler -> handler.fill(new FluidStack(fillFluid, 1000), IFluidHandler.FluidAction.EXECUTE));
         if (emptyBuckets.isEmpty()) {
             return filledStack;
         }
@@ -90,7 +90,7 @@ public class CeramicBucket extends FHBaseItem {
     }
 
     private Fluid getFluid(ItemStack stack) {
-        return stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).map(handler -> handler.getFluidInTank(0).getFluid()).orElse(Fluids.EMPTY);
+        return stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).map(handler -> handler.getFluidInTank(0).getFluid()).orElse(Fluids.EMPTY);
     }
 
     @Override
