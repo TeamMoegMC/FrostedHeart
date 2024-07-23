@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.content.town.resident.Resident;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 
 import static java.lang.Double.NEGATIVE_INFINITY;
 
@@ -60,7 +60,7 @@ public enum TownWorkerType {
     WAREHOUSE(FHBlocks.warehouse, null, 0),
     MINE(FHBlocks.mine, (town, workData) -> {
         double rating = workData.getDouble("rating");
-        ListTag list = workData.getList("resources", Constants.NBT.TAG_COMPOUND);
+        ListTag list = workData.getList("resources", Tag.TAG_COMPOUND);
         EnumMap<TownResourceType, Double> resources = new EnumMap<>(TownResourceType.class);
         list.forEach(nbt -> {
             CompoundTag nbt_1 = (CompoundTag) nbt;

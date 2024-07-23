@@ -30,7 +30,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.ListTag;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 
 /**
  * An act is a basic unit of execution code
@@ -103,7 +103,7 @@ public class Act implements IScenarioThread{
     	if(nbt.contains("pname"))
     		pn=nbt.getString("pname");
     	paragraph=new ParagraphData(this,pn,nbt.getInt("pn"));
-    	ListTag css=nbt.getList("callStack", Constants.NBT.TAG_COMPOUND);
+    	ListTag css=nbt.getList("callStack", Tag.TAG_COMPOUND);
     	for(Tag n:css) {
     		callStack.add(new ExecuteStackElement(this,(CompoundTag) n));
     	}

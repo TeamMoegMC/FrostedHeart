@@ -50,7 +50,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 
 /**
  * Class HeatProviderManager.
@@ -80,13 +80,13 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
 	@Override
 	public void load(CompoundTag nbt, boolean isPacket) {
 		propagated.clear();
-		ListTag cn=nbt.getList("pipes", Constants.NBT.TAG_COMPOUND);
+		ListTag cn=nbt.getList("pipes", Tag.TAG_COMPOUND);
 		for(Tag ccn:cn) {
 			CompoundTag ccnbt=((CompoundTag)ccn);
 			propagated.put(BlockPos.of(ccnbt.getLong("pos")), ccnbt.getInt("len"));
 		}
 		epdataset.clear();
-		ListTag cn2=nbt.getList("endpoints", Constants.NBT.TAG_COMPOUND);
+		ListTag cn2=nbt.getList("endpoints", Tag.TAG_COMPOUND);
 		for(Tag ccn:cn2) {
 			CompoundTag ccnbt=((CompoundTag)ccn);
 			epdataset.add(new EndPointData(RegistryUtils.getBlock(new ResourceLocation(ccnbt.getString("blk"))),

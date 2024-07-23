@@ -40,7 +40,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 
 public class ResearchData implements IEnvironment {
 
@@ -265,7 +265,7 @@ public class ResearchData implements IEnvironment {
         if (cn.contains("level"))
             level = cn.getInt("level");
         data.clear();
-        cn.getList("clues", Constants.NBT.TAG_COMPOUND).stream().map(t -> (CompoundTag) t).forEach(e -> data.put(e.getInt("id"), ClueDatas.read(e.getCompound("data"))));
+        cn.getList("clues", Tag.TAG_COMPOUND).stream().map(t -> (CompoundTag) t).forEach(e -> data.put(e.getInt("id"), ClueDatas.read(e.getCompound("data"))));
         // rs=FHResearch.getResearch(cn.getInt("research"));
     }
 

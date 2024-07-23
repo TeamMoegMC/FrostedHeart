@@ -50,7 +50,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -871,9 +871,9 @@ public class WorldClimate implements NBTSerializable {
 	public void load(CompoundTag nbt, boolean isPacket) {
         clockSource.deserialize(nbt);
         tempEventStream.clear();
-        tempEventStream.addAll(CodecUtil.fromNBTList(nbt.getList("tempEventStream", Constants.NBT.TAG_COMPOUND), ClimateEvent.CODEC));
+        tempEventStream.addAll(CodecUtil.fromNBTList(nbt.getList("tempEventStream", Tag.TAG_COMPOUND), ClimateEvent.CODEC));
         dailyTempData.clear();
-        dailyTempData.addAll(CodecUtil.fromNBTList(nbt.getList("hourlyTempStream", Constants.NBT.TAG_COMPOUND), DayTemperatureData.CODEC));
+        dailyTempData.addAll(CodecUtil.fromNBTList(nbt.getList("hourlyTempStream", Tag.TAG_COMPOUND), DayTemperatureData.CODEC));
         readCache();
 	}
 }

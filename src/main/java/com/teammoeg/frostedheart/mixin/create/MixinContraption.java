@@ -55,7 +55,6 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
-import net.minecraftforge.common.util.Constants.BlockFlags;
 
 @Mixin(Contraption.class)
 public abstract class MixinContraption implements ISpeedContraption {
@@ -94,7 +93,7 @@ public abstract class MixinContraption implements ISpeedContraption {
                     targetPos = targetPos.above();
                 if (!state.getBlockSupportShape(world, targetPos).isEmpty()) {
                     world.levelEvent(2001, targetPos, Block.getId(blockState));
-                    world.setBlock(targetPos, state, 3 | BlockFlags.IS_MOVING);
+                    world.setBlock(targetPos, state, 3 | Block.UPDATE_MOVE_BY_PISTON);
                     if (!blockState.requiresCorrectToolForDrops())
                         Block.dropResources(blockState, world, targetPos, null);
                 } else {

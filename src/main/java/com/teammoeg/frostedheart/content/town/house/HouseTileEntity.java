@@ -35,7 +35,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nonnull;
@@ -133,7 +133,7 @@ public class HouseTileEntity extends AbstractTownWorkerTileEntity{
         setBasicWorkData(data);
         if(this.isValid()) {
             //residents = new ArrayList<>();
-            //ListNBT residentList = data.getList("residents", Constants.NBT.TAG_COMPOUND);
+            //ListNBT residentList = data.getList("residents", Tag.TAG_COMPOUND);
             //for (int i = 0; i < residentList.size(); i++) {
             //    residents.add(new Resident(residentList.getCompound(i)));
             //}

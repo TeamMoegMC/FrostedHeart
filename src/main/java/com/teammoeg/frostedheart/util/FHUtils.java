@@ -72,7 +72,7 @@ import net.minecraft.world.level.levelgen.Heightmap.Types;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.crafting.NBTIngredient;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class FHUtils {
@@ -261,7 +261,7 @@ public class FHUtils {
 
     public static int getEnchantmentLevel(Enchantment enchID, CompoundTag tags) {
         ResourceLocation resourcelocation = RegistryUtils.getRegistryName(enchID);
-        ListTag listnbt = tags.getList("Enchantments", Constants.NBT.TAG_COMPOUND);
+        ListTag listnbt = tags.getList("Enchantments", Tag.TAG_COMPOUND);
 
         for (int i = 0; i < listnbt.size(); ++i) {
             CompoundTag compoundnbt = listnbt.getCompound(i);

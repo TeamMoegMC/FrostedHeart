@@ -31,7 +31,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.NonNullList;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 
@@ -178,7 +178,7 @@ public class DeathInventoryData implements NBTSerializable {
         inv = null;
         calledClone = nbt.getBoolean("cloned");
         if (nbt.contains("data")) {
-            nbt.getList("data", Constants.NBT.TAG_COMPOUND).stream().map(t -> (CompoundTag) t).findFirst().ifPresent(e-> inv = CopyInventory.deserializeNBT(e.getCompound("inv")));
+            nbt.getList("data", Tag.TAG_COMPOUND).stream().map(t -> (CompoundTag) t).findFirst().ifPresent(e-> inv = CopyInventory.deserializeNBT(e.getCompound("inv")));
         } else if (nbt.contains("inv")) {
             inv = CopyInventory.deserializeNBT(nbt.getCompound("inv"));
         }

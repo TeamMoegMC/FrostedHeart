@@ -14,7 +14,7 @@ import net.minecraft.nbt.LongTag;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -124,7 +124,7 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
             this.rack = data.getInt("rack");
             this.chest = data.getInt("chest");
             this.linkedMines.clear();
-            ListTag list = data.getList("linkedMines", Constants.NBT.TAG_LONG);
+            ListTag list = data.getList("linkedMines", Tag.TAG_LONG);
             list.forEach(nbt-> this.linkedMines.add( BlockPos.of( ((LongTag)nbt).getAsLong() )));
         }
     }

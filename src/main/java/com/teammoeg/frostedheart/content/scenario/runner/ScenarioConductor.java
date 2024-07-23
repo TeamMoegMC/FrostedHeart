@@ -42,7 +42,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.ListTag;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 
 /**
@@ -329,7 +329,7 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 		// TODO Auto-generated method stub
 		varData.extraData=data.getCompound("vars");
     	varData.snapshot=varData.extraData;
-    	ListTag lacts=data.getList("acts", Constants.NBT.TAG_COMPOUND);
+    	ListTag lacts=data.getList("acts", Tag.TAG_COMPOUND);
     	for(Tag v:lacts) {
     		Act i=new Act(this,(CompoundTag) v);
     		acts.put(i.name, i);

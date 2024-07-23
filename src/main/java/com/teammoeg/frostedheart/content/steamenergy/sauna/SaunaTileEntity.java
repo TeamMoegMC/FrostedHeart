@@ -62,7 +62,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.network.NetworkHooks;
 import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
@@ -238,7 +238,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements TickableBlockEn
             effectAmplifier = 0;
         }
         formed = nbt.getBoolean("formed");
-        ListTag floorNBT = nbt.getList("floor", Constants.NBT.TAG_COMPOUND);
+        ListTag floorNBT = nbt.getList("floor", Tag.TAG_COMPOUND);
         floor.clear();
         for (int i = 0; i < floorNBT.size(); i++) {
             BlockPos pos = NbtUtils.readBlockPos(floorNBT.getCompound(i));

@@ -14,7 +14,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 
 public abstract class Scene {
 
@@ -47,7 +47,7 @@ public abstract class Scene {
 
 	public void load(CompoundTag nbt) {
 		isSaveNowait = nbt.getBoolean("nowait");
-		ListTag logs = nbt.getList("logs", Constants.NBT.TAG_STRING);
+		ListTag logs = nbt.getList("logs", Tag.TAG_STRING);
 		savedLog.clear();
 		log.clear();
 		for (Tag s : logs) {

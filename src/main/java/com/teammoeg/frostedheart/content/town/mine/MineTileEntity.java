@@ -9,7 +9,7 @@ import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.core.BlockPos;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -118,7 +118,7 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
 
         if(this.isValid()){
             this.rating = data.getDouble("rating");
-            ListTag list = data.getList("resources", Constants.NBT.TAG_COMPOUND);
+            ListTag list = data.getList("resources", Tag.TAG_COMPOUND);
             this.resources = new EnumMap<>(TownResourceType.class);
             list.forEach(nbt -> {
                 CompoundTag nbt_1 = (CompoundTag) nbt;

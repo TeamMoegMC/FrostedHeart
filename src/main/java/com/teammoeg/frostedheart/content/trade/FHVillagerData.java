@@ -51,7 +51,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.gossip.GossipType;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraftforge.common.util.Tag;
 
 public class FHVillagerData implements MenuProvider {
     public ResourceLocation policytype;

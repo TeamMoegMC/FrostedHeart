@@ -71,7 +71,7 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.world.Explosion;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
@@ -358,15 +358,15 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     @Override
     public void receiveMessageFromClient(CompoundTag message) {
         super.receiveMessageFromClient(message);
-        if (message.contains("isWorking", Constants.NBT.TAG_BYTE))
+        if (message.contains("isWorking", Tag.TAG_BYTE))
             setWorking(message.getBoolean("isWorking"));
-        if (message.contains("isOverdrive", Constants.NBT.TAG_BYTE))
+        if (message.contains("isOverdrive", Tag.TAG_BYTE))
             setOverdrive(message.getBoolean("isOverdrive"));
         this.markContainingBlockForUpdate(null);
         this.setChanged();
-       /* if (message.contains("temperatureLevel", Constants.NBT.TAG_INT))
+       /* if (message.contains("temperatureLevel", Tag.TAG_INT))
             setTemperatureLevel(message.getInt("temperatureLevel"));
-        if (message.contains("rangeLevel", Constants.NBT.TAG_INT))
+        if (message.contains("rangeLevel", Tag.TAG_INT))
             setRangeLevel(message.getInt("rangeLevel"));*/
     }
 

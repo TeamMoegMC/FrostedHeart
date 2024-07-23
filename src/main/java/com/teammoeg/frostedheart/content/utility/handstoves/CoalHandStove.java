@@ -88,8 +88,8 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 
 
     @Override
-    public double getDurabilityForDisplay(ItemStack stack) {
-        return getFuelAmount(stack) * 1.0D / max_fuel;
+    public int getBarWidth(ItemStack stack) {
+        return (int) (getFuelAmount(stack) * 13.0D / max_fuel);
     }
 
 

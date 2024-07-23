@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabiliti
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
@@ -43,7 +44,7 @@ import net.minecraft.world.level.block.entity.TickableBlockEntity;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 
@@ -137,7 +138,7 @@ public class FountainTileEntity extends IEBaseTileEntity implements
                                 level.setBlock(nozzle,
                                         FHBlocks.fountain_nozzle.get().defaultBlockState()
                                                 .setValue(FountainNozzleBlock.HEIGHT, i + 1),
-                                        Constants.BlockFlags.DEFAULT_AND_RERENDER
+                                        Block.UPDATE_ALL_IMMEDIATE
                                 );
                             }
 
@@ -270,7 +271,7 @@ public class FountainTileEntity extends IEBaseTileEntity implements
                 level.setBlock(nozzle,
                         FHBlocks.fountain_nozzle.get().defaultBlockState()
                                 .setValue(FountainNozzleBlock.HEIGHT, 0),
-                        Constants.BlockFlags.DEFAULT_AND_RERENDER
+                        Block.UPDATE_ALL_IMMEDIATE
                 );
             }
         }
