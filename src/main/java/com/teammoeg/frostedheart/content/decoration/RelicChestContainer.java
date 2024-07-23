@@ -20,11 +20,11 @@
 package com.teammoeg.frostedheart.content.decoration;
 
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Slot;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
 
 public class RelicChestContainer extends IEBaseContainer<RelicChestTileEntity> {
-    public RelicChestContainer(int id, PlayerInventory inventoryPlayer, RelicChestTileEntity tile) {
+    public RelicChestContainer(int id, Inventory inventoryPlayer, RelicChestTileEntity tile) {
         super(tile, id);
 
         for (int j = 0; j < 3; ++j) {

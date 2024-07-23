@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.trade.policy;
 import com.google.gson.JsonElement;
 import com.teammoeg.frostedheart.util.io.Writeable;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class LevelData implements Writeable {
     int min;
@@ -42,7 +42,7 @@ public class LevelData implements Writeable {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
     }
 
 }

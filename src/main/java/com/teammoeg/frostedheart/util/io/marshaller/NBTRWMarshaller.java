@@ -2,26 +2,26 @@ package com.teammoeg.frostedheart.util.io.marshaller;
 
 import java.util.function.Function;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 
 public class NBTRWMarshaller<T> implements Marshaller {
-	final Function<CompoundNBT,T> from;
-	final Function<T,CompoundNBT> to;
-	public NBTRWMarshaller(Function<CompoundNBT,T> from, Function<T, CompoundNBT> to) {
+	final Function<CompoundTag,T> from;
+	final Function<T,CompoundTag> to;
+	public NBTRWMarshaller(Function<CompoundTag,T> from, Function<T, CompoundTag> to) {
 		super();
 		this.from = from;
 		this.to = to;
 	}
 
 	@Override
-	public INBT toNBT(Object o) {
+	public Tag toNBT(Object o) {
 		return to.apply((T) o);
 	}
 
 	@Override
-	public Object fromNBT(INBT nbt) {
-		return from.apply((CompoundNBT) nbt);
+	public Object fromNBT(Tag nbt) {
+		return from.apply((CompoundTag) nbt);
 		
 	}
 

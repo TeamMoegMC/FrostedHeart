@@ -20,12 +20,12 @@
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 
 public class SaunaContainer extends IEBaseContainer<SaunaTileEntity> {
-    public SaunaContainer(int id, PlayerInventory inventoryPlayer, SaunaTileEntity tile) {
+    public SaunaContainer(int id, Inventory inventoryPlayer, SaunaTileEntity tile) {
         super(tile, id);
         // medicine slot
         addSlot(new Slot(this.inv, 0, 98, 26) {

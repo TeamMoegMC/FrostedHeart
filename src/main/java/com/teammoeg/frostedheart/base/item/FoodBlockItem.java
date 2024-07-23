@@ -19,17 +19,17 @@
 
 package com.teammoeg.frostedheart.base.item;
 
-import net.minecraft.block.Block;
-import net.minecraft.item.Food;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.food.FoodProperties;
 
-import net.minecraft.item.Item.Properties;
+import net.minecraft.world.item.Item.Properties;
 
 public class FoodBlockItem extends FHBlockItem {
-    public FoodBlockItem(Block block, Properties props, Food food) {
+    public FoodBlockItem(Block block, Properties props, FoodProperties food) {
         super(block, props.food(food));
     }
 
-    public FoodBlockItem(Block block, Properties props, Food food, String name) {
+    public FoodBlockItem(Block block, Properties props, FoodProperties food, String name) {
         super(block, props.food(food), name);
     }
 }

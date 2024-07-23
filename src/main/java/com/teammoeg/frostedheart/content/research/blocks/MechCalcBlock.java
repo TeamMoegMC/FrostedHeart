@@ -30,35 +30,35 @@ import com.teammoeg.frostedheart.base.block.FHKineticBlock;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Direction.Axis;
-import net.minecraft.util.Hand;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.Axis;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.FakePlayer;
 
-import net.minecraft.block.AbstractBlock.Properties;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public class MechCalcBlock extends FHKineticBlock {
-    static final VoxelShaper shape = VoxelShaper.forDirectional(VoxelShapes.or(Block.box(0, 0, 0, 16, 9, 16), Block.box(0, 9, 0, 16, 16, 13)), Direction.SOUTH);
+    static final VoxelShaper shape = VoxelShaper.forDirectional(Shapes.or(Block.box(0, 0, 0, 16, 9, 16), Block.box(0, 9, 0, 16, 16, 13)), Direction.SOUTH);
 
     public MechCalcBlock( Properties blockProps) {
         super(blockProps);
@@ -67,8 +67,8 @@ public class MechCalcBlock extends FHKineticBlock {
 
 
     @Override
-    public void appendHoverText(ItemStack stack, IBlockReader worldIn, List<ITextComponent> tooltip,
-                               ITooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, BlockGetter worldIn, List<Component> tooltip,
+                               TooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         if (stack.hasTag() && stack.getTag().getBoolean("prod")) {
             tooltip.add(TranslateUtils.str("For Display Only"));
@@ -78,13 +78,13 @@ public class MechCalcBlock extends FHKineticBlock {
 
     @Nullable
     @Override
-    public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
+    public BlockEntity createTileEntity(@Nonnull BlockState state, @Nonnull BlockGetter world) {
         return FHTileTypes.MECH_CALC.get().create();
     }
 
 
     @Override
-    public void fillItemCategory(ItemGroup group, NonNullList<ItemStack> items) {
+    public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> items) {
         super.fillItemCategory(group, items);
         ItemStack is = new ItemStack(this);
         is.getOrCreateTag().putBoolean("prod", true);
@@ -98,13 +98,13 @@ public class MechCalcBlock extends FHKineticBlock {
 
 
     @Override
-    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
         return shape.get(state.getValue(BlockStateProperties.HORIZONTAL_FACING));
     }
 
 
     @Override
-    public boolean hasShaftTowards(IWorldReader arg0, BlockPos arg1, BlockState state, Direction dir) {
+    public boolean hasShaftTowards(LevelReader arg0, BlockPos arg1, BlockState state, Direction dir) {
         return state.getValue(BlockStateProperties.HORIZONTAL_FACING).getClockWise().getAxis() == dir.getAxis();
     }
 
@@ -116,11 +116,11 @@ public class MechCalcBlock extends FHKineticBlock {
 
 
     @Override
-    public ActionResultType use(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
-        ActionResultType superResult = super.use(state, world, pos, player, hand, hit);
+    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        InteractionResult superResult = super.use(state, world, pos, player, hand, hit);
         if (superResult.consumesAction() || player instanceof FakePlayer)
             return superResult;
-        TileEntity te = Utils.getExistingTileEntity(world, pos);
+        BlockEntity te = Utils.getExistingTileEntity(world, pos);
         if (te instanceof MechCalcTileEntity)
             return ((MechCalcTileEntity) te).onClick(player);
         return superResult;
@@ -128,9 +128,9 @@ public class MechCalcBlock extends FHKineticBlock {
 
 
     @Override
-    public void setPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+    public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
         if (stack.hasTag() && stack.getTag().getBoolean("prod")) {
-            TileEntity te = Utils.getExistingTileEntity(worldIn, pos);
+            BlockEntity te = Utils.getExistingTileEntity(worldIn, pos);
             if (te instanceof MechCalcTileEntity) {
                 ((MechCalcTileEntity) te).doProduct = false;
             }

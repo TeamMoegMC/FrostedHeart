@@ -24,14 +24,14 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHDamageSources;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectCategory;
 
-public class IonEffect extends Effect {
+public class IonEffect extends MobEffect {
 
-    public IonEffect(EffectType typeIn, int liquidColorIn) {
+    public IonEffect(MobEffectCategory typeIn, int liquidColorIn) {
         super(typeIn, liquidColorIn);
     }
 

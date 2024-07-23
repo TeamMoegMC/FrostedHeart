@@ -26,32 +26,32 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Maps;
 import com.teammoeg.frostedheart.util.FHUtils;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.IWaterLoggable;
-import net.minecraft.block.SixWayBlock;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.pathfinding.PathType;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Direction.Axis;
-import net.minecraft.util.Direction.AxisDirection;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockDisplayReader;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.TickPriority;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.SimpleWaterloggedBlock;
+import net.minecraft.world.level.block.PipeBlock;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.pathfinder.PathComputationType;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.Axis;
+import net.minecraft.core.Direction.AxisDirection;
+import net.minecraft.Util;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.TickPriority;
+import net.minecraft.world.level.Level;
 
-import net.minecraft.block.AbstractBlock.Properties;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
-public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock implements IWaterLoggable {
+public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends PipeBlock implements SimpleWaterloggedBlock {
 	Class<T> type;
 	protected int lightOpacity;
 	public static final BooleanProperty CASING = BooleanProperty.create("casing");
@@ -86,23 +86,23 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 	}
 
 	@Override
-	public boolean isPathfindable(BlockState state, IBlockReader worldIn, BlockPos pos, PathType type) {
+	public boolean isPathfindable(BlockState state, BlockGetter worldIn, BlockPos pos, PathComputationType type) {
 		return false;
 	}
 
-	public boolean canConnectTo(IWorld world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
+	public boolean canConnectTo(LevelAccessor world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
 		return false;
 	}
 
 	@Override
-	protected void createBlockStateDefinition(net.minecraft.state.StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition.Builder<Block, BlockState> builder) {
 		builder.add(NORTH, EAST, SOUTH, WEST, UP, DOWN, BlockStateProperties.WATERLOGGED);
 		builder.add(RNORTH, REAST, RSOUTH, RWEST, RUP, RDOWN, CASING);
 		super.createBlockStateDefinition(builder);
 	}
 
 	@Nullable
-	private Axis getAxis(IBlockReader world, BlockPos pos, BlockState state) {
+	private Axis getAxis(BlockGetter world, BlockPos pos, BlockState state) {
 		if (!state.is(this)) return null;
 		for (Axis axis : Axis.values()) {
 			Direction d1 = Direction.get(AxisDirection.NEGATIVE, axis);
@@ -129,7 +129,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 	}
 
 	@Override
-	public int getLightBlock(BlockState state, IBlockReader worldIn, BlockPos pos) {
+	public int getLightBlock(BlockState state, BlockGetter worldIn, BlockPos pos) {
 		if (state.isSolidRender(worldIn, pos))
 			return lightOpacity;
 		else
@@ -137,7 +137,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 	}
 
 	@Override
-	public BlockState getStateForPlacement(BlockItemUseContext context) {
+	public BlockState getStateForPlacement(BlockPlaceContext context) {
 		FluidState FluidState = context.getLevel()
 			.getFluidState(context.getClickedPos());
 		return updateBlockState(defaultBlockState(), context.getNearestLookingDirection(), null, context.getLevel(),
@@ -150,7 +150,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 		return true;
 	}
 
-	public boolean isCornerOrEndPipe(IBlockDisplayReader world, BlockPos pos, BlockState state) {
+	public boolean isCornerOrEndPipe(BlockAndTintGetter world, BlockPos pos, BlockState state) {
 		return (state.is(this)) && getAxis(world, pos, state) == null
 			&& !shouldDrawCasing(world, pos, state);
 	}
@@ -164,7 +164,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 		return (T) this;
 	}
 
-	public boolean shouldDrawCasing(IBlockDisplayReader world, BlockPos pos, BlockState state) {
+	public boolean shouldDrawCasing(BlockAndTintGetter world, BlockPos pos, BlockState state) {
 		if (!state.is(this))
 			return false;
 		Axis axis = getAxis(world, pos, state);
@@ -175,7 +175,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 		return false;
 	}
 
-	public boolean shouldDrawRim(IWorld world, BlockPos pos, BlockState state,
+	public boolean shouldDrawRim(LevelAccessor world, BlockPos pos, BlockState state,
 		Direction direction) {
 		if (!isOpenAt(state, direction))
 			return false;
@@ -195,7 +195,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 			return direction.getAxisDirection() == AxisDirection.POSITIVE;
 		return true;
 	}
-	public void checkNewConnection(IWorld world,BlockPos pos,BlockState old,BlockState neo) {
+	public void checkNewConnection(LevelAccessor world,BlockPos pos,BlockState old,BlockState neo) {
 		PipeTileEntity te=FHUtils.getExistingTileEntity(world, pos, PipeTileEntity.class);
 		if(te!=null) {
 			for (Direction d : Direction.values()) {
@@ -205,7 +205,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 		}
 	}
 	public BlockState updateBlockState(BlockState state, @Nullable Direction direction, @Nullable Direction ignore,
-		IWorld world, BlockPos pos) {
+		LevelAccessor world, BlockPos pos) {
 		
 		if (direction != null) {
 			state = state.setValue(PROPERTY_BY_DIRECTION.get(direction), canConnectTo(world, pos.relative(direction), world.getBlockState(pos.relative(direction)), direction));
@@ -226,7 +226,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 
 	@Override
 	public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState,
-		IWorld world, BlockPos pos, BlockPos neighbourPos) {
+		LevelAccessor world, BlockPos pos, BlockPos neighbourPos) {
 		if (state.getValue(BlockStateProperties.WATERLOGGED))
 			world.getLiquidTicks()
 				.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
@@ -239,7 +239,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 	}
 
 	@Override
-	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
+	public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
 		boolean isMoving) {
 		super.neighborChanged(state, worldIn, pos, blockIn, fromPos, isMoving);
 		//Direction d = FHUtils.dirBetween(fromPos, pos);
@@ -249,7 +249,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 	}
 
 	@Override
-	public void setPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+	public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
 		super.setPlacedBy(worldIn, pos, state, placer, stack);
 		BlockState updated=updateBlockState(state, null, null, worldIn, pos);
 		checkNewConnection(worldIn,pos,state,updated);

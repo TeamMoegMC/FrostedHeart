@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui;
 
 import java.util.List;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -32,15 +32,15 @@ import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.ITextProperties;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.Mth;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.TextComponent;
 
 public class RTextField extends Widget {
 
-    private ITextComponent component = StringTextComponent.EMPTY;
-    private ITextProperties[] formattedText = new ITextProperties[0];
+    private Component component = TextComponent.EMPTY;
+    private FormattedText[] formattedText = new FormattedText[0];
     public int textFlags = 0;
     public int minWidth = 0;
     public int maxWidth = 5000;
@@ -65,7 +65,7 @@ public class RTextField extends Widget {
     }
 
     @Override
-    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
         //drawBackground(matrixStack, theme, x, y, w, h);
 
         if (formattedText.length != 0) {
@@ -102,11 +102,11 @@ public class RTextField extends Widget {
     public RTextField resize(Theme theme) {
         setWidth(0);
 
-        for (ITextProperties s : formattedText) {
+        for (FormattedText s : formattedText) {
             setWidth(Math.max(width, (int) (theme.getStringWidth(s) * scale)));
         }
 
-        setWidth(MathHelper.clamp(width, minWidth, maxWidth));
+        setWidth(Mth.clamp(width, minWidth, maxWidth));
         setHeight((int) ((Math.max(1, formattedText.length) * textSpacing - (textSpacing - theme.getFontHeight() + 1))
                 * scale));
         return this;
@@ -142,17 +142,17 @@ public class RTextField extends Widget {
         return this;
     }
 
-    public RTextField setText(ITextComponent txt) {
+    public RTextField setText(Component txt) {
         component = txt;
         Theme theme = getGui().getTheme();
 
         if (maxLine > 0) {
-            List<ITextProperties> ls = theme.listFormattedStringToWidth(TranslateUtils.str("").append(txt),
+            List<FormattedText> ls = theme.listFormattedStringToWidth(TranslateUtils.str("").append(txt),
                     (int) (maxWidth / scale));
-            formattedText = ls.subList(0, Math.min(ls.size(), (int) (maxLine / scale))).toArray(new ITextProperties[0]);
+            formattedText = ls.subList(0, Math.min(ls.size(), (int) (maxLine / scale))).toArray(new FormattedText[0]);
         } else {
             formattedText = theme.listFormattedStringToWidth(TranslateUtils.str("").append(txt), (int) (maxWidth / scale))
-                    .toArray(new ITextProperties[0]);
+                    .toArray(new FormattedText[0]);
         }
 
         return resize(theme);

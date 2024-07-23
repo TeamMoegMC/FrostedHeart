@@ -49,9 +49,9 @@ import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVM;
 import com.teammoeg.frostedheart.content.scenario.runner.target.IVarTrigger;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.world.storage.FolderName;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -59,9 +59,9 @@ import net.minecraftforge.fml.network.PacketDistributor;
 public class FHScenario {
 	public static ScenarioExecutor<ScenarioVM> server = new ScenarioExecutor<>(ScenarioVM.class);
 	private static final List<ScenarioProvider> scenarioProviders = new ArrayList<>();
-	public static Map<PlayerEntity,Map<EventTriggerType,List<IVarTrigger>>> triggers=new HashMap<>();
+	public static Map<Player,Map<EventTriggerType,List<IVarTrigger>>> triggers=new HashMap<>();
 	//private static Map<ServerPlayerEntity,ScenarioConductor> runners=new HashMap<>();
-	public static void startFor(ServerPlayerEntity pe) {
+	public static void startFor(ServerPlayer pe) {
 		ScenarioConductor sr = get(pe);
 		sr.init(pe);
 		Scenario scenario = loadScenario(sr,"init");
@@ -72,10 +72,10 @@ public class FHScenario {
 		}
 		sr.run(scenario);
 	}
-	public static void addVarTrigger(PlayerEntity pe,EventTriggerType type,IVarTrigger trig) {
+	public static void addVarTrigger(Player pe,EventTriggerType type,IVarTrigger trig) {
 		triggers.computeIfAbsent(pe,k->new HashMap<>()).computeIfAbsent(type, k->new ArrayList<>()).add(trig);
 	}
-	public static void trigVar(PlayerEntity pe,EventTriggerType type) {
+	public static void trigVar(Player pe,EventTriggerType type) {
 		Map<EventTriggerType,List<IVarTrigger>> me=triggers.get(pe);
 		if(me!=null) {
 			List<IVarTrigger> le=me.get(type);
@@ -146,7 +146,7 @@ public class FHScenario {
 	}
 
 	public static void callClientCommand(String name, ScenarioVM runner, Map<String, String> params) {
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) runner.getPlayer()),
 				new ServerScenarioCommandPacket(name.toLowerCase(), params));
 	}
 
@@ -156,7 +156,7 @@ public class FHScenario {
 			data.put(params[i * 2], params[i * 2 + 1]);
 		}
 
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) runner.getPlayer()),
 				new ServerScenarioCommandPacket(name.toLowerCase(), data));
 	}
 
@@ -185,7 +185,7 @@ public class FHScenario {
 		register(MCCommands.class);
 	}
 	static Path local;
-	static final FolderName dataFolder = new FolderName("fhscenario");
+	static final LevelResource dataFolder = new LevelResource("fhscenario");
 /*
 	public static ScenarioConductor load(ServerPlayerEntity player) {
 		local = FHResearchDataManager.server.getWorldPath(dataFolder);
@@ -225,11 +225,11 @@ public class FHScenario {
 		runners.values().removeIf(t -> t.isOfflined());
 
 	}*/
-	public static ScenarioConductor getNullable(PlayerEntity playerEntity) {
+	public static ScenarioConductor getNullable(Player playerEntity) {
 		//return runners.computeIfAbsent((ServerPlayerEntity) playerEntity, FHScenario::load);
 		return ScenarioConductor.getCapability(playerEntity).orElse(null);
 	}
-	public static ScenarioConductor get(PlayerEntity playerEntity) {
+	public static ScenarioConductor get(Player playerEntity) {
 		//return runners.computeIfAbsent((ServerPlayerEntity) playerEntity, FHScenario::load);
 		return ScenarioConductor.getCapability(playerEntity).orElseThrow(()->new NoSuchElementException("conductor not present"));
 	}

@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.content.scenario.ScenarioExecutor.ScenarioMetho
 import com.teammoeg.frostedheart.content.scenario.commands.client.ClientControl;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 public class FHScenarioClient {
     static ScenarioExecutor<IClientScene> client = new ScenarioExecutor<>(IClientScene.class);

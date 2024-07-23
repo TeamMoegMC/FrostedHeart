@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.util.noise;
 
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 
 /**
  * Wrapper for a 2D noise layer
@@ -47,7 +47,7 @@ public interface INoise2D {
      * @return a new noise function
      */
     default INoise2D flattened(float min, float max) {
-        return (x, y) -> MathHelper.clamp(INoise2D.this.noise(x, y), min, max);
+        return (x, y) -> Mth.clamp(INoise2D.this.noise(x, y), min, max);
     }
 
     default INoise2D map(FloatUnaryFunction mappingFunction) {

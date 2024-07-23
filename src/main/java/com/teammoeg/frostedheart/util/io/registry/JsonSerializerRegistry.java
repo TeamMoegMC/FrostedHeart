@@ -25,7 +25,7 @@ import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.util.io.Writeable;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class JsonSerializerRegistry<U extends Writeable> extends PacketBufferSerializerRegistry<U, Object, JsonObject> {
 
@@ -45,7 +45,7 @@ public class JsonSerializerRegistry<U extends Writeable> extends PacketBufferSer
 		return obj.get("type").getAsString();
 	}
 
-	public void register(Class<? extends U> cls, String type, Function<JsonObject, U> json, Function<U, JsonObject> obj, Function<PacketBuffer, U> packet) {
+	public void register(Class<? extends U> cls, String type, Function<JsonObject, U> json, Function<U, JsonObject> obj, Function<FriendlyByteBuf, U> packet) {
 		super.register(cls, type, json, (t,c)->obj.apply(t), packet);
 	}
 

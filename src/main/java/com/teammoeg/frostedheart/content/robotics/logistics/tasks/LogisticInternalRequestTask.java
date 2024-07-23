@@ -4,22 +4,22 @@ import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticSlot;
 import com.teammoeg.frostedheart.content.robotics.logistics.SlotSet;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class LogisticInternalRequestTask implements LogisticTask {
-	TileEntity tile;
+	BlockEntity tile;
 	int slot;
 	ItemStack filter;
 	LogisticSlot to;
 	boolean useNBT;
-	private LogisticInternalRequestTask(TileEntity tile, int slot) {
+	private LogisticInternalRequestTask(BlockEntity tile, int slot) {
 		super();
 		this.tile = tile;
 		this.slot = slot;
 	}
 
-	public LogisticInternalRequestTask(TileEntity tile, int slot, ItemStack filter, boolean useNBT) {
+	public LogisticInternalRequestTask(BlockEntity tile, int slot, ItemStack filter, boolean useNBT) {
 		this(tile,slot);
 		if(!to.getItem().isEmpty()) {
 			this.filter = to.getItem();

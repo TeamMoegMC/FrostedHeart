@@ -30,30 +30,30 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkH
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.passive.BeeEntity;
-import net.minecraft.entity.passive.PigEntity;
-import net.minecraft.entity.passive.RabbitEntity;
-import net.minecraft.entity.passive.SheepEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.animal.Bee;
+import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.animal.Rabbit;
+import net.minecraft.world.entity.animal.Sheep;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 
-@Mixin({SheepEntity.class, BeeEntity.class, PigEntity.class, RabbitEntity.class})
-public class CoolableAnimals extends MobEntity {
+@Mixin({Sheep.class, Bee.class, Pig.class, Rabbit.class})
+public class CoolableAnimals extends Mob {
     short hxteTimer;
 
-    protected CoolableAnimals(EntityType<? extends MobEntity> type, World worldIn) {
+    protected CoolableAnimals(EntityType<? extends Mob> type, Level worldIn) {
         super(type, worldIn);
     }
 
     @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
+    public void fh$readAdditional(CompoundTag compound, CallbackInfo cbi) {
         hxteTimer = compound.getShort("hxthermia");
     }
 
     @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
+    public void fh$writeAdditional(CompoundTag compound, CallbackInfo cbi) {
         compound.putShort("hxthermia", hxteTimer);
 
     }

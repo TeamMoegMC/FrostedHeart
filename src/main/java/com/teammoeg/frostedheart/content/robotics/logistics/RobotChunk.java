@@ -25,12 +25,12 @@ import java.util.Map;
 import com.teammoeg.frostedheart.content.robotics.logistics.workers.INetworkCore;
 import com.teammoeg.frostedheart.util.FHUtils;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class RobotChunk {
     Map<ChunkSectionPos,BlockPos> networks = new HashMap<>();
-    public LogisticNetwork getNetworkFor(World world,BlockPos actual) {
+    public LogisticNetwork getNetworkFor(Level world,BlockPos actual) {
     	INetworkCore core = FHUtils.getExistingTileEntity(world, networks.get(new ChunkSectionPos(actual)), INetworkCore.class);
     	if(core==null)
     		return null;

@@ -24,9 +24,9 @@ import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.world.flora.FrozenForestBiome;
 import com.teammoeg.frostedheart.world.geology.volcanic.VolcanicBiome;
 
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.core.Registry;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraftforge.common.BiomeManager;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
@@ -45,7 +45,7 @@ public class FHBiomes {
         BiomeManager.addBiome(BiomeManager.BiomeType.COOL, new BiomeManager.BiomeEntry(makeKey(FROZEN_FOREST.get()), 8));
     }
 
-    public static RegistryKey<Biome> makeKey(Biome biome) {
-        return RegistryKey.create(Registry.BIOME_REGISTRY, RegistryUtils.getRegistryName(biome));
+    public static ResourceKey<Biome> makeKey(Biome biome) {
+        return ResourceKey.create(Registry.BIOME_REGISTRY, RegistryUtils.getRegistryName(biome));
     }
 }

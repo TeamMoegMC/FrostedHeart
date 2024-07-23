@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.io.codec.DataOps;
 import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
@@ -39,7 +39,7 @@ public class FHResearchDataSyncPacket implements FHMessage {
 	Object dat;
 
 
-	public FHResearchDataSyncPacket(PacketBuffer buffer) {
+	public FHResearchDataSyncPacket(FriendlyByteBuf buffer) {
 		this.dat = (ObjectWriter.readObject(buffer));
     }
 
@@ -57,7 +57,7 @@ public class FHResearchDataSyncPacket implements FHMessage {
     }
 
 	@Override
-	public void encode(PacketBuffer buffer) {
+	public void encode(FriendlyByteBuf buffer) {
 		ObjectWriter.writeObject(buffer, dat);
 	}
 }

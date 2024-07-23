@@ -24,27 +24,27 @@ import java.util.Random;
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHMain;
 
-import net.minecraft.util.Mirror;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Rotation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.util.math.vector.Vector3i;
-import net.minecraft.world.ISeedReader;
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.gen.feature.Feature;
-import net.minecraft.world.gen.feature.NoFeatureConfig;
-import net.minecraft.world.gen.feature.template.BlockIgnoreStructureProcessor;
-import net.minecraft.world.gen.feature.template.PlacementSettings;
-import net.minecraft.world.gen.feature.template.Template;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.feature.Feature;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraft.world.level.levelgen.structure.templatesystem.BlockIgnoreProcessor;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 
-public class SpacecraftFeature extends Feature<NoFeatureConfig> {
-    public SpacecraftFeature(Codec<NoFeatureConfig> codec) {
+public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
+    public SpacecraftFeature(Codec<NoneFeatureConfiguration> codec) {
         super(codec);
     }
 
     @Override
-    public boolean place(ISeedReader reader, ChunkGenerator generator, Random rand, BlockPos pos, NoFeatureConfig config) {
+    public boolean place(WorldGenLevel reader, ChunkGenerator generator, Random rand, BlockPos pos, NoneFeatureConfiguration config) {
       /*  List<Integer> listX = IntStream.rangeClosed(chunkpos.getXStart(), chunkpos.getXEnd()).boxed().collect(Collectors.toList());
         Collections.shuffle(listX, rand);
         List<Integer> listZ = IntStream.rangeClosed(chunkpos.getZStart(), chunkpos.getZEnd()).boxed().collect(Collectors.toList());
@@ -57,13 +57,13 @@ public class SpacecraftFeature extends Feature<NoFeatureConfig> {
         //if (reader.isAirBlock(blockpos$mutable) || reader.getBlockState(blockpos$mutable).getCollisionShapeUncached(reader, blockpos$mutable).isEmpty()) {
         Rotation rot = Rotation.getRandom(rand);
 
-        PlacementSettings settings = (new PlacementSettings()).setRotationPivot(new BlockPos(/*9*/9, 2, 7/*8*/)).setRotation(rot).setMirror(Mirror.NONE).addProcessor(BlockIgnoreStructureProcessor.STRUCTURE_BLOCK);
+        StructurePlaceSettings settings = (new StructurePlaceSettings()).setRotationPivot(new BlockPos(/*9*/9, 2, 7/*8*/)).setRotation(rot).setMirror(Mirror.NONE).addProcessor(BlockIgnoreProcessor.STRUCTURE_BLOCK);
         settings.keepLiquids = false;
-        Template template = reader.getLevel().getStructureManager().get(new ResourceLocation(FHMain.MODID, "relic/spacecraft"));
-        MutableBoundingBox boundingBox = template.getBoundingBox(settings, start);
+        StructureTemplate template = reader.getLevel().getStructureManager().get(new ResourceLocation(FHMain.MODID, "relic/spacecraft"));
+        BoundingBox boundingBox = template.getBoundingBox(settings, start);
 
 
-        Vector3i vector3i = boundingBox.getCenter();
+        Vec3i vector3i = boundingBox.getCenter();
 
         //                        FHMain.LOGGER.debug( "spacecraft at " + (start.getX()) + " " + start.getY() + " " + (start.getZ())+" "+rot);
         return template.placeInWorld(reader, start, new BlockPos(vector3i.getX(), vector3i.getY(), vector3i.getZ()), settings, reader.getRandom(), 2);

@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.util.io;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 public class IdDataPair<T> {
 	ResourceLocation id;

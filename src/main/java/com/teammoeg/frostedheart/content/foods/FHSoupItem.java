@@ -21,13 +21,13 @@ package com.teammoeg.frostedheart.content.foods;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 
-import net.minecraft.item.Item.Properties;
+import net.minecraft.world.item.Item.Properties;
 
 public class FHSoupItem extends FHBaseItem {
 
@@ -43,7 +43,7 @@ public class FHSoupItem extends FHBaseItem {
     }
 
     @Override
-    public ItemStack finishUsingItem(ItemStack stack, World worldIn, LivingEntity entityLiving) {
+    public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
         ItemStack itemstack = super.finishUsingItem(stack, worldIn, entityLiving);
 
         // Punish the player since soup item is not properly made
@@ -58,6 +58,6 @@ public class FHSoupItem extends FHBaseItem {
             }
         }*/
 
-        return entityLiving instanceof PlayerEntity && ((PlayerEntity) entityLiving).abilities.instabuild ? itemstack : new ItemStack(Items.BOWL);
+        return entityLiving instanceof Player && ((Player) entityLiving).abilities.instabuild ? itemstack : new ItemStack(Items.BOWL);
     }
 }

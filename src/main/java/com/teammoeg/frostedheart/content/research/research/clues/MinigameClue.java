@@ -24,7 +24,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.chat.Component;
 
 public class MinigameClue extends CustomClue {
 	public static final Codec<MinigameClue> CODEC=RecordCodecBuilder.create(t->t.group(
@@ -62,7 +62,7 @@ public class MinigameClue extends CustomClue {
     }
 
     @Override
-    public ITextComponent getName() {
+    public Component getName() {
         if (name != null && !name.isEmpty())
             return super.getName();
         return TranslateUtils.translate("clue." + FHMain.MODID + ".minigame.t" + level);

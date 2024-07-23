@@ -34,10 +34,10 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.network.FriendlyByteBuf;
 
 /**
  * Our own registry type to reduce network and storage cost.
@@ -108,7 +108,7 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
         return "";
     }
 
-    public <T extends FHRegisteredItem> void writeSupplier(PacketBuffer pb, Supplier<T> s) {
+    public <T extends FHRegisteredItem> void writeSupplier(FriendlyByteBuf pb, Supplier<T> s) {
         if (s != null) {
             T t = s.get();
             if (t != null) {
@@ -150,13 +150,13 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
      *
      * @param load the load<br>
      */
-    public void deserialize(ListNBT load) {
+    public void deserialize(ListTag load) {
         rnames.clear();
         rnamesl.clear();
         ArrayList<T> temp = new ArrayList<>(items);
         temp.removeIf(Objects::isNull);
 
-        load.stream().map(INBT::getAsString).forEach(e -> rnamesl.add(e));
+        load.stream().map(Tag::getAsString).forEach(e -> rnamesl.add(e));
         for (int i = 0; i < rnamesl.size(); i++) {
             rnames.put(rnamesl.get(i), i);
         }
@@ -260,7 +260,7 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
         cache.clear();
     }
 
-    public Supplier<T> readSupplier(PacketBuffer pb) {
+    public Supplier<T> readSupplier(FriendlyByteBuf pb) {
         return this.get(pb.readVarInt());
     }
 
@@ -309,9 +309,9 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
      *
      * @return returns serialize
      */
-    public ListNBT serialize() {
-        ListNBT cn = new ListNBT();
-        rnamesl.stream().map(StringNBT::valueOf).forEach(cn::add);
+    public ListTag serialize() {
+        ListTag cn = new ListTag();
+        rnamesl.stream().map(StringTag::valueOf).forEach(cn::add);
         return cn;
     }
 

@@ -7,9 +7,9 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.MasterGene
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -26,8 +26,8 @@ public class ClientEvents {
     @SubscribeEvent
     public static void addBreathParticles(TickEvent.PlayerTickEvent event) {
         if (event.side == LogicalSide.CLIENT && event.phase == TickEvent.Phase.START
-                && event.player instanceof ClientPlayerEntity) {
-            ClientPlayerEntity player = (ClientPlayerEntity) event.player;
+                && event.player instanceof LocalPlayer) {
+            LocalPlayer player = (LocalPlayer) event.player;
             if(ClientUtils.mc().screen instanceof MasterGeneratorScreen&&player.tickCount%20==0) {
             	((MasterGeneratorScreen)ClientUtils.mc().screen).fullInit();
             }
@@ -61,8 +61,8 @@ public class ClientEvents {
     @SubscribeEvent
     public static void playFrostedSound(TickEvent.PlayerTickEvent event) {
         if (event.side == LogicalSide.CLIENT && event.phase == TickEvent.Phase.START
-                && event.player instanceof ClientPlayerEntity) {
-            ClientPlayerEntity player = (ClientPlayerEntity) event.player;
+                && event.player instanceof LocalPlayer) {
+            LocalPlayer player = (LocalPlayer) event.player;
             if(forstedSoundCd>0)
             	forstedSoundCd--;
             if (!player.isSpectator() && !player.isCreative() && player.level != null&&forstedSoundCd>0) {
@@ -71,8 +71,8 @@ public class ClientEvents {
                 float prevTemp = ptd.smoothedBodyPrev;
                 float currTemp = ptd.smoothedBody;
                 // play sound if currTemp transitions across integer threshold
-                if (currTemp <= 0.5F && MathHelper.floor(prevTemp - 0.5F) != MathHelper.floor(currTemp - 0.5F)) {
-                    player.level.playSound(player, player.blockPosition(), FHSounds.ICE_CRACKING.get(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+                if (currTemp <= 0.5F && Mth.floor(prevTemp - 0.5F) != Mth.floor(currTemp - 0.5F)) {
+                    player.level.playSound(player, player.blockPosition(), FHSounds.ICE_CRACKING.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
                     forstedSoundCd=20;
                 }
             }

@@ -27,8 +27,8 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
 
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.TranslatableComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public enum ResearchCategory {
@@ -50,8 +50,8 @@ public enum ResearchCategory {
     	Codec.BYTE.xmap(i->ResearchCategory.values()[i], i->(byte)i.ordinal()));
 
     private final ResourceLocation id;
-    private final TranslationTextComponent name;
-    private final TranslationTextComponent desc;
+    private final TranslatableComponent name;
+    private final TranslatableComponent desc;
 
     private final ResourceLocation icon;
 
@@ -64,7 +64,7 @@ public enum ResearchCategory {
 
     }
 
-    public TranslationTextComponent getDesc() {
+    public TranslatableComponent getDesc() {
         return desc;
     }
 
@@ -76,7 +76,7 @@ public enum ResearchCategory {
         return id;
     }
 
-    public TranslationTextComponent getName() {
+    public TranslatableComponent getName() {
         return name;
     }
 

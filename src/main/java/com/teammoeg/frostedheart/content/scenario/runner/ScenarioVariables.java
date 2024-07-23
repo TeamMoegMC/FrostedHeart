@@ -23,25 +23,25 @@ import java.util.Arrays;
 
 import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 
 public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
-    CompoundNBT extraData=new CompoundNBT();
-    CompoundNBT snapshot;
+    CompoundTag extraData=new CompoundTag();
+    CompoundTag snapshot;
 
     public ScenarioVariables() {
         super();
     }
     @Override
-	public CompoundNBT save() {
+	public CompoundTag save() {
     	if(snapshot==null)
-    		return new CompoundNBT();
+    		return new CompoundTag();
     	return snapshot;
     }
     
     @Override
-	public void load(CompoundNBT data) {
+	public void load(CompoundTag data) {
     	extraData=data;
     }
     @Override
@@ -53,7 +53,7 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
     @Override
 	public boolean containsPath(String path) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (!nbt.contains(paths[i], 10))
                 return false;
@@ -63,9 +63,9 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
     }
 
     @Override
-	public INBT evalPath(String path) {
+	public Tag evalPath(String path) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             nbt = nbt.getCompound(paths[i]);
         }
@@ -75,7 +75,7 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
     @Override
 	public Double evalPathDouble(String path) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         if(path.length()>1)
 	        for (int i = 0; i < paths.length - 1; i++) {
 	            nbt = nbt.getCompound(paths[i]);
@@ -89,21 +89,21 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
     }
 
     @Override
-	public CompoundNBT getExecutionData() {
+	public CompoundTag getExecutionData() {
     	if(extraData==null) {
-    		extraData=new CompoundNBT();
+    		extraData=new CompoundTag();
     	}
         return extraData;
     }
     @Override
-	public void setPath(String path, INBT val) {
+	public void setPath(String path, Tag val) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (nbt.contains(paths[i], 10)) {
                 nbt = nbt.getCompound(paths[i]);
             } else if (!nbt.contains(paths[i])) {
-                CompoundNBT cnbt = new CompoundNBT();
+                CompoundTag cnbt = new CompoundTag();
                 nbt.put(paths[i], cnbt);
                 nbt = cnbt;
             } else
@@ -115,12 +115,12 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
     @Override
 	public void setPathNumber(String path, Number val) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (nbt.contains(paths[i], 10)) {
                 nbt = nbt.getCompound(paths[i]);
             } else if (!nbt.contains(paths[i])) {
-                CompoundNBT cnbt = new CompoundNBT();
+                CompoundTag cnbt = new CompoundTag();
                 nbt.put(paths[i], cnbt);
                 nbt = cnbt;
             } else
@@ -132,12 +132,12 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
     @Override
 	public void setPathString(String path, String val) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (nbt.contains(paths[i], 10)) {
                 nbt = nbt.getCompound(paths[i]);
             } else if (!nbt.contains(paths[i])) {
-                CompoundNBT cnbt = new CompoundNBT();
+                CompoundTag cnbt = new CompoundTag();
                 nbt.put(paths[i], cnbt);
                 nbt = cnbt;
             } else
@@ -169,12 +169,12 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
     }
 	public void remove(String path) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (nbt.contains(paths[i], 10)) {
                 nbt = nbt.getCompound(paths[i]);
             } else if (!nbt.contains(paths[i])) {
-                CompoundNBT cnbt = new CompoundNBT();
+                CompoundTag cnbt = new CompoundTag();
                 nbt.put(paths[i], cnbt);
                 nbt = cnbt;
             } else
@@ -182,10 +182,10 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
         }
         nbt.remove(paths[paths.length - 1]);
 	}
-	public CompoundNBT getExtraData() {
+	public CompoundTag getExtraData() {
 		return extraData;
 	}
-	public CompoundNBT getSnapshot() {
+	public CompoundTag getSnapshot() {
 		return snapshot;
 	}
 }

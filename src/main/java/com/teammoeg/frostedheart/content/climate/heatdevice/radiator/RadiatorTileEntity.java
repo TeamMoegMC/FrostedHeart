@@ -31,17 +31,17 @@ import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 
-public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<RadiatorTileEntity> implements IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, FHBlockInterfaces.IActiveState, ITickableTileEntity {
+public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<RadiatorTileEntity> implements IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, FHBlockInterfaces.IActiveState, TickableBlockEntity {
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
@@ -54,7 +54,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
 
 
     @Override
-    protected void callBlockConsumerWithTypeCheck(Consumer<RadiatorTileEntity> consumer, TileEntity te) {
+    protected void callBlockConsumerWithTypeCheck(Consumer<RadiatorTileEntity> consumer, BlockEntity te) {
         if (te instanceof RadiatorTileEntity)
             consumer.accept((RadiatorTileEntity) te);
     }
@@ -72,7 +72,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     }
 
     @Override
-    public boolean canUseGui(PlayerEntity player) {
+    public boolean canUseGui(Player player) {
         return false;
     }
 
@@ -132,7 +132,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
 
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
         network.load(nbt, descPacket);
     }
@@ -169,7 +169,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
 
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
         network.save(nbt, descPacket);
     }

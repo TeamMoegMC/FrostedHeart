@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.robotics.logistics.tasks;
 
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
 
 public class LogisticPushTask implements LogisticTask {

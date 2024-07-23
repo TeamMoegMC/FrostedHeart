@@ -5,10 +5,10 @@ import java.util.HashSet;
 
 import com.teammoeg.frostedheart.FHTags;
 
-import net.minecraft.block.BlockState;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.Tags;
 
 /**
@@ -17,12 +17,12 @@ import net.minecraftforge.common.Tags;
 public class FloorBlockScanner extends BlockScanner{
     public final boolean canUseLadder;
 
-    public FloorBlockScanner(World world, BlockPos startPos) {
+    public FloorBlockScanner(Level world, BlockPos startPos) {
         super(world, startPos);
         this.canUseLadder = true;
     }
 
-    public FloorBlockScanner(World world, BlockPos startPos, boolean canUseLadder) {
+    public FloorBlockScanner(Level world, BlockPos startPos, boolean canUseLadder) {
         super(world, startPos);
         this.canUseLadder = canUseLadder;
     }
@@ -32,12 +32,12 @@ public class FloorBlockScanner extends BlockScanner{
         return (blockState.isRedstoneConductor(world, pos) || blockState.is(BlockTags.STAIRS) || blockState.is(BlockTags.SLABS));
     }
 
-    public static boolean isFloorBlock(World world, BlockPos pos) {
+    public static boolean isFloorBlock(Level world, BlockPos pos) {
         BlockState blockState = world.getBlockState(pos);
         return (blockState.isRedstoneConductor(world, pos) || blockState.is(BlockTags.STAIRS) || blockState.is(BlockTags.SLABS));
     }
 
-    public static boolean isWallBlock(World world, BlockPos pos) {
+    public static boolean isWallBlock(Level world, BlockPos pos) {
         BlockState blockState = world.getBlockState(pos);
         return (blockState.isRedstoneConductor(world, pos) || blockState.is(FHTags.Blocks.WALL_BLOCKS) || blockState.is(BlockTags.DOORS) || blockState.is(BlockTags.WALLS) || blockState.is(Tags.Blocks.GLASS_PANES) || blockState.is(Tags.Blocks.FENCE_GATES) || blockState.is(Tags.Blocks.FENCES));
     }
@@ -49,11 +49,11 @@ public class FloorBlockScanner extends BlockScanner{
         return isFloorBlock(pos) || isWallBlock(pos);
     }
 
-    public static boolean isHouseBlock(World world, BlockPos pos){
+    public static boolean isHouseBlock(Level world, BlockPos pos){
         return isFloorBlock(world, pos) || isWallBlock(world, pos);
     }
 
-    public static boolean isValidFloorOrLadder(World world, BlockPos pos) {
+    public static boolean isValidFloorOrLadder(Level world, BlockPos pos) {
         // Determine whether the block satisfies type requirements
         if (!FloorBlockScanner.isFloorBlock(world, pos) && !world.getBlockState(pos).is(BlockTags.CLIMBABLE)) return false;
         AbstractMap.SimpleEntry<Integer, Boolean> information = countBlocksAbove(pos, (pos1)->FloorBlockScanner.isHouseBlock(world, pos1));

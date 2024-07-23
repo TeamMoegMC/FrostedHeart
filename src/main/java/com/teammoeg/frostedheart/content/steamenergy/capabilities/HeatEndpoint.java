@@ -3,9 +3,9 @@ package com.teammoeg.frostedheart.content.steamenergy.capabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 /**
  * The Endpoint base for heat network.
@@ -57,7 +57,7 @@ public abstract class HeatEndpoint implements NBTSerializable{
      * @param dist the distance to central
      * @return true, if successful
      */
-    public boolean reciveConnection(World w,BlockPos pos,HeatEnergyNetwork manager,Direction d,int dist) {
+    public boolean reciveConnection(Level w,BlockPos pos,HeatEnergyNetwork manager,Direction d,int dist) {
     	return manager.addEndpoint(pos, this,dist);
     }
     

@@ -24,9 +24,9 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.FHMain;
 
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 
 public class TranslateUtils {
 
@@ -34,8 +34,8 @@ public class TranslateUtils {
         return FHMain.rl("textures/gui/" + name + ".png");
     }
 
-    public static StringTextComponent str(String s) {
-        return new StringTextComponent(s);
+    public static TextComponent str(String s) {
+        return new TextComponent(s);
     }
 
     /**
@@ -47,7 +47,7 @@ public class TranslateUtils {
      * @return the string text component
      * @param <V> the type of the collection
      */
-    public static <V> StringTextComponent str(Collection<V> collection) {
+    public static <V> TextComponent str(Collection<V> collection) {
 
         StringBuilder sb = new StringBuilder();
         for (V v : collection) {
@@ -57,7 +57,7 @@ public class TranslateUtils {
         if (sb.length() > 0) {
             sb.setLength(sb.length() - 1);
         }
-        return new StringTextComponent(sb.toString());
+        return new TextComponent(sb.toString());
     }
 
     /**
@@ -71,43 +71,43 @@ public class TranslateUtils {
      * @param <K> the type of the keys
      * @param <V> the type of the values
      */
-    public static <K, V> StringTextComponent str(Map<K, V> map) {
+    public static <K, V> TextComponent str(Map<K, V> map) {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<K, V> entry : map.entrySet()) {
             sb.append(entry.getKey().toString()).append(": ").append(entry.getValue().toString()).append("\n");
         }
-        return new StringTextComponent(sb.toString());
+        return new TextComponent(sb.toString());
     }
 
-    public static TranslationTextComponent translate(String string, Object... args) {
-        return new TranslationTextComponent(string, args);
+    public static TranslatableComponent translate(String string, Object... args) {
+        return new TranslatableComponent(string, args);
     }
 
-    public static TranslationTextComponent translateGui(String name, Object... args) {
+    public static TranslatableComponent translateGui(String name, Object... args) {
         return translate("gui." + FHMain.MODID + "." + name, args);
     }
 
-    public static TranslationTextComponent translateJeiCategory(String name, Object... args) {
+    public static TranslatableComponent translateJeiCategory(String name, Object... args) {
         return translate("gui.jei.category." + FHMain.MODID + "." + name, args);
     }
 
-    public static TranslationTextComponent translateMessage(String name, Object... args) {
+    public static TranslatableComponent translateMessage(String name, Object... args) {
         return translate("message." + FHMain.MODID + "." + name, args);
     }
 
-    public static TranslationTextComponent translateResearchCategoryDesc(String name, Object... args) {
+    public static TranslatableComponent translateResearchCategoryDesc(String name, Object... args) {
         return translate("research.category.desc." + FHMain.MODID + "." + name, args);
     }
 
-    public static TranslationTextComponent translateResearchCategoryName(String name, Object... args) {
+    public static TranslatableComponent translateResearchCategoryName(String name, Object... args) {
         return translate("research.category." + FHMain.MODID + "." + name, args);
     }
 
-    public static TranslationTextComponent translateResearchLevel(String name, Object... args) {
+    public static TranslatableComponent translateResearchLevel(String name, Object... args) {
         return translate("research.level." + FHMain.MODID + "." + name, args);
     }
 
-    public static TranslationTextComponent translateTooltip(String name, Object... args) {
+    public static TranslatableComponent translateTooltip(String name, Object... args) {
         return translate("tooltip." + FHMain.MODID + "." + name, args);
     }
 }

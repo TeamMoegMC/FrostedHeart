@@ -1,31 +1,31 @@
 package com.teammoeg.frostedheart.base.network;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 
 public abstract class NBTMessage implements FHMessage{
-	private CompoundNBT tag;
+	private CompoundTag tag;
 
-	public NBTMessage(PacketBuffer buffer) {
+	public NBTMessage(FriendlyByteBuf buffer) {
 		this(buffer.readNbt());
 	}
-	public NBTMessage(CompoundNBT tag) {
+	public NBTMessage(CompoundTag tag) {
 		super();
 		this.tag = tag;
 	}
 
 	@Override
-	public void encode(PacketBuffer buffer) {
+	public void encode(FriendlyByteBuf buffer) {
 		buffer.writeNbt(tag);
 	}
 
 
-	public CompoundNBT getTag() {
+	public CompoundTag getTag() {
 		return tag;
 	}
 
 
-	public void setTag(CompoundNBT tag) {
+	public void setTag(CompoundTag tag) {
 		this.tag = tag;
 	}
 

@@ -29,17 +29,17 @@ import com.cannolicatfish.rankine.util.WorldgenUtils;
 import com.cannolicatfish.rankine.world.gen.feature.PostWorldReplacerFeature;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.SnowyDirtBlock;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.ISeedReader;
-import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.gen.Heightmap;
-import net.minecraft.world.gen.feature.NoFeatureConfig;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SnowyDirtBlock;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 
 @Mixin(PostWorldReplacerFeature.class)
 public class MixinPostWorldReplacer {
@@ -48,11 +48,11 @@ public class MixinPostWorldReplacer {
      * @reason TODO
      */
     @Overwrite(remap = false)
-    public boolean generate(ISeedReader reader, ChunkGenerator generator, Random rand, BlockPos pos, NoFeatureConfig config) {
-        IChunk chunk = reader.getChunk(pos);
+    public boolean generate(WorldGenLevel reader, ChunkGenerator generator, Random rand, BlockPos pos, NoneFeatureConfiguration config) {
+        ChunkAccess chunk = reader.getChunk(pos);
         for (int x = chunk.getPos().getMinBlockX(); x <= chunk.getPos().getMaxBlockX(); ++x) {
             for (int z = chunk.getPos().getMinBlockZ(); z <= chunk.getPos().getMaxBlockZ(); ++z) {
-                int endY = reader.getHeight(Heightmap.Type.OCEAN_FLOOR_WG, x, z);
+                int endY = reader.getHeight(Heightmap.Types.OCEAN_FLOOR_WG, x, z);
 
                 for (int y = 52; y < endY; ++y) {
                     BlockPos TARGET_POS = new BlockPos(x, y, z);

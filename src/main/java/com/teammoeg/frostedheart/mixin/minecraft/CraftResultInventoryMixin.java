@@ -23,26 +23,26 @@ import org.spongepowered.asm.mixin.Mixin;
 
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.CraftResultInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.IRecipeHolder;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.inventory.ResultContainer;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.RecipeHolder;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.level.Level;
 /**
  * Limit crafting for unresearched item
  * <p>
  * */
-@Mixin(CraftResultInventory.class)
-public abstract class CraftResultInventoryMixin implements IRecipeHolder, IInventory {
+@Mixin(ResultContainer.class)
+public abstract class CraftResultInventoryMixin implements RecipeHolder, Container {
 
     public CraftResultInventoryMixin() {
     }
 
     @Override
-    public boolean setRecipeUsed(World worldIn, ServerPlayerEntity player, IRecipe<?> recipe) {
+    public boolean setRecipeUsed(Level worldIn, ServerPlayer player, Recipe<?> recipe) {
         if (ResearchListeners.canUseRecipe(player, recipe))
-            return IRecipeHolder.super.setRecipeUsed(worldIn, player, recipe);
+            return RecipeHolder.super.setRecipeUsed(worldIn, player, recipe);
         return false;
     }
 

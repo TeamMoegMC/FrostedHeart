@@ -22,11 +22,11 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.MasterGeneratorContainer;
 import com.teammoeg.frostedheart.util.client.Point;
 
-import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public class T1GeneratorContainer extends MasterGeneratorContainer<T1GeneratorTileEntity> {
-    public T1GeneratorContainer(int id, PlayerInventory inventoryPlayer, T1GeneratorTileEntity tile) {
+    public T1GeneratorContainer(int id, Inventory inventoryPlayer, T1GeneratorTileEntity tile) {
 		super(id, inventoryPlayer, tile);
 	}
     static final Point pin=new Point(46,72);

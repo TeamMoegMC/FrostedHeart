@@ -26,9 +26,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.mojang.serialization.Lifecycle;
 
-import net.minecraft.world.storage.ServerWorldInfo;
+import net.minecraft.world.level.storage.PrimaryLevelData;
 
-@Mixin(ServerWorldInfo.class)
+@Mixin(PrimaryLevelData.class)
 public class ServerWorldInfoMixin {
 
     /**

@@ -26,22 +26,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.entity.passive.PigEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.Level;
 
-@Mixin(PigEntity.class)
-public abstract class RabbitEntityMixin extends AnimalEntity implements IFeedStore {
+@Mixin(Pig.class)
+public abstract class RabbitEntityMixin extends Animal implements IFeedStore {
     byte feeded = 0;
 
 
-    protected RabbitEntityMixin(EntityType<? extends AnimalEntity> type, World worldIn) {
+    protected RabbitEntityMixin(EntityType<? extends Animal> type, Level worldIn) {
         super(type, worldIn);
     }
 
@@ -56,19 +56,19 @@ public abstract class RabbitEntityMixin extends AnimalEntity implements IFeedSto
     }
 
     @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
+    public void fh$readAdditional(CompoundTag compound, CallbackInfo cbi) {
         feeded = compound.getByte("feed_stored");
     }
 
 
     @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
+    public void fh$writeAdditional(CompoundTag compound, CallbackInfo cbi) {
         compound.putByte("feed_stored", feeded);
 
     }
 
     @Override
-    public ActionResultType mobInteract(PlayerEntity playerIn, Hand hand) {
+    public InteractionResult mobInteract(Player playerIn, InteractionHand hand) {
         ItemStack itemstack = playerIn.getItemInHand(hand);
 
         if (!this.isBaby() && !itemstack.isEmpty() && isFood(itemstack)) {
@@ -76,7 +76,7 @@ public abstract class RabbitEntityMixin extends AnimalEntity implements IFeedSto
                 feeded++;
                 if (!this.level.isClientSide)
                     this.usePlayerItem(playerIn, itemstack);
-                return ActionResultType.sidedSuccess(this.level.isClientSide);
+                return InteractionResult.sidedSuccess(this.level.isClientSide);
             }
         }
         return super.mobInteract(playerIn, hand);

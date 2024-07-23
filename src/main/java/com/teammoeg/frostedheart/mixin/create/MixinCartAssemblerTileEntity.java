@@ -28,19 +28,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.simibubi.create.content.contraptions.components.structureMovement.mounted.CartAssemblerTileEntity;
 import com.simibubi.create.foundation.tileEntity.SmartTileEntity;
 
-import net.minecraft.entity.item.minecart.AbstractMinecartEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.vehicle.AbstractMinecart;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 @Mixin(CartAssemblerTileEntity.class)
 public abstract class MixinCartAssemblerTileEntity extends SmartTileEntity {
-    public MixinCartAssemblerTileEntity(TileEntityType<?> tileEntityTypeIn) {
+    public MixinCartAssemblerTileEntity(BlockEntityType<?> tileEntityTypeIn) {
         super(tileEntityTypeIn);
     }
 
     @Shadow(remap = false)
-    protected abstract void disassemble(World world, BlockPos pos, AbstractMinecartEntity cart);
+    protected abstract void disassemble(Level world, BlockPos pos, AbstractMinecart cart);
 
     @Shadow(remap = false)
     public abstract boolean isMinecartUpdateValid();
@@ -53,7 +53,7 @@ public abstract class MixinCartAssemblerTileEntity extends SmartTileEntity {
      * @reason config disable cart assembly
      */
     @Inject(at = @At("HEAD"), method = "tryAssemble", remap = false, cancellable = true)
-    public void tryAssemble(AbstractMinecartEntity cart, CallbackInfo cbi) {
+    public void tryAssemble(AbstractMinecart cart, CallbackInfo cbi) {
         if (cart == null)
             return;
         if (!cart.level.isClientSide) {

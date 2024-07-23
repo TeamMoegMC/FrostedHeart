@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEve
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.network.NetworkEvent;
 
@@ -42,7 +42,7 @@ public class FHResearchDataUpdatePacket extends NullableNBTMessage{
         this.id = rid;
     }
 
-    public FHResearchDataUpdatePacket(PacketBuffer buffer) {
+    public FHResearchDataUpdatePacket(FriendlyByteBuf buffer) {
         super(buffer);
         id = buffer.readVarInt();
     }
@@ -52,7 +52,7 @@ public class FHResearchDataUpdatePacket extends NullableNBTMessage{
         this.id = FHResearch.researches.getIntId(rd.getResearch());
     }
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         super.encode(buffer);
         buffer.writeVarInt(id);
     }

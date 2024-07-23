@@ -32,40 +32,40 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
-import net.minecraft.entity.item.ExperienceOrbEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.item.crafting.SmokingRecipe;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SmokingRecipe;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTileEntity, FHBlockInterfaces.IActiveState {
+public class ChargerTileEntity extends IEBaseTileEntity implements TickableBlockEntity, FHBlockInterfaces.IActiveState {
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
     HeatConsumerEndpoint network = new HeatConsumerEndpoint(-10, 200,5);
     float power;
-    private static void splitAndSpawnExperience(World world, BlockPos pos, float experience) {
-        int i = MathHelper.floor(experience);
-        float f = MathHelper.frac(experience);
+    private static void splitAndSpawnExperience(Level world, BlockPos pos, float experience) {
+        int i = Mth.floor(experience);
+        float f = Mth.frac(experience);
         if (f != 0.0F && Math.random() < f) {
             ++i;
         }
 
         while (i > 0) {
-            int j = ExperienceOrbEntity.getExperienceValue(i);
+            int j = ExperienceOrb.getExperienceValue(i);
             i -= j;
-            world.addFreshEntity(new ExperienceOrbEntity(world, pos.getX(), pos.getY(), pos.getZ(), j));
+            world.addFreshEntity(new ExperienceOrb(world, pos.getX(), pos.getY(), pos.getZ(), j));
         }
 
     }
@@ -105,13 +105,13 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
     	}
     	return null;
     }
-    public ActionResultType onClick(PlayerEntity pe, ItemStack is) {
+    public InteractionResult onClick(Player pe, ItemStack is) {
         if (is != null) {
             Item it = is.getItem();
             if (it instanceof IChargable) {
                 power -= ((IChargable) it).charge(is, power);
                 drawEffect();
-                return ActionResultType.SUCCESS;
+                return InteractionResult.SUCCESS;
             }
             ChargerRecipe cr = findRecipe(is);
             if (cr != null) {
@@ -125,12 +125,12 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
                         this.markContainingBlockForUpdate(null);
                     }
                     drawEffect();
-                    return ActionResultType.SUCCESS;
+                    return InteractionResult.SUCCESS;
                 }
             }
 
             if (power >= 100) {
-                List<SmokingRecipe> irs = this.level.getRecipeManager().getAllRecipesFor(IRecipeType.SMOKING);
+                List<SmokingRecipe> irs = this.level.getRecipeManager().getAllRecipesFor(RecipeType.SMOKING);
                 for (SmokingRecipe sr : irs) {
                     if (sr.getIngredients().iterator().next().test(is)) {
                         if (!level.isClientSide) {
@@ -143,7 +143,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
                             this.markContainingBlockForUpdate(null);
                         }
                         drawEffect();
-                        return ActionResultType.SUCCESS;
+                        return InteractionResult.SUCCESS;
                     }
                 }
             }
@@ -161,16 +161,16 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
                             this.markContainingBlockForUpdate(null);
                         }
                         drawEffect();
-                        return ActionResultType.SUCCESS;
+                        return InteractionResult.SUCCESS;
                     }
                 }
             }
         }
-        return ActionResultType.PASS;
+        return InteractionResult.PASS;
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
         power = nbt.getFloat("power");
         network.load(nbt,descPacket);
     }
@@ -192,7 +192,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         nbt.putFloat("power", power);
         network.save(nbt,descPacket);
     }

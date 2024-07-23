@@ -30,10 +30,10 @@ import com.simibubi.create.content.contraptions.components.crafter.RecipeGridHan
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
-import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.ICraftingRecipe;
-import net.minecraft.world.World;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.level.Level;
 
 @Mixin(RecipeGridHandler.class)
 public class RecipeGridHandlerMixin {
@@ -43,14 +43,14 @@ public class RecipeGridHandlerMixin {
     }
 
     @Inject(at = @At("HEAD"), method = "isRecipeAllowed", cancellable = true, remap = false)
-    private static void fh$isRecipeAllowed(ICraftingRecipe recipe, CraftingInventory inventory, CallbackInfoReturnable<Boolean> cbi) {
+    private static void fh$isRecipeAllowed(CraftingRecipe recipe, CraftingContainer inventory, CallbackInfoReturnable<Boolean> cbi) {
         if (!ResearchListeners.canUseRecipe(ResearchListeners.te, recipe))
             cbi.setReturnValue(false);
 
     }
 
     @Inject(at = @At("RETURN"), method = "tryToApplyRecipe", cancellable = true, remap = false)
-    private static void fh$tryToApplyRecipe(World world, GroupedItems items, CallbackInfoReturnable<ItemStack> cbi) {
+    private static void fh$tryToApplyRecipe(Level world, GroupedItems items, CallbackInfoReturnable<ItemStack> cbi) {
         ResearchListeners.te = null;
     }
 

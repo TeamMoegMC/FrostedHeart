@@ -32,10 +32,10 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
 
 /**
  * Reward the research team item rewards
@@ -76,18 +76,18 @@ public class EffectItemReward extends Effect {
     }
 
     @Override
-    public IFormattableTextComponent getDefaultName() {
+    public MutableComponent getDefaultName() {
         return TranslateUtils.translateGui("effect.item_reward");
     }
 
     @Override
-    public List<ITextComponent> getDefaultTooltip() {
-        List<ITextComponent> tooltip = new ArrayList<>();
+    public List<Component> getDefaultTooltip() {
+        List<Component> tooltip = new ArrayList<>();
         for (ItemStack stack : rewards) {
             if (stack.getCount() == 1)
                 tooltip.add(stack.getHoverName());
             else
-                tooltip.add(((IFormattableTextComponent) stack.getHoverName()).append(TranslateUtils.str(" x " + stack.getCount())));
+                tooltip.add(((MutableComponent) stack.getHoverName()).append(TranslateUtils.str(" x " + stack.getCount())));
         }
         return tooltip;
     }
@@ -98,7 +98,7 @@ public class EffectItemReward extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
         if (triggerPlayer == null || isload) return false;
         for (ItemStack s : rewards) {
             FHUtils.giveItem(triggerPlayer, s.copy());

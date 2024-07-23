@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.tips.client.hud;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.gui.EmptyScreen;
@@ -9,17 +9,17 @@ import com.teammoeg.frostedheart.content.tips.client.util.AnimationUtil;
 import com.teammoeg.frostedheart.content.tips.client.util.GuiUtil;
 import com.teammoeg.frostedheart.util.client.Point;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.client.util.InputMappings;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.resources.language.I18n;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.util.Mth;
+import net.minecraft.network.chat.Component;
 
 import java.util.List;
 
-public class TipHUD extends AbstractGui {
+public class TipHUD extends GuiComponent {
     private final Minecraft mc = Minecraft.getInstance();
-    private final MatrixStack ms;
+    private final PoseStack ms;
     private final TipElement element;
     private final int lineSpace = 12;
     private final boolean alwaysVisible;
@@ -34,7 +34,7 @@ public class TipHUD extends AbstractGui {
 
     public boolean visible = true;
 
-    public TipHUD(MatrixStack matrixStack, TipElement element) {
+    public TipHUD(PoseStack matrixStack, TipElement element) {
         this.ms = matrixStack;
         this.element = element;
         this.alwaysVisible = element.alwaysVisible;
@@ -108,9 +108,9 @@ public class TipHUD extends AbstractGui {
                 pitch = mc.player.getViewXRot(mc.getFrameTime()) - mc.player.xBob;
             } else {
                 yaw   = mc.player.getViewYRot(mc.getFrameTime())
-                        - MathHelper.lerp(mc.getFrameTime(), mc.player.yBobO, mc.player.yBob);
+                        - Mth.lerp(mc.getFrameTime(), mc.player.yBobO, mc.player.yBob);
                 pitch = mc.player.getViewXRot(mc.getFrameTime())
-                        - MathHelper.lerp(mc.getFrameTime(), mc.player.xBobO, mc.player.xBob);
+                        - Mth.lerp(mc.getFrameTime(), mc.player.xBobO, mc.player.xBob);
             }
         }
 
@@ -144,7 +144,7 @@ public class TipHUD extends AbstractGui {
         ms.popPose();
     }
 
-    private void renderContent(List<ITextComponent> texts, int x, int y, int fontColor, Point renderPos2, int BGColor) {
+    private void renderContent(List<Component> texts, int x, int y, int fontColor, Point renderPos2, int BGColor) {
         int BGPosX = x - 4;
         int width = renderPos2.getX()- BGPosX;
         if (texts.size() > 1) {
@@ -174,7 +174,7 @@ public class TipHUD extends AbstractGui {
     }
 
     private void renderButton(int x, int y, int color) {
-        if (!isFading() && (mc.screen != null || InputMappings.isKeyDown(mc.getWindow().getWindow(), 258))) {
+        if (!isFading() && (mc.screen != null || InputConstants.isKeyDown(mc.getWindow().getWindow(), 258))) {
             if (mc.screen == null) mc.setScreen(new EmptyScreen());
 
             if (GuiUtil.renderIconButton(ms, IconButton.ICON_CROSS, GuiUtil.getMouseX(), GuiUtil.getMouseY(), x, y, color, 0)) {

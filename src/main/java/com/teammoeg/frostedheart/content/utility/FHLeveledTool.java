@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.utility;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 
-import net.minecraft.item.Item.Properties;
+import net.minecraft.world.item.Item.Properties;
 
 public class FHLeveledTool extends FHBaseItem {
     protected int level;

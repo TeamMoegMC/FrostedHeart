@@ -27,13 +27,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.simibubi.create.content.contraptions.components.crafter.MechanicalCraftingRecipe;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 
-import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.item.crafting.ShapedRecipe;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.ShapedRecipe;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 @Mixin(MechanicalCraftingRecipe.class)
 public class MixinMechanicalCraftingRecipe extends ShapedRecipe {
@@ -45,7 +45,7 @@ public class MixinMechanicalCraftingRecipe extends ShapedRecipe {
     }
 
     @Inject(at = @At("HEAD"), method = "matches", cancellable = true)
-    public void fh$matches(CraftingInventory inv, World worldIn, CallbackInfoReturnable<Boolean> cbi) {
+    public void fh$matches(CraftingContainer inv, Level worldIn, CallbackInfoReturnable<Boolean> cbi) {
         if (!ResearchListeners.canUseRecipe(ResearchListeners.te, this)) cbi.setReturnValue(false);
     }
 }

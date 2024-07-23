@@ -30,12 +30,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.loot.LootContext;
-import net.minecraft.loot.conditions.ILootCondition;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.common.loot.LootModifier;
 
@@ -59,7 +59,7 @@ public class ReplaceLootModifier extends LootModifier {
 
     public static class Serializer extends GlobalLootModifierSerializer<ReplaceLootModifier> {
         @Override
-        public ReplaceLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
+        public ReplaceLootModifier read(ResourceLocation location, JsonObject object, LootItemCondition[] conditions) {
             JsonArray ja = object.get("changes").getAsJsonArray();
             List<ReplacePair> changes = new ArrayList<>();
             for (JsonElement je : ja) {
@@ -82,7 +82,7 @@ public class ReplaceLootModifier extends LootModifier {
 
     List<ReplacePair> remap = new ArrayList<>();
 
-    private ReplaceLootModifier(ILootCondition[] conditionsIn, Collection<ReplacePair> pairsin) {
+    private ReplaceLootModifier(LootItemCondition[] conditionsIn, Collection<ReplacePair> pairsin) {
         super(conditionsIn);
         this.remap.addAll(pairsin);
     }

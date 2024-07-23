@@ -10,28 +10,28 @@ import com.mojang.serialization.DynamicOps;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import io.netty.buffer.Unpooled;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 	Function<A,S> schemaSerialize;
 	Function<S,A> schemaDeserialize;
-	BiConsumer<A,PacketBuffer> bufferSerialize;
+	BiConsumer<A,FriendlyByteBuf> bufferSerialize;
 	Function<byte[],A> bufferDeserialize;
 	DynamicOps<S> schemaCodec;
 
-	public PacketOrSchemaCodec(DynamicOps<S> schema, Function<A, S> schemaSerialize, Function<S, A> schemaDeserialize, BiConsumer<A, PacketBuffer> bufferSerialize, Function<PacketBuffer, A> bufferDeserialize) {
+	public PacketOrSchemaCodec(DynamicOps<S> schema, Function<A, S> schemaSerialize, Function<S, A> schemaDeserialize, BiConsumer<A, FriendlyByteBuf> bufferSerialize, Function<FriendlyByteBuf, A> bufferDeserialize) {
 		super();
 		this.schemaSerialize = schemaSerialize;
 		this.schemaDeserialize = schemaDeserialize;
 		this.bufferSerialize = bufferSerialize;
-		this.bufferDeserialize = bs->bufferDeserialize.apply(new PacketBuffer(Unpooled.wrappedBuffer(bs)));
+		this.bufferDeserialize = bs->bufferDeserialize.apply(new FriendlyByteBuf(Unpooled.wrappedBuffer(bs)));
 		schemaCodec=schema;
 	}
 
 	@Override
 	public <T> DataResult<T> encode(A input, DynamicOps<T> ops, T prefix) {
 		if(ops.compressMaps()) {
-			PacketBuffer buffer=new PacketBuffer(Unpooled.buffer());
+			FriendlyByteBuf buffer=new FriendlyByteBuf(Unpooled.buffer());
 			bufferSerialize.accept(input, buffer);
 			byte[] ba=new byte[buffer.writerIndex()];
 			buffer.getBytes(0, ba);

@@ -19,11 +19,11 @@
 
 package com.teammoeg.frostedheart.compat.jei;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.compat.jei.category.animations.AnimatedKinetics;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.world.level.block.state.BlockState;
+import com.mojang.math.Vector3f;
 
 //borrowed from create
 public class StaticBlock extends AnimatedKinetics {
@@ -34,7 +34,7 @@ public class StaticBlock extends AnimatedKinetics {
     }
 
     @Override
-    public void draw(MatrixStack matrixStack, int xOffset, int yOffset) {
+    public void draw(PoseStack matrixStack, int xOffset, int yOffset) {
         matrixStack.pushPose();
         matrixStack.translate(xOffset, yOffset, 0);
         matrixStack.translate(0, 0, 200);

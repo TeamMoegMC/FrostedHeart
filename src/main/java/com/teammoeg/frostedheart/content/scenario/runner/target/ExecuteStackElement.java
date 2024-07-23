@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.scenario.runner.target;
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.content.scenario.runner.IScenarioThread;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 public class ExecuteStackElement extends ScenarioTarget{
 	private final int nodeNum;
@@ -34,12 +34,12 @@ public class ExecuteStackElement extends ScenarioTarget{
 		super(sc);
 		this.nodeNum = nodeNum;
 	}
-	public ExecuteStackElement(IScenarioThread par,CompoundNBT n) {
+	public ExecuteStackElement(IScenarioThread par,CompoundTag n) {
 		this(par,n.getString("storage"),n.getInt("node"));
 	}
 
-	public CompoundNBT save() {
-		CompoundNBT nbt=new CompoundNBT();
+	public CompoundTag save() {
+		CompoundTag nbt=new CompoundTag();
 		nbt.putString("storage", getName());
 		nbt.putInt("node", nodeNum);
 		return nbt;

@@ -46,8 +46,8 @@ import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -86,7 +86,7 @@ public class TeamResearchData implements SpecialData{
     /**
      * The variants.<br>
      */
-    CompoundNBT variants = new CompoundNBT();
+    CompoundTag variants = new CompoundTag();
 
     
 
@@ -291,7 +291,7 @@ public class TeamResearchData implements SpecialData{
      *
      * @return variants<br>
      */
-    public CompoundNBT getVariants() {
+    public CompoundTag getVariants() {
         return variants;
     }
 
@@ -301,7 +301,7 @@ public class TeamResearchData implements SpecialData{
      * @param e      the e<br>
      * @param player the player, only useful when player manually click "claim awards" or do similar things.<br>
      */
-    public void grantEffect(Effect e, @Nullable ServerPlayerEntity player) {
+    public void grantEffect(Effect e, @Nullable ServerPlayer player) {
         int id = FHResearch.effects.getIntId(e);
         ensureEffect(id);
         if (id > 0)
@@ -533,18 +533,18 @@ public class TeamResearchData implements SpecialData{
         triggerClue(FHResearch.clues.getByName(lid));
     }
 
-	public void setVariants(CompoundNBT variants) {
+	public void setVariants(CompoundTag variants) {
 		this.variants = variants;
 	}
 	public static final Codec<TeamResearchData> CODEC=RecordCodecBuilder.create(t->
 	t.group(CodecUtil.LONG_ARRAY_CODEC.fieldOf("clues").forGetter(o->o.clueComplete.toLongArray()),
 		CodecUtil.LONG_ARRAY_CODEC.fieldOf("effects").forGetter(o->o.grantedEffects.toLongArray()),
-		CompoundNBT.CODEC.fieldOf("vars").forGetter(o->o.variants),
+		CompoundTag.CODEC.fieldOf("vars").forGetter(o->o.variants),
 		Codec.list(ResearchData.CODEC).fieldOf("researches").forGetter(o->o.rdata),
 		Codec.INT.fieldOf("active").forGetter(o->o.activeResearchId)
 		).apply(t, TeamResearchData::new));
 	boolean isInited;
-	public TeamResearchData(long[] clueComplete, long[] grantedEffects, CompoundNBT variants, List<ResearchData> rdata, int activeResearchId) {
+	public TeamResearchData(long[] clueComplete, long[] grantedEffects, CompoundTag variants, List<ResearchData> rdata, int activeResearchId) {
 		super();
         crafting.clear();
         building.clear();

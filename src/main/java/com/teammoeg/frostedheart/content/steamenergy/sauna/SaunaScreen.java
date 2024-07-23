@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.Point;
@@ -27,11 +27,11 @@ import com.teammoeg.frostedheart.util.client.UV;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 
 public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
     private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("sauna_vent");
@@ -50,12 +50,12 @@ public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
     private static final Point clockPos = new Point(41, 15);
     private static final Point flamePos = new Point(122, 19);
 
-    public SaunaScreen(SaunaContainer inventorySlotsIn, PlayerInventory inv, ITextComponent title) {
+    public SaunaScreen(SaunaContainer inventorySlotsIn, Inventory inv, Component title) {
         super(inventorySlotsIn, inv, title);
     }
 
     @Override
-    protected void renderBg(MatrixStack matrixStack, float partialTicks, int x, int y) {
+    protected void renderBg(PoseStack matrixStack, float partialTicks, int x, int y) {
         Minecraft mc = Minecraft.getInstance();
         ClientUtils.bindTexture(TEXTURE);
         this.blit(matrixStack, leftPos, topPos, 0, 0, imageWidth, imageHeight);
@@ -78,21 +78,21 @@ public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
         // draw flame if the sauna is on
         if (tile.isWorking()) {
             // use effect to determine which flame to draw
-            EffectInstance effect = tile.getEffectInstance();
+            MobEffectInstance effect = tile.getEffectInstance();
             if (effect != null) {
                 float effectFrac = tile.getEffectTimeFraction();
                 int height = (int) (flame2.getH() * effectFrac);
                 int offset = flame2.getH() - height;
-                if (effect.getEffect() == Effects.DIG_SPEED) {
+                if (effect.getEffect() == MobEffects.DIG_SPEED) {
                     mc.gui.blit(matrixStack, leftPos + flamePos.getX(), topPos + flamePos.getY() + offset,
                             flame2.getX(), flame2.getY() + offset, flame2.getW(), height);
-                } else if (effect.getEffect() == Effects.ABSORPTION) {
+                } else if (effect.getEffect() == MobEffects.ABSORPTION) {
                     mc.gui.blit(matrixStack, leftPos + flamePos.getX(), topPos + flamePos.getY() + offset,
                             flame3.getX(), flame3.getY() + offset, flame3.getW(), height);
-                } else if (effect.getEffect() == Effects.MOVEMENT_SPEED) {
+                } else if (effect.getEffect() == MobEffects.MOVEMENT_SPEED) {
                     mc.gui.blit(matrixStack, leftPos + flamePos.getX(), topPos + flamePos.getY() + offset,
                             flame4.getX(), flame4.getY() + offset, flame4.getW(), height);
-                } else if (effect.getEffect() == Effects.JUMP) {
+                } else if (effect.getEffect() == MobEffects.JUMP) {
                     mc.gui.blit(matrixStack, leftPos + flamePos.getX(), topPos + flamePos.getY() + offset,
                             flame5.getX(), flame5.getY() + offset, flame5.getW(), height);
                 }
@@ -103,7 +103,7 @@ public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
     }
 
     @Override
-    protected void renderLabels(MatrixStack matrixStack, int x, int y) {
+    protected void renderLabels(PoseStack matrixStack, int x, int y) {
         super.renderLabels(matrixStack, x, y);
     }
 }

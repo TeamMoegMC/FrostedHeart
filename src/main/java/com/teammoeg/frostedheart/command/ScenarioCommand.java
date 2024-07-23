@@ -10,12 +10,12 @@ import com.teammoeg.frostedheart.content.scenario.runner.ActNamespace;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 
 public class ScenarioCommand {
-	public static void register(CommandDispatcher<CommandSource> dispatcher) {
-		LiteralArgumentBuilder<CommandSource> run=Commands.literal("scenario").then(
+	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+		LiteralArgumentBuilder<CommandSourceStack> run=Commands.literal("scenario").then(
 			
 			Commands.literal("jump").then(
 			Commands.argument("scenario", StringArgumentType.string()).then(

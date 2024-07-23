@@ -3,30 +3,30 @@ package com.teammoeg.frostedheart.util.io;
 import java.util.List;
 import java.util.UUID;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.ListTag;
 
 public class CompoundNBTBuilder<P> {
-    	private CompoundNBT nbt;
+    	private CompoundTag nbt;
         private P parent;
         
-        public CompoundNBTBuilder(CompoundNBT nbt, P parent) {
+        public CompoundNBTBuilder(CompoundTag nbt, P parent) {
 			super();
 			this.nbt = nbt;
 			this.parent = parent;
 		}
 
 		public static CompoundNBTBuilder<Void> create() {
-            return new CompoundNBTBuilder<>(new CompoundNBT(),null);
+            return new CompoundNBTBuilder<>(new CompoundTag(),null);
         }
 		public CompoundNBTBuilder<CompoundNBTBuilder<P>> compound(String key) {
-			CompoundNBT data=new CompoundNBT();
+			CompoundTag data=new CompoundTag();
 			nbt.put(key,data);
             return new CompoundNBTBuilder<>(data,this);
         }
 		public ArrayNBTBuilder<CompoundNBTBuilder<P>> array(String key) {
-			ListNBT data=new ListNBT();
+			ListTag data=new ListTag();
 			nbt.put(key,data);
             return new ArrayNBTBuilder<>(data,this);
         }
@@ -34,11 +34,11 @@ public class CompoundNBTBuilder<P> {
         	return parent;
         }
         
-        public CompoundNBT build() {
+        public CompoundTag build() {
             return nbt;
         }
 
-		public CompoundNBTBuilder<P> put(String key, INBT value) {
+		public CompoundNBTBuilder<P> put(String key, Tag value) {
 			nbt.put(key, value);
             return this;
 		}

@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.content.trade.policy.conditions.TotalTradeCondi
 import com.teammoeg.frostedheart.content.trade.policy.conditions.WithFlagCondition;
 import com.teammoeg.frostedheart.util.io.registry.JsonSerializerRegistry;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class Conditions {
     private static JsonSerializerRegistry<PolicyCondition> registry = new JsonSerializerRegistry<>();
@@ -48,18 +48,18 @@ public class Conditions {
         return registry.read(jo);
     }
 
-    public static PolicyCondition deserialize(PacketBuffer data) {
+    public static PolicyCondition deserialize(FriendlyByteBuf data) {
         return registry.read(data);
     }
     public static JsonObject serialize(PolicyCondition data) {
         return registry.write(data);
     }
 
-    public static void registerType(Class<? extends PolicyCondition> cls, String type, Function<JsonObject, PolicyCondition> json, Function<PacketBuffer, PolicyCondition> packet) {
+    public static void registerType(Class<? extends PolicyCondition> cls, String type, Function<JsonObject, PolicyCondition> json, Function<FriendlyByteBuf, PolicyCondition> packet) {
         registry.register(cls, type, json,PolicyCondition::serialize, packet);
     }
 
-    public static void write(PolicyCondition e, PacketBuffer pb) {
+    public static void write(PolicyCondition e, FriendlyByteBuf pb) {
         registry.write(pb, e);
     }
 

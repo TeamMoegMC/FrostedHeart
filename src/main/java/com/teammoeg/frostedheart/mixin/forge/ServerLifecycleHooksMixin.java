@@ -38,15 +38,15 @@ import com.teammoeg.frostedheart.util.io.ZipFile;
 import com.teammoeg.frostedheart.util.version.FHVersion;
 
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.storage.FolderName;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 
 @Mixin(ServerLifecycleHooks.class)
 public class ServerLifecycleHooksMixin {
     @Shadow(remap = false)
-    private static FolderName SERVERCONFIG;
-    private static FolderName bkfconfig = new FolderName("serverconfigbackup");
+    private static LevelResource SERVERCONFIG;
+    private static LevelResource bkfconfig = new LevelResource("serverconfigbackup");
     @Shadow(remap = false)
     private static Logger LOGGER;
 

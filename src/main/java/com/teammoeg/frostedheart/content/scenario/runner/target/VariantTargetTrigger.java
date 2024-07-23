@@ -24,7 +24,7 @@ import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import com.teammoeg.frostedheart.content.scenario.runner.IScenarioThread;
 import com.teammoeg.frostedheart.content.scenario.runner.IScenarioTrigger;
 
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 
 public class VariantTargetTrigger implements IScenarioTrigger,IVarTrigger {
 	boolean canStillTrigger=true;
@@ -63,7 +63,7 @@ public class VariantTargetTrigger implements IScenarioTrigger,IVarTrigger {
 	public boolean canStillTrig() {
 		return !canTrigger&&!canStillTrigger;
 	}
-	public VariantTargetTrigger register(PlayerEntity pe,EventTriggerType type) {
+	public VariantTargetTrigger register(Player pe,EventTriggerType type) {
 		FHScenario.addVarTrigger(pe, type, this);
 		return this;
 	}

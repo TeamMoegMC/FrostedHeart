@@ -26,26 +26,26 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.entity.passive.CowEntity;
-import net.minecraft.entity.passive.MooshroomEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.animal.MushroomCow;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.Level;
 
-@Mixin(MooshroomEntity.class)
-public abstract class MooshroomMixin extends AnimalEntity {
+@Mixin(MushroomCow.class)
+public abstract class MooshroomMixin extends Animal {
 
-    public MooshroomMixin(EntityType<? extends CowEntity> p_i48567_1_, World p_i48567_2_) {
+    public MooshroomMixin(EntityType<? extends Cow> p_i48567_1_, Level p_i48567_2_) {
         super(p_i48567_1_, p_i48567_2_);
     }
 
     @Inject(at = @At("HEAD"), method = "getEntityInteractionResult", cancellable = true)
-    public void fhmo$getEntityInteractionResult(PlayerEntity playerIn, Hand hand, CallbackInfoReturnable<ActionResultType> cbi) {
+    public void fhmo$getEntityInteractionResult(Player playerIn, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cbi) {
         ItemStack itemstack = playerIn.getItemInHand(hand);
         if (itemstack.getItem() == Items.BOWL && !this.isBaby()) {
             CowEntityMixin ot = (CowEntityMixin) (Object) this;
@@ -57,7 +57,7 @@ public abstract class MooshroomMixin extends AnimalEntity {
                     else
                         playerIn.displayClientMessage(TranslateUtils.translateMessage("cow.nomilk.digest"), true);
                 }
-                cbi.setReturnValue(ActionResultType.PASS);
+                cbi.setReturnValue(InteractionResult.PASS);
             }
             ot.milk--;
         }

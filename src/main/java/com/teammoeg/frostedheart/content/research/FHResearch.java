@@ -53,12 +53,12 @@ import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import io.netty.buffer.Unpooled;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.storage.FolderName;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.Constants;
@@ -196,7 +196,7 @@ public class FHResearch {
 		// FHResearch.saveAll();
 	}
 
-	public static void initFromRegistry(CompoundNBT data) {
+	public static void initFromRegistry(CompoundTag data) {
 		ClientResearchData.last = null;
 		ResearchListeners.reload();
 
@@ -215,7 +215,7 @@ public class FHResearch {
 		DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ResearchListeners::reloadEditor);
 	}
 
-	public static void initFromPacket(CompoundNBT data, List<Research> rs) {
+	public static void initFromPacket(CompoundTag data, List<Research> rs) {
 		ClientResearchData.last = null;
 		ResearchListeners.reload();
 		// no need
@@ -236,7 +236,7 @@ public class FHResearch {
 		return editor;
 	}
 
-	public static void load(CompoundNBT cnbt) {
+	public static void load(CompoundTag cnbt) {
 		clues.deserialize(cnbt.getList("clues", Constants.NBT.TAG_STRING));
 		researches.deserialize(cnbt.getList("researches", Constants.NBT.TAG_STRING));
 		effects.deserialize(cnbt.getList("effects", Constants.NBT.TAG_STRING));
@@ -314,7 +314,7 @@ public class FHResearch {
 
 		}
 		System.out.println(CodecUtil.INGREDIENT_CODEC.encodeStart(DataOps.COMPRESSED, Ingredient.of(Items.ACACIA_BOAT)));
-		PacketBuffer pb=new PacketBuffer(Unpooled.buffer());
+		FriendlyByteBuf pb=new FriendlyByteBuf(Unpooled.buffer());
 		Object prein=Research.CODEC.encodeStart(DataOps.COMPRESSED, new Research()).resultOrPartial(System.out::println).get();
 		System.out.println(prein);
 		ObjectWriter.writeObject(pb,prein);
@@ -362,7 +362,7 @@ public class FHResearch {
 		allResearches.orElse(Collections.emptyList()).forEach(Research::doIndex);
 	}
 
-	public static CompoundNBT save(CompoundNBT cnbt) {
+	public static CompoundTag save(CompoundTag cnbt) {
 		cnbt.put("clues", clues.serialize());
 		cnbt.put("researches", researches.serialize());
 		cnbt.put("effects", effects.serialize());
@@ -407,7 +407,7 @@ public class FHResearch {
 		FHNetwork.send(target, new FHResearchSyncEndPacket());
 	}
 
-	private static final FolderName dataFolder = new FolderName("fhdata");
+	private static final LevelResource dataFolder = new LevelResource("fhdata");
 
 	public static void load() {
 		FHResearch.editor = false;
@@ -416,7 +416,7 @@ public class FHResearch {
 		FHResearch.clearAll();
 		if (regfile.exists()) {
 			try {
-				FHResearch.load(CompressedStreamTools.readCompressed(regfile));
+				FHResearch.load(NbtIo.readCompressed(regfile));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -451,7 +451,7 @@ public class FHResearch {
 			e2.printStackTrace();
 		}
 		try {
-			CompressedStreamTools.writeCompressed(FHResearch.save(new CompoundNBT()), regfile);
+			NbtIo.writeCompressed(FHResearch.save(new CompoundTag()), regfile);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

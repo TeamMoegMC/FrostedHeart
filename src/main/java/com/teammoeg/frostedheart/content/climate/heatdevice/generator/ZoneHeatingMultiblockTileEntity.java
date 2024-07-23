@@ -32,12 +32,12 @@ import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.core.Vec3i;
 
 /**
  * Common base class for any generator like block that maintains a heat area
@@ -53,11 +53,11 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     boolean isOverdrive;
 
 
-    public ZoneHeatingMultiblockTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
+    public ZoneHeatingMultiblockTileEntity(IETemplateMultiblock multiblockInstance, BlockEntityType<T> type, boolean hasRSControl) {
         super(multiblockInstance, type, hasRSControl);
     }
 
-    protected abstract void callBlockConsumerWithTypeCheck(Consumer<T> consumer, TileEntity te);
+    protected abstract void callBlockConsumerWithTypeCheck(Consumer<T> consumer, BlockEntity te);
     @Override
     public void disassemble() {
         if (this == master())
@@ -66,12 +66,12 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     }
 
     public final void forEachBlock(Consumer<T> consumer) {
-        Vector3i vec = this.multiblockInstance.getSize(level);
+        Vec3i vec = this.multiblockInstance.getSize(level);
         for (int x = 0; x < vec.getX(); ++x)
             for (int y = 0; y < vec.getY(); ++y)
                 for (int z = 0; z < vec.getZ(); ++z) {
                     BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
-                    TileEntity te = Utils.getExistingTileEntity(level, actualPos);
+                    BlockEntity te = Utils.getExistingTileEntity(level, actualPos);
                     callBlockConsumerWithTypeCheck(consumer, te);
                 }
     }
@@ -90,7 +90,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 
 
     public int getLowerBound() {
-        return MathHelper.ceil(getRangeLevel());
+        return Mth.ceil(getRangeLevel());
     }
 
 
@@ -122,7 +122,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     }
 
     public int getUpperBound() {
-        return MathHelper.ceil(getRangeLevel() * 4);
+        return Mth.ceil(getRangeLevel() * 4);
     }
 
     public boolean isOverdrive() {
@@ -140,7 +140,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     protected abstract void onShutDown();
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
         
         isWorking = nbt.getBoolean("isWorking");
@@ -236,7 +236,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 
     public abstract void tickHeat(boolean isWorking);
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
         if(!this.isDummy()||descPacket) {
 	        nbt.putBoolean("isWorking", isWorking);

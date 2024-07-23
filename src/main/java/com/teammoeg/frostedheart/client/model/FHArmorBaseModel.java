@@ -19,18 +19,18 @@
 
 package com.teammoeg.frostedheart.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import net.minecraft.client.renderer.entity.model.BipedModel;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.ArmorStandEntity;
-import net.minecraft.entity.monster.SkeletonEntity;
-import net.minecraft.entity.monster.ZombieEntity;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.monster.Skeleton;
+import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.util.Mth;
 
-public class FHArmorBaseModel<T extends LivingEntity> extends BipedModel<T> {
+public class FHArmorBaseModel<T extends LivingEntity> extends HumanoidModel<T> {
     T entityTemp;
 
     public FHArmorBaseModel(float modelSize, float yOffsetIn, int textureWidthIn, int textureHeightIn) {
@@ -38,7 +38,7 @@ public class FHArmorBaseModel<T extends LivingEntity> extends BipedModel<T> {
     }
 
     @Override
-    public void renderToBuffer(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+    public void renderToBuffer(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
         if (entityTemp != null) {
             young = entityTemp.isBaby();
             crouching = entityTemp.isShiftKeyDown();
@@ -51,17 +51,17 @@ public class FHArmorBaseModel<T extends LivingEntity> extends BipedModel<T> {
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         entityTemp = entity;
         attackTime = entity.getAttackAnim(ClientUtils.partialTicks());
-        if (entity instanceof ArmorStandEntity)
+        if (entity instanceof ArmorStand)
             setRotationAnglesStand(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
-        else if (entity instanceof SkeletonEntity || entity instanceof ZombieEntity)
+        else if (entity instanceof Skeleton || entity instanceof Zombie)
             setRotationAnglesZombie(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
         else
             super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
     }
 
     public void setRotationAnglesStand(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        if (entity instanceof ArmorStandEntity) {
-            ArmorStandEntity entityarmorstand = (ArmorStandEntity) entity;
+        if (entity instanceof ArmorStand) {
+            ArmorStand entityarmorstand = (ArmorStand) entity;
             this.head.xRot = (0.01745329F * entityarmorstand.getHeadPose().getX());
             this.head.yRot = (0.01745329F * entityarmorstand.getHeadPose().getY());
             this.head.zRot = (0.01745329F * entityarmorstand.getHeadPose().getZ());
@@ -89,8 +89,8 @@ public class FHArmorBaseModel<T extends LivingEntity> extends BipedModel<T> {
 
     public void setRotationAnglesZombie(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
-        float f6 = MathHelper.sin(this.attackTime * 3.141593F);
-        float f7 = MathHelper.sin((1.0F - (1.0F - this.attackTime) * (1.0F - this.attackTime)) * 3.141593F);
+        float f6 = Mth.sin(this.attackTime * 3.141593F);
+        float f7 = Mth.sin((1.0F - (1.0F - this.attackTime) * (1.0F - this.attackTime)) * 3.141593F);
         this.rightArm.zRot = 0.0F;
         this.leftArm.zRot = 0.0F;
         this.rightArm.yRot = (-(0.1F - f6 * 0.6F));
@@ -99,9 +99,9 @@ public class FHArmorBaseModel<T extends LivingEntity> extends BipedModel<T> {
         this.leftArm.xRot = -1.570796F;
         this.rightArm.xRot -= f6 * 1.2F - f7 * 0.4F;
         this.leftArm.xRot -= f6 * 1.2F - f7 * 0.4F;
-        this.rightArm.zRot += MathHelper.cos(ageInTicks * 0.09F) * 0.05F + 0.05F;
-        this.leftArm.zRot -= MathHelper.cos(ageInTicks * 0.09F) * 0.05F + 0.05F;
-        this.rightArm.xRot += MathHelper.sin(ageInTicks * 0.067F) * 0.05F;
-        this.leftArm.xRot -= MathHelper.sin(ageInTicks * 0.067F) * 0.05F;
+        this.rightArm.zRot += Mth.cos(ageInTicks * 0.09F) * 0.05F + 0.05F;
+        this.leftArm.zRot -= Mth.cos(ageInTicks * 0.09F) * 0.05F + 0.05F;
+        this.rightArm.xRot += Mth.sin(ageInTicks * 0.067F) * 0.05F;
+        this.leftArm.xRot -= Mth.sin(ageInTicks * 0.067F) * 0.05F;
     }
 }

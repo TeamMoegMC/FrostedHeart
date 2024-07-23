@@ -27,16 +27,16 @@ import com.cannolicatfish.rankine.world.trees.BlackWalnutTree;
 import com.cannolicatfish.rankine.world.trees.YellowBirchTree;
 import com.teammoeg.frostedheart.util.FHUtils;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.trees.Tree;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.grower.AbstractTreeGrower;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.server.level.ServerLevel;
 
 @Mixin({YellowBirchTree.class, BlackWalnutTree.class})
-public abstract class MixinXMediumTree extends Tree {
+public abstract class MixinXMediumTree extends AbstractTreeGrower {
     @Override
-    public boolean growTree(ServerWorld world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,
+    public boolean growTree(ServerLevel world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,
                                    Random rand) {
         if (FHUtils.canTreeGenerate(world, pos, rand, 10))
             return super.growTree(world, chunkGenerator, pos, state, rand);

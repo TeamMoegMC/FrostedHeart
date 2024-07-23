@@ -28,32 +28,32 @@ import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.utility.FHLeveledTool;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.block.Block;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.ChatFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.FakePlayer;
 import se.mickelus.tetra.properties.IToolProvider;
 
-import net.minecraft.item.Item.Properties;
+import net.minecraft.world.item.Item.Properties;
 
 public class GeologistsHammer extends FHLeveledTool {
     public static ResourceLocation tag = new ResourceLocation("forge:ores");
 
-    public static ActionResultType doProspect(PlayerEntity player, World world, BlockPos blockpos, ItemStack is, Hand h) {
+    public static InteractionResult doProspect(Player player, Level world, BlockPos blockpos, ItemStack is, InteractionHand h) {
         if (player != null && (!(player instanceof FakePlayer))) {//fake players does not deserve XD
             if (world.getBlockState(blockpos).getBlock().getTags().contains(tag)) {//early exit 'cause ore found
-                player.displayClientMessage(TranslateUtils.translate(world.getBlockState(blockpos).getBlock().getDescriptionId()).withStyle(TextFormatting.GOLD), false);
-                return ActionResultType.SUCCESS;
+                player.displayClientMessage(TranslateUtils.translate(world.getBlockState(blockpos).getBlock().getDescriptionId()).withStyle(ChatFormatting.GOLD), false);
+                return InteractionResult.SUCCESS;
             }
             int x = blockpos.getX();
             int y = blockpos.getY();
@@ -64,7 +64,7 @@ public class GeologistsHammer extends FHLeveledTool {
                 Random rnd = new Random(BlockPos.asLong(x, y, z) ^ 0xebd763e5b71a0128L);//randomize
                 //This is predictable, but not any big problem. Cheaters can use x-ray or other things rather then hacking in this.
                 if (rnd.nextInt((int) (20 * corr)) != 0) {//mistaken rate 5%
-                    BlockPos.Mutable mutable = new BlockPos.Mutable(x, y, z);
+                    BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos(x, y, z);
                     Block ore;
                     HashMap<String, Integer> founded = new HashMap<>();
 
@@ -83,7 +83,7 @@ public class GeologistsHammer extends FHLeveledTool {
                             }
                     if (!founded.isEmpty()) {
                         int count = 0;
-                        IFormattableTextComponent s = TranslateUtils.translateMessage("vein_size.found");
+                        MutableComponent s = TranslateUtils.translateMessage("vein_size.found");
                         for (Entry<String, Integer> f : founded.entrySet()) {
                             if (rnd.nextInt((int) (f.getValue() * corr)) != 0) {
                                 int rval = f.getValue();
@@ -92,20 +92,20 @@ public class GeologistsHammer extends FHLeveledTool {
                                     if (err > 0)
                                         rval += rnd.nextInt(err * 2) - err;
                                 }
-                                s = s.append(TranslateUtils.translateMessage("vein_size.count", rval).append(TranslateUtils.translate(f.getKey()).withStyle(TextFormatting.GREEN)).append(" "));
+                                s = s.append(TranslateUtils.translateMessage("vein_size.count", rval).append(TranslateUtils.translate(f.getKey()).withStyle(ChatFormatting.GREEN)).append(" "));
                                 count++;
                             }
                         }
                         if (count > 0) {
                             player.displayClientMessage(s, false);
-                            return ActionResultType.SUCCESS;
+                            return InteractionResult.SUCCESS;
                         }
                     }
                 }
-                player.displayClientMessage(TranslateUtils.translateMessage("vein_size.nothing").withStyle(TextFormatting.GRAY), false);
+                player.displayClientMessage(TranslateUtils.translateMessage("vein_size.nothing").withStyle(ChatFormatting.GRAY), false);
             }
         }
-        return ActionResultType.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 
     public static float getCorrectness(ItemStack item) {
@@ -136,7 +136,7 @@ public class GeologistsHammer extends FHLeveledTool {
     }
 
     @Override
-    public ActionResultType useOn(ItemUseContext context) {
+    public InteractionResult useOn(UseOnContext context) {
         return doProspect(context.getPlayer(), context.getLevel(), context.getClickedPos(), context.getItemInHand(), context.getHand());
     }
 }

@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.blocks;
 
 import java.util.List;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHBlocks;
 
 import blusunrize.immersiveengineering.api.IEProperties.IEObjState;
@@ -30,28 +30,28 @@ import blusunrize.immersiveengineering.api.IEProperties.VisibilityList;
 import blusunrize.immersiveengineering.api.utils.client.SinglePropertyModelData;
 import blusunrize.immersiveengineering.client.render.tile.DynamicModel;
 import blusunrize.immersiveengineering.client.utils.RenderUtils;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.model.BakedQuad;
-import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Quaternion;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import com.mojang.math.Quaternion;
 
-public class MechCalcRenderer extends TileEntityRenderer<MechCalcTileEntity> {
+public class MechCalcRenderer extends BlockEntityRenderer<MechCalcTileEntity> {
     public static DynamicModel<Direction> MODEL;
     public static IEObjState drum = new IEObjState(VisibilityList.show("c7"));
     public static IEObjState register = new IEObjState(VisibilityList.show("c6"));
 
-    public MechCalcRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
+    public MechCalcRenderer(BlockEntityRenderDispatcher rendererDispatcherIn) {
         super(rendererDispatcherIn);
     }
 
     @Override
-    public void render(MechCalcTileEntity te, float partialTicks, MatrixStack matrixStack,
-                       IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
+    public void render(MechCalcTileEntity te, float partialTicks, PoseStack matrixStack,
+                       MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
         BlockPos blockPos = te.getBlockPos();
         BlockState state = te.getLevel().getBlockState(blockPos);
         if (state.getBlock() != FHBlocks.mech_calc.get())

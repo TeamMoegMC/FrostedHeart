@@ -32,21 +32,21 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkH
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.entity.passive.ChickenEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Chicken;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.level.Level;
 
-@Mixin(ChickenEntity.class)
-public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedStore {
+@Mixin(Chicken.class)
+public abstract class ChickenEntityMixin extends Animal implements IFeedStore {
     private final static ResourceLocation chicken_feed = new ResourceLocation(FHMain.MODID, "chicken_feed");
 
     @Shadow
@@ -56,7 +56,7 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
     int digestTimer;
     byte egg;
     short hxteTimer;
-    protected ChickenEntityMixin(EntityType<? extends AnimalEntity> type, World worldIn) {
+    protected ChickenEntityMixin(EntityType<? extends Animal> type, Level worldIn) {
         super(type, worldIn);
     }
 
@@ -89,7 +89,7 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
     }
 
     @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
+    public void fh$readAdditional(CompoundTag compound, CallbackInfo cbi) {
         egg = compound.getByte("egg_stored");
         feeded = compound.getByte("feed_stored");
         digestTimer = compound.getInt("feed_digest");
@@ -97,7 +97,7 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
     }
 
     @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
+    public void fh$writeAdditional(CompoundTag compound, CallbackInfo cbi) {
         compound.putByte("egg_stored", egg);
         compound.putByte("feed_stored", feeded);
         compound.putInt("feed_digest", digestTimer);
@@ -110,7 +110,7 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
      * change to our own milk logic
      */
     @Override
-    public ActionResultType mobInteract(PlayerEntity playerIn, Hand hand) {
+    public InteractionResult mobInteract(Player playerIn, InteractionHand hand) {
         ItemStack itemstack = playerIn.getItemInHand(hand);
 
         if (!this.isBaby() && !itemstack.isEmpty() && itemstack.getItem().getTags().contains(chicken_feed)) {
@@ -119,7 +119,7 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
                 if (!this.level.isClientSide)
                     this.usePlayerItem(playerIn, itemstack);
                 feeded++;
-                return ActionResultType.sidedSuccess(this.level.isClientSide);
+                return InteractionResult.sidedSuccess(this.level.isClientSide);
             }
         }
         return super.mobInteract(playerIn, hand);

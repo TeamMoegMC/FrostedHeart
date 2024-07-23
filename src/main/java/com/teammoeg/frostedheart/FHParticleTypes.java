@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart;
 
-import net.minecraft.particles.BasicParticleType;
-import net.minecraft.particles.ParticleType;
+import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.core.particles.ParticleType;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -28,7 +28,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class FHParticleTypes {
     public static final DeferredRegister<ParticleType<?>> REGISTER = DeferredRegister.create(ForgeRegistries.PARTICLE_TYPES, FHMain.MODID);
 
-    public static final RegistryObject<BasicParticleType> STEAM = REGISTER.register("steam", () -> new BasicParticleType(false));
-    public static final RegistryObject<BasicParticleType> BREATH = REGISTER.register("breath", () -> new BasicParticleType(false));
-    public static final RegistryObject<BasicParticleType> WET_STEAM = REGISTER.register("wet_steam", () -> new BasicParticleType(false));
+    public static final RegistryObject<SimpleParticleType> STEAM = REGISTER.register("steam", () -> new SimpleParticleType(false));
+    public static final RegistryObject<SimpleParticleType> BREATH = REGISTER.register("breath", () -> new SimpleParticleType(false));
+    public static final RegistryObject<SimpleParticleType> WET_STEAM = REGISTER.register("wet_steam", () -> new SimpleParticleType(false));
 }

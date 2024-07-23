@@ -19,34 +19,34 @@
 
 package com.teammoeg.frostedheart.client.particles;
 
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
-import net.minecraft.client.particle.IAnimatedSprite;
-import net.minecraft.client.particle.IParticleFactory;
+import net.minecraft.client.particle.SpriteSet;
+import net.minecraft.client.particle.ParticleProvider;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.renderer.ActiveRenderInfo;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.particles.BasicParticleType;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.Camera;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.util.Mth;
 
 public class BreathParticle extends GasParticle {
 
-    public static class Factory implements IParticleFactory<BasicParticleType> {
-        private final IAnimatedSprite spriteSet;
+    public static class Factory implements ParticleProvider<SimpleParticleType> {
+        private final SpriteSet spriteSet;
 
-        public Factory(IAnimatedSprite spriteSet) {
+        public Factory(SpriteSet spriteSet) {
             this.spriteSet = spriteSet;
         }
 
         @Override
-        public Particle createParticle(BasicParticleType typeIn, ClientWorld worldIn, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+        public Particle createParticle(SimpleParticleType typeIn, ClientLevel worldIn, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
             BreathParticle steamParticle = new BreathParticle(worldIn, x, y, z, xSpeed, ySpeed, zSpeed);
             steamParticle.pickSprite(this.spriteSet);
             return steamParticle;
         }
     }
 
-    public BreathParticle(ClientWorld world, double x, double y, double z, double motionX, double motionY, double motionZ) {
+    public BreathParticle(ClientLevel world, double x, double y, double z, double motionX, double motionY, double motionZ) {
         super(world, x, y, z, motionX, motionY, motionZ);
         this.gravity = 0.0F;
         this.rCol = this.gCol = this.bCol = (float) (Math.random() * 0.2) + 0.8f;
@@ -65,11 +65,11 @@ public class BreathParticle extends GasParticle {
     }
 
     @Override
-    public void render(IVertexBuilder worldRendererIn, ActiveRenderInfo entityIn, float pt) {
+    public void render(VertexConsumer worldRendererIn, Camera entityIn, float pt) {
         float age = (this.age + pt) / lifetime * 32.0F;
-        age = MathHelper.clamp(age, 0.0F, 1.0F);
+        age = Mth.clamp(age, 0.0F, 1.0F);
         float alpha = 0.3F * (1 - (this.age + pt) / lifetime);
-        super.alpha = MathHelper.clamp(alpha, 0.0F, 0.3F);
+        super.alpha = Mth.clamp(alpha, 0.0F, 0.3F);
         super.quadSize = initialScale * (age + this.age * 0.0375F) * 0.5F;
         super.render(worldRendererIn, entityIn, pt);
     }

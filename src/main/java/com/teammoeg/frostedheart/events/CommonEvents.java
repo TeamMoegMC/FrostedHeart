@@ -57,34 +57,34 @@ import com.teammoeg.frostedheart.world.FHGeneration;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import com.teammoeg.frostedheart.world.FHStructures;
-import net.minecraft.command.CommandSource;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityClassification;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.item.ExperienceOrbEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.resources.DataPackRegistries;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.server.ServerResources;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Style;
+import net.minecraft.ChatFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import net.minecraft.util.text.event.ClickEvent;
-import net.minecraft.util.text.event.HoverEvent;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.feature.structure.Structure;
-import net.minecraft.world.gen.settings.DimensionStructuresSettings;
-import net.minecraft.world.gen.settings.StructureSeparationSettings;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.levelgen.feature.StructureFeature;
+import net.minecraft.world.level.levelgen.StructureSettings;
+import net.minecraft.world.level.levelgen.feature.configurations.StructureFeatureConfiguration;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.ToolType;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.world.MobSpawnInfoBuilder;
@@ -125,27 +125,27 @@ public class CommonEvents {
     @SubscribeEvent
     public static void checkSleep(SleepingTimeCheckEvent event) {
         if (event.getPlayer().getSleepTimer() >= 100 && !event.getPlayer().getCommandSenderWorld().isClientSide) {
-            EnergyCore.applySleep((ServerPlayerEntity) event.getPlayer());
+            EnergyCore.applySleep((ServerPlayer) event.getPlayer());
         }
     }
     @SubscribeEvent
     public static void tickEnergy(PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.START
-                && event.player instanceof ServerPlayerEntity) {
-            ServerPlayerEntity player = (ServerPlayerEntity) event.player;
+                && event.player instanceof ServerPlayer) {
+            ServerPlayer player = (ServerPlayer) event.player;
             if (!player.isSpectator() && !player.isCreative() && player.tickCount % 20 == 0)
                 EnergyCore.dT(player);
         }
     }
     @SubscribeEvent
     public static void addManualToPlayer(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
-        CompoundNBT nbt = event.getPlayer().getPersistentData();
-        CompoundNBT persistent;
+        CompoundTag nbt = event.getPlayer().getPersistentData();
+        CompoundTag persistent;
 
-        if (nbt.contains(PlayerEntity.PERSISTED_NBT_TAG)) {
-            persistent = nbt.getCompound(PlayerEntity.PERSISTED_NBT_TAG);
+        if (nbt.contains(Player.PERSISTED_NBT_TAG)) {
+            persistent = nbt.getCompound(Player.PERSISTED_NBT_TAG);
         } else {
-            nbt.put(PlayerEntity.PERSISTED_NBT_TAG, (persistent = new CompoundNBT()));
+            nbt.put(Player.PERSISTED_NBT_TAG, (persistent = new CompoundTag()));
         }
         if (!persistent.contains(FHUtils.FIRST_LOGIN_GIVE_MANUAL)) {
             persistent.putBoolean(FHUtils.FIRST_LOGIN_GIVE_MANUAL, false);
@@ -161,7 +161,7 @@ public class CommonEvents {
                     .setHoverName(TranslateUtils.translate("itemname.frostedheart.start_foot"))));
             if (event.getPlayer().abilities.instabuild) {
                 event.getPlayer().sendMessage(TranslateUtils.translate("message.frostedheart.creative_help")
-                        .setStyle(Style.EMPTY.applyFormat(TextFormatting.YELLOW)
+                        .setStyle(Style.EMPTY.applyFormat(ChatFormatting.YELLOW)
                                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TranslateUtils.str("Click to use command")))
                                 .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/frostedheart research complete all"))), event.getPlayer().getUUID());
             }
@@ -173,8 +173,8 @@ public class CommonEvents {
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void addOreGenFeatures(BiomeLoadingEvent event) {
         if (event.getName() != null) {
-            Biome.Category category = event.getCategory();
-            if (category != Biome.Category.NETHER && category != Biome.Category.THEEND) {
+            Biome.BiomeCategory category = event.getCategory();
+            if (category != Biome.BiomeCategory.NETHER && category != Biome.BiomeCategory.THEEND) {
                 FHGeneration.generate_overworld_ores(event);
             }
             //else if(category == NETHER) { generate_nether_ores(event);
@@ -186,21 +186,21 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void addDimensionalSpacing(final WorldEvent.Load event){
-        if(event.getWorld() instanceof ServerWorld) {
-            ServerWorld serverWorld = (ServerWorld) event.getWorld();
+        if(event.getWorld() instanceof ServerLevel) {
+            ServerLevel serverWorld = (ServerLevel) event.getWorld();
 
 
-            Map<Structure<?>, StructureSeparationSettings> tempMap =
+            Map<StructureFeature<?>, StructureFeatureConfiguration> tempMap =
                     new HashMap<>(serverWorld.getChunkSource().generator.getSettings().structureConfig());
             tempMap.putIfAbsent(FHStructures.DESTROYED_GENERATOR.get(),
-                    DimensionStructuresSettings.DEFAULTS.get(FHStructures.DESTROYED_GENERATOR.get()));
+                    StructureSettings.DEFAULTS.get(FHStructures.DESTROYED_GENERATOR.get()));
             serverWorld.getChunkSource().generator.getSettings().structureConfig = tempMap;
         }
     }
 
     @SubscribeEvent
     public static void addReloadListeners(AddReloadListenerEvent event) {
-        DataPackRegistries dataPackRegistries = event.getDataPackRegistries();
+        ServerResources dataPackRegistries = event.getDataPackRegistries();
         // IReloadableResourceManager resourceManager = (IReloadableResourceManager)
         // dataPackRegistries.getResourceManager();
         event.addListener(new FHRecipeReloadListener(dataPackRegistries));
@@ -209,7 +209,7 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void addReloadListenersLowest(AddReloadListenerEvent event) {
-        DataPackRegistries dataPackRegistries = event.getDataPackRegistries();
+        ServerResources dataPackRegistries = event.getDataPackRegistries();
         event.addListener(new FHRecipeCachingReloadListener(dataPackRegistries));
     }
 
@@ -217,7 +217,7 @@ public class CommonEvents {
     public static void biomeLoadingEventRemove(@Nonnull BiomeLoadingEvent event) {
         MobSpawnInfoBuilder spawns = event.getSpawns();
 
-        for (EntityClassification en : EntityClassification.values()) {
+        for (MobCategory en : MobCategory.values()) {
             spawns.getSpawner(en).removeIf(entry -> VANILLA_ENTITIES.contains(entry.type));
             
         }
@@ -225,7 +225,7 @@ public class CommonEvents {
     }
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void doPlayerInteract(PlayerInteractEvent ite) {
-    	if(ite.getPlayer() instanceof ServerPlayerEntity&&!(ite.getPlayer() instanceof FakePlayer)) {
+    	if(ite.getPlayer() instanceof ServerPlayer&&!(ite.getPlayer() instanceof FakePlayer)) {
     		FHScenario.trigVar(ite.getPlayer(), EventTriggerType.PLAYER_INTERACT);
     	}
     }
@@ -256,7 +256,7 @@ public class CommonEvents {
                             ProspectorPick.doProspect(event.getPlayer(), event.getWorld(), event.getPos(), event.getItemStack(), event.getHand());
                             break;
                     }
-                    event.setCancellationResult(ActionResultType.SUCCESS);
+                    event.setCancellationResult(InteractionResult.SUCCESS);
                     event.setCanceled(true);
                 }
         }
@@ -295,14 +295,14 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void onCuriosDrop(DropRulesEvent cde) {
-        if ((cde.getEntityLiving() instanceof PlayerEntity) && FHConfig.SERVER.keepEquipments.get()) {
+        if ((cde.getEntityLiving() instanceof Player) && FHConfig.SERVER.keepEquipments.get()) {
             cde.addOverride(e -> true, DropRule.ALWAYS_KEEP);
         }
     }
 
     @SubscribeEvent
     public static void onHeal(LivingHealEvent event) {
-        EffectInstance ei = event.getEntityLiving().getEffect(FHEffects.SCURVY.get());
+        MobEffectInstance ei = event.getEntityLiving().getEffect(FHEffects.SCURVY.get());
         if (ei != null)
             event.setAmount(event.getAmount() * (0.2f / (ei.getAmplifier() + 1)));
     }
@@ -340,9 +340,9 @@ public class CommonEvents {
     public static void onPlayerKill(LivingDeathEvent event) {
         Entity ent = event.getSource().getEntity();
 
-        if (!(ent instanceof PlayerEntity) || ent instanceof FakePlayer) return;
+        if (!(ent instanceof Player) || ent instanceof FakePlayer) return;
         if (ent.getCommandSenderWorld().isClientSide) return;
-        ServerPlayerEntity p = (ServerPlayerEntity) ent;
+        ServerPlayer p = (ServerPlayer) ent;
 
         ResearchListeners.kill(p, event.getEntityLiving());
     }
@@ -356,7 +356,7 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
-        CommandDispatcher<CommandSource> dispatcher = event.getDispatcher();
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         ResearchCommand.register(dispatcher);
         DebugCommand.register(dispatcher);
         ScenarioCommand.register(dispatcher);
@@ -367,8 +367,8 @@ public class CommonEvents {
     @SubscribeEvent
     public static void tickPlayer(PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
-                && event.player instanceof ServerPlayerEntity) {
-            ServerPlayerEntity player = (ServerPlayerEntity) event.player;
+                && event.player instanceof ServerPlayer) {
+            ServerPlayer player = (ServerPlayer) event.player;
 
             // Scenario runner
             ScenarioConductor runner=FHScenario.getNullable(player);
@@ -405,20 +405,20 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void playerXPPickUp(PickupXp event) {
-        PlayerEntity player = event.getPlayer();
+        Player player = event.getPlayer();
         for (ItemStack stack : player.getArmorSlots()) {
             if (!stack.isEmpty()) {
-                CompoundNBT cn = stack.getTag();
+                CompoundTag cn = stack.getTag();
                 if (cn == null)
                     continue;
                 String inner = cn.getString("inner_cover");
                 if (inner.isEmpty() || cn.getBoolean("inner_bounded"))
                     continue;
-                CompoundNBT cnbt = cn.getCompound("inner_cover_tag");
+                CompoundTag cnbt = cn.getCompound("inner_cover_tag");
                 int crdmg = cnbt.getInt("Damage");
                 if (crdmg > 0 && FHUtils.getEnchantmentLevel(Enchantments.MENDING, cnbt) > 0) {
                     event.setCanceled(true);
-                    ExperienceOrbEntity orb = event.getOrb();
+                    ExperienceOrb orb = event.getOrb();
                     player.takeXpDelay = 2;
                     player.take(orb, 1);
 
@@ -440,21 +440,21 @@ public class CommonEvents {
     @SubscribeEvent
     public static void punishEatingRawMeat(LivingEntityUseItemEvent.Finish event) {
         if (event.getEntityLiving() != null && !event.getEntityLiving().level.isClientSide
-                && event.getEntityLiving() instanceof ServerPlayerEntity
+                && event.getEntityLiving() instanceof ServerPlayer
                 && event.getItem().getItem().getTags().contains(FHMain.rl("raw_food"))) {
-            ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
-            player.addEffect(new EffectInstance(Effects.HUNGER, 400, 1));
+            ServerPlayer player = (ServerPlayer) event.getEntityLiving();
+            player.addEffect(new MobEffectInstance(MobEffects.HUNGER, 400, 1));
             player.displayClientMessage(TranslateUtils.translate("message.frostedheart.eaten_poisonous_food"), false);
         }
     }
 
     @SubscribeEvent
     public static void removeSpawnVillage(WorldEvent.CreateSpawnPosition event) {
-        if (event.getWorld() instanceof ServerWorld) {
-            ServerWorld serverWorld = (ServerWorld) event.getWorld();
+        if (event.getWorld() instanceof ServerLevel) {
+            ServerLevel serverWorld = (ServerLevel) event.getWorld();
             try {
                 serverWorld.getChunkSource().generator.getSettings().structureConfig().keySet()
-                        .remove(Structure.VILLAGE);
+                        .remove(StructureFeature.VILLAGE);
             } catch (UnsupportedOperationException e) {
                 FHMain.LOGGER.error("Failed to remove vanilla village structures", e);
             }
@@ -464,11 +464,11 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void removeVanillaVillages(WorldEvent.Load event) {
-        if (event.getWorld() instanceof ServerWorld) {
-            ServerWorld serverWorld = (ServerWorld) event.getWorld();
+        if (event.getWorld() instanceof ServerLevel) {
+            ServerLevel serverWorld = (ServerLevel) event.getWorld();
             try {
                 serverWorld.getChunkSource().generator.getSettings().structureConfig().keySet()
-                        .remove(Structure.VILLAGE);
+                        .remove(StructureFeature.VILLAGE);
             } catch (UnsupportedOperationException e) {
                 FHMain.LOGGER.error("Failed to remove vanilla village structures", e);
             }
@@ -477,17 +477,17 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void respawn(PlayerRespawnEvent event) {
-        if (event.getPlayer() instanceof ServerPlayerEntity && !(event.getPlayer() instanceof FakePlayer)) {
-            ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getLevel();
+        if (event.getPlayer() instanceof ServerPlayer && !(event.getPlayer() instanceof FakePlayer)) {
+            ServerLevel serverWorld = ((ServerPlayer) event.getPlayer()).getLevel();
             DeathInventoryData dit = DeathInventoryData.get(event.getPlayer());
             dit.tryCallClone(event.getPlayer());
             if (FHConfig.SERVER.keepEquipments.get() && !event.getPlayer().level.isClientSide) {
                 if (dit != null)
                     dit.alive(event.getPlayer().inventory);
             }
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getPlayer()),
                     new FHClimatePacket(WorldClimate.get(serverWorld)));
-            EnergyCore.getCapability(event.getPlayer()).ifPresent(t->{t.onrespawn();t.sendUpdate((ServerPlayerEntity) event.getPlayer());});
+            EnergyCore.getCapability(event.getPlayer()).ifPresent(t->{t.onrespawn();t.sendUpdate((ServerPlayer) event.getPlayer());});
             PlayerTemperatureData.getCapability(event.getPlayer()).ifPresent(PlayerTemperatureData::reset);
             
         }
@@ -496,7 +496,7 @@ public class CommonEvents {
     @SubscribeEvent
     public static void setKeepInventory(FMLServerStartedEvent event) {
         if (FHConfig.SERVER.alwaysKeepInventory.get()) {
-            for (ServerWorld world : event.getServer().getAllLevels()) {
+            for (ServerLevel world : event.getServer().getAllLevels()) {
                 world.getGameRules().getRule(GameRules.RULE_KEEPINVENTORY).set(true, event.getServer());
             }
         }
@@ -505,8 +505,8 @@ public class CommonEvents {
     @SubscribeEvent
     public static void tickResearch(PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.START
-                && event.player instanceof ServerPlayerEntity) {
-            ResearchListeners.tick((ServerPlayerEntity) event.player);
+                && event.player instanceof ServerPlayer) {
+            ResearchListeners.tick((ServerPlayer) event.player);
         }
     }
 }

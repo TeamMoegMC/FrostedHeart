@@ -25,7 +25,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
@@ -48,20 +48,20 @@ import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientAdvancementManager;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.multiplayer.ClientAdvancements;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 
 public class SelectDialog<T> extends EditDialog {
     public class SelectorButton extends Button {
         T obj;
         SelectorList listPanel;
-        ITextComponent t;
+        Component t;
 
         public SelectorButton(SelectorList panel, T obj) {
-            super(panel, StringTextComponent.EMPTY, toicon.apply(obj));
+            super(panel, TextComponent.EMPTY, toicon.apply(obj));
             this.obj = obj;
             this.listPanel = panel;
             t = tostr.apply(obj);
@@ -74,7 +74,7 @@ public class SelectDialog<T> extends EditDialog {
         }
 
         @Override
-        public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
             //GuiHelper.setupDrawing();
             if (val == this.obj)
                 theme.drawButton(matrixStack, x, y, w, h, WidgetType.DISABLED);
@@ -137,7 +137,7 @@ public class SelectDialog<T> extends EditDialog {
             wrap(IMultiblock::getUniqueName)
     ).open();
     public static final Editor<ResourceLocation> EDITOR_ADVANCEMENT = (p, l, v, c) -> {
-        ClientAdvancementManager cam = ClientUtils.mc().player.connection.getAdvancements();
+        ClientAdvancements cam = ClientUtils.mc().player.connection.getAdvancements();
         Advancement adv = cam.getAdvancements().get(v);
 
         new SelectDialog<>(p, l, adv, e -> c.accept(e.getId()), () -> cam.getAdvancements().getAllAdvancements(),
@@ -152,7 +152,7 @@ public class SelectDialog<T> extends EditDialog {
     T val;
     Consumer<T> cb;
     Supplier<Collection<T>> fetcher;
-    Function<T, ITextComponent> tostr;
+    Function<T, Component> tostr;
     Function<T, String[]> tosearch;
 
     Function<T, Icon> toicon;
@@ -163,24 +163,24 @@ public class SelectDialog<T> extends EditDialog {
 
     public TextBox searchBox;
 
-    public static <R> Function<R, ITextComponent> wrap(Function<R, Object> str) {
+    public static <R> Function<R, Component> wrap(Function<R, Object> str) {
         return e -> TranslateUtils.str(String.valueOf(str.apply(e)));
     }
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
         this(panel, lbl, val, cb, fetcher, e -> TranslateUtils.str(e.toString()), e -> new String[]{e.toString()}, e -> Icon.EMPTY);
     }
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
-                        Function<T, ITextComponent> tostr) {
+                        Function<T, Component> tostr) {
         this(panel, lbl, val, cb, fetcher, tostr, e -> new String[]{tostr.apply(val).getString()}, e -> Icon.EMPTY);
     }
 
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
-                        Function<T, ITextComponent> tostr, Function<T, String[]> tosearch) {
+                        Function<T, Component> tostr, Function<T, String[]> tosearch) {
         this(panel, lbl, val, cb, fetcher, tostr, tosearch, e -> Icon.EMPTY);
     }
 
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
-                        Function<T, ITextComponent> tostr, Function<T, String[]> tosearch, Function<T, Icon> toicon) {
+                        Function<T, Component> tostr, Function<T, String[]> tosearch, Function<T, Icon> toicon) {
         super(panel);
         this.lbl = lbl;
         this.val = val;
@@ -221,13 +221,13 @@ public class SelectDialog<T> extends EditDialog {
     }
 
     @Override
-    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
         super.draw(matrixStack, theme, x, y, w, h);
         theme.drawString(matrixStack, lbl, x, y - 10);
     }
 
     @Override
-    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
         theme.drawGui(matrixStack, x, y, w, h, WidgetType.NORMAL);
     }
 

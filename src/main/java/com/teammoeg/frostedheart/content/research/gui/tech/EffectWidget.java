@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import java.util.List;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
@@ -33,11 +33,11 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.chat.Component;
 
 public class EffectWidget extends Widget {
-    List<ITextComponent> tooltips;
-    ITextComponent title;
+    List<Component> tooltips;
+    Component title;
     FHIcon icon;
     Effect e;
 
@@ -57,7 +57,7 @@ public class EffectWidget extends Widget {
     }
 
     @Override
-    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
         GuiHelper.setupDrawing();
         TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
         icon.draw(matrixStack, x, y, w, h);

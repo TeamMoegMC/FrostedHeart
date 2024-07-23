@@ -25,12 +25,12 @@ import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ColumnPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ColumnPos;
+import net.minecraft.world.level.Level;
 
 import java.util.AbstractMap;
 import java.util.HashMap;
@@ -69,12 +69,12 @@ public class HouseBlockScanner extends BlockScanner {
         return this.occupiedArea;
     }
 
-    public HouseBlockScanner(World world, BlockPos startPos) {
+    public HouseBlockScanner(Level world, BlockPos startPos) {
         super(world, startPos);
     }
 
 
-    public static boolean isValidFloorOrLadder(World world, BlockPos pos) {
+    public static boolean isValidFloorOrLadder(Level world, BlockPos pos) {
         // Determine whether the block satisfies type requirements
         if (!FloorBlockScanner.isFloorBlock(world, pos) && !world.getBlockState(pos).is(BlockTags.CLIMBABLE)) return false;
         AbstractMap.SimpleEntry<Integer, Boolean> information = countBlocksAbove(pos, (pos1)->FloorBlockScanner.isHouseBlock(world, pos1));

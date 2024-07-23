@@ -24,10 +24,10 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.FHDataManager;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 
 public class WorldTemperature {
 
@@ -128,15 +128,15 @@ public class WorldTemperature {
      * @param w the world<br>
      * @return world temperature<br>
      */
-    public static float getBaseTemperature(IWorldReader w, BlockPos pos) {
+    public static float getBaseTemperature(LevelReader w, BlockPos pos) {
         Biome b = w.getBiome(pos);
         Float temp = null;
         if (b != null)
             temp = biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
         float wt = 0;
-        if (w instanceof World) {
+        if (w instanceof Level) {
             wt = worldbuffer.computeIfAbsent(w, (k) -> {
-                Float fw = FHDataManager.getWorldTemp((World) w);
+                Float fw = FHDataManager.getWorldTemp((Level) w);
                 if (fw == null) return -10F;
                 return fw;
             });
@@ -146,15 +146,15 @@ public class WorldTemperature {
         return wt;
     }
 
-    public static float getClimateTemperature(IWorldReader w) {
-        if (w instanceof World) {
-            return WorldClimate.getTemp((World) w);
+    public static float getClimateTemperature(LevelReader w) {
+        if (w instanceof Level) {
+            return WorldClimate.getTemp((Level) w);
         }
         return 0;
     }
-    public static int getClimateWind(IWorldReader w) {
-        if (w instanceof World) {
-            return WorldClimate.getWind((World) w);
+    public static int getClimateWind(LevelReader w) {
+        if (w instanceof Level) {
+            return WorldClimate.getWind((Level) w);
         }
         return 0;
     }
@@ -164,21 +164,21 @@ public class WorldTemperature {
      * @param w the world<br>
      * @return world temperature<br>
      */
-    public static float getTemperature(IWorldReader w, BlockPos pos) {
+    public static float getTemperature(LevelReader w, BlockPos pos) {
         Biome b = w.getBiome(pos);
         Float temp = null;
         if (b != null)
             temp = biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
         float wt = 0;
-        if (w instanceof World) {
+        if (w instanceof Level) {
             wt = worldbuffer.computeIfAbsent(w, (k) -> {
-                Float fw = FHDataManager.getWorldTemp((World) w);
+                Float fw = FHDataManager.getWorldTemp((Level) w);
                 if (fw == null) return -10F;
                 return fw;
             });
 
             // Add dynamic temperature baseline
-            wt += WorldClimate.getTemp((World) w) * 0.25f;
+            wt += WorldClimate.getTemp((Level) w) * 0.25f;
         }
 
         if (temp != null)
@@ -186,9 +186,9 @@ public class WorldTemperature {
         return wt;
     }
 
-    public static boolean isWorldBlizzard(IWorldReader w) {
-        if (w instanceof World) {
-            return WorldClimate.isBlizzard((World) w);
+    public static boolean isWorldBlizzard(LevelReader w) {
+        if (w instanceof Level) {
+            return WorldClimate.isBlizzard((Level) w);
         }
         return false;
     }

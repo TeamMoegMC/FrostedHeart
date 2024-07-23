@@ -20,14 +20,14 @@
 package com.teammoeg.frostedheart.base.block;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
-import net.minecraft.block.BlockState;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.core.BlockPos;
 
 public abstract class FHBaseTileEntity extends IEBaseTileEntity {
 
-    public FHBaseTileEntity(TileEntityType<? extends TileEntity> type) {
+    public FHBaseTileEntity(BlockEntityType<? extends BlockEntity> type) {
         super(type);
     }
 

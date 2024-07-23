@@ -28,16 +28,16 @@ import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class ServerScenarioCommandPacket implements FHMessage {
     private String commandName;
     Map<String, String> params;
 
-    public ServerScenarioCommandPacket(PacketBuffer buffer) {
+    public ServerScenarioCommandPacket(FriendlyByteBuf buffer) {
         commandName = buffer.readUtf();
-        params = SerializeUtil.readStringMap(buffer, new HashMap<>(), PacketBuffer::readUtf);
+        params = SerializeUtil.readStringMap(buffer, new HashMap<>(), FriendlyByteBuf::readUtf);
     }
 
     
@@ -47,7 +47,7 @@ public class ServerScenarioCommandPacket implements FHMessage {
         this.params = params;
     }
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeUtf(commandName);
         SerializeUtil.writeStringMap(buffer, params, (v, p) -> p.writeUtf(v));
     }

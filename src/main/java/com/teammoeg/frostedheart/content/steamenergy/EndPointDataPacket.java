@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.trade.ClientHeatHandler;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when player join
@@ -38,11 +38,11 @@ public class EndPointDataPacket implements FHMessage {
 
     }
 
-    public EndPointDataPacket(PacketBuffer buffer) {
+    public EndPointDataPacket(FriendlyByteBuf buffer) {
         data = SerializeUtil.readList(buffer, EndPointData::readNetwork);
     }
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         SerializeUtil.writeList(buffer, data, EndPointData::writeNetwork);
     }
 

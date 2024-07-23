@@ -19,13 +19,13 @@ import com.teammoeg.frostedheart.util.utility.ReferenceValue;
 
 import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ChatLine;
-import net.minecraft.client.gui.RenderComponentsUtil;
-import net.minecraft.util.IReorderingProcessor;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.Style;
+import net.minecraft.client.GuiMessage;
+import net.minecraft.client.gui.components.ComponentRenderUtils;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.Mth;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ClientScene implements IClientScene {
@@ -42,7 +42,7 @@ public class ClientScene implements IClientScene {
 	public static int fromRelativeYH(float val) {
 		return (int) (val*ClientUtils.mc().getWindow().getGuiScaledHeight());
 	}
-	LinkedList<ITextComponent> origmsgQueue=new LinkedList<>();
+	LinkedList<Component> origmsgQueue=new LinkedList<>();
 	LinkedList<TextInfo> msgQueue = new LinkedList<>();
 	int ticks;
 	int page = 0;
@@ -54,15 +54,15 @@ public class ClientScene implements IClientScene {
 	boolean hasText = false;
 	boolean canSkip = false;
 	public boolean sendImmediately=false;
-	ITextComponent currentActTitle;
+	Component currentActTitle;
 
 
-	ITextComponent currentActSubtitle;
-	public ITextComponent getCurrentActTitle() {
+	Component currentActSubtitle;
+	public Component getCurrentActTitle() {
 		return currentActTitle;
 	}
 
-	public ITextComponent getCurrentActSubtitle() {
+	public Component getCurrentActSubtitle() {
 		return currentActSubtitle;
 	}
 	public void setSpeed(double value) {
@@ -160,11 +160,11 @@ public class ClientScene implements IClientScene {
 	@Override
 	public void cls() {
 		Minecraft mc = ClientUtils.mc();
-		List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.gui.getChat()).getDrawnChatLines();
+		List<GuiMessage<FormattedCharSequence>> i = ((NewChatGuiAccessor) mc.gui.getChat()).getDrawnChatLines();
 		i.removeIf(l -> l.getId() == fhchatid);
-		for(ITextComponent ic:origmsgQueue) {
-			for(IReorderingProcessor j:RenderComponentsUtil.wrapComponents(ic,w, ClientUtils.mc().font))
-				i.add(0, new ChatLine<>(mc.gui.getGuiTicks(), j, 0));
+		for(Component ic:origmsgQueue) {
+			for(FormattedCharSequence j:ComponentRenderUtils.wrapComponents(ic,w, ClientUtils.mc().font))
+				i.add(0, new GuiMessage<>(mc.gui.getGuiTicks(), j, 0));
 		}
 		origmsgQueue.clear();
 		msgQueue.clear();
@@ -181,7 +181,7 @@ public class ClientScene implements IClientScene {
 		process(txt, true, false, true,RunStatus.WAITCLIENT);
 	}
 
-	private int countCh(IReorderingProcessor p) {
+	private int countCh(FormattedCharSequence p) {
 		ReferenceValue<Integer> count = new ReferenceValue<>(0);
 		// if(p instanceof SizedReorderingProcessor)
 		// p=((SizedReorderingProcessor) p).origin;
@@ -198,20 +198,20 @@ public class ClientScene implements IClientScene {
 	public boolean shouldWrap;
 
 	@Override
-	public void processClient(ITextComponent item, boolean isReline, boolean isNowait) {
+	public void processClient(Component item, boolean isReline, boolean isNowait) {
 		if (getPreset() != null)
 			item = item.copy().withStyle(getPreset());
-		List<IReorderingProcessor> lines;
+		List<FormattedCharSequence> lines;
 		if (!msgQueue.isEmpty() && !shouldWrap) {
 			TextInfo ti = msgQueue.remove(msgQueue.size() - 1);
 			int lastline = ti.line;
 			int lastLimit = countCh(ti.text);
-			IFormattableTextComponent ntext = ti.parent.copy().append(item);
+			MutableComponent ntext = ti.parent.copy().append(item);
 			origmsgQueue.pollLast();
 			origmsgQueue.add(ntext);
-			lines = RenderComponentsUtil.wrapComponents(ntext, getDialogWidth(), ClientUtils.mc().font);
+			lines = ComponentRenderUtils.wrapComponents(ntext, getDialogWidth(), ClientUtils.mc().font);
 			for (int i = lastline; i < lines.size(); i++) {
-				IReorderingProcessor line = lines.get(i);
+				FormattedCharSequence line = lines.get(i);
 				if (!isNowait) {
 					SizedReorderingProcessor sized = new SizedReorderingProcessor(line);
 					if (i == lastline)
@@ -223,9 +223,9 @@ public class ClientScene implements IClientScene {
 			}
 		} else {
 			origmsgQueue.add(item);
-			lines = RenderComponentsUtil.wrapComponents(item, getDialogWidth(), ClientUtils.mc().font);
+			lines = ComponentRenderUtils.wrapComponents(item, getDialogWidth(), ClientUtils.mc().font);
 			int i = 0;
-			for (IReorderingProcessor line : lines) {
+			for (FormattedCharSequence line : lines) {
 				msgQueue.add(new TextInfo(item, i++, isNowait ? line : new SizedReorderingProcessor(line)));
 			}
 		}
@@ -246,7 +246,7 @@ public class ClientScene implements IClientScene {
 		//System.out.println("Received " + isReline + " " + text + " " + resetScene);
 		if (!text.isEmpty()) {
 			hasText = true;
-			ITextComponent item = ClientTextComponentUtils.parse(text);
+			Component item = ClientTextComponentUtils.parse(text);
 			processClient(item, isReline, isNowait);
 		}
 		shouldWrap = isReline;
@@ -254,7 +254,7 @@ public class ClientScene implements IClientScene {
 
 	}
 
-	public static String toString(IReorderingProcessor ipp) {
+	public static String toString(FormattedCharSequence ipp) {
 		StringBuilder sb = new StringBuilder();
 		ipp.accept((i, s, c) -> {
 			sb.appendCodePoint(c);
@@ -263,7 +263,7 @@ public class ClientScene implements IClientScene {
 		return sb.toString();
 
 	}
-	public static String toCurrentString(IReorderingProcessor ipp) {
+	public static String toCurrentString(FormattedCharSequence ipp) {
 		StringBuilder sb = new StringBuilder();
 		ipp.accept((i, s, c) -> {
 			sb.appendCodePoint(c);
@@ -275,7 +275,7 @@ public class ClientScene implements IClientScene {
 	int w;
 	double lastScale=0;
 	public void tick(Minecraft mc) {
-		w=MathHelper.floor((double) mc.gui.getChat().getWidth() / mc.gui.getChat().getScale());
+		w=Mth.floor((double) mc.gui.getChat().getWidth() / mc.gui.getChat().getScale());
 		if (!mc.isPaused()) {
 			if(lastScale!=mc.getWindow().getGuiScale()) {
 				lastScale=mc.getWindow().getGuiScale();
@@ -285,7 +285,7 @@ public class ClientScene implements IClientScene {
 				ticksActUpdate--;
 			if(ticksActStUpdate>0)
 				ticksActStUpdate--;
-			List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.gui.getChat()).getDrawnChatLines();
+			List<GuiMessage<FormattedCharSequence>> i = ((NewChatGuiAccessor) mc.gui.getChat()).getDrawnChatLines();
 			if(dialog!=null) {
 				dialog.tickDialog();
 				
@@ -301,7 +301,7 @@ public class ClientScene implements IClientScene {
 						for (TextInfo t : msgQueue) {
 							if (t.hasText()) {
 								// if(hasText) {
-								i.add(0, new ChatLine<>(mc.gui.getGuiTicks(), t.asFinished(), fhchatid));
+								i.add(0, new GuiMessage<>(mc.gui.getGuiTicks(), t.asFinished(), fhchatid));
 								// }
 							}
 						}

@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.util.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.ChatFormatting;
 
 public abstract class EditDialog extends Panel {
     EditDialog previous;
@@ -57,7 +57,7 @@ public abstract class EditDialog extends Panel {
                 sc.closeDialog(refresh);
         } catch (Exception ex) {
             ex.printStackTrace();
-            ClientUtils.getPlayer().sendMessage(TranslateUtils.str("Fatal error on switching dialog! see log for details").withStyle(TextFormatting.RED), null);
+            ClientUtils.getPlayer().sendMessage(TranslateUtils.str("Fatal error on switching dialog! see log for details").withStyle(ChatFormatting.RED), null);
             sc.closeGui();
         }
         try {

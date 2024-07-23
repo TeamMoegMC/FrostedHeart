@@ -41,16 +41,16 @@ import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.util.IItemProvider;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.level.ItemLike;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.Registry;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.api.distmarker.Dist;
@@ -65,16 +65,16 @@ public class EffectCrafting extends Effect {
 			Codec.list(ResourceLocation.CODEC).fieldOf("recipes"),
 			o->o.item,
 			o->o.itemStack,
-			o->o.unlocks.stream().map(IRecipe::getId).collect(Collectors.toList()))
+			o->o.unlocks.stream().map(Recipe::getId).collect(Collectors.toList()))
 		)
 	.apply(t,EffectCrafting::new));
-    List<IRecipe<?>> unlocks = new ArrayList<>();
+    List<Recipe<?>> unlocks = new ArrayList<>();
     ItemStack itemStack = null;
     Item item = null;
     EffectCrafting() {
     }
 
-    public EffectCrafting(IItemProvider item) {
+    public EffectCrafting(ItemLike item) {
         super();
         this.item = item.asItem();
         initItem();
@@ -98,7 +98,7 @@ public class EffectCrafting extends Effect {
 
     public EffectCrafting(ResourceLocation recipe) {
         super("@gui." + FHMain.MODID + ".effect.crafting", new ArrayList<>());
-        Optional<? extends IRecipe<?>> r = FHTeamDataManager.getRecipeManager().byKey(recipe);
+        Optional<? extends Recipe<?>> r = FHTeamDataManager.getRecipeManager().byKey(recipe);
 
         r.ifPresent(iRecipe -> unlocks.add(iRecipe));
     }
@@ -122,7 +122,7 @@ public class EffectCrafting extends Effect {
             return FHIcons.getIcon(FHIcons.getIcon(itemStack), FHIcons.getIcon(Items.CRAFTING_TABLE));
         else {
             Set<ItemStack> stacks = new HashSet<>();
-            for (IRecipe<?> r : unlocks) {
+            for (Recipe<?> r : unlocks) {
                 if (!r.getResultItem().isEmpty()) {
                     stacks.add(r.getResultItem());
                 }
@@ -134,13 +134,13 @@ public class EffectCrafting extends Effect {
     }
 
     @Override
-    public IFormattableTextComponent getDefaultName() {
+    public MutableComponent getDefaultName() {
         return TranslateUtils.translateGui("effect.crafting");
     }
 
     @Override
-    public List<ITextComponent> getDefaultTooltip() {
-        List<ITextComponent> tooltip = new ArrayList<>();
+    public List<Component> getDefaultTooltip() {
+        List<Component> tooltip = new ArrayList<>();
 
         if (item != null)
             tooltip.add(TranslateUtils.translate(item.getDescriptionId()));
@@ -148,7 +148,7 @@ public class EffectCrafting extends Effect {
             tooltip.add(itemStack.getHoverName());
         else {
             Set<ItemStack> stacks = new HashSet<>();
-            for (IRecipe<?> r : unlocks) {
+            for (Recipe<?> r : unlocks) {
                 if (!r.getResultItem().isEmpty()) {
                     stacks.add(r.getResultItem());
                 }
@@ -165,7 +165,7 @@ public class EffectCrafting extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
         team.crafting.addAll(unlocks);
         return true;
     }
@@ -177,7 +177,7 @@ public class EffectCrafting extends Effect {
 
     private void initItem() {
         unlocks.clear();
-        for (IRecipe<?> r : FHTeamDataManager.getRecipeManager().getRecipes()) {
+        for (Recipe<?> r : FHTeamDataManager.getRecipeManager().getRecipes()) {
             if (r.getResultItem().getItem().equals(this.item)) {
                 unlocks.add(r);
             }
@@ -187,7 +187,7 @@ public class EffectCrafting extends Effect {
 
     private void initStack() {
         unlocks.clear();
-        for (IRecipe<?> r : FHTeamDataManager.getRecipeManager().getRecipes()) {
+        for (Recipe<?> r : FHTeamDataManager.getRecipeManager().getRecipes()) {
             if (r.getResultItem().equals(item)) {
                 unlocks.add(r);
             }
@@ -224,13 +224,13 @@ public class EffectCrafting extends Effect {
     public void setList(Collection<String> ls) {
         unlocks.clear();
         for (String s : ls) {
-            Optional<? extends IRecipe<?>> r = FHTeamDataManager.getRecipeManager().byKey(new ResourceLocation(s));
+            Optional<? extends Recipe<?>> r = FHTeamDataManager.getRecipeManager().byKey(new ResourceLocation(s));
 
             r.ifPresent(iRecipe -> unlocks.add(iRecipe));
         }
     }
 
-	public List<IRecipe<?>> getUnlocks() {
+	public List<Recipe<?>> getUnlocks() {
 		return unlocks;
 	}
 

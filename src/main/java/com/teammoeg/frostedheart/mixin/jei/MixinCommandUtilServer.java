@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.teammoeg.frostedheart.FHConfig;
 
 import mezz.jei.util.CommandUtilServer;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.MinecraftServer;
 
 @Mixin(CommandUtilServer.class)
@@ -37,7 +37,7 @@ public class MixinCommandUtilServer {
      * @reason I must do this hack because EssentialsX and Bukkit does not compat with JEI
      */
     @Inject(at = @At("HEAD"), method = "hasPermission", cancellable = true, remap = false)
-    private static void hasPermission(PlayerEntity sender, CallbackInfoReturnable<Boolean> cbib) {
+    private static void hasPermission(Player sender, CallbackInfoReturnable<Boolean> cbib) {
         if (FHConfig.SERVER.fixEssJeiIssue.get()) {
             MinecraftServer s = sender.getServer();
             if (s != null)

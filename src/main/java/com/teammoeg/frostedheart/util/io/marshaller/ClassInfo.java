@@ -11,8 +11,8 @@ import java.util.stream.Stream;
 
 import com.google.gson.internal.UnsafeAllocator;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 public class ClassInfo implements Marshaller{
 	static final Map<Class<?>,ClassInfo> clss=new HashMap<>();
 	public ClassInfo superClass;
@@ -60,12 +60,12 @@ public class ClassInfo implements Marshaller{
 
 	}
 	@Override
-	public INBT toNBT(Object o) {
-		CompoundNBT cnbt=new CompoundNBT();
+	public Tag toNBT(Object o) {
+		CompoundTag cnbt=new CompoundTag();
 		saveNBT(o,cnbt);
 		return cnbt;
 	}
-	public void saveNBT(Object o,CompoundNBT cnbt) {
+	public void saveNBT(Object o,CompoundTag cnbt) {
 		if(superClass!=null) {
 			superClass.saveNBT(o, cnbt);
 		}
@@ -75,9 +75,9 @@ public class ClassInfo implements Marshaller{
 	}
 	
 	@Override
-	public Object fromNBT(INBT nbt) {
-		if(nbt instanceof CompoundNBT) {
-			CompoundNBT cnbt=(CompoundNBT) nbt;
+	public Object fromNBT(Tag nbt) {
+		if(nbt instanceof CompoundTag) {
+			CompoundTag cnbt=(CompoundTag) nbt;
 			Object o=factory.get();
 			if(o!=null) {
 				loadNBT(o,cnbt);
@@ -86,7 +86,7 @@ public class ClassInfo implements Marshaller{
 		}
 		return null;
 	}
-	public void loadNBT(Object o,CompoundNBT nbt) {
+	public void loadNBT(Object o,CompoundTag nbt) {
 		if(superClass!=null)
 			superClass.loadNBT(o, nbt);
 		for(FieldInfo fi:infos) {

@@ -30,13 +30,13 @@ import com.teammoeg.frostedheart.world.civilization.alliance.DestroyedGeneratorS
 import com.teammoeg.frostedheart.world.civilization.orbit.observatory.ObservatoryPiece;
 import com.teammoeg.frostedheart.world.civilization.orbit.observatory.ObservatoryStructure;
 
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.WorldGenRegistries;
-import net.minecraft.world.gen.feature.NoFeatureConfig;
-import net.minecraft.world.gen.feature.structure.IStructurePieceType;
-import net.minecraft.world.gen.feature.structure.Structure;
-import net.minecraft.world.gen.settings.DimensionStructuresSettings;
-import net.minecraft.world.gen.settings.StructureSeparationSettings;
+import net.minecraft.core.Registry;
+import net.minecraft.data.BuiltinRegistries;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.StructurePieceType;
+import net.minecraft.world.level.levelgen.feature.StructureFeature;
+import net.minecraft.world.level.levelgen.StructureSettings;
+import net.minecraft.world.level.levelgen.feature.configurations.StructureFeatureConfiguration;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
@@ -44,41 +44,41 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHStructures {
     //For now... (Added by Mixxs... please help)
-    public static DeferredRegister<Structure<?>> STRUCTURES = DeferredRegister.create(ForgeRegistries.STRUCTURE_FEATURES, FHMain.MODID);
+    public static DeferredRegister<StructureFeature<?>> STRUCTURES = DeferredRegister.create(ForgeRegistries.STRUCTURE_FEATURES, FHMain.MODID);
 
-    public static final RegistryObject<Structure<NoFeatureConfig>> DESTROYED_GENERATOR =
+    public static final RegistryObject<StructureFeature<NoneFeatureConfiguration>> DESTROYED_GENERATOR =
             STRUCTURES.register("destroyed_generator", DestroyedGeneratorStructure::new);
 
     public static void setupStructures(){
         setupMapSpacingAndLand(DESTROYED_GENERATOR.get(),
-                new StructureSeparationSettings(100,50, 841515441),
+                new StructureFeatureConfiguration(100,50, 841515441),
                 true);
     }
 
-    public static <F extends Structure<?>> void setupMapSpacingAndLand(F structure, StructureSeparationSettings structureSeparationSettings,
+    public static <F extends StructureFeature<?>> void setupMapSpacingAndLand(F structure, StructureFeatureConfiguration structureSeparationSettings,
                                                                        boolean transformSurroundingLand) {
-        Structure.STRUCTURES_REGISTRY.put(structure.getRegistryName().toString(), structure);
+        StructureFeature.STRUCTURES_REGISTRY.put(structure.getRegistryName().toString(), structure);
 
         if (transformSurroundingLand) {
-            Structure.NOISE_AFFECTING_FEATURES = ImmutableList.<Structure<?>>builder()
-                    .addAll(Structure.NOISE_AFFECTING_FEATURES)
+            StructureFeature.NOISE_AFFECTING_FEATURES = ImmutableList.<StructureFeature<?>>builder()
+                    .addAll(StructureFeature.NOISE_AFFECTING_FEATURES)
                     .add(structure)
                     .build();
         }
 
-        DimensionStructuresSettings.DEFAULTS =
-                ImmutableMap.<Structure<?>, StructureSeparationSettings>builder()
-                        .putAll(DimensionStructuresSettings.DEFAULTS)
+        StructureSettings.DEFAULTS =
+                ImmutableMap.<StructureFeature<?>, StructureFeatureConfiguration>builder()
+                        .putAll(StructureSettings.DEFAULTS)
                         .put(structure, structureSeparationSettings)
                         .build();
 
 
 
-        WorldGenRegistries.NOISE_GENERATOR_SETTINGS.entrySet().forEach(settings -> {
-            Map<Structure<?>, StructureSeparationSettings> structureMap = settings.getValue().structureSettings().structureConfig();
+        BuiltinRegistries.NOISE_GENERATOR_SETTINGS.entrySet().forEach(settings -> {
+            Map<StructureFeature<?>, StructureFeatureConfiguration> structureMap = settings.getValue().structureSettings().structureConfig();
 
             if (structureMap instanceof ImmutableMap) {
-                Map<Structure<?>, StructureSeparationSettings> tempMap = new HashMap<>(structureMap);
+                Map<StructureFeature<?>, StructureFeatureConfiguration> tempMap = new HashMap<>(structureMap);
                 tempMap.put(structure, structureSeparationSettings);
                 settings.getValue().structureSettings().structureConfig();
 
@@ -100,38 +100,38 @@ public class FHStructures {
 
 
 
-    public static final IStructurePieceType OBSERVATORY_PIECE = registerPiece(ObservatoryPiece::new, "observatory");
+    public static final StructurePieceType OBSERVATORY_PIECE = registerPiece(ObservatoryPiece::new, "observatory");
 //    public static final IStructurePieceType VOLCANIC_VENT_PIECE = registerPiece(VolcanicVentPiece::new, "volcanic_vent");
 
-    public static final Structure<NoFeatureConfig> OBSERVATORY = new ObservatoryStructure(NoFeatureConfig.CODEC);
+    public static final StructureFeature<NoneFeatureConfiguration> OBSERVATORY = new ObservatoryStructure(NoneFeatureConfiguration.CODEC);
 //    public static final Structure<NoFeatureConfig> VOLCANIC_VENT = new VolcanicVentStructure(NoFeatureConfig.CODEC);
 
 
-    private static IStructurePieceType registerPiece(IStructurePieceType type, String key) {
+    private static StructurePieceType registerPiece(StructurePieceType type, String key) {
         return Registry.register(Registry.STRUCTURE_PIECE, key, type);
     }
 
     public static void registerStructureGenerate() {
-        Structure.STRUCTURES_REGISTRY.put(RegistryUtils.getRegistryName(FHStructures.OBSERVATORY).toString(), FHStructures.OBSERVATORY);
+        StructureFeature.STRUCTURES_REGISTRY.put(RegistryUtils.getRegistryName(FHStructures.OBSERVATORY).toString(), FHStructures.OBSERVATORY);
 //        Structure.NAME_STRUCTURE_BIMAP.put(FHStructures.VOLCANIC_VENT.getRegistryName().toString(), FHStructures.VOLCANIC_VENT);
 
-        HashMap<Structure<?>, StructureSeparationSettings> StructureSettingMap = new HashMap<>();
-        StructureSettingMap.put(OBSERVATORY, new StructureSeparationSettings(30, 15, 545465463));
+        HashMap<StructureFeature<?>, StructureFeatureConfiguration> StructureSettingMap = new HashMap<>();
+        StructureSettingMap.put(OBSERVATORY, new StructureFeatureConfiguration(30, 15, 545465463));
 //        StructureSettingMap.put(VOLCANIC_VENT,new StructureSeparationSettings(12,8,123456));
 
 
-        DimensionStructuresSettings.DEFAULTS = ImmutableMap.<Structure<?>, StructureSeparationSettings>builder()
-                .putAll(DimensionStructuresSettings.DEFAULTS)
+        StructureSettings.DEFAULTS = ImmutableMap.<StructureFeature<?>, StructureFeatureConfiguration>builder()
+                .putAll(StructureSettings.DEFAULTS)
                 .putAll(StructureSettingMap)
                 .build();
-        Structure.NOISE_AFFECTING_FEATURES = ImmutableList.<Structure<?>>builder()
-                .addAll(Structure.NOISE_AFFECTING_FEATURES)
+        StructureFeature.NOISE_AFFECTING_FEATURES = ImmutableList.<StructureFeature<?>>builder()
+                .addAll(StructureFeature.NOISE_AFFECTING_FEATURES)
                 .add(FHStructures.OBSERVATORY.getStructure())
                 .build();
-        WorldGenRegistries.NOISE_GENERATOR_SETTINGS.forEach(settings -> {
-            Map<Structure<?>, StructureSeparationSettings> structureMap = settings.structureSettings().structureConfig();
+        BuiltinRegistries.NOISE_GENERATOR_SETTINGS.forEach(settings -> {
+            Map<StructureFeature<?>, StructureFeatureConfiguration> structureMap = settings.structureSettings().structureConfig();
             if (structureMap instanceof ImmutableMap) {
-                Map<Structure<?>, StructureSeparationSettings> tempMap = new HashMap<>(structureMap);
+                Map<StructureFeature<?>, StructureFeatureConfiguration> tempMap = new HashMap<>(structureMap);
                 tempMap.putAll(StructureSettingMap);
                 settings.structureSettings().structureConfig = tempMap;
             } else structureMap.putAll(StructureSettingMap);

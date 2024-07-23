@@ -27,27 +27,27 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.ClickType;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 /**
 * fix a dupe bug made by careless bugjang developers
 * Hope this would work
 */
-@Mixin(Container.class)
+@Mixin(AbstractContainerMenu.class)
 public class MixinContainer {
     @Shadow
     private List<Slot> inventorySlots;
 
     @Inject(at = @At("HEAD"), method = "doClick", cancellable = true, require = 1)
-    private void fh$slotSwapPending(int p_241440_1_, int p_241440_2_, ClickType p_241440_3_, PlayerEntity p_241440_4_, CallbackInfoReturnable<ItemStack> cbi) {
+    private void fh$slotSwapPending(int p_241440_1_, int p_241440_2_, ClickType p_241440_3_, Player p_241440_4_, CallbackInfoReturnable<ItemStack> cbi) {
         if (p_241440_3_ == ClickType.SWAP) {
             Slot slot2 = null;
             for (Slot slot : this.inventorySlots) {
-                if (slot.getSlotIndex() == p_241440_2_ && slot.container instanceof PlayerInventory) {
+                if (slot.getSlotIndex() == p_241440_2_ && slot.container instanceof Inventory) {
                     slot2 = slot;
                     break;
                 }

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import net.minecraft.util.Direction;
+import net.minecraft.core.Direction;
 
 /**
  * Interface INetworkConsumer.

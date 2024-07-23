@@ -19,18 +19,18 @@
 
 package com.teammoeg.frostedheart.world.fauna.icefish;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.fish.AbstractGroupFishEntity;
-import net.minecraft.entity.passive.fish.SalmonEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.AbstractSchoolingFish;
+import net.minecraft.world.entity.animal.Salmon;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.level.Level;
 
-public class IcefishEntity extends AbstractGroupFishEntity {
-    public IcefishEntity(EntityType<? extends SalmonEntity> p_i50246_1_, World p_i50246_2_) {
+public class IcefishEntity extends AbstractSchoolingFish {
+    public IcefishEntity(EntityType<? extends Salmon> p_i50246_1_, Level p_i50246_2_) {
         super(p_i50246_1_, p_i50246_2_);
     }
 

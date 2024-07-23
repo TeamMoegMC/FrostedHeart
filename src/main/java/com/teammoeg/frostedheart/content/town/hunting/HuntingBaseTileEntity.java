@@ -9,10 +9,10 @@ import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
@@ -189,8 +189,8 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
     }
 
     @Override
-    public CompoundNBT getWorkData() {
-        CompoundNBT nbt = getBasicWorkData();
+    public CompoundTag getWorkData() {
+        CompoundTag nbt = getBasicWorkData();
         if(this.isValid()){
             nbt.putDouble("rating",this.rating);
             nbt.putInt("maxResident",this.maxResident);
@@ -206,7 +206,7 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
     }
 
     @Override
-    public void setWorkData(CompoundNBT data) {
+    public void setWorkData(CompoundTag data) {
         this.setBasicWorkData(data);
         if(this.isValid()){
             this.rating=data.getDouble("rating");
@@ -228,7 +228,7 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
 
     public static class HuntingBaseWorker implements TownWorker {
         @Override
-        public boolean work(Town town, CompoundNBT workData) {
+        public boolean work(Town town, CompoundTag workData) {
             if(town instanceof TeamTown){//the town must be team town because it needs to get all camps in the town.
                 TreeSet<SimpleEntry<TownWorkerData,Double>> camps = new TreeSet<>(Comparator.comparingDouble(AbstractMap.SimpleEntry::getValue));//Double: rating
                 ArrayList<TownWorkerData> campsUnchecked = new ArrayList<>();

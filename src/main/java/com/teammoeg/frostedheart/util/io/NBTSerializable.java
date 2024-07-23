@@ -1,13 +1,13 @@
 package com.teammoeg.frostedheart.util.io;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.util.INBTSerializable;
 
 
 /**
  * Interface for serialization into NBT
  */
-public interface NBTSerializable extends INBTSerializable<CompoundNBT> {
+public interface NBTSerializable extends INBTSerializable<CompoundTag> {
 	
 	/**
 	 * Save data into existing nbt
@@ -15,7 +15,7 @@ public interface NBTSerializable extends INBTSerializable<CompoundNBT> {
 	 * @param nbt data
 	 * @param isPacket is to packet
 	 */
-	void save(CompoundNBT nbt,boolean isPacket) ;
+	void save(CompoundTag nbt,boolean isPacket) ;
 	
 	/**
 	 * load from existing nbt
@@ -23,7 +23,7 @@ public interface NBTSerializable extends INBTSerializable<CompoundNBT> {
 	 * @param nbt data
 	 * @param isPacket is from packet
 	 */
-	void load(CompoundNBT nbt,boolean isPacket) ;
+	void load(CompoundTag nbt,boolean isPacket) ;
 	
 	/**
 	 * Serialize to new NBT for storage.
@@ -31,8 +31,8 @@ public interface NBTSerializable extends INBTSerializable<CompoundNBT> {
 	 * @return the compound NBT
 	 */
 	@Override
-	default CompoundNBT serializeNBT() {
-		CompoundNBT nbt=new CompoundNBT();
+	default CompoundTag serializeNBT() {
+		CompoundTag nbt=new CompoundTag();
 		save(nbt,false);
 		return nbt;
 	}
@@ -43,7 +43,7 @@ public interface NBTSerializable extends INBTSerializable<CompoundNBT> {
 	 * @param nbt the nbt
 	 */
 	@Override
-	default void deserializeNBT(CompoundNBT nbt) {
+	default void deserializeNBT(CompoundTag nbt) {
 		load(nbt,false);
 	}
 	
@@ -53,8 +53,8 @@ public interface NBTSerializable extends INBTSerializable<CompoundNBT> {
 	 * @param isPacket is to packet
 	 * @return the compound NBT
 	 */
-	default CompoundNBT serialize(boolean isPacket) {
-		CompoundNBT nbt=new CompoundNBT();
+	default CompoundTag serialize(boolean isPacket) {
+		CompoundTag nbt=new CompoundTag();
 		save(nbt,isPacket);
 		return nbt;
 	}
@@ -65,7 +65,7 @@ public interface NBTSerializable extends INBTSerializable<CompoundNBT> {
 	 * @param nbt the nbt
 	 * @param isPacket is from packet
 	 */
-	default void deserialize(CompoundNBT nbt,boolean isPacket) {
+	default void deserialize(CompoundTag nbt,boolean isPacket) {
 		load(nbt,isPacket);
 	}
 }

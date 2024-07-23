@@ -6,7 +6,7 @@ import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class ServerSenarioScenePacket implements FHMessage {
@@ -16,7 +16,7 @@ public class ServerSenarioScenePacket implements FHMessage {
     private final boolean resetScene;
     private final RunStatus status;
     private final boolean isWaitClick;
-    public ServerSenarioScenePacket(PacketBuffer buffer) {
+    public ServerSenarioScenePacket(FriendlyByteBuf buffer) {
         text = buffer.readUtf(1024 * 300);
         isReline = buffer.readBoolean();
         isNowait = buffer.readBoolean();
@@ -39,7 +39,7 @@ public class ServerSenarioScenePacket implements FHMessage {
 
 
 
-	public void encode(PacketBuffer buffer) {
+	public void encode(FriendlyByteBuf buffer) {
         buffer.writeUtf(text, 1024 * 300);
         buffer.writeBoolean(isReline);
         buffer.writeBoolean(isNowait);

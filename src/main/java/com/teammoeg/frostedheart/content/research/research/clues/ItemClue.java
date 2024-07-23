@@ -28,8 +28,8 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.chat.Component;
 
 public class ItemClue extends Clue {
 	public static final Codec<ItemClue> CODEC=RecordCodecBuilder.create(t->t.group(
@@ -70,8 +70,8 @@ public class ItemClue extends Clue {
     }
 
     @Override
-    public ITextComponent getDescription() {
-        ITextComponent itc = super.getDescription();
+    public Component getDescription() {
+        Component itc = super.getDescription();
         if (itc != null || stack == null)
             return itc;
         if (stack.hasNoMatchingItems())
@@ -86,7 +86,7 @@ public class ItemClue extends Clue {
     }
 
     @Override
-    public ITextComponent getName() {
+    public Component getName() {
         if (name != null && !name.isEmpty())
             return super.getName();
         if (consume)

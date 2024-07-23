@@ -2,20 +2,20 @@ package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 
 import java.util.Objects;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.items.ItemStackHandler;
 
 public class TileEntityLogisticsStorage implements ILogisticsStorage {
 	public ILogisticsStorage storage;
-	public TileEntity te;
-	public TileEntityLogisticsStorage(ILogisticsStorage storage,TileEntity te) {
+	public BlockEntity te;
+	public TileEntityLogisticsStorage(ILogisticsStorage storage,BlockEntity te) {
 		this.storage = storage;
 		this.te=te;
 	}
-	public <T extends TileEntity&ILogisticsStorage> TileEntityLogisticsStorage(T storage) {
+	public <T extends BlockEntity&ILogisticsStorage> TileEntityLogisticsStorage(T storage) {
 		this.storage = storage;
 		te=storage;
 	}
@@ -33,7 +33,7 @@ public class TileEntityLogisticsStorage implements ILogisticsStorage {
 		return te.getBlockPos();
 	}
 
-	public World getActualWorld() {
+	public Level getActualWorld() {
 		return te.getLevel();
 	}
 
@@ -43,7 +43,7 @@ public class TileEntityLogisticsStorage implements ILogisticsStorage {
 	public ILogisticsStorage getStorage() {
 		return storage;
 	}
-	public TileEntity getTe() {
+	public BlockEntity getTe() {
 		return te;
 	}
 	@Override

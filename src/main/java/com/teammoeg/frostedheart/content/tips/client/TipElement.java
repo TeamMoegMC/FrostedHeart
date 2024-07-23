@@ -2,8 +2,8 @@ package com.teammoeg.frostedheart.content.tips.client;
 
 import com.google.gson.*;
 import com.teammoeg.frostedheart.FHMain;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import org.apache.logging.log4j.LogManager;
@@ -17,7 +17,7 @@ import java.util.List;
 
 public class TipElement implements Cloneable {
     private static final Logger LOGGER = LogManager.getLogger();
-    public List<ITextComponent> contents = new ArrayList<>();
+    public List<Component> contents = new ArrayList<>();
     public String ID = "";
     public boolean alwaysVisible = false;
     public boolean onceOnly = false;
@@ -30,7 +30,7 @@ public class TipElement implements Cloneable {
     public TipElement() {
     }
 
-    public TipElement(List<ITextComponent> contents) {
+    public TipElement(List<Component> contents) {
         this.contents = contents;
     }
 
@@ -89,7 +89,7 @@ public class TipElement implements Cloneable {
     public void replaceToError(File filePath, String type) {
         contents = new ArrayList<>();
         contents.add(TranslateUtils.translate("tips." + FHMain.MODID + ".error." + type));
-        contents.add(new StringTextComponent(filePath.getPath()));
+        contents.add(new TextComponent(filePath.getPath()));
         fontColor = 0xFFFF5340;
         BGColor = 0xFF000000;
         alwaysVisible = true;

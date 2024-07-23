@@ -19,11 +19,11 @@
 
 package com.teammoeg.frostedheart.world;
 
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.GenerationStage;
-import net.minecraft.world.gen.feature.ConfiguredFeature;
-import net.minecraft.world.gen.feature.IFeatureConfig;
-import net.minecraft.world.gen.feature.StructureFeature;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.levelgen.GenerationStep;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 
 import java.util.List;
@@ -32,18 +32,18 @@ import java.util.function.Supplier;
 public class FHGeneration {
     public static void generate_overworld_ores(final BiomeLoadingEvent event){
         // Generate gravel and clay disks
-        Biome.Category category = event.getCategory();
-        if (category == Biome.Category.RIVER || category == Biome.Category.BEACH) {
+        Biome.BiomeCategory category = event.getCategory();
+        if (category == Biome.BiomeCategory.RIVER || category == Biome.BiomeCategory.BEACH) {
             for (ConfiguredFeature<?, ?> feature : FHFeatures.FH_DISK)
-                event.getGeneration().addFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
+                event.getGeneration().addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, feature);
         }
         // Generate rankine ores
         for (ConfiguredFeature<?, ?> feature : FHFeatures.FH_ORES)
-            event.getGeneration().addFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
+            event.getGeneration().addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, feature);
         // Generate clay and gravel deposit
-        if (category != Biome.Category.TAIGA && category != Biome.Category.EXTREME_HILLS && category != Biome.Category.OCEAN && category != Biome.Category.DESERT && category != Biome.Category.RIVER) {
-            event.getGeneration().addFeature(GenerationStage.Decoration.LOCAL_MODIFICATIONS, FHFeatures.clay_deposit);
-            event.getGeneration().addFeature(GenerationStage.Decoration.LOCAL_MODIFICATIONS, FHFeatures.gravel_deposit);
+        if (category != Biome.BiomeCategory.TAIGA && category != Biome.BiomeCategory.EXTREME_HILLS && category != Biome.BiomeCategory.OCEAN && category != Biome.BiomeCategory.DESERT && category != Biome.BiomeCategory.RIVER) {
+            event.getGeneration().addFeature(GenerationStep.Decoration.LOCAL_MODIFICATIONS, FHFeatures.clay_deposit);
+            event.getGeneration().addFeature(GenerationStep.Decoration.LOCAL_MODIFICATIONS, FHFeatures.gravel_deposit);
         }
     }
     public static void generate_nether_ores(final BiomeLoadingEvent event){
@@ -58,15 +58,15 @@ public class FHGeneration {
             return;
         }
 
-        Biome.Category category = event.getCategory();
+        Biome.BiomeCategory category = event.getCategory();
 
-        if (category == Biome.Category.EXTREME_HILLS || category == Biome.Category.TAIGA) {
+        if (category == Biome.BiomeCategory.EXTREME_HILLS || category == Biome.BiomeCategory.TAIGA) {
             event.getGeneration().addStructureStart(FHStructureFeatures.OBSERVATORY_FEATURE);
         }
 
-        if(category.name().equals("volcanic") || category == Biome.Category.PLAINS || category == Biome.Category.MESA || category == Biome.Category.EXTREME_HILLS) {
-            List<Supplier<StructureFeature<?, ?>>> structures = event.getGeneration().getStructures();
-            structures.add(() -> FHStructures.DESTROYED_GENERATOR.get().configured(IFeatureConfig.NONE));
+        if(category.name().equals("volcanic") || category == Biome.BiomeCategory.PLAINS || category == Biome.BiomeCategory.MESA || category == Biome.BiomeCategory.EXTREME_HILLS) {
+            List<Supplier<ConfiguredStructureFeature<?, ?>>> structures = event.getGeneration().getStructures();
+            structures.add(() -> FHStructures.DESTROYED_GENERATOR.get().configured(FeatureConfiguration.NONE));
         }
 
     }

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.trade.gui;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -33,7 +33,7 @@ public class TechScrollBar extends PanelScrollBar {
     // Have to do this hack since FTBL fields are private.
     private static final Theme dtheme = new Theme() {
         @Override
-        public void drawScrollBar(MatrixStack matrixStack, int x, int y, int w, int h, WidgetType type,
+        public void drawScrollBar(PoseStack matrixStack, int x, int y, int w, int h, WidgetType type,
                                   boolean vertical) {
             GuiHelper.setupDrawing();
             TradeIcons.SCROLLBTN.draw(matrixStack, x, y, w, h);
@@ -56,12 +56,12 @@ public class TechScrollBar extends PanelScrollBar {
     }
 
     @Override
-    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
         TradeIcons.SCROLLFRAME.draw(matrixStack, x - 1, y - 7, 15, 160);
     }
 
     @Override
-    public void drawScrollBar(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawScrollBar(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
         if (!isHidden)
             super.drawScrollBar(matrixStack, dtheme, x + 1, y + 1, w - 2, h - 2);
     }

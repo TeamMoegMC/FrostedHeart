@@ -66,23 +66,23 @@ import dev.ftb.mods.ftbquests.quest.task.CheckmarkTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.item.Food;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 public class DebugCommand {
-    public static void register(CommandDispatcher<CommandSource> dispatcher) {
-        LiteralArgumentBuilder<CommandSource> add = Commands.literal("debug")
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("debug")
                 .then(Commands.literal("generate_airship").executes(ct -> {
-                    FHFeatures.spacecraft_feature.place(((ServerWorld) ct.getSource().getPlayerOrException().level), ((ServerWorld) ct.getSource().getPlayerOrException().level).getChunkSource().getGenerator(), ct.getSource().getPlayerOrException().level.random,
+                    FHFeatures.spacecraft_feature.place(((ServerLevel) ct.getSource().getPlayerOrException().level), ((ServerLevel) ct.getSource().getPlayerOrException().level).getChunkSource().getGenerator(), ct.getSource().getPlayerOrException().level.random,
                             ct.getSource().getPlayerOrException().blockPosition());
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("export_food").executes(ct -> {
@@ -104,7 +104,7 @@ public class DebugCommand {
                                         ps.println(item + "," + parts[1]);
                                     } else {
                                         items.add(it);
-                                        Food f = it.getFoodProperties();
+                                        FoodProperties f = it.getFoodProperties();
                                         if (f == null)
                                             ps.println(item + "," + parts[1]);
                                         else
@@ -119,7 +119,7 @@ public class DebugCommand {
                             if (!ix.isEdible()) continue;
                             if (ix instanceof StewItem) continue;
                             items.add(ix);
-                            Food f = ix.getFoodProperties();
+                            FoodProperties f = ix.getFoodProperties();
                             if (f != null)
                                 ps.println(RegistryUtils.getRegistryName(ix) + "," + f.getNutrition());
                         }
@@ -142,7 +142,7 @@ public class DebugCommand {
                         jo.addProperty("subtitle", e.getSubtitle().getString());
                         jo.addProperty("chapter", e.getQuestChapter().getTitle().getString());
                         JsonArray dec = new JsonArray();
-                        for (ITextComponent it : e.getDescription()) {
+                        for (Component it : e.getDescription()) {
                             dec.add(it.getString());
                         }
                         jo.add("description", dec);
@@ -202,12 +202,12 @@ public class DebugCommand {
                         jo.addProperty("points", e.getRequiredPoints());
                         jo.addProperty("category", e.getCategory().toString());
                         JsonArray odec = new JsonArray();
-                        for (ITextComponent it : e.getODesc()) {
+                        for (Component it : e.getODesc()) {
                             odec.add(it.getString());
                         }
                         jo.add("description", odec);
                         JsonArray adec = new JsonArray();
-                        for (ITextComponent it : e.getAltDesc()) {
+                        for (Component it : e.getAltDesc()) {
                             adec.add(it.getString());
                         }
                         jo.add("alt_description", adec);
@@ -226,8 +226,8 @@ public class DebugCommand {
                         for (Clue t : e.getClues()) {
                             JsonObject joc = new JsonObject();
                             joc.addProperty("name", t.getName().getString());
-                            ITextComponent desc = t.getDescription();
-                            ITextComponent hint = t.getHint();
+                            Component desc = t.getDescription();
+                            Component hint = t.getHint();
                             if (desc != null)
                                 joc.addProperty("desc", desc.getString());
                             if (hint != null)
@@ -243,7 +243,7 @@ public class DebugCommand {
                             joe.addProperty("name", r.getName().getString());
 
                             JsonArray dec = new JsonArray();
-                            for (ITextComponent it : r.getTooltip()) {
+                            for (Component it : r.getTooltip()) {
                                 dec.add(it.getString());
                             }
                             joe.add("description", dec);
@@ -265,7 +265,7 @@ public class DebugCommand {
                 })).then(Commands.literal("sort_chunks").executes(ct -> {
                     long now = System.currentTimeMillis();
                     ReferenceValue<Integer> tchunks = new ReferenceValue<>(0);
-                    Map<RegistryKey<World>, Map<Team, List<SendChunkPacket.SingleChunk>>> chunksToSend = new HashMap<>();
+                    Map<ResourceKey<Level>, Map<Team, List<SendChunkPacket.SingleChunk>>> chunksToSend = new HashMap<>();
                     FTBTeamsAPI.getManager().getKnownPlayers().values().stream().filter(t -> t.actualTeam != t).map(t -> Pair.of(t, FTBChunksAPI.manager.getData(t))).filter(p -> p.getSecond() != null)
                             .forEach(d -> {
 
@@ -282,7 +282,7 @@ public class DebugCommand {
 
                             });
                     if (tchunks.val > 0)
-                        for (Entry<RegistryKey<World>, Map<Team, List<SingleChunk>>> entry : chunksToSend.entrySet()) {
+                        for (Entry<ResourceKey<Level>, Map<Team, List<SingleChunk>>> entry : chunksToSend.entrySet()) {
                             for (Entry<Team, List<SingleChunk>> entry2 : entry.getValue().entrySet()) {
                                 SendManyChunksPacket packet = new SendManyChunksPacket();
                                 packet.dimension = entry.getKey();

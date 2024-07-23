@@ -8,15 +8,15 @@ import com.teammoeg.frostedheart.content.robotics.logistics.workers.ILogisticsSt
 import com.teammoeg.frostedheart.content.robotics.logistics.workers.TileEntityLogisticsStorage;
 import com.teammoeg.frostedheart.util.FHUtils;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class LogisticSlot {
 	public int slot;
 	public TileEntityLogisticsStorage storage;
-	public LogisticSlot(ILogisticsStorage storage,TileEntity te, int slot) {
+	public LogisticSlot(ILogisticsStorage storage,BlockEntity te, int slot) {
 		super();
 		this.slot = slot;
 		this.storage = new TileEntityLogisticsStorage(storage,te);
@@ -26,7 +26,7 @@ public class LogisticSlot {
 		this.storage = storage;
 		this.slot = slot;
 	}
-	public <T extends TileEntity&ILogisticsStorage> LogisticSlot(T storage, int slot) {
+	public <T extends BlockEntity&ILogisticsStorage> LogisticSlot(T storage, int slot) {
 		this.slot = slot;
 		this.storage = new TileEntityLogisticsStorage(storage);
 	}

@@ -23,8 +23,8 @@ import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.content.research.data.IClueData;
 import com.teammoeg.frostedheart.util.io.registry.TypedCodecRegistry;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTDynamicOps;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 
 public class ClueDatas {
     public static final TypedCodecRegistry<IClueData> registry = new TypedCodecRegistry<>();
@@ -34,10 +34,10 @@ public class ClueDatas {
 	public <A extends IClueData> void register(Class<A> cls, String type,Codec<A> codec) {
 		registry.register(cls, type,codec);
 	}
-	public static IClueData read(CompoundNBT nbt) {
-		return registry.read(NBTDynamicOps.INSTANCE, nbt);
+	public static IClueData read(CompoundTag nbt) {
+		return registry.read(NbtOps.INSTANCE, nbt);
 	}
-	public static CompoundNBT write(IClueData nbt) {
-		return (CompoundNBT) registry.write(NBTDynamicOps.INSTANCE, nbt);
+	public static CompoundTag write(IClueData nbt) {
+		return (CompoundTag) registry.write(NbtOps.INSTANCE, nbt);
 	}
 }

@@ -47,16 +47,16 @@ import dev.ftb.mods.ftbquests.quest.QuestFile;
 import dev.ftb.mods.ftbquests.quest.task.ItemTask;
 import dev.ftb.mods.ftbquests.quest.task.KillTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
-import net.minecraft.client.audio.BackgroundMusicSelector;
-import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.ISound.AttenuationType;
-import net.minecraft.client.audio.SimpleSound;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.event.ClickEvent;
+import net.minecraft.sounds.Music;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance.Attenuation;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.ClickEvent;
 
 public class ClientControl implements IClientControlCommand {
 	public void link(IClientScene runner,@Param("lid")String linkId) {
@@ -70,7 +70,7 @@ public class ClientControl implements IClientControlCommand {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		Task tsk=quest.tasks.get(t);
-		ITextComponent itt;
+		Component itt;
 		if(tsk instanceof ItemTask) {
 			itt=TranslateUtils.translateMessage("item_task",tsk.getTitle());
 			
@@ -90,7 +90,7 @@ public class ClientControl implements IClientControlCommand {
 	}
 	@Override
 	public void showTitle(IClientScene runner,@Param("t")String t,@Param("st")String st,@Param("in")Integer i1,@Param("show")Integer i2,@Param("out")Integer i3) {
-		ITextComponent t1=null,t2=null;
+		Component t1=null,t2=null;
 		if(t!=null) {
 			t1=ClientTextComponentUtils.parse(t);
 			ClientUtils.mc().gui.setTitles(t1,null,i1==null?-1:i1,i2==null?-1:i2, i3==null?-1:i3);
@@ -251,7 +251,7 @@ public class ClientControl implements IClientControlCommand {
 	public void bgm(IClientScene runner,@Param("n")@Param("name")String name) {
 		//ISound sound=SimpleSound.music();
 		ClientUtils.mc().getMusicManager().stopPlaying();
-		ClientUtils.mc().getMusicManager().startPlaying(new BackgroundMusicSelector(new SoundEvent(FHScenarioClient.getPathOf(new ResourceLocation(name),"")), 0, 0, true));
+		ClientUtils.mc().getMusicManager().startPlaying(new Music(new SoundEvent(FHScenarioClient.getPathOf(new ResourceLocation(name),"")), 0, 0, true));
 	
 	}
 	@Override
@@ -259,11 +259,11 @@ public class ClientControl implements IClientControlCommand {
 		//ISound sound=SimpleSound.music();
 		ClientUtils.mc().getMusicManager().stopPlaying();
 	}
-	List<ISound> current=new ArrayList<>();
+	List<SoundInstance> current=new ArrayList<>();
 	@Override
 	public void sound(IClientScene runner,@Param("n")@Param("name")String name,@Param("repeat")int rep) {
 		//ISound sound=SimpleSound.music();
-		ISound sound=new SimpleSound(FHScenarioClient.getPathOf(new ResourceLocation(name),""), SoundCategory.MASTER,1, 1, rep>0, 0, AttenuationType.LINEAR, 0, 0, 0, true);
+		SoundInstance sound=new SimpleSoundInstance(FHScenarioClient.getPathOf(new ResourceLocation(name),""), SoundSource.MASTER,1, 1, rep>0, 0, Attenuation.LINEAR, 0, 0, 0, true);
 		ClientUtils.mc().getSoundManager().play(sound);
 		current.add(sound);
 	}

@@ -25,14 +25,14 @@ import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.potion.Effect;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
 public class SaunaRecipe extends IESerializableRecipe {
@@ -45,14 +45,14 @@ public class SaunaRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public SaunaRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+        public SaunaRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
             // read effect from buffer
-            CompoundNBT effectNBT = buffer.readNbt();
-            Effect effect = null;
+            CompoundTag effectNBT = buffer.readNbt();
+            MobEffect effect = null;
             int duration = 0;
             int amplifier = 0;
             if (effectNBT.contains("Id")) {
-                effect = Effect.byId(effectNBT.getInt("Id"));
+                effect = MobEffect.byId(effectNBT.getInt("Id"));
                 duration = effectNBT.getInt("Duration");
                 amplifier = effectNBT.getInt("Amplifier");
             }
@@ -66,26 +66,26 @@ public class SaunaRecipe extends IESerializableRecipe {
         @Override
         public SaunaRecipe readFromJson(ResourceLocation id, JsonObject json) {
             // read effect from json
-            Effect effect = null;
+            MobEffect effect = null;
             int duration = 0, amplifier = 0;
             if (json.has("effect")) {
-                JsonObject effectJson = JSONUtils.getAsJsonObject(json, "effect");
-                ResourceLocation effectID = new ResourceLocation(JSONUtils.getAsString(effectJson, "id"));
-                duration = JSONUtils.getAsInt(effectJson, "duration");
-                amplifier = JSONUtils.getAsInt(effectJson, "amplifier");
+                JsonObject effectJson = GsonHelper.getAsJsonObject(json, "effect");
+                ResourceLocation effectID = new ResourceLocation(GsonHelper.getAsString(effectJson, "id"));
+                duration = GsonHelper.getAsInt(effectJson, "duration");
+                amplifier = GsonHelper.getAsInt(effectJson, "amplifier");
                 // Get Effect from effectID from Registry
                 effect = RegistryUtils.getEffect(effectID);
             }
-            return new SaunaRecipe(id, Ingredient.fromJson(json.get("input")), JSONUtils.getAsInt(json, "time"),
+            return new SaunaRecipe(id, Ingredient.fromJson(json.get("input")), GsonHelper.getAsInt(json, "time"),
                     effect, duration, amplifier);
         }
 
         @Override
-        public void toNetwork(PacketBuffer buffer, SaunaRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buffer, SaunaRecipe recipe) {
             // write effect to buffer
-            CompoundNBT effectNBT = new CompoundNBT();
+            CompoundTag effectNBT = new CompoundTag();
             if (recipe.effect != null) {
-                effectNBT.putInt("Id", Effect.getId(recipe.effect));
+                effectNBT.putInt("Id", MobEffect.getId(recipe.effect));
                 effectNBT.putInt("Duration", recipe.duration);
                 effectNBT.putInt("Amplifier", recipe.amplifier);
             }
@@ -97,17 +97,17 @@ public class SaunaRecipe extends IESerializableRecipe {
         }
 
     }
-    public static IRecipeType<SaunaRecipe> TYPE;
+    public static RecipeType<SaunaRecipe> TYPE;
     public static RegistryObject<IERecipeSerializer<SaunaRecipe>> SERIALIZER;
     public final Ingredient input;
     public final int time;
-    public final Effect effect;
+    public final MobEffect effect;
     public final int duration;
 
     public final int amplifier;
 
 
-    public SaunaRecipe(ResourceLocation id, Ingredient input, int time, Effect effect, int duration, int amplifier) {
+    public SaunaRecipe(ResourceLocation id, Ingredient input, int time, MobEffect effect, int duration, int amplifier) {
         super(ItemStack.EMPTY, TYPE, id);
         this.input = input;
         this.time = time;

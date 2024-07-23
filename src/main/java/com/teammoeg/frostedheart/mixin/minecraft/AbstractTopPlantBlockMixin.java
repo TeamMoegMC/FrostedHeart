@@ -27,22 +27,22 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.minecraft.block.AbstractPlantBlock;
-import net.minecraft.block.AbstractTopPlantBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.block.AbstractBlock.Properties;
+import net.minecraft.world.level.block.GrowingPlantBlock;
+import net.minecraft.world.level.block.GrowingPlantHeadBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 /**
  * To fix an issue that forge event is not properly fired which causes our event mechanic breaks.
  * e.g. kelp breaking everything/growing even when cold
  * <p>
  * */
-@Mixin(AbstractTopPlantBlock.class)
-public abstract class AbstractTopPlantBlockMixin extends AbstractPlantBlock {
+@Mixin(GrowingPlantHeadBlock.class)
+public abstract class AbstractTopPlantBlockMixin extends GrowingPlantBlock {
     @Shadow
     private double growthChance;
 
@@ -61,13 +61,13 @@ public abstract class AbstractTopPlantBlockMixin extends AbstractPlantBlock {
      */
     @Inject(at = @At("HEAD"), method = "randomTick", cancellable = true)
 
-    public void fh$randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random, CallbackInfo cbi) {
-        if (state.getValue(AbstractTopPlantBlock.AGE) < 25 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn,
+    public void fh$randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, Random random, CallbackInfo cbi) {
+        if (state.getValue(GrowingPlantHeadBlock.AGE) < 25 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn,
                 pos, state,
                 random.nextDouble() < this.growthChance)) {
             BlockPos blockpos = pos.relative(this.growthDirection);
             if (this.canGrowIn(worldIn.getBlockState(blockpos))) {
-                worldIn.setBlockAndUpdate(blockpos, state.cycle(AbstractTopPlantBlock.AGE));
+                worldIn.setBlockAndUpdate(blockpos, state.cycle(GrowingPlantHeadBlock.AGE));
                 net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, blockpos,
                         worldIn.getBlockState(blockpos));
             }

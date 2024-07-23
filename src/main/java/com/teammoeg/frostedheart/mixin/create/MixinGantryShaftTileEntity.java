@@ -28,19 +28,19 @@ import com.simibubi.create.content.contraptions.relays.advanced.GantryShaftTileE
 import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
 import com.teammoeg.frostedheart.util.mixin.IGantryShaft;
 
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 
 @Mixin(GantryShaftTileEntity.class)
-public abstract class MixinGantryShaftTileEntity extends KineticTileEntity implements ITickableTileEntity, IGantryShaft {
+public abstract class MixinGantryShaftTileEntity extends KineticTileEntity implements TickableBlockEntity, IGantryShaft {
     private int fh$cooldown;
 
     public AbstractContraptionEntity currentComp;
 
-    public MixinGantryShaftTileEntity(TileEntityType<?> typeIn) {
+    public MixinGantryShaftTileEntity(BlockEntityType<?> typeIn) {
         super(typeIn);
     }
     @Override
@@ -50,7 +50,7 @@ public abstract class MixinGantryShaftTileEntity extends KineticTileEntity imple
                 fh$cooldown = 100;
                 //float impact = currentComp.getContraption().getBlocks().size()*4;
                 Direction facing = ((GantryContraption) currentComp.getContraption()).getFacing();
-                Vector3d currentPosition = currentComp.getAnchorVec().add(.5, .5, .5);
+                Vec3 currentPosition = currentComp.getAnchorVec().add(.5, .5, .5);
                 BlockPos gantryShaftPos = new BlockPos(currentPosition).relative(facing.getOpposite());
                 if (gantryShaftPos.equals(this.worldPosition)) {
                     ContraptionCostUtils.setSpeedAndCollect(currentComp, (int) speed);

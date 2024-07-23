@@ -24,29 +24,29 @@ import java.util.OptionalDouble;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.RenderState;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.math.vector.Matrix4f;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.math.Matrix4f;
 
 public class FHGuiHelper {
     // hack to access render state protected members
-    public static class RenderStateAccess extends RenderState {
-        public static RenderType.State getLineState(double width) {
-            return RenderType.State.builder().setLineState(new RenderState.LineState(OptionalDouble.of(width)))// width
+    public static class RenderStateAccess extends RenderStateShard {
+        public static RenderType.CompositeState getLineState(double width) {
+            return RenderType.CompositeState.builder().setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(width)))// width
                     .setLayeringState(VIEW_OFFSET_Z_LAYERING).setOutputState(MAIN_TARGET).setWriteMaskState(COLOR_DEPTH_WRITE).createCompositeState(true);
         }
 
-        public static RenderType.State getRectState() {
-            return RenderType.State.builder()
+        public static RenderType.CompositeState getRectState() {
+            return RenderType.CompositeState.builder()
                     // width
                     .setLayeringState(VIEW_OFFSET_Z_LAYERING).setOutputState(MAIN_TARGET).setWriteMaskState(COLOR_DEPTH_WRITE).createCompositeState(true);
         }
@@ -58,9 +58,9 @@ public class FHGuiHelper {
     }
 
     public static final RenderType BOLD_LINE_TYPE = RenderType.create("fh_line_bold",
-            DefaultVertexFormats.POSITION_COLOR, GL11.GL_LINES, 128, RenderStateAccess.getLineState(4));
+            DefaultVertexFormat.POSITION_COLOR, GL11.GL_LINES, 128, RenderStateAccess.getLineState(4));
 
-    private static void drawVertexLine(Matrix4f mat, IVertexBuilder renderBuffer, Color4I color, int startX, int startY,
+    private static void drawVertexLine(Matrix4f mat, VertexConsumer renderBuffer, Color4I color, int startX, int startY,
                                  int endX, int endY,float z) {
     	//RenderSystem.disableTexture();
         RenderSystem.enableColorMaterial();
@@ -71,7 +71,7 @@ public class FHGuiHelper {
                 .endVertex();
         //RenderSystem.enableTexture();
     }
-    private static void drawVertexLine2(Matrix4f mat, IVertexBuilder renderBuffer, Color4I color, int startX, int startY,
+    private static void drawVertexLine2(Matrix4f mat, VertexConsumer renderBuffer, Color4I color, int startX, int startY,
             int endX, int endY,float z) {
 		RenderSystem.disableTexture();
 		RenderSystem.enableColorMaterial();
@@ -84,22 +84,22 @@ public class FHGuiHelper {
 		RenderSystem.enableTexture();
 	}
     // draw a line from start to end by color, ABSOLUTE POSITION
-    public static void drawLine(MatrixStack matrixStack, Color4I color, int startX, int startY, int endX, int endY,float z) {
-    	Tessellator t=Tessellator.getInstance();
+    public static void drawLine(PoseStack matrixStack, Color4I color, int startX, int startY, int endX, int endY,float z) {
+    	Tesselator t=Tesselator.getInstance();
         BufferBuilder vertexBuilderLines = t.getBuilder();
-        vertexBuilderLines.begin(GL11C.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+        vertexBuilderLines.begin(GL11C.GL_LINES, DefaultVertexFormat.POSITION_COLOR);
         drawVertexLine(matrixStack.last().pose(), vertexBuilderLines, color, startX, startY, endX, endY,z);
         t.end();
     }
 
     // draw a line from start to end by color, ABSOLUTE POSITION
-    public static void drawLine(MatrixStack matrixStack, Color4I color, int startX, int startY, int endX, int endY) {
-        IVertexBuilder vertexBuilderLines = Minecraft.getInstance().renderBuffers().bufferSource()
+    public static void drawLine(PoseStack matrixStack, Color4I color, int startX, int startY, int endX, int endY) {
+        VertexConsumer vertexBuilderLines = Minecraft.getInstance().renderBuffers().bufferSource()
                 .getBuffer(BOLD_LINE_TYPE);
         drawVertexLine(matrixStack.last().pose(), vertexBuilderLines, color, startX, startY, endX, endY,0f);
     }
 
-    private static void drawRect(Matrix4f mat, IVertexBuilder renderBuffer, Color4I color, int x, int y, int w, int h) {
+    private static void drawRect(Matrix4f mat, VertexConsumer renderBuffer, Color4I color, int x, int y, int w, int h) {
         renderBuffer.vertex(mat, x, y, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
         renderBuffer.vertex(mat, x + w, y, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
                 .endVertex();
@@ -126,15 +126,15 @@ public class FHGuiHelper {
     }
 
     // draw a rectangle
-    public static void fillGradient(MatrixStack matrixStack, int x1, int y1, int x2, int y2, int colorFrom, int colorTo) {
+    public static void fillGradient(PoseStack matrixStack, int x1, int y1, int x2, int y2, int colorFrom, int colorTo) {
         RenderSystem.disableTexture();
         RenderSystem.enableBlend();
         RenderSystem.disableAlphaTest();
         RenderSystem.defaultBlendFunc();
         RenderSystem.shadeModel(7425);
-        Tessellator tessellator = Tessellator.getInstance();
+        Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBuilder();
-        bufferbuilder.begin(7, DefaultVertexFormats.POSITION_COLOR);
+        bufferbuilder.begin(7, DefaultVertexFormat.POSITION_COLOR);
         fillGradient(matrixStack.last().pose(), bufferbuilder, x1, y1, x2, y2, colorFrom, colorTo);
         tessellator.end();
         RenderSystem.shadeModel(7424);

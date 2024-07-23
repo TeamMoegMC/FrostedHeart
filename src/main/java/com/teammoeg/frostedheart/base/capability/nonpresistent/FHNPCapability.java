@@ -2,9 +2,9 @@ package com.teammoeg.frostedheart.base.capability.nonpresistent;
 
 import com.teammoeg.frostedheart.base.capability.IFHCapability;
 import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.util.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
@@ -24,11 +24,11 @@ public class FHNPCapability<C> implements IFHCapability{
 	@SuppressWarnings("unchecked")
 	public void register() {
         CapabilityManager.INSTANCE.register(capClass, new Capability.IStorage<C>() {
-            public void readNBT(Capability<C> capability, C instance, Direction side, INBT nbt) {
+            public void readNBT(Capability<C> capability, C instance, Direction side, Tag nbt) {
             }
 
-            public INBT writeNBT(Capability<C> capability, C instance, Direction side) {
-                return new CompoundNBT();
+            public Tag writeNBT(Capability<C> capability, C instance, Direction side) {
+                return new CompoundTag();
             }
         }, ()->factory.get());
         capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(capClass.getName().intern());

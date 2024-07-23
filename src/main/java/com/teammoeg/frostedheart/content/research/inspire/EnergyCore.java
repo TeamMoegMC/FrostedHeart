@@ -38,10 +38,10 @@ import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.utility.LeveledValue;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.network.PacketDistributor;
 import top.theillusivec4.diet.api.DietCapability;
@@ -73,7 +73,7 @@ public class EnergyCore implements NBTSerializable {
 		//System.out.println(level);
 		//System.out.println(persistLevel);
     }
-    protected void addPersistExp(ServerPlayerEntity player, float value) {
+    protected void addPersistExp(ServerPlayer player, float value) {
     	persistLevel.addValue(value*getModifier(player));
     	int pLvl=persistLevel.getLevel();
     	if(pLvl>=maxPesistLevel) {
@@ -81,7 +81,7 @@ public class EnergyCore implements NBTSerializable {
 			maxPesistLevel=pLvl;
 		}
     }
-    protected void addTemperalExp(ServerPlayerEntity player, float value) {
+    protected void addTemperalExp(ServerPlayer player, float value) {
     	level.addValue(value*getModifier(player));
     	int lvl=level.getLevel();
 		if(lvl>=maxLevel) {
@@ -89,20 +89,20 @@ public class EnergyCore implements NBTSerializable {
 			maxLevel=lvl;
 		}
     }
-    public static void addEnergy(ServerPlayerEntity player, int val) {
+    public static void addEnergy(ServerPlayer player, int val) {
     	getCapability(player).ifPresent(t->t.addTemperalExp(player,val));
         FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(player));
     }
 
-    public static void addPersistentEnergy(ServerPlayerEntity player, int val) {
+    public static void addPersistentEnergy(ServerPlayer player, int val) {
     	getCapability(player).ifPresent(t->t.addPersistExp(player,val));
         FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(player));
     }
-    public static void addPoint(ServerPlayerEntity player, int val) {
+    public static void addPoint(ServerPlayer player, int val) {
     	getCapability(player).ifPresent(t->t.researchPoint+=val);
         FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(player));
     }
-    public static void applySleep(ServerPlayerEntity player) {
+    public static void applySleep(ServerPlayer player) {
         EnergyCore data=getCapability(player).orElse(null);
         long lsd = data.lastsleepdate;
         long csd = (player.level.getDayTime() + 12000L) / 24000L;
@@ -116,13 +116,13 @@ public class EnergyCore implements NBTSerializable {
         data.lastsleepdate=csd;
     }
 
-    public float getModifier(ServerPlayerEntity player) {
+    public float getModifier(ServerPlayer player) {
     	boolean isBodyNotWell = player.getEffect(FHEffects.HYPERTHERMIA.get()) != null || player.getEffect(FHEffects.HYPOTHERMIA.get()) != null;
     	if(isBodyNotWell)return 0;
     	TeamResearchData trd = ResearchDataAPI.getData(player);
     	double initValue=(1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
         if ( utbody != 0) {
-            double t = MathHelper.clamp(((int)lastsleep), 1, Integer.MAX_VALUE) / 1200d;
+            double t = Mth.clamp(((int)lastsleep), 1, Integer.MAX_VALUE) / 1200d;
             initValue *= ( utbody / (t * t * t * t * t * t +  utbody * 2) + 0.5);
         } else {
         	initValue *= 0.5;
@@ -144,27 +144,27 @@ public class EnergyCore implements NBTSerializable {
         initValue/=1+(trd.getHolder().getOnlineMembers().size()-1)*0.8f;
         return (float) initValue;
     }
-    public static void dT(ServerPlayerEntity player) {
+    public static void dT(ServerPlayer player) {
         //System.out.println("dt");
     	EnergyCore data=getCapability(player).orElse(null);
         data.lastsleep++;
        // FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(player));
     }
 
-    public static int getEnergy(PlayerEntity player) {
+    public static int getEnergy(Player player) {
         return getCapability(player).map(t->t.researchPoint).orElse(0);
     }
-    public static void costEnergy(PlayerEntity player,int val) {
+    public static void costEnergy(Player player,int val) {
         getCapability(player).ifPresent(t->t.researchPoint-=val);
     }
 
-    public static void reportEnergy(PlayerEntity player) {
+    public static void reportEnergy(Player player) {
     	getCapability(player).ifPresent(data->player.sendMessage(TranslateUtils.str("Energy:" + data.level + ",Persist Energy: " + data.persistLevel), player.getUUID()));
     }
  
 
 
-    public static LazyOptional<EnergyCore> getCapability(@Nullable PlayerEntity player) {
+    public static LazyOptional<EnergyCore> getCapability(@Nullable Player player) {
     	return FHCapabilities.ENERGY.getCapability(player);
     }
 
@@ -177,12 +177,12 @@ public class EnergyCore implements NBTSerializable {
         level.minPercent(0.1f);
         
 	}
-	public void sendUpdate(ServerPlayerEntity player) {
+	public void sendUpdate(ServerPlayer player) {
 		FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(player));
 	}
 
 	@Override
-	public void save(CompoundNBT saved, boolean isPacket) {
+	public void save(CompoundTag saved, boolean isPacket) {
 		// TODO Auto-generated method stub
 
 	    CodecUtil.encodeNBT(LEVELED_CODEC, saved, "lvl", level);
@@ -198,7 +198,7 @@ public class EnergyCore implements NBTSerializable {
 	}
 
 	@Override
-	public void load(CompoundNBT saved, boolean isPacket) {
+	public void load(CompoundTag saved, boolean isPacket) {
 		level=CodecUtil.decodeNBT(LEVELED_CODEC, saved, "lvl");
 		persistLevel=CodecUtil.decodeNBT(PERSIST_LEVELED_CODEC, saved, "plvl");
 		//System.out.println("load===============");

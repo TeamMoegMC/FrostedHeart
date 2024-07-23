@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when data update
@@ -42,7 +42,7 @@ public class FHChangeActiveResearchPacket implements FHMessage {
         this.id = rid;
     }
 
-    public FHChangeActiveResearchPacket(PacketBuffer buffer) {
+    public FHChangeActiveResearchPacket(FriendlyByteBuf buffer) {
         id = buffer.readVarInt();
     }
 
@@ -50,7 +50,7 @@ public class FHChangeActiveResearchPacket implements FHMessage {
         this.id = FHResearch.researches.getIntId(rs);
     }
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeVarInt(id);
     }
 

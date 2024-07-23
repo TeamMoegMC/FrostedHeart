@@ -52,12 +52,12 @@ import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.codec.BooleansCodec;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.IItemProvider;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ItemLike;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.BaseComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -189,7 +189,7 @@ public class Research implements FHRegisteredItem {
      * @param parents  the parents<br>
      */
     @SafeVarargs
-    public Research(String id, ResearchCategory category, IItemProvider icon, Supplier<Research>... parents) {
+    public Research(String id, ResearchCategory category, ItemLike icon, Supplier<Research>... parents) {
         this(id, category, new ItemStack(icon), parents);
     }
 
@@ -314,7 +314,7 @@ public class Research implements FHRegisteredItem {
      *
      * @return alt desc<br>
      */
-    public List<ITextComponent> getAltDesc() {
+    public List<Component> getAltDesc() {
         return FHTextUtil.get(fdesc, "research", () -> id + ".desc_alt");
     }
 
@@ -389,7 +389,7 @@ public class Research implements FHRegisteredItem {
      *
      * @return desc<br>
      */
-    public List<ITextComponent> getDesc() {
+    public List<Component> getDesc() {
         if (showfdesc && !isCompleted())
             return getAltDesc();
         return getODesc();
@@ -428,8 +428,8 @@ public class Research implements FHRegisteredItem {
      *
      * @return name<br>
      */
-    public TextComponent getName() {
-        return (TextComponent) FHTextUtil.get(name, "research", () -> id + ".name");
+    public BaseComponent getName() {
+        return (BaseComponent) FHTextUtil.get(name, "research", () -> id + ".name");
     }
 
     /**
@@ -437,7 +437,7 @@ public class Research implements FHRegisteredItem {
      *
      * @return o desc<br>
      */
-    public List<ITextComponent> getODesc() {
+    public List<Component> getODesc() {
         return FHTextUtil.get(desc, "research", () -> id + ".desc");
     }
 
@@ -494,7 +494,7 @@ public class Research implements FHRegisteredItem {
      * @param team the team<br>
      * @param spe  the spe<br>
      */
-    public void grantEffects(TeamResearchData team, ServerPlayerEntity spe) {
+    public void grantEffects(TeamResearchData team, ServerPlayer spe) {
         boolean granted = true;
         for (Effect e : getEffects()) {
             team.grantEffect(e, spe);

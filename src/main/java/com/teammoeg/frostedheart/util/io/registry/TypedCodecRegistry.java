@@ -10,7 +10,7 @@ import com.mojang.serialization.DynamicOps;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class TypedCodecRegistry<T> extends TypeRegistry<T> {
 	Map<String,Codec<? extends T>> codecs=new HashMap<>();
@@ -31,10 +31,10 @@ public class TypedCodecRegistry<T> extends TypeRegistry<T> {
 	public Codec<T> byIntCodec(){
 		return byInt;
 	}
-	public void write(T obj,PacketBuffer buffer) {
+	public void write(T obj,FriendlyByteBuf buffer) {
 		CodecUtil.writeCodec(buffer, byInt, obj);
 	}
-	public T read(PacketBuffer buffer) {
+	public T read(FriendlyByteBuf buffer) {
 		return CodecUtil.readCodec(buffer, byInt);
 	}
 	public <A> A write(DynamicOps<A> op,T obj) {

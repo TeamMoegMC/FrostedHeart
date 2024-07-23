@@ -24,11 +24,11 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NBTDynamicOps;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 
 import java.util.Objects;
 
@@ -48,12 +48,12 @@ public class TownWorkerData {
 	public static final Codec<TownWorkerData> CODEC=RecordCodecBuilder.create(t->
 	t.group(CodecUtil.enumCodec(TownWorkerType.class).fieldOf("type").forGetter(o->o.type),
 		CodecUtil.BLOCKPOS.fieldOf("pos").forGetter(o->o.pos),
-		CompoundNBT.CODEC.fieldOf("data").forGetter(o->o.workData),
+		CompoundTag.CODEC.fieldOf("data").forGetter(o->o.workData),
 		Codec.INT.fieldOf("priority").forGetter(o->o.priority)
 		).apply(t,TownWorkerData::new));
     private TownWorkerType type;
     private BlockPos pos;
-    private CompoundNBT workData;
+    private CompoundTag workData;
     private int priority;
     boolean loaded;
 
@@ -62,7 +62,7 @@ public class TownWorkerData {
         this.pos = pos;
     }
 
-    public TownWorkerData(TownWorkerType type, BlockPos pos, CompoundNBT workData, int priority) {
+    public TownWorkerData(TownWorkerType type, BlockPos pos, CompoundTag workData, int priority) {
 		super();
 		this.type = type;
 		this.pos = pos;
@@ -70,7 +70,7 @@ public class TownWorkerData {
 		this.priority = priority;
 	}
 
-	public TownWorkerData(CompoundNBT data) {
+	public TownWorkerData(CompoundTag data) {
         super();
         this.pos = BlockPos.of(data.getLong("pos"));
         this.type = TownWorkerType.valueOf(data.getString("type"));
@@ -108,7 +108,7 @@ public class TownWorkerData {
         return type;
     }
 
-    public CompoundNBT getWorkData() {
+    public CompoundTag getWorkData() {
         return workData;
     }
 
@@ -116,8 +116,8 @@ public class TownWorkerData {
         return type.getWorker().lastWork(resource, workData);
     }
 
-    public CompoundNBT serialize() {
-        CompoundNBT data = new CompoundNBT();
+    public CompoundTag serialize() {
+        CompoundTag data = new CompoundTag();
         data.putLong("pos", pos.asLong());
         data.putString("type", type.name());
         data.put("data", workData);
@@ -125,16 +125,16 @@ public class TownWorkerData {
         return data;
     }
 
-    public void setData(ServerWorld w) {
+    public void setData(ServerLevel w) {
         if (loaded) {
-            TileEntity te = Utils.getExistingTileEntity(w, pos);
+            BlockEntity te = Utils.getExistingTileEntity(w, pos);
             if (te instanceof TownTileEntity) {
                 ((TownTileEntity) te).setWorkData(workData);
             }
         }
     }
 
-    public void setWorkData(CompoundNBT workData) {
+    public void setWorkData(CompoundTag workData) {
         this.workData = workData;
     }
 

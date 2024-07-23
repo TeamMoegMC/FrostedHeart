@@ -19,14 +19,14 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.radiator;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
 
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -50,6 +50,6 @@ public class RadiatorMultiblock extends FHBaseMultiblock {
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void renderFormedStructure(MatrixStack transform, IRenderTypeBuffer buffer) {
+    public void renderFormedStructure(PoseStack transform, MultiBufferSource buffer) {
     }
 }

@@ -26,25 +26,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.util.mixin.BreedUtil;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.entity.passive.CatEntity;
-import net.minecraft.entity.passive.ChickenEntity;
-import net.minecraft.entity.passive.FoxEntity;
-import net.minecraft.entity.passive.PigEntity;
-import net.minecraft.entity.passive.RabbitEntity;
-import net.minecraft.entity.passive.horse.AbstractHorseEntity;
-import net.minecraft.entity.passive.horse.LlamaEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Cat;
+import net.minecraft.world.entity.animal.Chicken;
+import net.minecraft.world.entity.animal.Fox;
+import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.animal.Rabbit;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.animal.horse.Llama;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 /**
  * Add more breeding cooldown and set breading item to tag items
  * For removal in 1.20+
  * */
-@Mixin({PigEntity.class, ChickenEntity.class, FoxEntity.class, RabbitEntity.class, CatEntity.class, LlamaEntity.class, AbstractHorseEntity.class})
-public abstract class BreedableEntityMixin extends AnimalEntity {
+@Mixin({Pig.class, Chicken.class, Fox.class, Rabbit.class, Cat.class, Llama.class, AbstractHorse.class})
+public abstract class BreedableEntityMixin extends Animal {
 
-    protected BreedableEntityMixin(EntityType<? extends AnimalEntity> type, World worldIn) {
+    protected BreedableEntityMixin(EntityType<? extends Animal> type, Level worldIn) {
         super(type, worldIn);
     }
 

@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 /**
@@ -33,43 +33,43 @@ import net.minecraftforge.fml.network.PacketDistributor;
  */
 public class TemperatureDisplayHelper {
 
-    public static void sendTemperature(Collection<ServerPlayerEntity> pe, String format, float... temps) {
+    public static void sendTemperature(Collection<ServerPlayer> pe, String format, float... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, temps);
-        for (ServerPlayerEntity p : pe)
+        for (ServerPlayer p : pe)
             FHNetwork.send(PacketDistributor.PLAYER.with(() -> p), k);
     }
 
-    public static void sendTemperature(Collection<ServerPlayerEntity> pe, String format, int... temps) {
+    public static void sendTemperature(Collection<ServerPlayer> pe, String format, int... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, temps);
-        for (ServerPlayerEntity p : pe)
+        for (ServerPlayer p : pe)
             FHNetwork.send(PacketDistributor.PLAYER.with(() -> p), k);
     }
 
-    public static void sendTemperature(ServerPlayerEntity pe, String format, float... temps) {
+    public static void sendTemperature(ServerPlayer pe, String format, float... temps) {
         FHNetwork.send(PacketDistributor.PLAYER.with(() -> pe), new FHTemperatureDisplayPacket(format, temps));
     }
 
-    public static void sendTemperature(ServerPlayerEntity pe, String format, int... temps) {
+    public static void sendTemperature(ServerPlayer pe, String format, int... temps) {
         FHNetwork.send(PacketDistributor.PLAYER.with(() -> pe), new FHTemperatureDisplayPacket(format, temps));
     }
 
-    public static void sendTemperatureStatus(Collection<ServerPlayerEntity> pe, String format, boolean act, float... temps) {
+    public static void sendTemperatureStatus(Collection<ServerPlayer> pe, String format, boolean act, float... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, act, temps);
-        for (ServerPlayerEntity p : pe)
+        for (ServerPlayer p : pe)
             FHNetwork.send(PacketDistributor.PLAYER.with(() -> p), k);
     }
 
-    public static void sendTemperatureStatus(Collection<ServerPlayerEntity> pe, String format, boolean act, int... temps) {
+    public static void sendTemperatureStatus(Collection<ServerPlayer> pe, String format, boolean act, int... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, act, temps);
-        for (ServerPlayerEntity p : pe)
+        for (ServerPlayer p : pe)
             FHNetwork.send(PacketDistributor.PLAYER.with(() -> p), k);
     }
 
-    public static void sendTemperatureStatus(ServerPlayerEntity pe, String format, boolean act, float... temps) {
+    public static void sendTemperatureStatus(ServerPlayer pe, String format, boolean act, float... temps) {
         FHNetwork.send(PacketDistributor.PLAYER.with(() -> pe), new FHTemperatureDisplayPacket(format, act, temps));
     }
 
-    public static void sendTemperatureStatus(ServerPlayerEntity pe, String format, boolean act, int... temps) {
+    public static void sendTemperatureStatus(ServerPlayer pe, String format, boolean act, int... temps) {
         FHNetwork.send(PacketDistributor.PLAYER.with(() -> pe), new FHTemperatureDisplayPacket(format, act, temps));
     }
 

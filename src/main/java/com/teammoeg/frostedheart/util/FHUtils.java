@@ -40,36 +40,36 @@ import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.block.BlockState;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.item.crafting.RecipeManager;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeManager;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
-import net.minecraft.world.gen.Heightmap.Type;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.levelgen.Heightmap.Types;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.crafting.NBTIngredient;
 import net.minecraftforge.common.util.Constants;
@@ -87,74 +87,74 @@ public class FHUtils {
 	public static final String FIRST_LOGIN_GIVE_NUTRITION = FHMain.MODID + "first_login_give_nutrition";
 	public static final String FIRST_LOGIN_GIVE_MANUAL = "first";
 
-    public static void applyEffectTo(EffectInstance effectinstance, PlayerEntity playerentity) {
+    public static void applyEffectTo(MobEffectInstance effectinstance, Player playerentity) {
         if (effectinstance.getEffect().isInstantenous()) {
             effectinstance.getEffect().applyInstantenousEffect(playerentity, playerentity, playerentity, effectinstance.getAmplifier(), 1.0D);
         } else {
-            playerentity.addEffect(new EffectInstance(effectinstance));
+            playerentity.addEffect(new MobEffectInstance(effectinstance));
         }
     }
 
-    public static boolean canBigTreeGenerate(World w, BlockPos p, Random r) {
+    public static boolean canBigTreeGenerate(Level w, BlockPos p, Random r) {
 
         return canTreeGenerate(w, p, r, 7);
 
     }
 
-    public static void canBigTreeGenerate(World w, BlockPos p, Random r, CallbackInfoReturnable<Boolean> cr) {
+    public static void canBigTreeGenerate(Level w, BlockPos p, Random r, CallbackInfoReturnable<Boolean> cr) {
         if (!canBigTreeGenerate(w, p, r))
             cr.setReturnValue(false);
     }
 
-    public static boolean canGrassSurvive(IWorldReader world, BlockPos pos) {
+    public static boolean canGrassSurvive(LevelReader world, BlockPos pos) {
         float t = ChunkHeatData.getTemperature(world, pos);
         return t >= WorldTemperature.HEMP_GROW_TEMPERATURE && t <= WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX;
     }
 
-    public static boolean canNetherTreeGrow(IBlockReader w, BlockPos p) {
-        if (!(w instanceof IWorld)) {
+    public static boolean canNetherTreeGrow(BlockGetter w, BlockPos p) {
+        if (!(w instanceof LevelAccessor)) {
             return false;
         }
-        float temp = ChunkHeatData.getTemperature((IWorld) w, p);
+        float temp = ChunkHeatData.getTemperature((LevelAccessor) w, p);
         if (temp <= 300)
             return false;
         return !(temp > 300 + WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX);
     }
 
-    public static boolean canTreeGenerate(World w, BlockPos p, Random r, int chance) {
+    public static boolean canTreeGenerate(Level w, BlockPos p, Random r, int chance) {
         return r.nextInt(chance) == 0;
 
     }
     public static Direction dirBetween(BlockPos from,BlockPos to) {
     	BlockPos delt=from.subtract(to);
-    	return Direction.fromNormal(MathHelper.clamp(delt.getX(), -1, 1), MathHelper.clamp(delt.getY(), -1, 1), MathHelper.clamp(delt.getZ(), -1, 1));
+    	return Direction.fromNormal(Mth.clamp(delt.getX(), -1, 1), Mth.clamp(delt.getY(), -1, 1), Mth.clamp(delt.getZ(), -1, 1));
     }
-    public static TileEntity getExistingTileEntity(IWorld w,BlockPos pos) {
+    public static BlockEntity getExistingTileEntity(LevelAccessor w,BlockPos pos) {
 		if(w==null)
 			return null;
-    	TileEntity te=null;
-    	if(w instanceof World) {
-    		te=Utils.getExistingTileEntity((World) w, pos);
+    	BlockEntity te=null;
+    	if(w instanceof Level) {
+    		te=Utils.getExistingTileEntity((Level) w, pos);
     	}else {
 			if(w.hasChunkAt(pos))
 				te=w.getBlockEntity(pos);
     	}
     	return te;
     }
-    public static <T> T getExistingTileEntity(IWorld w,BlockPos pos,Class<T> type) {
-    	TileEntity te=getExistingTileEntity(w,pos);
+    public static <T> T getExistingTileEntity(LevelAccessor w,BlockPos pos,Class<T> type) {
+    	BlockEntity te=getExistingTileEntity(w,pos);
     	if(type.isInstance(te))
     		return (T) te;
     	return null;
     }
 
-    public static <T> T getCapability(IWorld w,BlockPos pos,Direction d,Capability<T> cap){
-    	TileEntity te=getExistingTileEntity(w,pos);
+    public static <T> T getCapability(LevelAccessor w,BlockPos pos,Direction d,Capability<T> cap){
+    	BlockEntity te=getExistingTileEntity(w,pos);
     	if(te!=null)
     		return te.getCapability(cap,d).orElse(null);
     	return null;
     }
-    public static boolean canTreeGrow(World w, BlockPos p, Random r) {
+    public static boolean canTreeGrow(Level w, BlockPos p, Random r) {
         float temp = ChunkHeatData.getTemperature(w, p);
         if (temp <= -6 || WorldClimate.isBlizzard(w))
             return false;
@@ -162,9 +162,9 @@ public class FHUtils {
             return false;
         if (temp > 0)
             return true;
-        return r.nextInt(Math.max(1, MathHelper.ceil(-temp / 2))) == 0;
+        return r.nextInt(Math.max(1, Mth.ceil(-temp / 2))) == 0;
     }
-    public static boolean hasItems(PlayerEntity player,List<IngredientWithSize> costList) {
+    public static boolean hasItems(Player player,List<IngredientWithSize> costList) {
     	int i=0;
         for (IngredientWithSize iws : costList) {
             int count = iws.getCount();
@@ -181,7 +181,7 @@ public class FHUtils {
         }
         return true;
     }
-    public static BitSet checkItemList(PlayerEntity player,List<IngredientWithSize> costList) {
+    public static BitSet checkItemList(Player player,List<IngredientWithSize> costList) {
     	BitSet bs=new BitSet(costList.size());
     	int i=0;
         for (IngredientWithSize iws : costList) {
@@ -201,7 +201,7 @@ public class FHUtils {
         }
         return bs;
     }
-    public static boolean costItems(PlayerEntity player,List<IngredientWithSize> costList) {
+    public static boolean costItems(Player player,List<IngredientWithSize> costList) {
         // first do simple verify
         for (IngredientWithSize iws : costList) {
             int count = iws.getCount();
@@ -259,15 +259,15 @@ public class FHUtils {
         return emptyLoot;
     }
 
-    public static int getEnchantmentLevel(Enchantment enchID, CompoundNBT tags) {
+    public static int getEnchantmentLevel(Enchantment enchID, CompoundTag tags) {
         ResourceLocation resourcelocation = RegistryUtils.getRegistryName(enchID);
-        ListNBT listnbt = tags.getList("Enchantments", Constants.NBT.TAG_COMPOUND);
+        ListTag listnbt = tags.getList("Enchantments", Constants.NBT.TAG_COMPOUND);
 
         for (int i = 0; i < listnbt.size(); ++i) {
-            CompoundNBT compoundnbt = listnbt.getCompound(i);
+            CompoundTag compoundnbt = listnbt.getCompound(i);
             ResourceLocation resourcelocation1 = ResourceLocation.tryParse(compoundnbt.getString("id"));
             if (resourcelocation1 != null && resourcelocation1.equals(resourcelocation)) {
-                return MathHelper.clamp(compoundnbt.getInt("lvl"), 0, 255);
+                return Mth.clamp(compoundnbt.getInt("lvl"), 0, 255);
             }
         }
 
@@ -278,25 +278,25 @@ public class FHUtils {
         return (state) -> state.getValue(BlockStateProperties.LIT) ? lightValue : 0;
     }
 
-    public static void giveItem(PlayerEntity pe, ItemStack is) {
+    public static void giveItem(Player pe, ItemStack is) {
         if (!pe.addItem(is))
             pe.level.addFreshEntity(new ItemEntity(pe.level, pe.blockPosition().getX(), pe.blockPosition().getY(), pe.blockPosition().getZ(), is));
     }
 
-    public static boolean isBlizzardHarming(IWorld iWorld, BlockPos p) {
-        return WorldClimate.isBlizzard(iWorld) && iWorld.getHeight(Type.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) <= p.getY();
+    public static boolean isBlizzardHarming(LevelAccessor iWorld, BlockPos p) {
+        return WorldClimate.isBlizzard(iWorld) && iWorld.getHeight(Types.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) <= p.getY();
     }
 
-    public static boolean isRainingAt(BlockPos pos, World world) {
+    public static boolean isRainingAt(BlockPos pos, Level world) {
 
         if (!world.isRaining()) {
             return false;
         } else if (!world.canSeeSky(pos)) {
             return false;
-        } else return world.getHeightmapPos(Type.MOTION_BLOCKING, pos).getY() <= pos.getY();
+        } else return world.getHeightmapPos(Types.MOTION_BLOCKING, pos).getY() <= pos.getY();
     }
 
-    public static EffectInstance noHeal(EffectInstance ei) {
+    public static MobEffectInstance noHeal(MobEffectInstance ei) {
         ei.setCurativeItems(ImmutableList.of());
         return ei;
     }
@@ -309,17 +309,17 @@ public class FHUtils {
         return Optional.ofNullable(map.get(key));
     }
 
-    public static void spawnMob(ServerWorld world, BlockPos blockpos, CompoundNBT nbt, ResourceLocation type) {
-        if (World.isInSpawnableBounds(blockpos)) {
-            CompoundNBT compoundnbt = nbt.copy();
+    public static void spawnMob(ServerLevel world, BlockPos blockpos, CompoundTag nbt, ResourceLocation type) {
+        if (Level.isInSpawnableBounds(blockpos)) {
+            CompoundTag compoundnbt = nbt.copy();
             compoundnbt.putString("id", type.toString());
             Entity entity = EntityType.loadEntityRecursive(compoundnbt, world, (p_218914_1_) -> {
                 p_218914_1_.moveTo(blockpos.getX(), blockpos.getY(), blockpos.getZ(), p_218914_1_.yRot, p_218914_1_.xRot);
                 return p_218914_1_;
             });
             if (entity != null) {
-                if (entity instanceof MobEntity) {
-                    ((MobEntity) entity).finalizeSpawn(world, world.getCurrentDifficultyAt(entity.blockPosition()), SpawnReason.NATURAL, null, null);
+                if (entity instanceof Mob) {
+                    ((Mob) entity).finalizeSpawn(world, world.getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.NATURAL, null, null);
                 }
                 if (!world.tryAddFreshEntityWithPassengers(entity)) {
                 }
@@ -336,7 +336,7 @@ public class FHUtils {
 	    stack.setDamageValue((int) (stack.getMaxDamage() - base - Math.random() * mult));
 	    return stack;
 	}
-	public static <R extends IRecipe<IInventory>> List<R> filterRecipes(@Nullable RecipeManager recipeManager, IRecipeType<R> recipeType) {
+	public static <R extends Recipe<Container>> List<R> filterRecipes(@Nullable RecipeManager recipeManager, RecipeType<R> recipeType) {
         if(recipeManager==null) {
         	if(ClientUtils.mc().level!=null)
         		recipeManager=ClientUtils.mc().level.getRecipeManager();
@@ -356,16 +356,16 @@ public class FHUtils {
    public static <T extends NBTSerializable> void cloneCapability(LazyOptional<T> oldCapability, LazyOptional<T> newCapability){
        newCapability.ifPresent((newCap) -> oldCapability.ifPresent((oldCap) -> copyAllFields(newCap,oldCap)));
    }
-   public static <T extends NBTSerializable> void copyPlayerCapability(Capability<T> capability,PlayerEntity old,PlayerEntity now){
+   public static <T extends NBTSerializable> void copyPlayerCapability(Capability<T> capability,Player old,Player now){
 	   copyCapability(old.getCapability(capability),now.getCapability(capability));
    }
-   public static <T extends NBTSerializable> void clonePlayerCapability(Capability<T> capability,PlayerEntity old,PlayerEntity now){
+   public static <T extends NBTSerializable> void clonePlayerCapability(Capability<T> capability,Player old,Player now){
 	   cloneCapability(old.getCapability(capability),now.getCapability(capability));
    }
-   public static <T extends NBTSerializable> void copyPlayerCapability(FHNBTCapability<T> capability,PlayerEntity old,PlayerEntity now){
+   public static <T extends NBTSerializable> void copyPlayerCapability(FHNBTCapability<T> capability,Player old,Player now){
 	   copyCapability(capability.getCapability(old),capability.getCapability(now));
    }
-   public static <T extends NBTSerializable> void clonePlayerCapability(FHNBTCapability<T> capability,PlayerEntity old,PlayerEntity now){
+   public static <T extends NBTSerializable> void clonePlayerCapability(FHNBTCapability<T> capability,Player old,Player now){
 	   cloneCapability(capability.getCapability(old),capability.getCapability(now));
    }
    public static <T> void copyAllFields(T to, T from) {

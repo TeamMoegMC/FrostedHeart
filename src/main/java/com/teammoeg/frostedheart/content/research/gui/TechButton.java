@@ -19,14 +19,14 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.chat.Component;
 
 public abstract class TechButton extends Button {
 
@@ -39,12 +39,12 @@ public abstract class TechButton extends Button {
         super.setIcon(i);
     }
 
-    public TechButton(Panel panel, ITextComponent t, Icon i) {
+    public TechButton(Panel panel, Component t, Icon i) {
         super(panel, t, i);
     }
 
     @Override
-    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
         GuiHelper.setupDrawing();
 
         TechIcons.drawTexturedRect(matrixStack, x, y, w, h, isMouseOver());

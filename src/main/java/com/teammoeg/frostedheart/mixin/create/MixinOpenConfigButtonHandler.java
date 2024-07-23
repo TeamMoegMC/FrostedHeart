@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.simibubi.create.foundation.config.ui.OpenCreateMenuButton;
 
-import net.minecraft.client.gui.screen.MainMenuScreen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraftforge.client.event.GuiScreenEvent;
 
 @Mixin(OpenCreateMenuButton.OpenConfigButtonHandler.class)
@@ -37,7 +37,7 @@ public class MixinOpenConfigButtonHandler {
      */
     @Inject(at = @At("HEAD"), method = "onGuiInit", remap = false, cancellable = true)
     private static void fh$disableMainMenuButton(GuiScreenEvent.InitGuiEvent event, CallbackInfo cbi) {
-        if (event.getGui() instanceof MainMenuScreen) cbi.cancel();
+        if (event.getGui() instanceof TitleScreen) cbi.cancel();
 
     }
 }

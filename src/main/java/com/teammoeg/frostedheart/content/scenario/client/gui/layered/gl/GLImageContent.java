@@ -2,20 +2,20 @@ package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 
 import org.lwjgl.opengl.GL11C;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldVertexBufferUploader;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.BufferUploader;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Matrix4f;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import net.minecraft.resources.ResourceLocation;
+import com.mojang.math.Matrix4f;
 
 public class GLImageContent extends GLLayerContent {
 	public ResourceLocation showingImage;
@@ -53,11 +53,11 @@ public class GLImageContent extends GLLayerContent {
 		}
 	}
 
-	public static void blit(MatrixStack matrixStack, int x, int y, int width, int height, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight,float opacity) {
+	public static void blit(PoseStack matrixStack, int x, int y, int width, int height, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight,float opacity) {
 		innerBlit(matrixStack, x, x + width, y, y + height, 0, uWidth, vHeight, uOffset, vOffset, textureWidth, textureHeight,opacity);
 	}
 
-	public static void innerBlit(MatrixStack matrixStack, int x1, int x2, int y1, int y2, int blitOffset, int uWidth, int vHeight, float uOffset, float vOffset, int textureWidth, int textureHeight,
+	public static void innerBlit(PoseStack matrixStack, int x1, int x2, int y1, int y2, int blitOffset, int uWidth, int vHeight, float uOffset, float vOffset, int textureWidth, int textureHeight,
 		float opacity) {
 		innerBlit(matrixStack.last().pose(), x1, x2, y1, y2, blitOffset, (uOffset + 0.0F) / textureWidth, (uOffset + uWidth) / textureWidth,
 			(vOffset + 0.0F) / textureHeight, (vOffset + vHeight) / textureHeight, opacity);
@@ -65,8 +65,8 @@ public class GLImageContent extends GLLayerContent {
 
 	public static void innerBlit(Matrix4f matrix, int x1, int x2, int y1, int y2, int blitOffset, float minU, float maxU, float minV, float maxV, float opacity) {
 		//RenderSystem.enableAlphaTest();
-		BufferBuilder bufferbuilder = Tessellator.getInstance().getBuilder();
-		bufferbuilder.begin(GL11C.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
+		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
+		bufferbuilder.begin(GL11C.GL_QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
 		bufferbuilder.vertex(matrix, x1, y2, blitOffset).color(1, 1, 1, opacity).uv(minU, maxV).endVertex();
 		bufferbuilder.vertex(matrix, x2, y2, blitOffset).color(1, 1, 1, opacity).uv(maxU, maxV).endVertex();
 		bufferbuilder.vertex(matrix, x2, y1, blitOffset).color(1, 1, 1, opacity).uv(maxU, minV).endVertex();
@@ -74,7 +74,7 @@ public class GLImageContent extends GLLayerContent {
 		bufferbuilder.end();
 		RenderSystem.enableBlend();
 		RenderSystem.enableAlphaTest();
-		WorldVertexBufferUploader.end(bufferbuilder);
+		BufferUploader.end(bufferbuilder);
 		RenderSystem.disableBlend();
 	}
 

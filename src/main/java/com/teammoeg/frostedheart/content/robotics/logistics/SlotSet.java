@@ -6,7 +6,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 public interface SlotSet extends Set<LogisticSlot> {
 	static class EmptySlotSet extends AbstractCollection<LogisticSlot> implements SlotSet{

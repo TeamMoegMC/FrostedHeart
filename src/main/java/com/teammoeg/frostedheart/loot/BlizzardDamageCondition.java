@@ -26,15 +26,15 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.teammoeg.frostedheart.FHDamageSources;
 
-import net.minecraft.loot.ILootSerializer;
-import net.minecraft.loot.LootConditionType;
-import net.minecraft.loot.LootContext;
-import net.minecraft.loot.LootParameterSets;
-import net.minecraft.loot.LootParameters;
-import net.minecraft.loot.conditions.ILootCondition;
+import net.minecraft.world.level.storage.loot.Serializer;
+import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 
-public class BlizzardDamageCondition implements ILootCondition {
-    public static class Serializer implements ILootSerializer<BlizzardDamageCondition> {
+public class BlizzardDamageCondition implements LootItemCondition {
+    public static class Serializer implements Serializer<BlizzardDamageCondition> {
 
         @Nonnull
         @Override
@@ -47,20 +47,20 @@ public class BlizzardDamageCondition implements ILootCondition {
         }
     }
 
-    public static LootConditionType TYPE;
+    public static LootItemConditionType TYPE;
 
     public BlizzardDamageCondition() {
     }
 
     @Override
-    public LootConditionType getType() {
+    public LootItemConditionType getType() {
         return TYPE;
     }
 
     @Override
     public boolean test(LootContext t) {
-        if (t.getLootTable(t.getQueriedLootTableId()).getParamSet() == LootParameterSets.ENTITY) {
-            return t.getParamOrNull(LootParameters.DAMAGE_SOURCE) == FHDamageSources.BLIZZARD;
+        if (t.getLootTable(t.getQueriedLootTableId()).getParamSet() == LootContextParamSets.ENTITY) {
+            return t.getParamOrNull(LootContextParams.DAMAGE_SOURCE) == FHDamageSources.BLIZZARD;
         }
         return false;
     }

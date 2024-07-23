@@ -8,18 +8,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import net.minecraft.world.GameRules;
-import net.minecraft.world.GameRules.BooleanValue;
-import net.minecraft.world.GameRules.RuleKey;
-import net.minecraft.world.GameRules.RuleValue;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.GameRules.BooleanValue;
+import net.minecraft.world.level.GameRules.Key;
+import net.minecraft.world.level.GameRules.Value;
 
 @Mixin(GameRules.class)
 public class GameRulesMixin{
     @Shadow
-    private Map<RuleKey<?>, RuleValue<?>> rules;
+    private Map<Key<?>, Value<?>> rules;
 
     @Inject(method = "getBoolean", at = @At(value = "HEAD"), cancellable = true)
-    public void disableWeatherCycle(GameRules.RuleKey<GameRules.BooleanValue> key, CallbackInfoReturnable<Boolean> cir) {
+    public void disableWeatherCycle(GameRules.Key<GameRules.BooleanValue> key, CallbackInfoReturnable<Boolean> cir) {
         if (key == GameRules.RULE_WEATHER_CYCLE) {
             cir.setReturnValue(false);
         }

@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.util.io.marshaller;
 
-import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.Tag;
 
 public interface Marshaller {
-	INBT toNBT(Object o);
-	Object fromNBT(INBT nbt);
+	Tag toNBT(Object o);
+	Object fromNBT(Tag nbt);
 }

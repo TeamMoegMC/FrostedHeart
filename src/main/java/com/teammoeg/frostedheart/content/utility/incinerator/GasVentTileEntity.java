@@ -23,9 +23,9 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
@@ -34,7 +34,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState, ITickableTileEntity {
+public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState, TickableBlockEntity {
     FluidTank input = new FluidTank(10000, s -> s.getFluid().getAttributes().isGaseous());
     private LazyOptional<IFluidHandler> holder = LazyOptional.empty();
 
@@ -51,7 +51,7 @@ public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState,
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean dp) {
+    public void readCustomNBT(CompoundTag nbt, boolean dp) {
         input.readFromNBT(nbt.getCompound("in"));
     }
 
@@ -116,7 +116,7 @@ public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState,
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean dp) {
-        nbt.put("in", input.writeToNBT(new CompoundNBT()));
+    public void writeCustomNBT(CompoundTag nbt, boolean dp) {
+        nbt.put("in", input.writeToNBT(new CompoundTag()));
     }
 }

@@ -25,13 +25,13 @@ import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class DebugHeaterTileEntity extends IEBaseTileEntity implements  ITickableTileEntity {
+public class DebugHeaterTileEntity extends IEBaseTileEntity implements  TickableBlockEntity {
 
     HeatEnergyNetwork manager = new HeatEnergyNetwork(this, c -> {
         for (Direction d : Direction.values()) {
@@ -45,7 +45,7 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements  ITickabl
 
 
     @Override      
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
     }
 
     @Override
@@ -66,7 +66,7 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements  ITickabl
 	}
 
 	@Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
     }
 
 }

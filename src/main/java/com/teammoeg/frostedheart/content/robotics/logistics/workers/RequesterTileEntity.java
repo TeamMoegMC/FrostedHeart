@@ -14,14 +14,14 @@ import com.teammoeg.frostedheart.content.robotics.logistics.ItemHandlerListener;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.items.ItemStackHandler;
 
-public class RequesterTileEntity extends FHBaseTileEntity implements TaskableLogisticStorage,ItemChangeListener,ITickableTileEntity{
+public class RequesterTileEntity extends FHBaseTileEntity implements TaskableLogisticStorage,ItemChangeListener,TickableBlockEntity{
 	private static class NumCount{
 		public static final Codec<NumCount> CODEC=RecordCodecBuilder.create(t->t.group(
 			CodecUtil.INT_ARRAY_CODEC.fieldOf("slot").forGetter(o->o.slot.stream().mapToInt(n->n).toArray()),
@@ -43,7 +43,7 @@ public class RequesterTileEntity extends FHBaseTileEntity implements TaskableLog
 	LogisticTask[] tasks=new LogisticTask[MAX_FILTER_SLOT];
 	int[] msize=new int[MAX_FILTER_SLOT];
 	NumCount[] counts=new NumCount[27];
-	public RequesterTileEntity(TileEntityType<? extends TileEntity> type) {
+	public RequesterTileEntity(BlockEntityType<? extends BlockEntity> type) {
 		super(type);
 		for(int i=0;i<filters.length;i++)
 			filters[i]=new FilterSlot();
@@ -93,12 +93,12 @@ public class RequesterTileEntity extends FHBaseTileEntity implements TaskableLog
 	}
 
 	@Override
-	public void readCustomNBT(CompoundNBT arg0, boolean arg1) {
+	public void readCustomNBT(CompoundTag arg0, boolean arg1) {
 		container.deserializeNBT(arg0.getCompound("container"));
 	}
 
 	@Override
-	public void writeCustomNBT(CompoundNBT arg0, boolean arg1) {
+	public void writeCustomNBT(CompoundTag arg0, boolean arg1) {
 		arg0.put("container", container.serializeNBT());
 	}
 

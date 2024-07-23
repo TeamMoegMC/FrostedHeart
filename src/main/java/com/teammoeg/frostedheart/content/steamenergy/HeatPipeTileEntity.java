@@ -24,13 +24,13 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.PipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
 
-public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileEntity,EnergyNetworkProvider, INetworkConsumer {
+public class HeatPipeTileEntity extends PipeTileEntity implements TickableBlockEntity,EnergyNetworkProvider, INetworkConsumer {
 	HeatEnergyNetwork ntwk;
 	int cnt=1;
     public HeatPipeTileEntity() {
@@ -66,7 +66,7 @@ public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileE
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
         if (descPacket) {
         }
     }
@@ -88,7 +88,7 @@ public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileE
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         if (descPacket) {
         }
     }

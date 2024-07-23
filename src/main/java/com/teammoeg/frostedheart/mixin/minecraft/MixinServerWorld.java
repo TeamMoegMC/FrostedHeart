@@ -32,27 +32,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.GameRules.BooleanValue;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.IServerWorldInfo;
-import net.minecraft.world.storage.ISpawnWorldInfo;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.GameRules.BooleanValue;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.storage.ServerLevelData;
+import net.minecraft.world.level.storage.WritableLevelData;
 /**
  * Weather modify
  * */
-@Mixin(ServerWorld.class)
-public abstract class MixinServerWorld extends World {
+@Mixin(ServerLevel.class)
+public abstract class MixinServerWorld extends Level {
 
     @Shadow
     @Final
-    public IServerWorldInfo serverWorldInfo;
+    public ServerLevelData serverWorldInfo;
 
-    protected MixinServerWorld(ISpawnWorldInfo worldInfo, RegistryKey<World> dimension, DimensionType dimensionType,
-                               Supplier<IProfiler> profiler, boolean isRemote, boolean isDebug, long seed) {
+    protected MixinServerWorld(WritableLevelData worldInfo, ResourceKey<Level> dimension, DimensionType dimensionType,
+                               Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed) {
         super(worldInfo, dimension, dimensionType, profiler, isRemote, isDebug, seed);
     }
 

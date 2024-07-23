@@ -45,13 +45,13 @@ import java.util.Set;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
-import net.minecraft.item.Item;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.IntNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.IntTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 
 
@@ -102,34 +102,34 @@ public class WantedFoodCapability implements NBTSerializable{
         return this.eatenTimes;
     }
 
-    private static StringNBT turnItemToStringNBT(Item item){
-        return StringNBT.valueOf(Objects.requireNonNull(RegistryUtils.getRegistryName(item)).toString());
+    private static StringTag turnItemToStringNBT(Item item){
+        return StringTag.valueOf(Objects.requireNonNull(RegistryUtils.getRegistryName(item)).toString());
     }
 
-    private static Item turnStringNBTToItem(INBT nbt){
+    private static Item turnStringNBTToItem(Tag nbt){
         ResourceLocation itemResourceLocation = new ResourceLocation(nbt.getAsString());
         return RegistryUtils.getItem(itemResourceLocation);
     }
 
 	@Override
-	public void save(CompoundNBT nbt, boolean isPacket) {
-        ListNBT list = new ListNBT();
+	public void save(CompoundTag nbt, boolean isPacket) {
+        ListTag list = new ListTag();
         for(Item item: this.wantedFoods){
             list.add(turnItemToStringNBT(item));
         }
         nbt.put(key_wantedFoods, list);
-        nbt.put(key_eatenFoodsAmount, IntNBT.valueOf(this.eatenFoodsAmount));
-        nbt.put(key_eatenTimes, IntNBT.valueOf((this.eatenTimes)));
+        nbt.put(key_eatenFoodsAmount, IntTag.valueOf(this.eatenFoodsAmount));
+        nbt.put(key_eatenTimes, IntTag.valueOf((this.eatenTimes)));
 
 	}
 
 	@Override
-	public void load(CompoundNBT nbt, boolean isPacket) {
+	public void load(CompoundTag nbt, boolean isPacket) {
         wantedFoods.clear();
-        ListNBT list = nbt.getList(key_wantedFoods, Constants.NBT.TAG_STRING/*9*/);
+        ListTag list = nbt.getList(key_wantedFoods, Constants.NBT.TAG_STRING/*9*/);
         this.eatenFoodsAmount = nbt.getInt(key_eatenFoodsAmount);
         this.eatenTimes = nbt.getInt(key_eatenTimes);
-        for(INBT itemNBT : list){
+        for(Tag itemNBT : list){
             wantedFoods.add(turnStringNBTToItem(itemNBT));
         }
 	}

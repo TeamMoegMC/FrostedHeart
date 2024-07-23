@@ -29,18 +29,18 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.loot.LootContext;
-import net.minecraft.loot.conditions.ILootCondition;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.common.loot.LootModifier;
 
 public class RemoveLootModifier extends LootModifier {
     public static class Serializer extends GlobalLootModifierSerializer<RemoveLootModifier> {
         @Override
-        public RemoveLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
+        public RemoveLootModifier read(ResourceLocation location, JsonObject object, LootItemCondition[] conditions) {
             JsonArray ja = object.get("removed").getAsJsonArray();
             List<Ingredient> changes = new ArrayList<>();
             for (JsonElement je : ja) {
@@ -61,7 +61,7 @@ public class RemoveLootModifier extends LootModifier {
 
     List<Ingredient> removed = new ArrayList<>();
 
-    private RemoveLootModifier(ILootCondition[] conditionsIn, Collection<Ingredient> pairsin) {
+    private RemoveLootModifier(LootItemCondition[] conditionsIn, Collection<Ingredient> pairsin) {
         super(conditionsIn);
         this.removed.addAll(pairsin);
     }

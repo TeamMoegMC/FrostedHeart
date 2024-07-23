@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.scenario.client.dialog;
 
 import java.util.List;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
@@ -30,7 +30,7 @@ public class HUDDialog implements IScenarioDialog{
 	public int getDialogWidth() {
 		return 0;
 	}
-	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 		//AbstractGui.fill(matrixStack, 0, 0, width, height, 0xffffffff);
 		partialTicks=handlePt(partialTicks);
 		getPrimary().render(new RenderParams(this,matrixStack,mouseX,mouseY,partialTicks));

@@ -22,12 +22,12 @@ package com.teammoeg.frostedheart.mixin.client;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.content.curiosities.armor.CopperBacktankArmorLayer;
 import com.simibubi.create.events.ClientEvents;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -41,8 +41,8 @@ public class MixinClientEvents {
     @SubscribeEvent
     @Overwrite(remap = false)
     public static void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-        MatrixStack ms = event.getMatrixStack();
-        IRenderTypeBuffer.Impl buffers = Minecraft.getInstance().renderBuffers().bufferSource();
+        PoseStack ms = event.getMatrixStack();
+        MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
         int light = 15728880;
         int overlay = OverlayTexture.NO_OVERLAY;
         float pt = event.getPartialTicks();

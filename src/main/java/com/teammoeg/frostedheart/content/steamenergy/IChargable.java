@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 public interface IChargable {
     float charge(ItemStack stack, float value);

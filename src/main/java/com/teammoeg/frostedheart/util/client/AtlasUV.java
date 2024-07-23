@@ -22,9 +22,9 @@ package com.teammoeg.frostedheart.util.client;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 public class AtlasUV extends TexturedUV {
 	int gridW;
@@ -54,25 +54,25 @@ public class AtlasUV extends TexturedUV {
 		this.gridW=gridW;
 		this.gridSize=gridSize;
 	}
-	public void blitAtlas(MatrixStack s, int targetX, int targetY, int gridIndex) {
+	public void blitAtlas(PoseStack s, int targetX, int targetY, int gridIndex) {
 		if(gridIndex>=gridSize)
 			gridIndex=gridSize-1;
 		if(gridIndex<0)return;
 		super.blitAtlas(s, targetX, targetY, gridIndex % gridW, gridIndex / gridW);
 	}
-	public void blitAtlas(MatrixStack s, int targetX, int targetY, Point loc, int gridIndex) {
+	public void blitAtlas(PoseStack s, int targetX, int targetY, Point loc, int gridIndex) {
 		if(gridIndex>=gridSize)
 			gridIndex=gridSize-1;
 		if(gridIndex<0)return;
 		super.blitAtlas(s, targetX, targetY, loc, gridIndex % gridW, gridIndex / gridW);
 	}
-	public void blitAtlasVH(MatrixStack s, int targetX, int targetY, int gridIndex) {
+	public void blitAtlasVH(PoseStack s, int targetX, int targetY, int gridIndex) {
 		if(gridIndex>=gridSize)
 			gridIndex=gridSize-1;
 		if(gridIndex<0)return;
 		super.blitAtlas(s, targetX, targetY, gridIndex / gridW, gridIndex % gridW);
 	}
-	public void blitAtlasVH(MatrixStack s, int targetX, int targetY, Point loc, int gridIndex) {
+	public void blitAtlasVH(PoseStack s, int targetX, int targetY, Point loc, int gridIndex) {
 		if(gridIndex>=gridSize)
 			gridIndex=gridSize-1;
 		if(gridIndex<0)return;

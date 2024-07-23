@@ -19,20 +19,20 @@
 
 package com.teammoeg.frostedheart.client.particles;
 
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
-import net.minecraft.client.particle.IParticleRenderType;
-import net.minecraft.client.particle.SpriteTexturedParticle;
-import net.minecraft.client.renderer.ActiveRenderInfo;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.client.particle.TextureSheetParticle;
+import net.minecraft.client.Camera;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.util.Mth;
 
 /**
  * A particle that simulates the behavior of a gas.
  * <p>
  * For example, steam, smoke, or any other gas-like particle.
  */
-public class GasParticle extends SpriteTexturedParticle {
+public class GasParticle extends TextureSheetParticle {
     /** The original scale of the particle. Default: 1.0F */
     protected float initialScale;
     /** The scaling increase per tick. Default  */
@@ -50,7 +50,7 @@ public class GasParticle extends SpriteTexturedParticle {
     protected static final double DENSITY_TEMPERATURE_SENSITIVITY = 0.001; // Unit is K^-1
 
 
-    public GasParticle(ClientWorld world, double x, double y, double z, double motionX, double motionY, double motionZ) {
+    public GasParticle(ClientLevel world, double x, double y, double z, double motionX, double motionY, double motionZ) {
         super(world, x, y, z, motionX, motionY, motionZ);
         this.initialScale = 1.0F;
         this.scaleSpeed = 0.02F;
@@ -72,16 +72,16 @@ public class GasParticle extends SpriteTexturedParticle {
         return (float) (GRAVITY_ACC * (AIR_DENSITY - 2 * effectiveDensity) / effectiveDensity) / 400;
     }
 
-    public IParticleRenderType getRenderType() {
-        return IParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
+    public ParticleRenderType getRenderType() {
+        return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
     }
 
     @Override
-    public void render(IVertexBuilder worldRendererIn, ActiveRenderInfo entityIn, float pt) {
+    public void render(VertexConsumer worldRendererIn, Camera entityIn, float pt) {
         // simulate age-based particle scaling and alpha decay
-        float ageFraction = MathHelper.clamp((this.age + pt) / lifetime, 0.0F, 1.0F);
+        float ageFraction = Mth.clamp((this.age + pt) / lifetime, 0.0F, 1.0F);
         // the particle will fade out as it ages
-        super.alpha = MathHelper.clamp(1 - ageFraction, 0.0F, 1.0F);
+        super.alpha = Mth.clamp(1 - ageFraction, 0.0F, 1.0F);
         // the particle will grow as it ages
         super.quadSize = initialScale * (1 + (this.age + pt) * scaleSpeed);
         super.render(worldRendererIn, entityIn, pt);

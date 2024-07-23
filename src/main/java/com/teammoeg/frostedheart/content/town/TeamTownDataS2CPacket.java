@@ -28,18 +28,18 @@ import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.util.io.codec.DataOps;
 import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class TeamTownDataS2CPacket implements FHMessage {
 	Object data;
 
-    public TeamTownDataS2CPacket(PlayerEntity player) {
+    public TeamTownDataS2CPacket(Player player) {
     	this(FHTeamDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA));
     }
 
-	public TeamTownDataS2CPacket(PacketBuffer buffer) {
+	public TeamTownDataS2CPacket(FriendlyByteBuf buffer) {
 		data=ObjectWriter.readObject(buffer);
 	}
 
@@ -53,7 +53,7 @@ public class TeamTownDataS2CPacket implements FHMessage {
     }
 
 	@Override
-	public void encode(PacketBuffer buffer) {
+	public void encode(FriendlyByteBuf buffer) {
 		ObjectWriter.writeObject(buffer, data);
 	}
 }

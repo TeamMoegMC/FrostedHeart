@@ -27,24 +27,24 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.UseAction;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceContext.FluidMode;
-import net.minecraft.util.math.RayTraceResult.Type;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.level.ClipContext.Fluid;
+import net.minecraft.world.phys.HitResult.Type;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.Level;
 
-import net.minecraft.item.Item.Properties;
+import net.minecraft.world.item.Item.Properties;
 
 public class RubbingTool extends FHBaseItem {
 
@@ -79,19 +79,19 @@ public class RubbingTool extends FHBaseItem {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
         if (hasResearch(stack)) {
             Research rs = FHResearch.getResearch(getResearch(stack)).get();
             if (rs != null)
-                tooltip.add(TranslateUtils.translateTooltip("rubbing.current", rs.getName()).withStyle(TextFormatting.GOLD));
+                tooltip.add(TranslateUtils.translateTooltip("rubbing.current", rs.getName()).withStyle(ChatFormatting.GOLD));
             else
-                tooltip.add(TranslateUtils.translateTooltip("rubbing.current.empty").withStyle(TextFormatting.GRAY));
+                tooltip.add(TranslateUtils.translateTooltip("rubbing.current.empty").withStyle(ChatFormatting.GRAY));
         } else
-            tooltip.add(TranslateUtils.translateTooltip("rubbing.current.empty").withStyle(TextFormatting.GRAY));
+            tooltip.add(TranslateUtils.translateTooltip("rubbing.current.empty").withStyle(ChatFormatting.GRAY));
         int points = getPoint(stack);
         if (points > 0) {
             tooltip.add(TranslateUtils.translateTooltip("rubbing.points", points));
-            tooltip.add(TranslateUtils.translateTooltip("rubbing.points.hint").withStyle(TextFormatting.YELLOW));
+            tooltip.add(TranslateUtils.translateTooltip("rubbing.points.hint").withStyle(ChatFormatting.YELLOW));
         }
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
@@ -101,8 +101,8 @@ public class RubbingTool extends FHBaseItem {
      * returns the action that specifies what animation to play when the items is being used
      */
     @Override
-    public UseAction getUseAnimation(ItemStack stack) {
-        return UseAction.BLOCK;
+    public UseAnim getUseAnimation(ItemStack stack) {
+        return UseAnim.BLOCK;
     }
 
     @Override
@@ -111,22 +111,22 @@ public class RubbingTool extends FHBaseItem {
     }
 
     @Override
-    public ActionResult<ItemStack> use(World worldIn, PlayerEntity playerIn, Hand handIn) {
+    public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
         playerIn.startUsingItem(handIn);
-        return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getItemInHand(handIn));
+        return new InteractionResultHolder<>(InteractionResult.SUCCESS, playerIn.getItemInHand(handIn));
     }
 
     @Override
-    public ItemStack finishUsingItem(ItemStack stack, World worldIn, LivingEntity entityLiving) {
+    public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
         if (worldIn.isClientSide) return stack;
         if (stack.getDamageValue() >= stack.getMaxDamage()) return stack;
         if (!hasResearch(stack)) return stack;
-        PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
-        if (entityplayer instanceof ServerPlayerEntity) {
-            BlockRayTraceResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, FluidMode.NONE);
+        Player entityplayer = entityLiving instanceof Player ? (Player) entityLiving : null;
+        if (entityplayer instanceof ServerPlayer) {
+            BlockHitResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, Fluid.NONE);
             if (brtr.getType() == Type.MISS) return stack;
 
-            TileEntity te = Utils.getExistingTileEntity(worldIn, brtr.getBlockPos());
+            BlockEntity te = Utils.getExistingTileEntity(worldIn, brtr.getBlockPos());
             if (te instanceof MechCalcTileEntity) {
                 MechCalcTileEntity mcte = (MechCalcTileEntity) te;
                 int crp = mcte.currentPoints;

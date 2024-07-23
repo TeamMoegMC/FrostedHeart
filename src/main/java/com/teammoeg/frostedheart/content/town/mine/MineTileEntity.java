@@ -6,9 +6,9 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.util.Constants;
 
 import java.util.*;
@@ -85,8 +85,8 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
     }
 
     @Override
-    public CompoundNBT getWorkData() {
-        CompoundNBT nbt = getBasicWorkData();
+    public CompoundTag getWorkData() {
+        CompoundTag nbt = getBasicWorkData();
         nbt.putBoolean("hasLinkedBase", this.hasLinkedBase);
         if(this.hasLinkedBase){
             nbt.putLong("linkedBasePos", this.linkedBasePos.asLong());
@@ -95,9 +95,9 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
         if(this.isValid()){
             nbt.putDouble("temperature", this.temperature);
             nbt.putDouble("rating", this.rating);
-            ListNBT list = new ListNBT();
+            ListTag list = new ListTag();
             this.resources.forEach((type, amount) -> {
-                CompoundNBT nbt_1 = new CompoundNBT();
+                CompoundTag nbt_1 = new CompoundTag();
                 nbt_1.putString("type", type.getKey());
                 nbt_1.putDouble("amount", amount);
                 list.add(nbt_1);
@@ -108,7 +108,7 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
     }
 
     @Override
-    public void setWorkData(CompoundNBT data) {
+    public void setWorkData(CompoundTag data) {
         this.setBasicWorkData(data);
         this.hasLinkedBase = data.getBoolean("hasLinkedBase");
         if(this.hasLinkedBase){
@@ -118,10 +118,10 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
 
         if(this.isValid()){
             this.rating = data.getDouble("rating");
-            ListNBT list = data.getList("resources", Constants.NBT.TAG_COMPOUND);
+            ListTag list = data.getList("resources", Constants.NBT.TAG_COMPOUND);
             this.resources = new EnumMap<>(TownResourceType.class);
             list.forEach(nbt -> {
-                CompoundNBT nbt_1 = (CompoundNBT) nbt;
+                CompoundTag nbt_1 = (CompoundTag) nbt;
                 String key = nbt_1.getString("type");
                 double amount = nbt_1.getDouble("amount");
                 this.resources.put(TownResourceType.from(key), amount);
@@ -171,12 +171,12 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT compoundNBT, boolean b) {
+    public void readCustomNBT(CompoundTag compoundNBT, boolean b) {
 
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT compoundNBT, boolean b) {
+    public void writeCustomNBT(CompoundTag compoundNBT, boolean b) {
 
     }
 }

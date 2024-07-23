@@ -31,7 +31,7 @@ import com.simibubi.create.content.contraptions.components.structureMovement.bea
 import com.simibubi.create.content.contraptions.components.structureMovement.bearing.MechanicalBearingTileEntity;
 import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
 
-import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 
 @Mixin(MechanicalBearingTileEntity.class)
 public abstract class MixinMechanicalBearingTileEntity extends GeneratingKineticTileEntity
@@ -40,7 +40,7 @@ public abstract class MixinMechanicalBearingTileEntity extends GeneratingKinetic
     protected ControlledContraptionEntity movedContraption;
 
     private int fh$cooldown;
-    public MixinMechanicalBearingTileEntity(TileEntityType<?> typeIn) {
+    public MixinMechanicalBearingTileEntity(BlockEntityType<?> typeIn) {
         super(typeIn);
     }
 

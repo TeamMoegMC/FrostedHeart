@@ -35,8 +35,8 @@ import com.teammoeg.frostedheart.util.mixin.FTBFixUtils;
 import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.data.ClientTeamManager;
 import dev.ftb.mods.ftbteams.data.KnownClientPlayer;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.FriendlyByteBuf;
 
 @Mixin(ClientTeamManager.class)
 public abstract class ClientTeamManagerMixin {
@@ -53,7 +53,7 @@ public abstract class ClientTeamManagerMixin {
      * @author khjxiaogu
      */
     @Overwrite(remap = false)
-    public void write(PacketBuffer buffer, long now) {
+    public void write(FriendlyByteBuf buffer, long now) {
         buffer.writeUUID(getId());
         UUID puuid = FTBFixUtils.networkPlayer.getUUID();
         Set<ClientTeam> tosendteam = new HashSet<>();
@@ -70,7 +70,7 @@ public abstract class ClientTeamManagerMixin {
                 }
             }
         }
-        for (ServerPlayerEntity p : FHTeamDataManager.getServer().getPlayerList().getPlayers()) {
+        for (ServerPlayer p : FHTeamDataManager.getServer().getPlayerList().getPlayers()) {
             KnownClientPlayer kcp = knownPlayers.get(p.getUUID());
             if (kcp != null)
                 tosendplayer.add(kcp);

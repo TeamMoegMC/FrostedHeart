@@ -24,28 +24,28 @@ import java.util.Random;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.loot.LootTables;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.LockableLootTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.gen.feature.structure.IStructurePieceType;
-import net.minecraft.world.gen.feature.structure.IglooPieces;
-import net.minecraft.world.gen.feature.structure.TemplateStructurePiece;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.storage.loot.BuiltInLootTables;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.levelgen.feature.StructurePieceType;
+import net.minecraft.world.level.levelgen.structure.IglooPieces;
+import net.minecraft.world.level.levelgen.structure.TemplateStructurePiece;
 /**
  * Replace chest to stone ones
  * */
-@Mixin(IglooPieces.Piece.class)
+@Mixin(IglooPieces.IglooPiece.class)
 public abstract class MixinIglooPiece extends TemplateStructurePiece {
 
-    public MixinIglooPiece(IStructurePieceType structurePieceTypeIn, CompoundNBT nbt) {
+    public MixinIglooPiece(StructurePieceType structurePieceTypeIn, CompoundTag nbt) {
         super(structurePieceTypeIn, nbt);
     }
 
-    public MixinIglooPiece(IStructurePieceType structurePieceTypeIn, int componentTypeIn) {
+    public MixinIglooPiece(StructurePieceType structurePieceTypeIn, int componentTypeIn) {
         super(structurePieceTypeIn, componentTypeIn);
     }
 
@@ -54,12 +54,12 @@ public abstract class MixinIglooPiece extends TemplateStructurePiece {
      * @reason fix chest type to fit our structure system
      */
     @Overwrite
-    protected void handleDataMarker(String function, BlockPos pos, IServerWorld worldIn, Random rand, MutableBoundingBox sbb) {
+    protected void handleDataMarker(String function, BlockPos pos, ServerLevelAccessor worldIn, Random rand, BoundingBox sbb) {
         if ("chest".equals(function)) {
             worldIn.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
-            TileEntity tileentity = worldIn.getBlockEntity(pos.below());
-            if (tileentity instanceof LockableLootTileEntity) {
-                ((LockableLootTileEntity) tileentity).setLootTable(LootTables.IGLOO_CHEST, rand.nextLong());
+            BlockEntity tileentity = worldIn.getBlockEntity(pos.below());
+            if (tileentity instanceof RandomizableContainerBlockEntity) {
+                ((RandomizableContainerBlockEntity) tileentity).setLootTable(BuiltInLootTables.IGLOO_CHEST, rand.nextLong());
             }
 
         }

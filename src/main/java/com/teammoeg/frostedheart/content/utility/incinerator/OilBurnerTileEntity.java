@@ -25,11 +25,11 @@ import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
@@ -38,7 +38,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveState, ITickableTileEntity {
+public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveState, TickableBlockEntity {
     ResourceLocation burnable = new ResourceLocation("frostedheart", "flammable_fluid");
     FluidTank input = new FluidTank(10000, s -> s.getFluid().getTags().contains(burnable));
     int vals;
@@ -57,7 +57,7 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean dp) {
+    public void readCustomNBT(CompoundTag nbt, boolean dp) {
         input.readFromNBT(nbt.getCompound("in"));
         vals = nbt.getInt("burntick");
     }
@@ -110,7 +110,7 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
     @Override
     public void tick() {
         if (this.level != null && !this.level.isClientSide) {
-            TileEntity down = Utils.getExistingTileEntity(level, worldPosition.relative(Direction.DOWN));
+            BlockEntity down = Utils.getExistingTileEntity(level, worldPosition.relative(Direction.DOWN));
             if (down != null) {
                 LazyOptional<IFluidHandler> cap = down.getCapability(ForgeCapabilities.FLUID_HANDLER, Direction.UP);
                 if (cap.isPresent()) {
@@ -151,8 +151,8 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean dp) {
-        nbt.put("in", input.writeToNBT(new CompoundNBT()));
+    public void writeCustomNBT(CompoundTag nbt, boolean dp) {
+        nbt.put("in", input.writeToNBT(new CompoundTag()));
         nbt.putInt("burntick", vals);
     }
 }

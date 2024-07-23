@@ -2,13 +2,13 @@ package com.teammoeg.frostedheart.base.capability.nbt;
 
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class FHNBTCapabilityProvider<C extends NBTSerializable> implements ICapabilitySerializable<CompoundNBT>{
+public class FHNBTCapabilityProvider<C extends NBTSerializable> implements ICapabilitySerializable<CompoundTag>{
 	LazyOptional<C> lazyCap;
 	FHNBTCapability<C> capability;
 	public FHNBTCapabilityProvider(FHNBTCapability<C> capability) {
@@ -26,12 +26,12 @@ public class FHNBTCapabilityProvider<C extends NBTSerializable> implements ICapa
 	}
 
 	@Override
-	public CompoundNBT serializeNBT() {
-		return lazyCap.map(NBTSerializable::serializeNBT).orElseGet(CompoundNBT::new);
+	public CompoundTag serializeNBT() {
+		return lazyCap.map(NBTSerializable::serializeNBT).orElseGet(CompoundTag::new);
 	}
 
 	@Override
-	public void deserializeNBT(CompoundNBT nbt) {
+	public void deserializeNBT(CompoundTag nbt) {
 		lazyCap.ifPresent(c->c.deserializeNBT(nbt));
 	}
 

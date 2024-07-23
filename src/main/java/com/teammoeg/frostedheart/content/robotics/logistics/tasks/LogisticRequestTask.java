@@ -2,16 +2,16 @@ package com.teammoeg.frostedheart.content.robotics.logistics.tasks;
 
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class LogisticRequestTask implements LogisticTask {
 	ItemStack filter;
 	int size;
 	boolean fetchNBT;
-	TileEntity storage;
+	BlockEntity storage;
 
-	public LogisticRequestTask(ItemStack filter, int size, boolean fetchNBT, TileEntity storage) {
+	public LogisticRequestTask(ItemStack filter, int size, boolean fetchNBT, BlockEntity storage) {
 		super();
 		this.filter = filter;
 		this.size = size;

@@ -23,7 +23,7 @@ import com.teammoeg.frostedheart.FHMain;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 public class TradeIcons {
     public static final ImageIcon ALL = (ImageIcon) Icon

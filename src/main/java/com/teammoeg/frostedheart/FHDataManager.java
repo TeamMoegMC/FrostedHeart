@@ -51,18 +51,18 @@ import com.teammoeg.frostedheart.util.mixin.StructureUtils;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import net.minecraft.block.Block;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.resources.IResource;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.resources.IResourceManagerReloadListener;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraftforge.fluids.FluidStack;
 
-public class FHDataManager implements IResourceManagerReloadListener {
+public class FHDataManager implements ResourceManagerReloadListener {
 	public static class ResourceMap<T> extends HashMap<ResourceLocation, T> {
 		private static final long serialVersionUID = 1564047056157250446L;
 		public ResourceMap() {
@@ -103,12 +103,12 @@ public class FHDataManager implements IResourceManagerReloadListener {
 			return codec.decode(JsonOps.INSTANCE, jo).result().map(t -> t.getFirst()).orElse(null);
 		}
 
-		public void write(IdDataPair<T> obj, PacketBuffer pb) {
+		public void write(IdDataPair<T> obj, FriendlyByteBuf pb) {
 
 			CodecUtil.writeCodec(pb, codec, obj);
 		};
 
-		public IdDataPair<T> read(PacketBuffer pb) {
+		public IdDataPair<T> read(FriendlyByteBuf pb) {
 			return CodecUtil.readCodec(pb, codec);
 		};
 
@@ -135,7 +135,7 @@ public class FHDataManager implements IResourceManagerReloadListener {
 		// nbt=FHDataType.Armor.type.codec.encodeStart(DataOps.COMPRESSED,(DataReference<Object>)FHDataType.Armor.type.create(new
 		// JsonParser().parse("{\"id\":\"abc:def\",\"factor\":12}"))).result().orElse(null);
 		ByteBuf bb = ByteBufAllocator.DEFAULT.buffer(256);
-		PacketBuffer pb = new PacketBuffer(bb);
+		FriendlyByteBuf pb = new FriendlyByteBuf(bb);
 		Armor.write(Armor.create(new JsonParser().parse("{\"id\":\"abc:def\",\"factor\":12}")), pb);
 		System.out.println(bb.writerIndex());
 		bb.resetReaderIndex();
@@ -209,7 +209,7 @@ public class FHDataManager implements IResourceManagerReloadListener {
 		return foodData.get(RegistryUtils.getRegistryName(is.getItem()));
 	}
 
-	public static Float getWorldTemp(World w) {
+	public static Float getWorldTemp(Level w) {
 		WorldTempData data = FHDataManager.get(World).get(w.dimension().location());
 		if (data != null)
 			return data.getTemp();
@@ -250,14 +250,14 @@ public class FHDataManager implements IResourceManagerReloadListener {
 	private static final JsonParser parser = new JsonParser();
 
 	@Override
-	public void onResourceManagerReload(IResourceManager manager) {
+	public void onResourceManagerReload(ResourceManager manager) {
 		FHDataManager.reset();
 		StructureUtils.addBanedBlocks();
 		WorldTemperature.clear();
 		for (DataType<?> dat : DataType.types) {
 			for (ResourceLocation rl : manager.listResources(dat.getLocation(), (s) -> s.endsWith(".json"))) {
 				try (
-					IResource rc = manager.getResource(rl);
+					Resource rc = manager.getResource(rl);
 					InputStream stream = rc.getInputStream();
 					InputStreamReader reader = new InputStreamReader(stream)){
 					JsonObject object = parser.parse(reader).getAsJsonObject();

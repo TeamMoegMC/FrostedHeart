@@ -42,34 +42,34 @@ import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import net.minecraft.block.Blocks;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.entity.item.TNTEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.ItemStackHelper;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.play.server.SExplosionPacket;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.IIntArray;
-import net.minecraft.util.IntArray;
-import net.minecraft.util.Mirror;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Rotation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.core.Direction;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.core.Vec3i;
 import net.minecraft.world.Explosion;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
@@ -86,9 +86,9 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 	public static final int POWER=3;
 	public static final int TLEVEL=4;
 	public static final int RLEVEL=5;
-    public IIntArray guiData = new IIntArray() {
+    public ContainerData guiData = new ContainerData() {
 
-    	IIntArray base=new IntArray(4);
+    	ContainerData base=new SimpleContainerData(4);
 		@Override
 		public int get(int index) {
 			if(index<base.getCount())
@@ -137,7 +137,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     );
     List<IngredientWithSize> upgrade;
     
-    public MasterGeneratorTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
+    public MasterGeneratorTileEntity(IETemplateMultiblock multiblockInstance, BlockEntityType<T> type, boolean hasRSControl) {
         super(multiblockInstance, type, hasRSControl);
         
 
@@ -154,7 +154,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
     @Override
-    public boolean canUseGui(PlayerEntity player) {
+    public boolean canUseGui(Player player) {
         return formed;
     }
 
@@ -178,8 +178,8 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     @Nonnull
     @Override
-    public VoxelShape getBlockBounds(@Nullable ISelectionContext ctx) {
-        return VoxelShapes.block();
+    public VoxelShape getBlockBounds(@Nullable CollisionContext ctx) {
+        return Shapes.block();
     }
 
     @Nonnull
@@ -264,12 +264,12 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     }
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
-        ItemStackHelper.loadAllItems(nbt, linventory);
+        ContainerHelper.loadAllItems(nbt, linventory);
         hasFuel = nbt.getBoolean("hasFuel");
         isBroken = nbt.getBoolean("isBroken");
-        if(!descPacket&&this.getLevel() instanceof ServerWorld) {
+        if(!descPacket&&this.getLevel() instanceof ServerLevel) {
             Optional<GeneratorData> data = this.getData();
             data.ifPresent(t -> {
                 this.isOverdrive=t.isOverdrive;
@@ -286,7 +286,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         this.markContainingBlockForUpdate(null);
         return true;
     }
-    public void onUpgradeMaintainClicked(ServerPlayerEntity player) {
+    public void onUpgradeMaintainClicked(ServerPlayer player) {
     	if(isBroken) {
     		repairStructure(player);
     	} else {
@@ -312,11 +312,11 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	IETemplateMultiblock ietm=getNextLevelMultiblock();
     	if(ietm==null)
     		return false;
-    	Vector3i csize=this.multiblockInstance.getSize(level);
-    	Vector3i nsize=ietm.getSize(level);
+    	Vec3i csize=this.multiblockInstance.getSize(level);
+    	Vec3i nsize=ietm.getSize(level);
     	BlockPos masterOffset=ietm.getMasterFromOriginOffset().subtract(this.multiblockInstance.getMasterFromOriginOffset());
     	BlockPos negMasterOffset=this.multiblockInstance.getMasterFromOriginOffset().subtract(ietm.getMasterFromOriginOffset());
-    	AxisAlignedBB aabb=new AxisAlignedBB(masterOffset,masterOffset.offset(csize));
+    	AABB aabb=new AABB(masterOffset,masterOffset.offset(csize));
     	
     	for(int x=0;x<nsize.getX();x++) {
     		for(int y=0;y<nsize.getY();y++) {
@@ -333,7 +333,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	}
     	return true;
     }
-    public void upgradeStructure(ServerPlayerEntity entityplayer) {
+    public void upgradeStructure(ServerPlayer entityplayer) {
     	if(!isValidStructure())
     		return;
     	if(!ResearchListeners.hasMultiblock(getOwner(), getNextLevelMultiblock()))
@@ -346,7 +346,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         ((MultiBlockAccess) getNextLevelMultiblock()).callForm(level, getBlockPosForPos(negMasterOffset), rot, Mirror.NONE, getFacing());
 
     }
-    public void repairStructure(ServerPlayerEntity entityplayer) {
+    public void repairStructure(ServerPlayer entityplayer) {
     	if(!isBroken)
     		return;
     	if(!FHUtils.costItems(entityplayer, getRepairCost()))
@@ -356,7 +356,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     }
     @Override
-    public void receiveMessageFromClient(CompoundNBT message) {
+    public void receiveMessageFromClient(CompoundTag message) {
         super.receiveMessageFromClient(message);
         if (message.contains("isWorking", Constants.NBT.TAG_BYTE))
             setWorking(message.getBoolean("isWorking"));
@@ -442,9 +442,9 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 	        			new BlockPos(level.random.nextInt(multiblockInstance.getSize(level).getX()),
 	        						level.random.nextInt(multiblockInstance.getSize(level).getY()),
 	        						level.random.nextInt(multiblockInstance.getSize(level).getZ())));
-	            for(PlayerEntity serverplayerentity : this.level.players()) {
+	            for(Player serverplayerentity : this.level.players()) {
 	                if (serverplayerentity.blockPosition().distSqr(pos) < 4096.0D) {
-	                   ((ServerPlayerEntity)serverplayerentity).connection.send(new SExplosionPacket(pos.getX(), pos.getY(), pos.getZ(), 8, Arrays.asList(), null));
+	                   ((ServerPlayer)serverplayerentity).connection.send(new ClientboundExplodePacket(pos.getX(), pos.getY(), pos.getZ(), 8, Arrays.asList(), null));
 	                }
 	             }
         	}
@@ -466,10 +466,10 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
         if(!this.isDummy()||descPacket) {
-	        ItemStackHelper.saveAllItems(nbt, linventory);
+	        ContainerHelper.saveAllItems(nbt, linventory);
 	        nbt.putBoolean("hasFuel", hasFuel);
 	        nbt.putBoolean("isBroken", isBroken);
         }
@@ -478,15 +478,15 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     @Override
     public int getLowerBound() {
-        return MathHelper.ceil(getRangeLevel()*2+1);
+        return Mth.ceil(getRangeLevel()*2+1);
     }
 
     @Override
     public int getUpperBound() {
-        return MathHelper.ceil(getRangeLevel() * 4+1);
+        return Mth.ceil(getRangeLevel() * 4+1);
     }
 	@Override
-	protected void callBlockConsumerWithTypeCheck(Consumer<T> consumer, TileEntity te) {
+	protected void callBlockConsumerWithTypeCheck(Consumer<T> consumer, BlockEntity te) {
 	}
 
 	@Override

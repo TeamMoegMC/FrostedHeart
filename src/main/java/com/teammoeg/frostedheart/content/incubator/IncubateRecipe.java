@@ -33,15 +33,15 @@ import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.IItemProvider;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.ItemLike;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.RegistryObject;
 
@@ -54,13 +54,13 @@ public class IncubateRecipe extends IESerializableRecipe {
 
         @Nullable
         @Override
-        public IncubateRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+        public IncubateRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
             return new IncubateRecipe(recipeId, IngredientWithSize.read(buffer), SerializeUtil.readOptional(buffer, IngredientWithSize::read).orElse(null), buffer.readItem(), buffer.readFluidStack(), buffer.readBoolean(), buffer.readVarInt(), buffer.readVarInt());
         }
 
         @Override
         public IncubateRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            IngredientWithSize input = IngredientWithSize.deserialize(JSONUtils.getAsJsonObject(json, "input"));
+            IngredientWithSize input = IngredientWithSize.deserialize(GsonHelper.getAsJsonObject(json, "input"));
             ItemStack output = ItemStack.EMPTY;
             if (json.has("output"))
                 output = readOutput(json.get("output"));
@@ -84,7 +84,7 @@ public class IncubateRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public void toNetwork(PacketBuffer buffer, IncubateRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buffer, IncubateRecipe recipe) {
             recipe.input.write(buffer);
             SerializeUtil.writeOptional(buffer, recipe.catalyst, IngredientWithSize::write);
 
@@ -95,7 +95,7 @@ public class IncubateRecipe extends IESerializableRecipe {
             buffer.writeVarInt(recipe.time);
         }
     }
-    public static IRecipeType<IncubateRecipe> TYPE;
+    public static RecipeType<IncubateRecipe> TYPE;
 
     public static RegistryObject<Serializer> SERIALIZER;
     public IngredientWithSize input;
@@ -115,13 +115,13 @@ public class IncubateRecipe extends IESerializableRecipe {
     public IncubateRecipe() {
         super(ItemStack.EMPTY, TYPE, IncubatorTileEntity.food);
         isFood = true;
-        List<IItemProvider> items = new ArrayList<>();
+        List<ItemLike> items = new ArrayList<>();
         for (Item i : RegistryUtils.getItems()) {
             if (i.isEdible())
                 items.add(i);
         }
 
-        this.input = new IngredientWithSize(Ingredient.of(items.toArray(new IItemProvider[0])), 1);
+        this.input = new IngredientWithSize(Ingredient.of(items.toArray(new ItemLike[0])), 1);
         this.catalyst = IngredientWithSize.of(new ItemStack(Items.ROTTEN_FLESH));
         this.output = ItemStack.EMPTY;
         this.output_fluid = new FluidStack(IncubatorTileEntity.getProtein(), 25);

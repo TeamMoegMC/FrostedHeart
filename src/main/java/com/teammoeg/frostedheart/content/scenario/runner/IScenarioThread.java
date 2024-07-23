@@ -6,7 +6,7 @@ import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.content.scenario.runner.target.IScenarioTarget;
 
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 
 public interface IScenarioThread {
 	void setScenario(Scenario s);
@@ -18,7 +18,7 @@ public interface IScenarioThread {
 	void queue(IScenarioTarget t);
 	void jump(IScenarioTarget acttrigger);
 	RunStatus getStatus();
-	PlayerEntity getPlayer();
+	Player getPlayer();
 	void setStatus(RunStatus waitclient);
 	Collection<? extends ExecuteStackElement> getCallStack();
 }

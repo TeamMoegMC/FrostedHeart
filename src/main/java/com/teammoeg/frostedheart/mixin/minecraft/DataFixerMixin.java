@@ -26,9 +26,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import com.mojang.datafixers.DataFixerBuilder;
 import com.teammoeg.frostedheart.util.mixin.LazyDataFixerBuilder;
 
-import net.minecraft.util.datafix.DataFixesManager;
+import net.minecraft.util.datafix.DataFixers;
 
-@Mixin({DataFixesManager.class})
+@Mixin({DataFixers.class})
 public class DataFixerMixin {
 
     @Redirect(method = "createFixer", at = @At(value = "NEW", target = "com/mojang/datafixers/DataFixerBuilder", remap = false))

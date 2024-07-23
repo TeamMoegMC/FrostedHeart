@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.tips.client.util;
 
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 
 import java.util.HashMap;
 import java.util.Map;

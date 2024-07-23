@@ -26,11 +26,11 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.gen.feature.template.Template;
-import net.minecraft.world.gen.feature.template.Template.BlockInfo;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 
 public class StructureUtils {
     static List<Block> baned = new ArrayList<>();
@@ -53,14 +53,14 @@ public class StructureUtils {
         return b;
     }
 
-    public static void handlePalette(List<Template.Palette> p) {
+    public static void handlePalette(List<StructureTemplate.Palette> p) {
 
         p.forEach(q -> q.blocks().replaceAll(r -> {
 
             if (baned.contains(r.state.getBlock())) {
-                return new BlockInfo(r.pos, Blocks.AIR.defaultBlockState(), null);
+                return new StructureBlockInfo(r.pos, Blocks.AIR.defaultBlockState(), null);
             } else if (remap.containsKey(r.state.getBlock())) {
-                return new BlockInfo(r.pos, remap.get(r.state.getBlock()).defaultBlockState(), r.nbt);
+                return new StructureBlockInfo(r.pos, remap.get(r.state.getBlock()).defaultBlockState(), r.nbt);
             }
             return r;
         }));

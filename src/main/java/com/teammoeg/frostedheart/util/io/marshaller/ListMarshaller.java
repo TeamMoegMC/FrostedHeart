@@ -2,8 +2,8 @@ package com.teammoeg.frostedheart.util.io.marshaller;
 
 import java.util.function.Function;
 
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.ListTag;
 
 public class ListMarshaller<T> implements Marshaller {
 	private final Class<T> elmType;
@@ -19,8 +19,8 @@ public class ListMarshaller<T> implements Marshaller {
 	}
 
 	@Override
-	public INBT toNBT(Object o) {
-		ListNBT nbt=new ListNBT();
+	public Tag toNBT(Object o) {
+		ListTag nbt=new ListTag();
 		IList<T> list=wrapper.apply(o);
 		for(int i=0;i<list.size();i++) {
 			nbt.add(MarshallUtil.serialize(list.get(i)));
@@ -29,11 +29,11 @@ public class ListMarshaller<T> implements Marshaller {
 	}
 
 	@Override
-	public Object fromNBT(INBT nbt) {
+	public Object fromNBT(Tag nbt) {
 		
-		if(nbt instanceof ListNBT) {
-			IList<T> list=factory.apply(((ListNBT)nbt).size());
-			for(INBT n:(ListNBT)nbt) {
+		if(nbt instanceof ListTag) {
+			IList<T> list=factory.apply(((ListTag)nbt).size());
+			for(Tag n:(ListTag)nbt) {
 				list.add(MarshallUtil.deserialize(elmType, n));
 			}
 			return list.getInstance();

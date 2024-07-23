@@ -2,17 +2,17 @@ package com.teammoeg.frostedheart.util;
 
 import java.util.Collection;
 
-import net.minecraft.block.Block;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.merchant.villager.VillagerProfession;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.Item;
-import net.minecraft.potion.Effect;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.feature.NoFeatureConfig;
-import net.minecraft.world.gen.feature.structure.Structure;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class RegistryUtils {
@@ -36,10 +36,10 @@ public class RegistryUtils {
 			new IllegalStateException("Item: " + rl + " does not exist");
 		return ForgeRegistries.ITEMS.getValue(rl);
 	}
-	public static Effect getEffect(ResourceLocation rl) {
+	public static MobEffect getEffect(ResourceLocation rl) {
 		return ForgeRegistries.POTIONS.getValue(rl);
 	}
-	public static ResourceLocation getRegistryName(Structure<NoFeatureConfig> observatory) {
+	public static ResourceLocation getRegistryName(StructureFeature<NoneFeatureConfiguration> observatory) {
 		return observatory.getRegistryName();
 	}
 	public static ResourceLocation getRegistryName(VillagerProfession prof) {

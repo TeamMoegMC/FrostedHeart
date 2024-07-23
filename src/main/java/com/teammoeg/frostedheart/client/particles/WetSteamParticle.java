@@ -22,21 +22,21 @@ package com.teammoeg.frostedheart.client.particles;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 import net.minecraft.client.particle.*;
 import net.minecraft.client.renderer.ActiveRenderInfo;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.particles.BasicParticleType;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.util.math.MathHelper;
 
-public class WetSteamParticle extends SpriteTexturedParticle {
+public class WetSteamParticle extends TextureSheetParticle {
 
-    public static class Factory implements IParticleFactory<BasicParticleType> {
-        private final IAnimatedSprite spriteSet;
+    public static class Factory implements ParticleProvider<SimpleParticleType> {
+        private final SpriteSet spriteSet;
 
-        public Factory(IAnimatedSprite spriteSet) {
+        public Factory(SpriteSet spriteSet) {
             this.spriteSet = spriteSet;
         }
 
         @Override
-        public Particle createParticle(BasicParticleType typeIn, ClientWorld worldIn, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+        public Particle createParticle(SimpleParticleType typeIn, ClientLevel worldIn, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
             WetSteamParticle steamParticle = new WetSteamParticle(worldIn, x, y, z, xSpeed, ySpeed, zSpeed);
             steamParticle.pickSprite(this.spriteSet);
             return steamParticle;
@@ -44,7 +44,7 @@ public class WetSteamParticle extends SpriteTexturedParticle {
     }
 
     // The motion is the distance we want the particle to move
-    public WetSteamParticle(ClientWorld world, double x, double y, double z, double distanceX, double distanceY, double distanceZ) {
+    public WetSteamParticle(ClientLevel world, double x, double y, double z, double distanceX, double distanceY, double distanceZ) {
         super(world, x, y, z, 0.0, 0.0, 0.0);
         this.rCol = this.gCol = this.bCol = (float) (Math.random() * 0.15) + 0.7f;
         this.alpha = 0.8f;
@@ -62,8 +62,8 @@ public class WetSteamParticle extends SpriteTexturedParticle {
     }
 
     @Override
-    public IParticleRenderType getRenderType() {
-        return IParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
+    public ParticleRenderType getRenderType() {
+        return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
     }
 
     public void tick() {

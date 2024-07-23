@@ -6,9 +6,9 @@ import java.util.HashSet;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 /**
  * scan air
@@ -17,7 +17,7 @@ import net.minecraft.world.World;
  */
 public class ConfinedSpaceScanner extends BlockScanner {
 
-    public ConfinedSpaceScanner(World world, BlockPos startPos){
+    public ConfinedSpaceScanner(Level world, BlockPos startPos){
         super(world, startPos);
     }
 

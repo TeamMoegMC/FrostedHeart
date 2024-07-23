@@ -6,10 +6,10 @@ import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.awt.geom.AffineTransform;
 
-import net.minecraft.util.ICharacterConsumer;
-import net.minecraft.util.text.Style;
+import net.minecraft.util.FormattedCharSink;
+import net.minecraft.network.chat.Style;
 
-public class GraphicGlyphRenderer implements ICharacterConsumer{
+public class GraphicGlyphRenderer implements FormattedCharSink{
 	Graphics2D g2d;
 	int x;
 	public GraphicGlyphRenderer(Graphics2D g2d, int x, int y, int size, boolean shadow) {

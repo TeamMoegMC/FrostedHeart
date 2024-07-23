@@ -2,8 +2,8 @@ package com.teammoeg.frostedheart.content.scenario.client;
 
 import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
 
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.Style;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 
 public interface IClientScene {
 
@@ -21,7 +21,7 @@ public interface IClientScene {
 
 	void setText(String txt);
 
-	void processClient(ITextComponent item, boolean isReline, boolean isNowait);
+	void processClient(Component item, boolean isReline, boolean isNowait);
 
 	void process(String text, boolean isReline, boolean isNowait, boolean resetScene, RunStatus status);
 

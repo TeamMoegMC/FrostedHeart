@@ -24,13 +24,13 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FHClientReadyPacket implements FHMessage {
     String lang;
 
-    public FHClientReadyPacket(PacketBuffer buffer) {
+    public FHClientReadyPacket(FriendlyByteBuf buffer) {
         lang = buffer.readUtf();
     }
 
@@ -41,7 +41,7 @@ public class FHClientReadyPacket implements FHMessage {
     }
 
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeUtf(lang);
     }
 

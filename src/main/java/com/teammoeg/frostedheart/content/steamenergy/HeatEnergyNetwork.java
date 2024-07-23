@@ -37,19 +37,19 @@ import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.INamedContainerProvider;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.Constants;
 
 /**
@@ -57,11 +57,11 @@ import net.minecraftforge.common.util.Constants;
  * <p>
  * Integrated manager for heat providers
  */
-public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializable{
+public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
     private transient int interval = 0;
     private transient Consumer<BiConsumer<BlockPos, Direction>> onConnect;
-    transient World world;
-    transient TileEntity cur;
+    transient Level world;
+    transient BlockEntity cur;
 
     transient PriorityQueue<HeatEndpoint> endpoints=new PriorityQueue<>(Comparator.comparingInt(HeatEndpoint::getPriority).reversed().thenComparing(HeatEndpoint::getDistance));
     public Map<HeatEndpoint,EndPointData> data=new HashMap<>();
@@ -70,7 +70,7 @@ public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializab
     boolean dataModified=true;
 	private boolean isValid = true;
 	@Override
-	public void save(CompoundNBT nbt, boolean isPacket) {
+	public void save(CompoundTag nbt, boolean isPacket) {
 		nbt.put("pipes",
 		SerializeUtil.toNBTList(propagated.entrySet(),(t,p)->p.compound().putLong("pos",t.getKey().asLong()).putInt("len", t.getValue())));
 		nbt.put("endpoints",
@@ -78,24 +78,24 @@ public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializab
 	}
 
 	@Override
-	public void load(CompoundNBT nbt, boolean isPacket) {
+	public void load(CompoundTag nbt, boolean isPacket) {
 		propagated.clear();
-		ListNBT cn=nbt.getList("pipes", Constants.NBT.TAG_COMPOUND);
-		for(INBT ccn:cn) {
-			CompoundNBT ccnbt=((CompoundNBT)ccn);
+		ListTag cn=nbt.getList("pipes", Constants.NBT.TAG_COMPOUND);
+		for(Tag ccn:cn) {
+			CompoundTag ccnbt=((CompoundTag)ccn);
 			propagated.put(BlockPos.of(ccnbt.getLong("pos")), ccnbt.getInt("len"));
 		}
 		epdataset.clear();
-		ListNBT cn2=nbt.getList("endpoints", Constants.NBT.TAG_COMPOUND);
-		for(INBT ccn:cn2) {
-			CompoundNBT ccnbt=((CompoundNBT)ccn);
+		ListTag cn2=nbt.getList("endpoints", Constants.NBT.TAG_COMPOUND);
+		for(Tag ccn:cn2) {
+			CompoundTag ccnbt=((CompoundTag)ccn);
 			epdataset.add(new EndPointData(RegistryUtils.getBlock(new ResourceLocation(ccnbt.getString("blk"))),
 					BlockPos.of(ccnbt.getLong("pos"))));
 		}
 	}
     private BiConsumer<BlockPos, Direction> connect = (pos, d) -> {
     	if(getWorld()!=null) {
-	        TileEntity te = Utils.getExistingTileEntity(getWorld(), pos);
+	        BlockEntity te = Utils.getExistingTileEntity(getWorld(), pos);
 	        if (te instanceof INetworkConsumer)
 	            ((INetworkConsumer) te).tryConnectAt(this,d, 1);
 	        else if(te!=null)
@@ -151,7 +151,7 @@ public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializab
     	
     }
     @Override
-    public Container createMenu(int p1, PlayerInventory p2, PlayerEntity p3) {
+    public AbstractContainerMenu createMenu(int p1, Inventory p2, Player p3) {
         return new HeatStatContainer(p1,p3,this);
     }
     /**
@@ -160,11 +160,11 @@ public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializab
      * @param cur the current tile entity<br>
      * @param con the function that called when refresh is required. Should provide connect direction and location when called.<br>
      */
-    public HeatEnergyNetwork(TileEntity cur, Consumer<BiConsumer<BlockPos, Direction>> con) {
+    public HeatEnergyNetwork(BlockEntity cur, Consumer<BiConsumer<BlockPos, Direction>> con) {
     	this.cur=cur;
         this.onConnect = con;
     }
-    public World getWorld() {
+    public Level getWorld() {
     	if(world==null)
             this.world = cur.getLevel();
     	return world;
@@ -250,7 +250,7 @@ public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializab
     	dataModified=true;
     }
 	@Override
-	public ITextComponent getDisplayName() {
+	public Component getDisplayName() {
 		return TranslateUtils.translateGui("heat_stat");
 	}
 

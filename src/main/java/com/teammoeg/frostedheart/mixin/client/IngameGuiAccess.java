@@ -22,10 +22,10 @@ package com.teammoeg.frostedheart.mixin.client;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-import net.minecraft.client.gui.IngameGui;
-import net.minecraft.item.ItemStack;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.world.item.ItemStack;
 
-@Mixin(IngameGui.class)
+@Mixin(Gui.class)
 public interface IngameGuiAccess {
     @Accessor("highlightingItemStack")
     ItemStack getHighlightingItemStack();

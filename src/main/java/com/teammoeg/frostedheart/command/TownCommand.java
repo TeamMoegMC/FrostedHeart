@@ -32,13 +32,13 @@ import com.teammoeg.frostedheart.content.town.TownResourceType;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 
 public class TownCommand {
-    public static void register(CommandDispatcher<CommandSource> dispatcher) {
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 
-        LiteralArgumentBuilder<CommandSource> name =
+        LiteralArgumentBuilder<CommandSourceStack> name =
                 Commands.literal("name")
                         .executes(ct -> {
                             TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
@@ -46,7 +46,7 @@ public class TownCommand {
                             return Command.SINGLE_SUCCESS;
                         });
 
-        LiteralArgumentBuilder<CommandSource> listResources =
+        LiteralArgumentBuilder<CommandSourceStack> listResources =
                 Commands.literal("list")
                         .executes(ct -> {
                             TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
@@ -54,7 +54,7 @@ public class TownCommand {
                             return Command.SINGLE_SUCCESS;
                         });
 
-        LiteralArgumentBuilder<CommandSource> addResources =
+        LiteralArgumentBuilder<CommandSourceStack> addResources =
                 Commands.literal("add")
                         .then(Commands.argument("type", StringArgumentType.string())
                                 .suggests((ct, s) -> {
@@ -74,7 +74,7 @@ public class TownCommand {
                                 )
                         );
 
-        LiteralArgumentBuilder<CommandSource> listResidents =
+        LiteralArgumentBuilder<CommandSourceStack> listResidents =
                 Commands.literal("list").executes(ct -> {
                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                             int size = town.getResidents().values().size();
@@ -83,7 +83,7 @@ public class TownCommand {
                             return Command.SINGLE_SUCCESS;
                         });
 
-        LiteralArgumentBuilder<CommandSource> addResident =
+        LiteralArgumentBuilder<CommandSourceStack> addResident =
                 Commands.literal("add")
                         .then(Commands.argument("first_name", StringArgumentType.string())
                                 .then(Commands.argument("last_name", StringArgumentType.string()).executes(ct -> {
@@ -94,7 +94,7 @@ public class TownCommand {
                                 }))
                         );
 
-        LiteralArgumentBuilder<CommandSource> listBlocks =
+        LiteralArgumentBuilder<CommandSourceStack> listBlocks =
                 Commands.literal("list").executes(ct -> {
                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                     ct.getSource().sendSuccess(TranslateUtils.str("Total blocks: " + town.getTownBlocks().size()), true);

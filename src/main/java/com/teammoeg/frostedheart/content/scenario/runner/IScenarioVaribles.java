@@ -1,27 +1,27 @@
 package com.teammoeg.frostedheart.content.scenario.runner;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 
 public interface IScenarioVaribles {
 
-	CompoundNBT save();
+	CompoundTag save();
 
-	void load(CompoundNBT data);
+	void load(CompoundTag data);
 
 	void restoreSnapshot();
 
 	boolean containsPath(String path);
 
-	INBT evalPath(String path);
+	Tag evalPath(String path);
 
 	Double evalPathDouble(String path);
 
 	String evalPathString(String path);
 
-	CompoundNBT getExecutionData();
+	CompoundTag getExecutionData();
 
-	void setPath(String path, INBT val);
+	void setPath(String path, Tag val);
 
 	void setPathNumber(String path, Number val);
 

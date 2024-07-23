@@ -22,18 +22,18 @@ package com.teammoeg.frostedheart.mixin.client;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.IngameGui;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.util.Mth;
 import net.minecraftforge.client.gui.ForgeIngameGui;
 
 @Mixin(ForgeIngameGui.class)
-public class ForgeIngameGuiMixin extends IngameGui {
+public class ForgeIngameGuiMixin extends Gui {
 
     public ForgeIngameGuiMixin(Minecraft mcIn) {
         super(mcIn);
@@ -44,8 +44,8 @@ public class ForgeIngameGuiMixin extends IngameGui {
      * @reason change style
      */
     @Overwrite(remap = false)
-    public void renderAir(int width, int height, MatrixStack stack) {
-        PlayerEntity player = FrostedHud.getRenderViewPlayer();
+    public void renderAir(int width, int height, PoseStack stack) {
+        Player player = FrostedHud.getRenderViewPlayer();
         if (player == null) return;
         int x = width / 2;
         FrostedHud.renderAirBar(stack, x, height, minecraft, player);
@@ -56,7 +56,7 @@ public class ForgeIngameGuiMixin extends IngameGui {
      * @reason change text position
      */
     @Overwrite(remap = false)
-    public void renderRecordOverlay(int width, int height, float partialTicks, MatrixStack mStack) {
+    public void renderRecordOverlay(int width, int height, float partialTicks, PoseStack mStack) {
         if (overlayMessageTime > 0) {
             minecraft.getProfiler().push("overlayMessage");
             float hue = overlayMessageTime - partialTicks;
@@ -68,7 +68,7 @@ public class ForgeIngameGuiMixin extends IngameGui {
                 RenderSystem.translatef((float) width / 2, height - 68, 0.0F);
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
-                int color = (animateOverlayMessageColor ? MathHelper.hsvToRgb(hue / 50.0F, 0.7F, 0.6F) & 0xFFFFFF : 0xFFFFFF);
+                int color = (animateOverlayMessageColor ? Mth.hsvToRgb(hue / 50.0F, 0.7F, 0.6F) & 0xFFFFFF : 0xFFFFFF);
                 // original: Minecraft.getInstance().fontRenderer.draw(mStack, overlayMessage.getVisualOrderText(), -Minecraft.getInstance().fontRenderer.getStringPropertyWidth(overlayMessage) / 2, -4, color | (opacity << 24));
                 // new:
                 Minecraft.getInstance().font.draw(mStack, overlayMessageString.getVisualOrderText(), (float) -Minecraft.getInstance().font.width(overlayMessageString) / 2, -15, color | (opacity << 24));

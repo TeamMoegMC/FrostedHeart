@@ -29,9 +29,9 @@ import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseTileEntity;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import net.minecraft.block.Block;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraftforge.common.util.Constants;
 
 import static java.lang.Double.NEGATIVE_INFINITY;
@@ -60,10 +60,10 @@ public enum TownWorkerType {
     WAREHOUSE(FHBlocks.warehouse, null, 0),
     MINE(FHBlocks.mine, (town, workData) -> {
         double rating = workData.getDouble("rating");
-        ListNBT list = workData.getList("resources", Constants.NBT.TAG_COMPOUND);
+        ListTag list = workData.getList("resources", Constants.NBT.TAG_COMPOUND);
         EnumMap<TownResourceType, Double> resources = new EnumMap<>(TownResourceType.class);
         list.forEach(nbt -> {
-            CompoundNBT nbt_1 = (CompoundNBT) nbt;
+            CompoundTag nbt_1 = (CompoundTag) nbt;
             String key = nbt_1.getString("type");
             double amount = nbt_1.getDouble("amount");
             resources.put(TownResourceType.from(key), amount);
@@ -122,7 +122,7 @@ public enum TownWorkerType {
      * 每有一个居民在此工作，优先级应减少1左右，这样可以使居民尽可能均匀地分配在所有工作方块中
      * 当居民数量大于最大居民数时，应该返回Double.NEGATIVE_INFINITY
      */
-    private BiFunction<Integer, CompoundNBT, Double> residentPriorityFunction;
+    private BiFunction<Integer, CompoundTag, Double> residentPriorityFunction;
 
     /**
      * Extra score besides proficiency and health
@@ -150,7 +150,7 @@ public enum TownWorkerType {
     }
 
     //if needsResident is true, residentPriorityFunction must be set
-    TownWorkerType(Supplier<Block> workerBlock, TownWorker worker, int internalPriority, boolean needsResident, BiFunction<Integer, CompoundNBT, Double> residentPriorityFunction, Function<Resident, Double> residentExtraScoreFunction) {
+    TownWorkerType(Supplier<Block> workerBlock, TownWorker worker, int internalPriority, boolean needsResident, BiFunction<Integer, CompoundTag, Double> residentPriorityFunction, Function<Resident, Double> residentExtraScoreFunction) {
         this.block = workerBlock;
         this.worker = worker;
         this.priority = internalPriority;
@@ -189,7 +189,7 @@ public enum TownWorkerType {
      *
      * @param data TownWorkerData中的workData
      */
-    public double getResidentPriority(Integer currentResident, CompoundNBT data) {
+    public double getResidentPriority(Integer currentResident, CompoundTag data) {
         return this.residentPriorityFunction.apply(currentResident, data);
     }
 
@@ -214,7 +214,7 @@ public enum TownWorkerType {
         return needsResident;
     }
 
-    public BiFunction<Integer, CompoundNBT, Double> getResidentPriorityFunction() {
+    public BiFunction<Integer, CompoundTag, Double> getResidentPriorityFunction() {
         if(this.needsResident){
             return residentPriorityFunction;
         } else{

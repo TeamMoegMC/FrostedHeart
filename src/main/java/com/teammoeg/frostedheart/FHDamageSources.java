@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.util.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.damagesource.DamageSource;
 
 public class FHDamageSources {
     public static final DamageSource HYPOTHERMIA = (new DamageSource("hypothermia")).bypassArmor().bypassMagic();

@@ -9,10 +9,10 @@ import com.teammoeg.frostedheart.content.tips.client.util.GuiUtil;
 import com.teammoeg.frostedheart.content.tips.client.util.TipDisplayUtil;
 import com.teammoeg.frostedheart.content.tips.client.waypoint.WaypointManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.ChatScreen;
-import net.minecraft.client.gui.screen.IngameMenuScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.InputMappings;
+import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.gui.screens.PauseScreen;
+import net.minecraft.client.gui.screens.Screen;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -56,7 +56,7 @@ public class RenderHUD {
             TipDisplayUtil.removeCurrent();
             return;
 
-        } else if (!InputMappings.isKeyDown(mc.getWindow().getWindow(), 258) && current instanceof EmptyScreen) {
+        } else if (!InputConstants.isKeyDown(mc.getWindow().getWindow(), 258) && current instanceof EmptyScreen) {
             mc.popGuiLayer();
         }
 
@@ -66,11 +66,11 @@ public class RenderHUD {
     @SubscribeEvent
     public static void renderOnGUI(GuiScreenEvent.DrawScreenEvent.Post event) {
         Screen gui = event.getGui();
-        if (gui instanceof IngameMenuScreen || gui instanceof ChatScreen || gui instanceof EmptyScreen) {
+        if (gui instanceof PauseScreen || gui instanceof ChatScreen || gui instanceof EmptyScreen) {
             int x = mc.getWindow().getGuiScaledWidth()-12;
             int y = mc.getWindow().getGuiScaledHeight()-26;
             if (GuiUtil.renderIconButton(event.getMatrixStack(), IconButton.ICON_HISTORY, GuiUtil.getMouseX(), GuiUtil.getMouseY(), x, y, 0xFFFFFFFF, 0x80000000)) {
-                mc.setScreen(new TipListScreen(gui instanceof IngameMenuScreen));
+                mc.setScreen(new TipListScreen(gui instanceof PauseScreen));
             }
         }
 

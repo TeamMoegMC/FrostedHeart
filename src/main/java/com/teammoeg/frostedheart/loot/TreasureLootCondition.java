@@ -25,14 +25,14 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 
-import net.minecraft.loot.ILootSerializer;
-import net.minecraft.loot.LootConditionType;
-import net.minecraft.loot.LootContext;
-import net.minecraft.loot.LootParameterSets;
-import net.minecraft.loot.conditions.ILootCondition;
+import net.minecraft.world.level.storage.loot.Serializer;
+import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 
-public class TreasureLootCondition implements ILootCondition {
-    public static class Serializer implements ILootSerializer<TreasureLootCondition> {
+public class TreasureLootCondition implements LootItemCondition {
+    public static class Serializer implements Serializer<TreasureLootCondition> {
 
         @Nonnull
         @Override
@@ -45,18 +45,18 @@ public class TreasureLootCondition implements ILootCondition {
         }
     }
 
-    public static LootConditionType TYPE;
+    public static LootItemConditionType TYPE;
 
     public TreasureLootCondition() {
     }
 
     @Override
-    public LootConditionType getType() {
+    public LootItemConditionType getType() {
         return TYPE;
     }
 
     @Override
     public boolean test(LootContext t) {
-        return t.getLootTable(t.getQueriedLootTableId()).getParamSet() == LootParameterSets.CHEST;
+        return t.getLootTable(t.getQueriedLootTableId()).getParamSet() == LootContextParamSets.CHEST;
     }
 }

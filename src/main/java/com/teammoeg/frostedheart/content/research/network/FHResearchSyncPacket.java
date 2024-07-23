@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when player join
@@ -36,12 +36,12 @@ public class FHResearchSyncPacket implements FHMessage {
     	this.r=r;
     }
 
-    public FHResearchSyncPacket(PacketBuffer buffer) {
+    public FHResearchSyncPacket(FriendlyByteBuf buffer) {
         r = CodecUtil.readCodec(buffer, Research.CODEC);
         r.setId(buffer.readUtf());
     }
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         CodecUtil.writeCodec(buffer, Research.CODEC, r);
         buffer.writeUtf(r.getId());
     }

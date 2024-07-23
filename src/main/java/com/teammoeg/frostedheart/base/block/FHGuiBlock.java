@@ -25,22 +25,22 @@ import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteract
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IPlayerInteraction;
 import blusunrize.immersiveengineering.common.util.DirectionUtils;
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Direction.AxisDirection;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.AxisDirection;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.network.NetworkHooks;
 
-import net.minecraft.block.AbstractBlock.Properties;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public class FHGuiBlock extends FHBaseBlock {
 
@@ -54,8 +54,8 @@ public class FHGuiBlock extends FHBaseBlock {
     }
 
     @Override
-    public ActionResultType use(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
-        ActionResultType superResult = super.use(state, world, pos, player, hand, hit);
+    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        InteractionResult superResult = super.use(state, world, pos, player, hand, hit);
         if (superResult.consumesAction())
             return superResult;
         final Direction side = hit.getDirection();
@@ -63,10 +63,10 @@ public class FHGuiBlock extends FHBaseBlock {
         final float hitY = (float) hit.getLocation().y - pos.getY();
         final float hitZ = (float) hit.getLocation().z - pos.getZ();
         ItemStack heldItem = player.getItemInHand(hand);
-        TileEntity tile = world.getBlockEntity(pos);
+        BlockEntity tile = world.getBlockEntity(pos);
         if (tile instanceof IDirectionalTile && Utils.isHammer(heldItem) && ((IDirectionalTile) tile).canHammerRotate(
                 side,
-                hit.getLocation().subtract(Vector3d.atLowerCornerOf(pos)),
+                hit.getLocation().subtract(Vec3.atLowerCornerOf(pos)),
                 player) && !world.isClientSide) {
             Direction f = ((IDirectionalTile) tile).getFacing();
             Direction oldF = f;
@@ -90,19 +90,19 @@ public class FHGuiBlock extends FHBaseBlock {
             tile.setChanged();
             world.sendBlockUpdated(pos, state, state, 3);
             world.blockEvent(tile.getBlockPos(), tile.getBlockState().getBlock(), 255, 0);
-            return ActionResultType.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
         if (tile instanceof IPlayerInteraction) {
             boolean b = ((IPlayerInteraction) tile).interact(side, player, hand, heldItem, hitX, hitY, hitZ);
             if (b)
-                return ActionResultType.SUCCESS;
+                return InteractionResult.SUCCESS;
         }
-        if (tile instanceof IInteractionObjectIE && hand == Hand.MAIN_HAND && !player.isShiftKeyDown()) {
+        if (tile instanceof IInteractionObjectIE && hand == InteractionHand.MAIN_HAND && !player.isShiftKeyDown()) {
             IInteractionObjectIE interaction = (IInteractionObjectIE) tile;
             interaction = interaction.getGuiMaster();
             if (interaction != null && interaction.canUseGui(player) && !world.isClientSide)
-                NetworkHooks.openGui((ServerPlayerEntity) player, interaction, ((TileEntity) interaction).getBlockPos());
-            return ActionResultType.SUCCESS;
+                NetworkHooks.openGui((ServerPlayer) player, interaction, ((BlockEntity) interaction).getBlockPos());
+            return InteractionResult.SUCCESS;
         }
         return superResult;
     }

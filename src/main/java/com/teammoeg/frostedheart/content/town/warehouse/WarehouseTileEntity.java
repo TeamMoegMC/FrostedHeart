@@ -7,10 +7,10 @@ import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
 
 import java.util.Objects;
 
@@ -71,8 +71,8 @@ public class WarehouseTileEntity extends AbstractTownWorkerTileEntity{
 
 
     @Override
-    public CompoundNBT getWorkData() {
-        CompoundNBT nbt = getBasicWorkData();
+    public CompoundTag getWorkData() {
+        CompoundTag nbt = getBasicWorkData();
         if(this.isValid()){
             nbt.putInt("area", this.area);
             nbt.putInt("volume", this.volume);
@@ -82,7 +82,7 @@ public class WarehouseTileEntity extends AbstractTownWorkerTileEntity{
     }
 
     @Override
-    public void setWorkData(CompoundNBT data) {
+    public void setWorkData(CompoundTag data) {
         this.setBasicWorkData(data);
         if(this.isValid()){
             this.area = data.getInt("area");

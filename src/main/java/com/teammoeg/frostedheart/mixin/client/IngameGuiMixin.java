@@ -22,27 +22,27 @@ package com.teammoeg.frostedheart.mixin.client;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.IngameGui;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
-@Mixin(IngameGui.class)
-public class IngameGuiMixin extends AbstractGui {
+@Mixin(Gui.class)
+public class IngameGuiMixin extends GuiComponent {
 
     /**
      * @author yuesha-yc
      * @reason change text position
      */
     @Overwrite
-    public void renderItemName(MatrixStack matrixStack) {
+    public void renderItemName(PoseStack matrixStack) {
         Minecraft mc = Minecraft.getInstance();
         int scaledWidth = mc.getWindow().getGuiScaledWidth();
         int scaledHeight = mc.getWindow().getGuiScaledHeight();
@@ -50,12 +50,12 @@ public class IngameGuiMixin extends AbstractGui {
 
         mc.getProfiler().push("selectedItemName");
         if (access.getRemainingHighlightTicks() > 0 && !access.getHighlightingItemStack().isEmpty()) {
-            IFormattableTextComponent iformattabletextcomponent = (TranslateUtils.str("")).append(access.getHighlightingItemStack().getHoverName()).withStyle(access.getHighlightingItemStack().getRarity().color);
+            MutableComponent iformattabletextcomponent = (TranslateUtils.str("")).append(access.getHighlightingItemStack().getHoverName()).withStyle(access.getHighlightingItemStack().getRarity().color);
             if (access.getHighlightingItemStack().hasCustomHoverName()) {
-                iformattabletextcomponent.withStyle(TextFormatting.ITALIC);
+                iformattabletextcomponent.withStyle(ChatFormatting.ITALIC);
             }
 
-            ITextComponent highlightTip = access.getHighlightingItemStack().getHighlightTip(iformattabletextcomponent);
+            Component highlightTip = access.getHighlightingItemStack().getHighlightTip(iformattabletextcomponent);
             int i = mc.font.width(highlightTip);
             int j = (scaledWidth - i) / 2;
             int k = scaledHeight - 59;
@@ -77,7 +77,7 @@ public class IngameGuiMixin extends AbstractGui {
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
                 fill(matrixStack, j - 2, k - 2, j + i + 2, k + 9 + 2, mc.options.getBackgroundColor(0));
-                FontRenderer font = access.getHighlightingItemStack().getItem().getFontRenderer(access.getHighlightingItemStack());
+                Font font = access.getHighlightingItemStack().getItem().getFontRenderer(access.getHighlightingItemStack());
                 if (font == null) {
                     mc.font.drawShadow(matrixStack, highlightTip, (float) j, (float) k, 16777215 + (l << 24));
                 } else {

@@ -4,17 +4,17 @@ import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.scheduler.ScheduledTaskTileEntity;
 import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 
 public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity implements
-        TownTileEntity, ScheduledTaskTileEntity, ITickableTileEntity, FHBlockInterfaces.IActiveState {
+        TownTileEntity, ScheduledTaskTileEntity, TickableBlockEntity, FHBlockInterfaces.IActiveState {
     public TownWorkerState workerState = TownWorkerState.NOT_INITIALIZED;
     public OccupiedArea occupiedArea;
     protected boolean addedToSchedulerQueue = false;
-    public AbstractTownWorkerTileEntity(TileEntityType<? extends TileEntity> type)  {
+    public AbstractTownWorkerTileEntity(BlockEntityType<? extends BlockEntity> type)  {
         super(type);
     }
     public abstract void refresh();
@@ -34,7 +34,7 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
         return OccupiedArea.EMPTY;
     }
 
-    public static OccupiedArea getOccupiedArea(CompoundNBT nbt){
+    public static OccupiedArea getOccupiedArea(CompoundTag nbt){
         return OccupiedArea.fromNBT(nbt.getCompound("occupiedArea"));
     }
 
@@ -55,7 +55,7 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
         return this.workerState.isValid();
     }
 
-    public static boolean isValid(CompoundNBT nbt){
+    public static boolean isValid(CompoundTag nbt){
         return TownWorkerState.fromByte(nbt.getByte("workerState")).isValid();
     }
 
@@ -66,13 +66,13 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
     public boolean isOccupiedAreaOverlapped(){
         return this.workerState == TownWorkerState.OCCUPIED_AREA_OVERLAPPED;}
 
-    protected CompoundNBT getBasicWorkData(){
-        CompoundNBT nbt = new CompoundNBT();
+    protected CompoundTag getBasicWorkData(){
+        CompoundTag nbt = new CompoundTag();
         nbt.putByte("workerState", workerState.getStateNum());
         if(this.occupiedArea != null) nbt.put("occupiedArea", occupiedArea.toNBT());
         return nbt;
     }
-    protected void setBasicWorkData(CompoundNBT data){
+    protected void setBasicWorkData(CompoundTag data){
         workerState = TownWorkerState.fromByte(data.getByte("workerState"));
         occupiedArea = OccupiedArea.fromNBT(data.getCompound("occupiedArea"));
     }
@@ -84,7 +84,7 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
         return workerState;
     }
 
-    public static TownWorkerState getWorkerState(CompoundNBT nbt){
+    public static TownWorkerState getWorkerState(CompoundTag nbt){
         return TownWorkerState.fromByte(nbt.getByte("workerState"));
     }
 
@@ -105,7 +105,7 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
 
     //这两个方法除了在house里面，暂时没什么用
     @Override
-    public void readCustomNBT(CompoundNBT compoundNBT, boolean b) {}
+    public void readCustomNBT(CompoundTag compoundNBT, boolean b) {}
     @Override
-    public void writeCustomNBT(CompoundNBT compoundNBT, boolean b) {}
+    public void writeCustomNBT(CompoundTag compoundNBT, boolean b) {}
 }

@@ -52,16 +52,16 @@ import com.teammoeg.frostedheart.util.io.codec.StreamCodec;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.NBTDynamicOps;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.SimpleRegistry;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.core.MappedRegistry;
 
 public class CodecUtil {
 
@@ -146,7 +146,7 @@ public class CodecUtil {
 	public static final Codec<ItemStack>  ITEMSTACK_CODEC = RecordCodecBuilder.create(t -> t.group(
 			CodecUtil.registryCodec(()->Registry.ITEM).fieldOf("id").forGetter(ItemStack::getItem),
 			Codec.INT.fieldOf("Count").forGetter(ItemStack::getCount),
-			CodecUtil.defaultSupply(CompoundNBT.CODEC,CompoundNBT::new).fieldOf("tag").forGetter(ItemStack::getTag))
+			CodecUtil.defaultSupply(CompoundTag.CODEC,CompoundTag::new).fieldOf("tag").forGetter(ItemStack::getTag))
 		.apply(t, ItemStack::new));
 	public static final Codec<Integer> POSITIVE_INT = Codec.intRange(0, Integer.MAX_VALUE);
 	public static final Codec<BlockPos> BLOCKPOS = alternative(BlockPos.class).add(BlockPos.CODEC).add(Codec.LONG.xmap(BlockPos::of, BlockPos::asLong)).build();
@@ -193,7 +193,7 @@ public class CodecUtil {
 	public static <A,B> Codec<Map<A,B>> toMap(Codec<List<Pair<A,B>>> codec){
 		return codec.xmap(l->l.stream().collect(Collectors.toMap(Pair::getFirst, Pair::getSecond,(k1,k2)->k2,LinkedHashMap::new)), l->l.entrySet().stream().map(t->Pair.of(t.getKey(), t.getValue())).collect(Collectors.toList()));
 	}*/
-	public static <A> Codec<A> createIntCodec(SimpleRegistry<A> registry) {
+	public static <A> Codec<A> createIntCodec(MappedRegistry<A> registry) {
 		return Codec.INT.xmap(registry::byId, registry::getId);
 	}
 	static <K> Codec<K> scCodec(DynamicOps<K> op){
@@ -305,13 +305,13 @@ public class CodecUtil {
 		}
 		return codec.fieldOf(path0);
 	}
-	public static <T> void writeCodec(PacketBuffer pb, Codec<T> codec, T obj) {
+	public static <T> void writeCodec(FriendlyByteBuf pb, Codec<T> codec, T obj) {
 		DataResult<Object> ob = codec.encodeStart(DataOps.COMPRESSED, obj);
 		Optional<Object> ret = ob.resultOrPartial(t->{throw new EncoderException(t);});
 		System.out.println(ret.get());
 		ObjectWriter.writeObject(pb, ret.get());
 	}
-	public static <T> T readCodec(PacketBuffer pb, Codec<T> codec) {
+	public static <T> T readCodec(FriendlyByteBuf pb, Codec<T> codec) {
 		
 		Object readed = ObjectWriter.readObject(pb);
 		System.out.println(readed);
@@ -320,14 +320,14 @@ public class CodecUtil {
 		Optional<T> ret = ob.resultOrPartial(t->{throw new DecoderException(t);});
 		return ret.get();
 	}
-	public static <T> void writeCodecNBT(PacketBuffer pb, Codec<T> codec, T obj) {
-		DataResult<INBT> ob = codec.encodeStart(NBTDynamicOps.INSTANCE, obj);
-		Optional<INBT> ret = ob.resultOrPartial(EncoderException::new);
-		pb.writeNbt((CompoundNBT) ret.get());
+	public static <T> void writeCodecNBT(FriendlyByteBuf pb, Codec<T> codec, T obj) {
+		DataResult<Tag> ob = codec.encodeStart(NbtOps.INSTANCE, obj);
+		Optional<Tag> ret = ob.resultOrPartial(EncoderException::new);
+		pb.writeNbt((CompoundTag) ret.get());
 	}
-	public static <T> T readCodecNBT(PacketBuffer pb, Codec<T> codec) {
-		INBT readed = pb.readNbt();
-		DataResult<T> ob = codec.parse(NBTDynamicOps.INSTANCE, readed);
+	public static <T> T readCodecNBT(FriendlyByteBuf pb, Codec<T> codec) {
+		Tag readed = pb.readNbt();
+		DataResult<T> ob = codec.parse(NbtOps.INSTANCE, readed);
 		Optional<T> ret = ob.resultOrPartial(DecoderException::new);
 		return ret.get();
 	}
@@ -340,30 +340,30 @@ public class CodecUtil {
 	public static <A> A initEmpty(Codec<A> codec) {
 		if(codec instanceof ConstructorCodec)
 			return ((ConstructorCodec<A>) codec).getInstance();
-		return decodeOrThrow(codec.decode(NBTDynamicOps.INSTANCE,new CompoundNBT()));
+		return decodeOrThrow(codec.decode(NbtOps.INSTANCE,new CompoundTag()));
 	}
-	public static <T> void encodeNBT(Codec<T> codec,CompoundNBT nbt,String key,T value) {
-		codec.encodeStart(NBTDynamicOps.INSTANCE, value).resultOrPartial(System.out::println).ifPresent(t->nbt.put(key,t));
+	public static <T> void encodeNBT(Codec<T> codec,CompoundTag nbt,String key,T value) {
+		codec.encodeStart(NbtOps.INSTANCE, value).resultOrPartial(System.out::println).ifPresent(t->nbt.put(key,t));
 	}
-	public static <T> T decodeNBTIfPresent(Codec<T> codec,CompoundNBT nbt,String key) {
+	public static <T> T decodeNBTIfPresent(Codec<T> codec,CompoundTag nbt,String key) {
 		if(nbt.contains(key))
-			return codec.parse(NBTDynamicOps.INSTANCE, nbt.get(key)).resultOrPartial(System.out::println).orElse(null);
+			return codec.parse(NbtOps.INSTANCE, nbt.get(key)).resultOrPartial(System.out::println).orElse(null);
 		return null;
 	}
-	public static <T> T decodeNBT(Codec<T> codec,CompoundNBT nbt,String key) {
+	public static <T> T decodeNBT(Codec<T> codec,CompoundTag nbt,String key) {
 		if(nbt.contains(key))
-			return codec.parse(NBTDynamicOps.INSTANCE, nbt.get(key)).resultOrPartial(System.out::println).orElse(null);
-		return codec.parse(NBTDynamicOps.INSTANCE,NBTDynamicOps.INSTANCE.empty()).resultOrPartial(System.out::println).orElse(null);
+			return codec.parse(NbtOps.INSTANCE, nbt.get(key)).resultOrPartial(System.out::println).orElse(null);
+		return codec.parse(NbtOps.INSTANCE,NbtOps.INSTANCE.empty()).resultOrPartial(System.out::println).orElse(null);
 	}
-	public static <T> ListNBT toNBTList(Collection<T> stacks, Codec<T> codec) {
+	public static <T> ListTag toNBTList(Collection<T> stacks, Codec<T> codec) {
 		ArrayNBTBuilder<Void> arrayBuilder = ArrayNBTBuilder.create();
-		stacks.stream().forEach(t -> arrayBuilder.add(encodeOrThrow(codec.encodeStart(NBTDynamicOps.INSTANCE, t))));
+		stacks.stream().forEach(t -> arrayBuilder.add(encodeOrThrow(codec.encodeStart(NbtOps.INSTANCE, t))));
 		return arrayBuilder.build();
 	}
-	public static <T> List<T> fromNBTList(ListNBT list, Codec<T> codec) {
+	public static <T> List<T> fromNBTList(ListTag list, Codec<T> codec) {
 		List<T> al = new ArrayList<>();
-		for (INBT nbt : list) {
-			al.add(decodeOrThrow(codec.decode(NBTDynamicOps.INSTANCE, nbt)));
+		for (Tag nbt : list) {
+			al.add(decodeOrThrow(codec.decode(NbtOps.INSTANCE, nbt)));
 		}
 		return al;
 	}
@@ -392,6 +392,6 @@ public class CodecUtil {
 		
 	}
 	public static void main(String[] args) throws Exception {
-		System.out.println(GeneratorData.CODEC.encodeStart(NBTDynamicOps.INSTANCE, new GeneratorData((SpecialDataHolder)null)));
+		System.out.println(GeneratorData.CODEC.encodeStart(NbtOps.INSTANCE, new GeneratorData((SpecialDataHolder)null)));
 	}
 }

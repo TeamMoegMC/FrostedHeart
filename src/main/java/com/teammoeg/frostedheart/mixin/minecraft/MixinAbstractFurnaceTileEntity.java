@@ -24,18 +24,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.minecraft.tileentity.AbstractFurnaceTileEntity;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.LockableTileEntity;
-import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 /**
  * Fully diable furnace
  * <p>
  * */
-@Mixin(AbstractFurnaceTileEntity.class)
-public abstract class MixinAbstractFurnaceTileEntity extends LockableTileEntity implements ITickableTileEntity {
+@Mixin(AbstractFurnaceBlockEntity.class)
+public abstract class MixinAbstractFurnaceTileEntity extends BaseContainerBlockEntity implements TickableBlockEntity {
 
-    protected MixinAbstractFurnaceTileEntity(TileEntityType<?> typeIn) {
+    protected MixinAbstractFurnaceTileEntity(BlockEntityType<?> typeIn) {
         super(typeIn);
     }
 

@@ -29,26 +29,26 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.entity.passive.SheepEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Sheep;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.Level;
 
-@Mixin(SheepEntity.class)
-public abstract class SheepEntityMixin extends AnimalEntity implements IFeedStore {
+@Mixin(Sheep.class)
+public abstract class SheepEntityMixin extends Animal implements IFeedStore {
 
 
     private final static ResourceLocation cow_feed = new ResourceLocation(FHMain.MODID, "cow_feed");
 
     byte feeded = 0;
-    protected SheepEntityMixin(EntityType<? extends AnimalEntity> type, World worldIn) {
+    protected SheepEntityMixin(EntityType<? extends Animal> type, Level worldIn) {
         super(type, worldIn);
     }
 
@@ -68,7 +68,7 @@ public abstract class SheepEntityMixin extends AnimalEntity implements IFeedStor
     }
 
     @Inject(at = @At("HEAD"), method = "getEntityInteractionResult", cancellable = true)
-    public void fh$getEntityInteractionResult(PlayerEntity playerIn, Hand hand, CallbackInfoReturnable<ActionResultType> cbi) {
+    public void fh$getEntityInteractionResult(Player playerIn, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cbi) {
         ItemStack itemstack = playerIn.getItemInHand(hand);
 
         if (!this.isBaby() && !itemstack.isEmpty() && itemstack.getItem().getTags().contains(cow_feed)) {
@@ -76,18 +76,18 @@ public abstract class SheepEntityMixin extends AnimalEntity implements IFeedStor
                 feeded++;
                 if (!this.level.isClientSide)
                     this.usePlayerItem(playerIn, itemstack);
-                cbi.setReturnValue(ActionResultType.sidedSuccess(this.level.isClientSide));
+                cbi.setReturnValue(InteractionResult.sidedSuccess(this.level.isClientSide));
             }
         }
     }
 
     @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
+    public void fh$readAdditional(CompoundTag compound, CallbackInfo cbi) {
         feeded = compound.getByte("feed_stored");
     }
 
     @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
+    public void fh$writeAdditional(CompoundTag compound, CallbackInfo cbi) {
         compound.putByte("feed_stored", feeded);
 
     }
@@ -97,5 +97,5 @@ public abstract class SheepEntityMixin extends AnimalEntity implements IFeedStor
     public abstract boolean isShearable();
 
     @Shadow
-    public abstract void shear(SoundCategory category);
+    public abstract void shear(SoundSource category);
 }

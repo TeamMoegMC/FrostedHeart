@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.trade.policy.actions;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class SetLevelAction extends AbstractAction {
     int value;
@@ -35,7 +35,7 @@ public class SetLevelAction extends AbstractAction {
         value = jo.get("level").getAsInt();
     }
 
-    public SetLevelAction(PacketBuffer buffer) {
+    public SetLevelAction(FriendlyByteBuf buffer) {
         value = buffer.readVarInt();
     }
 
@@ -52,7 +52,7 @@ public class SetLevelAction extends AbstractAction {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
         super.write(buffer);
         buffer.writeVarInt(value);
     }

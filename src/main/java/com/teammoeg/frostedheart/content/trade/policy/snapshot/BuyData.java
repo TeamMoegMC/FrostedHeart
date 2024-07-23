@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.trade.policy.snapshot;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.DemandData;
 
-import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.Ingredient;
 
 public class BuyData {
 

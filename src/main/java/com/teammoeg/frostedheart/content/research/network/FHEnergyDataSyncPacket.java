@@ -26,19 +26,19 @@ import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FHEnergyDataSyncPacket extends NBTMessage {
-    public FHEnergyDataSyncPacket(PlayerEntity pe) {
-        super(EnergyCore.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundNBT::new));
+    public FHEnergyDataSyncPacket(Player pe) {
+        super(EnergyCore.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundTag::new));
     }
 
-    public FHEnergyDataSyncPacket(PacketBuffer buffer) {
+    public FHEnergyDataSyncPacket(FriendlyByteBuf buffer) {
         super(buffer.readNbt());
     }
 
@@ -46,7 +46,7 @@ public class FHEnergyDataSyncPacket extends NBTMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-            PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
+            Player player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
             if (player != null) {
                 EnergyCore.getCapability(player).ifPresent(t->t.deserializeNBT(super.getTag()));
             }

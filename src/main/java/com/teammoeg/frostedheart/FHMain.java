@@ -51,15 +51,15 @@ import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructures;
 
 import dev.ftb.mods.ftbteams.event.TeamEvent;
-import net.minecraft.advancements.criterion.ItemPredicate;
-import net.minecraft.block.Block;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.GameRules.IntegerValue;
+import net.minecraft.advancements.critereon.ItemPredicate;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.GameRules.IntegerValue;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent.MissingMappings;
@@ -92,7 +92,7 @@ public class FHMain {
     public static File lastServerConfig;
     public static boolean saveNeedUpdate;
     public static final NonNullLazyValue<CreateRegistrate> registrate = CreateRegistrate.lazy(MODID);
-    public static final ItemGroup itemGroup = new ItemGroup(MODID) {
+    public static final CreativeModeTab itemGroup = new CreativeModeTab(MODID) {
         @Override
         @Nonnull
         public ItemStack makeIcon() {

@@ -21,9 +21,9 @@ package com.teammoeg.frostedheart.content.decoration;
 
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.Material;
 
 public class AccessControlBlock extends FHBaseBlock {
     public AccessControlBlock() {

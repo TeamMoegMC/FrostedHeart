@@ -32,7 +32,7 @@ import com.simibubi.create.content.contraptions.components.structureMovement.Mov
 import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
 import com.teammoeg.frostedheart.util.mixin.ISpeedContraption;
 
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 
 @Mixin(DeployerMovementBehaviour.class)
 public abstract class MixinDeployerMovementBehaviour extends MovementBehaviour {
@@ -46,7 +46,7 @@ public abstract class MixinDeployerMovementBehaviour extends MovementBehaviour {
         Contraption c = m.contraption;
         if (c instanceof ISpeedContraption) {
             int timer = m.data.getInt("Timer");
-            timer += (int) MathHelper.clamp(Math.abs(((ISpeedContraption) c).getSpeed()) * 10, 1, 2560);
+            timer += (int) Mth.clamp(Math.abs(((ISpeedContraption) c).getSpeed()) * 10, 1, 2560);
             m.data.putInt("Timer", timer);
             cbi.cancel();
         }

@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
 import java.util.List;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHMultiblocks;
 
 import blusunrize.immersiveengineering.api.IEProperties.IEObjState;
@@ -30,25 +30,25 @@ import blusunrize.immersiveengineering.api.IEProperties.VisibilityList;
 import blusunrize.immersiveengineering.api.utils.client.SinglePropertyModelData;
 import blusunrize.immersiveengineering.client.render.tile.DynamicModel;
 import blusunrize.immersiveengineering.client.utils.RenderUtils;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.model.BakedQuad;
-import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
 
-public class T2GeneratorRenderer extends TileEntityRenderer<T2GeneratorTileEntity> {
+public class T2GeneratorRenderer extends BlockEntityRenderer<T2GeneratorTileEntity> {
     public static DynamicModel<Direction> FUEL;
 
-    public T2GeneratorRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
+    public T2GeneratorRenderer(BlockEntityRenderDispatcher rendererDispatcherIn) {
         super(rendererDispatcherIn);
     }
 
     @Override
-    public void render(T2GeneratorTileEntity te, float partialTicks, MatrixStack matrixStack,
-                       IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
+    public void render(T2GeneratorTileEntity te, float partialTicks, PoseStack matrixStack,
+                       MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
         if (!te.formed || te.isDummy() || !te.getWorldNonnull().hasChunkAt(te.getBlockPos()))
             return;
         if (!te.hasFuel())

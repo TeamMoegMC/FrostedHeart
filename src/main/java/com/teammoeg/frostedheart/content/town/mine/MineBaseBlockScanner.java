@@ -6,12 +6,12 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkH
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.PlantBlockHelper;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.NetherVines;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.math.ColumnPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.Tags;
 import se.mickelus.tetra.blocks.rack.RackBlock;
 
@@ -21,7 +21,7 @@ import java.util.Set;
 
 //矿场基地需要有铁轨连通到矿场，因此不做任何的密封性要求，有个顶就行。
 public class MineBaseBlockScanner extends FloorBlockScanner {
-    public MineBaseBlockScanner(World world, BlockPos startPos) {
+    public MineBaseBlockScanner(Level world, BlockPos startPos) {
         super(world, startPos);
     }
     private final HashSet<BlockPos> rails = new HashSet<>();
@@ -55,7 +55,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
                 rack++;
                 return false;
             }
-            if(PlantBlockHelper.isValidGrowthState(world.getBlockState(pos1))){
+            if(NetherVines.isValidGrowthState(world.getBlockState(pos1))){
                 temperature += ChunkHeatData.getTemperature(world, pos1);
                 counter_for_temperature++;
                 return false;
@@ -113,7 +113,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
         @Override
         public boolean isValidFloor(BlockPos pos){
             if(world.getBlockState(pos).is(BlockTags.RAILS)){
-                return PlantBlockHelper.isValidGrowthState(world.getBlockState(pos.above()));
+                return NetherVines.isValidGrowthState(world.getBlockState(pos.above()));
             } else if(world.getBlockState(pos).getBlock().equals(FHBlocks.mine.get())){
                 linkedMines.add(pos);
             }

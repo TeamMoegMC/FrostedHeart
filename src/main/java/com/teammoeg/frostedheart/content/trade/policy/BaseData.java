@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.io.Writeable;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public abstract class BaseData implements Writeable {
     private String id;
@@ -52,7 +52,7 @@ public abstract class BaseData implements Writeable {
 
     }
 
-    public static BaseData read(PacketBuffer pb) {
+    public static BaseData read(FriendlyByteBuf pb) {
         switch (pb.readVarInt()) {
             case 1:
                 return new ProductionData(pb);
@@ -75,7 +75,7 @@ public abstract class BaseData implements Writeable {
             hideStockout = jo.get("hide_stockout").getAsBoolean();
     }
 
-    public BaseData(PacketBuffer pb) {
+    public BaseData(FriendlyByteBuf pb) {
         id = pb.readUtf();
         maxstore = pb.readVarInt();
         recover = pb.readFloat();
@@ -143,7 +143,7 @@ public abstract class BaseData implements Writeable {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
         buffer.writeUtf(id);
         buffer.writeVarInt(maxstore);
         buffer.writeFloat(recover);

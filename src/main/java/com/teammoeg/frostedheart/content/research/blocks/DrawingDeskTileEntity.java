@@ -35,12 +35,12 @@ import com.teammoeg.frostedheart.util.client.ClientUtils;
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.ItemStackHelper;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.NonNullList;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.NonNullList;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -58,11 +58,11 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
     }
 
     @Override
-    public boolean canUseGui(PlayerEntity arg0) {
+    public boolean canUseGui(Player arg0) {
         return true;
     }
 
-    private boolean damageInk(ServerPlayerEntity spe, int val, int lvl) {
+    private boolean damageInk(ServerPlayer spe, int val, int lvl) {
         ItemStack is = inventory.get(INK_SLOT);
         if (is.isEmpty() || !(is.getItem() instanceof IPen)) return false;
         IPen pen = (IPen) is.getItem();
@@ -93,7 +93,7 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
         return 64;
     }
 
-    public void initGame(ServerPlayerEntity player) {
+    public void initGame(ServerPlayer player) {
         if (inventory.get(PAPER_SLOT).isEmpty()) return;
         int lvl = ResearchListeners.fetchGameLevel(player);
         if (lvl < 0) return;
@@ -136,22 +136,22 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
         if (nbt.contains("gamedata"))
             game.load(nbt.getCompound("gamedata"));
         if (!descPacket) {
 
-            ItemStackHelper.loadAllItems(nbt, inventory);
+            ContainerHelper.loadAllItems(nbt, inventory);
         }
 
 
     }
 
-    public void submitItem(ServerPlayerEntity sender) {
+    public void submitItem(ServerPlayer sender) {
         inventory.set(EXAMINE_SLOT, ResearchListeners.submitItem(sender, inventory.get(EXAMINE_SLOT)));
     }
 
-    public boolean tryCombine(ServerPlayerEntity player, CardPos cp1, CardPos cp2) {
+    public boolean tryCombine(ServerPlayer player, CardPos cp1, CardPos cp2) {
         ItemStack is = inventory.get(INK_SLOT);
         if (is.isEmpty() || !(is.getItem() instanceof IPen)) return false;
         IPen pen = (IPen) is.getItem();
@@ -165,7 +165,7 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
         });
     }
 
-    public void updateGame(ServerPlayerEntity player) {
+    public void updateGame(ServerPlayer player) {
         if (game.isFinished()) {
 
             ResearchListeners.commitGameLevel(player, game.getLvl());
@@ -174,11 +174,11 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         nbt.put("gamedata", game.serialize());
         if (!descPacket) {
 
-            ItemStackHelper.saveAllItems(nbt, inventory);
+            ContainerHelper.saveAllItems(nbt, inventory);
         }
     }
 

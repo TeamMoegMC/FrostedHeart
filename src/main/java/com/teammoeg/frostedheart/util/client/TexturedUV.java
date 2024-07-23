@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.util.client;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHMain;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 public class TexturedUV extends UV {
     ResourceLocation texture;
@@ -53,53 +53,53 @@ public class TexturedUV extends UV {
     }
 
 	@Override
-	public void blit(MatrixStack s, int targetX, int targetY, int sourceWidth, int sourceHeight) {
+	public void blit(PoseStack s, int targetX, int targetY, int sourceWidth, int sourceHeight) {
 		bindTexture();
 		super.blit(s, targetX, targetY, sourceWidth, sourceHeight);
 	}
 
 	@Override
-	public void blit(MatrixStack s, int targetX, int targetY, int sourceWidth) {
+	public void blit(PoseStack s, int targetX, int targetY, int sourceWidth) {
 		bindTexture();
 		super.blit(s, targetX, targetY, sourceWidth);
 	}
 
 	@Override
-	public void blit(MatrixStack s, int targetX, int targetY) {
+	public void blit(PoseStack s, int targetX, int targetY) {
 		bindTexture();
 		super.blit(s, targetX, targetY);
 	}
 
 	@Override
-	public void blitAtlas(MatrixStack s, int targetX, int targetY, int gridX, int gridY) {
+	public void blitAtlas(PoseStack s, int targetX, int targetY, int gridX, int gridY) {
 		bindTexture();
 		super.blitAtlas(s, targetX, targetY, gridX, gridY);
 	}
 
 	@Override
-	public void blit(MatrixStack s, int targetX, int targetY, Point loc, int sourceWidth) {
+	public void blit(PoseStack s, int targetX, int targetY, Point loc, int sourceWidth) {
 		bindTexture();
 		super.blit(s, targetX, targetY, loc, sourceWidth);
 	}
 
 	@Override
-	public void blitAt(MatrixStack s, int targetX, int targetY, Point loc) {
+	public void blitAt(PoseStack s, int targetX, int targetY, Point loc) {
 		bindTexture();
 		super.blitAt(s, targetX, targetY, loc);
 	}
 
 	@Override
-	public void blitAtlas(MatrixStack s, int targetX, int targetY, Point loc, int gridX, int gridY) {
+	public void blitAtlas(PoseStack s, int targetX, int targetY, Point loc, int gridX, int gridY) {
 		bindTexture();
 		super.blitAtlas(s, targetX, targetY, loc, gridX, gridY);
 	}
 	@Override
-	public void blit(MatrixStack s, int targetX, int targetY, Point loc, Transition direction, double progress) {
+	public void blit(PoseStack s, int targetX, int targetY, Point loc, Transition direction, double progress) {
 		bindTexture();
 		super.blit(s, targetX, targetY, loc, direction, progress);
 	}
 	@Override
-	public void blit(MatrixStack s, int targetX, int targetY, Transition direction, double progress) {
+	public void blit(PoseStack s, int targetX, int targetY, Transition direction, double progress) {
 		bindTexture();
 		super.blit(s, targetX, targetY, direction, progress);
 	}

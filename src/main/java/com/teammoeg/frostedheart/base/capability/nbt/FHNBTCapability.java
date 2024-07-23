@@ -4,9 +4,9 @@ import com.teammoeg.frostedheart.base.capability.IFHCapability;
 import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.util.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
@@ -25,11 +25,11 @@ public class FHNBTCapability<C extends NBTSerializable> implements IFHCapability
 	@SuppressWarnings("unchecked")
 	public void register() {
         CapabilityManager.INSTANCE.register(capClass, new Capability.IStorage<C>() {
-            public void readNBT(Capability<C> capability, C instance, Direction side, INBT nbt) {
-                instance.deserializeNBT((CompoundNBT) nbt);
+            public void readNBT(Capability<C> capability, C instance, Direction side, Tag nbt) {
+                instance.deserializeNBT((CompoundTag) nbt);
             }
 
-            public INBT writeNBT(Capability<C> capability, C instance, Direction side) {
+            public Tag writeNBT(Capability<C> capability, C instance, Direction side) {
                 return instance.serializeNBT();
             }
         }, ()->factory.get());

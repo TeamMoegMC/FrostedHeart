@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.content.trade.policy.actions.SetFlagAction;
 import com.teammoeg.frostedheart.content.trade.policy.actions.SetFlagValueAction;
 import com.teammoeg.frostedheart.util.io.registry.JsonSerializerRegistry;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class Actions {
     private static JsonSerializerRegistry<PolicyAction> registry = new JsonSerializerRegistry<>();
@@ -45,15 +45,15 @@ public class Actions {
         return registry.write(jo);
     }
 
-    public static PolicyAction deserialize(PacketBuffer data) {
+    public static PolicyAction deserialize(FriendlyByteBuf data) {
         return registry.read(data);
     }
 
-    public static void registerType(Class<? extends PolicyAction> cls, String type, Function<JsonObject, PolicyAction> json, Function<PacketBuffer, PolicyAction> packet) {
+    public static void registerType(Class<? extends PolicyAction> cls, String type, Function<JsonObject, PolicyAction> json, Function<FriendlyByteBuf, PolicyAction> packet) {
         registry.register(cls, type, json,PolicyAction::serialize, packet);
     }
 
-    public static void write(PolicyAction e, PacketBuffer pb) {
+    public static void write(PolicyAction e, FriendlyByteBuf pb) {
         registry.write(pb, e);
     }
 

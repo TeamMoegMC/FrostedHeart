@@ -38,7 +38,7 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.registry.TypedCodecRegistry;
 
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -160,23 +160,23 @@ public abstract class Clue extends AutoIDItem{
         return "   " + (this.required ? "required " : "") + "+" + (int) (this.contribution * 100) + "%";
     }
 
-    public ITextComponent getDescription() {
+    public Component getDescription() {
         return FHTextUtil.getOptional(desc, "clue", () -> this.getId() + ".desc");
     }
 
     public String getDescriptionString() {
-        ITextComponent tc = getDescription();
+        Component tc = getDescription();
 
         return tc != null ? tc.getString() : "";
     }
 
-    public ITextComponent getHint() {
+    public Component getHint() {
         return FHTextUtil.getOptional(hint, "clue", () -> this.getId() + ".hint");
     }
 
     public abstract String getId();
 
-    public ITextComponent getName() {
+    public Component getName() {
         return FHTextUtil.get(name, "clue", () -> this.getId() + ".name");
     }
 

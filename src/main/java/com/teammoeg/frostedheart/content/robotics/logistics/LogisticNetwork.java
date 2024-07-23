@@ -14,11 +14,11 @@ import com.teammoeg.frostedheart.content.robotics.logistics.workers.TaskableLogi
 import com.teammoeg.frostedheart.content.robotics.logistics.workers.TileEntityLogisticsStorage;
 import com.teammoeg.frostedheart.util.ResultCacheIterator;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 
@@ -30,7 +30,7 @@ public class LogisticNetwork {
 	// List<LogisticEnvolop> envolops=new ArrayList<>();
 	List<TileEntityLogisticsStorage> storages = new ArrayList<>();
 	Map<BlockPos,TileEntityLogisticsStorage> storageList=new HashMap<>();
-	World world;
+	Level world;
 	BlockPos centerPos;
 	int order=0;
 	int task=0;
@@ -81,7 +81,7 @@ public class LogisticNetwork {
 	public LogisticNetwork() {
 	}
 
-	public World getWorld() {
+	public Level getWorld() {
 		return world;
 	}
 
@@ -89,7 +89,7 @@ public class LogisticNetwork {
 		updateSlot(new LogisticSlot(storage, slot), stack);
 	}
 	
-	public <T extends TileEntity & ILogisticsStorage> void update(T tile) {
+	public <T extends BlockEntity & ILogisticsStorage> void update(T tile) {
 		TileEntityLogisticsStorage storage = new TileEntityLogisticsStorage(tile);
 		TileEntityLogisticsStorage ostor=storageList.put(tile.getBlockPos(), storage);
 		if(ostor.getTe()!=tile) {
@@ -247,7 +247,7 @@ public class LogisticNetwork {
 		}
 		return curcnt;
 	}
-	public void setWorld(World world) {
+	public void setWorld(Level world) {
 		this.world = world;
 	}
 

@@ -35,12 +35,12 @@ import com.simibubi.create.compat.jei.CreateJEI;
 import com.simibubi.create.compat.jei.category.CreateRecipeCategory;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.item.crafting.ShapedRecipe;
-import net.minecraft.item.crafting.ShapelessRecipe;
-import net.minecraft.util.NonNullList;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.ShapedRecipe;
+import net.minecraft.world.item.crafting.ShapelessRecipe;
+import net.minecraft.core.NonNullList;
 
 @Mixin(targets = "com.simibubi.create.compat.jei.CreateJEI$CategoryBuilder", remap = false)
 public abstract class CreateJEIMixin {
@@ -48,14 +48,14 @@ public abstract class CreateJEIMixin {
     @Shadow(remap = false)
     private CreateRecipeCategory category;
 
-    private static IRecipe<?> fh$convert(ShapelessRecipe r) {
+    private static Recipe<?> fh$convert(ShapelessRecipe r) {
         NonNullList<Ingredient> i = r.getIngredients();
         NonNullList<Ingredient> outcopy = NonNullList.create();
         outcopy.addAll(i);
         if (outcopy.size() > 3)
             while (outcopy.size() % 3 != 0)
                 outcopy.add(Ingredient.EMPTY);
-        IRecipe<?> packed = new ShapedRecipe(r.getId(), r.getGroup(), Math.min(i.size(), 3), Math.max(1, (outcopy.size() + 2) / 3), outcopy, r.getResultItem());
+        Recipe<?> packed = new ShapedRecipe(r.getId(), r.getGroup(), Math.min(i.size(), 3), Math.max(1, (outcopy.size() + 2) / 3), outcopy, r.getResultItem());
         JEICompat.overrides.put(r.getId(), packed);
         return packed;
     }
@@ -68,7 +68,7 @@ public abstract class CreateJEIMixin {
         if (hidden.contains(category.getUid().getPath())) cat.setReturnValue(category);
         if (category.getUid().getPath().equals("automatic_shaped")) {
             try {
-                this.getClass().getMethod("recipeList", Supplier.class, Function.class).invoke(this, (Supplier<List<IRecipe<?>>>) () -> CreateJEI.findRecipes(r -> r.getSerializer() == IRecipeSerializer.SHAPELESS_RECIPE), (Function<ShapelessRecipe, IRecipe<?>>) CreateJEIMixin::fh$convert);
+                this.getClass().getMethod("recipeList", Supplier.class, Function.class).invoke(this, (Supplier<List<Recipe<?>>>) () -> CreateJEI.findRecipes(r -> r.getSerializer() == RecipeSerializer.SHAPELESS_RECIPE), (Function<ShapelessRecipe, Recipe<?>>) CreateJEIMixin::fh$convert);
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
                      | NoSuchMethodException | SecurityException e) {
                 // TODO Auto-generated catch block

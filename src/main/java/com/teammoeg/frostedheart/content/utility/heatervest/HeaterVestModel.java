@@ -19,21 +19,21 @@
 
 package com.teammoeg.frostedheart.content.utility.heatervest;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.teammoeg.frostedheart.client.model.FHArmorBaseModel;
 
 import blusunrize.immersiveengineering.mixin.accessors.client.ModelAccess;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.world.entity.LivingEntity;
 
 public class HeaterVestModel<T extends LivingEntity> extends FHArmorBaseModel<T> {
     static HeaterVestModel modelInstance;
-    private final ModelRenderer front;
-    private final ModelRenderer deco;
+    private final ModelPart front;
+    private final ModelPart deco;
 
-    private final ModelRenderer back;
+    private final ModelPart back;
 
     public static HeaterVestModel getModel() {
         if (modelInstance == null)
@@ -48,18 +48,18 @@ public class HeaterVestModel<T extends LivingEntity> extends FHArmorBaseModel<T>
         texWidth = 32;
         texHeight = 32;
 
-        front = new ModelRenderer(this);
+        front = new ModelPart(this);
         front.setPos(0.0F, 12.0F, 0.0F);
         front.texOffs(0, 16).addBox(-2.5F, -9.75F, -4.5F, 5.0F, 6.0F, 2.0F, 0.0F, false);
         body.addChild(front);
 
-        deco = new ModelRenderer(this);
+        deco = new ModelPart(this);
         deco.setPos(0.0F, -1.0F, 0.0F);
         front.addChild(deco);
         setRotationAngle(deco, -0.3927F, 0.0F, 0.0F);
         deco.texOffs(14, 16).addBox(-3.0F, -3.0F, -5.25F, 6.0F, 3.0F, 2.0F, 0.0F, false);
 
-        back = new ModelRenderer(this);
+        back = new ModelPart(this);
         back.setPos(0.0F, 12.0F, 0.0F);
         back.texOffs(0, 0).addBox(-4.0F, -12.0F, -3.0F, 8.0F, 12.0F, 4.0F, 0.0F, false);
         body.addChild(back);
@@ -73,11 +73,11 @@ public class HeaterVestModel<T extends LivingEntity> extends FHArmorBaseModel<T>
     }
 
     @Override
-    public void renderToBuffer(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+    public void renderToBuffer(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
         super.renderToBuffer(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
     }
 
-    public void setRotationAngle(ModelRenderer modelRenderer, float x, float y, float z) {
+    public void setRotationAngle(ModelPart modelRenderer, float x, float y, float z) {
         modelRenderer.xRot = x;
         modelRenderer.yRot = y;
         modelRenderer.zRot = z;

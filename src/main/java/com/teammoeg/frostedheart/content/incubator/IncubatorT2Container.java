@@ -21,13 +21,13 @@ package com.teammoeg.frostedheart.content.incubator;
 
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import blusunrize.immersiveengineering.common.gui.IESlot;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 
 public class IncubatorT2Container extends IEBaseContainer<HeatIncubatorTileEntity> {
 
-    public IncubatorT2Container(int id, PlayerInventory inventoryPlayer, HeatIncubatorTileEntity tile) {
+    public IncubatorT2Container(int id, Inventory inventoryPlayer, HeatIncubatorTileEntity tile) {
         super(tile, id);
 
         /*this.addSlot(new IESlot(this, this.inv, 0, 34, 52) {

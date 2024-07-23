@@ -26,7 +26,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.util.io.registry.JsonSerializerRegistry;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class Numbers {
     static JsonSerializerRegistry<IResearchNumber> registry = new JsonSerializerRegistry<>();
@@ -51,15 +51,15 @@ public class Numbers {
         return registry.read(je.getAsJsonObject());
     }
 
-    public static IResearchNumber deserialize(PacketBuffer data) {
+    public static IResearchNumber deserialize(FriendlyByteBuf data) {
         return registry.read(data);
     }
 
-    public static void registerNumberType(Class<? extends IResearchNumber> cls, String type, Function<JsonObject, IResearchNumber> json, Function<IResearchNumber,JsonObject> obj, Function<PacketBuffer, IResearchNumber> packet) {
+    public static void registerNumberType(Class<? extends IResearchNumber> cls, String type, Function<JsonObject, IResearchNumber> json, Function<IResearchNumber,JsonObject> obj, Function<FriendlyByteBuf, IResearchNumber> packet) {
         registry.register(cls, type, json,obj, packet);
     }
 
-    public static void write(IResearchNumber e, PacketBuffer pb) {
+    public static void write(IResearchNumber e, FriendlyByteBuf pb) {
         registry.write(pb, e);
     }
 

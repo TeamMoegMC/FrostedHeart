@@ -26,28 +26,28 @@ import java.util.Map;
 import com.teammoeg.frostedheart.FHConfig;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 
 public class SchedulerQueue {
-    static Map<RegistryKey<World>, SchedulerQueue> queues = new HashMap<>();
+    static Map<ResourceKey<Level>, SchedulerQueue> queues = new HashMap<>();
     ArrayList<ScheduledData> tasks = new ArrayList<>();
 
     int lastpos;
     double tasksPerTick = FHConfig.SERVER.taskPerTick.get();
     double tasksPerTickCounter = 0;//if taskPerTick is not integer, use this to decide when to execute an extra task
 
-    public static void add(TileEntity te) {
+    public static void add(BlockEntity te) {
         queues.computeIfAbsent(te.getLevel().dimension(), e -> new SchedulerQueue())
                 .add(te.getBlockPos());
 
     }
 
-    public static void tickAll(ServerWorld serverWorld) {
+    public static void tickAll(ServerLevel serverWorld) {
         SchedulerQueue q = queues.get(serverWorld.dimension());
         if (q != null)
             q.tick(serverWorld);
@@ -74,10 +74,10 @@ public class SchedulerQueue {
         }
     }
 
-    public void tick(ServerWorld world) {
+    public void tick(ServerLevel world) {
         //count count of tasks
         int taskNum = (int) tasksPerTick;
-        double fracNum = MathHelper.frac(tasksPerTick);
+        double fracNum = Mth.frac(tasksPerTick);
         tasksPerTickCounter += fracNum;
         if (tasksPerTickCounter >= 1) {
             taskNum++;
@@ -88,7 +88,7 @@ public class SchedulerQueue {
         int curpos = lastpos;
         while (taskNum > 0) {
             ScheduledData data = tasks.get(curpos);
-            TileEntity te = Utils.getExistingTileEntity(world, data.pos);
+            BlockEntity te = Utils.getExistingTileEntity(world, data.pos);
             if ((te instanceof ScheduledTaskTileEntity)) {
                 ((ScheduledTaskTileEntity) te).executeTask();
             } else {

@@ -27,16 +27,16 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.ItemStackHelper;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.LockableLootTileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.common.capabilities.Capability;
@@ -44,7 +44,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
 
-public class RelicChestTileEntity extends LockableLootTileEntity implements IIEInventory {
+public class RelicChestTileEntity extends RandomizableContainerBlockEntity implements IIEInventory {
     protected NonNullList<ItemStack> inventory;
     private LazyOptional<IItemHandler> insertionCap;
 
@@ -56,7 +56,7 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
     }
 
     @Override
-    protected Container createMenu(int id, PlayerInventory player) {
+    protected AbstractContainerMenu createMenu(int id, Inventory player) {
         return GuiHandler.createContainer(player, this, id);
     }
 
@@ -71,7 +71,7 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
     }
 
     @Override
-    protected ITextComponent getDefaultName() {
+    protected Component getDefaultName() {
         return TranslateUtils.translate("container.relic_chest");
     }
 
@@ -102,11 +102,11 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
     }
 
     @Override
-    public void load(BlockState state, CompoundNBT nbt) {
+    public void load(BlockState state, CompoundTag nbt) {
         super.load(state, nbt);
         this.inventory = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
         if (!this.tryLoadLootTable(nbt)) {
-            ItemStackHelper.loadAllItems(nbt, this.inventory);
+            ContainerHelper.loadAllItems(nbt, this.inventory);
         }
 
     }
@@ -126,10 +126,10 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
     }
 
     @Override
-    public CompoundNBT save(CompoundNBT compound) {
+    public CompoundTag save(CompoundTag compound) {
         super.save(compound);
         if (!this.trySaveLootTable(compound)) {
-            ItemStackHelper.saveAllItems(compound, this.inventory);
+            ContainerHelper.saveAllItems(compound, this.inventory);
         }
 
         return compound;

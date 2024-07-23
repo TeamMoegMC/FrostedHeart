@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import java.util.List;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
@@ -34,7 +34,7 @@ import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.chat.Component;
 
 public class ResearchDetailPanel extends Panel {
     public static class DescPanel extends Panel {
@@ -47,9 +47,9 @@ public class ResearchDetailPanel extends Panel {
 
         @Override
         public void addWidgets() {
-            List<ITextComponent> itxs = detailPanel.research.getDesc();
+            List<Component> itxs = detailPanel.research.getDesc();
             int offset = 0;
-            for (ITextComponent itx : itxs) {
+            for (Component itx : itxs) {
                 TextField desc = new TextField(this);
                 add(desc);
                 desc.setMaxWidth(width);
@@ -121,7 +121,7 @@ public class ResearchDetailPanel extends Panel {
         infoPanel.setPosAndSize(150, 15, 135, 151);
         Button closePanel = new Button(this) {
             @Override
-            public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+            public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
             }
 
             @Override
@@ -164,7 +164,7 @@ public class ResearchDetailPanel extends Panel {
     }
 
     @Override
-    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
         if (research == null) {
             return;
         }
@@ -175,7 +175,7 @@ public class ResearchDetailPanel extends Panel {
     }
 
     @Override
-    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
         // drawBackground(matrixStack, theme, x, y, w, h);
         // theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
         TechIcons.DIALOG.draw(matrixStack, x, y, w, h);

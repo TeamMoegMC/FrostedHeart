@@ -26,21 +26,21 @@ import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.SpecialRecipe;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.CustomRecipe;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.RegistryObject;
 
-public class DismantleInnerRecipe extends SpecialRecipe {
+public class DismantleInnerRecipe extends CustomRecipe {
     public static class Serializer extends IERecipeSerializer<DismantleInnerRecipe> {
         @Override
         public ItemStack getIcon() {
@@ -49,7 +49,7 @@ public class DismantleInnerRecipe extends SpecialRecipe {
 
         @Nullable
         @Override
-        public DismantleInnerRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+        public DismantleInnerRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
             return new DismantleInnerRecipe(recipeId);
         }
 
@@ -59,7 +59,7 @@ public class DismantleInnerRecipe extends SpecialRecipe {
         }
 
         @Override
-        public void toNetwork(PacketBuffer buffer, DismantleInnerRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buffer, DismantleInnerRecipe recipe) {
         }
     }
 
@@ -67,10 +67,10 @@ public class DismantleInnerRecipe extends SpecialRecipe {
 
     public static ItemStack getDismantledResult(ItemStack armoritem) {
         if (armoritem.hasTag()) {
-            CompoundNBT tags = armoritem.getTag();
+            CompoundTag tags = armoritem.getTag();
             if (!tags.getBoolean("inner_bounded")) {
                 ResourceLocation item = new ResourceLocation(tags.getString("inner_cover"));
-                CompoundNBT tag = tags.getCompound("inner_cover_tag");
+                CompoundTag tag = tags.getCompound("inner_cover_tag");
                 Item buff = RegistryUtils.getItem(item);
                 if (buff == null)
                     return ItemStack.EMPTY;
@@ -84,8 +84,8 @@ public class DismantleInnerRecipe extends SpecialRecipe {
     }
 
     public static ItemStack tryDismantle(ItemStack item) {
-        EquipmentSlotType type = MobEntity.getEquipmentSlotForItem(item);
-        if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND) {
+        EquipmentSlot type = Mob.getEquipmentSlotForItem(item);
+        if (type != null && type != EquipmentSlot.MAINHAND && type != EquipmentSlot.OFFHAND) {
             if (item.hasTag() && !item.getTag().getString("inner_cover").isEmpty())
                 return DismantleInnerRecipe.getDismantledResult(item);
         }
@@ -106,17 +106,17 @@ public class DismantleInnerRecipe extends SpecialRecipe {
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack assemble(CraftingInventory inv) {
+    public ItemStack assemble(CraftingContainer inv) {
         ItemStack armoritem = ItemStack.EMPTY;
         for (int i = 0; i < inv.getContainerSize(); ++i) {
             ItemStack itemstack = inv.getItem(i);
             if (itemstack != null && !itemstack.isEmpty()) {
                 if (!armoritem.isEmpty())
                     return ItemStack.EMPTY;
-                EquipmentSlotType type = MobEntity.getEquipmentSlotForItem(itemstack);
-                if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND)
+                EquipmentSlot type = Mob.getEquipmentSlotForItem(itemstack);
+                if (type != null && type != EquipmentSlot.MAINHAND && type != EquipmentSlot.OFFHAND)
                     if (itemstack.hasTag()) {
-                        CompoundNBT cnbt = itemstack.getTag();
+                        CompoundTag cnbt = itemstack.getTag();
                         if (!cnbt.getBoolean("inner_bounded") && cnbt.getString("inner_cover") != null)
                             armoritem = itemstack;
                         else
@@ -133,7 +133,7 @@ public class DismantleInnerRecipe extends SpecialRecipe {
     }
 
     @Override
-    public NonNullList<ItemStack> getRemainingItems(CraftingInventory inv) {
+    public NonNullList<ItemStack> getRemainingItems(CraftingContainer inv) {
         NonNullList<ItemStack> nonnulllist = NonNullList.withSize(inv.getContainerSize(), ItemStack.EMPTY);
 
         for (int i = 0; i < nonnulllist.size(); ++i) {
@@ -152,14 +152,14 @@ public class DismantleInnerRecipe extends SpecialRecipe {
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getSerializer() {
         return SERIALIZER.get();
     }
 
     /**
      * Used to check if a recipe matches current crafting inventory
      */
-    public boolean matches(CraftingInventory inv, World worldIn) {
+    public boolean matches(CraftingContainer inv, Level worldIn) {
         boolean hasArmor = false;
         for (int i = 0; i < inv.getContainerSize(); ++i) {
             ItemStack itemstack = inv.getItem(i);
@@ -168,10 +168,10 @@ public class DismantleInnerRecipe extends SpecialRecipe {
             }
             if (hasArmor)
                 return false;
-            EquipmentSlotType type = MobEntity.getEquipmentSlotForItem(itemstack);
-            if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND) {
+            EquipmentSlot type = Mob.getEquipmentSlotForItem(itemstack);
+            if (type != null && type != EquipmentSlot.MAINHAND && type != EquipmentSlot.OFFHAND) {
                 if (itemstack.hasTag()) {
-                    CompoundNBT cnbt = itemstack.getTag();
+                    CompoundTag cnbt = itemstack.getTag();
                     if (!cnbt.getBoolean("inner_bounded") && !cnbt.getString("inner_cover").isEmpty())
                         hasArmor = true;
                     else

@@ -26,14 +26,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.cannolicatfish.rankine.items.alloys.AlloyItem;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
 @Mixin(AlloyItem.class)
 public class MixinAlloyItem {
     @Inject(at = @At("HEAD"), method = "inventoryTick", cancellable = true)
-    private void inventoryNBT(ItemStack stack, World worldIn, Entity entityIn, int itemSlot, boolean isSelected, CallbackInfo ci) {
+    private void inventoryNBT(ItemStack stack, Level worldIn, Entity entityIn, int itemSlot, boolean isSelected, CallbackInfo ci) {
         if (stack.getTag() != null) {
             stack.setTag(null);
         }

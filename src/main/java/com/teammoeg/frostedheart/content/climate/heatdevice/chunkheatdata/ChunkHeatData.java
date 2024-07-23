@@ -36,11 +36,11 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.chunk.IChunk;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class ChunkHeatData{
@@ -61,9 +61,9 @@ public class ChunkHeatData{
      * ChunkData instance
      * Updates server side cache first.
      */
-    private static void addChunkAdjust(IWorld world, ChunkPos chunkPos, IHeatArea adjx) {
+    private static void addChunkAdjust(LevelAccessor world, ChunkPos chunkPos, IHeatArea adjx) {
         if (world != null && !world.isClientSide()) {
-            IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
+            ChunkAccess chunk = world.getChunk(chunkPos.x, chunkPos.z);
             ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
             if (data != null) {
                 data.adjusters.remove(adjx.getCenter());
@@ -80,7 +80,7 @@ public class ChunkHeatData{
      * @param range   the distance from the heatPos to the boundary
      * @param tempMod the temperature added
      */
-    public static void addCubicTempAdjust(IWorld world, BlockPos heatPos, int range, int tempMod) {
+    public static void addCubicTempAdjust(LevelAccessor world, BlockPos heatPos, int range, int tempMod) {
         removeTempAdjust(world, heatPos);//remove current first
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
 
@@ -114,7 +114,7 @@ public class ChunkHeatData{
      * @param down    y range below the plane
      * @param tempMod the temperature added
      */
-    public static void addPillarTempAdjust(IWorld world, BlockPos heatPos, int range, int up, int down, int tempMod) {
+    public static void addPillarTempAdjust(LevelAccessor world, BlockPos heatPos, int range, int up, int down, int tempMod) {
         removeTempAdjust(world, heatPos);
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
 
@@ -144,7 +144,7 @@ public class ChunkHeatData{
      * @param world must be server side
      * @param adj   adjust
      */
-    public static void addTempAdjust(IWorld world, IHeatArea adj) {
+    public static void addTempAdjust(LevelAccessor world, IHeatArea adj) {
 
         int sourceX = adj.getCenter().getX(), sourceZ = adj.getCenter().getZ();
         removeTempAdjust(world, new BlockPos(sourceX, adj.getCenter().getY(), sourceZ));
@@ -177,11 +177,11 @@ public class ChunkHeatData{
      * @deprecated use {@link ChunkHeatData#addCubicTempAdjust}
      */
     @Deprecated
-    public static void addTempToCube(IWorld world, BlockPos heatPos, int range, byte tempMod) {
+    public static void addTempToCube(LevelAccessor world, BlockPos heatPos, int range, byte tempMod) {
         addCubicTempAdjust(world, heatPos, range, tempMod);
     }
 
-    public static ChunkHeatData get(IWorld world, BlockPos pos) {
+    public static ChunkHeatData get(LevelAccessor world, BlockPos pos) {
         return get(world, new ChunkPos(pos)).orElse(null);
     }
 
@@ -193,13 +193,13 @@ public class ChunkHeatData{
      * provider to generate the data.
      */
     @SuppressWarnings("deprecation")
-	public static Optional<ChunkHeatData> get(IWorldReader world, ChunkPos pos) {
+	public static Optional<ChunkHeatData> get(LevelReader world, ChunkPos pos) {
         // Query cache first, picking the correct cache for the current logical side
         //ChunkData data = ChunkDataCache.get(world).get(pos);
         //if (data == null) {
         //System.out.println("no cache at"+pos);
-        if (world instanceof IWorld)
-            return ((IWorld) world).getChunkSource().isEntityTickingChunk(pos) ? getCapability(world.getChunk(pos.getWorldPosition()))
+        if (world instanceof LevelAccessor)
+            return ((LevelAccessor) world).getChunkSource().isEntityTickingChunk(pos) ? getCapability(world.getChunk(pos.getWorldPosition()))
                     .resolve() : Optional.empty();
         return world.hasChunk(pos.x, pos.z) ? getCapability(world.getChunk(pos.getWorldPosition())).resolve() : Optional.empty();
         //}
@@ -212,7 +212,7 @@ public class ChunkHeatData{
      * provider to generate the data.
      * This method directly get temperature at any positions.
      */
-    public static float getAdditionTemperature(IWorldReader world, BlockPos pos) {
+    public static float getAdditionTemperature(LevelReader world, BlockPos pos) {
         return get(world, new ChunkPos(pos)).map(t->t.getAdditionTemperatureAtBlock(world, pos)).orElse(0f);
     }
 
@@ -222,7 +222,7 @@ public class ChunkHeatData{
      * provider to generate the data.
      * This method directly get temperature adjusts at any positions.
      */
-    public static Collection<IHeatArea> getAdjust(IWorldReader world, BlockPos pos) {
+    public static Collection<IHeatArea> getAdjust(LevelReader world, BlockPos pos) {
         ArrayList<IHeatArea> al = new ArrayList<>(get(world, new ChunkPos(pos)).map(ChunkHeatData::getAdjusters).orElseGet(Arrays::asList));
         al.removeIf(adj -> !adj.isEffective(pos));
         return al;
@@ -231,14 +231,14 @@ public class ChunkHeatData{
     /**
      * If there is any adjust at the position.
      */
-    public static boolean hasAdjust(IWorldReader world, BlockPos pos) {
+    public static boolean hasAdjust(LevelReader world, BlockPos pos) {
         return !getAdjust(world, pos).isEmpty();
     }
 
     /**
      * Helper method, since lazy optionals and instanceof checks together are ugly
      */
-    public static LazyOptional<ChunkHeatData> getCapability(@Nullable IChunk chunk) {
+    public static LazyOptional<ChunkHeatData> getCapability(@Nullable ChunkAccess chunk) {
     	return FHCapabilities.CHUNK_HEAT.getCapability(chunk);
     }
 
@@ -248,7 +248,7 @@ public class ChunkHeatData{
      * provider to generate the data.
      * This method directly get temperature at any positions.
      */
-    public static float getTemperature(IWorldReader world, BlockPos pos) {
+    public static float getTemperature(LevelReader world, BlockPos pos) {
         return get(world, new ChunkPos(pos)).map(t->t.getTemperatureAtBlock(world, pos)).orElseGet(()->WorldTemperature.getTemperature(world, pos));
     }
     public static String toDisplaySoil(float temp) {
@@ -263,9 +263,9 @@ public class ChunkHeatData{
      * ChunkData instance
      * Updates server side cache first. Then send a sync packet to every client.
      */
-    private static void removeChunkAdjust(IWorld world, ChunkPos chunkPos, BlockPos src) {
+    private static void removeChunkAdjust(LevelAccessor world, ChunkPos chunkPos, BlockPos src) {
         if (world != null && !world.isClientSide()) {
-            IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
+            ChunkAccess chunk = world.getChunk(chunkPos.x, chunkPos.z);
             ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
             // TODO: should use isPresent some how
             if (data != null)
@@ -278,9 +278,9 @@ public class ChunkHeatData{
      * ChunkData instance
      * Updates server side cache first. Then send a sync packet to every client.
      */
-    private static void removeChunkAdjust(IWorld world, ChunkPos chunkPos, IHeatArea adj) {
+    private static void removeChunkAdjust(LevelAccessor world, ChunkPos chunkPos, IHeatArea adj) {
         if (world != null && !world.isClientSide()) {
-            IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
+            ChunkAccess chunk = world.getChunk(chunkPos.x, chunkPos.z);
             ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
             if (data != null)
                 data.adjusters.remove(adj);
@@ -292,7 +292,7 @@ public class ChunkHeatData{
      * @param world   must be server side
      * @param heatPos the position of the heating block, at the center of the area
      */
-    public static void removeTempAdjust(IWorld world, BlockPos heatPos) {
+    public static void removeTempAdjust(LevelAccessor world, BlockPos heatPos) {
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
         ChunkHeatData cd = ChunkHeatData.get(world, heatPos);
         if(cd==null)return;
@@ -323,7 +323,7 @@ public class ChunkHeatData{
      * @param world must be server side
      * @param adj   adjust
      */
-    public static void removeTempAdjust(IWorld world, IHeatArea adj) {
+    public static void removeTempAdjust(LevelAccessor world, IHeatArea adj) {
         int sourceX = adj.getCenter().getX(), sourceZ = adj.getCenter().getZ();
 
         // these are block position offset
@@ -350,7 +350,7 @@ public class ChunkHeatData{
      * @deprecated use {@link ChunkHeatData#removeTempAdjust}
      */
     @Deprecated
-    public static void resetTempToCube(IWorld world, BlockPos heatPos) {
+    public static void resetTempToCube(LevelAccessor world, BlockPos heatPos) {
         removeTempAdjust(world, heatPos);
     }
 
@@ -366,7 +366,7 @@ public class ChunkHeatData{
      * @param world world in
      * @param pos   position
      */
-    float getAdditionTemperatureAtBlock(IWorldReader world, BlockPos pos) {
+    float getAdditionTemperatureAtBlock(LevelReader world, BlockPos pos) {
         if (adjusters.isEmpty()) return 0;
         float ret = 0, tmp;
         for (IHeatArea adj : adjusters.values()) {
@@ -396,7 +396,7 @@ public class ChunkHeatData{
      * @param world world in
      * @param pos   position
      */
-    float getTemperatureAtBlock(IWorldReader world, BlockPos pos) {
+    float getTemperatureAtBlock(LevelReader world, BlockPos pos) {
         if (adjusters.isEmpty()) return WorldTemperature.getTemperature(world, pos);
         float ret = 0, tmp;
         for (IHeatArea adj : adjusters.values()) {

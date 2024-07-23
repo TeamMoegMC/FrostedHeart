@@ -24,11 +24,11 @@ import java.util.List;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-import net.minecraft.world.gen.feature.template.Template;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 
-@Mixin(Template.class)
+@Mixin(StructureTemplate.class)
 public interface TemplateAccess {
     @Accessor
-    List<Template.Palette> getBlocks();
+    List<StructureTemplate.Palette> getBlocks();
 
 }

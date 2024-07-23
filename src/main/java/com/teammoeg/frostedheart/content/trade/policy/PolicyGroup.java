@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.io.Writeable;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public abstract class PolicyGroup implements Writeable {
     List<PolicyCondition> conditions;
@@ -40,7 +40,7 @@ public abstract class PolicyGroup implements Writeable {
         return new BasicPolicyGroup(jo);
     }
 
-    public static PolicyGroup read(PacketBuffer pb) {
+    public static PolicyGroup read(FriendlyByteBuf pb) {
         if (pb.readBoolean())
             return new ExtendPolicyGroup(pb);
         return new BasicPolicyGroup(pb);
@@ -59,7 +59,7 @@ public abstract class PolicyGroup implements Writeable {
         this.conditions = conditions;
     }
 
-    public PolicyGroup(PacketBuffer pb) {
+    public PolicyGroup(FriendlyByteBuf pb) {
         super();
         conditions = SerializeUtil.readList(pb, Conditions::deserialize);
     }
@@ -80,7 +80,7 @@ public abstract class PolicyGroup implements Writeable {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
         SerializeUtil.writeList(buffer, conditions, Conditions::write);
     }
 }

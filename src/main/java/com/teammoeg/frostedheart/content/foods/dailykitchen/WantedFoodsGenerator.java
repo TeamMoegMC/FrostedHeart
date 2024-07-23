@@ -26,9 +26,9 @@ import java.util.Set;
 
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TextComponent;
+import net.minecraft.world.item.Item;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.BaseComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
@@ -36,7 +36,7 @@ import net.minecraftforge.fluids.capability.ItemFluidContainer;
 class WantedFoodsGenerator {
     private final Random random;
     private final Set<Item> foodsEaten;
-    private TextComponent wantedFoodsText = TranslateUtils.translateMessage("wanted_foods");
+    private BaseComponent wantedFoodsText = TranslateUtils.translateMessage("wanted_foods");
     private final int eatenFoodsAmount;
     private final int maxGenerateAmount;
     private HashSet<Item> wantedFoods = new HashSet<>();
@@ -81,7 +81,7 @@ class WantedFoodsGenerator {
         return wantedFoods;
     }
 
-    public TextComponent getWantedFoodsText() {
+    public BaseComponent getWantedFoodsText() {
         return wantedFoodsText;
     }
 }

@@ -32,8 +32,8 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.network.login.server.SDisconnectLoginPacket;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.protocol.login.ClientboundLoginDisconnectPacket;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.fml.network.FMLHandshakeHandler;
 import net.minecraftforge.fml.network.FMLHandshakeMessages;
 import net.minecraftforge.fml.network.NetworkEvent;
@@ -47,9 +47,9 @@ public class FMLHandshakeAntiCheatMixin {
         for (String s : FHConfig.COMMON.blackmods.get()) {
             if (cli.contains(s)) {
                 FHMain.LOGGER.warn("Rejected Connection: Blacklisted mods ");
-                ITextComponent t = TranslateUtils.str("警告：你有被认为是作弊的mod。");
+                Component t = TranslateUtils.str("警告：你有被认为是作弊的mod。");
                 c.get().getNetworkManager()
-                        .send(new SDisconnectLoginPacket(t), (p_211391_2_) -> c.get().getNetworkManager().disconnect(t));
+                        .send(new ClientboundLoginDisconnectPacket(t), (p_211391_2_) -> c.get().getNetworkManager().disconnect(t));
 
 
                 cbi.cancel();

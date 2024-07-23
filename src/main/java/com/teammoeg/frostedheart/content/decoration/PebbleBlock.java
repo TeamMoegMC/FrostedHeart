@@ -4,18 +4,18 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.IntegerProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 
 public class PebbleBlock extends FHBaseBlock {
     private static Integer typeCount = 7;
@@ -26,17 +26,17 @@ public class PebbleBlock extends FHBaseBlock {
     static final VoxelShape shape2 = Block.box(0, 0, 0, 16, 7, 16);
     static final VoxelShape shape3 = Block.box(0, 0, 0, 16, 5, 16);
     static final VoxelShape shape4 = Block.box(0, 0, 0, 16, 2, 16);
-    public PebbleBlock(AbstractBlock.Properties blockProps) {
+    public PebbleBlock(BlockBehaviour.Properties blockProps) {
         super( blockProps);
         this.registerDefaultState(this.stateDefinition.any().setValue(TYPE, 0).setValue(COLOR, 0));
     }
 
-    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(TYPE);
         builder.add(COLOR);
     }
 
-    public void setPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+    public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         Integer finalType = Math.abs(RANDOM.nextInt()) % typeCount;
         Integer finalColor = Math.abs(RANDOM.nextInt()) % colorCount;
         BlockState newState = this.stateDefinition.any().setValue(TYPE, finalType).setValue(COLOR, finalColor);
@@ -44,8 +44,8 @@ public class PebbleBlock extends FHBaseBlock {
     }
 
     @Override
-    public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos,
-                                        ISelectionContext context) {
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter worldIn, BlockPos pos,
+                                        CollisionContext context) {
         if(state.getValue(TYPE) <= 1)return shape;
         if(state.getValue(TYPE) <= 2)return shape2;
         if(state.getValue(TYPE) <= 4)return shape3;
@@ -53,7 +53,7 @@ public class PebbleBlock extends FHBaseBlock {
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
         if(state.getValue(TYPE) <= 1)return shape;
         if(state.getValue(TYPE) <= 2)return shape2;
         if(state.getValue(TYPE) <= 4)return shape3;

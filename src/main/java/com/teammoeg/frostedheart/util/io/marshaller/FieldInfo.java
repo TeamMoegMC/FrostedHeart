@@ -10,8 +10,8 @@ import org.spongepowered.asm.mixin.injection.struct.InjectorGroupInfo.Map;
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.util.io.SerializeName;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 
 public class FieldInfo {
 	public Field field;
@@ -41,9 +41,9 @@ public class FieldInfo {
 		}
 		return MarshallUtil.getOrCreateCodec(field.getType());
 	}
-	public void load(CompoundNBT data,Object o) {
+	public void load(CompoundTag data,Object o) {
 		if(data.contains(name)) {
-			INBT nbt=data.get(name);
+			Tag nbt=data.get(name);
 			try {
 				field.set(o,MarshallUtil.deserialize(field.getType(), nbt));
 			} catch (IllegalArgumentException | IllegalAccessException e) {
@@ -53,10 +53,10 @@ public class FieldInfo {
 		}
 		
 	}
-	public void save(CompoundNBT data,Object o) {
+	public void save(CompoundTag data,Object o) {
 		try {
 			Object f=field.get(o);
-			INBT nbt=MarshallUtil.serialize(f);
+			Tag nbt=MarshallUtil.serialize(f);
 			if(nbt!=null)
 			data.put(name,nbt);
 		} catch (IllegalArgumentException | IllegalAccessException e) {

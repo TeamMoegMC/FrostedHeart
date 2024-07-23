@@ -23,7 +23,7 @@ import com.teammoeg.frostedheart.FHClientTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -37,7 +37,7 @@ public class ClientResearchDataAPI {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public static CompoundNBT getVariants() {
+    public static CompoundTag getVariants() {
         return getData().getVariants();
 
     }

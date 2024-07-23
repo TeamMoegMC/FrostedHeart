@@ -31,34 +31,34 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 import com.teammoeg.frostedheart.util.mixin.IMilkable;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.goal.BreedGoal;
-import net.minecraft.entity.ai.goal.EatGrassGoal;
-import net.minecraft.entity.ai.goal.FollowParentGoal;
-import net.minecraft.entity.ai.goal.LookAtGoal;
-import net.minecraft.entity.ai.goal.LookRandomlyGoal;
-import net.minecraft.entity.ai.goal.PanicGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.ai.goal.TemptGoal;
-import net.minecraft.entity.ai.goal.WaterAvoidingRandomWalkingGoal;
-import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.entity.passive.CowEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.DrinkHelper;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.goal.BreedGoal;
+import net.minecraft.world.entity.ai.goal.EatBlockGoal;
+import net.minecraft.world.entity.ai.goal.FollowParentGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.PanicGoal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.TemptGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.ItemUtils;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.level.Level;
 
-@Mixin(CowEntity.class)
-public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, IFeedStore {
+@Mixin(Cow.class)
+public abstract class CowEntityMixin extends Animal implements IMilkable, IFeedStore {
     private final static ResourceLocation cow_feed = new ResourceLocation(FHMain.MODID, "cow_feed");
-    private EatGrassGoal eatGrassGoal;
+    private EatBlockGoal eatGrassGoal;
 
     byte feeded;
 
@@ -67,7 +67,7 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
     byte milk;
 
     short hxteTimer;
-    protected CowEntityMixin(EntityType<? extends AnimalEntity> type, World worldIn) {
+    protected CowEntityMixin(EntityType<? extends Animal> type, Level worldIn) {
         super(type, worldIn);
     }/*
 	@Override
@@ -107,7 +107,7 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
      * @reason change to our own milk logic
      */
     @Overwrite
-    public ActionResultType mobInteract(PlayerEntity playerIn, Hand hand) {
+    public InteractionResult mobInteract(Player playerIn, InteractionHand hand) {
         ItemStack itemstack = playerIn.getItemInHand(hand);
         //FHMain.LOGGER.info("start feed"+this.isInLove());
         if (!this.isBaby() && !itemstack.isEmpty() && itemstack.getItem().getTags().contains(cow_feed)) {
@@ -117,17 +117,17 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
                 if (!this.level.isClientSide)
                     this.usePlayerItem(playerIn, itemstack);
                 //FHMain.LOGGER.info("ret feed"+this.isInLove());
-                return ActionResultType.sidedSuccess(this.level.isClientSide);
+                return InteractionResult.sidedSuccess(this.level.isClientSide);
             }
         }
         //FHMain.LOGGER.info("end feed"+this.isInLove());
         if (itemstack.getItem() == Items.BUCKET) {
             if (milk > 0 && !this.isBaby()) {
                 playerIn.playSound(SoundEvents.COW_MILK, 1.0F, 1.0F);
-                ItemStack itemstack1 = DrinkHelper.createFilledResult(itemstack, playerIn, Items.MILK_BUCKET.getDefaultInstance());
+                ItemStack itemstack1 = ItemUtils.createFilledResult(itemstack, playerIn, Items.MILK_BUCKET.getDefaultInstance());
                 playerIn.setItemInHand(hand, itemstack1);
                 milk--;
-                return ActionResultType.sidedSuccess(this.level.isClientSide);
+                return InteractionResult.sidedSuccess(this.level.isClientSide);
             }
             if (!level.isClientSide) {
                 if (feeded <= 0)
@@ -145,7 +145,7 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundNBT compound) {
+    public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
         milk = compound.getByte("milk_stored");
         feeded = compound.getByte("feed_stored");
@@ -160,16 +160,16 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
     @Overwrite
     @Override
     protected void registerGoals() {
-        eatGrassGoal = new EatGrassGoal(this);
-        this.goalSelector.addGoal(0, new SwimGoal(this));
+        eatGrassGoal = new EatBlockGoal(this);
+        this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new PanicGoal(this, 2.0D));
         this.goalSelector.addGoal(2, new BreedGoal(this, 1.0D));
         this.goalSelector.addGoal(3, new TemptGoal(this, 1.25D, Ingredient.of(Items.WHEAT), false));
         this.goalSelector.addGoal(4, new FollowParentGoal(this, 1.25D));
         this.goalSelector.addGoal(5, eatGrassGoal);
-        this.goalSelector.addGoal(6, new WaterAvoidingRandomWalkingGoal(this, 1.0D));
-        this.goalSelector.addGoal(7, new LookAtGoal(this, PlayerEntity.class, 6.0F));
-        this.goalSelector.addGoal(8, new LookRandomlyGoal(this));
+        this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 1.0D));
+        this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0F));
+        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
     }
 
     @Override
@@ -222,7 +222,7 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundNBT compound) {
+    public void addAdditionalSaveData(CompoundTag compound) {
         super.addAdditionalSaveData(compound);
         compound.putByte("milk_stored", milk);
         compound.putByte("feed_stored", feeded);

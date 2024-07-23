@@ -23,7 +23,7 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.PolicyCondition;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class LevelCondition implements PolicyCondition {
     int level;
@@ -37,7 +37,7 @@ public class LevelCondition implements PolicyCondition {
         this(jo.get("level").getAsInt());
     }
 
-    public LevelCondition(PacketBuffer buffer) {
+    public LevelCondition(FriendlyByteBuf buffer) {
         this(buffer.readVarInt());
     }
 
@@ -54,7 +54,7 @@ public class LevelCondition implements PolicyCondition {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
         buffer.writeVarInt(level);
     }
 

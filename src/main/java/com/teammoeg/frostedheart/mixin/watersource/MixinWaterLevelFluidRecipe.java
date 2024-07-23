@@ -24,9 +24,9 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import gloridifice.watersource.common.recipe.WaterLevelFluidRecipe;
 import gloridifice.watersource.common.recipe.WaterLevelItemRecipe;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;

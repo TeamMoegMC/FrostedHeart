@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.steamenergy.capabilities;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -29,11 +29,11 @@ public abstract class HeatPowerEndpoint extends HeatEndpoint {
         return power;
     }
     
-    public void load(CompoundNBT nbt,boolean isPacket) {
+    public void load(CompoundTag nbt,boolean isPacket) {
         power = nbt.getFloat("net_power");
     }
 
-    public void save(CompoundNBT nbt,boolean isPacket) {
+    public void save(CompoundTag nbt,boolean isPacket) {
         nbt.putFloat("net_power", power);
     }
 

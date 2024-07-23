@@ -28,7 +28,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 public class ResearchGame {
     Card[][] cards = new Card[9][9];
@@ -223,7 +223,7 @@ public class ResearchGame {
                 || (addmax == addcur && cur.card == 8));
     }
 
-    public void load(CompoundNBT data) {
+    public void load(CompoundTag data) {
         addcur = data.getInt("cur");
         addmax = data.getInt("max");
 
@@ -311,8 +311,8 @@ public class ResearchGame {
 
     }
 
-    public CompoundNBT serialize() {
-        CompoundNBT cnbt = new CompoundNBT();
+    public CompoundTag serialize() {
+        CompoundTag cnbt = new CompoundTag();
         cnbt.putInt("cur", addcur);
         cnbt.putInt("max", addmax);
         cnbt.putInt("lvl", lvl);

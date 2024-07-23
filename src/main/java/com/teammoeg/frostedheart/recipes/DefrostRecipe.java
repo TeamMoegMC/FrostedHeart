@@ -28,16 +28,16 @@ import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.item.crafting.ShapedRecipe;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.ShapedRecipe;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.resources.ResourceLocation;
 
-public interface DefrostRecipe extends IRecipe<IInventory> {
+public interface DefrostRecipe extends Recipe<Container> {
     class Serializer<T extends DefrostRecipe> extends IERecipeSerializer<T> {
         @FunctionalInterface
         public interface DRFactory<T extends DefrostRecipe> {
@@ -57,7 +57,7 @@ public interface DefrostRecipe extends IRecipe<IInventory> {
 
         @Nullable
         @Override
-        public T fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+        public T fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
             String s = buffer.readUtf();
             Ingredient ingredient = Ingredient.fromNetwork(buffer);
             int itemlen = buffer.readVarInt();
@@ -71,9 +71,9 @@ public interface DefrostRecipe extends IRecipe<IInventory> {
 
         @Override
         public T readFromJson(ResourceLocation recipeId, JsonObject json) {
-            String s = JSONUtils.getAsString(json, "group", "");
-            JsonElement jsonelement = JSONUtils.isArrayNode(json, "ingredient") ? JSONUtils.getAsJsonArray(json, "ingredient")
-                    : JSONUtils.getAsJsonObject(json, "ingredient");
+            String s = GsonHelper.getAsString(json, "group", "");
+            JsonElement jsonelement = GsonHelper.isArrayNode(json, "ingredient") ? GsonHelper.getAsJsonArray(json, "ingredient")
+                    : GsonHelper.getAsJsonObject(json, "ingredient");
             Ingredient ingredient = Ingredient.fromJson(jsonelement);
             ItemStack[] itemstacks = null;
 
@@ -88,8 +88,8 @@ public interface DefrostRecipe extends IRecipe<IInventory> {
                 itemstacks[0] = readOutput(json.get("result"));
             } else
                 throw new com.google.gson.JsonSyntaxException("Missing result, expected to find a string or object");
-            float f = JSONUtils.getAsFloat(json, "experience", 0.0F);
-            int i = JSONUtils.getAsInt(json, "cookingtime", 100);
+            float f = GsonHelper.getAsFloat(json, "experience", 0.0F);
+            int i = GsonHelper.getAsInt(json, "cookingtime", 100);
             return factory.create(recipeId, s, ingredient, itemstacks != null ? itemstacks : new ItemStack[0], f, i);
         }
 
@@ -102,7 +102,7 @@ public interface DefrostRecipe extends IRecipe<IInventory> {
         }
 
         @Override
-        public void toNetwork(PacketBuffer buffer, DefrostRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buffer, DefrostRecipe recipe) {
             buffer.writeUtf(recipe.getGroup());
             recipe.getIngredient().toNetwork(buffer);
             buffer.writeVarInt(recipe.getIss().length);

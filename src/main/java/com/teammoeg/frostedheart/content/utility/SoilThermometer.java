@@ -26,23 +26,23 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkH
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.UseAction;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceContext.FluidMode;
-import net.minecraft.util.math.RayTraceResult.Type;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.level.ClipContext.Fluid;
+import net.minecraft.world.phys.HitResult.Type;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.Level;
 
-import net.minecraft.item.Item.Properties;
+import net.minecraft.world.item.Item.Properties;
 
 public class SoilThermometer extends FHBaseItem {
     public SoilThermometer(Properties properties) {
@@ -50,16 +50,16 @@ public class SoilThermometer extends FHBaseItem {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-        tooltip.add(TranslateUtils.translateTooltip("thermometer.usage").withStyle(TextFormatting.GRAY));
+    public void appendHoverText(ItemStack stack, Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+        tooltip.add(TranslateUtils.translateTooltip("thermometer.usage").withStyle(ChatFormatting.GRAY));
     }
 
     /**
      * returns the action that specifies what animation to play when the items is being used
      */
     @Override
-    public UseAction getUseAnimation(ItemStack stack) {
-        return UseAction.SPEAR;
+    public UseAnim getUseAnimation(ItemStack stack) {
+        return UseAnim.SPEAR;
     }
 
     @Override
@@ -68,28 +68,28 @@ public class SoilThermometer extends FHBaseItem {
     }
 
     @Override
-    public ActionResult<ItemStack> use(World worldIn, PlayerEntity playerIn, Hand handIn) {
+    public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
         playerIn.displayClientMessage(TranslateUtils.translateMessage("thermometer.testing"), true);
         playerIn.startUsingItem(handIn);
-        if (playerIn instanceof ServerPlayerEntity && playerIn.abilities.instabuild) {
-            BlockRayTraceResult brtr = getPlayerPOVHitResult(worldIn, playerIn, FluidMode.ANY);
+        if (playerIn instanceof ServerPlayer && playerIn.abilities.instabuild) {
+            BlockHitResult brtr = getPlayerPOVHitResult(worldIn, playerIn, Fluid.ANY);
             if (brtr.getType() != Type.MISS) {
 
             	playerIn.sendMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(ChunkHeatData.getTemperature(playerIn.level, brtr.getBlockPos()))), playerIn.getUUID());
             }
 
         }
-        return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getItemInHand(handIn));
+        return new InteractionResultHolder<>(InteractionResult.SUCCESS, playerIn.getItemInHand(handIn));
     }
 
     @Override
-    public ItemStack finishUsingItem(ItemStack stack, World worldIn, LivingEntity entityLiving) {
+    public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
         if (worldIn.isClientSide) return stack;
-        PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
-        if (entityplayer instanceof ServerPlayerEntity) {
-            BlockRayTraceResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, FluidMode.ANY);
+        Player entityplayer = entityLiving instanceof Player ? (Player) entityLiving : null;
+        if (entityplayer instanceof ServerPlayer) {
+            BlockHitResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, Fluid.ANY);
             if (brtr.getType() == Type.MISS) return stack;
-            TemperatureDisplayHelper.sendTemperature((ServerPlayerEntity) entityLiving,
+            TemperatureDisplayHelper.sendTemperature((ServerPlayer) entityLiving,
                     "info.soil_thermometerbody", (int) (ChunkHeatData.getTemperature(entityLiving.level, brtr.getBlockPos()) * 10) / 10f);
         }
         return stack;

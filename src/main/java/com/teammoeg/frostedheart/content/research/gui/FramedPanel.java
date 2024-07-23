@@ -21,15 +21,15 @@ package com.teammoeg.frostedheart.content.research.gui;
 
 import java.util.function.Consumer;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.chat.Component;
 
 public class FramedPanel extends Panel {
-    ITextComponent title;
+    Component title;
     Consumer<Panel> addWidgets;
 
     public FramedPanel(Panel panel, Consumer<Panel> addWidgets) {
@@ -54,7 +54,7 @@ public class FramedPanel extends Panel {
     }
 
     @Override
-    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
         theme.drawString(matrixStack, title, x, y, TechIcons.text, 0);
         TechIcons.HLINE_L.draw(matrixStack, x, y + 8, 80, 3);
         TechIcons.VLINE.draw(matrixStack, x + 2, y + 9, 1, this.height - 16);
@@ -62,11 +62,11 @@ public class FramedPanel extends Panel {
     }
 
     @Override
-    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
 
     }
 
-    public void setTitle(ITextComponent title) {
+    public void setTitle(Component title) {
         this.title = title;
     }
 

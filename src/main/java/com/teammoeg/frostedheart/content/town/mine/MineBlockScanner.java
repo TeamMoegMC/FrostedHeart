@@ -3,11 +3,11 @@ package com.teammoeg.frostedheart.content.town.mine;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.PlantBlockHelper;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.NetherVines;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.math.ColumnPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.Tags;
 
 import java.util.HashSet;
@@ -23,7 +23,7 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
     private double temperature = 0;
     private int volume = 0;//used to calculate temperature
     private final OccupiedArea occupiedArea = new OccupiedArea();
-    public MineBlockScanner(World world, BlockPos startPos) {
+    public MineBlockScanner(Level world, BlockPos startPos) {
         super(world, startPos);
         this.startX = startPos.getX();
         this.startY = startPos.getY();
@@ -44,14 +44,14 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
     }
 
 
-    public static boolean isStoneOrOre(World world, BlockPos pos){
+    public static boolean isStoneOrOre(Level world, BlockPos pos){
         BlockState state = world.getBlockState(pos);
         return state.is(Tags.Blocks.ORES) || state.is(Tags.Blocks.STONE);
     }
 
     @Override
     protected boolean isValidAir(BlockPos pos){
-        return Math.abs(pos.getZ()-startZ) < 6 && Math.abs(pos.getX()-startX) < 6 && Math.abs(pos.getY()-startY) < 5 && PlantBlockHelper.isValidGrowthState(world.getBlockState(pos));
+        return Math.abs(pos.getZ()-startZ) < 6 && Math.abs(pos.getX()-startX) < 6 && Math.abs(pos.getY()-startY) < 5 && NetherVines.isValidGrowthState(world.getBlockState(pos));
     }
 
     @Override

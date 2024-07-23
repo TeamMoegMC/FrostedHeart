@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when player join
@@ -37,7 +37,7 @@ public class FHEffectProgressSyncPacket implements FHMessage {
     private final boolean data;
     private final int id;
 
-    public FHEffectProgressSyncPacket(PacketBuffer buffer) {
+    public FHEffectProgressSyncPacket(FriendlyByteBuf buffer) {
         data = buffer.readBoolean();
         id = buffer.readVarInt();
     }
@@ -49,7 +49,7 @@ public class FHEffectProgressSyncPacket implements FHMessage {
     }
 
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeBoolean(data);
         buffer.writeVarInt(id);
     }

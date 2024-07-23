@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when player join
@@ -32,10 +32,10 @@ public class FHResearchSyncEndPacket implements FHMessage {
     public FHResearchSyncEndPacket() {
     }
 
-    public FHResearchSyncEndPacket(PacketBuffer buffer) {
+    public FHResearchSyncEndPacket(FriendlyByteBuf buffer) {
     }
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {

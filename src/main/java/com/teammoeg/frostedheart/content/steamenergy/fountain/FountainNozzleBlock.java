@@ -27,30 +27,30 @@ import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import dev.ftb.mods.ftbteams.property.IntProperty;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.IntegerProperty;
-import net.minecraft.state.StateContainer;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
+import net.minecraft.core.Direction;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Random;
 
-import net.minecraft.block.AbstractBlock.Properties;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public class FountainNozzleBlock extends FHBaseBlock {
     public static final IntegerProperty HEIGHT =
@@ -62,7 +62,7 @@ public class FountainNozzleBlock extends FHBaseBlock {
     }
 
     @Override
-    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random random) {
+    public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, Random random) {
         super.animateTick(stateIn, worldIn, pos, random);
         final int height = stateIn.getValue(HEIGHT);
         if (height > 0) {
@@ -109,7 +109,7 @@ public class FountainNozzleBlock extends FHBaseBlock {
     }
 
     @Override
-    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         builder.add(HEIGHT);
     }
@@ -120,7 +120,7 @@ public class FountainNozzleBlock extends FHBaseBlock {
     }
 
     @Override
-    public void tick(BlockState state, ServerWorld world, BlockPos pos, Random rand) {
+    public void tick(BlockState state, ServerLevel world, BlockPos pos, Random rand) {
         // Check if the nozzle is still valid
         int height = state.getValue(HEIGHT);
         if (height > 0) {
@@ -150,7 +150,7 @@ public class FountainNozzleBlock extends FHBaseBlock {
     }
 
     @Override
-    public void neighborChanged(BlockState state, World world, BlockPos pos, Block block, BlockPos pos2, boolean p_220069_6_) {
+    public void neighborChanged(BlockState state, Level world, BlockPos pos, Block block, BlockPos pos2, boolean p_220069_6_) {
         super.neighborChanged(state, world, pos, block, pos2, p_220069_6_);
 
         int height = state.getValue(HEIGHT);

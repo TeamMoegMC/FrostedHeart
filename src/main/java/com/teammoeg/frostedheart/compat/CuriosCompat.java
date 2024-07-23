@@ -26,8 +26,8 @@ import java.util.stream.IntStream;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestItem;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.InterModComms;
 import top.theillusivec4.curios.api.CuriosApi;

@@ -19,15 +19,15 @@
 
 package com.teammoeg.frostedheart.util.mixin;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Mirror;
-import net.minecraft.util.Rotation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public interface MultiBlockAccess {
-    void callForm(World world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit);
-    void setPlayer(ServerPlayerEntity spe);
+    void callForm(Level world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit);
+    void setPlayer(ServerPlayer spe);
 }
 

@@ -32,35 +32,35 @@ import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.material.PushReaction;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.DirectionProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Mirror;
-import net.minecraft.util.Rotation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.vector.Vector3i;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.material.PushReaction;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.network.NetworkHooks;
 
-import net.minecraft.block.AbstractBlock.Properties;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvider {
 
@@ -75,7 +75,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
         return !b ? directionIn : directionIn.getOpposite();
     }
 
-    public static void setBlockhasbook(World worldIn, BlockPos pos, BlockState state, boolean hasBook) {
+    public static void setBlockhasbook(Level worldIn, BlockPos pos, BlockState state, boolean hasBook) {
         worldIn.setBlock(pos, state.setValue(BOOK, hasBook), 3);
     }
 
@@ -87,35 +87,35 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
 
     @Nullable
     @Override
-    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
+    public BlockEntity createTileEntity(BlockState state, BlockGetter world) {
         if (!state.getValue(IS_NOT_MAIN))
             return new DrawingDeskTileEntity();
         else return null;
     }
 
     @Override
-    public boolean triggerEvent(BlockState state, World worldIn, BlockPos pos, int id, int param) {
+    public boolean triggerEvent(BlockState state, Level worldIn, BlockPos pos, int id, int param) {
         super.triggerEvent(state, worldIn, pos, id, param);
-        TileEntity tileentity = worldIn.getBlockEntity(pos);
+        BlockEntity tileentity = worldIn.getBlockEntity(pos);
         return tileentity != null && tileentity.triggerEvent(id, param);
     }
 
     @Override
-    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         builder.add(IS_NOT_MAIN, FACING, BOOK);
     }
 
     @Override
-    public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos,
-                                        ISelectionContext context) {
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter worldIn, BlockPos pos,
+                                        CollisionContext context) {
         if (state.getValue(IS_NOT_MAIN))
             return shape2;
         return shape;
     }
 
     @Override
-    public BlockPos getModelOffset(BlockState arg0, Vector3i arg1) {
+    public BlockPos getModelOffset(BlockState arg0, Vec3i arg1) {
         if (arg0.getValue(IS_NOT_MAIN))
             return new BlockPos(1, 0, 0);
         return new BlockPos(0, 0, 0);
@@ -128,7 +128,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
         if (state.getValue(IS_NOT_MAIN))
             return shape2;
         return shape;
@@ -136,7 +136,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
 
     @Nullable
     @Override
-    public BlockState getStateForPlacement(BlockItemUseContext context) {
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
         Direction direction = context.getHorizontalDirection().getClockWise();
         BlockPos blockpos = context.getClickedPos();
         BlockPos blockpos1 = blockpos.relative(direction);
@@ -154,8 +154,8 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
     }
 
     @Override
-    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (!worldIn.isClientSide && handIn == Hand.MAIN_HAND && !player.isShiftKeyDown()) {
+    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
+        if (!worldIn.isClientSide && handIn == InteractionHand.MAIN_HAND && !player.isShiftKeyDown()) {
             if (!player.isCreative() && worldIn.getMaxLocalRawBrightness(pos) < 8) {
                 player.displayClientMessage(TranslateUtils.translateMessage("research.too_dark"), true);
             } else if (!player.isCreative() && PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getBodyTemp).orElse(0f) < -0.2) {
@@ -164,20 +164,20 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
                 if (state.getValue(IS_NOT_MAIN)) {
                     pos = pos.relative(getNeighbourDirection(state.getValue(IS_NOT_MAIN), state.getValue(FACING)));
                 }
-                TileEntity ii = Utils.getExistingTileEntity(worldIn, pos);
+                BlockEntity ii = Utils.getExistingTileEntity(worldIn, pos);
                 UUID crid = FHTeamDataManager.get(player).getId();
                 IOwnerTile.trySetOwner(ii, crid);
                 if (crid != null && crid.equals(IOwnerTile.getOwner(ii)))
-                    NetworkHooks.openGui((ServerPlayerEntity) player, (IInteractionObjectIE) ii, ii.getBlockPos());
+                    NetworkHooks.openGui((ServerPlayer) player, (IInteractionObjectIE) ii, ii.getBlockPos());
                 else
                     player.displayClientMessage(TranslateUtils.translateMessage("research.not_owned"), true);
             }
         }
-        return ActionResultType.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    public void playerWillDestroy(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
+    public void playerWillDestroy(Level worldIn, BlockPos pos, BlockState state, Player player) {
         if (!worldIn.isClientSide && player.isCreative()) {
             boolean block = state.getValue(IS_NOT_MAIN);
             if (!block) {
@@ -192,7 +192,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
     }
 
     @Override
-    public void setPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+    public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         if (!worldIn.isClientSide) {
             BlockPos blockpos = pos.relative(state.getValue(FACING));
             worldIn.setBlock(blockpos, state.setValue(IS_NOT_MAIN, true), 3);
@@ -202,12 +202,12 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
     }
 
     @Override
-    public BlockState rotate(BlockState state, IWorld world, BlockPos pos, Rotation direction) {
+    public BlockState rotate(BlockState state, LevelAccessor world, BlockPos pos, Rotation direction) {
         return state.setValue(FACING, direction.rotate(state.getValue(FACING)));
     }
 
     @Override
-    public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+    public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor worldIn, BlockPos currentPos, BlockPos facingPos) {
         if (facing == getNeighbourDirection(stateIn.getValue(IS_NOT_MAIN), stateIn.getValue(FACING)) && facingState.getBlock() != this) {
             return Blocks.AIR.defaultBlockState();
         }

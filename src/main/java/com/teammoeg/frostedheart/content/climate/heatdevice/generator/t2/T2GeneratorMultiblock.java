@@ -19,18 +19,18 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.model.ItemCameraTransforms;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -57,13 +57,13 @@ public class T2GeneratorMultiblock extends FHBaseMultiblock {
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void renderFormedStructure(MatrixStack transform, IRenderTypeBuffer buffer) {
+    public void renderFormedStructure(PoseStack transform, MultiBufferSource buffer) {
         if (renderStack == null)
             renderStack = new ItemStack(FHMultiblocks.generator_t2);
         transform.translate(1.5D, 1.5D, 1.5D);
         ClientUtils.mc().getItemRenderer().renderStatic(
                 renderStack,
-                ItemCameraTransforms.TransformType.NONE,
+                ItemTransforms.TransformType.NONE,
                 0xf000f0,
                 OverlayTexture.NO_OVERLAY,
                 transform, buffer);

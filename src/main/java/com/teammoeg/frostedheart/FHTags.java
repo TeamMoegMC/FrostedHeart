@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ITag;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.tags.Tag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.Tags;
 
 public class FHTags {
@@ -31,7 +31,7 @@ public class FHTags {
         public static final Tags.IOptionalNamedTag<Block> DECORATIONS = tag("decorations");
         public static final Tags.IOptionalNamedTag<Block> WALL_BLOCKS = tag("wall_blocks");
 
-        private static ITag.INamedTag<Block> create(String id) {
+        private static Tag.Named<Block> create(String id) {
             return BlockTags.bind(new ResourceLocation(FHMain.MODID, id).toString());
         }
 

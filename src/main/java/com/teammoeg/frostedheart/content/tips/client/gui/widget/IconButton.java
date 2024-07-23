@@ -1,15 +1,15 @@
 package com.teammoeg.frostedheart.content.tips.client.gui.widget;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.client.Point;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 
-import net.minecraft.client.gui.widget.button.Button.IPressable;
+import net.minecraft.client.gui.components.Button.OnPress;
 
 public class IconButton extends Button {
     public static final ResourceLocation ICON_LOCATION = new ResourceLocation(FHMain.MODID, "textures/gui/hud_icon.png");
@@ -30,7 +30,7 @@ public class IconButton extends Button {
     public final Point currentIcon;
     public final int color;
 
-    public IconButton(int x, int y, Point icon, int color, ITextComponent title, IPressable pressedAction) {
+    public IconButton(int x, int y, Point icon, int color, Component title, OnPress pressedAction) {
         super(x, y, 10, 10, title, pressedAction);
         this.color = color;
         this.currentIcon = icon;
@@ -42,7 +42,7 @@ public class IconButton extends Button {
     }
 
     @Override
-    public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderButton(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (isHovered()) {
             fill(matrixStack, x, y, x+width, y+height, 50 << 24 | color & 0x00FFFFFF);
             renderToolTip(matrixStack, mouseX, mouseY);
@@ -60,7 +60,7 @@ public class IconButton extends Button {
     }
 
     @Override
-    public void renderToolTip(MatrixStack matrixStack, int mouseX, int mouseY) {
+    public void renderToolTip(PoseStack matrixStack, int mouseX, int mouseY) {
         Minecraft mc = Minecraft.getInstance();
         String text = getMessage().getString();
         if (!text.isEmpty()) {

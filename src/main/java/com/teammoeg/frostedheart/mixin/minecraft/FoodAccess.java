@@ -27,13 +27,13 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import com.mojang.datafixers.util.Pair;
 
-import net.minecraft.item.Food;
-import net.minecraft.potion.EffectInstance;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.effect.MobEffectInstance;
 
-@Mixin(Food.class)
+@Mixin(FoodProperties.class)
 public interface FoodAccess {
     @Accessor("effects")
-    List<Pair<Supplier<EffectInstance>, Float>> getEffectsSuppliers();
+    List<Pair<Supplier<MobEffectInstance>, Float>> getEffectsSuppliers();
 
 
 }

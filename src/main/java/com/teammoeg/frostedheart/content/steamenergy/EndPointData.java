@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import net.minecraft.block.Block;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.core.BlockPos;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class EndPointData {
@@ -33,14 +33,14 @@ public class EndPointData {
 		output=-1;
 		maxIntake=-1;
 	}
-	public void writeNetwork(PacketBuffer pb) {
+	public void writeNetwork(FriendlyByteBuf pb) {
 		pb.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS,blk);
 		pb.writeBlockPos(pos);
 		pb.writeFloat(avgIntake);
 		pb.writeFloat(avgOutput);
 		pb.writeBoolean(canCostMore);
 	}
-	public static EndPointData readNetwork(PacketBuffer pb) {
+	public static EndPointData readNetwork(FriendlyByteBuf pb) {
 		EndPointData dat=new EndPointData(pb.readRegistryIdUnsafe(ForgeRegistries.BLOCKS),pb.readBlockPos());
 		dat.avgIntake=pb.readFloat();
 		dat.avgOutput=pb.readFloat();

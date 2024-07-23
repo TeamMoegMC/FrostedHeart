@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.radiator.RadiatorMul
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 
 public class FHMultiblocks {
     public static IETemplateMultiblock GENERATOR = new T1GeneratorMultiblock();

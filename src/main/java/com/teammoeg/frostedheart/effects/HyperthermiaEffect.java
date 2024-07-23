@@ -24,14 +24,14 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHDamageSources;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectCategory;
 
-public class HyperthermiaEffect extends Effect {
-    public HyperthermiaEffect(EffectType typeIn, int liquidColorIn) {
+public class HyperthermiaEffect extends MobEffect {
+    public HyperthermiaEffect(MobEffectCategory typeIn, int liquidColorIn) {
         super(typeIn, liquidColorIn);
     }
 
@@ -51,7 +51,7 @@ public class HyperthermiaEffect extends Effect {
 
     @Override
     public void applyEffectTick(LivingEntity entityLivingBaseIn, int amplifier) {
-        if (entityLivingBaseIn instanceof ServerPlayerEntity) {
+        if (entityLivingBaseIn instanceof ServerPlayer) {
             if (entityLivingBaseIn.getHealth() > 20.0F) {
                 entityLivingBaseIn.hurt(FHDamageSources.HYPERTHERMIA, 1F);
             } else if (entityLivingBaseIn.getHealth() > 10.0F) {

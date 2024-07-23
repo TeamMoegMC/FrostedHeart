@@ -32,34 +32,34 @@ import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.TradeHandler;
 import com.teammoeg.frostedheart.util.mixin.VillagerDataHolder;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
-import net.minecraft.entity.merchant.villager.VillagerEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.stats.Stats;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.Level;
 /**
  * New trade system
  * */
-@Mixin(VillagerEntity.class)
-public abstract class VillagerMixin extends AbstractVillagerEntity implements VillagerDataHolder {
+@Mixin(Villager.class)
+public abstract class VillagerMixin extends AbstractVillager implements VillagerDataHolder {
     FHVillagerData fh$data = new FHVillagerData(getThis());
 
-    public VillagerMixin(EntityType<? extends AbstractVillagerEntity> type, World worldIn) {
+    public VillagerMixin(EntityType<? extends AbstractVillager> type, Level worldIn) {
         super(type, worldIn);
     }
 
     @Shadow
-    protected abstract void displayMerchantGui(PlayerEntity pe);
+    protected abstract void displayMerchantGui(Player pe);
 
     @Inject(at = @At("HEAD"), method = "readAdditional")
-    public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
+    public void fh$readAdditional(CompoundTag compound, CallbackInfo cbi) {
         fh$data.deserialize(compound.getCompound("fhdata"));
     }
 
@@ -70,8 +70,8 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
     }
 
     @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
-        CompoundNBT cnbt = new CompoundNBT();
+    public void fh$writeAdditional(CompoundTag compound, CallbackInfo cbi) {
+        CompoundTag cnbt = new CompoundTag();
         fh$data.serialize(cnbt);
         compound.put("fhdata", cnbt);
     }
@@ -81,13 +81,13 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
      * @reason disable villager trade for our system
      */
     @Overwrite
-    public ActionResultType mobInteract(PlayerEntity playerIn, Hand hand) {
+    public InteractionResult mobInteract(Player playerIn, InteractionHand hand) {
         ItemStack itemstack = playerIn.getItemInHand(hand);
         if (itemstack.getItem() != Items.VILLAGER_SPAWN_EGG && this.isAlive() && !this.isTrading()
                 && !this.isSleeping() && !playerIn.isSecondaryUseActive()) {
             if (this.isBaby()) {
                 this.shakeHead();
-                return ActionResultType.sidedSuccess(this.level.isClientSide);
+                return InteractionResult.sidedSuccess(this.level.isClientSide);
             }
 			/*boolean flag = this.getOffers().isEmpty();
 			if (hand == Hand.MAIN_HAND) {
@@ -111,7 +111,7 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
                 playerIn.awardStat(Stats.TALKED_TO_VILLAGER);
                 setTradingPlayer(playerIn);
                 //System.out.println(this.getCustomer());
-                TradeHandler.openTradeScreen((ServerPlayerEntity) playerIn, fh$data);
+                TradeHandler.openTradeScreen((ServerPlayer) playerIn, fh$data);
 
             }
 
@@ -120,7 +120,7 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
 				this.displayMerchantGui(playerIn);
 			}*/
 
-            return ActionResultType.sidedSuccess(this.level.isClientSide);
+            return InteractionResult.sidedSuccess(this.level.isClientSide);
         }
         return super.mobInteract(playerIn, hand);
     }
@@ -130,12 +130,12 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
         return fh$data;
     }
 
-    private VillagerEntity getThis() {
-        return (VillagerEntity) (Object) this;
+    private Villager getThis() {
+        return (Villager) (Object) this;
     }
 
     @Shadow
-    public abstract void setTradingPlayer(@Nullable PlayerEntity player);
+    public abstract void setTradingPlayer(@Nullable Player player);
 
     @Shadow
     protected abstract void shakeHead();

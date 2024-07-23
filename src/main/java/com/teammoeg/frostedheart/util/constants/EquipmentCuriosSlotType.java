@@ -5,8 +5,8 @@ import java.util.UUID;
 
 import com.teammoeg.frostedheart.FHMain;
 
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.util.Mth;
 import top.theillusivec4.curios.api.SlotTypePreset;
 
 public enum EquipmentCuriosSlotType {
@@ -44,7 +44,7 @@ public enum EquipmentCuriosSlotType {
 		this.isCurios = isCurios;
 		slotUUID=new UUID[num];
 		key=new String[num];
-		int ix=MathHelper.ceil(Math.log10(num));
+		int ix=Mth.ceil(Math.log10(num));
 		String format="%0"+ix+"d";
 		for(int i=0;i<num;i++) {
 			this.key[i]		 = FHMain.rl(this.name().toLowerCase()+"_"+String.format(format, i)).toString();
@@ -54,7 +54,7 @@ public enum EquipmentCuriosSlotType {
 	public boolean isHand() {
 		return this==MAINHAND||this==OFFHAND;
 	}
-	public static EquipmentCuriosSlotType fromVanilla(EquipmentSlotType vanilla) {
+	public static EquipmentCuriosSlotType fromVanilla(EquipmentSlot vanilla) {
 		switch(vanilla) {
 		case MAINHAND: return MAINHAND;
 		case OFFHAND: return OFFHAND;

@@ -24,10 +24,10 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 import snownee.snow.ModUtil;
 import snownee.snow.SnowCommonConfig;
 
@@ -38,10 +38,10 @@ public class ModUtilMixin {
      * @reason snow melting when chunk temp < 0
      */
     @Overwrite(remap = false)
-    public static boolean shouldMelt(World world, BlockPos pos) {
+    public static boolean shouldMelt(Level world, BlockPos pos) {
         if (SnowCommonConfig.snowNeverMelt)
             return false;
-        if (world.getBrightness(LightType.BLOCK, pos) > 11)
+        if (world.getBrightness(LightLayer.BLOCK, pos) > 11)
             return true;
         if (ChunkHeatData.getTemperature(world, pos) > 0.5)
             return true;

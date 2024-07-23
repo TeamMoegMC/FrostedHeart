@@ -5,8 +5,8 @@ import javax.annotation.Nullable;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class PlayerTemperatureData implements NBTSerializable  {
@@ -20,13 +20,13 @@ public class PlayerTemperatureData implements NBTSerializable  {
 	
 	public PlayerTemperatureData() {
 	}
-	public void load(CompoundNBT nbt,boolean isPacket) {
+	public void load(CompoundTag nbt,boolean isPacket) {
 		previousTemp=nbt.getFloat("previous_body_temperature");
 		bodyTemp=nbt.getFloat("bodytemperature");
 		envTemp=nbt.getFloat("envtemperature");
 		feelTemp=nbt.getFloat("feeltemperature");
 	}
-	public void save(CompoundNBT nc,boolean isPacket) {
+	public void save(CompoundTag nc,boolean isPacket) {
         nc.putFloat("previous_body_temperature",previousTemp);
         nc.putFloat("bodytemperature",bodyTemp);
         nc.putFloat("envtemperature",envTemp);
@@ -46,7 +46,7 @@ public class PlayerTemperatureData implements NBTSerializable  {
     	envTemp=env;
     	feelTemp=feel;
     }
-    public static LazyOptional<PlayerTemperatureData> getCapability(@Nullable PlayerEntity player) {
+    public static LazyOptional<PlayerTemperatureData> getCapability(@Nullable Player player) {
         return FHCapabilities.PLAYER_TEMP.getCapability(player);
     }
 	public float getPreviousTemp() {

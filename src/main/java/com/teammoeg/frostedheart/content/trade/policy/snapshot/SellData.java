@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.trade.policy.snapshot;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.ProductionData;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 public class SellData {
     String id;

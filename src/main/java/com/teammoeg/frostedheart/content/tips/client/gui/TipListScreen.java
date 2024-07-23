@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
@@ -9,10 +9,10 @@ import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.client.util.AnimationUtil;
 import com.teammoeg.frostedheart.content.tips.client.util.GuiUtil;
 import com.teammoeg.frostedheart.content.tips.client.util.TipDisplayUtil;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.util.Mth;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
@@ -40,7 +40,7 @@ public class TipListScreen extends Screen {
     public static String select = "";
 
     public TipListScreen(boolean background) {
-        super(new StringTextComponent(""));
+        super(new TextComponent(""));
         this.background = background;
     }
 
@@ -74,7 +74,7 @@ public class TipListScreen extends Screen {
     }
 
     @Override
-    public void render(MatrixStack ms, int mouseX, int mouseY, float partialTicks) {
+    public void render(PoseStack ms, int mouseX, int mouseY, float partialTicks) {
         float fadeIn = AnimationUtil.calcFadeIn(400, "TipListGuiFading", false);
         int BGColor = (int)(fadeIn * (background ? 128 : 77)) << 24;
         int x = width - (int)(width*0.6F*fadeIn);
@@ -125,7 +125,7 @@ public class TipListScreen extends Screen {
         super.render(ms, mouseX, mouseY, partialTicks);
     }
 
-    private void renderList(MatrixStack ms, List<String> list, int x, int y, int mouseX, int mouseY) {
+    private void renderList(PoseStack ms, List<String> list, int x, int y, int mouseX, int mouseY) {
         int BGOutline = -4;
 
         for (int i = 0; i < list.size(); i++) {
@@ -142,9 +142,9 @@ public class TipListScreen extends Screen {
             }
 
             if (progress != 0) {
-                int fontColor = MathHelper.clamp((int)(progress * 255), 0x04, 0xFF) << 24 | 0xFFC6FCFF & 0x00FFFFFF;
+                int fontColor = Mth.clamp((int)(progress * 255), 0x04, 0xFF) << 24 | 0xFFC6FCFF & 0x00FFFFFF;
                 int BGAlpha = background ? 128 : 77;
-                int BGColor = MathHelper.clamp((int) (progress * BGAlpha), 0x04, 0xFF) << 24;
+                int BGColor = Mth.clamp((int) (progress * BGAlpha), 0x04, 0xFF) << 24;
                 float selOffset;
 
                 if (list.get(i).equals(select)) {
@@ -176,7 +176,7 @@ public class TipListScreen extends Screen {
                 ms.translate(x*progress + selOffset-BGOutline, y-BGOutline + i*16, 0);
                 if (list.get(i).equals(select)) {
                     float selColorP = AnimationUtil.calcFadeIn(200, "TipListSelColor", false);
-                    int selColor = MathHelper.clamp((int)(selColorP * BGAlpha), 0x04, 0xFF) << 24 | 0xFFC6FCFF & 0x00FFFFFF;
+                    int selColor = Mth.clamp((int)(selColorP * BGAlpha), 0x04, 0xFF) << 24 | 0xFFC6FCFF & 0x00FFFFFF;
                     fill(ms, BGOutline, BGOutline, BGWidth, 10, selColor);
                 } else {
                     fill(ms, BGOutline, BGOutline, BGWidth, 10, BGColor);
@@ -204,7 +204,7 @@ public class TipListScreen extends Screen {
         }
     }
 
-    private void renderTipContent(MatrixStack ms, int x, int y) { //TODO 搜索和分组
+    private void renderTipContent(PoseStack ms, int x, int y) { //TODO 搜索和分组
         boolean custom = select.startsWith("*custom*");
         if (selectEle == null || !selectEle.ID.equals(select)) {
             if (custom) {
@@ -213,7 +213,7 @@ public class TipListScreen extends Screen {
                     ele.ID = customTipList.get(select).get(0);
                     ele.visibleTime = Integer.parseInt(customTipList.get(select).get(1));
                     for (int i = 2; i < customTipList.get(select).size(); i++) {
-                        ele.contents.add(new StringTextComponent(customTipList.get(select).get(i)));
+                        ele.contents.add(new TextComponent(customTipList.get(select).get(i)));
                     }
                     selectEle = ele;
                 } catch (Exception e) {
@@ -276,7 +276,7 @@ public class TipListScreen extends Screen {
         }
     }
 
-    private void renderScrollBar(MatrixStack ms, int mouseX, int mouseY, int x, int y, int w, int h, int totalHeight){
+    private void renderScrollBar(PoseStack ms, int mouseX, int mouseY, int x, int y, int w, int h, int totalHeight){
         float maxHeight = totalHeight-h;
         int barHeight = (int)Math.max(32, h/(maxHeight+h) * h);
         float barY = (float)((-(displayListScroll-1)/maxHeight)*(h-barHeight));
@@ -325,11 +325,11 @@ public class TipListScreen extends Screen {
     }
 
     private void setListScroll(double listScroll) {
-        this.listScroll = listScroll == 0 ? 0 : MathHelper.clamp(listScroll, -listHeight + GuiHeight +16, 0);
+        this.listScroll = listScroll == 0 ? 0 : Mth.clamp(listScroll, -listHeight + GuiHeight +16, 0);
     }
     
     private void setTextScroll(double textScroll) {
-        this.textScroll = textScroll == 0 ? 0 : MathHelper.clamp(textScroll, -textHeight + GuiHeight, 0);
+        this.textScroll = textScroll == 0 ? 0 : Mth.clamp(textScroll, -textHeight + GuiHeight, 0);
     }
 
     @Override

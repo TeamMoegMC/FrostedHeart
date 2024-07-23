@@ -29,10 +29,10 @@ import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Items;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Items;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
 
 /**
  * Reward the research team executes command
@@ -67,19 +67,19 @@ public class EffectExperience extends Effect {
     }
 
     @Override
-    public IFormattableTextComponent getDefaultName() {
+    public MutableComponent getDefaultName() {
         return TranslateUtils.translateGui("effect.exp");
     }
 
     @Override
-    public List<ITextComponent> getDefaultTooltip() {
-        List<ITextComponent> tooltip = new ArrayList<>();
+    public List<Component> getDefaultTooltip() {
+        List<Component> tooltip = new ArrayList<>();
         tooltip.add(TranslateUtils.str("+" + exp));
         return tooltip;
     }
 
     @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
         if (triggerPlayer == null || isload)
             return false;
 

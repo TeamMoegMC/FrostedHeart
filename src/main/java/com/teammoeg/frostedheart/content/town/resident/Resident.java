@@ -25,10 +25,10 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.util.UUIDCodec;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.core.SerializableUUID;
+import net.minecraft.core.BlockPos;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -45,7 +45,7 @@ public class Resident {
 	public static final Codec<Resident> CODEC=RecordCodecBuilder.create(t->t.group(
             Codec.STRING.fieldOf("firstName").forGetter(o->o.firstName),
             Codec.STRING.fieldOf("lastName").forGetter(o->o.lastName),
-            UUIDCodec.CODEC.fieldOf("uuid").forGetter(o->o.uuid)
+            SerializableUUID.CODEC.fieldOf("uuid").forGetter(o->o.uuid)
 		).apply(t, Resident::new));
 
     private UUID uuid;
@@ -85,8 +85,8 @@ public class Resident {
     //public Resident() {
     //}
 
-    public Resident(INBT inbt){
-        this.deserialize((CompoundNBT)inbt);
+    public Resident(Tag inbt){
+        this.deserialize((CompoundTag)inbt);
     }
 
     public Resident(String firstName, String lastName, UUID uuid){
@@ -169,8 +169,8 @@ public class Resident {
     }
 
     // serialization
-    public CompoundNBT serialize() {
-        CompoundNBT data = new CompoundNBT();
+    public CompoundTag serialize() {
+        CompoundTag data = new CompoundTag();
         data.putString("uuid", uuid.toString());
         data.putString("firstName", firstName);
         data.putString("lastName", lastName);
@@ -187,7 +187,7 @@ public class Resident {
         return data;
     }
 
-    public Resident deserialize(CompoundNBT data) {
+    public Resident deserialize(CompoundTag data) {
         uuid = UUID.fromString(data.getString("uuid"));
         firstName = data.getString("firstName");
         lastName = data.getString("lastName");
@@ -198,7 +198,7 @@ public class Resident {
         trust = data.getInt("trust");
         culture = data.getInt("culture");
         educationLevel = data.getInt("educationLevel");
-        CompoundNBT workProficiencyNBT = data.getCompound("workProficiency");
+        CompoundTag workProficiencyNBT = data.getCompound("workProficiency");
         workProficiency.keySet().forEach(key/*TownWorkerType*/ -> workProficiency.put(key, workProficiencyNBT.getInt(key.getKey())));
         workPos = BlockPos.of(data.getLong("workPos"));
         housePos = BlockPos.of(data.getLong("housePos"));

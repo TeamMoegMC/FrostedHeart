@@ -22,9 +22,9 @@ package com.teammoeg.frostedheart.util.mixin;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.util.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import top.theillusivec4.diet.DietMod;
@@ -32,7 +32,7 @@ import top.theillusivec4.diet.api.DietCapability;
 import top.theillusivec4.diet.api.IDietTracker;
 import top.theillusivec4.diet.common.capability.DietTrackerCapability;
 
-public class FixedDietProvider implements ICapabilitySerializable<INBT> {
+public class FixedDietProvider implements ICapabilitySerializable<Tag> {
 
     private static final IDietTracker EMPTY_TRACKER = new DietTrackerCapability.EmptyDietTracker();
 
@@ -43,7 +43,7 @@ public class FixedDietProvider implements ICapabilitySerializable<INBT> {
     }
 
     @Override
-    public void deserializeNBT(INBT nbt) {
+    public void deserializeNBT(Tag nbt) {
 
         if (DietCapability.DIET_TRACKER != null) {
             DietCapability.DIET_TRACKER.readNBT(capability.orElse(EMPTY_TRACKER), null, nbt);
@@ -65,13 +65,13 @@ public class FixedDietProvider implements ICapabilitySerializable<INBT> {
     }
 
     @Override
-    public INBT serializeNBT() {
+    public Tag serializeNBT() {
 
         if (DietCapability.DIET_TRACKER != null && capability.isPresent()) {
             return DietCapability.DIET_TRACKER.writeNBT(capability.orElse(EMPTY_TRACKER), null);
         }
         DietMod.LOGGER.error("Missing Diet capability!");
-        return new CompoundNBT();
+        return new CompoundTag();
     }
 
 }

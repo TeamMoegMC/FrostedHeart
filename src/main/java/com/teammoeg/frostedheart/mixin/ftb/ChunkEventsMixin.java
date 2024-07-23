@@ -34,10 +34,10 @@ import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
 import dev.ftb.mods.ftbteams.event.PlayerJoinedPartyTeamEvent;
-import net.minecraft.command.CommandSource;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.Util;
-import net.minecraft.world.World;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.Util;
+import net.minecraft.world.level.Level;
 
 @Mixin(FTBChunks.class)
 public class ChunkEventsMixin {
@@ -51,13 +51,13 @@ public class ChunkEventsMixin {
      */
     @Overwrite(remap = false)
     private void playerJoinedParty(PlayerJoinedPartyTeamEvent event) {
-        CommandSource sourceStack = event.getTeam().manager.server.createCommandSourceStack();
+        CommandSourceStack sourceStack = event.getTeam().manager.server.createCommandSourceStack();
         FTBChunksTeamData oldData = FTBChunksAPI.getManager().getData(event.getPreviousTeam());
         FTBChunksTeamData newData = FTBChunksAPI.getManager().getData(event.getTeam());
         newData.updateLimits(event.getPlayer());
 
-        Map<RegistryKey<World>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
-        Map<RegistryKey<World>, List<SendChunkPacket.SingleChunk>> chunksToUnclaim = new HashMap<>();
+        Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
+        Map<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> chunksToUnclaim = new HashMap<>();
         int chunks = 0;
         long now = System.currentTimeMillis();
         int total = newData.getClaimedChunks().size();
@@ -83,7 +83,7 @@ public class ChunkEventsMixin {
             return;
         }
 
-        for (Map.Entry<RegistryKey<World>, List<SendChunkPacket.SingleChunk>> entry : chunksToSend.entrySet()) {
+        for (Map.Entry<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> entry : chunksToSend.entrySet()) {
             SendManyChunksPacket packet = new SendManyChunksPacket();
             packet.dimension = entry.getKey();
             packet.teamId = newData.getTeamId();
@@ -91,7 +91,7 @@ public class ChunkEventsMixin {
             packet.sendToAll(sourceStack.getServer());
         }
 
-        for (Map.Entry<RegistryKey<World>, List<SendChunkPacket.SingleChunk>> entry : chunksToUnclaim.entrySet()) {
+        for (Map.Entry<ResourceKey<Level>, List<SendChunkPacket.SingleChunk>> entry : chunksToUnclaim.entrySet()) {
             SendManyChunksPacket packet = new SendManyChunksPacket();
             packet.dimension = entry.getKey();
             packet.teamId = Util.NIL_UUID;

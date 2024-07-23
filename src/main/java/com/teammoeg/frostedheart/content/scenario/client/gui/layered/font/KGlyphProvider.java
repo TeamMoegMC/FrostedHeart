@@ -17,17 +17,17 @@ import com.teammoeg.frostedheart.util.io.FileUtil;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.ReloadListener;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.resources.IReloadableResourceManager;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.server.packs.resources.ReloadableResourceManager;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.resources.ResourceLocation;
 
-public class KGlyphProvider extends ReloadListener<Object>{
+public class KGlyphProvider extends SimplePreparableReloadListener<Object>{
 	public static KGlyphProvider INSTANCE=new KGlyphProvider();
 	private Int2ObjectMap<GlyphData> data=new Int2ObjectOpenHashMap<>();
 	private Int2ObjectMap<GlyphData> unicodeData=new Int2ObjectOpenHashMap<>();
-	IResourceManager rm;
+	ResourceManager rm;
 	private KGlyphProvider() {
 	
 	}
@@ -138,7 +138,7 @@ public class KGlyphProvider extends ReloadListener<Object>{
 
 		
 	}
-	public void onResourceManagerReload(IResourceManager resourceManager) {
+	public void onResourceManagerReload(ResourceManager resourceManager) {
 		rm=resourceManager;
 		JsonParser jp=new JsonParser();
 		try {
@@ -154,7 +154,7 @@ public class KGlyphProvider extends ReloadListener<Object>{
 		}
     }
 	@Override
-	protected Object prepare(IResourceManager resourceManagerIn, IProfiler profilerIn) {
+	protected Object prepare(ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
 		onResourceManagerReload(resourceManagerIn);
 		/*for(int i='A';i<'z';i++) {
 			System.out.println(Character.toString((char)i)+unicodeData.get(i));
@@ -162,12 +162,12 @@ public class KGlyphProvider extends ReloadListener<Object>{
 		return new Object();
 	}
 	@Override
-	protected void apply(Object objectIn, IResourceManager resourceManagerIn, IProfiler profilerIn) {
+	protected void apply(Object objectIn, ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
 		// TODO Auto-generated method stub
 		
 	}
 	public static void addListener() {
 		if(Minecraft.getInstance()!=null&&Minecraft.getInstance().getResourceManager()!=null)
-			((IReloadableResourceManager)Minecraft.getInstance().getResourceManager()).registerReloadListener(INSTANCE);
+			((ReloadableResourceManager)Minecraft.getInstance().getResourceManager()).registerReloadListener(INSTANCE);
 	}
 }

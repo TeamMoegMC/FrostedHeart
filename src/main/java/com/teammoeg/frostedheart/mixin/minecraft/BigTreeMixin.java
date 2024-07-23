@@ -28,20 +28,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.util.FHUtils;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.trees.BigTree;
-import net.minecraft.block.trees.Tree;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.grower.AbstractMegaTreeGrower;
+import net.minecraft.world.level.block.grower.AbstractTreeGrower;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.server.level.ServerLevel;
 /**
  * Reduces chance for big tree
  * <p>
  * */
-@Mixin(BigTree.class)
-public abstract class BigTreeMixin extends Tree {
+@Mixin(AbstractMegaTreeGrower.class)
+public abstract class BigTreeMixin extends AbstractTreeGrower {
     @Inject(at = @At("HEAD"), method = "growBigTree", cancellable = true)
-    public void placeMega(ServerWorld p_235678_1_, ChunkGenerator p_235678_2_, BlockPos p_235678_3_, BlockState p_235678_4_, Random p_235678_5_, int p_235678_6_, int p_235678_7_, CallbackInfoReturnable<Boolean> cr) {
+    public void placeMega(ServerLevel p_235678_1_, ChunkGenerator p_235678_2_, BlockPos p_235678_3_, BlockState p_235678_4_, Random p_235678_5_, int p_235678_6_, int p_235678_7_, CallbackInfoReturnable<Boolean> cr) {
         FHUtils.canBigTreeGenerate(p_235678_1_, p_235678_3_, p_235678_5_, cr);
     }
 }

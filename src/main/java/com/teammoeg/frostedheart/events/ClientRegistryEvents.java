@@ -61,20 +61,20 @@ import blusunrize.lib.manual.Tree;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.IHasContainer;
-import net.minecraft.client.gui.ScreenManager;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screens.inventory.MenuAccess;
+import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.RenderTypeLookup;
-import net.minecraft.client.renderer.entity.PlayerRenderer;
-import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.model.ModelResourceLocation;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.ContainerType;
-import net.minecraft.inventory.container.PlayerContainer;
-import net.minecraft.item.ArmorItem;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
@@ -107,11 +107,11 @@ public class ClientRegistryEvents {
         }
     }
 
-    public static <C extends Container, S extends BaseScreen> ScreenManager.IScreenFactory<C, MenuScreenWrapper<C>>
+    public static <C extends AbstractContainerMenu, S extends BaseScreen> MenuScreens.ScreenConstructor<C, MenuScreenWrapper<C>>
     FTBScreenFactory(Function<C, S> factory) {
         return (c, i, t) -> new MenuScreenWrapper<>(factory.apply(c), c, i, t).disableSlotDrawing();
     }
-	public static KeyBinding key_skipDialog = new KeyBinding("key.frostedheart.skip_dialog", 
+	public static KeyMapping key_skipDialog = new KeyMapping("key.frostedheart.skip_dialog", 
 		GLFW.GLFW_KEY_Z, "key.categories.frostedheart");
 
     @SubscribeEvent
@@ -129,20 +129,20 @@ public class ClientRegistryEvents {
 
         // Register translucent render type
 
-        RenderTypeLookup.setRenderLayer(FHBlocks.rye_block.get(), RenderType.cutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.white_turnip_block.get(), RenderType.cutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.wolfberry_bush_block.get(), RenderType.cutout());
-        RenderTypeLookup.setRenderLayer(FHMultiblocks.generator, RenderType.cutout());
-        RenderTypeLookup.setRenderLayer(FHMultiblocks.generator_t2, RenderType.cutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.drawing_desk.get(), RenderType.cutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.charger.get(), RenderType.cutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.mech_calc.get(), RenderType.cutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.steam_core.get(), RenderType.cutout());
-        RenderTypeLookup.setRenderLayer(FHMultiblocks.radiator, RenderType.cutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.debug_heater.get(), RenderType.cutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.relic_chest.get(), RenderType.cutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.fluorite_ore.get(), RenderType.cutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.halite_ore.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.rye_block.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.white_turnip_block.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.wolfberry_bush_block.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.generator, RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.generator_t2, RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.drawing_desk.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.charger.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.mech_calc.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.steam_core.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.radiator, RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.debug_heater.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.relic_chest.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.fluorite_ore.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.halite_ore.get(), RenderType.cutout());
 /*
         RenderTypeLookup.setRenderLayer(FHBlocks.blood_block, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.bone_block, RenderType.getCutout());
@@ -175,7 +175,7 @@ public class ClientRegistryEvents {
             ResourceLocation item = new ResourceLocation(location.getNamespace(), location.getPath());
             if (RegistryUtils.getItem(item) instanceof ArmorItem) {
                 ModelResourceLocation itemModelResourceLocation = new ModelResourceLocation(item, "inventory");
-                IBakedModel model = event.getModelRegistry().get(itemModelResourceLocation);
+                BakedModel model = event.getModelRegistry().get(itemModelResourceLocation);
                 if (model == null) {
                     FHMain.LOGGER.warn("Did not find the expected vanilla baked model for " + item + " in registry");
                 } else if (model instanceof LiningModel) {
@@ -191,7 +191,7 @@ public class ClientRegistryEvents {
 
     @SubscribeEvent
     public static void onTextureStitchEvent(TextureStitchEvent.Pre event) {
-        if (event.getMap().location() == PlayerContainer.BLOCK_ATLAS) {
+        if (event.getMap().location() == InventoryMenu.BLOCK_ATLAS) {
             event.addSprite(LiningFinalizedModel.buffCoatFeetTexture);
             event.addSprite(LiningFinalizedModel.buffCoatLegsTexture);
             event.addSprite(LiningFinalizedModel.buffCoatHelmetTexture);
@@ -213,7 +213,7 @@ public class ClientRegistryEvents {
 
     @SubscribeEvent
     public static void provideTextures(final TextureStitchEvent.Pre event) {
-        if (PlayerContainer.BLOCK_ATLAS.equals(event.getMap().location())) {
+        if (InventoryMenu.BLOCK_ATLAS.equals(event.getMap().location())) {
             Minecraft.getInstance().getResourceManager().listResources("textures/item/module", s -> s.endsWith(".png")).stream()
                     .filter(resourceLocation -> FHMain.MODID.equals(resourceLocation.getNamespace()))
                     // 9 is the length of "textures/" & 4 is the length of ".png"
@@ -224,16 +224,16 @@ public class ClientRegistryEvents {
         }
     }
 
-    public static <C extends Container, S extends BaseScreen> void
-    registerFTBScreen(ContainerType<C> type, Function<C, S> factory) {
-        ScreenManager.register(type, FTBScreenFactory(factory));
+    public static <C extends AbstractContainerMenu, S extends BaseScreen> void
+    registerFTBScreen(MenuType<C> type, Function<C, S> factory) {
+        MenuScreens.register(type, FTBScreenFactory(factory));
     }
 
-    public static <C extends Container, S extends Screen & IHasContainer<C>> void
-    registerIEScreen(ResourceLocation containerName, ScreenManager.IScreenFactory<C, S> factory) {
+    public static <C extends AbstractContainerMenu, S extends Screen & MenuAccess<C>> void
+    registerIEScreen(ResourceLocation containerName, MenuScreens.ScreenConstructor<C, S> factory) {
         @SuppressWarnings("unchecked")
-        ContainerType<C> type = (ContainerType<C>) GuiHandler.getContainerType(containerName);
-        ScreenManager.register(type, factory);
+        MenuType<C> type = (MenuType<C>) GuiHandler.getContainerType(containerName);
+        MenuScreens.register(type, factory);
     }
 
     @SubscribeEvent

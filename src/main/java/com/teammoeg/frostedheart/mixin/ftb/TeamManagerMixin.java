@@ -32,7 +32,7 @@ import dev.ftb.mods.ftbteams.data.ClientTeamManager;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
 import dev.ftb.mods.ftbteams.net.SyncTeamsMessage;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
 
 @Mixin(TeamManager.class)
@@ -44,12 +44,12 @@ public abstract class TeamManagerMixin {
     public abstract ClientTeamManager createClientTeamManager();
 
     @Inject(at = @At("HEAD"), method = "sync(Lnet/minecraft/entity/player/ServerPlayerEntity;Ldev/ftb/mods/ftbteams/data/Team;)V", remap = false)
-    public void fh$sync(ServerPlayerEntity player, Team self, CallbackInfo cbi) {
+    public void fh$sync(ServerPlayer player, Team self, CallbackInfo cbi) {
         FTBFixUtils.networkPlayer = player;
     }
 
     @Shadow(remap = false)
-    public abstract Team getPlayerTeam(ServerPlayerEntity player);
+    public abstract Team getPlayerTeam(ServerPlayer player);
 
     @Shadow(remap = false)
     public abstract void save();
@@ -64,7 +64,7 @@ public abstract class TeamManagerMixin {
 
         ClientTeamManager clientManager = createClientTeamManager();
 
-        for (ServerPlayerEntity player : server.getPlayerList().getPlayers()) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             FTBFixUtils.networkPlayer = player;
             new SyncTeamsMessage(clientManager, getPlayerTeam(player)).sendTo(player);
             server.getPlayerList().sendPlayerPermissionLevel(player);

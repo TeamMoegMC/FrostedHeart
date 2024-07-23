@@ -27,9 +27,9 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.TranslatableComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
@@ -41,7 +41,7 @@ public class FHTemperatureDisplayPacket implements FHMessage {
     private final boolean isStatus;
     private final boolean isAction;
 
-    public FHTemperatureDisplayPacket(PacketBuffer buffer) {
+    public FHTemperatureDisplayPacket(FriendlyByteBuf buffer) {
         langKey = buffer.readUtf();
         temp = buffer.readVarIntArray();
         boolean[] bs = SerializeUtil.readBooleans(buffer);
@@ -85,7 +85,7 @@ public class FHTemperatureDisplayPacket implements FHMessage {
         isAction = false;
     }
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeUtf(langKey);
         buffer.writeVarIntArray(temp);
         SerializeUtil.writeBooleans(buffer, isStatus, isAction);
@@ -93,13 +93,13 @@ public class FHTemperatureDisplayPacket implements FHMessage {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
+            Player player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
             Object[] ss = new Object[temp.length];
             for (int i = 0; i < ss.length; i++) {
                 ss[i] = TemperatureDisplayHelper.toTemperatureIntString(temp[i] / 10f);
             }
             
-            TranslationTextComponent tosend = TranslateUtils.translateMessage(langKey, ss);
+            TranslatableComponent tosend = TranslateUtils.translateMessage(langKey, ss);
             if (isStatus)
                 player.displayClientMessage(tosend, false);
             else

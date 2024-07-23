@@ -1,14 +1,14 @@
 package com.teammoeg.frostedheart.base.block;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.Direction;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.core.Direction;
 
-public abstract class PipeTileEntity extends IEBaseTileEntity implements ITickableTileEntity{
+public abstract class PipeTileEntity extends IEBaseTileEntity implements TickableBlockEntity{
 
-	public PipeTileEntity(TileEntityType<? extends TileEntity> type) {
+	public PipeTileEntity(BlockEntityType<? extends BlockEntity> type) {
 		super(type);
 
 	}

@@ -24,14 +24,14 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class ClientScenarioResponsePacket implements FHMessage {
     boolean isSkipped;
     int status;
 
-    public ClientScenarioResponsePacket(PacketBuffer buffer) {
+    public ClientScenarioResponsePacket(FriendlyByteBuf buffer) {
         isSkipped = buffer.readBoolean();
         status = buffer.readVarInt();
     }
@@ -44,7 +44,7 @@ public class ClientScenarioResponsePacket implements FHMessage {
     }
 
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeBoolean(isSkipped);
         buffer.writeVarInt(status);
     }

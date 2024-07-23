@@ -29,26 +29,26 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 
 /**
  * Mixin to set owner for TEs, for research systems.
  */
-@Mixin(TileEntity.class)
+@Mixin(BlockEntity.class)
 public class TileEntityMixin implements IOwnerTile {
     UUID id;
 
     @Inject(at = @At("RETURN"), method = "read(Lnet/minecraft/block/BlockState;Lnet/minecraft/nbt/CompoundNBT;)V")
-    public void fh$to$read(BlockState bs, CompoundNBT nbt, CallbackInfo cbi) {
+    public void fh$to$read(BlockState bs, CompoundTag nbt, CallbackInfo cbi) {
         if (nbt.contains("fhowner"))
             id = UUID.fromString(nbt.getString("fhowner"));
     }
 
     @Inject(at = @At("HEAD"), method = "write(Lnet/minecraft/nbt/CompoundNBT;)Lnet/minecraft/nbt/CompoundNBT;")
-    public void fh$to$write(CompoundNBT nbt, CallbackInfoReturnable<CompoundNBT> cbi) {
+    public void fh$to$write(CompoundTag nbt, CallbackInfoReturnable<CompoundTag> cbi) {
         if (id != null)
             nbt.putString("fhowner", id.toString());
     }

@@ -23,10 +23,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 import blusunrize.immersiveengineering.common.util.RotationUtil;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Rotation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 @Mixin(RotationUtil.class)
 public class RotationUtilMixin {
@@ -37,7 +37,7 @@ public class RotationUtilMixin {
      * @reason fix some rotation bug
      */
     @Overwrite(remap = false)
-    public static boolean rotateBlock(World world, BlockPos pos, boolean inverse) {
+    public static boolean rotateBlock(Level world, BlockPos pos, boolean inverse) {
         if (!world.getBlockState(pos).getBlock().getTags().contains(tag))
             return RotationUtil.rotateBlock(world, pos, inverse ? Rotation.COUNTERCLOCKWISE_90 : Rotation.CLOCKWISE_90);
         return false;

@@ -36,8 +36,8 @@ import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.advancements.Advancement;
-import net.minecraft.client.multiplayer.ClientAdvancementManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.multiplayer.ClientAdvancements;
+import net.minecraft.resources.ResourceLocation;
 
 public class LabeledSelection<R> extends LabeledPane<Button> {
     List<R> objs;
@@ -52,7 +52,7 @@ public class LabeledSelection<R> extends LabeledPane<Button> {
         return new LabeledSelection<>(p, lab, val, Arrays.asList(en.getEnumConstants()), Enum::name);
     }
     public static LabeledSelection<String> createCriterion(Panel p, String lab, ResourceLocation adv, String val, Consumer<String> cb) {
-        ClientAdvancementManager cam = ClientUtils.mc().player.connection.getAdvancements();
+        ClientAdvancements cam = ClientUtils.mc().player.connection.getAdvancements();
         Advancement advx = cam.getAdvancements().get(adv);
         List<String> cit = new ArrayList<>();
         cit.add("");

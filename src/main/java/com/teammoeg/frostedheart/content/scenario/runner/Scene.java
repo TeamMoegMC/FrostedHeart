@@ -10,10 +10,10 @@ import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.IScenarioTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.TriggerTarget;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraftforge.common.util.Constants;
 
 public abstract class Scene {
@@ -34,23 +34,23 @@ public abstract class Scene {
 		super();
 	}
 
-	public CompoundNBT save() {
-		CompoundNBT nbt = new CompoundNBT();
+	public CompoundTag save() {
+		CompoundTag nbt = new CompoundTag();
 		nbt.putBoolean("nowait", isSaveNowait);
-		ListNBT logs = new ListNBT();
+		ListTag logs = new ListTag();
 		for (String s : savedLog) {
-			logs.add(StringNBT.valueOf(s));
+			logs.add(StringTag.valueOf(s));
 		}
 		nbt.put("logs", logs);
 		return nbt;
 	}
 
-	public void load(CompoundNBT nbt) {
+	public void load(CompoundTag nbt) {
 		isSaveNowait = nbt.getBoolean("nowait");
-		ListNBT logs = nbt.getList("logs", Constants.NBT.TAG_STRING);
+		ListTag logs = nbt.getList("logs", Constants.NBT.TAG_STRING);
 		savedLog.clear();
 		log.clear();
-		for (INBT s : logs) {
+		for (Tag s : logs) {
 			savedLog.add(s.getAsString());
 			log.add(new StringBuilder(s.getAsString()));
 		}

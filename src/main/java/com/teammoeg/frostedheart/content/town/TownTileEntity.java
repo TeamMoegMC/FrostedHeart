@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.math.ColumnPos;
 
 import java.util.Collection;
@@ -58,7 +58,7 @@ public interface TownTileEntity {
      *
      * @return the work data
      */
-    CompoundNBT getWorkData();
+    CompoundTag getWorkData();
 
     /**
      * Set work data here.
@@ -67,7 +67,7 @@ public interface TownTileEntity {
      *
      * @param data the work data
      */
-    void setWorkData(CompoundNBT data);
+    void setWorkData(CompoundTag data);
 
     /**
      * Get the occupied area of the entire structure.

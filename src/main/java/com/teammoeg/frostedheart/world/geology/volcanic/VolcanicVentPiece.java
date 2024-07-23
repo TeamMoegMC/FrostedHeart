@@ -21,16 +21,16 @@ package com.teammoeg.frostedheart.world.geology.volcanic;
 
 import java.util.Random;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.world.ISeedReader;
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.gen.feature.structure.StructureManager;
-import net.minecraft.world.gen.feature.structure.StructurePiece;
-import net.minecraft.world.gen.feature.template.TemplateManager;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.StructureFeatureManager;
+import net.minecraft.world.level.levelgen.structure.StructurePiece;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 
 
 public class VolcanicVentPiece extends StructurePiece {
@@ -46,12 +46,12 @@ public class VolcanicVentPiece extends StructurePiece {
 
         int range = 4 * 8;
 
-        this.boundingBox = new MutableBoundingBox(
+        this.boundingBox = new BoundingBox(
                 center.getX() - range, center.getY(), center.getZ() - range,
                 center.getX() + range, center.getY() + 32, center.getZ() + range);
     }
 
-    public VolcanicVentPiece(TemplateManager templateManager, CompoundNBT nbt) {
+    public VolcanicVentPiece(StructureManager templateManager, CompoundTag nbt) {
         super(null, nbt);
         this.centerX = nbt.getInt("x");
         this.centerY = nbt.getInt("y");
@@ -59,8 +59,8 @@ public class VolcanicVentPiece extends StructurePiece {
     }
 
     @Override
-    public boolean postProcess(ISeedReader reader, StructureManager structureManager, ChunkGenerator generator, Random seed, MutableBoundingBox boundingBox, ChunkPos chunkPos, BlockPos pos) {
-        BlockPos.Mutable mutablePos = new BlockPos.Mutable();
+    public boolean postProcess(WorldGenLevel reader, StructureFeatureManager structureManager, ChunkGenerator generator, Random seed, BoundingBox boundingBox, ChunkPos chunkPos, BlockPos pos) {
+        BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
         for (int x = boundingBox.x0; x <= boundingBox.x1; x++) {
             mutablePos.setX(x);
             for (int z = boundingBox.z0; z <= boundingBox.z1; z++) {
@@ -79,7 +79,7 @@ public class VolcanicVentPiece extends StructurePiece {
         return true;
     }
 
-    protected void addAdditionalSaveData(CompoundNBT nbt) {
+    protected void addAdditionalSaveData(CompoundTag nbt) {
         nbt.putInt("x", this.centerX);
         nbt.putInt("y", this.centerY);
         nbt.putInt("z", this.centerZ);

@@ -26,8 +26,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.recipes.DietValueRecipe;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import top.theillusivec4.diet.api.DietApi;
 import top.theillusivec4.diet.api.IDietResult;
 import top.theillusivec4.diet.common.impl.DietApiImpl;
@@ -36,7 +36,7 @@ import top.theillusivec4.diet.common.util.DietResult;
 @Mixin(DietApiImpl.class)
 public class DietApiImplMixin extends DietApi {
     @Inject(at = @At("HEAD"), require = 1, method = "get(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;)Ltop/theillusivec4/diet/api/IDietResult;", cancellable = true, remap = false)
-    public void get(PlayerEntity player, ItemStack input, CallbackInfoReturnable<IDietResult> result) {
+    public void get(Player player, ItemStack input, CallbackInfoReturnable<IDietResult> result) {
         DietValueRecipe fvr = DietValueRecipe.recipeList.get(input.getItem());
         if (fvr != null) {
             result.setReturnValue(new DietResult(fvr.getValues()));
@@ -44,7 +44,7 @@ public class DietApiImplMixin extends DietApi {
     }
 
     @Inject(at = @At("HEAD"), require = 1, method = "get(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;IF)Ltop/theillusivec4/diet/api/IDietResult;", cancellable = true, remap = false)
-    public void get(PlayerEntity player, ItemStack input, int heal, float sat,
+    public void get(Player player, ItemStack input, int heal, float sat,
                     CallbackInfoReturnable<IDietResult> result) {
         DietValueRecipe fvr = DietValueRecipe.recipeList.get(input.getItem());
         if (fvr != null) {

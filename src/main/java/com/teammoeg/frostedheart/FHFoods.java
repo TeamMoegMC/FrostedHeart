@@ -19,22 +19,22 @@
 
 package com.teammoeg.frostedheart;
 
-import net.minecraft.item.Food;
+import net.minecraft.world.food.FoodProperties;
 
 public class FHFoods {
-    public static final Food VEGETABLE_SAWDUST_SOUP = buildStew(6, 0.3F);
-    public static final Food RYE_SAWDUST_PORRIDGE = buildStew(6, 0.4F);
-    public static final Food RYE_BREAD = buildStew(6);
-    public static final Food BLACK_BREAD = buildStew(5, 0.0F);
-    public static final Food WHITE_TURNIP = buildStew(3, 0.5F);
-    public static final Food WOLFBERRIES = buildStew(2, 0.0F);
-    public static final Food DRIED_WOLFBERRIES = buildStew(1);
+    public static final FoodProperties VEGETABLE_SAWDUST_SOUP = buildStew(6, 0.3F);
+    public static final FoodProperties RYE_SAWDUST_PORRIDGE = buildStew(6, 0.4F);
+    public static final FoodProperties RYE_BREAD = buildStew(6);
+    public static final FoodProperties BLACK_BREAD = buildStew(5, 0.0F);
+    public static final FoodProperties WHITE_TURNIP = buildStew(3, 0.5F);
+    public static final FoodProperties WOLFBERRIES = buildStew(2, 0.0F);
+    public static final FoodProperties DRIED_WOLFBERRIES = buildStew(1);
 
-    private static Food buildStew(int hunger) {
-        return (new Food.Builder()).nutrition(hunger).saturationMod(0.6F).build();
+    private static FoodProperties buildStew(int hunger) {
+        return (new FoodProperties.Builder()).nutrition(hunger).saturationMod(0.6F).build();
     }
 
-    private static Food buildStew(int hunger, float saturation) {
-        return (new Food.Builder()).nutrition(hunger).saturationMod(saturation).build();
+    private static FoodProperties buildStew(int hunger, float saturation) {
+        return (new FoodProperties.Builder()).nutrition(hunger).saturationMod(saturation).build();
     }
 }

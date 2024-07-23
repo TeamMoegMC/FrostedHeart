@@ -27,21 +27,21 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import com.teammoeg.frostedheart.util.mixin.IMilkable;
 
-import net.minecraft.entity.passive.CowEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.Vec3;
 import wile.engineersdecor.blocks.EdMilker.MilkerTileEntity;
 
 @Mixin(MilkerTileEntity.class)
 public class EdMilkerMixin {
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/CowEntity;setNoAI(Z)V", ordinal = 2), method = "milking_process", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
-    private void fh$milked(CallbackInfoReturnable<Boolean> cir, Direction facing, Vector3d target_pos, CowEntity cow) {
+    private void fh$milked(CallbackInfoReturnable<Boolean> cir, Direction facing, Vec3 target_pos, Cow cow) {
         IMilkable im = (IMilkable) cow;
         im.setMilk((byte) (im.getMilk() - 1));
     }
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/CowEntity;isAlive()Z", ordinal = 0), method = "milking_process", cancellable = true, require = 1, locals = LocalCapture.CAPTURE_FAILHARD)
-    private void fh$milkingPending(CallbackInfoReturnable<Boolean> cir, Direction facing, Vector3d target_pos, CowEntity cow) {
+    private void fh$milkingPending(CallbackInfoReturnable<Boolean> cir, Direction facing, Vec3 target_pos, Cow cow) {
         IMilkable im = (IMilkable) cow;
         if (im.getMilk() <= 0) cir.setReturnValue(false);
     }

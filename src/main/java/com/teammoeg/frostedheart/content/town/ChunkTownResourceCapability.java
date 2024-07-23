@@ -7,7 +7,7 @@ import java.util.Random;
 
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 /**
  * 用于存储一个区块中含有的自然资源量。主要用于存储矿物等不可再生自然资源。
@@ -41,7 +41,7 @@ public class ChunkTownResourceCapability implements NBTSerializable {
     }
 
     @Override
-    public void save(CompoundNBT nbt, boolean isPacket) {
+    public void save(CompoundTag nbt, boolean isPacket) {
         for(Map.Entry<ChunkTownResourceType, Integer> abundanceEntry : resourceAbundance.entrySet()){
             if(abundanceEntry.getValue()!=null) {
                 nbt.putInt(abundanceEntry.getKey().getKey(), abundanceEntry.getValue());
@@ -50,7 +50,7 @@ public class ChunkTownResourceCapability implements NBTSerializable {
     }
 
     @Override
-    public void load(CompoundNBT nbt, boolean isPacket) {
+    public void load(CompoundTag nbt, boolean isPacket) {
         for(String key : CHUNK_RESOURCE_TYPE_KEY.keySet()){
             this.resourceAbundance.put(getChunkTownResourceType(key), nbt.getInt(key) >=0 ? null : nbt.getInt(key));
         }

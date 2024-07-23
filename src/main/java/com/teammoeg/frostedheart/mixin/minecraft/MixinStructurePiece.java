@@ -31,15 +31,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.util.mixin.StructureUtils;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.tileentity.LockableLootTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.world.ISeedReader;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.gen.feature.structure.StructurePiece;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.levelgen.structure.StructurePiece;
 /**
  * Replace chest to stone ones
  * */
@@ -50,7 +50,7 @@ public class MixinStructurePiece {
      * @reason auto remake chests
      */
     @Overwrite
-    protected boolean generateChest(IServerWorld worldIn, MutableBoundingBox boundsIn, Random rand, BlockPos posIn,
+    protected boolean generateChest(ServerLevelAccessor worldIn, BoundingBox boundsIn, Random rand, BlockPos posIn,
                                     ResourceLocation resourceLocationIn, @Nullable BlockState p_191080_6_) {
         if (boundsIn.isInside(posIn) && !worldIn.getBlockState(posIn).is(StructureUtils.getChest())) {
             if (p_191080_6_ == null) {
@@ -58,9 +58,9 @@ public class MixinStructurePiece {
             }
 
             worldIn.setBlock(posIn, p_191080_6_, 2);
-            TileEntity tileentity = worldIn.getBlockEntity(posIn);
-            if (tileentity instanceof LockableLootTileEntity) {
-                ((LockableLootTileEntity) tileentity).setLootTable(resourceLocationIn, rand.nextLong());
+            BlockEntity tileentity = worldIn.getBlockEntity(posIn);
+            if (tileentity instanceof RandomizableContainerBlockEntity) {
+                ((RandomizableContainerBlockEntity) tileentity).setLootTable(resourceLocationIn, rand.nextLong());
             }
 
             return true;
@@ -69,7 +69,7 @@ public class MixinStructurePiece {
     }
 
     @Inject(at = @At("HEAD"), method = "setBlockState", cancellable = true)
-    protected void setBlockState(ISeedReader worldIn, BlockState blockstateIn, int x, int y, int z, MutableBoundingBox boundingboxIn, CallbackInfo cbi) {
+    protected void setBlockState(WorldGenLevel worldIn, BlockState blockstateIn, int x, int y, int z, BoundingBox boundingboxIn, CallbackInfo cbi) {
         if (StructureUtils.isBanned(blockstateIn.getBlock())) {
             cbi.cancel();
         }

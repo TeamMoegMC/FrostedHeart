@@ -23,12 +23,12 @@ import com.google.gson.JsonObject;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
 public class InspireRecipe extends IESerializableRecipe {
@@ -41,7 +41,7 @@ public class InspireRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public InspireRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+        public InspireRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
             return new InspireRecipe(recipeId, Ingredient.fromNetwork(buffer), buffer.readInt());
         }
 
@@ -51,13 +51,13 @@ public class InspireRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public void toNetwork(PacketBuffer buffer, InspireRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buffer, InspireRecipe recipe) {
             recipe.item.toNetwork(buffer);
             buffer.writeInt(recipe.inspire);
         }
 
     }
-    public static IRecipeType<InspireRecipe> TYPE;
+    public static RecipeType<InspireRecipe> TYPE;
     public static RegistryObject<IERecipeSerializer<InspireRecipe>> SERIALIZER;
     public Ingredient item;
 

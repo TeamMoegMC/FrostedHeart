@@ -24,14 +24,14 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import com.simibubi.create.foundation.tileEntity.SmartTileEntity;
 
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.Level;
 
 @Mixin(SmartTileEntity.class)
-public abstract class MixinSmartTileEntity extends TileEntity {
+public abstract class MixinSmartTileEntity extends BlockEntity {
 
-    public MixinSmartTileEntity(TileEntityType<?> tileEntityTypeIn) {
+    public MixinSmartTileEntity(BlockEntityType<?> tileEntityTypeIn) {
         super(tileEntityTypeIn);
     }
 
@@ -40,7 +40,7 @@ public abstract class MixinSmartTileEntity extends TileEntity {
      * @reason fixed crash in dev environment.
      */
     @Overwrite(remap = false)
-    public World getLevel() {
+    public Level getLevel() {
         return level;
     }
 }

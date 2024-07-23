@@ -32,10 +32,10 @@ import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 import blusunrize.immersiveengineering.common.blocks.metal.AssemblerTileEntity;
 import blusunrize.immersiveengineering.common.blocks.metal.AssemblerTileEntity.CrafterPatternInventory;
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.util.NonNullList;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.core.NonNullList;
 
 @Mixin(CrafterPatternInventory.class)
 public class CrafterPatternInventoryMixin {
@@ -43,7 +43,7 @@ public class CrafterPatternInventoryMixin {
     public NonNullList<ItemStack> inv;
     @SuppressWarnings("rawtypes")
     @Shadow(remap = false)
-    public IRecipe recipe;
+    public Recipe recipe;
     @Final
     @Shadow(remap = false)
     AssemblerTileEntity tile;
@@ -58,7 +58,7 @@ public class CrafterPatternInventoryMixin {
     @Overwrite(remap = false)
     public void recalculateOutput() {
         if (tile.getLevel() != null) {
-            CraftingInventory invC = Utils.InventoryCraftingFalse.createFilledCraftingInventory(3, 3, inv);
+            CraftingContainer invC = Utils.InventoryCraftingFalse.createFilledCraftingInventory(3, 3, inv);
             this.recipe = Utils.findCraftingRecipe(invC, tile.getWorldNonnull()).orElse(null);
             AssemblerTileEntity nte = tile;
             if (!nte.isDummy()) {

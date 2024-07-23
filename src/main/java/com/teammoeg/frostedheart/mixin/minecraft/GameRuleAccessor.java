@@ -5,12 +5,12 @@ import java.util.Map;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-import net.minecraft.world.GameRules;
-import net.minecraft.world.GameRules.RuleKey;
-import net.minecraft.world.GameRules.RuleValue;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.GameRules.Key;
+import net.minecraft.world.level.GameRules.Value;
 @Mixin(GameRules.class)
 public interface GameRuleAccessor {
 	@Accessor
-	Map<RuleKey<?>, RuleValue<?>> getRules();
+	Map<Key<?>, Value<?>> getRules();
 
 }

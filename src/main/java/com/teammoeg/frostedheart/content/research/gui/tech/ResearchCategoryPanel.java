@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
 
@@ -29,7 +29,7 @@ import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.ChatFormatting;
 
 public class ResearchCategoryPanel extends Panel {
     public static class CategoryButton extends Button {
@@ -46,11 +46,11 @@ public class ResearchCategoryPanel extends Panel {
         @Override
         public void addMouseOverText(TooltipList list) {
             list.add(category.getName());
-            list.add(category.getDesc().withStyle(TextFormatting.GRAY));
+            list.add(category.getDesc().withStyle(ChatFormatting.GRAY));
         }
 
         @Override
-        public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
 
             //theme.drawHorizontalTab(matrixStack, x, y, w, h,categoryPanel.researchScreen.selectedCategory==category);
 
@@ -97,7 +97,7 @@ public class ResearchCategoryPanel extends Panel {
     }
 
     @Override
-    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
         super.draw(matrixStack, theme, x, y, w, h);
         //drawBackground(matrixStack, theme, x, y, w, h);
     }

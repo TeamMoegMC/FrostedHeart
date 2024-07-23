@@ -27,16 +27,16 @@ import com.cannolicatfish.rankine.world.trees.EasternHemlockTree;
 import com.cannolicatfish.rankine.world.trees.WesternHemlockTree;
 import com.teammoeg.frostedheart.util.FHUtils;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.trees.Tree;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.grower.AbstractTreeGrower;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.server.level.ServerLevel;
 
 @Mixin({EasternHemlockTree.class, WesternHemlockTree.class})
-public abstract class MixinXLargeTree extends Tree {
+public abstract class MixinXLargeTree extends AbstractTreeGrower {
     @Override
-    public boolean growTree(ServerWorld world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,
+    public boolean growTree(ServerLevel world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,
                                    Random rand) {
         if (FHUtils.canTreeGenerate(world, pos, rand, 42))
             return super.growTree(world, chunkGenerator, pos, state, rand);

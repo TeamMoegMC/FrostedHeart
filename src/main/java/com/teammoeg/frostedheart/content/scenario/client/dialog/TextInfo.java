@@ -4,17 +4,17 @@ import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.utility.ReferenceValue;
 
-import net.minecraft.util.ICharacterConsumer;
-import net.minecraft.util.IReorderingProcessor;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.FormattedCharSink;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.network.chat.Component;
 
 public class TextInfo {
-	public static class SizedReorderingProcessor implements IReorderingProcessor {
-		IReorderingProcessor origin;
+	public static class SizedReorderingProcessor implements FormattedCharSequence {
+		FormattedCharSequence origin;
 		int limit = 0;
 		boolean isFinished = false;
 
-		public SizedReorderingProcessor(IReorderingProcessor origin) {
+		public SizedReorderingProcessor(FormattedCharSequence origin) {
 			super();
 			this.origin = origin;
 		}
@@ -23,7 +23,7 @@ public class TextInfo {
 			return limit > 0;
 		}
 
-		public IReorderingProcessor asFinished() {
+		public FormattedCharSequence asFinished() {
 			if (isFinished) return origin;
 			return this;
 		}
@@ -44,7 +44,7 @@ public class TextInfo {
 			return retTracker.getVal();
 		}
 		@Override
-		public boolean accept(ICharacterConsumer p_accept_1_) {
+		public boolean accept(FormattedCharSink p_accept_1_) {
 			ReferenceValue<Integer> renderTracker = new ReferenceValue<>(0);
 			return origin.accept((i, s, c) -> {
 				isFinished = true;
@@ -77,9 +77,9 @@ public class TextInfo {
 		}
 
 	}
-	public ITextComponent parent;
+	public Component parent;
 	public int line;
-	public IReorderingProcessor text;
+	public FormattedCharSequence text;
 	public boolean addLimit(int amount,boolean toSpace) {
 		if (text instanceof SizedReorderingProcessor) {
 			SizedReorderingProcessor t = (SizedReorderingProcessor) text;
@@ -94,7 +94,7 @@ public class TextInfo {
 		return false;
 	}
 
-	public TextInfo(ITextComponent parent, int line, IReorderingProcessor text) {
+	public TextInfo(Component parent, int line, FormattedCharSequence text) {
 		super();
 		this.parent = parent;
 		this.line = line;
@@ -108,7 +108,7 @@ public class TextInfo {
 	public int getCurLen() {
 		return ClientUtils.mc().font.width(ClientScene.toString(text))+30;
 	}
-	public IReorderingProcessor asFinished() {
+	public FormattedCharSequence asFinished() {
 		return (text instanceof SizedReorderingProcessor) ? ((SizedReorderingProcessor) text).asFinished() : text;
 
 	}
@@ -120,7 +120,7 @@ public class TextInfo {
 		return !(text instanceof SizedReorderingProcessor) || ((SizedReorderingProcessor) text).hasText();
 	}
 
-	public IReorderingProcessor getFinished() {
+	public FormattedCharSequence getFinished() {
 		// TODO Auto-generated method stub
 		return (text instanceof SizedReorderingProcessor) ? ((SizedReorderingProcessor) text).origin : text;
 	}

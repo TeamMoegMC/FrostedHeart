@@ -26,21 +26,21 @@ import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import net.minecraft.block.Blocks;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.item.crafting.ShapedRecipe;
-import net.minecraft.item.crafting.ShapelessRecipe;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.ShapedRecipe;
+import net.minecraft.world.item.crafting.ShapelessRecipe;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
-public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishedRecipe {
+public class ShapelessCopyDataRecipe extends ShapelessRecipe implements FinishedRecipe {
     public static class Serializer extends IERecipeSerializer<ShapelessCopyDataRecipe> {
         private static NonNullList<Ingredient> readIngredients(JsonArray ingredientArray) {
             NonNullList<Ingredient> nonnulllist = NonNullList.create();
@@ -60,7 +60,7 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishe
             return new ItemStack(Blocks.CRAFTING_TABLE);
         }
 
-        public ShapelessCopyDataRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+        public ShapelessCopyDataRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
 
             NonNullList<Ingredient> nonnulllist = NonNullList.of(Ingredient.EMPTY,
                     SerializeUtil.readList(buffer, Ingredient::fromNetwork).toArray(new Ingredient[0]));
@@ -69,18 +69,18 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishe
         }
 
         public ShapelessCopyDataRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            NonNullList<Ingredient> nonnulllist = readIngredients(JSONUtils.getAsJsonArray(json, "ingredients"));
+            NonNullList<Ingredient> nonnulllist = readIngredients(GsonHelper.getAsJsonArray(json, "ingredients"));
             if (nonnulllist.isEmpty()) {
                 throw new JsonParseException("No ingredients for shapeless recipe");
             } else if (nonnulllist.size() > 9) {
                 throw new JsonParseException("Too many ingredients for shapeless recipe the max is 9");
             } else {
-                ItemStack itemstack = ShapedRecipe.itemFromJson(JSONUtils.getAsJsonObject(json, "result"));
+                ItemStack itemstack = ShapedRecipe.itemFromJson(GsonHelper.getAsJsonObject(json, "result"));
                 return new ShapelessCopyDataRecipe(recipeId, itemstack, nonnulllist);
             }
         }
 
-        public void toNetwork(PacketBuffer buffer, ShapelessCopyDataRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buffer, ShapelessCopyDataRecipe recipe) {
 
             SerializeUtil.writeList(buffer, recipe.getIngredients(), Ingredient::toNetwork);
             buffer.writeItem(recipe.getResultItem());
@@ -109,7 +109,7 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishe
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack assemble(CraftingInventory inv) {
+    public ItemStack assemble(CraftingContainer inv) {
         for (int j = 0; j < inv.getContainerSize(); ++j) {
             ItemStack in = inv.getItem(j);
             if (tool.test(in)) {
@@ -127,7 +127,7 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishe
         return getId();
     }
 
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getSerializer() {
         return SERIALIZER.get();
     }
 

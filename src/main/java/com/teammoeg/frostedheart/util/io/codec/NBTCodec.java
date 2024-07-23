@@ -8,9 +8,9 @@ import com.mojang.serialization.MapLike;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.marshaller.ClassInfo;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.NBTDynamicOps;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.NbtOps;
 
 public class NBTCodec<A extends NBTSerializable> implements Codec<A> {
 	Class<A> clazz;
@@ -22,7 +22,7 @@ public class NBTCodec<A extends NBTSerializable> implements Codec<A> {
 
 	@Override
 	public <T> DataResult<T> encode(A input, DynamicOps<T> ops, T prefix) {
-		DataResult<MapLike<T>> data=ops.getMap(NBTDynamicOps.INSTANCE.convertMap(ops, input.serializeNBT()));
+		DataResult<MapLike<T>> data=ops.getMap(NbtOps.INSTANCE.convertMap(ops, input.serializeNBT()));
 		if(!data.result().isPresent())
 			return (DataResult<T>) data;
 		return ops.mergeToMap(prefix, data.result().get());
@@ -31,10 +31,10 @@ public class NBTCodec<A extends NBTSerializable> implements Codec<A> {
 	@Override
 	public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
 
-		INBT nbt = ops.convertTo(NBTDynamicOps.INSTANCE, input);
-		if (nbt instanceof CompoundNBT) {
+		Tag nbt = ops.convertTo(NbtOps.INSTANCE, input);
+		if (nbt instanceof CompoundTag) {
 			A inst = ClassInfo.createInstance(clazz);
-			inst.deserializeNBT((CompoundNBT) nbt);
+			inst.deserializeNBT((CompoundTag) nbt);
 			return DataResult.success(Pair.of(inst, input));
 		}
 		return DataResult.error("Not A Compound");

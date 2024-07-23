@@ -32,9 +32,9 @@ import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import dev.ftb.mods.ftbteams.data.Team;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTDynamicOps;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 /**
@@ -63,7 +63,7 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 	}
 	
 	@Override
-	public void save(CompoundNBT nbt, boolean isPacket) {
+	public void save(CompoundTag nbt, boolean isPacket) {
 
 		super.save(nbt, isPacket);
         if (ownerName != null)
@@ -73,11 +73,11 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 	}
 	
 	@Override
-	public void load(CompoundNBT nbt, boolean isPacket) {
+	public void load(CompoundTag nbt, boolean isPacket) {
 		super.load(nbt, isPacket);
 		//Compatible migration from old data folder
 		if(nbt.contains("researches")) {
-			this.setData(SpecialDataTypes.RESEARCH_DATA, SpecialDataTypes.RESEARCH_DATA.loadData(NBTDynamicOps.INSTANCE, nbt));
+			this.setData(SpecialDataTypes.RESEARCH_DATA, SpecialDataTypes.RESEARCH_DATA.loadData(NbtOps.INSTANCE, nbt));
 		}
         if (nbt.contains("owner"))
             ownerName = nbt.getString("owner");
@@ -91,8 +91,8 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 	 *
 	 * @param consumer the player consumer
 	 */
-	public void forEachOnline(Consumer<ServerPlayerEntity> consumer) {
-        for (ServerPlayerEntity spe : team.get().getOnlineMembers())
+	public void forEachOnline(Consumer<ServerPlayer> consumer) {
+        for (ServerPlayer spe : team.get().getOnlineMembers())
         	consumer.accept(spe);
 	}
 	
@@ -102,7 +102,7 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 	 * @param packet the packet
 	 */
 	public void sendToOnline(FHMessage packet) {
-        for (ServerPlayerEntity spe : team.get().getOnlineMembers())
+        for (ServerPlayer spe : team.get().getOnlineMembers())
         	FHNetwork.send(PacketDistributor.PLAYER.with(()->spe), packet);
 	}
     public UUID getId() {
@@ -131,7 +131,7 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 	 *
 	 * @return the online members
 	 */
-	public List<ServerPlayerEntity> getOnlineMembers() {
+	public List<ServerPlayer> getOnlineMembers() {
 		return team.get().getOnlineMembers();
 	}
 }

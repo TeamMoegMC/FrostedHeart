@@ -29,10 +29,10 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkH
 
 import blusunrize.immersiveengineering.common.blocks.plant.EnumHempGrowth;
 import blusunrize.immersiveengineering.common.blocks.plant.HempBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 
 @Mixin(HempBlock.class)
 public class HempBlockMixin {
@@ -44,7 +44,7 @@ public class HempBlockMixin {
             return EnumHempGrowth.BOTTOM4;
     }
 
-    private float fh$getGrowthSpeed(World world, BlockPos pos, BlockState state, int light) {
+    private float fh$getGrowthSpeed(Level world, BlockPos pos, BlockState state, int light) {
         float growth = 0.125f * (light - 11);
         if (world.canSeeSkyFromBelowWater(pos))
             growth += 2f;
@@ -68,7 +68,7 @@ public class HempBlockMixin {
      * @reason Got some weird obfuscation issues if I use @Inject above
      */
     @Overwrite
-    public void tick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
+    public void tick(BlockState state, ServerLevel world, BlockPos pos, Random random) {
         int light = world.getMaxLocalRawBrightness(pos);
         if (light >= 12) {
             // FH Starts

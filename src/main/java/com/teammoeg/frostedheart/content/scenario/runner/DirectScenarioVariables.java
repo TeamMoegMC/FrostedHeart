@@ -23,21 +23,21 @@ import java.util.Arrays;
 
 import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 
 public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles  {
-    CompoundNBT extraData;
+    CompoundTag extraData;
     
     public DirectScenarioVariables() {
         super();
     }
     @Override
-	public CompoundNBT save() {
+	public CompoundTag save() {
     	return extraData;
     }
     @Override
-	public void load(CompoundNBT data) {
+	public void load(CompoundTag data) {
     	extraData=data;
     }
     @Override
@@ -46,7 +46,7 @@ public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles 
     @Override
 	public boolean containsPath(String path) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (!nbt.contains(paths[i], 10))
                 return false;
@@ -56,9 +56,9 @@ public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles 
     }
 
     @Override
-	public INBT evalPath(String path) {
+	public Tag evalPath(String path) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             nbt = nbt.getCompound(paths[i]);
         }
@@ -68,7 +68,7 @@ public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles 
     @Override
 	public Double evalPathDouble(String path) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             nbt = nbt.getCompound(paths[i]);
         }
@@ -81,21 +81,21 @@ public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles 
     }
 
     @Override
-	public CompoundNBT getExecutionData() {
+	public CompoundTag getExecutionData() {
     	if(extraData==null) {
-    		extraData=new CompoundNBT();
+    		extraData=new CompoundTag();
     	}
         return extraData;
     }
     @Override
-	public void setPath(String path, INBT val) {
+	public void setPath(String path, Tag val) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (nbt.contains(paths[i], 10)) {
                 nbt = nbt.getCompound(paths[i]);
             } else if (!nbt.contains(paths[i])) {
-                CompoundNBT cnbt = new CompoundNBT();
+                CompoundTag cnbt = new CompoundTag();
                 nbt.put(paths[i], cnbt);
                 nbt = cnbt;
             } else
@@ -107,12 +107,12 @@ public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles 
     @Override
 	public void setPathNumber(String path, Number val) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (nbt.contains(paths[i], 10)) {
                 nbt = nbt.getCompound(paths[i]);
             } else if (!nbt.contains(paths[i])) {
-                CompoundNBT cnbt = new CompoundNBT();
+                CompoundTag cnbt = new CompoundTag();
                 nbt.put(paths[i], cnbt);
                 nbt = cnbt;
             } else
@@ -124,12 +124,12 @@ public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles 
     @Override
 	public void setPathString(String path, String val) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = getExecutionData();
+        CompoundTag nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (nbt.contains(paths[i], 10)) {
                 nbt = nbt.getCompound(paths[i]);
             } else if (!nbt.contains(paths[i])) {
-                CompoundNBT cnbt = new CompoundNBT();
+                CompoundTag cnbt = new CompoundTag();
                 nbt.put(paths[i], cnbt);
                 nbt = cnbt;
             } else

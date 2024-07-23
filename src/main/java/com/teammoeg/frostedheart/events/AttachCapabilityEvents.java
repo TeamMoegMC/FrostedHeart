@@ -26,12 +26,12 @@ import com.teammoeg.frostedheart.base.capability.CurioCapabilityProvider;
 import com.teammoeg.frostedheart.content.climate.ArmorTempCurios;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -41,9 +41,9 @@ import net.minecraftforge.fml.common.Mod;
 public class AttachCapabilityEvents {
 
     @SubscribeEvent
-    public static void attachToChunk(AttachCapabilitiesEvent<Chunk> event) {
+    public static void attachToChunk(AttachCapabilitiesEvent<LevelChunk> event) {
         if (!event.getObject().isEmpty()) {
-            World world = event.getObject().getLevel();
+            Level world = event.getObject().getLevel();
             if (!world.isClientSide) {
                 event.addCapability(new ResourceLocation(FHMain.MODID, "chunk_data"), FHCapabilities.CHUNK_HEAT.provider());
                 event.addCapability(new ResourceLocation(FHMain.MODID, "chunk_town_resource"), FHCapabilities.CHUNK_TOWN_RESOURCE.provider());
@@ -53,8 +53,8 @@ public class AttachCapabilityEvents {
 
     @SubscribeEvent
     public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
-        if (event.getObject() instanceof ServerPlayerEntity) {//server-side only capabilities
-            ServerPlayerEntity player = (ServerPlayerEntity) event.getObject();
+        if (event.getObject() instanceof ServerPlayer) {//server-side only capabilities
+            ServerPlayer player = (ServerPlayer) event.getObject();
             if (!(player instanceof FakePlayer)) {
                 event.addCapability(new ResourceLocation(FHMain.MODID, "death_inventory"), FHCapabilities.DEATH_INV.provider());
                 event.addCapability(new ResourceLocation(FHMain.MODID, "scenario"       ), FHCapabilities.SCENARIO.provider());
@@ -74,7 +74,7 @@ public class AttachCapabilityEvents {
         }
     }
     @SubscribeEvent
-    public static void attachToWorld(AttachCapabilitiesEvent<World> event) {
+    public static void attachToWorld(AttachCapabilitiesEvent<Level> event) {
         // only attach to dimension with skylight (i.e. overworld)
         if (!event.getObject().dimensionType().hasFixedTime()) {
             event.addCapability(new ResourceLocation(FHMain.MODID, "climate_data"),FHCapabilities.CLIMATE_DATA.provider());

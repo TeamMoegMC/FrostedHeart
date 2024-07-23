@@ -24,14 +24,14 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import com.cannolicatfish.rankine.blocks.BlastingPowderBlock;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.FallingBlock;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.Explosion;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.FallingBlock;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.Level;
 
-import net.minecraft.block.AbstractBlock.Properties;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 @Mixin(BlastingPowderBlock.class)
 public class MixinBlastingPowderBlock extends FallingBlock {
@@ -46,10 +46,10 @@ public class MixinBlastingPowderBlock extends FallingBlock {
      */
     @Override
     @Overwrite(remap = false)
-    public void catchFire(BlockState state, World world, BlockPos pos, net.minecraft.util.Direction face,
+    public void catchFire(BlockState state, Level world, BlockPos pos, net.minecraft.core.Direction face,
                           LivingEntity igniter) {
         world.removeBlock(pos, false);
-        world.explode(igniter, pos.getX(), pos.getY() + 16 * .0625D, pos.getZ(), 2.4F, Explosion.Mode.BREAK);
+        world.explode(igniter, pos.getX(), pos.getY() + 16 * .0625D, pos.getZ(), 2.4F, Explosion.BlockInteraction.BREAK);
     }
 
 }

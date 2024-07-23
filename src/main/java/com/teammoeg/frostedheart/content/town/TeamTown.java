@@ -27,9 +27,9 @@ import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import dev.ftb.mods.ftbteams.data.Team;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.util.LazyOptional;
 
 /**
@@ -69,7 +69,7 @@ public class TeamTown implements Town {
      * @param player the player
      * @return the town
      */
-    public static TeamTown from(PlayerEntity player) {
+    public static TeamTown from(Player player) {
         TeamTownData data = FHTeamDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA);
         return new TeamTown(data);
     }
@@ -268,7 +268,7 @@ public class TeamTown implements Town {
      * @param pos position of the block
      * @return the work data
      */
-    public CompoundNBT getTownBlockData(BlockPos pos) {
+    public CompoundTag getTownBlockData(BlockPos pos) {
         TownWorkerData twd = data.blocks.get(pos);
         if (twd == null)
             return null;

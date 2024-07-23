@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.IScenarioDialog;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLLayerContent;
@@ -10,7 +10,7 @@ import net.minecraft.client.Minecraft;
 
 public class RenderParams {
 	IScenarioDialog screen;
-	MatrixStack matrixStack;
+	PoseStack matrixStack;
 	int mouseX;
 	int mouseY;
 	float partialTicks;
@@ -19,7 +19,7 @@ public class RenderParams {
 	int x,y,width,height,offsetX,offsetY;
 	boolean forceFirst;
 	int contentWidth,contentHeight;
-	public RenderParams(IScenarioDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+	public RenderParams(IScenarioDialog screen, PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 		super();
 		this.screen = screen;
 		this.matrixStack = matrixStack;
@@ -34,7 +34,7 @@ public class RenderParams {
 	}
 
 
-	public RenderParams(IScenarioDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks,
+	public RenderParams(IScenarioDialog screen, PoseStack matrixStack, int mouseX, int mouseY, float partialTicks,
 			float opacity, int x, int y, int width, int height, float xzoom, float yzoom, int offsetX,
 			int offsetY,int contentWidth,int contentHeight) {
 		super();
@@ -55,7 +55,7 @@ public class RenderParams {
 		this.contentWidth=contentWidth;
 		this.contentHeight=contentHeight;
 	}
-	public RenderParams(IScenarioDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks,
+	public RenderParams(IScenarioDialog screen, PoseStack matrixStack, int mouseX, int mouseY, float partialTicks,
 			float opacity, int x, int y, int width, int height, float xzoom, float yzoom) {
 		super();
 		this.screen = screen;
@@ -92,10 +92,10 @@ public class RenderParams {
 	public IScenarioDialog getScreen() {
 		return screen;
 	}
-	public MatrixStack getMatrixStack() {
+	public PoseStack getMatrixStack() {
 		return matrixStack;
 	}
-	public void setMatrixStack(MatrixStack matrixStack) {
+	public void setMatrixStack(PoseStack matrixStack) {
 		this.matrixStack = matrixStack;
 	}
 	public int getMouseX() {

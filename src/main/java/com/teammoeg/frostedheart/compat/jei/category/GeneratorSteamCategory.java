@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
@@ -43,9 +43,9 @@ import mezz.jei.api.gui.ingredient.IGuiItemStackGroup;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
@@ -72,7 +72,7 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
     }
 
     @Override
-    public void draw(GeneratorSteamRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
+    public void draw(GeneratorSteamRecipe recipe, PoseStack transform, double mouseX, double mouseY) {
         FIRE.draw(transform, 80, 28);
         SWITCH.draw(transform, 52, 31);
         int offset1 = (int) ((4 - recipe.level) * 14);
@@ -103,8 +103,8 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
     }
 
     @Override
-    public List<ITextComponent> getTooltipStrings(GeneratorSteamRecipe recipe, double mouseX, double mouseY) {
-        List<ITextComponent> tooltip = new ArrayList<>();
+    public List<Component> getTooltipStrings(GeneratorSteamRecipe recipe, double mouseX, double mouseY) {
+        List<Component> tooltip = new ArrayList<>();
 
         if (isMouseIn(mouseX, mouseY, 8, 9, 2, 54)) {
             tooltip.add(TranslateUtils.translateGui("generator.temperature.level").append(String.valueOf(recipe.level)));

@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.trade.policy.conditions;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class GreaterFlagCondition extends FlagValueCondition {
 
@@ -30,7 +30,7 @@ public class GreaterFlagCondition extends FlagValueCondition {
         super(jo);
     }
 
-    public GreaterFlagCondition(PacketBuffer buffer) {
+    public GreaterFlagCondition(FriendlyByteBuf buffer) {
         super(buffer);
     }
 

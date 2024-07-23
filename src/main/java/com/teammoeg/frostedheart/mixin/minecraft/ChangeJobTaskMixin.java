@@ -24,20 +24,20 @@ import java.util.Map;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-import net.minecraft.entity.ai.brain.memory.MemoryModuleStatus;
-import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
-import net.minecraft.entity.ai.brain.task.ChangeJobTask;
-import net.minecraft.entity.ai.brain.task.Task;
-import net.minecraft.entity.merchant.villager.VillagerEntity;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.entity.ai.memory.MemoryStatus;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.world.entity.ai.behavior.ResetProfession;
+import net.minecraft.world.entity.ai.behavior.Behavior;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.server.level.ServerLevel;
 /**
  * Disable vanilla village profession
  * <p>
  * */
-@Mixin(ChangeJobTask.class)
-public abstract class ChangeJobTaskMixin extends Task<VillagerEntity> {
+@Mixin(ResetProfession.class)
+public abstract class ChangeJobTaskMixin extends Behavior<Villager> {
 
-    public ChangeJobTaskMixin(Map<MemoryModuleType<?>, MemoryModuleStatus> requiredMemoryStateIn) {
+    public ChangeJobTaskMixin(Map<MemoryModuleType<?>, MemoryStatus> requiredMemoryStateIn) {
         super(requiredMemoryStateIn);
     }
 
@@ -46,7 +46,7 @@ public abstract class ChangeJobTaskMixin extends Task<VillagerEntity> {
      * @reason Disable vanilla profession
      */
     @Overwrite
-    protected boolean checkExtraStartConditions(ServerWorld worldIn, VillagerEntity owner) {
+    protected boolean checkExtraStartConditions(ServerLevel worldIn, Villager owner) {
         return false;
     }
 

@@ -1,15 +1,15 @@
 package com.teammoeg.frostedheart.base.capability.codec;
 
 import com.teammoeg.frostedheart.util.io.CodecUtil;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.NBTDynamicOps;
-import net.minecraft.util.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class FHCodecCapabilityProvider<T> implements ICapabilitySerializable<INBT> {
+public class FHCodecCapabilityProvider<T> implements ICapabilitySerializable<Tag> {
 	LazyOptional<T> lazyCap;
 	FHCodecCapability<T> capability;
 	public FHCodecCapabilityProvider(FHCodecCapability<T> capability) {
@@ -24,14 +24,14 @@ public class FHCodecCapabilityProvider<T> implements ICapabilitySerializable<INB
 	}
 
 	@Override
-	public INBT serializeNBT() {
-		return lazyCap.map(t->CodecUtil.encodeOrThrow(capability.codec().encodeStart(NBTDynamicOps.INSTANCE, t))).orElseGet(CompoundNBT::new);
+	public Tag serializeNBT() {
+		return lazyCap.map(t->CodecUtil.encodeOrThrow(capability.codec().encodeStart(NbtOps.INSTANCE, t))).orElseGet(CompoundTag::new);
 	}
 
 	@Override
-	public void deserializeNBT(INBT nbt) {
+	public void deserializeNBT(Tag nbt) {
 		lazyCap.invalidate();
-		T obj=CodecUtil.decodeOrThrow(capability.codec().decode(NBTDynamicOps.INSTANCE, nbt));
+		T obj=CodecUtil.decodeOrThrow(capability.codec().decode(NbtOps.INSTANCE, nbt));
 		lazyCap=LazyOptional.of(()->obj);
 	}
 

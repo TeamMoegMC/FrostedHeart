@@ -30,7 +30,7 @@ import dev.ftb.mods.ftbchunks.data.ClaimedChunkManager;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import dev.ftb.mods.ftbteams.data.PlayerTeam;
 import dev.ftb.mods.ftbteams.data.Team;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 @Mixin(FTBChunksTeamData.class)
 public class ChunkDataMixin {
@@ -43,7 +43,7 @@ public class ChunkDataMixin {
     }
 
     @Inject(at = @At("HEAD"), method = "deserializeNBT", remap = false)
-    public void fh$deserializeNBT(CompoundNBT tag, CallbackInfo cbi) {
+    public void fh$deserializeNBT(CompoundTag tag, CallbackInfo cbi) {
         if (team instanceof PlayerTeam) {
             PlayerTeam pt = (PlayerTeam) team;
             if (pt.actualTeam != pt)

@@ -25,7 +25,7 @@ import com.simibubi.create.foundation.block.BlockStressValues;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
-import net.minecraft.block.Blocks;
+import net.minecraft.world.level.block.Blocks;
 
 public class CreateCompat {
     public static void init() {

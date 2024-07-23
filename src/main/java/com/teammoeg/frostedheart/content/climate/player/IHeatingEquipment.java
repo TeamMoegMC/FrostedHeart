@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Interface IHeatingEquipment.

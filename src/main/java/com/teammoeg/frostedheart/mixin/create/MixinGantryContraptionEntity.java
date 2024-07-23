@@ -30,27 +30,27 @@ import com.simibubi.create.content.contraptions.components.structureMovement.gan
 import com.simibubi.create.content.contraptions.relays.advanced.GantryShaftTileEntity;
 import com.teammoeg.frostedheart.util.mixin.IGantryShaft;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.Level;
 
 @Mixin(GantryContraptionEntity.class)
 public abstract class MixinGantryContraptionEntity extends AbstractContraptionEntity {
 
-    public MixinGantryContraptionEntity(EntityType<?> entityTypeIn, World worldIn) {
+    public MixinGantryContraptionEntity(EntityType<?> entityTypeIn, Level worldIn) {
         super(entityTypeIn, worldIn);
     }
 
     @Inject(at = @At("HEAD"), method = "checkPinionShaft", remap = false)
     protected void checkPinionShaft(CallbackInfo cbi) {
         Direction facing = ((GantryContraption) contraption).getFacing();
-        Vector3d currentPosition = getAnchorVec().add(.5, .5, .5);
+        Vec3 currentPosition = getAnchorVec().add(.5, .5, .5);
         BlockPos gantryShaftPos = new BlockPos(currentPosition).relative(facing.getOpposite());
 
-        TileEntity te = level.getBlockEntity(gantryShaftPos);
+        BlockEntity te = level.getBlockEntity(gantryShaftPos);
         if (te instanceof IGantryShaft) {
             GantryShaftTileEntity gte = (GantryShaftTileEntity) te;
             ((IGantryShaft) gte).setEntity(this);

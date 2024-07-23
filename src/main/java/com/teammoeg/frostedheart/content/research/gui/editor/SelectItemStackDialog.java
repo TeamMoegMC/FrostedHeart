@@ -32,7 +32,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterators;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
@@ -55,20 +55,20 @@ import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.JsonToNBT;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.TagParser;
+import net.minecraft.util.Mth;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.ChatFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
@@ -85,7 +85,7 @@ public class SelectItemStackDialog extends EditDialog {
         public void onClicked(MouseButton button) {
             playClickSound();
 
-            final CompoundNBT nbt = current.save(new CompoundNBT());
+            final CompoundTag nbt = current.save(new CompoundTag());
 
 
             EditPrompt.open(this, "caps", fromNBT(nbt.get("ForgeCaps")), s -> {
@@ -93,7 +93,7 @@ public class SelectItemStackDialog extends EditDialog {
                     nbt.remove("ForgeCaps");
                 } else {
                     try {
-                        nbt.put("ForgeCaps", JsonToNBT.parseTag(s));
+                        nbt.put("ForgeCaps", TagParser.parseTag(s));
                     } catch (CommandSyntaxException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
@@ -117,11 +117,11 @@ public class SelectItemStackDialog extends EditDialog {
 
     private class ButtonEditData extends Button {
         public ButtonEditData(Panel panel) {
-            super(panel, StringTextComponent.EMPTY, Icons.BUG);
+            super(panel, TextComponent.EMPTY, Icons.BUG);
         }
 
         @Override
-        public void drawIcon(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void drawIcon(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
             matrixStack.pushPose();
             matrixStack.translate(0, 0, 100);
             GuiHelper.drawItem(matrixStack, current, x, y, w / 16F, h / 16F, true, null);
@@ -129,16 +129,16 @@ public class SelectItemStackDialog extends EditDialog {
         }
 
         @Override
-        public ITextComponent getTitle() {
+        public Component getTitle() {
             return current.getHoverName();
         }
 
         @Override
         public void onClicked(MouseButton button) {
             playClickSound();
-            EditPrompt.open(this, "Data", current.save(new CompoundNBT()).toString(), s -> {
+            EditPrompt.open(this, "Data", current.save(new CompoundTag()).toString(), s -> {
                 try {
-                    current = ItemStack.of(JsonToNBT.parseTag(s));
+                    current = ItemStack.of(TagParser.parseTag(s));
                 } catch (CommandSyntaxException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -157,7 +157,7 @@ public class SelectItemStackDialog extends EditDialog {
             playClickSound();
             EditPrompt.open(this, "nbt", fromNBT(current.getTag()), s -> {
                 try {
-                    current.setTag(JsonToNBT.parseTag(s));
+                    current.setTag(TagParser.parseTag(s));
                 } catch (CommandSyntaxException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -167,7 +167,7 @@ public class SelectItemStackDialog extends EditDialog {
     }
 
     private abstract class ButtonStackConfig extends Button {
-        public ButtonStackConfig(Panel panel, ITextComponent title, Icon icon) {
+        public ButtonStackConfig(Panel panel, Component title, Icon icon) {
             super(panel, title, icon);
         }
 
@@ -188,16 +188,16 @@ public class SelectItemStackDialog extends EditDialog {
         @Override
         public void addMouseOverText(TooltipList list) {
             super.addMouseOverText(list);
-            list.add(activeMode.getDisplayName().withStyle(TextFormatting.GRAY).append(TranslateUtils.str(" [" + panelStacks.widgets.size() + "]").withStyle(TextFormatting.DARK_GRAY)));
+            list.add(activeMode.getDisplayName().withStyle(ChatFormatting.GRAY).append(TranslateUtils.str(" [" + panelStacks.widgets.size() + "]").withStyle(ChatFormatting.DARK_GRAY)));
         }
 
         @Override
-        public void drawIcon(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void drawIcon(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
             activeMode.getIcon().draw(matrixStack, x, y, w, h);
         }
 
         @Override
-        public ITextComponent getTitle() {
+        public Component getTitle() {
             return TranslateUtils.translate("ftblibrary.select_item.list_mode");
         }
 
@@ -213,7 +213,7 @@ public class SelectItemStackDialog extends EditDialog {
         private final ItemStack stack;
 
         private ItemStackButton(Panel panel, ItemStack is) {
-            super(panel, StringTextComponent.EMPTY, Icons.BARRIER);
+            super(panel, TextComponent.EMPTY, Icons.BARRIER);
             setSize(18, 18);
             stack = is;
             title = null;
@@ -225,12 +225,12 @@ public class SelectItemStackDialog extends EditDialog {
         }
 
         @Override
-        public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
             (getWidgetType() == WidgetType.MOUSE_OVER ? Color4I.LIGHT_GREEN.withAlpha(70) : Color4I.BLACK.withAlpha(50)).draw(matrixStack, x, y, w, h);
         }
 
         @Override
-        public ITextComponent getTitle() {
+        public Component getTitle() {
             if (title == null) {
                 title = stack.getHoverName();
             }
@@ -289,7 +289,7 @@ public class SelectItemStackDialog extends EditDialog {
             }
 
             @Override
-            public IFormattableTextComponent getDisplayName() {
+            public MutableComponent getDisplayName() {
                 return TranslateUtils.str("Blocks");
             }
 
@@ -318,7 +318,7 @@ public class SelectItemStackDialog extends EditDialog {
     private static String fromItemStack(ItemStack s) {
         return s.getHoverName().getString() + " x " + s.getCount();
     }
-    private static String fromNBT(INBT nbt) {
+    private static String fromNBT(Tag nbt) {
         if (nbt == null)
             return "";
         return nbt.toString();
@@ -370,7 +370,7 @@ public class SelectItemStackDialog extends EditDialog {
             }
 
             @Override
-            public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+            public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
                 theme.drawPanelBackground(matrixStack, x, y, w, h);
             }
         };
@@ -435,7 +435,7 @@ public class SelectItemStackDialog extends EditDialog {
     }
 
     @Override
-    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
         theme.drawGui(matrixStack, x, y, w, h, WidgetType.NORMAL);
 
         long now = System.currentTimeMillis();
@@ -493,6 +493,6 @@ public class SelectItemStackDialog extends EditDialog {
         panelStacks.addAll(items);
         scrollBar.setPosAndSize(panelStacks.posX + panelStacks.width + 25, panelStacks.posY - 1, 16, panelStacks.height + 2);
         scrollBar.setValue(0);
-        scrollBar.setMaxValue(1 + MathHelper.ceil(panelStacks.widgets.size() / 9F) * 19);
+        scrollBar.setMaxValue(1 + Mth.ceil(panelStacks.widgets.size() / 9F) * 19);
     }
 }

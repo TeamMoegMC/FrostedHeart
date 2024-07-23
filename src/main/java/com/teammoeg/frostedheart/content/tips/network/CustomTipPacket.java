@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.tips.network;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.tips.client.util.TipDisplayUtil;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -13,7 +13,7 @@ public class CustomTipPacket implements FHMessage {
     private final int visibleTime;
     private final boolean history;
 
-    public CustomTipPacket(PacketBuffer buffer) {
+    public CustomTipPacket(FriendlyByteBuf buffer) {
         title = buffer.readUtf();
         content = buffer.readUtf();
         visibleTime = buffer.readInt();
@@ -27,7 +27,7 @@ public class CustomTipPacket implements FHMessage {
         this.history = history;
     }
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeUtf(this.title);
         buffer.writeUtf(this.content);
         buffer.writeInt(this.visibleTime);

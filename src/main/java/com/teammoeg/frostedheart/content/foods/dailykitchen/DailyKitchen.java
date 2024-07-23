@@ -44,10 +44,10 @@ import java.util.Set;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
 import top.theillusivec4.diet.api.DietCapability;
 import top.theillusivec4.diet.api.IDietTracker;
@@ -57,7 +57,7 @@ public class DailyKitchen {
      * This function generates 1-3 foods that player wants to eat.It should be called once every morning(in frostedheart.events.PlayerEvents.sendForecastMessages).
      * It records how many kinds of foods the player have eaten in wantedFoodCapability(It seems that diet mod doesn't record this), eatenFoodsAmount WON'T be changed until this function is called again. So the player will get same effect in one day.
      */
-    public static void generateWantedFood(PlayerEntity player){
+    public static void generateWantedFood(Player player){
         LazyOptional<IDietTracker> dietTracker = DietCapability.get(player);
         if(!dietTracker.isPresent()){
             return;
@@ -84,7 +84,7 @@ public class DailyKitchen {
     }
 
 
-    public static void tryGiveBenefits(ServerPlayerEntity player, ItemStack foodItemStack){
+    public static void tryGiveBenefits(ServerPlayer player, ItemStack foodItemStack){
         Benefits benefits = new Benefits(player);
         benefits.tryGive(foodItemStack);
     }

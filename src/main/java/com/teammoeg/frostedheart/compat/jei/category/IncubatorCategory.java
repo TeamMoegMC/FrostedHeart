@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.cannolicatfish.rankine.init.RankineItems;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
@@ -42,10 +42,10 @@ import mezz.jei.api.gui.ingredient.IGuiItemStackGroup;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.fluids.FluidStack;
@@ -73,7 +73,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     }
 
     @Override
-    public void draw(IncubateRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
+    public void draw(IncubateRecipe recipe, PoseStack transform, double mouseX, double mouseY) {
         FIRE.draw(transform, 31, 31);
         PROC.draw(transform, 76, 24);
         EFF.draw(transform, 15, 31);
@@ -108,7 +108,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     }
 
     @Override
-    public List<ITextComponent> getTooltipStrings(IncubateRecipe recipe, double mouseX, double mouseY) {
+    public List<Component> getTooltipStrings(IncubateRecipe recipe, double mouseX, double mouseY) {
         return new ArrayList<>();
     }
 

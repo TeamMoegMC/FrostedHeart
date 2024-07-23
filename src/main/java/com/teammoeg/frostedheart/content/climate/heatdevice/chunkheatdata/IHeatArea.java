@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 /**
  * Interface to adjust temperature

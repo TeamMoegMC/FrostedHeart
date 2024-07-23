@@ -35,14 +35,14 @@ import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.codec.DiscreteListCodec;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.World;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemHandlerHelper;
 
@@ -65,7 +65,7 @@ public class GeneratorData implements SpecialData{
     public BlockPos actualPos = BlockPos.ZERO;
     public HeatProviderEndPoint ep=new HeatProviderEndPoint(200);
     public LazyOptional<HeatProviderEndPoint> epcap=LazyOptional.of(()->ep);
-    public RegistryKey<World> dimension;
+    public ResourceKey<Level> dimension;
 
     final float heatChance = .05f;
     
@@ -75,7 +75,7 @@ public class GeneratorData implements SpecialData{
         teamData = teamResearchData;
     }
 
-    public boolean consumesFuel(World w) {
+    public boolean consumesFuel(Level w) {
         if (!currentItem.isEmpty()) {
             if (!inventory.get(OUTPUT_SLOT).isEmpty() && ItemHandlerHelper.canItemStacksStack(inventory.get(OUTPUT_SLOT), currentItem))
                 inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
@@ -109,7 +109,7 @@ public class GeneratorData implements SpecialData{
         return inventory;
     }
 
-    public GeneratorRecipe getRecipe(World w) {
+    public GeneratorRecipe getRecipe(Level w) {
         if (inventory.get(INPUT_SLOT).isEmpty())
             return null;
         GeneratorRecipe recipe=null;
@@ -133,13 +133,13 @@ public class GeneratorData implements SpecialData{
 
 
 
-    public void tick(World w) {
+    public void tick(Level w) {
         isActive = tickFuelProcess(w);
         tickHeatedProcess(w);
         if(isActive&&power>0)
         	ep.setPower((float) (power*getHeatEfficiency()));
     }
-    public void tickHeatedProcess(World world) {
+    public void tickHeatedProcess(Level world) {
     	int heatedMax=getMaxHeated();
     	int rangedMax=getMaxRanged();
         if (isActive) {
@@ -172,7 +172,7 @@ public class GeneratorData implements SpecialData{
         RLevel=ranged / 100F;
 
     }
-    public boolean tickFuelProcess(World w) {
+    public boolean tickFuelProcess(Level w) {
         if (!isWorking||isBroken)
             return false;
         boolean hasFuel = true;
@@ -275,7 +275,7 @@ public class GeneratorData implements SpecialData{
 			this.inventory.set(i, inventory.get(i));
 		this.currentItem = currentItem;
 		this.actualPos = actualPos;
-		this.dimension = dimension.map(t->RegistryKey.create(Registry.DIMENSION_REGISTRY, t)).orElse(null);
+		this.dimension = dimension.map(t->ResourceKey.create(Registry.DIMENSION_REGISTRY, t)).orElse(null);
 	}
 	@Override
 	public void setHolder(SpecialDataHolder holder) {

@@ -32,16 +32,16 @@ import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabiliti
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
@@ -51,7 +51,7 @@ import javax.annotation.Nonnull;
 import java.util.UUID;
 
 public class FountainTileEntity extends IEBaseTileEntity implements
-        INetworkConsumer, ITickableTileEntity, FHBlockInterfaces.IActiveState {
+        INetworkConsumer, TickableBlockEntity, FHBlockInterfaces.IActiveState {
 
     private static final UUID WARMTH_EFFECT_UUID = UUID.fromString("95c1f024-8f3a-4828-aaa7-a86733cffbf2");
     private static final float POWER_CAP = 400;
@@ -96,7 +96,7 @@ public class FountainTileEntity extends IEBaseTileEntity implements
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
         power = nbt.getFloat("power");
         refilling = nbt.getBoolean("refilling");
         height = nbt.getInt("height");
@@ -105,7 +105,7 @@ public class FountainTileEntity extends IEBaseTileEntity implements
     }
 
     @Override
-    public void receiveMessageFromServer(CompoundNBT message) {
+    public void receiveMessageFromServer(CompoundTag message) {
         super.receiveMessageFromServer(message);
     }
 
@@ -160,8 +160,8 @@ public class FountainTileEntity extends IEBaseTileEntity implements
                 this.markContainingBlockForUpdate(null);
                 adjustHeat(getRange());
 
-                for (PlayerEntity p : this.getLevel().players()) {
-                    removeWarmth((ServerPlayerEntity) p);
+                for (Player p : this.getLevel().players()) {
+                    removeWarmth((ServerPlayer) p);
 
                     if (p.distanceToSqr(
                             this.getBlockPos().getX() + 0.5,
@@ -171,7 +171,7 @@ public class FountainTileEntity extends IEBaseTileEntity implements
                             p.getY() > this.getBlockPos().getY() - 0.5 &&
                             p.getY() < this.getBlockPos().getY() + height + 0.5
                     ) {
-                        grantWarmth((ServerPlayerEntity) p);
+                        grantWarmth((ServerPlayer) p);
                     }
                 }
             } else {
@@ -213,13 +213,13 @@ public class FountainTileEntity extends IEBaseTileEntity implements
         return height * RANGE_PER_NOZZLE + 1; // +1 for the edge
     }
 
-    private void grantWarmth(ServerPlayerEntity player) {
+    private void grantWarmth(ServerPlayer player) {
         player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).addTransientModifier(
                 new AttributeModifier(WARMTH_EFFECT_UUID, "fountain warmth", lastTemp * 25, AttributeModifier.Operation.ADDITION)
         );
     }
 
-    private void removeWarmth(ServerPlayerEntity player) {
+    private void removeWarmth(ServerPlayer player) {
         player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).removeModifier(WARMTH_EFFECT_UUID);
     }
 
@@ -237,7 +237,7 @@ public class FountainTileEntity extends IEBaseTileEntity implements
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         nbt.putFloat("power", power);
         nbt.putBoolean("refilling", refilling);
         nbt.putInt("height", height);

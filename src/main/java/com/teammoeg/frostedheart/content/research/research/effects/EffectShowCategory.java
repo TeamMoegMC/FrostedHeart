@@ -31,11 +31,11 @@ import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -78,18 +78,18 @@ public class EffectShowCategory extends Effect {
     }
 
     @Override
-    public IFormattableTextComponent getDefaultName() {
+    public MutableComponent getDefaultName() {
         return TranslateUtils.translateGui("effect.category");
     }
 
 
     @Override
-    public List<ITextComponent> getDefaultTooltip() {
+    public List<Component> getDefaultTooltip() {
         return new ArrayList<>();
     }
 
     @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
         team.categories.add(cate);
         return true;
     }

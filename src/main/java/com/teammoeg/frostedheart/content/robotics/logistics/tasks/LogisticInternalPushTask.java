@@ -3,16 +3,16 @@ package com.teammoeg.frostedheart.content.robotics.logistics.tasks;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticSlot;
 
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class LogisticInternalPushTask implements LogisticTask {
-	TileEntity tile;
+	BlockEntity tile;
 	int slot;
 	LogisticSlot from;
 
 
 
-	public LogisticInternalPushTask(TileEntity tile, int slot) {
+	public LogisticInternalPushTask(BlockEntity tile, int slot) {
 		super();
 		this.tile = tile;
 		this.slot = slot;

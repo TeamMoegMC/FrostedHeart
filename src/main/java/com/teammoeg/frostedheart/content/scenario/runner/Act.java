@@ -26,10 +26,10 @@ import com.teammoeg.frostedheart.content.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.content.scenario.runner.target.IScenarioTarget;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.ListTag;
 import net.minecraftforge.common.util.Constants;
 
 /**
@@ -56,7 +56,7 @@ public class Act implements IScenarioThread{
 		parent=paraData;
 		this.name=name;
 	}
-    public Act(ScenarioConductor paraData,CompoundNBT data) {
+    public Act(ScenarioConductor paraData,CompoundTag data) {
 		super();
 		this.scene=new ServerScene();
 		parent=paraData;
@@ -74,12 +74,12 @@ public class Act implements IScenarioThread{
     		}
     	}
     }
-    public CompoundNBT save() {
-    	CompoundNBT nbt=new CompoundNBT();
+    public CompoundTag save() {
+    	CompoundTag nbt=new CompoundTag();
     	if(paragraph.getName()!=null)
     		nbt.putString("pname", paragraph.getName());
     	nbt.putInt("pn", paragraph.getParagraphNum());
-    	ListNBT css=new ListNBT();
+    	ListTag css=new ListTag();
     	for(ExecuteStackElement cs:callStack) {
     		css.add(cs.save());
     	}
@@ -98,14 +98,14 @@ public class Act implements IScenarioThread{
     	}
     	return nbt;
     }
-    public void load(CompoundNBT nbt) {
+    public void load(CompoundTag nbt) {
     	String pn=null;
     	if(nbt.contains("pname"))
     		pn=nbt.getString("pname");
     	paragraph=new ParagraphData(this,pn,nbt.getInt("pn"));
-    	ListNBT css=nbt.getList("callStack", Constants.NBT.TAG_COMPOUND);
-    	for(INBT n:css) {
-    		callStack.add(new ExecuteStackElement(this,(CompoundNBT) n));
+    	ListTag css=nbt.getList("callStack", Constants.NBT.TAG_COMPOUND);
+    	for(Tag n:css) {
+    		callStack.add(new ExecuteStackElement(this,(CompoundTag) n));
     	}
     	name=new ActNamespace(nbt.getString("chapter"),nbt.getString("act"));
     	title=nbt.getString("title");
@@ -141,7 +141,7 @@ public class Act implements IScenarioThread{
 	public void queue(IScenarioTarget target) {
 		parent.addToQueue(new ActTarget(name,target));
 	}
-	public PlayerEntity getPlayer() {
+	public Player getPlayer() {
 		return parent.getPlayer();
 	}
 

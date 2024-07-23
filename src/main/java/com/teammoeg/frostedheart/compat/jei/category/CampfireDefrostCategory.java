@@ -25,7 +25,7 @@ import java.util.Collections;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
@@ -42,12 +42,12 @@ import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.config.Constants;
-import net.minecraft.block.Blocks;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
@@ -78,20 +78,20 @@ public class CampfireDefrostCategory implements IRecipeCategory<CampfireDefrostR
     }
 
     @Override
-    public void draw(CampfireDefrostRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
+    public void draw(CampfireDefrostRecipe recipe, PoseStack transform, double mouseX, double mouseY) {
         animatedFlame.draw(transform, 1, 20);
         IDrawableAnimated arrow = getArrow(recipe);
         arrow.draw(transform, 24, 8);
         drawCookTime(recipe, transform, 35);
     }
 
-    protected void drawCookTime(CampfireDefrostRecipe recipe, MatrixStack matrixStack, int y) {
+    protected void drawCookTime(CampfireDefrostRecipe recipe, PoseStack matrixStack, int y) {
         int cookTime = recipe.getCookingTime();
         if (cookTime > 0) {
             int cookTimeSeconds = cookTime / 20;
-            ITextComponent timeString = TranslateUtils.translate("gui.jei.category.smelting.time.seconds", cookTimeSeconds);
+            Component timeString = TranslateUtils.translate("gui.jei.category.smelting.time.seconds", cookTimeSeconds);
             Minecraft minecraft = Minecraft.getInstance();
-            FontRenderer fontRenderer = minecraft.font;
+            Font fontRenderer = minecraft.font;
             int stringWidth = fontRenderer.width(timeString);
             fontRenderer.draw(matrixStack, timeString, BACKGROUND.getWidth() - stringWidth, y, 0xFF808080);
         }

@@ -44,11 +44,11 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.registry.TypedCodecRegistry;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.IItemProvider;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ItemLike;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -169,7 +169,7 @@ public abstract class Effect extends AutoIDItem{
      * @param tooltip the tooltip<br>
      * @param icon    the icon<br>
      */
-    public Effect(String name, List<String> tooltip, IItemProvider icon) {
+    public Effect(String name, List<String> tooltip, ItemLike icon) {
         this(name, tooltip, FHIcons.getIcon(icon));
     }
 
@@ -245,7 +245,7 @@ public abstract class Effect extends AutoIDItem{
      *
      * @return default name<br>
      */
-    public abstract IFormattableTextComponent getDefaultName();
+    public abstract MutableComponent getDefaultName();
 
     /**
      * Get default tooltip.
@@ -253,7 +253,7 @@ public abstract class Effect extends AutoIDItem{
      *
      * @return default tooltip<br>
      */
-    public abstract List<ITextComponent> getDefaultTooltip();
+    public abstract List<Component> getDefaultTooltip();
 
     /**
      * Get icon.
@@ -271,10 +271,10 @@ public abstract class Effect extends AutoIDItem{
      *
      * @return name<br>
      */
-    public final IFormattableTextComponent getName() {
+    public final MutableComponent getName() {
         if (name.isEmpty())
             return getDefaultName();
-        return (IFormattableTextComponent) FHTextUtil.get(name, "effect", this::getId);
+        return (MutableComponent) FHTextUtil.get(name, "effect", this::getId);
     }
 
     /**
@@ -292,7 +292,7 @@ public abstract class Effect extends AutoIDItem{
      *
      * @return tooltip<br>
      */
-    public final List<ITextComponent> getTooltip() {
+    public final List<Component> getTooltip() {
         if (tooltip.isEmpty())
             return getDefaultTooltip();
         return FHTextUtil.get(tooltip, "effect", this::getId);
@@ -317,7 +317,7 @@ public abstract class Effect extends AutoIDItem{
      * @param isload        true if this is run when loaded from disk<br>
      * @return true, if
      */
-    public abstract boolean grant(TeamResearchData team, @Nullable PlayerEntity triggerPlayer, boolean isload);
+    public abstract boolean grant(TeamResearchData team, @Nullable Player triggerPlayer, boolean isload);
 
     /**
      * Inits this effect globally.

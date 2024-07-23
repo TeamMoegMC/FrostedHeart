@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.climate.data;
 import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;

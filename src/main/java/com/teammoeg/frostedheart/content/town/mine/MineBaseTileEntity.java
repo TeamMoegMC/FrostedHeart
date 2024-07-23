@@ -8,12 +8,12 @@ import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.LongNBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.LongTag;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.util.Constants;
 
 import java.util.HashSet;
@@ -76,12 +76,12 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT compoundNBT, boolean b) {
+    public void readCustomNBT(CompoundTag compoundNBT, boolean b) {
 
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT compoundNBT, boolean b) {
+    public void writeCustomNBT(CompoundTag compoundNBT, boolean b) {
 
     }
 
@@ -97,16 +97,16 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
 
 
     @Override
-    public CompoundNBT getWorkData() {
-        CompoundNBT nbt = getBasicWorkData();
+    public CompoundTag getWorkData() {
+        CompoundTag nbt = getBasicWorkData();
         if(this.isValid()) {
             nbt.putInt("volume", this.volume);
             nbt.putInt("area", this.area);
             nbt.putInt("rack", this.rack);
             nbt.putInt("chest", this.chest);
-            ListNBT list = new ListNBT();
+            ListTag list = new ListTag();
             for (BlockPos pos : this.linkedMines) {
-                list.add(LongNBT.valueOf(pos.asLong()));
+                list.add(LongTag.valueOf(pos.asLong()));
             }
             nbt.put("linkedMines", list);
             nbt.putDouble("temperature", this.temperature);
@@ -116,7 +116,7 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
     }
 
     @Override
-    public void setWorkData(CompoundNBT data) {
+    public void setWorkData(CompoundTag data) {
         setBasicWorkData(data);
         if(this.isValid()) {
             this.volume = data.getInt("volume");
@@ -124,8 +124,8 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
             this.rack = data.getInt("rack");
             this.chest = data.getInt("chest");
             this.linkedMines.clear();
-            ListNBT list = data.getList("linkedMines", Constants.NBT.TAG_LONG);
-            list.forEach(nbt-> this.linkedMines.add( BlockPos.of( ((LongNBT)nbt).getAsLong() )));
+            ListTag list = data.getList("linkedMines", Constants.NBT.TAG_LONG);
+            list.forEach(nbt-> this.linkedMines.add( BlockPos.of( ((LongTag)nbt).getAsLong() )));
         }
     }
 

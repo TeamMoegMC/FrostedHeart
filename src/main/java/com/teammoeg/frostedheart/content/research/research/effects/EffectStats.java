@@ -30,9 +30,9 @@ import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
 
 /**
  * Effect on numerical stats of the team's machines or abilities
@@ -80,14 +80,14 @@ public class EffectStats extends Effect {
     }
 
     @Override
-    public IFormattableTextComponent getDefaultName() {
+    public MutableComponent getDefaultName() {
         return TranslateUtils.translateGui("effect.stats");
     }
 
 
     @Override
-    public List<ITextComponent> getDefaultTooltip() {
-        List<ITextComponent> tooltip = new ArrayList<>();
+    public List<Component> getDefaultTooltip() {
+        List<Component> tooltip = new ArrayList<>();
         tooltip.add(TranslateUtils.translateGui("effect.stats." + vars));
         String vtext;
         if (isPercentage) {
@@ -102,7 +102,7 @@ public class EffectStats extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
         if (isload) return false;
         double var = team.getVariants().getDouble(vars);
         if (isPercentage)

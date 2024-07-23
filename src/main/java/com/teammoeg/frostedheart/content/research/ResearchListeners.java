@@ -48,15 +48,15 @@ import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.FakePlayer;
@@ -68,7 +68,7 @@ public class ResearchListeners {
             super();
         }
 
-        public BlockUnlockList(ListNBT nbt) {
+        public BlockUnlockList(ListTag nbt) {
             super(nbt);
         }
 
@@ -88,7 +88,7 @@ public class ResearchListeners {
             super();
         }
 
-        public CategoryUnlockList(ListNBT nbt) {
+        public CategoryUnlockList(ListTag nbt) {
             super(nbt);
         }
 
@@ -183,7 +183,7 @@ public class ResearchListeners {
             super();
         }
 
-        public MultiblockUnlockList(ListNBT nbt) {
+        public MultiblockUnlockList(ListTag nbt) {
             super(nbt);
         }
 
@@ -200,23 +200,23 @@ public class ResearchListeners {
 
     }
 
-    public static class RecipeUnlockList extends UnlockList<IRecipe<?>> {
+    public static class RecipeUnlockList extends UnlockList<Recipe<?>> {
 
         public RecipeUnlockList() {
             super();
         }
 
-        public RecipeUnlockList(ListNBT nbt) {
+        public RecipeUnlockList(ListTag nbt) {
             super(nbt);
         }
 
         @Override
-        public IRecipe<?> getObject(String s) {
+        public Recipe<?> getObject(String s) {
             return FHTeamDataManager.getRecipeManager().byKey(new ResourceLocation(s)).orElse(null);
         }
 
         @Override
-        public String getString(IRecipe<?> item) {
+        public String getString(Recipe<?> item) {
             return item.getId().toString();
         }
 
@@ -241,7 +241,7 @@ public class ResearchListeners {
         return true;
     }
 
-    public static boolean canUseBlock(PlayerEntity player, Block b) {
+    public static boolean canUseBlock(Player player, Block b) {
         if (block.has(b)) {
             if (player instanceof FakePlayer) return false;
             if (player.getCommandSenderWorld().isClientSide)
@@ -252,14 +252,14 @@ public class ResearchListeners {
 
     }
 
-    public static boolean canUseRecipe(IRecipe<?> r) {
+    public static boolean canUseRecipe(Recipe<?> r) {
         if (recipe.has(r)) {
             return ClientResearchDataAPI.getData().crafting.has(r);
         }
         return true;
     }
 
-    public static boolean canUseRecipe(PlayerEntity s, IRecipe<?> r) {
+    public static boolean canUseRecipe(Player s, Recipe<?> r) {
         if (s == null)
             return canUseRecipe(r);
         if (recipe.has(r)) {
@@ -270,7 +270,7 @@ public class ResearchListeners {
         return true;
     }
 
-    public static boolean canUseRecipe(UUID team, IRecipe<?> r) {
+    public static boolean canUseRecipe(UUID team, Recipe<?> r) {
         if (recipe.has(r)) {
             if (team == null) return false;
             TeamResearchData trd=ResearchDataAPI.getData(team);
@@ -279,7 +279,7 @@ public class ResearchListeners {
         return true;
     }
 
-    public static boolean commitGameLevel(ServerPlayerEntity s, int lvl) {
+    public static boolean commitGameLevel(ServerPlayer s, int lvl) {
         TeamResearchData trd = ResearchDataAPI.getData(s);
         OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent()) {
@@ -317,7 +317,7 @@ public class ResearchListeners {
         return -1;
     }
 
-    public static int fetchGameLevel(ServerPlayerEntity s) {
+    public static int fetchGameLevel(ServerPlayer s) {
         TeamResearchData trd = ResearchDataAPI.getData(s);
         OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent()) {
@@ -342,7 +342,7 @@ public class ResearchListeners {
         return tickClues;
     }
 
-    public static void kill(ServerPlayerEntity s, LivingEntity e) {
+    public static void kill(ServerPlayer s, LivingEntity e) {
         TeamResearchData trd = ResearchDataAPI.getData(s);
         killClues.call(trd.getId(), c -> c.isCompleted(trd, e));
     }
@@ -385,7 +385,7 @@ public class ResearchListeners {
         FHTeamDataManager.INSTANCE.getAllData(SpecialDataTypes.RESEARCH_DATA).forEach(TeamResearchData::sendUpdate);
     }
 
-    public static ItemStack submitItem(ServerPlayerEntity s, ItemStack i) {
+    public static ItemStack submitItem(ServerPlayer s, ItemStack i) {
         TeamResearchData trd = ResearchDataAPI.getData(s);
         OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent())
@@ -421,7 +421,7 @@ public class ResearchListeners {
         return i;
     }
 
-    public static void tick(ServerPlayerEntity s) {
+    public static void tick(ServerPlayer s) {
         TeamResearchData trd = ResearchDataAPI.getData(s);
         tickClues.call(trd.getId(), e -> e.tick(trd, s));
     }

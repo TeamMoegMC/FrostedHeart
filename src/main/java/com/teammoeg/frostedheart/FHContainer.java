@@ -37,8 +37,8 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
 
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
-import net.minecraft.inventory.container.ContainerType;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.extensions.IForgeContainerType;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
@@ -46,10 +46,10 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHContainer {
 
-    public static final DeferredRegister<ContainerType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.CONTAINERS,
+    public static final DeferredRegister<MenuType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.CONTAINERS,
             FHMain.MODID);
-    public static final RegistryObject<ContainerType<TradeContainer>> TRADE_GUI = CONTAINERS.register("trade", () -> IForgeContainerType.create(TradeContainer::new));
-    public static final RegistryObject<ContainerType<HeatStatContainer>> HEAT_STAT = CONTAINERS.register("heat_stat", () -> IForgeContainerType.create(HeatStatContainer::new));
+    public static final RegistryObject<MenuType<TradeContainer>> TRADE_GUI = CONTAINERS.register("trade", () -> IForgeContainerType.create(TradeContainer::new));
+    public static final RegistryObject<MenuType<HeatStatContainer>> HEAT_STAT = CONTAINERS.register("heat_stat", () -> IForgeContainerType.create(HeatStatContainer::new));
     public static void registerContainers() {
         GuiHandler.register(T1GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorContainer::new);
         GuiHandler.register(T2GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorContainer::new);

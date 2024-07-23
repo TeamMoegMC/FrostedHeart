@@ -39,11 +39,11 @@ import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMulti
 import blusunrize.immersiveengineering.common.items.IEItems;
 import blusunrize.lib.manual.ManualEntry;
 import blusunrize.lib.manual.gui.ManualScreen;
-import net.minecraft.block.Block;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.api.distmarker.Dist;
@@ -86,13 +86,13 @@ public class EffectBuilding extends Effect {
     }
 
     @Override
-    public IFormattableTextComponent getDefaultName() {
+    public MutableComponent getDefaultName() {
         return TranslateUtils.translateGui("effect.building");
     }
 
     @Override
-    public List<ITextComponent> getDefaultTooltip() {
-        ArrayList<ITextComponent> ar = new ArrayList<>();
+    public List<Component> getDefaultTooltip() {
+        ArrayList<Component> ar = new ArrayList<>();
         String raw = multiblock.getUniqueName().toString();
         String namespace = raw.substring(0, raw.indexOf(':'));
         String multiblock = raw.substring(raw.indexOf('/') + 1);
@@ -106,7 +106,7 @@ public class EffectBuilding extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
         team.building.add(multiblock);
         return true;
 

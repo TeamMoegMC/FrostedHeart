@@ -16,15 +16,15 @@ import com.teammoeg.frostedheart.content.scenario.runner.target.trigger.Movement
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.JsonToNBT;
-import net.minecraft.server.management.OpEntry;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.TagParser;
+import net.minecraft.server.players.ServerOpListEntry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
 
 public class MCCommands {
 	public void giveItem(ScenarioVM runner, @Param("i") String item, @Param("n") String nbt, @Param("c") int count) throws CommandSyntaxException {
@@ -32,7 +32,7 @@ public class MCCommands {
 		if (count == 0) count = 1;
 		ItemStack is = new ItemStack(i, count);
 		if (nbt != null)
-			is.setTag(JsonToNBT.parseTag(nbt));
+			is.setTag(TagParser.parseTag(nbt));
 		FHUtils.giveItem(runner.getPlayer(), is);
 	}
 
@@ -47,20 +47,20 @@ public class MCCommands {
 
 	public void gameCommand(ScenarioVM runner,@Param("op")int op,@Param("asPlayer")int asp, @Param("cmd") @Param("command") String s) {
 		Map<String, Object> overrides = new HashMap<>();
-		ServerPlayerEntity triggerPlayer = (ServerPlayerEntity) runner.getPlayer();
+		ServerPlayer triggerPlayer = (ServerPlayer) runner.getPlayer();
 		overrides.put("p", triggerPlayer.getGameProfile().getName());
 
 		BlockPos pos = triggerPlayer.blockPosition();
 		overrides.put("x", pos.getX());
 		overrides.put("y", pos.getY());
 		overrides.put("z", pos.getZ());
-		OpEntry opent= FHTeamDataManager.getServer().getPlayerList().getOps().get(triggerPlayer.getGameProfile());
+		ServerOpListEntry opent= FHTeamDataManager.getServer().getPlayerList().getOps().get(triggerPlayer.getGameProfile());
 		if(op>0)
 			if(opent==null){
 				FHTeamDataManager.getServer().getPlayerList().op(triggerPlayer.getGameProfile());
 			}
 		Commands cmds = FHTeamDataManager.getServer().getCommands();
-		CommandSource source = asp>0?triggerPlayer.createCommandSourceStack(): FHTeamDataManager.getServer().createCommandSourceStack();
+		CommandSourceStack source = asp>0?triggerPlayer.createCommandSourceStack(): FHTeamDataManager.getServer().createCommandSourceStack();
 		for (Map.Entry<String, Object> entry : overrides.entrySet()) {
 			if (entry.getValue() != null) {
 				s = s.replace("@" + entry.getKey(), entry.getValue().toString());

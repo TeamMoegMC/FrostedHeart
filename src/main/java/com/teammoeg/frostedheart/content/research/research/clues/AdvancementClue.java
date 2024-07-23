@@ -30,10 +30,10 @@ import com.teammoeg.frostedheart.util.io.CodecUtil;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.advancements.CriterionProgress;
-import net.minecraft.client.multiplayer.ClientAdvancementManager;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.multiplayer.ClientAdvancements;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 
 public class AdvancementClue extends TickListenerClue {
 	public static final Codec<AdvancementClue> CODEC=RecordCodecBuilder.create(t->t.group(
@@ -68,10 +68,10 @@ public class AdvancementClue extends TickListenerClue {
     }
 
     @Override
-    public ITextComponent getDescription() {
-        ITextComponent itc = super.getDescription();
+    public Component getDescription() {
+        Component itc = super.getDescription();
         if (itc != null) return itc;
-        ClientAdvancementManager cam = ClientUtils.getPlayer().connection.getAdvancements();
+        ClientAdvancements cam = ClientUtils.getPlayer().connection.getAdvancements();
         Advancement adv = cam.getAdvancements().get(advancement);
         if (adv != null)
             return adv.getChatComponent();
@@ -86,14 +86,14 @@ public class AdvancementClue extends TickListenerClue {
     }
 
     @Override
-    public ITextComponent getName() {
+    public Component getName() {
         if (name != null && !name.isEmpty())
             return super.getName();
         return TranslateUtils.translate("clue." + FHMain.MODID + ".advancement");
     }
 
     @Override
-    public boolean isCompleted(TeamResearchData t, ServerPlayerEntity player) {
+    public boolean isCompleted(TeamResearchData t, ServerPlayer player) {
         Advancement a = player.server.getAdvancements().getAdvancement(advancement);
         if (a == null) {
             return false;

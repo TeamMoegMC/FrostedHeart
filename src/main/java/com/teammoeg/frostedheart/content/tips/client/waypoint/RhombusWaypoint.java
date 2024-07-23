@@ -1,14 +1,14 @@
 package com.teammoeg.frostedheart.content.tips.client.waypoint;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.client.util.AnimationUtil;
 import com.teammoeg.frostedheart.content.tips.client.util.GuiUtil;
 import com.teammoeg.frostedheart.util.client.Point;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.world.phys.Vec3;
+import com.mojang.math.Vector3f;
 
 public class RhombusWaypoint extends Waypoint {
     private Point icon;
@@ -37,7 +37,7 @@ public class RhombusWaypoint extends Waypoint {
     }
 
     @Override
-    public void renderMain(MatrixStack ms) {
+    public void renderMain(PoseStack ms) {
         if (focus) {
             ms.mulPose(Vector3f.ZN.rotationDegrees(45));
             ms.scale(1.5F, 1.5F, 1.5F);
@@ -52,7 +52,7 @@ public class RhombusWaypoint extends Waypoint {
             //让不透明度可以低于0.1
             ms.scale(progress+0.25F, progress+0.25F, progress+0.25F);
             RenderSystem.disableAlphaTest();
-            AbstractGui.fill(ms, -5, -5, 5, 5, fadeColor);
+            GuiComponent.fill(ms, -5, -5, 5, 5, fadeColor);
             RenderSystem.enableAlphaTest();
             ms.scale(0.66667F, 0.66667F, 0.66667F);
             return;
@@ -66,19 +66,19 @@ public class RhombusWaypoint extends Waypoint {
 
 
     @Override
-    public void renderText(MatrixStack ms) {
+    public void renderText(PoseStack ms) {
         ms.translate(15, -3.5F, 0);
-        AbstractGui.fill(ms, -3, -2, -2, height, this.color);
-        AbstractGui.fill(ms, -2, -2, maxTextWidth+2, height, 0x40000000);
+        GuiComponent.fill(ms, -3, -2, -2, height, this.color);
+        GuiComponent.fill(ms, -2, -2, maxTextWidth+2, height, 0x40000000);
 
         maxTextWidth = MC.player.isShiftKeyDown() ? Math.max(96, maxTextWidth) : 96;
         height = 10 * GuiUtil.drawWrapString(this.id, ms, 0, 0, maxTextWidth, this.color, 10, false);
         
         if (MC.player.isShiftKeyDown()) {
-            AbstractGui.fill(ms, -3, height, -2, height+30, this.color);
-            AbstractGui.fill(ms, -2, height, maxTextWidth+2, height+30, 0x40000000);
+            GuiComponent.fill(ms, -3, height, -2, height+30, this.color);
+            GuiComponent.fill(ms, -2, height, maxTextWidth+2, height+30, 0x40000000);
 
-            Vector3d v = new Vector3d(this.target);
+            Vec3 v = new Vec3(this.target);
             String distance = "Distance: " + (int)v.distanceTo(MC.player.position()) + " blocks";
             maxTextWidth = Math.max(MC.font.width(distance), maxTextWidth);
             MC.font.draw(ms, distance, 0, height+10, this.color);

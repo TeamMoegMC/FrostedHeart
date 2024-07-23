@@ -30,23 +30,23 @@ import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.gen.Heightmap;
-import net.minecraft.world.gen.Heightmap.Type;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.Heightmap.Types;
+import net.minecraft.server.level.ServerLevel;
 
 /**
  * A simulator built on Alphagem618's heat conducting model
@@ -85,14 +85,14 @@ public class SurroundingTemperatureSimulator {
     private static final int n = 4168;//number of particles
     private static final int rdiff = 10;//division of the unit square, changing this value would have no effect but improve precision
     private static final float v0 = .4f;//initial particle speed
-    private static final VoxelShape EMPTY = VoxelShapes.empty();
-    private static final VoxelShape FULL = VoxelShapes.block();
-    private static Vector3d[] speedVectors;// Vp, speed vector list, this list is constant and considered a distributed ball mesh.
+    private static final VoxelShape EMPTY = Shapes.empty();
+    private static final VoxelShape FULL = Shapes.block();
+    private static Vec3[] speedVectors;// Vp, speed vector list, this list is constant and considered a distributed ball mesh.
     private static final int num_rounds = 20;//propagate time-to-live for each particles
     private static int[][] speedVectorByDirection=new int[6][];// index: ordinal value of outbounding facing
     static {// generate speed vector list
     	Map<Direction,List<Integer>> lis=new EnumMap<>(Direction.class);
-    	List<Vector3d> v3fs=new ArrayList<>();
+    	List<Vec3> v3fs=new ArrayList<>();
     	for(Direction dr:Direction.values()) {
     		lis.put(dr, new ArrayList<>());
     	}
@@ -103,10 +103,10 @@ public class SurroundingTemperatureSimulator {
                     if (i == 0 && j == 0 && k == 0)
                         continue; // ignore zero vector
                     float x = i * 1f / rdiff, y = j * 1f / rdiff, z = k * 1f / rdiff;
-                    float r = MathHelper.sqrt(x * x + y * y + z * z);
+                    float r = Mth.sqrt(x * x + y * y + z * z);
                     if (r > 1)
                         continue; // ignore vectors out of the unit ball
-                    Vector3d v3 = new Vector3d(x / r * v0, y / r * v0, z / r * v0);
+                    Vec3 v3 = new Vec3(x / r * v0, y / r * v0, z / r * v0);
                     v3fs.add(v3);
                     if(v3.x>+0) 
                     	lis.get(Direction.EAST).add(o);
@@ -122,18 +122,18 @@ public class SurroundingTemperatureSimulator {
                     	lis.get(Direction.NORTH).add(o);
                     o++;
                 }
-        speedVectors=v3fs.toArray(new Vector3d[o]);
+        speedVectors=v3fs.toArray(new Vec3[o]);
         for(Direction dr:Direction.values()) {
         	speedVectorByDirection[dr.ordinal()]=lis.get(dr).stream().mapToInt(t->t).toArray();
         }
     }
-    public ChunkSection[] sections = new ChunkSection[8];// index: bitset of xzy(1 stands for +)
+    public LevelChunkSection[] sections = new LevelChunkSection[8];// index: bitset of xzy(1 stands for +)
     public Heightmap[] maps=new Heightmap[4]; // index: bitset of xz(1 stands for +)
     BlockPos origin;
-    ServerWorld world;
+    ServerLevel world;
     Random rnd;
     //RandomSequence rrnd;
-    private Vector3d[] Qpos = new Vector3d[n];// Qpos, position of particle.
+    private Vec3[] Qpos = new Vec3[n];// Qpos, position of particle.
     private int[] vid = new int[n];// IDv, particle speed index in speed vector list, this lower random cost.
     //private double[] factor=
     
@@ -145,8 +145,8 @@ public class SurroundingTemperatureSimulator {
     	
     }
 
-    public SurroundingTemperatureSimulator(ServerPlayerEntity player) {
-        int sourceX = MathHelper.floor(player.getX()), sourceY = MathHelper.floor(player.getEyeY()), sourceZ = MathHelper.floor( player.getZ());
+    public SurroundingTemperatureSimulator(ServerPlayer player) {
+        int sourceX = Mth.floor(player.getX()), sourceY = Mth.floor(player.getEyeY()), sourceZ = Mth.floor( player.getZ());
         // these are block position offset
         int offsetN = sourceZ - range;
         int offsetW = sourceX - range;
@@ -162,9 +162,9 @@ public class SurroundingTemperatureSimulator {
         world = player.getLevel();
         for (int x = chunkOffsetW; x <= chunkOffsetW + 1; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetN + 1; z++) {
-            	Chunk cnk=world.getChunk(x, z);
-                ChunkSection[] css = cnk.getSections();
-                maps[i/2]=cnk.getOrCreateHeightmapUnprimed(Type.MOTION_BLOCKING_NO_LEAVES);
+            	LevelChunk cnk=world.getChunk(x, z);
+                LevelChunkSection[] css = cnk.getSections();
+                maps[i/2]=cnk.getOrCreateHeightmapUnprimed(Types.MOTION_BLOCKING_NO_LEAVES);
                 if(css.length>chunkOffsetD&&chunkOffsetD>=0)
                 	sections[i]=css[chunkOffsetD];
                 if(css.length>chunkOffsetD+1&&chunkOffsetD+1>=0)
@@ -188,7 +188,7 @@ public class SurroundingTemperatureSimulator {
             i += 2;
         if (y >= 0)
             i += 1;
-        ChunkSection current = sections[i];
+        LevelChunkSection current = sections[i];
         if (current == null)
             return Blocks.AIR.defaultBlockState();
         try {
@@ -215,7 +215,7 @@ public class SurroundingTemperatureSimulator {
     }
     public Pair<Float,Float> getBlockTemperatureAndWind(double qx0, double qy0, double qz0) {
     	float wind=0;
-    	Vector3d q0=new Vector3d(qx0, qy0, qz0);
+    	Vec3 q0=new Vec3(qx0, qy0, qz0);
         for (int i = 0; i < n; ++i) // initialize position as the player's position and the speed (index)
         {
             Qpos[i] = q0;
@@ -234,13 +234,13 @@ public class SurroundingTemperatureSimulator {
             for (int i = 0; i < n; ++i) // for all particles:
             {
             	int nid=vid[i];
-            	Vector3d curspeed=speedVectors[vid[i]];
-            	Vector3d svec=Qpos[i];
-            	Vector3d dvec=svec.add(curspeed);
+            	Vec3 curspeed=speedVectors[vid[i]];
+            	Vec3 svec=Qpos[i];
+            	Vec3 dvec=svec.add(curspeed);
             	BlockPos bpos=new BlockPos(dvec);
                 CachedBlockInfo info = getInfoCached(bpos);
-                if (info.shape != EMPTY &&(info.shape == FULL||info.shape.isFullWide(MathHelper.frac(dvec.x),MathHelper.frac(dvec.y),MathHelper.frac(dvec.z)))) {
-                	BlockRayTraceResult brtr=AxisAlignedBB.clip(info.shape.toAabbs(), svec, dvec, bpos);
+                if (info.shape != EMPTY &&(info.shape == FULL||info.shape.isFullWide(Mth.frac(dvec.x),Mth.frac(dvec.y),Mth.frac(dvec.z)))) {
+                	BlockHitResult brtr=AABB.clip(info.shape.toAabbs(), svec, dvec, bpos);
                     if(brtr!=null) {
                     	if(rnd.nextDouble()<0.33f) {
                     		nid = rnd.nextInt(speedVectors.length);
@@ -253,8 +253,8 @@ public class SurroundingTemperatureSimulator {
                 }
                 Qpos[i] = dvec;
                 vid[i] = nid;
-                heat += (float) (getHeat(bpos) * MathHelper.lerp(MathHelper.clamp(-curspeed.y(), 0, 0.4) * 2.5, 1, 0.5)); // add heat
-                wind += getAir(bpos)? (float) MathHelper.lerp((MathHelper.clamp(Math.abs(curspeed.y()), 0.2, 0.8) - 0.2) / 0.6, 2, 0.5) :0;
+                heat += (float) (getHeat(bpos) * Mth.lerp(Mth.clamp(-curspeed.y(), 0, 0.4) * 2.5, 1, 0.5)); // add heat
+                wind += getAir(bpos)? (float) Mth.lerp((Mth.clamp(Math.abs(curspeed.y()), 0.2, 0.8) - 0.2) / 0.6, 2, 0.5) :0;
             }
         }
         return Pair.of(heat / n, wind/n);
@@ -327,9 +327,9 @@ public class SurroundingTemperatureSimulator {
         CachedBlockInfo info = getInfoCached(bpos);
         if (info.shape == EMPTY)
             return null;
-        Vector3d svec=new Vector3d(sx, sy, sz);
-        Vector3d vvec=new Vector3d(sx+vx, sy+vy, sz+vz);
-        BlockRayTraceResult brtr=AxisAlignedBB.clip(info.shape.toAabbs(), svec, vvec, bpos);
+        Vec3 svec=new Vec3(sx, sy, sz);
+        Vec3 vvec=new Vec3(sx+vx, sy+vy, sz+vz);
+        BlockHitResult brtr=AABB.clip(info.shape.toAabbs(), svec, vvec, bpos);
         if(brtr!=null)
         	return brtr.getDirection();
         return null;
@@ -340,7 +340,7 @@ public class SurroundingTemperatureSimulator {
             return true;
         if (info.shape == EMPTY)
             return false;
-        double nx=MathHelper.frac(x),ny=MathHelper.frac(y),nz=MathHelper.frac(z);
+        double nx=Mth.frac(x),ny=Mth.frac(y),nz=Mth.frac(z);
         return info.shape.isFullWide(nx,ny,nz);
     }
 }

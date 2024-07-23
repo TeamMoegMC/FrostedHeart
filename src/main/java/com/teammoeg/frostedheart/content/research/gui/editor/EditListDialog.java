@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
@@ -42,8 +42,8 @@ import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
@@ -63,7 +63,7 @@ public class EditListDialog<T> extends EditDialog {
         }
 
         @Override
-        public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
             boolean mouseOver = getMouseY() >= 20 && isMouseOver();
 
             if (mouseOver) {
@@ -107,7 +107,7 @@ public class EditListDialog<T> extends EditDialog {
         }
 
         @Override
-        public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
             boolean mouseOver = getMouseY() >= 20 && isMouseOver();
             int ioffset = 0;
             if (toicon != null) {
@@ -155,7 +155,7 @@ public class EditListDialog<T> extends EditDialog {
 
     private final Consumer<Collection<T>> callback;
 
-    private final ITextComponent title;
+    private final Component title;
     private final Panel configPanel;
     private final Button buttonAccept, buttonCancel;
     private final List<T> list;
@@ -181,7 +181,7 @@ public class EditListDialog<T> extends EditDialog {
             list = new ArrayList<>(vx);
         else
             list = new ArrayList<>();
-        title = TranslateUtils.str(label).withStyle(TextFormatting.BOLD);
+        title = TranslateUtils.str(label).withStyle(ChatFormatting.BOLD);
         this.editor = editor;
         this.def = def;
         this.read = toread;
@@ -236,14 +236,14 @@ public class EditListDialog<T> extends EditDialog {
     }
 
     @Override
-    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
         theme.drawGui(matrixStack, x, y, w, h, WidgetType.NORMAL);
 
         theme.drawString(matrixStack, getTitle(), x, y - 10);
     }
 
     @Override
-    public ITextComponent getTitle() {
+    public Component getTitle() {
         return title;
     }
 

@@ -27,24 +27,24 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.simibubi.create.AllBlocks;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.play.ServerPlayNetHandler;
-import net.minecraft.network.play.client.CMoveVehiclePacket;
-import net.minecraft.network.play.client.CPlayerPacket;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 /**
  * Stop players from being kicked when flying
  * */
-@Mixin(ServerPlayNetHandler.class)
+@Mixin(ServerGamePacketListenerImpl.class)
 public class ServerPlayNetHandlerMixin {
     @Shadow
     boolean floating;
     @Shadow
     boolean vehicleFloating;
     @Shadow
-    ServerPlayerEntity player;
+    ServerPlayer player;
 
     @Inject(at = @At("TAIL"), method = "processPlayer(Lnet/minecraft/network/play/client/CPlayerPacket;)V")
-    public void fh$processPlayer(CPlayerPacket packetIn, CallbackInfo cbi) {
+    public void fh$processPlayer(ServerboundMovePlayerPacket packetIn, CallbackInfo cbi) {
         if (player.getCommandSenderWorld().getBlockState(player.blockPosition()) == AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState() ||
                 player.getCommandSenderWorld().getBlockState(player.blockPosition().above()) == AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState()) {
             floating = false;
@@ -52,7 +52,7 @@ public class ServerPlayNetHandlerMixin {
     }
 
     @Inject(at = @At("TAIL"), method = "processVehicleMove(Lnet/minecraft/network/play/client/CMoveVehiclePacket;)V")
-    public void fh$processVehicleMove(CMoveVehiclePacket packetIn, CallbackInfo cbi) {
+    public void fh$processVehicleMove(ServerboundMoveVehiclePacket packetIn, CallbackInfo cbi) {
         if (player.getCommandSenderWorld().getBlockState(player.blockPosition()) == AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState() ||
                 player.getCommandSenderWorld().getBlockState(player.blockPosition().above()) == AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState()) {
             vehicleFloating = false;

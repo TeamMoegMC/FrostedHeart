@@ -44,12 +44,12 @@ import com.teammoeg.frostedheart.events.CommonEvents;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.TickEvent;
@@ -114,7 +114,7 @@ public class WorldClimate implements NBTSerializable {
      * @return An instance of ClimateData exists on the world, otherwise return null
      */
     @Nullable
-    public static WorldClimate get(IWorld world) {
+    public static WorldClimate get(LevelAccessor world) {
         return getCapability(world).orElse(null);
     }
 
@@ -124,15 +124,15 @@ public class WorldClimate implements NBTSerializable {
      * @param world server or client
      * @return An instance of ClimateData if data exists on the world, otherwise return empty.
      */
-    public static LazyOptional<WorldClimate> getCapability(@Nullable IWorld world) {
+    public static LazyOptional<WorldClimate> getCapability(@Nullable LevelAccessor world) {
         return FHCapabilities.CLIMATE_DATA.getCapability(world);
     }
 
-    public static long getDay(IWorld world) {
+    public static long getDay(LevelAccessor world) {
     	return getCapability(world).map(t->t.clockSource.getDate()).orElse(0L);
     }
 
-    public static int getFirstHourGreaterThan(IWorld world, int withinHours, float highTemp) {
+    public static int getFirstHourGreaterThan(LevelAccessor world, int withinHours, float highTemp) {
         int firstHour = 0;
         for (float f : getFutureTempIterator(get(world), 0)) {
             if (f > highTemp)
@@ -152,7 +152,7 @@ public class WorldClimate implements NBTSerializable {
      * @return number of hours after temperature first reach below lowTemp.
      * Return -1 if such hour not found within limit.
      */
-    public static int getFirstHourLowerThan(IWorld world, int withinHours, float lowTemp) {
+    public static int getFirstHourLowerThan(LevelAccessor world, int withinHours, float lowTemp) {
         int firstHour = 0;
         for (float f : getFutureTempIterator(get(world), 0)) {
             if (f < lowTemp)
@@ -218,7 +218,7 @@ public class WorldClimate implements NBTSerializable {
      * @param deltaHours delta hours from now to forecast;
      * @return temperature at hour at index
      */
-    public static float getFutureTemp(IWorld world, int deltaHours) {
+    public static float getFutureTemp(LevelAccessor world, int deltaHours) {
 
         return getCapability(world).map(t->t.getFutureTemp(deltaHours)).orElse(0f);
     }
@@ -232,7 +232,7 @@ public class WorldClimate implements NBTSerializable {
      * @param deltaHours in that day to forecast
      * @return temperature at hour at index. If exceeds cache size, return NaN.
      */
-    public static float getFutureTemp(IWorld world, int deltaDays, int deltaHours) {
+    public static float getFutureTemp(LevelAccessor world, int deltaDays, int deltaHours) {
         return getFutureTemp(get(world), deltaDays, deltaHours);
     }
 
@@ -301,19 +301,19 @@ public class WorldClimate implements NBTSerializable {
         };
     }
     
-    public static long getHour(IWorld world) {
+    public static long getHour(LevelAccessor world) {
         return getCapability(world).map(t->t.clockSource.getHours()).orElse(0L);
     }
 
-    public static int getHourInDay(IWorld world) {
+    public static int getHourInDay(LevelAccessor world) {
         return getCapability(world).map(t->t.clockSource.getHourInDay()).orElse(0);
     }
 
-    public static long getMonth(IWorld world) {
+    public static long getMonth(LevelAccessor world) {
         return getCapability(world).map(t->t.clockSource.getDate()).orElse(0L);
     }
 
-    public static long getSec(IWorld world) {
+    public static long getSec(LevelAccessor world) {
         return getCapability(world).map(t->t.clockSource.getTimeSecs()).orElse(0L);
     }
 
@@ -323,14 +323,14 @@ public class WorldClimate implements NBTSerializable {
      *
      * @return temperature at current hour
      */
-    public static float getTemp(IWorld world) {
+    public static float getTemp(LevelAccessor world) {
         return getCapability(world).map(t->t.getTemp()).orElse(0f);
     }
-    public static int getWind(IWorld world) {
+    public static int getWind(LevelAccessor world) {
         return getCapability(world).map(t->t.getWind()).orElse(0);
     }
 
-    public static long getWorldDay(IWorld w) {
+    public static long getWorldDay(LevelAccessor w) {
         return getCapability(w).map(t->t.getDay()).orElse(0L);
     }
 
@@ -340,11 +340,11 @@ public class WorldClimate implements NBTSerializable {
      *
      * @return temperature at current hour
      */
-    public static boolean isBlizzard(IWorld world) {
+    public static boolean isBlizzard(LevelAccessor world) {
         return getCapability(world).map(t->t.getHourData().getType() == ClimateType.BLIZZARD).orElse(false);
     }
 
-    public static boolean isCloudy(World world) {
+    public static boolean isCloudy(Level world) {
         return getCapability(world).map(t->t.getHourData().getType() == ClimateType.CLOUDY).orElse(false);
     }
 
@@ -357,7 +357,7 @@ public class WorldClimate implements NBTSerializable {
      * @param deltaHours delta hours from now to forecast;
      * @return temperature at hour at index
      */
-    public static boolean isFutureBlizzard(IWorld world, int deltaHours) {
+    public static boolean isFutureBlizzard(LevelAccessor world, int deltaHours) {
         WorldClimate data = get(world);
         if(data==null)return false;
         long thours = data.clockSource.getHours() + deltaHours;
@@ -375,15 +375,15 @@ public class WorldClimate implements NBTSerializable {
      * @param deltaHours in that day to forecast
      * @return temperature at hour at index. If exceeds cache size, return NaN.
      */
-    public static boolean isFutureBlizzard(IWorld world, int deltaDays, int deltaHours) {
+    public static boolean isFutureBlizzard(LevelAccessor world, int deltaDays, int deltaHours) {
         return getFutureBlizzard(get(world), deltaDays, deltaHours);
     }
 
-    public static boolean isSnowing(World world) {
+    public static boolean isSnowing(Level world) {
         return getCapability(world).map(t->t.getHourData().getType() == ClimateType.SNOW).orElse(false);
     }
 
-    public static boolean isSun(IWorld world) {
+    public static boolean isSun(LevelAccessor world) {
         return getCapability(world).map(t->t.getHourData().getType() == ClimateType.SUN).orElse(false);
     }
 
@@ -393,7 +393,7 @@ public class WorldClimate implements NBTSerializable {
         dailyTempData = new LinkedList<>();
     }
 
-    public void addInitTempEvent(ServerWorld w) {
+    public void addInitTempEvent(ServerLevel w) {
         this.tempEventStream.clear();
         this.dailyTempData.clear();
         long s = clockSource.secs;
@@ -457,8 +457,8 @@ public class WorldClimate implements NBTSerializable {
         Random rnd = new Random();
         long startTime = day * 1200;
         dtd.day = day;
-        dtd.dayNoise = (float) MathHelper.clamp(rnd.nextGaussian() * 5 + lastnoise, -5d, 5d);
-        dtd.dayHumidity = (float) MathHelper.clamp(rnd.nextGaussian() * 5 + lasthumid, 0d, 50d);
+        dtd.dayNoise = (float) Mth.clamp(rnd.nextGaussian() * 5 + lastnoise, -5d, 5d);
+        dtd.dayHumidity = (float) Mth.clamp(rnd.nextGaussian() * 5 + lasthumid, 0d, 50d);
         for (int i = 0; i < 24; i++) {
             Pair<Float, ClimateType> temp = this.computeTemp(startTime + i * 50);
             dtd.setTemp(i, temp.getFirst()); // Removed daynoise
@@ -645,7 +645,7 @@ public class WorldClimate implements NBTSerializable {
         this.updateFrames();
     }
 
-    public void rebuildCache(ServerWorld w) {
+    public void rebuildCache(ServerLevel w) {
         this.dailyTempData.clear();
         lasthour = -1;
         lastday = -1;
@@ -678,7 +678,7 @@ public class WorldClimate implements NBTSerializable {
         }
     }
 
-    public void resetTempEvent(ServerWorld w) {
+    public void resetTempEvent(ServerLevel w) {
         this.tempEventStream.clear();
         this.dailyTempData.clear();
         lasthour = -1;
@@ -750,7 +750,7 @@ public class WorldClimate implements NBTSerializable {
      *
      * @param serverWorld must be server side.
      */
-    public void updateCache(ServerWorld serverWorld) {
+    public void updateCache(ServerLevel serverWorld) {
         long hours = clockSource.getHours();
         if (hours != lasthour) {
             long date = clockSource.getDate();
@@ -772,7 +772,7 @@ public class WorldClimate implements NBTSerializable {
      *
      * @param serverWorld must be server side.
      */
-    public void updateClock(ServerWorld serverWorld) {
+    public void updateClock(ServerLevel serverWorld) {
         this.clockSource.update(serverWorld);
     }
 
@@ -861,14 +861,14 @@ public class WorldClimate implements NBTSerializable {
         return true;
     }
 	@Override
-	public void save(CompoundNBT nbt, boolean isPacket) {
+	public void save(CompoundTag nbt, boolean isPacket) {
         clockSource.serialize(nbt);
         nbt.put("tempEventStream", CodecUtil.toNBTList(tempEventStream, ClimateEvent.CODEC));
         nbt.put("hourlyTempStream", CodecUtil.toNBTList(dailyTempData, DayTemperatureData.CODEC));
 	}
 
 	@Override
-	public void load(CompoundNBT nbt, boolean isPacket) {
+	public void load(CompoundTag nbt, boolean isPacket) {
         clockSource.deserialize(nbt);
         tempEventStream.clear();
         tempEventStream.addAll(CodecUtil.fromNBTList(nbt.getList("tempEventStream", Constants.NBT.TAG_COMPOUND), ClimateEvent.CODEC));

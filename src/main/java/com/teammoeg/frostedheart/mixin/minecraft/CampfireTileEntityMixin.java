@@ -27,24 +27,24 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.CampfireBlock;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.CampfireTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.CampfireBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvents;
 /**
  * Add time limit for campfire
  * <p>
  * */
-@Mixin(CampfireTileEntity.class)
-public abstract class CampfireTileEntityMixin extends TileEntity implements ICampfireExtra {
+@Mixin(CampfireBlockEntity.class)
+public abstract class CampfireTileEntityMixin extends BlockEntity implements ICampfireExtra {
     public int lifeTime = 0;
 
-    public CampfireTileEntityMixin(TileEntityType<?> tileEntityTypeIn) {
-        super(TileEntityType.CAMPFIRE);
+    public CampfireTileEntityMixin(BlockEntityType<?> tileEntityTypeIn) {
+        super(BlockEntityType.CAMPFIRE);
     }
 
     @Override
@@ -53,7 +53,7 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
     }
 
     public void extinguishCampfire() {
-        this.level.playSound(null, worldPosition, SoundEvents.GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1.0F, 1.0F);
+        this.level.playSound(null, worldPosition, SoundEvents.GENERIC_EXTINGUISH_FIRE, SoundSource.BLOCKS, 1.0F, 1.0F);
         this.level.setBlockAndUpdate(this.worldPosition, this.getBlockState().setValue(CampfireBlock.LIT, false));
     }
 
@@ -68,7 +68,7 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
     }
 
     @Inject(at = @At("TAIL"), method = "read")
-    public void readAdditional(BlockState state, CompoundNBT nbt, CallbackInfo ci) {
+    public void readAdditional(BlockState state, CompoundTag nbt, CallbackInfo ci) {
         if (nbt.contains("LifeTime", 3)) {
             setLifeTime(nbt.getInt("LifeTime"));
         }
@@ -93,7 +93,7 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
     }
 
     @Inject(at = @At("HEAD"), method = "write", cancellable = true)
-    public void writeAdditional(CompoundNBT compound, CallbackInfoReturnable<CompoundNBT> cir) {
+    public void writeAdditional(CompoundTag compound, CallbackInfoReturnable<CompoundTag> cir) {
         compound.putInt("LifeTime", lifeTime);
     }
 }

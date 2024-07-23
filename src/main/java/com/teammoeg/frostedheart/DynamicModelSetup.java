@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
 
 import blusunrize.immersiveengineering.client.render.tile.DynamicModel;
 import blusunrize.immersiveengineering.client.render.tile.DynamicModel.ModelType;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 public class DynamicModelSetup {
     public static void setup() {

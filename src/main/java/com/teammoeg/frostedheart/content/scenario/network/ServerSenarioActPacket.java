@@ -6,24 +6,24 @@ import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class ServerSenarioActPacket implements FHMessage {
     private final String title;
     private final String subtitle;
-    public ServerSenarioActPacket(PacketBuffer buffer) {
-    	title =  SerializeUtil.readOptional(buffer, PacketBuffer::readUtf).orElse(null);
-    	subtitle = SerializeUtil.readOptional(buffer, PacketBuffer::readUtf).orElse(null);
+    public ServerSenarioActPacket(FriendlyByteBuf buffer) {
+    	title =  SerializeUtil.readOptional(buffer, FriendlyByteBuf::readUtf).orElse(null);
+    	subtitle = SerializeUtil.readOptional(buffer, FriendlyByteBuf::readUtf).orElse(null);
     }
 	public ServerSenarioActPacket(String title, String subtitle) {
 		super();
 		this.title = title;
 		this.subtitle = subtitle;
 	}
-	public void encode(PacketBuffer buffer) {
-        SerializeUtil.writeOptional2(buffer, title, PacketBuffer::writeUtf);
-        SerializeUtil.writeOptional2(buffer, subtitle, PacketBuffer::writeUtf);
+	public void encode(FriendlyByteBuf buffer) {
+        SerializeUtil.writeOptional2(buffer, title, FriendlyByteBuf::writeUtf);
+        SerializeUtil.writeOptional2(buffer, subtitle, FriendlyByteBuf::writeUtf);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {

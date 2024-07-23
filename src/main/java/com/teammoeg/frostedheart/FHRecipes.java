@@ -36,13 +36,13 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
 import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
 
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.IRecipeType;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHRecipes {
-    public static final DeferredRegister<IRecipeSerializer<?>> RECIPE_SERIALIZERS = DeferredRegister.create(
+    public static final DeferredRegister<RecipeSerializer<?>> RECIPE_SERIALIZERS = DeferredRegister.create(
             ForgeRegistries.RECIPE_SERIALIZERS, FHMain.MODID
     );
 
@@ -66,14 +66,14 @@ public class FHRecipes {
     }
 
     public static void registerRecipeTypes() {
-        GeneratorRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":generator");
-        GeneratorSteamRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":steam_generator");
-        ChargerRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":charger");
-        DietValueRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":diet_override");
-        IncubateRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":incubate");
-        ResearchPaperRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":paper");
-        SaunaRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":sauna");
-        InspireRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":inspire");
-        TradePolicy.TYPE = IRecipeType.register(FHMain.MODID + ":trade");
+        GeneratorRecipe.TYPE = RecipeType.register(FHMain.MODID + ":generator");
+        GeneratorSteamRecipe.TYPE = RecipeType.register(FHMain.MODID + ":steam_generator");
+        ChargerRecipe.TYPE = RecipeType.register(FHMain.MODID + ":charger");
+        DietValueRecipe.TYPE = RecipeType.register(FHMain.MODID + ":diet_override");
+        IncubateRecipe.TYPE = RecipeType.register(FHMain.MODID + ":incubate");
+        ResearchPaperRecipe.TYPE = RecipeType.register(FHMain.MODID + ":paper");
+        SaunaRecipe.TYPE = RecipeType.register(FHMain.MODID + ":sauna");
+        InspireRecipe.TYPE = RecipeType.register(FHMain.MODID + ":inspire");
+        TradePolicy.TYPE = RecipeType.register(FHMain.MODID + ":trade");
     }
 }

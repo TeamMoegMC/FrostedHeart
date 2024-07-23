@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.util.io;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 public class JsonHelper {
     public static Boolean getBoolean(JsonObject jo, String mem) {

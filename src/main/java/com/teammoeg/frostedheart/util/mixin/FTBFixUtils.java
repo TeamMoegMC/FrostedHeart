@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.util.mixin;
 
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 
 public class FTBFixUtils {
-    public static PlayerEntity networkPlayer;
+    public static Player networkPlayer;
 }

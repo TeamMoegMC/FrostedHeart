@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -25,17 +25,17 @@ import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonState;
 import blusunrize.immersiveengineering.client.utils.GuiHelper;
 import blusunrize.immersiveengineering.common.network.MessageTileSync;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3i;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.Vec3i;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.ChatFormatting;
 
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonIE.IIEPressable;
 
@@ -51,7 +51,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 			super(x, y, w, h, null, state, TEXTURE, u, v, 0, handler);
 		}
 		
-		public void blit(MatrixStack matrixStack, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight) {
+		public void blit(PoseStack matrixStack, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight) {
 		      blit(matrixStack, x, y,getBlitOffset(), uOffset, vOffset, uWidth, vHeight, TEXH, TEXW);
 		   }
 	}
@@ -60,10 +60,10 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		public MasterGeneratorGuiButtonUpgrade(int x, int y, int w, int h,
 				int initialState,  int u, int v,
 				IIEPressable<GuiButtonState<Integer>> handler) {
-			super(x, y, w, h, StringTextComponent.EMPTY, new Integer[] {0,1,2,3}, initialState, TEXTURE, u, v, 1, handler);
+			super(x, y, w, h, TextComponent.EMPTY, new Integer[] {0,1,2,3}, initialState, TEXTURE, u, v, 1, handler);
 		}
 
-		public void blit(MatrixStack matrixStack, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight) {
+		public void blit(PoseStack matrixStack, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight) {
 		      blit(matrixStack, x, y,getBlitOffset(), uOffset, vOffset, uWidth, vHeight, TEXH, TEXW);
 		   }
 	}
@@ -78,23 +78,23 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 	private static final AtlasUV generatorSymbol=new AtlasUV(TEXTURE, 176, 0, 24, 48, 3, 12, TEXW, TEXH);
 	private static final Point generatorPos=new Point(76, 44);
 	MasterGeneratorGuiButtonUpgrade upgrade;
-	public MasterGeneratorScreen(MasterGeneratorContainer<T> inventorySlotsIn, PlayerInventory inv, ITextComponent title) {
+	public MasterGeneratorScreen(MasterGeneratorContainer<T> inventorySlotsIn, Inventory inv, Component title) {
 		super(inventorySlotsIn, inv, title);
 		tile=inventorySlotsIn.tile;
 		this.imageHeight=222;
 		
 	}
-	public void blit(MatrixStack matrixStack, int x, int y,int w,int h, int u, int v, int uWidth, int vHeight) {
-		AbstractGui.blit(matrixStack,leftPos + x,topPos+y, w, h, u, v, uWidth, vHeight, TEXW, TEXH);
+	public void blit(PoseStack matrixStack, int x, int y,int w,int h, int u, int v, int uWidth, int vHeight) {
+		GuiComponent.blit(matrixStack,leftPos + x,topPos+y, w, h, u, v, uWidth, vHeight, TEXW, TEXH);
 	}
-	public void blit(MatrixStack matrixStack, int x, int y,int w,int h, int u, int v) {
+	public void blit(PoseStack matrixStack, int x, int y,int w,int h, int u, int v) {
 		blit(matrixStack,x,y, w, h, u, v, w, h);
 	}
 	public MasterGeneratorContainer<T> getMenu() {
 		return menu;
 	}
 	@Override
-	protected void renderBg(MatrixStack matrixStack, float partialTicks, int x, int y) {
+	protected void renderBg(PoseStack matrixStack, float partialTicks, int x, int y) {
 		ClientUtils.bindTexture(TEXTURE);
 		//background
 		this.blit(matrixStack, 0, 0, this.imageWidth, this.imageHeight, 0, 0);
@@ -143,10 +143,10 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		//overdrive gauge
 		minorPointer.blitRotated(matrixStack, leftPos, topPos, overGauge, menu.data.get(MasterGeneratorTileEntity.OVERDRIVE)/1000f*271f);
 	}
-	private void drawCenterText(MatrixStack matrixStack,int x,int y,String s,int clr) {
+	private void drawCenterText(PoseStack matrixStack,int x,int y,String s,int clr) {
 		this.font.draw(matrixStack,TranslateUtils.str(s),x- (float) this.font.width(s) /2, y-4, clr);
 	}
-	protected void renderLabels(MatrixStack matrixStack, int x, int y) {
+	protected void renderLabels(PoseStack matrixStack, int x, int y) {
 		//titles
 	    this.font.draw(matrixStack, this.title, this.titleLabelX, this.titleLabelY, 0xff404040);
 	    //this.font.drawText(matrixStack, this.playerInventory.getDisplayName(), this.playerInventoryTitleX, this.playerInventoryTitleY+5, 0xff404040);
@@ -166,7 +166,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         validStructure=tile.isValidStructure();
         this.addButton(new MasterGeneratorGuiButtonBoolean(leftPos + 5, topPos + 24, 11, 22, tile.isWorking(), 472, 148,
                 btn -> {
-                    CompoundNBT tag = new CompoundNBT();
+                    CompoundTag tag = new CompoundTag();
                     tile.setWorking(!btn.getState());
                     tag.putBoolean("isWorking", tile.isWorking());
                     ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(tile.master(), tag));
@@ -174,14 +174,14 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
                 }));
         this.addButton(new MasterGeneratorGuiButtonBoolean(leftPos + 160, topPos + 24, 11, 22, tile.isOverdrive(),450, 148,
                 btn -> {
-                    CompoundNBT tag = new CompoundNBT();
+                    CompoundTag tag = new CompoundTag();
                     tile.setOverdrive(!btn.getState());
                     tag.putBoolean("isOverdrive", tile.isOverdrive());
                     ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(tile.master(), tag));
                     fullInit();
                 }));
         int level=1;
-        PlayerEntity player=ClientUtils.mc().player;
+        Player player=ClientUtils.mc().player;
         if(tile.isBroken) {
         	if(FHUtils.hasItems(player, tile.getRepairCost())) 
         		level=2;
@@ -202,9 +202,9 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         
     }
     @Override
-    public void render(MatrixStack transform, int mouseX, int mouseY, float partial) {
+    public void render(PoseStack transform, int mouseX, int mouseY, float partial) {
         super.render(transform, mouseX, mouseY, partial);
-        List<ITextComponent> tooltip = new ArrayList<>();
+        List<Component> tooltip = new ArrayList<>();
         if(menu.getTank()!=null) {
         	
         	GuiHelper.handleGuiTank(transform, menu.getTank(), leftPos + 135, topPos + 57, 16, 60, 384, 192, 16, 60, mouseX, mouseY, TEXTURE, tooltip);
@@ -240,7 +240,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         	if(tile.getNextLevelMultiblock()!=null&&!tile.isBroken) {
         		upgrade.setStateByInt(1);
         		if(!validStructure) {
-        			Vector3i v3i=tile.getNextLevelMultiblock().getSize(ClientUtils.mc().level);
+        			Vec3i v3i=tile.getNextLevelMultiblock().getSize(ClientUtils.mc().level);
         			tooltip.add(TranslateUtils.translateGui("generator.no_enough_space",v3i.getX(),v3i.getY(),v3i.getZ()));
         		}else if(!ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock())) {
         			tooltip.add(TranslateUtils.translateGui("generator.incomplete_research"));
@@ -251,11 +251,11 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         			boolean isOk=true;;
         			for(IngredientWithSize iws:tile.getUpgradeCost()) {
         				ItemStack[] iss=iws.getMatchingStacks();
-        				IFormattableTextComponent iftc=TranslateUtils.str(iws.getCount()+"x ").append(iss[(int) ((new Date().getTime()/1000)%iss.length)].getHoverName());
+        				MutableComponent iftc=TranslateUtils.str(iws.getCount()+"x ").append(iss[(int) ((new Date().getTime()/1000)%iss.length)].getHoverName());
         				if(bs.get(i))
-        					iftc=iftc.withStyle(TextFormatting.GREEN);
+        					iftc=iftc.withStyle(ChatFormatting.GREEN);
         				else
-        					iftc=iftc.withStyle(TextFormatting.RED);
+        					iftc=iftc.withStyle(ChatFormatting.RED);
         				isOk&=bs.get(i);
         				i++;
         				tooltip.add(iftc);
@@ -269,11 +269,11 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
     			boolean isOk=true;;
     			for(IngredientWithSize iws:tile.getRepairCost()) {
     				ItemStack[] iss=iws.getMatchingStacks();
-    				IFormattableTextComponent iftc=TranslateUtils.str(iws.getCount()+"x ").append(iss[(int) ((new Date().getTime()/1000)%iss.length)].getHoverName());
+    				MutableComponent iftc=TranslateUtils.str(iws.getCount()+"x ").append(iss[(int) ((new Date().getTime()/1000)%iss.length)].getHoverName());
     				if(bs.get(i))
-    					iftc=iftc.withStyle(TextFormatting.GREEN);
+    					iftc=iftc.withStyle(ChatFormatting.GREEN);
     				else
-    					iftc=iftc.withStyle(TextFormatting.RED);
+    					iftc=iftc.withStyle(ChatFormatting.RED);
     				isOk&=bs.get(i);
     				i++;
     				tooltip.add(iftc);

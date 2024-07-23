@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.util.client;
 
-import net.minecraft.client.gui.IGuiEventListener;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 
-public class GuiClickedEvent implements IGuiEventListener {
+public class GuiClickedEvent implements GuiEventListener {
     int x1;
     int y1;
     int x2;

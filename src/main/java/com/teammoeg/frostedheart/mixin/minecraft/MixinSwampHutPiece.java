@@ -23,32 +23,32 @@ import java.util.Random;
 
 import org.spongepowered.asm.mixin.Mixin;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.CraftingTableBlock;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.world.ISeedReader;
-import net.minecraft.world.gen.feature.structure.IStructurePieceType;
-import net.minecraft.world.gen.feature.structure.ScatteredStructurePiece;
-import net.minecraft.world.gen.feature.structure.SwampHutPiece;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.CraftingTableBlock;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.levelgen.feature.StructurePieceType;
+import net.minecraft.world.level.levelgen.structure.ScatteredFeaturePiece;
+import net.minecraft.world.level.levelgen.structure.SwamplandHutPiece;
 /**
  * Remove crafting table in swamp hut
  * */
-@Mixin(SwampHutPiece.class)
-public abstract class MixinSwampHutPiece extends ScatteredStructurePiece {
+@Mixin(SwamplandHutPiece.class)
+public abstract class MixinSwampHutPiece extends ScatteredFeaturePiece {
 
-    protected MixinSwampHutPiece(IStructurePieceType structurePieceTypeIn, CompoundNBT nbt) {
+    protected MixinSwampHutPiece(StructurePieceType structurePieceTypeIn, CompoundTag nbt) {
         super(structurePieceTypeIn, nbt);
     }
 
-    public MixinSwampHutPiece(IStructurePieceType structurePieceTypeIn, Random rand, int xIn, int yIn, int zIn,
+    public MixinSwampHutPiece(StructurePieceType structurePieceTypeIn, Random rand, int xIn, int yIn, int zIn,
                               int widthIn, int heightIn, int depthIn) {
         super(structurePieceTypeIn, rand, xIn, yIn, zIn, widthIn, heightIn, depthIn);
     }
 
     @Override
-    protected void placeBlock(ISeedReader worldIn, BlockState blockstateIn, int x, int y, int z,
-                                 MutableBoundingBox boundingboxIn) {
+    protected void placeBlock(WorldGenLevel worldIn, BlockState blockstateIn, int x, int y, int z,
+                                 BoundingBox boundingboxIn) {
         if (blockstateIn != null && blockstateIn.getBlock() instanceof CraftingTableBlock) return;
 
         super.placeBlock(worldIn, blockstateIn, x, y, z, boundingboxIn);

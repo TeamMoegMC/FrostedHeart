@@ -37,11 +37,11 @@ import blusunrize.immersiveengineering.common.blocks.stone.AlloySmelterTileEntit
 import blusunrize.immersiveengineering.common.blocks.stone.BlastFurnaceTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 
 public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1GeneratorTileEntity> {
     GeneratorDriveHandler generatorDriveHandler;
@@ -52,7 +52,7 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
         lastSupportPos = new BlockPos(0,0,0);
     }
     public boolean isExistNeighborTileEntity() {
-        Vector3i vec = this.multiblockInstance.getSize(level);
+        Vec3i vec = this.multiblockInstance.getSize(level);
         int xLow = -1, xHigh = vec.getX(), yLow = 0, yHigh = vec.getY(), zLow = -1, zHigh = vec.getZ();
         int blastBlockCount = 0, alloySmelterCount = 0;
         for (int x = xLow; x <= xHigh; ++x)
@@ -61,7 +61,7 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
                     BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
                     // Enum a seamless NoUpandDown hollow cube
                     if ( ( (z>zLow && z<zHigh) && ((x==xLow) || (x==xHigh)) ) || ((z==zLow || z==zHigh) && (x>xLow && x<xHigh)) ) {
-                        TileEntity te = Utils.getExistingTileEntity(level, actualPos);
+                        BlockEntity te = Utils.getExistingTileEntity(level, actualPos);
                         if (te instanceof BlastFurnaceTileEntity) {
                             if (++blastBlockCount == 9) {
                             	BlastFurnaceTileEntity master=((BlastFurnaceTileEntity) te).master();
@@ -80,7 +80,7 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
         return false;
     }
     @Override
-    protected void callBlockConsumerWithTypeCheck(Consumer<T1GeneratorTileEntity> consumer, TileEntity te) {
+    protected void callBlockConsumerWithTypeCheck(Consumer<T1GeneratorTileEntity> consumer, BlockEntity te) {
         if (te instanceof T1GeneratorTileEntity)
             consumer.accept((T1GeneratorTileEntity) te);
     }
@@ -88,7 +88,7 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
 
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
        
     }
@@ -116,7 +116,7 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
         }
     }
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
         
     }

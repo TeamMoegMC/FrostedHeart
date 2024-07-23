@@ -30,8 +30,8 @@ import com.teammoeg.frostedheart.content.climate.BlizzardRenderer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -40,13 +40,13 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * Set priority to 1 for injecting earlier than Primal Winter
  */
 @OnlyIn(Dist.CLIENT)
-@Mixin(value = WorldRenderer.class, priority = 1)
+@Mixin(value = LevelRenderer.class, priority = 1)
 public abstract class WorldRendererMixin {
     @Shadow
     @Final
     private Minecraft mc;
     @Shadow
-    private ClientWorld world;
+    private ClientLevel world;
     @Shadow
     private int ticks;
 

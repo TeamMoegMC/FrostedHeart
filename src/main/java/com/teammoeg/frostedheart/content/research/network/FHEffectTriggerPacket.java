@@ -27,14 +27,14 @@ import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.Research;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FHEffectTriggerPacket implements FHMessage {
     private final int researchID;
 
-    public FHEffectTriggerPacket(PacketBuffer buffer) {
+    public FHEffectTriggerPacket(FriendlyByteBuf buffer) {
         researchID = buffer.readVarInt();
 
     }
@@ -43,7 +43,7 @@ public class FHEffectTriggerPacket implements FHMessage {
         this.researchID = FHResearch.researches.getIntId(r);
     }
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeVarInt(researchID);
     }
 
@@ -52,7 +52,7 @@ public class FHEffectTriggerPacket implements FHMessage {
         context.get().enqueueWork(() -> {
             Research r = FHResearch.researches.getById(researchID);
             TeamResearchData trd = ResearchDataAPI.getData(context.get().getSender());
-            ServerPlayerEntity spe = context.get().getSender();
+            ServerPlayer spe = context.get().getSender();
             if (trd.getData(r).isCompleted()) {
             	
                 r.grantEffects(trd, spe);

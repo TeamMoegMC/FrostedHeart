@@ -30,13 +30,13 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkH
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.IHeatArea;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.command.arguments.BlockPosArgument;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 
 public class AddTempCommand {
-    public static void register(CommandDispatcher<CommandSource> dispatcher) {
-        LiteralArgumentBuilder<CommandSource> add = Commands.literal("set")
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("set")
                 .then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ct) -> {
                     ChunkHeatData.removeTempAdjust(ct.getSource().getLevel(), BlockPosArgument.getOrLoadBlockPos(ct, "position"));
                     return Command.SINGLE_SUCCESS;
@@ -48,7 +48,7 @@ public class AddTempCommand {
                                     IntegerArgumentType.getInteger(ct, "temperature"));
                             return Command.SINGLE_SUCCESS;
                         }))));
-        LiteralArgumentBuilder<CommandSource> get = Commands.literal("get")
+        LiteralArgumentBuilder<CommandSourceStack> get = Commands.literal("get")
                 .executes((ct) -> {
                     Collection<IHeatArea> adjs = ChunkHeatData.getAdjust(ct.getSource().getLevel(), ct.getSource().getPlayerOrException().blockPosition());
                     if (adjs.isEmpty()) {

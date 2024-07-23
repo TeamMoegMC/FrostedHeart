@@ -27,18 +27,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.cannolicatfish.rankine.blocks.GrassySoilBlock;
 import com.teammoeg.frostedheart.util.FHUtils;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.GrassBlock;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorldReader;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.GrassBlock;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.LevelReader;
 
-import net.minecraft.block.AbstractBlock.Properties;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 @Mixin(GrassySoilBlock.class)
 public class MixinGrassySoilBlock extends GrassBlock {
 
     @Inject(at = @At("HEAD"), method = "isSnowyConditions", cancellable = true, remap = false)
-    private static void isSnowyConditions(BlockState state, IWorldReader worldReader, BlockPos pos, CallbackInfoReturnable<Boolean> cbi) {
+    private static void isSnowyConditions(BlockState state, LevelReader worldReader, BlockPos pos, CallbackInfoReturnable<Boolean> cbi) {
         if (!FHUtils.canGrassSurvive(worldReader, pos))
             cbi.setReturnValue(false);
     }

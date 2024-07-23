@@ -24,9 +24,9 @@ import java.util.Map;
 
 import com.cannolicatfish.rankine.init.RankineTags;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.Tags.IOptionalNamedTag;
 
 public class BreedUtil {

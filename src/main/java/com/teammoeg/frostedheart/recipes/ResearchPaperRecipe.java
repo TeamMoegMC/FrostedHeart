@@ -23,12 +23,12 @@ import com.google.gson.JsonObject;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
 public class ResearchPaperRecipe extends IESerializableRecipe {
@@ -41,7 +41,7 @@ public class ResearchPaperRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public ResearchPaperRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+        public ResearchPaperRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
             return new ResearchPaperRecipe(recipeId, Ingredient.fromNetwork(buffer), buffer.readVarInt());
         }
 
@@ -51,13 +51,13 @@ public class ResearchPaperRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public void toNetwork(PacketBuffer buffer, ResearchPaperRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buffer, ResearchPaperRecipe recipe) {
             recipe.paper.toNetwork(buffer);
             buffer.writeVarInt(recipe.maxlevel);
         }
 
     }
-    public static IRecipeType<ResearchPaperRecipe> TYPE;
+    public static RecipeType<ResearchPaperRecipe> TYPE;
     public static RegistryObject<IERecipeSerializer<ResearchPaperRecipe>> SERIALIZER;
     public Ingredient paper;
 

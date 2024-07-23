@@ -25,15 +25,15 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectCategory;
 
-public class SaunaEffect extends Effect {
+public class SaunaEffect extends MobEffect {
 
-    protected SaunaEffect(EffectType typeIn, int liquidColorIn) {
+    protected SaunaEffect(MobEffectCategory typeIn, int liquidColorIn) {
         super(typeIn, liquidColorIn);
     }
 
@@ -49,8 +49,8 @@ public class SaunaEffect extends Effect {
 
     @Override
     public void applyEffectTick(LivingEntity entity, int amplifier) {
-        if (entity instanceof ServerPlayerEntity) {
-            ServerPlayerEntity player = (ServerPlayerEntity) entity;
+        if (entity instanceof ServerPlayer) {
+            ServerPlayer player = (ServerPlayer) entity;
             EnergyCore.addEnergy(player, 9);
         }
     }

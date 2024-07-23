@@ -26,21 +26,21 @@ import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FHBodyDataSyncPacket extends NBTMessage {
-    public FHBodyDataSyncPacket(PlayerEntity pe) {
-        super(PlayerTemperatureData.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundNBT::new));
+    public FHBodyDataSyncPacket(Player pe) {
+        super(PlayerTemperatureData.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundTag::new));
     }
 
 
-	public FHBodyDataSyncPacket(PacketBuffer buffer) {
+	public FHBodyDataSyncPacket(FriendlyByteBuf buffer) {
 		super(buffer);
 	}
 
@@ -49,8 +49,8 @@ public class FHBodyDataSyncPacket extends NBTMessage {
 	public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-            World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getWorld);
-            PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
+            Level world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getWorld);
+            Player player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
             if (world != null) {
             	PlayerTemperatureData.getCapability(player).ifPresent(t->t.deserializeNBT(super.getTag()));
             }

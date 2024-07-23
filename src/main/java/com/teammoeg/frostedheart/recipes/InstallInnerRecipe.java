@@ -32,21 +32,21 @@ import com.teammoeg.frostedheart.util.io.JsonHelper;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.item.crafting.SpecialRecipe;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.CustomRecipe;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.RegistryObject;
 
-public class InstallInnerRecipe extends SpecialRecipe {
+public class InstallInnerRecipe extends CustomRecipe {
     public static class Serializer extends IERecipeSerializer<InstallInnerRecipe> {
         @Override
         public ItemStack getIcon() {
@@ -55,7 +55,7 @@ public class InstallInnerRecipe extends SpecialRecipe {
 
         @Nullable
         @Override
-        public InstallInnerRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+        public InstallInnerRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
             Ingredient input = Ingredient.fromNetwork(buffer);
             int dura = buffer.readVarInt();
             return new InstallInnerRecipe(recipeId, input, dura);
@@ -69,7 +69,7 @@ public class InstallInnerRecipe extends SpecialRecipe {
         }
 
         @Override
-        public void toNetwork(PacketBuffer buffer, InstallInnerRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buffer, InstallInnerRecipe recipe) {
             recipe.type.toNetwork(buffer);
             buffer.writeVarInt(recipe.durability);
         }
@@ -103,7 +103,7 @@ public class InstallInnerRecipe extends SpecialRecipe {
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack assemble(CraftingInventory inv) {
+    public ItemStack assemble(CraftingContainer inv) {
         ItemStack buffstack = ItemStack.EMPTY;
         ItemStack armoritem = ItemStack.EMPTY;
         for (int i = 0; i < inv.getContainerSize(); ++i) {
@@ -116,8 +116,8 @@ public class InstallInnerRecipe extends SpecialRecipe {
                 } else {
                     if (!armoritem.isEmpty())
                         return ItemStack.EMPTY;
-                    EquipmentSlotType type = MobEntity.getEquipmentSlotForItem(itemstack);
-                    if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND)
+                    EquipmentSlot type = Mob.getEquipmentSlotForItem(itemstack);
+                    if (type != null && type != EquipmentSlot.MAINHAND && type != EquipmentSlot.OFFHAND)
                         if (itemstack.hasTag()) {
                             if (!itemstack.getTag().getString("inner_cover").isEmpty()) return ItemStack.EMPTY;
                         }
@@ -130,8 +130,8 @@ public class InstallInnerRecipe extends SpecialRecipe {
             ItemStack ret = armoritem.copy();
             ret.setCount(1);
             ItemNBTHelper.putString(ret, "inner_cover", RegistryUtils.getRegistryName(buffstack.getItem()).toString());
-            CompoundNBT nbt = buffstack.getTag();
-            ret.getTag().put("inner_cover_tag", nbt != null ? nbt : new CompoundNBT());
+            CompoundTag nbt = buffstack.getTag();
+            ret.getTag().put("inner_cover_tag", nbt != null ? nbt : new CompoundTag());
             return ret;
         }
         return ItemStack.EMPTY;
@@ -146,19 +146,19 @@ public class InstallInnerRecipe extends SpecialRecipe {
     }
 
     @Override
-    public NonNullList<ItemStack> getRemainingItems(CraftingInventory inv) {
+    public NonNullList<ItemStack> getRemainingItems(CraftingContainer inv) {
         return NonNullList.withSize(inv.getContainerSize(), ItemStack.EMPTY);
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getSerializer() {
         return SERIALIZER.get();
     }
 
     /**
      * Used to check if a recipe matches current crafting inventory
      */
-    public boolean matches(CraftingInventory inv, World worldIn) {
+    public boolean matches(CraftingContainer inv, Level worldIn) {
         boolean hasArmor = false;
         boolean hasItem = false;
         for (int i = 0; i < inv.getContainerSize(); ++i) {
@@ -173,8 +173,8 @@ public class InstallInnerRecipe extends SpecialRecipe {
             } else {
                 if (hasArmor)
                     return false;
-                EquipmentSlotType type = MobEntity.getEquipmentSlotForItem(itemstack);
-                if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND)
+                EquipmentSlot type = Mob.getEquipmentSlotForItem(itemstack);
+                if (type != null && type != EquipmentSlot.MAINHAND && type != EquipmentSlot.OFFHAND)
                     if (itemstack.hasTag()) {
                         if (!itemstack.getTag().getString("inner_cover").isEmpty()) return false;
                     }
@@ -185,8 +185,8 @@ public class InstallInnerRecipe extends SpecialRecipe {
     }
 
     public boolean matches(ItemStack itemstack) {
-        EquipmentSlotType type = MobEntity.getEquipmentSlotForItem(itemstack);
-        return type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND;
+        EquipmentSlot type = Mob.getEquipmentSlotForItem(itemstack);
+        return type != null && type != EquipmentSlot.MAINHAND && type != EquipmentSlot.OFFHAND;
     }
 
 }

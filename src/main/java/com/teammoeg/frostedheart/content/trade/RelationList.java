@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.trade;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class RelationList {
     public final int[] relations = new int[RelationModifier.values().length];
@@ -39,7 +39,7 @@ public class RelationList {
         sum = null;
     }
 
-    public void read(PacketBuffer pb) {
+    public void read(FriendlyByteBuf pb) {
         int[] arr = pb.readVarIntArray();
         int minl = Math.min(arr.length, relations.length);
         System.arraycopy(arr, 0, relations, 0, minl);
@@ -55,7 +55,7 @@ public class RelationList {
         return sum;
     }
 
-    public void write(PacketBuffer pb) {
+    public void write(FriendlyByteBuf pb) {
         pb.writeVarIntArray(relations);
     }
 }

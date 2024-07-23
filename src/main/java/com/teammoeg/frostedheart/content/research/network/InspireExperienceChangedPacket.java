@@ -8,8 +8,8 @@ import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.DistExecutor;
@@ -22,7 +22,7 @@ public class InspireExperienceChangedPacket implements FHMessage {
 	int pexp;
 	int researchPoint;
 	
-	public InspireExperienceChangedPacket(PacketBuffer pb) {
+	public InspireExperienceChangedPacket(FriendlyByteBuf pb) {
 		level=pb.readVarInt();
 		exp=pb.readVarInt();
 		plevel=pb.readVarInt();
@@ -31,7 +31,7 @@ public class InspireExperienceChangedPacket implements FHMessage {
 	}
 
 	@Override
-	public void encode(PacketBuffer buffer) {
+	public void encode(FriendlyByteBuf buffer) {
 		buffer.writeVarInt(level);
 		buffer.writeVarInt(exp);
 		buffer.writeVarInt(plevel);
@@ -42,7 +42,7 @@ public class InspireExperienceChangedPacket implements FHMessage {
 	@Override
 	public void handle(Supplier<Context> context) {
         context.get().enqueueWork(() -> {
-        	PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
+        	Player player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
         	LazyOptional<EnergyCore> ec=FHCapabilities.ENERGY.getCapability(player);
         	ec.ifPresent(s->{
         		s.update(level, exp, plevel, pexp, researchPoint);

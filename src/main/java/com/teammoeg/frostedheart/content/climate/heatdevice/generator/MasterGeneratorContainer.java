@@ -23,16 +23,16 @@ import com.teammoeg.frostedheart.util.client.Point;
 
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import blusunrize.immersiveengineering.common.gui.IESlot;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.IIntArray;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public abstract class MasterGeneratorContainer<T extends MasterGeneratorTileEntity<T>> extends IEBaseContainer<T> {
-    public IIntArray data;
+    public ContainerData data;
 
-    public MasterGeneratorContainer(int id, PlayerInventory inventoryPlayer, T tile) {
+    public MasterGeneratorContainer(int id, Inventory inventoryPlayer, T tile) {
         super(tile, id);
         Point in=getSlotIn();
         this.addSlot(new IESlot(this, this.inv, 0, in.getX(), in.getY()) {

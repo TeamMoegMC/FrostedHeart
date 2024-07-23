@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.trade;
 
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public enum RelationModifier {
@@ -41,7 +41,7 @@ public enum RelationModifier {
         this.tkey = tkey;
     }
 
-    public TranslationTextComponent getDesc() {
+    public TranslatableComponent getDesc() {
         return TranslateUtils.translateGui("trade.relation." + tkey);
     }
 }

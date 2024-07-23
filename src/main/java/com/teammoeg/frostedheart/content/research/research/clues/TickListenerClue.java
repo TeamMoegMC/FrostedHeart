@@ -23,7 +23,7 @@ import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 
 public abstract class TickListenerClue extends ListenerClue {
 
@@ -53,14 +53,14 @@ public abstract class TickListenerClue extends ListenerClue {
         ResearchListeners.getTickClues().add(this, t.getId());
     }
 
-    public abstract boolean isCompleted(TeamResearchData t, ServerPlayerEntity player);
+    public abstract boolean isCompleted(TeamResearchData t, ServerPlayer player);
 
     @Override
     public void removeListener(TeamDataHolder t) {
         ResearchListeners.getTickClues().remove(this, t.getId());
     }
 
-    public final void tick(TeamResearchData t, ServerPlayerEntity player) {
+    public final void tick(TeamResearchData t, ServerPlayer player) {
         if (!t.isClueTriggered(this))
             if (this.isCompleted(t, player)) {
                 this.setCompleted(t, true);

@@ -31,20 +31,20 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.loot.LootContext;
-import net.minecraft.loot.conditions.ILootCondition;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.common.loot.LootModifier;
 
 public class DechantLootModifier extends LootModifier {
     public static class Serializer extends GlobalLootModifierSerializer<DechantLootModifier> {
         @Override
-        public DechantLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
+        public DechantLootModifier read(ResourceLocation location, JsonObject object, LootItemCondition[] conditions) {
             JsonArray ja = object.get("removed").getAsJsonArray();
             List<ResourceLocation> changes = new ArrayList<>();
             for (JsonElement je : ja) {
@@ -65,7 +65,7 @@ public class DechantLootModifier extends LootModifier {
 
     List<Enchantment> removed = new ArrayList<>();
 
-    private DechantLootModifier(ILootCondition[] conditionsIn, Collection<ResourceLocation> pairsin) {
+    private DechantLootModifier(LootItemCondition[] conditionsIn, Collection<ResourceLocation> pairsin) {
         super(conditionsIn);
         pairsin.stream().map(RegistryUtils::getEnchantment).forEach(removed::add);
     }

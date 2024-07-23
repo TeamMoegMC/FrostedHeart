@@ -28,26 +28,26 @@ import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.thermopolium.data.recipes.BowlContainingRecipe;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
 
 class Benefits {
-    private final Effect[] basicEffects = new Effect[]{Effects.DAMAGE_BOOST, Effects.MOVEMENT_SPEED, Effects.DIG_SPEED};
-    private final ServerPlayerEntity player;
+    private final MobEffect[] basicEffects = new MobEffect[]{MobEffects.DAMAGE_BOOST, MobEffects.MOVEMENT_SPEED, MobEffects.DIG_SPEED};
+    private final ServerPlayer player;
     private final WantedFoodCapability capability;
     private final int eatenFoodsAmount;
     private final int benefitLevel;
     private final Random random = new Random();
     private final int basicEffectDuration;
 
-    public Benefits(ServerPlayerEntity player) {
+    public Benefits(ServerPlayer player) {
         this.player = player;
         this.capability = FHCapabilities.WANTED_FOOD.getCapability(player).orElse(null);
         this.eatenFoodsAmount = capability.getEatenFoodsAmount();
@@ -66,13 +66,13 @@ class Benefits {
      */
     private void giveBasicEffects(int amount) {
         if (amount == 1) {
-            player.addEffect(new EffectInstance(basicEffects[random.nextInt(2)], basicEffectDuration, 0));
+            player.addEffect(new MobEffectInstance(basicEffects[random.nextInt(2)], basicEffectDuration, 0));
 
         } else if (amount == 2) {
             int notGiveEffect = random.nextInt(2);
             for (int i = 0; i < 2; i++) {
                 if (i != notGiveEffect) {
-                    player.addEffect(new EffectInstance(basicEffects[i], basicEffectDuration, 0));
+                    player.addEffect(new MobEffectInstance(basicEffects[i], basicEffectDuration, 0));
                 }
             }
         }
@@ -83,13 +83,13 @@ class Benefits {
             this.giveBasicEffects(amount);
         } else if (amount == 3)
             for (int i = 0; i < 3; i++) {
-                player.addEffect(new EffectInstance(basicEffects[i], basicEffectDuration, potionLevel[i]));
+                player.addEffect(new MobEffectInstance(basicEffects[i], basicEffectDuration, potionLevel[i]));
             }
         else FHMain.LOGGER.error("Invalid effect amount input!");
     }
 
     private void giveHealthRegen(int duration) {
-        this.player.addEffect(new EffectInstance(Effects.REGENERATION, duration));
+        this.player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, duration));
     }
 
 

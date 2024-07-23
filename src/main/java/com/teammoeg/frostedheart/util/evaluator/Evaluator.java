@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 
 public class Evaluator {
     public static Map<String, Function<Node[], Node>> functions = new HashMap<>();
@@ -35,8 +35,8 @@ public class Evaluator {
         functions.put("sin", x -> new FuncCallNode(x, "sin", 1, v -> Math.sin(v[0]), true));
         functions.put("cos", x -> new FuncCallNode(x, "cos", 1, v -> Math.cos(v[0]), true));
         functions.put("tan", x -> new FuncCallNode(x, "tan", 1, v -> Math.tan(v[0]), true));
-        functions.put("sinf", x -> new FuncCallNode(x, "sinf", 1, v -> (double) MathHelper.sin((float) v[0]), true));
-        functions.put("cosf", x -> new FuncCallNode(x, "cosf", 1, v -> (double) MathHelper.cos((float) v[0]), true));
+        functions.put("sinf", x -> new FuncCallNode(x, "sinf", 1, v -> (double) Mth.sin((float) v[0]), true));
+        functions.put("cosf", x -> new FuncCallNode(x, "cosf", 1, v -> (double) Mth.cos((float) v[0]), true));
         functions.put("rad", x -> new FuncCallNode(x, "rad", 1, v -> Math.toRadians(v[0]), true));
         functions.put("deg", x -> new FuncCallNode(x, "deg", 1, v -> Math.toDegrees(v[0]), true));
         functions.put("abs", x -> new FuncCallNode(x, "abs", 1, v -> Math.abs(v[0]), true));

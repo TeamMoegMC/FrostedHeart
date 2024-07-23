@@ -48,14 +48,14 @@ import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.crafting.RecipeManager;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.crafting.RecipeManager;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.management.PlayerProfileCache;
-import net.minecraft.world.storage.FolderName;
+import net.minecraft.server.players.GameProfileCache;
+import net.minecraft.world.level.storage.LevelResource;
 
 /**
  * The data manager for all team data.
@@ -68,8 +68,8 @@ public class FHTeamDataManager {
 
     public static FHTeamDataManager INSTANCE;
     private final MinecraftServer server;
-    static final FolderName dataFolder = new FolderName("fhdata");
-    static final FolderName oldDataFolder = new FolderName("fhresearch");
+    static final LevelResource dataFolder = new LevelResource("fhdata");
+    static final LevelResource oldDataFolder = new LevelResource("fhresearch");
     private Map<UUID, UUID> dataByFTBId = new HashMap<>();
     private Map<UUID, TeamDataHolder> dataByFhId = new HashMap<>();
     
@@ -125,8 +125,8 @@ public class FHTeamDataManager {
      * @param player the player
      * @return the data
      */
-	public static TeamDataHolder get(PlayerEntity player) {
-		return INSTANCE.get(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)player));
+	public static TeamDataHolder get(Player player) {
+		return INSTANCE.get(FTBTeamsAPI.getPlayerTeam((ServerPlayer)player));
 		
 	}
 
@@ -153,7 +153,7 @@ public class FHTeamDataManager {
         }
         TeamDataHolder data=dataByFhId.computeIfAbsent(cn, c -> new TeamDataHolder(c, OptionalLazy.of(()->team)));
         if (data.getOwnerName() == null) {
-            PlayerProfileCache cache = getServer().getProfileCache();
+            GameProfileCache cache = getServer().getProfileCache();
             if (cache != null) {
                 GameProfile gp = cache.get(team.getOwner());
                 if (gp != null) {
@@ -210,7 +210,7 @@ public class FHTeamDataManager {
 	                    return;
 	                }
 	                
-	                CompoundNBT nbt = CompressedStreamTools.readCompressed(f);
+	                CompoundTag nbt = NbtIo.readCompressed(f);
 	                if(nbt.contains("teamId"))
 	                	tud=nbt.getUUID("teamId");
 	                final UUID ftbid=tud;
@@ -240,7 +240,7 @@ public class FHTeamDataManager {
             String fn = entry.getKey().toString() + ".nbt";
             File f = local.resolve(fn).toFile();
             try {
-                CompressedStreamTools.writeCompressed(entry.getValue().serialize(false), f);
+                NbtIo.writeCompressed(entry.getValue().serialize(false), f);
                 files.remove(fn);
             } catch (IOException e) {
 

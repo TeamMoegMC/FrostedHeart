@@ -35,31 +35,31 @@ import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.yanny.age.stone.blocks.FlintWorkbenchTileEntity;
 import com.yanny.age.stone.recipes.FlintWorkbenchRecipe;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.items.wrapper.RecipeWrapper;
 
 @Mixin(FlintWorkbenchTileEntity.class)
-public class FlintWorkbenchTileEntityMixin extends TileEntity {
+public class FlintWorkbenchTileEntityMixin extends BlockEntity {
     @Shadow(remap = false)
     private NonNullList<ItemStack> stacks;
     @Shadow(remap = false)
     private RecipeWrapper inventoryWrapper;
 
-    PlayerEntity pe;
+    Player pe;
 
-    public FlintWorkbenchTileEntityMixin(TileEntityType<?> tileEntityTypeIn) {
+    public FlintWorkbenchTileEntityMixin(BlockEntityType<?> tileEntityTypeIn) {
         super(tileEntityTypeIn);
     }
 
     @Inject(at = @At("HEAD"), method = "blockActivated", remap = false)
-    public void fh$blockActivated(@Nonnull PlayerEntity player, @Nonnull BlockRayTraceResult hit,
-                                  CallbackInfoReturnable<ActionResultType> cbi) {
+    public void fh$blockActivated(@Nonnull Player player, @Nonnull BlockHitResult hit,
+                                  CallbackInfoReturnable<InteractionResult> cbi) {
         pe = player;
     }
 

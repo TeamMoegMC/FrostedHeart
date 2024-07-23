@@ -26,27 +26,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.mojang.authlib.GameProfile;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.util.FakePlayer;
 
 /**
  * Relief a performance issue in server
  * For removal in 1.20+
  */
-@Mixin(ServerPlayerEntity.class)
-public abstract class ServerPlayerEntityMixin extends PlayerEntity {
+@Mixin(ServerPlayer.class)
+public abstract class ServerPlayerEntityMixin extends Player {
 
-    public ServerPlayerEntityMixin(World p_i241920_1_, BlockPos p_i241920_2_, float p_i241920_3_,
+    public ServerPlayerEntityMixin(Level p_i241920_1_, BlockPos p_i241920_2_, float p_i241920_3_,
                                    GameProfile p_i241920_4_) {
         super(p_i241920_1_, p_i241920_2_, p_i241920_3_, p_i241920_4_);
     }
 
     @Inject(at = @At(value = "HEAD"), method = "Lnet/minecraft/entity/player/ServerPlayerEntity;fudgeSpawnLocation(Lnet/minecraft/world/server/ServerWorld;)V", cancellable = true)
-    public void fh$init(ServerWorld worldIn, CallbackInfo cbi) {
+    public void fh$init(ServerLevel worldIn, CallbackInfo cbi) {
         if (((Object) this) instanceof FakePlayer)
             cbi.cancel();
     }

@@ -24,12 +24,12 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class ClientLinkClickedPacket implements FHMessage {
     final String link;
-    public ClientLinkClickedPacket(PacketBuffer buffer) {
+    public ClientLinkClickedPacket(FriendlyByteBuf buffer) {
     	link=buffer.readUtf();
     }
 
@@ -40,7 +40,7 @@ public class ClientLinkClickedPacket implements FHMessage {
 		this.link = link;
 	}
 
-	public void encode(PacketBuffer buffer) {
+	public void encode(FriendlyByteBuf buffer) {
 		buffer.writeUtf(link);
     }
 

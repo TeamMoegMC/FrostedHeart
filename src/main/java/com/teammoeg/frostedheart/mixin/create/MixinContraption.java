@@ -43,18 +43,18 @@ import com.simibubi.create.foundation.config.AllConfigs;
 import com.simibubi.create.foundation.utility.Iterate;
 import com.teammoeg.frostedheart.util.mixin.ISpeedContraption;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.material.PushReaction;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.IBooleanFunction;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.template.Template.BlockInfo;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.PushReaction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.minecraftforge.common.util.Constants.BlockFlags;
 
 @Mixin(Contraption.class)
@@ -63,16 +63,16 @@ public abstract class MixinContraption implements ISpeedContraption {
     float sc = 0;
 
     @Shadow(remap = false)
-    protected Map<BlockPos, BlockInfo> blocks;
+    protected Map<BlockPos, StructureBlockInfo> blocks;
 
     @Shadow(remap = false)
-    protected abstract void addBlock(BlockPos pos, Pair<BlockInfo, TileEntity> pair);
+    protected abstract void addBlock(BlockPos pos, Pair<StructureBlockInfo, BlockEntity> pair);
 
     @Shadow(remap = false)
     protected abstract void addGlue(SuperGlueEntity entity);
 
     @Shadow(remap = false)
-    protected abstract Pair<BlockInfo, TileEntity> capture(World world, BlockPos pos);
+    protected abstract Pair<StructureBlockInfo, BlockEntity> capture(Level world, BlockPos pos);
 
     @Override
     public void contributeSpeed(float s) {
@@ -85,7 +85,7 @@ public abstract class MixinContraption implements ISpeedContraption {
      * @reason no more instabreak
      */
     @Overwrite(remap = false)
-    protected boolean customBlockPlacement(IWorld world, BlockPos targetPos, BlockState state) {
+    protected boolean customBlockPlacement(LevelAccessor world, BlockPos targetPos, BlockState state) {
         BlockState blockState = world.getBlockState(targetPos);
 
         if (sc < 20480)
@@ -112,7 +112,7 @@ public abstract class MixinContraption implements ISpeedContraption {
      */
     @Inject(at = @At(value = "INVOKE_ASSIGN", target = "Lcom/simibubi/create/content/contraptions/components/structureMovement/glue/SuperGlueHandler;gatherGlue(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;)Ljava/util/Map;", remap = false, ordinal = 0)
             , method = "moveBlock", remap = false, locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
-    protected void fh$moveBlock(World world, @Nullable Direction forcedDirection, Queue<BlockPos> frontier,
+    protected void fh$moveBlock(Level world, @Nullable Direction forcedDirection, Queue<BlockPos> frontier,
                                 Set<BlockPos> visited, CallbackInfoReturnable<Boolean> r, BlockPos pos, BlockState state, BlockPos posDown, BlockState stateBelow, Map<Direction, SuperGlueEntity> superglue) throws AssemblyException {
         // Slime blocks and super glue drag adjacent blocks if possible
         for (Direction offset : Iterate.directions) {
@@ -165,12 +165,12 @@ public abstract class MixinContraption implements ISpeedContraption {
     }
 
     @Inject(at = @At("HEAD"), method = "readNBT", remap = false)
-    public void fh$readNBT(World world, CompoundNBT nbt, boolean spawnData, CallbackInfo cbi) {
+    public void fh$readNBT(Level world, CompoundTag nbt, boolean spawnData, CallbackInfo cbi) {
         sc = nbt.getFloat("speedCollected");
     }
 
     @Inject(at = @At("RETURN"), method = "writeNBT", remap = false, locals = LocalCapture.CAPTURE_FAILHARD)
-    public void fh$writeNBT(boolean spawnPacket, CallbackInfoReturnable<CompoundNBT> cbi, CompoundNBT cnbt) {
+    public void fh$writeNBT(boolean spawnPacket, CallbackInfoReturnable<CompoundTag> cbi, CompoundTag cnbt) {
         cnbt.putFloat("speedCollected", sc);
     }
 
@@ -182,13 +182,13 @@ public abstract class MixinContraption implements ISpeedContraption {
     @Shadow(remap = false)
     protected abstract boolean isAnchoringBlockAt(BlockPos pos);
 
-    private boolean isSupportive(BlockState s1, BlockState s2, World w, BlockPos p1, BlockPos p2, Direction offset) {
+    private boolean isSupportive(BlockState s1, BlockState s2, Level w, BlockPos p1, BlockPos p2, Direction offset) {
 
-        return VoxelShapes.joinIsNotEmpty(s1.getShape(w, p1).getFaceShape(offset), s2.getShape(w, p2).getFaceShape(offset.getOpposite()), IBooleanFunction.AND);
+        return Shapes.joinIsNotEmpty(s1.getShape(w, p1).getFaceShape(offset), s2.getShape(w, p2).getFaceShape(offset.getOpposite()), BooleanOp.AND);
     }
 
     @Shadow(remap = false)
-    protected abstract boolean movementAllowed(BlockState state, World world, BlockPos pos);
+    protected abstract boolean movementAllowed(BlockState state, Level world, BlockPos pos);
 
     @Override
     public void setSpeed(float spd) {

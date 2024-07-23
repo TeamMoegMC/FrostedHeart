@@ -19,14 +19,14 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.fml.RegistryObject;
 
-import net.minecraft.block.AbstractBlock.Properties;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public class HeatIncubatorBlock extends IncubatorBlock {
 
-    public HeatIncubatorBlock(Properties p, RegistryObject<TileEntityType<?>> incubator2) {
+    public HeatIncubatorBlock(Properties p, RegistryObject<BlockEntityType<?>> incubator2) {
         super(p, incubator2);
     }
 

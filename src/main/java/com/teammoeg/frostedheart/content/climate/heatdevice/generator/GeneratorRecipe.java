@@ -27,11 +27,11 @@ import com.teammoeg.frostedheart.FHMultiblocks;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
 public class GeneratorRecipe extends IESerializableRecipe {
@@ -43,7 +43,7 @@ public class GeneratorRecipe extends IESerializableRecipe {
 
         @Nullable
         @Override
-        public GeneratorRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+        public GeneratorRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
             ItemStack output = buffer.readItem();
             IngredientWithSize input = IngredientWithSize.read(buffer);
             int time = buffer.readInt();
@@ -54,18 +54,18 @@ public class GeneratorRecipe extends IESerializableRecipe {
         public GeneratorRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
             ItemStack output = readOutput(json.get("result"));
             IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
-            int time = JSONUtils.getAsInt(json, "time");
+            int time = GsonHelper.getAsInt(json, "time");
             return new GeneratorRecipe(recipeId, output, input, time);
         }
 
         @Override
-        public void toNetwork(PacketBuffer buffer, GeneratorRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buffer, GeneratorRecipe recipe) {
             buffer.writeItem(recipe.output);
             recipe.input.write(buffer);
             buffer.writeInt(recipe.time);
         }
     }
-    public static IRecipeType<GeneratorRecipe> TYPE;
+    public static RecipeType<GeneratorRecipe> TYPE;
 
     public static RegistryObject<IERecipeSerializer<GeneratorRecipe>> SERIALIZER;
     public final IngredientWithSize input;

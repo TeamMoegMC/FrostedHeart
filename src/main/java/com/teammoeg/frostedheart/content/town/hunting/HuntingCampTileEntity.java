@@ -6,7 +6,7 @@ import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 public class HuntingCampTileEntity extends AbstractTownWorkerTileEntity {
     public HuntingCampTileEntity() {
@@ -37,12 +37,12 @@ public class HuntingCampTileEntity extends AbstractTownWorkerTileEntity {
     }
 
     @Override
-    public CompoundNBT getWorkData() {
+    public CompoundTag getWorkData() {
         return getBasicWorkData();
     }
 
     @Override
-    public void setWorkData(CompoundNBT data) {
+    public void setWorkData(CompoundTag data) {
         setBasicWorkData(data);
     }
 }

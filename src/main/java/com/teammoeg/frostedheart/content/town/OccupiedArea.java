@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.content.town;
 
 import net.minecraft.nbt.*;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ColumnPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ColumnPos;
 import net.minecraftforge.common.util.Constants;
 
 import java.util.HashSet;
@@ -125,34 +125,34 @@ public class OccupiedArea {
     }
 
 
-    public CompoundNBT toNBT(){
-        CompoundNBT nbt = new CompoundNBT();
-        ListNBT list = new ListNBT();
+    public CompoundTag toNBT(){
+        CompoundTag nbt = new CompoundTag();
+        ListTag list = new ListTag();
         for (ColumnPos pos : occupiedArea) {
-            list.add(LongNBT.valueOf(BlockPos.asLong(pos.x, 0, pos.z)));
+            list.add(LongTag.valueOf(BlockPos.asLong(pos.x, 0, pos.z)));
         }
         nbt.put("occupiedAreaList", list);
         list.clear();
-        list.add(IntNBT.valueOf(maxX));
-        list.add(IntNBT.valueOf(maxZ));
-        list.add(IntNBT.valueOf(minX));
-        list.add(IntNBT.valueOf(minZ));
+        list.add(IntTag.valueOf(maxX));
+        list.add(IntTag.valueOf(maxZ));
+        list.add(IntTag.valueOf(minX));
+        list.add(IntTag.valueOf(minZ));
         nbt.put("maxOccupiedCoordinates", list);
         return nbt;
     }
 
-    public static OccupiedArea fromNBT(CompoundNBT nbt){
+    public static OccupiedArea fromNBT(CompoundTag nbt){
         Set<ColumnPos> occupiedArea = new HashSet<>();
-        ListNBT list = nbt.getList("occupiedAreaList", Constants.NBT.TAG_LONG);
+        ListTag list = nbt.getList("occupiedAreaList", Constants.NBT.TAG_LONG);
         list.forEach(nbt1 -> {
-            occupiedArea.add(new ColumnPos(BlockPos.getX(((LongNBT) nbt1).getAsLong()), BlockPos.getZ(((LongNBT) nbt1).getAsLong())));
+            occupiedArea.add(new ColumnPos(BlockPos.getX(((LongTag) nbt1).getAsLong()), BlockPos.getZ(((LongTag) nbt1).getAsLong())));
         });
         list = nbt.getList("maxOccupiedCoordinates", Constants.NBT.TAG_INT);
-        Iterator<INBT> iterator = list.iterator();
-        int maxX = ((IntNBT) (iterator.next()) ).getAsInt();
-        int maxZ = ((IntNBT) (iterator.next()) ).getAsInt();
-        int minX = ((IntNBT) (iterator.next()) ).getAsInt();
-        int minZ = ((IntNBT) (iterator.next()) ).getAsInt();
+        Iterator<Tag> iterator = list.iterator();
+        int maxX = ((IntTag) (iterator.next()) ).getAsInt();
+        int maxZ = ((IntTag) (iterator.next()) ).getAsInt();
+        int minX = ((IntTag) (iterator.next()) ).getAsInt();
+        int minZ = ((IntTag) (iterator.next()) ).getAsInt();
         return new OccupiedArea(occupiedArea, maxX, maxZ, minX, minZ);
     }
 }

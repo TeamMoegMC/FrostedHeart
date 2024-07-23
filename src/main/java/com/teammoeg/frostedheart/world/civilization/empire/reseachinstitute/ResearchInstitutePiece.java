@@ -24,24 +24,24 @@ import java.util.Random;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.world.FHStructures;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.Mirror;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Rotation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.gen.feature.structure.TemplateStructurePiece;
-import net.minecraft.world.gen.feature.template.PlacementSettings;
-import net.minecraft.world.gen.feature.template.Template;
-import net.minecraft.world.gen.feature.template.TemplateManager;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.levelgen.structure.TemplateStructurePiece;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 
 
 public class ResearchInstitutePiece extends TemplateStructurePiece {
     public final ResourceLocation resource;
     public final Rotation rotation;
 
-    public ResearchInstitutePiece(TemplateManager templateManager, BlockPos pos, Rotation rotation) {
+    public ResearchInstitutePiece(StructureManager templateManager, BlockPos pos, Rotation rotation) {
         super(FHStructures.OBSERVATORY_PIECE, 0);
         this.resource = new ResourceLocation(FHMain.MODID, "relic/institute");
         this.templatePosition = pos;
@@ -49,7 +49,7 @@ public class ResearchInstitutePiece extends TemplateStructurePiece {
         this.loadTemplate(templateManager);
     }
 
-    public ResearchInstitutePiece(TemplateManager templateManager, CompoundNBT p_i50566_2_) {
+    public ResearchInstitutePiece(StructureManager templateManager, CompoundTag p_i50566_2_) {
         super(FHStructures.OBSERVATORY_PIECE, p_i50566_2_);
         this.resource = new ResourceLocation(p_i50566_2_.getString("Template"));
         this.rotation = Rotation.valueOf(p_i50566_2_.getString("Rot"));
@@ -57,16 +57,16 @@ public class ResearchInstitutePiece extends TemplateStructurePiece {
     }
 
     @Override
-    protected void handleDataMarker(String function, BlockPos pos, IServerWorld worldIn, Random rand, MutableBoundingBox sbb) {
+    protected void handleDataMarker(String function, BlockPos pos, ServerLevelAccessor worldIn, Random rand, BoundingBox sbb) {
     }
 
-    private void loadTemplate(TemplateManager manager) {
-        Template template = manager.getOrCreate(this.resource);
-        PlacementSettings placementsettings = (new PlacementSettings()).setRotation(this.rotation).setMirror(Mirror.NONE);
+    private void loadTemplate(StructureManager manager) {
+        StructureTemplate template = manager.getOrCreate(this.resource);
+        StructurePlaceSettings placementsettings = (new StructurePlaceSettings()).setRotation(this.rotation).setMirror(Mirror.NONE);
         this.setup(template, this.templatePosition, placementsettings);
     }
 
-    protected void addAdditionalSaveData(CompoundNBT tagCompound) {
+    protected void addAdditionalSaveData(CompoundTag tagCompound) {
         super.addAdditionalSaveData(tagCompound);
         tagCompound.putString("Template", this.resource.toString());
         tagCompound.putString("Rot", this.rotation.name());

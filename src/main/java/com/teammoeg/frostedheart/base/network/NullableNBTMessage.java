@@ -4,23 +4,23 @@ import java.util.Optional;
 
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 
 public abstract class NullableNBTMessage extends NBTMessage {
 
-	public NullableNBTMessage(PacketBuffer buffer) {
-		this(SerializeUtil.readOptional(buffer, PacketBuffer::readNbt));
+	public NullableNBTMessage(FriendlyByteBuf buffer) {
+		this(SerializeUtil.readOptional(buffer, FriendlyByteBuf::readNbt));
 	}
 
 	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-	public NullableNBTMessage(Optional<CompoundNBT> tag) {
+	public NullableNBTMessage(Optional<CompoundTag> tag) {
 		super(tag.orElse(null));
 	}
 
 	@Override
-	public void encode(PacketBuffer buffer) {
-		SerializeUtil.writeOptional2(buffer, this.getTag(),PacketBuffer::writeNbt);
+	public void encode(FriendlyByteBuf buffer) {
+		SerializeUtil.writeOptional2(buffer, this.getTag(),FriendlyByteBuf::writeNbt);
 	}
 
 }

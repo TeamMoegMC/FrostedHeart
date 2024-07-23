@@ -26,13 +26,13 @@ import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVariables;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FHClientSettingsPacket implements FHMessage {
     double scale;
 
-    public FHClientSettingsPacket(PacketBuffer buffer) {
+    public FHClientSettingsPacket(FriendlyByteBuf buffer) {
         scale=buffer.readDouble();
     }
 
@@ -43,7 +43,7 @@ public class FHClientSettingsPacket implements FHMessage {
     }
 
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeDouble(scale);
     }
 

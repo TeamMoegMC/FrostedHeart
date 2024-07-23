@@ -24,12 +24,12 @@ import javax.annotation.Nullable;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.ItemStackHelper;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.NonNullList;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.NonNullList;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
@@ -41,20 +41,20 @@ public class DeathInventoryData implements NBTSerializable {
         NonNullList<ItemStack> armor = NonNullList.withSize(4, ItemStack.EMPTY);
         ItemStack offhand = ItemStack.EMPTY;
 
-        public static CopyInventory deserializeNBT(CompoundNBT nbt) {
+        public static CopyInventory deserializeNBT(CompoundTag nbt) {
 
             return new CopyInventory(nbt);
         }
 
-        private CopyInventory(CompoundNBT nbt) {
+        private CopyInventory(CompoundTag nbt) {
             super();
-            ItemStackHelper.loadAllItems(nbt.getCompound("main"), inv);
-            ItemStackHelper.loadAllItems(nbt.getCompound("armor"), armor);
+            ContainerHelper.loadAllItems(nbt.getCompound("main"), inv);
+            ContainerHelper.loadAllItems(nbt.getCompound("armor"), armor);
             this.offhand = ItemStack.of(nbt.getCompound("off"));
 
         }
 
-        public CopyInventory(PlayerInventory othis) {
+        public CopyInventory(Inventory othis) {
             for (int i = 0; i < 9; i++) {
                 ItemStack itemstack = othis.items.get(i);
                 if (!itemstack.isEmpty()) {
@@ -75,7 +75,7 @@ public class DeathInventoryData implements NBTSerializable {
             }
         }
 
-        public void restoreInventory(PlayerInventory othis) {
+        public void restoreInventory(Inventory othis) {
             for (int i = 0; i < 9; i++) {
                 ItemStack ret = inv.get(i);
                 if (!ret.isEmpty())
@@ -91,12 +91,12 @@ public class DeathInventoryData implements NBTSerializable {
             }
         }
 
-        public CompoundNBT serializeNBT() {
-            CompoundNBT cnbto = new CompoundNBT();
+        public CompoundTag serializeNBT() {
+            CompoundTag cnbto = new CompoundTag();
 
 
-            cnbto.put("main", ItemStackHelper.saveAllItems(new CompoundNBT(), inv));
-            cnbto.put("armor", ItemStackHelper.saveAllItems(new CompoundNBT(), armor));
+            cnbto.put("main", ContainerHelper.saveAllItems(new CompoundTag(), inv));
+            cnbto.put("armor", ContainerHelper.saveAllItems(new CompoundTag(), armor));
             cnbto.put("off", offhand.serializeNBT());
             return cnbto;
         }
@@ -111,7 +111,7 @@ public class DeathInventoryData implements NBTSerializable {
      * @param world server or client
      * @return An instance of ClimateData exists on the world, otherwise return a new ClimateData instance.
      */
-    public static DeathInventoryData get(PlayerEntity world) {
+    public static DeathInventoryData get(Player world) {
 
         return getCapability(world).resolve().orElse(null);
     }
@@ -122,14 +122,14 @@ public class DeathInventoryData implements NBTSerializable {
      * @param player server or client
      * @return An instance of ClimateData if data exists on the world, otherwise return empty.
      */
-    private static LazyOptional<DeathInventoryData> getCapability(@Nullable PlayerEntity player) {
+    private static LazyOptional<DeathInventoryData> getCapability(@Nullable Player player) {
     	return FHCapabilities.DEATH_INV.getCapability(player);
     }
 
     public DeathInventoryData() {
     }
 
-    public void alive(PlayerInventory inv) {
+    public void alive(Inventory inv) {
         if (this.inv != null) {
             this.inv.restoreInventory(inv);
             this.inv = null;
@@ -145,12 +145,12 @@ public class DeathInventoryData implements NBTSerializable {
         this.inv = data.inv;
     }
 
-    public void death(PlayerInventory inv) {
+    public void death(Inventory inv) {
         this.inv = new CopyInventory(inv);
     }
 
     @Override
-    public void deserializeNBT(CompoundNBT nbt) {
+    public void deserializeNBT(CompoundTag nbt) {
 
     }
 
@@ -158,7 +158,7 @@ public class DeathInventoryData implements NBTSerializable {
         calledClone = false;
     }
 
-    public void tryCallClone(PlayerEntity pe) {
+    public void tryCallClone(Player pe) {
         //System.out.println("Detecting clone event");
         if (!calledClone) {
             //System.out.println("calling clone event");
@@ -167,18 +167,18 @@ public class DeathInventoryData implements NBTSerializable {
     }
 
 	@Override
-	public void save(CompoundNBT cnbt, boolean isPacket) {
+	public void save(CompoundTag cnbt, boolean isPacket) {
         if (inv != null)
             cnbt.put("inv", inv.serializeNBT());
         cnbt.putBoolean("cloned", calledClone);
 	}
 
 	@Override
-	public void load(CompoundNBT nbt, boolean isPacket) {
+	public void load(CompoundTag nbt, boolean isPacket) {
         inv = null;
         calledClone = nbt.getBoolean("cloned");
         if (nbt.contains("data")) {
-            nbt.getList("data", Constants.NBT.TAG_COMPOUND).stream().map(t -> (CompoundNBT) t).findFirst().ifPresent(e-> inv = CopyInventory.deserializeNBT(e.getCompound("inv")));
+            nbt.getList("data", Constants.NBT.TAG_COMPOUND).stream().map(t -> (CompoundTag) t).findFirst().ifPresent(e-> inv = CopyInventory.deserializeNBT(e.getCompound("inv")));
         } else if (nbt.contains("inv")) {
             inv = CopyInventory.deserializeNBT(nbt.getCompound("inv"));
         }

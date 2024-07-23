@@ -4,24 +4,24 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent.Context;
 
 public class GeneratorModifyPacket implements FHMessage{
 	public GeneratorModifyPacket() {
 	}
-	public GeneratorModifyPacket(PacketBuffer buffer) {
+	public GeneratorModifyPacket(FriendlyByteBuf buffer) {
 	}
 	@Override
-	public void encode(PacketBuffer buffer) {
+	public void encode(FriendlyByteBuf buffer) {
 	}
 	@Override
 	public void handle(Supplier<Context> context) {
 		context.get().enqueueWork(() -> {
-			ServerPlayerEntity spe=context.get().getSender();
-			Container container=spe.containerMenu;
+			ServerPlayer spe=context.get().getSender();
+			AbstractContainerMenu container=spe.containerMenu;
 			if(container instanceof MasterGeneratorContainer) {
 				MasterGeneratorContainer crncontainer=(MasterGeneratorContainer) container;
 				((MasterGeneratorTileEntity)crncontainer.tile).onUpgradeMaintainClicked(spe);

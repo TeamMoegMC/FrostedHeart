@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.util.constants;
 
 import java.util.HashMap;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 public class VersionRemap {
 

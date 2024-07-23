@@ -2,8 +2,8 @@ package com.teammoeg.frostedheart.content.robotics.logistics;
 
 import com.teammoeg.frostedheart.content.robotics.logistics.workers.ILogisticsStorage;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 public class LogisticEnvolop {

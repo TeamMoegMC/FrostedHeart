@@ -24,28 +24,28 @@ import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEMultiblockBlock;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.material.Material;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
-import net.minecraft.block.AbstractBlock.Properties;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public class FHStoneMultiblockBlock<T extends MultiblockPartTileEntity<? super T>> extends IEMultiblockBlock<T> {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
-    public FHStoneMultiblockBlock(String name, Properties props, RegistryObject<TileEntityType<T>> type) {
+    public FHStoneMultiblockBlock(String name, Properties props, RegistryObject<BlockEntityType<T>> type) {
         super(name, props, type);
         this.lightOpacity = 0;
         this.registerDefaultState(this.stateDefinition.any().setValue(LIT, Boolean.FALSE));
     }
 
-    public FHStoneMultiblockBlock(String name, RegistryObject<TileEntityType<T>> type) {
+    public FHStoneMultiblockBlock(String name, RegistryObject<BlockEntityType<T>> type) {
         super(name, Properties.of(Material.STONE).strength(2.0F, 20.0F).noOcclusion().lightLevel(FHUtils.getLightValueLit(15)), type);
         this.lightOpacity = 0;
         this.registerDefaultState(this.stateDefinition.any().setValue(LIT, Boolean.FALSE));
@@ -63,7 +63,7 @@ public class FHStoneMultiblockBlock<T extends MultiblockPartTileEntity<? super T
     }*/
 
     @Override
-    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         builder.add(LIT);
     }

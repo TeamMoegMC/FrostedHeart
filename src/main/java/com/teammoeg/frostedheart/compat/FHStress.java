@@ -23,7 +23,7 @@ import com.simibubi.create.foundation.block.BlockStressValues.IStressValueProvid
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHConfig;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 
 public class FHStress implements IStressValueProvider {
 

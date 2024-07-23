@@ -25,7 +25,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 public class DayTemperatureData {
     public static class HourData {
@@ -112,7 +112,7 @@ public class DayTemperatureData {
     float dayNoise;
     long day;
 
-    public static DayTemperatureData read(CompoundNBT data) {
+    public static DayTemperatureData read(CompoundTag data) {
         DayTemperatureData dtd = new DayTemperatureData();
         dtd.deserialize(data);
         return dtd;
@@ -136,7 +136,7 @@ public class DayTemperatureData {
         this.day = day;
     }
 
-    public void deserialize(CompoundNBT cnbt) {
+    public void deserialize(CompoundTag cnbt) {
         int[] iar = cnbt.getIntArray("ndata");
         for (int i = 0; i < iar.length; i++)
             hourData[i].unpack(iar[i]);
@@ -210,8 +210,8 @@ public class DayTemperatureData {
         return isSunny(wcs.getHourInDay());
     }
 
-    public CompoundNBT serialize() {
-        CompoundNBT cnbt = new CompoundNBT();
+    public CompoundTag serialize() {
+        CompoundTag cnbt = new CompoundTag();
         cnbt.putIntArray("ndata", Arrays.stream(hourData).mapToInt(HourData::pack).toArray());
         // cnbt.putIntArray("data", hourData);
         cnbt.putFloat("humidity", dayHumidity);

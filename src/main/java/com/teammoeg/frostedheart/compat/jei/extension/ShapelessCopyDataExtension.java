@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.recipes.ShapelessCopyDataRecipe;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.extensions.vanilla.crafting.ICraftingCategoryExtension;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 public class ShapelessCopyDataExtension implements ICraftingCategoryExtension {
     ShapelessCopyDataRecipe recipe;

@@ -38,11 +38,11 @@ import com.simibubi.create.foundation.utility.IntAttached;
 import com.simibubi.create.foundation.utility.NBTHelper;
 import com.simibubi.create.foundation.utility.Pointing;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 
 @Mixin(ProcessingScenes.class)
 public class MixinProcessingScenes {
@@ -71,7 +71,7 @@ public class MixinProcessingScenes {
 
         BlockPos basin = util.grid.at(1, 2, 2);
         BlockPos pressPos = util.grid.at(1, 4, 2);
-        Vector3d basinSide = util.vector.blockSurface(basin, Direction.WEST);
+        Vec3 basinSide = util.vector.blockSurface(basin, Direction.WEST);
 
         ItemStack copper = AllItems.COPPER_INGOT.asStack();
         ItemStack copperBlock = AllItems.COPPER_SHEET.asStack();
@@ -136,7 +136,7 @@ public class MixinProcessingScenes {
         scene.rotateCameraY(30);
 
         scene.idle(60);
-        Vector3d filterPos = util.vector.of(1, 2.75f, 2.5f);
+        Vec3 filterPos = util.vector.of(1, 2.75f, 2.5f);
         scene.overlay.showFilterSlotInput(filterPos, 100);
         scene.overlay.showText(120)
                 .pointAt(filterPos)

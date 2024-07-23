@@ -28,8 +28,8 @@ import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.Research;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FHResearchControlPacket implements FHMessage {
@@ -49,12 +49,12 @@ public class FHResearchControlPacket implements FHMessage {
         this.researchID = FHResearch.researches.getIntId(research);
     }
 
-    public FHResearchControlPacket(PacketBuffer buffer) {
+    public FHResearchControlPacket(FriendlyByteBuf buffer) {
         researchID = buffer.readVarInt();
         status = Operator.values()[buffer.readByte()];
     }
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeVarInt(researchID);
         buffer.writeByte(status.ordinal());
     }
@@ -63,7 +63,7 @@ public class FHResearchControlPacket implements FHMessage {
 
         context.get().enqueueWork(() -> {
             Research r = FHResearch.researches.getById(researchID);
-            ServerPlayerEntity spe = context.get().getSender();
+            ServerPlayer spe = context.get().getSender();
             TeamResearchData trd = ResearchDataAPI.getData(spe);
             switch (status) {
                 case COMMIT_ITEM:

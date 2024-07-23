@@ -32,7 +32,7 @@ import dev.ftb.mods.ftbteams.event.PlayerChangedTeamEvent;
 import dev.ftb.mods.ftbteams.event.PlayerTransferredTeamOwnershipEvent;
 import dev.ftb.mods.ftbteams.event.TeamCreatedEvent;
 import dev.ftb.mods.ftbteams.event.TeamEvent;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 public class FTBTeamsEvents {
@@ -48,7 +48,7 @@ public class FTBTeamsEvents {
             PlayerTeam orig = FTBTeamsAPI.getManager().getInternalPlayerTeam(event.getCreator().getUUID());
 
             FHTeamDataManager.INSTANCE.transfer(orig.getId(), event.getTeam());
-            for(ServerPlayerEntity p:event.getTeam().getOnlineMembers()) {
+            for(ServerPlayer p:event.getTeam().getOnlineMembers()) {
 	            FHNetwork.send(PacketDistributor.PLAYER.with(()->p),
 	                    new FHResearchDataSyncPacket(ResearchDataAPI.getData(p)));
             }
@@ -62,7 +62,7 @@ public class FTBTeamsEvents {
             PlayerTeam orig = FTBTeamsAPI.getManager().getInternalPlayerTeam(owner);
 
             FHTeamDataManager.INSTANCE.transfer(event.getTeam().getId(), orig);
-            for(ServerPlayerEntity p:event.getTeam().getOnlineMembers()) {
+            for(ServerPlayer p:event.getTeam().getOnlineMembers()) {
 	            FHNetwork.send(PacketDistributor.PLAYER.with(()->p),
 	                    new FHResearchDataSyncPacket(ResearchDataAPI.getData(p)));
             }

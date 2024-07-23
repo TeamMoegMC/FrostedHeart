@@ -26,16 +26,16 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 
-import net.minecraft.loot.ILootSerializer;
-import net.minecraft.loot.LootConditionType;
-import net.minecraft.loot.LootContext;
-import net.minecraft.loot.LootParameters;
-import net.minecraft.loot.conditions.ILootCondition;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.world.level.storage.loot.Serializer;
+import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.Level;
 
-public class TemperatureLootCondition implements ILootCondition {
+public class TemperatureLootCondition implements LootItemCondition {
     private enum Comp {
         lt((a, b) -> a < b),
         le((a, b) -> a <= b),
@@ -53,7 +53,7 @@ public class TemperatureLootCondition implements ILootCondition {
             return comp.test(f1, f2);
         }
     }
-    public static class Serializer implements ILootSerializer<TemperatureLootCondition> {
+    public static class Serializer implements Serializer<TemperatureLootCondition> {
 
         @Override
         public TemperatureLootCondition deserialize(JsonObject jo, JsonDeserializationContext jdc) {
@@ -68,7 +68,7 @@ public class TemperatureLootCondition implements ILootCondition {
             jo.addProperty("compare", ot.comparator.name());
         }
     }
-    public static LootConditionType TYPE;
+    public static LootItemConditionType TYPE;
 
     private float temp;
 
@@ -80,16 +80,16 @@ public class TemperatureLootCondition implements ILootCondition {
     }
 
     @Override
-    public LootConditionType getType() {
+    public LootItemConditionType getType() {
         return TYPE;
     }
 
     @Override
     public boolean test(LootContext t) {
-        if (t.hasParam(LootParameters.ORIGIN)) {
-            Vector3d v = t.getParamOrNull(LootParameters.ORIGIN);
+        if (t.hasParam(LootContextParams.ORIGIN)) {
+            Vec3 v = t.getParamOrNull(LootContextParams.ORIGIN);
             BlockPos bp = new BlockPos(v.x, v.y, v.z);
-            World w = t.getLevel();
+            Level w = t.getLevel();
             return comparator.test(ChunkHeatData.getTemperature(w, bp), temp);
         }
         return false;

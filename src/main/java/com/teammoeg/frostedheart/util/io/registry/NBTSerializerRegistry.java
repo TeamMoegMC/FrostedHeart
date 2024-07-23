@@ -24,43 +24,43 @@ import java.util.function.Function;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.util.io.Writeable;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 
-public class NBTSerializerRegistry<U extends Writeable> extends PacketBufferSerializerRegistry<U, Object, CompoundNBT> {
+public class NBTSerializerRegistry<U extends Writeable> extends PacketBufferSerializerRegistry<U, Object, CompoundTag> {
 
 
     public NBTSerializerRegistry() {
         super();
     }
-    public U deserialize(CompoundNBT je) {
-        Function<CompoundNBT, U> func = from.get(je.getString("type"));
+    public U deserialize(CompoundTag je) {
+        Function<CompoundTag, U> func = from.get(je.getString("type"));
         if (func == null)
             return null;
         return func.apply(je);
     }
 
-    public U deserializeOrDefault(CompoundNBT je, U def) {
-        Function<CompoundNBT, U> func = from.get(je.getString("type"));
+    public U deserializeOrDefault(CompoundTag je, U def) {
+        Function<CompoundTag, U> func = from.get(je.getString("type"));
         if (func == null)
             return def;
         return func.apply(je);
     }
     
 	@Override
-	protected void writeType(Pair<Integer, String> type, CompoundNBT obj) {
+	protected void writeType(Pair<Integer, String> type, CompoundTag obj) {
 		obj.putString("type", type.getSecond());
 	}
 	@Override
-	protected String readType(CompoundNBT obj) {
+	protected String readType(CompoundTag obj) {
 		// TODO Auto-generated method stub
 		return obj.getString("type");
 	}
-	public void register(Class<? extends U> cls, String type, Function<CompoundNBT, U> json, Function<U, CompoundNBT> obj, Function<PacketBuffer, U> packet) {
+	public void register(Class<? extends U> cls, String type, Function<CompoundTag, U> json, Function<U, CompoundTag> obj, Function<FriendlyByteBuf, U> packet) {
 		// TODO Auto-generated method stub
 		super.register(cls, type, json, (t,c)->obj.apply(t), packet);
 	}
-	public CompoundNBT write(U fromObj) {
+	public CompoundTag write(U fromObj) {
 		// TODO Auto-generated method stub
 		return super.write(fromObj, null);
 	}

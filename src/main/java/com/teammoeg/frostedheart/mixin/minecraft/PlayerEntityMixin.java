@@ -26,18 +26,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.FakePlayer;
 /**
  * Keep equipments for players
  * */
-@Mixin(PlayerEntity.class)
+@Mixin(Player.class)
 public abstract class PlayerEntityMixin extends LivingEntity {
 
-    protected PlayerEntityMixin(EntityType<? extends LivingEntity> type, World worldIn) {
+    protected PlayerEntityMixin(EntityType<? extends LivingEntity> type, Level worldIn) {
         super(type, worldIn);
     }
 
@@ -46,7 +46,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
         super.dropEquipment();
         if (((Object) this) instanceof FakePlayer)
             return;
-        DeathInventoryData dit = DeathInventoryData.get((PlayerEntity) ((Object) this));
+        DeathInventoryData dit = DeathInventoryData.get((Player) ((Object) this));
         dit.startClone();
     }
 

@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.robotics.logistics;
 
 import com.teammoeg.frostedheart.base.block.FHGuiBlock;
 
-import net.minecraft.block.AbstractBlock.Properties;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public class LogisticChestBlock extends FHGuiBlock{
 

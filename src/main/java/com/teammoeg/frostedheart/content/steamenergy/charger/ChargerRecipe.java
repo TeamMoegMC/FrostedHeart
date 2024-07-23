@@ -27,11 +27,11 @@ import com.teammoeg.frostedheart.FHBlocks;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
 public class ChargerRecipe extends IESerializableRecipe {
@@ -43,7 +43,7 @@ public class ChargerRecipe extends IESerializableRecipe {
 
         @Nullable
         @Override
-        public ChargerRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+        public ChargerRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
             ItemStack output = buffer.readItem();
             IngredientWithSize input = IngredientWithSize.read(buffer);
             float cost = buffer.readFloat();
@@ -54,18 +54,18 @@ public class ChargerRecipe extends IESerializableRecipe {
         public ChargerRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
             ItemStack output = readOutput(json.get("result"));
             IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
-            float cost = JSONUtils.getAsInt(json, "cost");
+            float cost = GsonHelper.getAsInt(json, "cost");
             return new ChargerRecipe(recipeId, output, input, cost);
         }
 
         @Override
-        public void toNetwork(PacketBuffer buffer, ChargerRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buffer, ChargerRecipe recipe) {
             buffer.writeItem(recipe.output);
             recipe.input.write(buffer);
             buffer.writeFloat(recipe.cost);
         }
     }
-    public static IRecipeType<ChargerRecipe> TYPE;
+    public static RecipeType<ChargerRecipe> TYPE;
 
     public static RegistryObject<IERecipeSerializer<ChargerRecipe>> SERIALIZER;
     public final IngredientWithSize input;

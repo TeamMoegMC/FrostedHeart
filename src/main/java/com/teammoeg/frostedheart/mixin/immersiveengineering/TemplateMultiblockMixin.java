@@ -34,39 +34,39 @@ import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Mirror;
-import net.minecraft.util.Rotation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 @Mixin(TemplateMultiblock.class)
 public abstract class TemplateMultiblockMixin implements IMultiblock, MultiBlockAccess {
-    private ServerPlayerEntity pe;
+    private ServerPlayer pe;
 
     public TemplateMultiblockMixin() {
     }
 
     @Invoker(remap = false)
-    public abstract void callForm(World world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit);
+    public abstract void callForm(Level world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit);
 
     @Inject(at = @At(value = "INVOKE", target = "Lblusunrize/immersiveengineering/api/multiblocks/TemplateMultiblock;form"), method = "createStructure", remap = false)
-    public void fh$on$createStructure(World world, BlockPos pos, Direction side, PlayerEntity player, CallbackInfoReturnable<Boolean> cbi) {
+    public void fh$on$createStructure(Level world, BlockPos pos, Direction side, Player player, CallbackInfoReturnable<Boolean> cbi) {
     	pe = null;
     	if (!world.isClientSide)
-            pe = (ServerPlayerEntity) player;
+            pe = (ServerPlayer) player;
     }
 
     @Inject(at = @At("RETURN"), remap = false, method = "form", locals = LocalCapture.CAPTURE_FAILHARD)
-    public void fh$on$form(World world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit, CallbackInfo cbi, BlockPos master) {
+    public void fh$on$form(Level world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit, CallbackInfo cbi, BlockPos master) {
         if (pe != null)
             IOwnerTile.trySetOwner(Utils.getExistingTileEntity(world, master), FHTeamDataManager.get(pe).getId());
     }
 
 	@Override
-	public void setPlayer(ServerPlayerEntity spe) {
+	public void setPlayer(ServerPlayer spe) {
 		pe=spe;
 	}
 }

@@ -24,9 +24,9 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import com.cannolicatfish.rankine.blocks.StickBlock;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 
-import net.minecraft.block.AbstractBlock.Properties;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 @Mixin(StickBlock.class)
 public class MixinStickBlock extends Block {

@@ -27,15 +27,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.util.INameable;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.Container;
+import net.minecraft.world.Nameable;
 import net.minecraftforge.common.util.FakePlayer;
 /**
  * Keep equipments for players
  * */
-@Mixin(PlayerInventory.class)
-public abstract class PlayerInventoryMixin implements IInventory, INameable {
+@Mixin(Inventory.class)
+public abstract class PlayerInventoryMixin implements Container, Nameable {
 
     public PlayerInventoryMixin() {
     }
@@ -51,8 +51,8 @@ public abstract class PlayerInventoryMixin implements IInventory, INameable {
         }
     }
 
-    private PlayerInventory getThis() {
-        return (PlayerInventory) (Object) this;
+    private Inventory getThis() {
+        return (Inventory) (Object) this;
     }
 
 }

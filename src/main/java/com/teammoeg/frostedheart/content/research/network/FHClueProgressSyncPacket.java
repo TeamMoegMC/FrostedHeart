@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when player join
@@ -36,7 +36,7 @@ public class FHClueProgressSyncPacket implements FHMessage {
     private final boolean data;
     private final int id;
 
-    public FHClueProgressSyncPacket(PacketBuffer buffer) {
+    public FHClueProgressSyncPacket(FriendlyByteBuf buffer) {
         data = buffer.readBoolean();
         id = buffer.readVarInt();
     }
@@ -47,7 +47,7 @@ public class FHClueProgressSyncPacket implements FHMessage {
         this.id = FHResearch.clues.getIntId(rs);
     }
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeBoolean(data);
         buffer.writeVarInt(id);
     }

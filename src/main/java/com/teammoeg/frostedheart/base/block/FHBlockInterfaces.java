@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.base.block;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
-import net.minecraft.block.BlockState;
-import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 public class FHBlockInterfaces {
     public interface IActiveState extends IEBlockInterfaces.BlockstateProvider {

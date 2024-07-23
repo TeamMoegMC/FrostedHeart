@@ -27,16 +27,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorldReader;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.LevelReader;
 import snownee.snow.Hook;
 
 //Mixin into mixin
 @Mixin(Hook.class)
 public class HookMixin {
     @Inject(at = @At("HEAD"), method = "canSurvive", remap = false, cancellable = true)
-    private static void canSurvive(BlockState blockState, IWorldReader world, BlockPos pos, CallbackInfoReturnable<Boolean> cbi) {
+    private static void canSurvive(BlockState blockState, LevelReader world, BlockPos pos, CallbackInfoReturnable<Boolean> cbi) {
         float t = ChunkHeatData.getTemperature(world, pos);
         if (t < WorldTemperature.HEMP_GROW_TEMPERATURE || t > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
             cbi.setReturnValue(false);

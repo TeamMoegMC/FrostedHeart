@@ -31,21 +31,21 @@ import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.entity.EntitySpawnPlacementRegistry;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.play.server.STitlePacket;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.entity.SpawnPlacements;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.game.ClientboundSetTitlesPacket;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -56,31 +56,31 @@ public class PlayerEvents {
     public static void onRC(PlayerInteractEvent.RightClickItem rci) {
         if (!rci.getWorld().isClientSide
                 && RegistryUtils.getRegistryName(rci.getItemStack().getItem()).getNamespace().equals("projecte")) {
-            rci.setCancellationResult(ActionResultType.SUCCESS);
+            rci.setCancellationResult(InteractionResult.SUCCESS);
             rci.setCanceled(true);
-            World world = rci.getWorld();
-            PlayerEntity player = rci.getPlayer();
+            Level world = rci.getWorld();
+            Player player = rci.getPlayer();
             BlockPos pos = rci.getPos();
-            ServerWorld serverWorld = (ServerWorld) world;
-            ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
+            ServerLevel serverWorld = (ServerLevel) world;
+            ServerPlayer serverPlayerEntity = (ServerPlayer) player;
 
             serverPlayerEntity.addEffect(
-                    new EffectInstance(Effects.BLINDNESS, (int) (100 * (world.random.nextDouble() + 0.5)), 3));
+                    new MobEffectInstance(MobEffects.BLINDNESS, (int) (100 * (world.random.nextDouble() + 0.5)), 3));
             serverPlayerEntity.addEffect(
-                    new EffectInstance(Effects.CONFUSION, (int) (1000 * (world.random.nextDouble() + 0.5)), 5));
+                    new MobEffectInstance(MobEffects.CONFUSION, (int) (1000 * (world.random.nextDouble() + 0.5)), 5));
 
             serverPlayerEntity.connection.send(
-                    new STitlePacket(STitlePacket.Type.TITLE, TranslateUtils.translateMessage("too_cold_to_transmute")));
+                    new ClientboundSetTitlesPacket(ClientboundSetTitlesPacket.Type.TITLE, TranslateUtils.translateMessage("too_cold_to_transmute")));
             serverPlayerEntity.connection.send(
-                    new STitlePacket(STitlePacket.Type.SUBTITLE, TranslateUtils.translateMessage("magical_backslash")));
+                    new ClientboundSetTitlesPacket(ClientboundSetTitlesPacket.Type.SUBTITLE, TranslateUtils.translateMessage("magical_backslash")));
 
             double posX = pos.getX() + (world.random.nextDouble() - world.random.nextDouble()) * 4.5D;
             double posY = pos.getY() + world.random.nextInt(3) - 1;
             double posZ = pos.getZ() + (world.random.nextDouble() - world.random.nextDouble()) * 4.5D;
             if (world.noCollision(EntityType.WITCH.getAABB(posX, posY, posZ))
-                    && EntitySpawnPlacementRegistry.checkSpawnRules(EntityType.WITCH, serverWorld, SpawnReason.NATURAL,
+                    && SpawnPlacements.checkSpawnRules(EntityType.WITCH, serverWorld, MobSpawnType.NATURAL,
                     new BlockPos(posX, posY, posZ), world.getRandom())) {
-                FHUtils.spawnMob(serverWorld, new BlockPos(posX, posY, posZ), new CompoundNBT(),
+                FHUtils.spawnMob(serverWorld, new BlockPos(posX, posY, posZ), new CompoundTag(),
                         new ResourceLocation("minecraft", "witch"));
             }
         }
@@ -89,8 +89,8 @@ public class PlayerEvents {
 
     @SubscribeEvent
     public static void sendForecastMessages(TickEvent.PlayerTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayerEntity) {
-            ServerPlayerEntity serverPlayer = (ServerPlayerEntity) event.player;
+        if (event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer) {
+            ServerPlayer serverPlayer = (ServerPlayer) event.player;
             boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
             if (configAllows && ResearchDataAPI.getVariants(serverPlayer).getDouble("has_forecast")>0) {
                 // Blizzard warning
@@ -101,14 +101,14 @@ public class PlayerEvents {
                 if (!thisHourB) { // not in blizzard yet
                     if (nextHourB) {
                         serverPlayer.displayClientMessage(TranslateUtils.translateMessage("forecast.blizzard_warning")
-                                .withStyle(TextFormatting.DARK_RED).withStyle(TextFormatting.BOLD), true);
+                                .withStyle(ChatFormatting.DARK_RED).withStyle(ChatFormatting.BOLD), true);
                         // serverPlayer.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE,
                         // GuiUtils.translateMessage("forecast.blizzard_warning")));
                     }
                 } else { // in blizzard now
                     if (!nextHourB) {
                         serverPlayer.displayClientMessage(TranslateUtils.translateMessage("forecast.blizzard_retreating")
-                                .withStyle(TextFormatting.GREEN).withStyle(TextFormatting.BOLD), true);
+                                .withStyle(ChatFormatting.GREEN).withStyle(ChatFormatting.BOLD), true);
                         // serverPlayer.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE,
                         // GuiUtils.translateMessage("forecast.blizzard_retreating")));
                     }

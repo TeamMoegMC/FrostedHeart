@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.compat.jei.category;
 import java.util.Arrays;
 import java.util.Collections;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
@@ -37,12 +37,12 @@ import mezz.jei.api.gui.ingredient.IGuiItemStackGroup;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.SmokingRecipe;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.SmokingRecipe;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
@@ -58,7 +58,7 @@ public class ChargerCookingCategory implements IRecipeCategory<SmokingRecipe> {
     }
 
     @Override
-    public void draw(SmokingRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
+    public void draw(SmokingRecipe recipe, PoseStack transform, double mouseX, double mouseY) {
         AllGuiTextures.JEI_SLOT.draw(transform, 43, 4);
         AllGuiTextures.JEI_DOWN_ARROW.draw(transform, 67, 7);
 

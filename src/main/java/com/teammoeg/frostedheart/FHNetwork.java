@@ -60,8 +60,8 @@ import com.teammoeg.frostedheart.content.trade.network.BargainResponse;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeUpdatePacket;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -81,7 +81,7 @@ public class FHNetwork {
     public static synchronized <T extends FHMessage> void registerMessage(String name,Class<T> msg) {
     	classesId.put(msg,FHMain.rl(name));
 		try {
-			Constructor<T> ctor = msg.getConstructor(PacketBuffer.class);
+			Constructor<T> ctor = msg.getConstructor(FriendlyByteBuf.class);
 	    	CHANNEL.registerMessage(++iid,msg,FHMessage::encode,pb->{
 	    		try {
 					return ctor.newInstance(pb);
@@ -98,7 +98,7 @@ public class FHNetwork {
     /**
      * Register Message Type, should provide a deserializer
      * */
-    public static synchronized <T extends FHMessage> void registerMessage(String name,Class<T> msg,Function<PacketBuffer,T> func) {
+    public static synchronized <T extends FHMessage> void registerMessage(String name,Class<T> msg,Function<FriendlyByteBuf,T> func) {
     	classesId.put(msg,FHMain.rl(name));
 	    CHANNEL.registerMessage(++iid,msg,FHMessage::encode,func,FHMessage::handle);
     }

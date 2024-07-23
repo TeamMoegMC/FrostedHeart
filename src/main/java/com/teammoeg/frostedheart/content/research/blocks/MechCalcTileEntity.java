@@ -28,17 +28,17 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Direction.Axis;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.Axis;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -60,20 +60,20 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
     }
 
     @Override
-    public boolean addToGoggleTooltip(List<ITextComponent> tooltip, boolean isPlayerSneaking) {
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         super.addToGoggleTooltip(tooltip, isPlayerSneaking);
         boolean flag = true;
-        float spd = MathHelper.abs(super.getSpeed());
+        float spd = Mth.abs(super.getSpeed());
         if (spd > 64) {
-            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.too_fast").withStyle(TextFormatting.RED));
+            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.too_fast").withStyle(ChatFormatting.RED));
             flag = false;
         }
         if (this.currentPoints >= maxPoints) {
-            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.full").withStyle(TextFormatting.RED));
+            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.full").withStyle(ChatFormatting.RED));
             flag = false;
         }
         if (flag && spd > 0)
-            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.working").withStyle(TextFormatting.GREEN));
+            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.working").withStyle(ChatFormatting.GREEN));
         tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.points", currentPoints, maxPoints));
         return true;
     }
@@ -81,7 +81,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 
     @Override
     public float calculateStressApplied() {
-        float rspd = MathHelper.abs(super.getSpeed());
+        float rspd = Mth.abs(super.getSpeed());
         if (currentPoints < maxPoints && rspd <= 64) {
             this.lastStressApplied = 64;
             return 64;
@@ -96,7 +96,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
     }
 
     @Override
-    protected void fromTag(BlockState state, CompoundNBT tag, boolean client) {
+    protected void fromTag(BlockState state, CompoundTag tag, boolean client) {
         super.fromTag(state, tag, client);
         process = tag.getInt("process");
         currentPoints = tag.getInt("pts");
@@ -113,12 +113,12 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
         return this.getBlockState().getValue(BlockStateProperties.HORIZONTAL_FACING);
     }
 
-    public ActionResultType onClick(PlayerEntity pe) {
+    public InteractionResult onClick(Player pe) {
         if (!pe.level.isClientSide) {
             currentPoints = (int) ResearchDataAPI.getData(pe).doResearch(currentPoints);
             updatePoints();
         }
-        return ActionResultType.sidedSuccess(pe.level.isClientSide);
+        return InteractionResult.sidedSuccess(pe.level.isClientSide);
     }
 
     @Override
@@ -140,14 +140,14 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
     public void tick() {
         super.tick();
         if (!level.isClientSide) {
-            float spd = MathHelper.abs(super.getSpeed());
+            float spd = Mth.abs(super.getSpeed());
 
             if (spd > 0 && spd <= 64 && currentPoints <= maxPoints - 20) {
                 process += (int) spd;
                 int curact = process / 1067;
                 if (lastact != curact) {
                     lastact = curact;
-                    level.playSound(null, worldPosition, FHSounds.MC_BELL.get(), SoundCategory.BLOCKS, 0.1f, 1f);
+                    level.playSound(null, worldPosition, FHSounds.MC_BELL.get(), SoundSource.BLOCKS, 0.1f, 1f);
                 }
                 if (process >= processMax) {
                     process = 0;
@@ -159,9 +159,9 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 
 
                 if (ticsSlp <= 0) {
-                    float pitch = MathHelper.clamp((spd / 32f) + 0.5f, 0.5f, 2f);
-                    level.playSound(null, worldPosition, FHSounds.MC_ROLL.get(), SoundCategory.BLOCKS, 0.3f, pitch);
-                    ticsSlp = MathHelper.ceil(20 / pitch);
+                    float pitch = Mth.clamp((spd / 32f) + 0.5f, 0.5f, 2f);
+                    level.playSound(null, worldPosition, FHSounds.MC_ROLL.get(), SoundSource.BLOCKS, 0.3f, pitch);
+                    ticsSlp = Mth.ceil(20 / pitch);
                 } else ticsSlp--;
                 this.notifyUpdate();
             }
@@ -183,7 +183,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
     }
 
     @Override
-    protected void write(CompoundNBT tag, boolean client) {
+    protected void write(CompoundTag tag, boolean client) {
         super.write(tag, client);
         tag.putInt("process", process);
         tag.putInt("pts", currentPoints);

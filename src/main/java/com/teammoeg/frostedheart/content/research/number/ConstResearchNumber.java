@@ -29,7 +29,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class ConstResearchNumber implements IResearchNumber {
     private static Cache<Number, ConstResearchNumber> cb = CacheBuilder.newBuilder().expireAfterAccess(20, TimeUnit.SECONDS).build();
@@ -49,7 +49,7 @@ public class ConstResearchNumber implements IResearchNumber {
         return null;
     }
 
-    public static ConstResearchNumber valueOf(PacketBuffer buffer) {
+    public static ConstResearchNumber valueOf(FriendlyByteBuf buffer) {
         return valueOf(buffer.readDouble());
     }
 
@@ -78,7 +78,7 @@ public class ConstResearchNumber implements IResearchNumber {
         return new JsonPrimitive(n);
     }
 
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
         buffer.writeDouble(n.doubleValue());
     }
 

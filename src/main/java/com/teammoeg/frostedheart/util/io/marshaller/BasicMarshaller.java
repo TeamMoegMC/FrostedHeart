@@ -2,9 +2,9 @@ package com.teammoeg.frostedheart.util.io.marshaller;
 
 import java.util.function.Function;
 
-import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.Tag;
 
-public class BasicMarshaller<R extends INBT,T> implements Marshaller {
+public class BasicMarshaller<R extends Tag,T> implements Marshaller {
 	final Function<R,T> from;
 	final Function<T,R> to;
 	final Class<R> cls;
@@ -22,12 +22,12 @@ public class BasicMarshaller<R extends INBT,T> implements Marshaller {
 	}
 
 	@Override
-	public INBT toNBT(Object o) {
+	public Tag toNBT(Object o) {
 		return to.apply((T) o);
 	}
 
 	@Override
-	public Object fromNBT(INBT nbt) {
+	public Object fromNBT(Tag nbt) {
 		if(cls.isInstance(nbt))
 			return from.apply((R) nbt);
 		return def;

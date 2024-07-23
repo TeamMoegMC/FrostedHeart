@@ -5,8 +5,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticRequestTask;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class FilterSlot {
 	public static final Codec<FilterSlot> CODEC=RecordCodecBuilder.create(t->t.group(
@@ -28,7 +28,7 @@ public class FilterSlot {
 	public boolean isEmpty() {
 		return filter.isEmpty();
 	}
-	public LogisticRequestTask createTask(TileEntity target,int size) {
+	public LogisticRequestTask createTask(BlockEntity target,int size) {
 		return new LogisticRequestTask(filter, size, strictNBT, target);
 	}
 }

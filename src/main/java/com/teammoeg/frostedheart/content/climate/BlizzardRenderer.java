@@ -24,16 +24,16 @@ import java.util.Random;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.gen.Heightmap;
+import com.mojang.blaze3d.vertex.Tesselator;
+import net.minecraft.client.renderer.LevelRenderer;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 /**
  * Render cool Blizzard!
@@ -52,7 +52,7 @@ public class BlizzardRenderer {
     private final static float[] rainSizeZMemento = new float[1024];
 
     public static void render(Minecraft mc,
-                              ClientWorld world,
+                              ClientLevel world,
                               LightTexture lightTexture,
                               int ticks,
                               float partialTicks,
@@ -62,11 +62,11 @@ public class BlizzardRenderer {
         float rainStrength = world.getThunderLevel(partialTicks);
         lightTexture.turnOnLightLayer();
 
-        int cameraBlockPosX = MathHelper.floor(cameraX);
-        int cameraBlockPosY = MathHelper.floor(cameraY);
-        int cameraBlockPosZ = MathHelper.floor(cameraZ);
+        int cameraBlockPosX = Mth.floor(cameraX);
+        int cameraBlockPosY = Mth.floor(cameraY);
+        int cameraBlockPosZ = Mth.floor(cameraZ);
 
-        Tessellator tessellator = Tessellator.getInstance();
+        Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuilder();
         RenderSystem.enableAlphaTest();
         RenderSystem.disableCull();
@@ -86,7 +86,7 @@ public class BlizzardRenderer {
         int i1 = -1;
         float ticksAndPartialTicks = ticks + partialTicks;
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        BlockPos.Mutable blockPos = new BlockPos.Mutable();
+        BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
         Random random = new Random(
                 (long) cameraBlockPosX * cameraBlockPosX * 3121
                         + cameraBlockPosZ * 45238971L ^ (long) cameraBlockPosZ * cameraBlockPosZ * 418711
@@ -105,7 +105,7 @@ public class BlizzardRenderer {
                 double rainSizeZ = rainSizeZMemento[rainSizeIdx] * 0.5D;
                 blockPos.set(currentlyRenderingX, 0, currentlyRenderingZ);
 
-                int altitudeOfHighestSolidBlock = mc.level.getHeight(Heightmap.Type.MOTION_BLOCKING, blockPos.getX(), blockPos.getZ());
+                int altitudeOfHighestSolidBlock = mc.level.getHeight(Heightmap.Types.MOTION_BLOCKING, blockPos.getX(), blockPos.getZ());
                 int renderingYLowerBound = Math.max(cameraBlockPosY - renderRadius, altitudeOfHighestSolidBlock);
                 int renderingYUpperBound = Math.max(cameraBlockPosY + renderRadius, altitudeOfHighestSolidBlock);
 
@@ -122,7 +122,7 @@ public class BlizzardRenderer {
                         i1 = 1;
                         mc.getTextureManager()
                                 .bind(new ResourceLocation("minecraft:textures/environment/snow.png"));
-                        bufferBuilder.begin(7, DefaultVertexFormats.PARTICLE);
+                        bufferBuilder.begin(7, DefaultVertexFormat.PARTICLE);
                     }
 
                     float f7 = (float) (random.nextDouble()
@@ -134,7 +134,7 @@ public class BlizzardRenderer {
                     float f9 = (float) ((d3 * d3 + d5 * d5) / (renderRadius * renderRadius));
                     float ticksAndPartialTicks0 = ((1.0F - f9) * 0.3F + 0.5F) * rainStrength;
                     blockPos.set(currentlyRenderingX, posY2, currentlyRenderingZ);
-                    int k3 = WorldRenderer.getLightColor(world, blockPos);
+                    int k3 = LevelRenderer.getLightColor(world, blockPos);
                     int l3 = k3 >> 16 & '\uffff';
                     int i4 = (k3 & '\uffff') * 3;
                     int j4 = (l3 * 3 + 240) / 4;
@@ -192,7 +192,7 @@ public class BlizzardRenderer {
             for (int j = 0; j < 32; ++j) {
                 float f = j - 16;
                 float f1 = i - 16;
-                float f2 = MathHelper.sqrt(f * f + f1 * f1);
+                float f2 = Mth.sqrt(f * f + f1 * f1);
                 rainSizeXMemento[i << 5 | j] = -f1 / f2;
                 rainSizeZMemento[i << 5 | j] = f / f2;
             }

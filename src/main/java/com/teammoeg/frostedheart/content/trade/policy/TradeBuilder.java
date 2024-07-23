@@ -41,13 +41,13 @@ import com.teammoeg.frostedheart.content.trade.policy.conditions.WithFlagConditi
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.entity.merchant.villager.VillagerProfession;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * Class TradeBuilder.
@@ -55,7 +55,7 @@ import net.minecraft.util.ResourceLocation;
  *
  * @author khjxiaogu
  */
-public class TradeBuilder implements IFinishedRecipe {
+public class TradeBuilder implements FinishedRecipe {
     /**
      * Class ActionBuilder.
      * Builder class to build action list
@@ -568,7 +568,7 @@ public class TradeBuilder implements IFinishedRecipe {
      *
      * @param out the out<br>
      */
-    public void finish(Consumer<IFinishedRecipe> out) {
+    public void finish(Consumer<FinishedRecipe> out) {
         out.accept(this);
     }
 
@@ -588,7 +588,7 @@ public class TradeBuilder implements IFinishedRecipe {
     }
 
     @Override
-    public IRecipeSerializer<?> getType() {
+    public RecipeSerializer<?> getType() {
         return TradePolicy.SERIALIZER.get();
     }
 

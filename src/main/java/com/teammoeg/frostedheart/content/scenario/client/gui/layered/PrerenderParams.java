@@ -10,8 +10,8 @@ import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.Rect;
 
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.renderer.texture.NativeImage;
-import net.minecraft.client.renderer.texture.NativeImage.PixelFormat;
+import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.platform.NativeImage.Format;
 
 public class PrerenderParams {
 	Graphics2D g2d;
@@ -71,7 +71,7 @@ public class PrerenderParams {
 		g2d.dispose();
 		image.flush();
 		BufferedImage cur=image;
-		NativeImage texture=new NativeImage(PixelFormat.RGBA, cur.getWidth(), cur.getHeight(), false);//No need to close because dynamicTexture would handle this properly
+		NativeImage texture=new NativeImage(Format.RGBA, cur.getWidth(), cur.getHeight(), false);//No need to close because dynamicTexture would handle this properly
 		int[] pixels = new int[cur.getWidth() * cur.getHeight()];
 		cur.getRGB(0, 0, cur.getWidth(), cur.getHeight(), pixels, 0, cur.getWidth());
 		

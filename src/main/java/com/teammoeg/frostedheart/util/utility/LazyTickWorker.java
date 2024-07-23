@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.util.utility;
 
 import java.util.function.Supplier;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 public class LazyTickWorker {
     public int tMax;
@@ -46,13 +46,13 @@ public class LazyTickWorker {
         tCur = tMax;
     }
 
-    public void read(CompoundNBT cnbt) {
+    public void read(CompoundTag cnbt) {
         if (!isStaticMax)
             tMax = cnbt.getInt("max");
         tCur = cnbt.getInt("cur");
     }
 
-    public void read(CompoundNBT cnbt, String key) {
+    public void read(CompoundTag cnbt, String key) {
         if (!isStaticMax)
             tMax = cnbt.getInt(key + "max");
         tCur = cnbt.getInt(key);
@@ -73,14 +73,14 @@ public class LazyTickWorker {
         return false;
     }
 
-    public CompoundNBT write(CompoundNBT cnbt) {
+    public CompoundTag write(CompoundTag cnbt) {
         if (!isStaticMax)
             cnbt.putInt("max", tMax);
         cnbt.putInt("cur", tCur);
         return cnbt;
     }
 
-    public CompoundNBT write(CompoundNBT cnbt, String key) {
+    public CompoundTag write(CompoundTag cnbt, String key) {
         if (!isStaticMax)
             cnbt.putInt(key + "max", tMax);
         cnbt.putInt(key, tCur);

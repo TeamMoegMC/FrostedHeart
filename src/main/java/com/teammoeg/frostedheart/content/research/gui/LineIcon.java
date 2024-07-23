@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.IconProperties;
@@ -57,7 +57,7 @@ public class LineIcon extends IconWithParent {
     }
 
     @Override
-    public void draw(MatrixStack matrixStack, int x, int y, int w, int h) {
+    public void draw(PoseStack matrixStack, int x, int y, int w, int h) {
         int msize = w - side2 - side1;
         if (msize <= 0) {
             s0.draw(matrixStack, x, y, side1, h);

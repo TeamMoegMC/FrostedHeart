@@ -27,10 +27,10 @@ import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardPos;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when data update
@@ -66,7 +66,7 @@ public class FHDrawingDeskOperationPacket implements FHMessage {
         this.pos2 = pos2;
     }
 
-    public FHDrawingDeskOperationPacket(PacketBuffer buffer) {
+    public FHDrawingDeskOperationPacket(FriendlyByteBuf buffer) {
         pos = buffer.readBlockPos();
         op = buffer.readByte();
         if (op < 3) {
@@ -81,7 +81,7 @@ public class FHDrawingDeskOperationPacket implements FHMessage {
         } else pos1 = pos2 = null;
     }
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeBlockPos(pos);
         buffer.writeByte(op);
         if (op < 3) {
@@ -94,8 +94,8 @@ public class FHDrawingDeskOperationPacket implements FHMessage {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            ServerWorld world = Objects.requireNonNull(context.get().getSender()).getLevel();
-            TileEntity tile = Utils.getExistingTileEntity(world, pos);
+            ServerLevel world = Objects.requireNonNull(context.get().getSender()).getLevel();
+            BlockEntity tile = Utils.getExistingTileEntity(world, pos);
             if (tile instanceof DrawingDeskTileEntity) {
                // ResearchGame rg = ((DrawingDeskTileEntity) tile).getGame();
                 boolean flag = true;

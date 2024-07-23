@@ -25,9 +25,9 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.Direction;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
@@ -71,7 +71,7 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity{
 
 
     @Override
-    public void readCustomNBT(CompoundNBT compound, boolean client) {
+    public void readCustomNBT(CompoundTag compound, boolean client) {
         super.readCustomNBT(compound, client);
         network.load(compound,client);
     }
@@ -85,7 +85,7 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity{
 
 
     @Override
-    public void writeCustomNBT(CompoundNBT compound, boolean client) {
+    public void writeCustomNBT(CompoundTag compound, boolean client) {
         super.writeCustomNBT(compound, client);
         network.save(compound,client);
     }

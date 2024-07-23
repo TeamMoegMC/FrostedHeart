@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.util.io.IdDataPair;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FHDatapackSyncPacket implements FHMessage {
@@ -39,16 +39,16 @@ public class FHDatapackSyncPacket implements FHMessage {
         this.type=type;
     }
 
-    public FHDatapackSyncPacket(PacketBuffer buffer) {
+    public FHDatapackSyncPacket(FriendlyByteBuf buffer) {
         decode(buffer);
     }
 
-    public void decode(PacketBuffer buffer) {
+    public void decode(FriendlyByteBuf buffer) {
     	type = DataType.types.get(buffer.readByte());
         entries = SerializeUtil.readList(buffer,type::read);
     }
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
     	buffer.writeByte(type.getId());
         SerializeUtil.writeList(buffer, (List)entries, type::write);
     }

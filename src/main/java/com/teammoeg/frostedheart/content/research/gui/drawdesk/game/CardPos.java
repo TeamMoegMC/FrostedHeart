@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk.game;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class CardPos {
     private static CardPos[][] cache = new CardPos[11][11];
@@ -42,7 +42,7 @@ public class CardPos {
         return new CardPos(x, y);
     }
 
-    public static CardPos valueOf(PacketBuffer pb) {
+    public static CardPos valueOf(FriendlyByteBuf pb) {
         return valueOf(pb.readByte(), pb.readByte());
     }
 
@@ -84,7 +84,7 @@ public class CardPos {
         return "CardPos [x=" + x + ", y=" + y + ", hash=" + hash + "]";
     }
 
-    public void write(PacketBuffer pb) {
+    public void write(FriendlyByteBuf pb) {
         pb.writeByte(x);
         pb.writeByte(y);
     }

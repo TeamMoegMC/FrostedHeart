@@ -39,12 +39,12 @@ import com.teammoeg.frostedheart.util.client.ClientUtils;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidAttributes;
@@ -75,7 +75,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     }
 
     @Override
-    protected void callBlockConsumerWithTypeCheck(Consumer<T2GeneratorTileEntity> consumer, TileEntity te) {
+    protected void callBlockConsumerWithTypeCheck(Consumer<T2GeneratorTileEntity> consumer, BlockEntity te) {
         if (te instanceof T2GeneratorTileEntity)
             consumer.accept((T2GeneratorTileEntity) te);
     }
@@ -108,13 +108,13 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 
 
     @Override
-    public AxisAlignedBB getRenderBoundingBox() {
-        return new AxisAlignedBB(worldPosition.getX() - 2, worldPosition.getY() - 2, worldPosition.getZ() - 2, worldPosition.getX() + 2, worldPosition.getY() + 6,
+    public AABB getRenderBoundingBox() {
+        return new AABB(worldPosition.getX() - 2, worldPosition.getY() - 2, worldPosition.getZ() - 2, worldPosition.getX() + 2, worldPosition.getY() + 6,
                 worldPosition.getZ() + 2);
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
         liquidtick = nbt.getInt("liquid_tick");
         tank.readFromNBT(nbt.getCompound("fluid"));
@@ -149,7 +149,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 //                    ClientUtils.spawnSteamParticles(world, blockpos);
 //                }
                 ClientUtils.spawnT2FireParticles(level, blockpos);
-                Vector3d wind = new Vector3d(0, 0, 0);
+                Vec3 wind = new Vec3(0, 0, 0);
                 ClientUtils.spawnInvertedConeSteam(level, blockpos, wind);
             }
             /*
@@ -239,10 +239,10 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
         if(!this.isDummy()||descPacket) {
-	        CompoundNBT tankx = new CompoundNBT();
+	        CompoundTag tankx = new CompoundTag();
 	        tank.writeToNBT(tankx);
 	        nbt.putFloat("liquid_tick", liquidtick);
 	        nbt.put("fluid", tankx);

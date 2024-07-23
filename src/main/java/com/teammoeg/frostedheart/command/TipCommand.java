@@ -7,14 +7,14 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.tips.network.CustomTipPacket;
 import com.teammoeg.frostedheart.content.tips.network.SingleTipPacket;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.command.arguments.EntityArgument;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 public class TipCommand {
-    public static void register(CommandDispatcher<CommandSource> dispatcher) {
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
             Commands.literal("tips").requires((p_198820_0_) -> {return p_198820_0_.hasPermission(2);}).then(
             Commands.literal("add").then(
@@ -24,7 +24,7 @@ public class TipCommand {
                     String ID = a.getArgument("ID", String.class);
                     int i = 0;
 
-                    for(ServerPlayerEntity sp : EntityArgument.getPlayers(a, "targets")) {
+                    for(ServerPlayer sp : EntityArgument.getPlayers(a, "targets")) {
                         FHNetwork.send(PacketDistributor.PLAYER.with(() -> sp), new SingleTipPacket(ID));
                         i++;
                     }
@@ -45,7 +45,7 @@ public class TipCommand {
                         boolean history = c.getArgument("history", Boolean.class);
 
                         int i = 0;
-                        for(ServerPlayerEntity sp : EntityArgument.getPlayers(c, "targets")) {
+                        for(ServerPlayer sp : EntityArgument.getPlayers(c, "targets")) {
                             FHNetwork.send(PacketDistributor.PLAYER.with(() -> sp), new CustomTipPacket(title, content, visibleTime, history));
                             i++;
                         }

@@ -27,8 +27,8 @@ import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class ProductionData extends BaseData {
     public ItemStack item;
@@ -38,7 +38,7 @@ public class ProductionData extends BaseData {
         item = SerializeUtil.fromJson(jo.get("produce"));
     }
 
-    public ProductionData(PacketBuffer pb) {
+    public ProductionData(FriendlyByteBuf pb) {
         super(pb);
         item = pb.readItem();
     }
@@ -70,7 +70,7 @@ public class ProductionData extends BaseData {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
         buffer.writeVarInt(1);
         super.write(buffer);
         buffer.writeItem(item);

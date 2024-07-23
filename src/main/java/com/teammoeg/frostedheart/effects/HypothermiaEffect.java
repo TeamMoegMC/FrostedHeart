@@ -24,14 +24,14 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHDamageSources;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectCategory;
 
-public class HypothermiaEffect extends Effect {
-    public HypothermiaEffect(EffectType typeIn, int liquidColorIn) {
+public class HypothermiaEffect extends MobEffect {
+    public HypothermiaEffect(MobEffectCategory typeIn, int liquidColorIn) {
         super(typeIn, liquidColorIn);
     }
 
@@ -51,8 +51,8 @@ public class HypothermiaEffect extends Effect {
 
     @Override
     public void applyEffectTick(LivingEntity entityLivingBaseIn, int amplifier) {
-        if (entityLivingBaseIn instanceof ServerPlayerEntity) {
-            ((ServerPlayerEntity) entityLivingBaseIn).causeFoodExhaustion(amplifier < 2 ? 0.044f * (amplifier + 1) : 0.132f);
+        if (entityLivingBaseIn instanceof ServerPlayer) {
+            ((ServerPlayer) entityLivingBaseIn).causeFoodExhaustion(amplifier < 2 ? 0.044f * (amplifier + 1) : 0.132f);
             if (amplifier > 1) {
                 if (entityLivingBaseIn.getHealth() > 20.0F) {
                     entityLivingBaseIn.hurt(FHDamageSources.HYPOTHERMIA, 1F);

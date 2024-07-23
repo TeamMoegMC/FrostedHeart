@@ -25,16 +25,16 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.util.io.JsonHelper;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.item.crafting.ShapelessRecipe;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.ShapelessRecipe;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.RegistryObject;
 
 public class ModifyDamageRecipe extends ShapelessRecipe {
@@ -46,7 +46,7 @@ public class ModifyDamageRecipe extends ShapelessRecipe {
 
         @Nullable
         @Override
-        public ModifyDamageRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+        public ModifyDamageRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
             Ingredient input = Ingredient.fromNetwork(buffer);
             Ingredient input2 = Ingredient.fromNetwork(buffer);
             int dura = buffer.readVarInt();
@@ -62,7 +62,7 @@ public class ModifyDamageRecipe extends ShapelessRecipe {
         }
 
         @Override
-        public void toNetwork(PacketBuffer buffer, ModifyDamageRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buffer, ModifyDamageRecipe recipe) {
             recipe.tool.toNetwork(buffer);
             recipe.repair.toNetwork(buffer);
 
@@ -92,7 +92,7 @@ public class ModifyDamageRecipe extends ShapelessRecipe {
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack assemble(CraftingInventory inv) {
+    public ItemStack assemble(CraftingContainer inv) {
         for (int j = 0; j < inv.getContainerSize(); ++j) {
             ItemStack in = inv.getItem(j);
             if (tool.test(in)) {
@@ -105,11 +105,11 @@ public class ModifyDamageRecipe extends ShapelessRecipe {
         return ItemStack.EMPTY;
     }
 
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getSerializer() {
         return SERIALIZER.get();
     }
 
-    public boolean matches(CraftingInventory inv, World worldIn) {
+    public boolean matches(CraftingContainer inv, Level worldIn) {
         boolean hasArmor = false;
         boolean hasItem = false;
         for (int i = 0; i < inv.getContainerSize(); ++i) {

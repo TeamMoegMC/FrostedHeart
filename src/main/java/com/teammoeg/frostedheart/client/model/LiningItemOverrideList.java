@@ -24,25 +24,25 @@ import javax.annotation.Nullable;
 import com.teammoeg.frostedheart.FHMain;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
-import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.model.ItemOverrideList;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ArmorItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.ItemOverrides;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
 
-public class LiningItemOverrideList extends ItemOverrideList {
+public class LiningItemOverrideList extends ItemOverrides {
 
     public LiningItemOverrideList() {
         super();
     }
 
     @Override
-    public IBakedModel resolve(IBakedModel originalModel, ItemStack stack, @Nullable ClientWorld world, @Nullable LivingEntity entity) {
+    public BakedModel resolve(BakedModel originalModel, ItemStack stack, @Nullable ClientLevel world, @Nullable LivingEntity entity) {
         String s = ItemNBTHelper.getString(stack, "inner_cover");
-        EquipmentSlotType slotType = ((ArmorItem) stack.getItem()).getSlot();
+        EquipmentSlot slotType = ((ArmorItem) stack.getItem()).getSlot();
         if (!s.isEmpty() && slotType != null) {
             String liningType = new ResourceLocation(s).getPath();
             String slotName = "feet";

@@ -22,28 +22,28 @@ package com.teammoeg.frostedheart.content.incubator;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.utils.GuiHelper;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 
 public class IncubatorT1Screen extends IEContainerScreen<IncubatorT1Container> {
     private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("incubator");
     private IncubatorTileEntity tile;
 
-    public IncubatorT1Screen(IncubatorT1Container container, PlayerInventory inv, ITextComponent title) {
+    public IncubatorT1Screen(IncubatorT1Container container, Inventory inv, Component title) {
         super(container, inv, title);
         this.tile = container.tile;
     }
 
 
     @Override
-    protected void renderBg(MatrixStack transform, float partial, int x, int y) {
+    protected void renderBg(PoseStack transform, float partial, int x, int y) {
         ClientUtils.bindTexture(TEXTURE);
         this.blit(transform, leftPos, topPos, 0, 0, imageWidth, imageHeight);
         GuiHelper.handleGuiTank(transform, tile.fluid[0], leftPos + 61, topPos + 20, 16, 46, 177, 177, 20, 51, x, y, TEXTURE, null);
@@ -74,9 +74,9 @@ public class IncubatorT1Screen extends IEContainerScreen<IncubatorT1Container> {
     }
 
     @Override
-    public void render(MatrixStack transform, int mouseX, int mouseY, float partial) {
+    public void render(PoseStack transform, int mouseX, int mouseY, float partial) {
         super.render(transform, mouseX, mouseY, partial);
-        List<ITextComponent> tooltip = new ArrayList<>();
+        List<Component> tooltip = new ArrayList<>();
         GuiHelper.handleGuiTank(transform, tile.fluid[0], leftPos + 61, topPos + 20, 16, 46, 177, 177, 20, 51, mouseX, mouseY, TEXTURE, tooltip);
         GuiHelper.handleGuiTank(transform, tile.fluid[1], leftPos + 117, topPos + 20, 16, 46, 177, 177, 20, 51, mouseX, mouseY, TEXTURE, tooltip);
 

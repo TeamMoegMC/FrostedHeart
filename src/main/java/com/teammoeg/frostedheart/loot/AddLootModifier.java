@@ -25,11 +25,11 @@ import javax.annotation.Nonnull;
 
 import com.google.gson.JsonObject;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootContext;
-import net.minecraft.loot.LootTable;
-import net.minecraft.loot.conditions.ILootCondition;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.common.loot.LootModifier;
 
@@ -38,7 +38,7 @@ public class AddLootModifier extends LootModifier {
 
     public static class Serializer extends GlobalLootModifierSerializer<AddLootModifier> {
         @Override
-        public AddLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
+        public AddLootModifier read(ResourceLocation location, JsonObject object, LootItemCondition[] conditions) {
             return new AddLootModifier(conditions, new ResourceLocation(object.get("loot_table").getAsString()));
         }
 
@@ -53,7 +53,7 @@ public class AddLootModifier extends LootModifier {
 
     boolean isAdding;
 
-    private AddLootModifier(ILootCondition[] conditionsIn, ResourceLocation lt) {
+    private AddLootModifier(LootItemCondition[] conditionsIn, ResourceLocation lt) {
         super(conditionsIn);
         this.lt = lt;
     }

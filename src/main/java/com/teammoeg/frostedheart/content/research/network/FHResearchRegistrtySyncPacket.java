@@ -24,19 +24,19 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when player join
 public class FHResearchRegistrtySyncPacket extends NBTMessage {
 
     public FHResearchRegistrtySyncPacket() {
-        super(FHResearch.save(new CompoundNBT()));
+        super(FHResearch.save(new CompoundTag()));
 
     }
 
-    public FHResearchRegistrtySyncPacket(PacketBuffer buffer) {
+    public FHResearchRegistrtySyncPacket(FriendlyByteBuf buffer) {
         super(buffer);
     }
 

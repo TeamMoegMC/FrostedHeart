@@ -53,29 +53,29 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.IGrowable;
-import net.minecraft.block.SaplingBlock;
-import net.minecraft.command.CommandSource;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.enchantment.UnbreakingEnchantment;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.BonemealableBlock;
+import net.minecraft.world.level.block.SaplingBlock;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.DigDurabilityEnchantment;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.ItemAttributeModifierEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -101,7 +101,7 @@ public class CommonEvents {
         ArmorTempData data=FHDataManager.getArmor(event.getItemStack());
 
         if(data!=null) {
-        	EquipmentSlotType es=event.getItemStack().getEquipmentSlot();
+        	EquipmentSlot es=event.getItemStack().getEquipmentSlot();
         	if(es!=null) {
 	        	EquipmentCuriosSlotType ecs=EquipmentCuriosSlotType.fromVanilla(es);
 	        	if(event.getSlotType()==es) {
@@ -168,7 +168,7 @@ public class CommonEvents {
                 }
                 event.setResult(Event.Result.DENY);
             }
-        } else if(growBlock instanceof IGrowable){
+        } else if(growBlock instanceof BonemealableBlock){
             if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE) {
                 // Set back to default state, might not be necessary
                 if (event.getWorld().getRandom().nextInt(3) == 0) {
@@ -194,7 +194,7 @@ public class CommonEvents {
     @SubscribeEvent
     public static void finishedEatingFood(LivingEntityUseItemEvent.Finish event) {
         if (event.getEntityLiving() != null && !event.getEntityLiving().level.isClientSide
-                && event.getEntityLiving() instanceof ServerPlayerEntity) {
+                && event.getEntityLiving() instanceof ServerPlayer) {
             ItemStack is = event.getItem();
             Item it = event.getItem().getItem();
             ITempAdjustFood adj = null;
@@ -206,10 +206,10 @@ public class CommonEvents {
                 adj = FHDataManager.getFood(is);
             }
             if (adj != null) {
-                float current = PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
+                float current = PlayerTemperatureData.getCapability((ServerPlayer) event.getEntityLiving()).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
-                float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(PlayerTemperatureData::getEnvTemp).orElse(0f));
+                float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayer) event.getEntityLiving()).map(PlayerTemperatureData::getEnvTemp).orElse(0f));
                 if (heat > 1) {
                     event.getEntityLiving().hurt(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
                 } else if (heat < -1)
@@ -228,17 +228,17 @@ public class CommonEvents {
                         return;
                 }
                 final float toset=current;
-                PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).ifPresent(t->t.setBodyTemp(toset));
+                PlayerTemperatureData.getCapability((ServerPlayer) event.getEntityLiving()).ifPresent(t->t.setBodyTemp(toset));
             }
 
-            DailyKitchen.tryGiveBenefits((ServerPlayerEntity) event.getEntityLiving(), is);
+            DailyKitchen.tryGiveBenefits((ServerPlayer) event.getEntityLiving(), is);
         }
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onArmorDamage(LivingHurtEvent event) {
-        if (event.getEntityLiving() instanceof PlayerEntity && (event.getSource().isFire() || !event.getSource().isBypassArmor())) {
-            PlayerEntity player = (PlayerEntity) event.getEntityLiving();
+        if (event.getEntityLiving() instanceof Player && (event.getSource().isFire() || !event.getSource().isBypassArmor())) {
+            Player player = (Player) event.getEntityLiving();
             float damage = event.getAmount();
             DamageSource p_234563_1_ = event.getSource();
             if (damage > 0) {
@@ -255,7 +255,7 @@ public class CommonEvents {
                 for (ItemStack itemstack : player.getArmorSlots()) {
                     if (itemstack.isEmpty())
                         continue;
-                    CompoundNBT cn = itemstack.getTag();
+                    CompoundTag cn = itemstack.getTag();
                     if (cn == null)
                         continue;
                     String inner = cn.getString("inner_cover");
@@ -272,16 +272,16 @@ public class CommonEvents {
                             cn.remove("inner_cover_tag");
                             cn.remove("inner_bounded");
                             cn.remove("inner_damage");
-                            player.broadcastBreakEvent(MobEntity.getEquipmentSlotForItem(itemstack));
+                            player.broadcastBreakEvent(Mob.getEquipmentSlotForItem(itemstack));
                         } else cn.putInt("inner_damage", dmg);
                         continue;
                     }
-                    CompoundNBT cnbt = cn.getCompound("inner_cover_tag");
+                    CompoundTag cnbt = cn.getCompound("inner_cover_tag");
                     int i = FHUtils.getEnchantmentLevel(Enchantments.UNBREAKING, cnbt);
                     int j = 0;
                     if (i > 0)
                         for (int k = 0; k < amount; ++k) {
-                            if (UnbreakingEnchantment.shouldIgnoreDurabilityDrop(itemstack, i, player.getRandom())) {
+                            if (DigDurabilityEnchantment.shouldIgnoreDurabilityDrop(itemstack, i, player.getRandom())) {
                                 ++j;
                             }
                         }
@@ -296,7 +296,7 @@ public class CommonEvents {
                         cn.remove("inner_cover");
                         cn.remove("inner_cover_tag");
                         cn.remove("inner_bounded");
-                        player.broadcastBreakEvent(MobEntity.getEquipmentSlotForItem(itemstack));
+                        player.broadcastBreakEvent(Mob.getEquipmentSlotForItem(itemstack));
                     } else {
                         cnbt.putInt("Damage", crdmg);
                         cn.put("inner_cover_tag", cnbt);
@@ -310,11 +310,11 @@ public class CommonEvents {
     // TODO create grow temperature mappings for every plant in the modpack
     @SubscribeEvent
     public static void onEntityPlaceBlock(BlockEvent.EntityPlaceEvent event) {
-        if (event.getEntity() instanceof ServerPlayerEntity) {
-            ServerPlayerEntity player = (ServerPlayerEntity) event.getEntity();
+        if (event.getEntity() instanceof ServerPlayer) {
+            ServerPlayer player = (ServerPlayer) event.getEntity();
             Block growBlock = event.getPlacedBlock().getBlock();
             float temp = ChunkHeatData.getTemperature(event.getWorld(), event.getPos());
-            if (growBlock instanceof IGrowable) {
+            if (growBlock instanceof BonemealableBlock) {
                 if (growBlock instanceof SaplingBlock) {
                     if (temp < -5) {
                     	player.displayClientMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(-6)), true);
@@ -349,7 +349,7 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
-        CommandDispatcher<CommandSource> dispatcher = event.getDispatcher();
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         AddTempCommand.register(dispatcher);
         ClimateCommand.register(dispatcher);
     }
@@ -357,9 +357,9 @@ public class CommonEvents {
     @SubscribeEvent
     public static void onServerTick(TickEvent.WorldTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.START) {
-            World world = event.world;
-            if (!world.isClientSide && world instanceof ServerWorld) {
-                ServerWorld serverWorld = (ServerWorld) world;
+            Level world = event.world;
+            if (!world.isClientSide && world instanceof ServerLevel) {
+                ServerLevel serverWorld = (ServerLevel) world;
 
                 // Scheduled checks (e.g. town structures)
                 SchedulerQueue.tickAll(serverWorld);
@@ -398,8 +398,8 @@ public class CommonEvents {
     }
     @SubscribeEvent
     public static void onUseBoneMeal(BonemealEvent event) {
-        if (event.getPlayer() instanceof ServerPlayerEntity) {
-            ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
+        if (event.getPlayer() instanceof ServerPlayer) {
+            ServerPlayer player = (ServerPlayer) event.getPlayer();
             Block growBlock = event.getBlock().getBlock();
             float temp = ChunkHeatData.getTemperature(event.getWorld(), event.getPos());
             if (growBlock instanceof FHCropBlock) {
@@ -427,13 +427,13 @@ public class CommonEvents {
     }
     @SubscribeEvent
     public static void syncDataToClient(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof ServerPlayerEntity) {
-            ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getLevel();
-            PacketTarget currentPlayer=PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer());
+        if (event.getEntity() instanceof ServerPlayer) {
+            ServerLevel serverWorld = ((ServerPlayer) event.getPlayer()).getLevel();
+            PacketTarget currentPlayer=PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getPlayer());
             FHResearch.sendSyncPacket(currentPlayer);
             for(DataType type:DataType.types)
             	FHNetwork.send(currentPlayer,new FHDatapackSyncPacket(type));
-            FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayerEntity) event.getEntity())));
+            FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayer) event.getEntity())));
             FHCapabilities.CLIMATE_DATA.getCapability(serverWorld).ifPresent((cap) -> FHNetwork.send(currentPlayer,new FHClimatePacket(cap)));
             //System.out.println("=x-x=");
             //System.out.println(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS.getValue(new ResourceLocation(FHMain.MODID,"add_loot")));
@@ -442,10 +442,10 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void syncDataWhenDimensionChanged(PlayerEvent.PlayerChangedDimensionEvent event) {
-        if (event.getEntity() instanceof ServerPlayerEntity) {
-            ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getLevel();
+        if (event.getEntity() instanceof ServerPlayer) {
+            ServerLevel serverWorld = ((ServerPlayer) event.getPlayer()).getLevel();
 
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getPlayer()),
                     new FHClimatePacket(WorldClimate.get(serverWorld)));
         }
     }

@@ -28,10 +28,10 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.core.Registry;
+import net.minecraft.network.chat.Component;
 
 public class KillClue extends ListenerClue {
 	public static final Codec<KillClue> CODEC=RecordCodecBuilder.create(t->t.group(
@@ -60,8 +60,8 @@ public class KillClue extends ListenerClue {
     }
 
     @Override
-    public ITextComponent getDescription() {
-        ITextComponent itc = super.getDescription();
+    public Component getDescription() {
+        Component itc = super.getDescription();
         if (itc != null || type == null) return itc;
         return type.getDescription();
     }
@@ -72,7 +72,7 @@ public class KillClue extends ListenerClue {
     }
 
     @Override
-    public ITextComponent getName() {
+    public Component getName() {
         if (name != null && !name.isEmpty())
             return super.getName();
         return TranslateUtils.translate("clue." + FHMain.MODID + ".kill");

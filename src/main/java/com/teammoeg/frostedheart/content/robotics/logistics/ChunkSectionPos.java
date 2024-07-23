@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.robotics.logistics;
 
 import java.util.Objects;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 public class ChunkSectionPos {
 	int x;

@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.content.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FHClimatePacket implements FHMessage {
@@ -42,7 +42,7 @@ public class FHClimatePacket implements FHMessage {
         climate = ClimateType.NONE;
     }
 
-    public FHClimatePacket(PacketBuffer buffer) {
+    public FHClimatePacket(FriendlyByteBuf buffer) {
         data = SerializeUtil.readShortArray(buffer);
         sec = buffer.readVarLong();
         climate = ClimateType.values()[buffer.readByte() & 0xff];
@@ -60,7 +60,7 @@ public class FHClimatePacket implements FHMessage {
     	}
     }
 
-    public void encode(PacketBuffer buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         SerializeUtil.writeShortArray(buffer, data);
         buffer.writeVarLong(sec);
         buffer.writeByte((byte) climate.ordinal());

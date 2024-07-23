@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -32,7 +32,7 @@ public class ThickLine {
     public ThickLine() {
     }
 
-    public void draw(MatrixStack matrixStack, int x, int y) {
+    public void draw(PoseStack matrixStack, int x, int y) {
         FHGuiHelper.drawLine(matrixStack, color, x + this.x, y + this.y, x + this.x2, y + this.y2);
 
         // super.draw(matrixStack, theme, x, y, w, h);

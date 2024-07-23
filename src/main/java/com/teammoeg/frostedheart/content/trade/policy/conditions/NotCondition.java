@@ -24,7 +24,7 @@ import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.Conditions;
 import com.teammoeg.frostedheart.content.trade.policy.PolicyCondition;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class NotCondition implements PolicyCondition {
     PolicyCondition nested;
@@ -33,7 +33,7 @@ public class NotCondition implements PolicyCondition {
         this(Conditions.deserialize(jo.get("condition").getAsJsonObject()));
     }
 
-    public NotCondition(PacketBuffer buffer) {
+    public NotCondition(FriendlyByteBuf buffer) {
         this(Conditions.deserialize(buffer));
     }
 
@@ -55,7 +55,7 @@ public class NotCondition implements PolicyCondition {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void write(FriendlyByteBuf buffer) {
         Conditions.write(nested, buffer);
     }
 

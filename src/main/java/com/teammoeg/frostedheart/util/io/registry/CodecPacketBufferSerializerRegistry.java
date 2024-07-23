@@ -9,7 +9,7 @@ import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.DynamicOps;
 import com.teammoeg.frostedheart.util.io.PacketWritable;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class CodecPacketBufferSerializerRegistry<A extends PacketWritable> extends PacketBufferSerializerRegistry<A,Dynamic<?>,Dynamic<?>> implements Codec<A>{
 
@@ -37,7 +37,7 @@ public class CodecPacketBufferSerializerRegistry<A extends PacketWritable> exten
 		return obj.asString().result().orElse(null);
 	}
 
-	public void register(Class<A> cls, String type, Codec<A> codec, Function<PacketBuffer, A> packet) {
+	public void register(Class<A> cls, String type, Codec<A> codec, Function<FriendlyByteBuf, A> packet) {
 		super.register(cls, type,
 			t->codec.decode(t).result().map(Pair::getFirst).orElse(null),
 			(t,c)->((Dynamic<Object>)c).map(x->codec.encode(t,((Dynamic<Object>)c).getOps(),x).result().orElse(null)),

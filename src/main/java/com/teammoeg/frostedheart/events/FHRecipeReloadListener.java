@@ -38,18 +38,18 @@ import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.utils.TagUtils;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.StaticTemplateManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.item.crafting.AbstractCookingRecipe;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.item.crafting.RecipeManager;
-import net.minecraft.resources.DataPackRegistries;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.resources.IResourceManagerReloadListener;
+import net.minecraft.world.item.crafting.AbstractCookingRecipe;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.RecipeManager;
+import net.minecraft.server.ServerResources;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RecipesUpdatedEvent;
 import net.minecraftforge.event.TagsUpdatedEvent;
@@ -59,13 +59,13 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 
-public class FHRecipeReloadListener implements IResourceManagerReloadListener {
-    private final DataPackRegistries dataPackRegistries;
+public class FHRecipeReloadListener implements ResourceManagerReloadListener {
+    private final ServerResources dataPackRegistries;
 
     RecipeManager clientRecipeManager;
 
     public static void buildRecipeLists(RecipeManager recipeManager) {
-        Collection<IRecipe<?>> recipes = recipeManager.getRecipes();
+        Collection<Recipe<?>> recipes = recipeManager.getRecipes();
         if (recipes.isEmpty())
             return;
         //filterRecipes(recipes, GeneratorRecipe.class, GeneratorRecipe.TYPE);
@@ -96,21 +96,21 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
     }
     
 
-    static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass) {
+    static <R extends Recipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<Recipe<?>> recipes, Class<R> recipeClass) {
         return recipes.stream()
                 .filter(iRecipe -> iRecipe.getClass() == recipeClass)
                 .map(recipeClass::cast)
                 .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
     }
 
-    static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass, IRecipeType<R> recipeType) {
+    static <R extends Recipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<Recipe<?>> recipes, Class<R> recipeClass, RecipeType<R> recipeType) {
         return recipes.stream()
                 .filter(iRecipe -> iRecipe.getType() == recipeType)
                 .map(recipeClass::cast)
                 .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
     }
 
-    public FHRecipeReloadListener(DataPackRegistries dataPackRegistries) {
+    public FHRecipeReloadListener(ServerResources dataPackRegistries) {
         this.dataPackRegistries = dataPackRegistries;
     }
 
@@ -123,11 +123,11 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
     }
 
     @Override
-    public void onResourceManagerReload(@Nonnull IResourceManager resourceManager) {
+    public void onResourceManagerReload(@Nonnull ResourceManager resourceManager) {
         if (dataPackRegistries != null) {
             MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
             if (server != null) {
-                Iterator<ServerWorld> it = server.getAllLevels().iterator();
+                Iterator<ServerLevel> it = server.getAllLevels().iterator();
                 // Should only be false when no players are loaded, so the data will be synced on login
                 if (it.hasNext())
                     ApiUtils.addFutureServerTask(it.next(),

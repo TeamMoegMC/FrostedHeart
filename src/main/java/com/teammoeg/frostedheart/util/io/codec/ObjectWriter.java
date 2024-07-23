@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class ObjectWriter {
 	private static class TypedValue{
@@ -67,7 +67,7 @@ public class ObjectWriter {
 			return new TypedValue(0,input);
 		}
 	}
-	public static void writeTyped(PacketBuffer pb,TypedValue input) {
+	public static void writeTyped(FriendlyByteBuf pb,TypedValue input) {
 		switch(input.type) {
 		case 1:pb.writeByte((Byte)input.value);break;
 		case 2:pb.writeShort((Short) input.value);break;
@@ -102,7 +102,7 @@ public class ObjectWriter {
 		}break;
 		}
 	}
-    public static Object readWithType(int type,PacketBuffer pb) {
+    public static Object readWithType(int type,FriendlyByteBuf pb) {
     	switch(type) {
     	case 1:return pb.readByte();
     	case 2:return pb.readShort();
@@ -119,9 +119,9 @@ public class ObjectWriter {
     	})
     	;
     	case 9:return DataOps.INSTANCE.createByteList(ByteBuffer.wrap(pb.readByteArray()));
-    	case 10:return SerializeUtil.readList(pb, PacketBuffer::readVarInt);
-    	case 11:return SerializeUtil.readList(pb, PacketBuffer::readLong);
-    	case 12:return SerializeUtil.readList(pb, PacketBuffer::readUtf);
+    	case 10:return SerializeUtil.readList(pb, FriendlyByteBuf::readVarInt);
+    	case 11:return SerializeUtil.readList(pb, FriendlyByteBuf::readLong);
+    	case 12:return SerializeUtil.readList(pb, FriendlyByteBuf::readUtf);
     	case 13:return SerializeUtil.readList(pb, p->readWithType(8,p));
     	case 14:{
 			List<Object> obj=new ArrayList<>();
@@ -140,12 +140,12 @@ public class ObjectWriter {
     	}
     	return DataOps.NULLTAG;
     }
-    public static void writeObject(PacketBuffer pb,Object input) {
+    public static void writeObject(FriendlyByteBuf pb,Object input) {
     	TypedValue value=getTyped(input);
     	pb.writeByte(value.type);
     	writeTyped(pb,value);
     }
-    public static Object readObject(PacketBuffer pb) {
+    public static Object readObject(FriendlyByteBuf pb) {
     	return readWithType(pb.readByte(),pb);
     }
 }

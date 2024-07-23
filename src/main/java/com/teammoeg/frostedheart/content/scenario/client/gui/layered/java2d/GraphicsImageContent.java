@@ -12,7 +12,7 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableC
 import com.teammoeg.frostedheart.util.client.Rect;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 public class GraphicsImageContent extends GraphicLayerContent {
 	public ResourceLocation showingImage;

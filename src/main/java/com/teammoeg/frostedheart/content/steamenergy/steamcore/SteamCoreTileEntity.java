@@ -9,20 +9,20 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.Direction;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
-        ITickableTileEntity, IHaveGoggleInformation,
+        TickableBlockEntity, IHaveGoggleInformation,
         FHBlockInterfaces.IActiveState{
-    public SteamCoreTileEntity(TileEntityType<?> type) {
+    public SteamCoreTileEntity(BlockEntityType<?> type) {
         super(type);
         this.setLazyTickRate(20);
     }
@@ -77,13 +77,13 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
     }
 
     @Override
-    protected void fromTag(BlockState state, CompoundNBT tag, boolean client) {
+    protected void fromTag(BlockState state, CompoundTag tag, boolean client) {
         super.fromTag(state, tag, client);
         network.load(tag, client);
     }
 
     @Override
-    protected void write(CompoundNBT tag, boolean client) {
+    protected void write(CompoundTag tag, boolean client) {
         super.write(tag, client);
         network.save(tag, client);
     }
@@ -100,7 +100,7 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
         }
     }
 
-    public World getWorldNonnull() {
+    public Level getWorldNonnull() {
         return Objects.requireNonNull(super.getLevel());
     }
 }

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.util.noise;
 
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 
 /**
  * Wrapper for a 3D Noise Layer
@@ -40,7 +40,7 @@ public interface INoise3D {
     }
 
     default INoise3D flattened(float min, float max) {
-        return (x, y, z) -> MathHelper.clamp(INoise3D.this.noise(x, y, z), min, max);
+        return (x, y, z) -> Mth.clamp(INoise3D.this.noise(x, y, z), min, max);
     }
 
     default INoise3D map(FloatUnaryFunction mappingFunction) {

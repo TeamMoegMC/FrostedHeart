@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 /**
  * Lowest level town processing function.
@@ -41,7 +41,7 @@ public interface TownWorker {
      * @param workData workData provided by work type
      * @return true, if work done successfully
      */
-    default boolean firstWork(Town town, CompoundNBT workData) {
+    default boolean firstWork(Town town, CompoundTag workData) {
         return true;
     }
 
@@ -53,7 +53,7 @@ public interface TownWorker {
      * @param workData workData provided by work type
      * @return true, if work done successfully
      */
-    default boolean beforeWork(Town town, CompoundNBT workData) {
+    default boolean beforeWork(Town town, CompoundTag workData) {
         return true;
     }
 
@@ -65,7 +65,7 @@ public interface TownWorker {
      * @param workData workData provided by work type
      * @return true, if work done successfully
      */
-    boolean work(Town town, CompoundNBT workData);
+    boolean work(Town town, CompoundTag workData);
 
     /**
      * Work with lower priority;
@@ -75,7 +75,7 @@ public interface TownWorker {
      * @param workData workData provided by work type
      * @return true, if work done successfully
      */
-    default boolean afterWork(Town town, CompoundNBT workData) {
+    default boolean afterWork(Town town, CompoundTag workData) {
         return true;
     }
 
@@ -87,7 +87,7 @@ public interface TownWorker {
      * @param workData workData provided by work type
      * @return true, if work done successfully
      */
-    default boolean lastWork(Town town, CompoundNBT workData) {
+    default boolean lastWork(Town town, CompoundTag workData) {
         return true;
     }
 

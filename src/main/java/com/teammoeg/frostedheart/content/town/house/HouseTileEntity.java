@@ -29,11 +29,11 @@ import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
@@ -109,10 +109,10 @@ public class HouseTileEntity extends AbstractTownWorkerTileEntity{
 
 
     @Override
-    public CompoundNBT getWorkData() {
-        CompoundNBT data = getBasicWorkData();
+    public CompoundTag getWorkData() {
+        CompoundTag data = getBasicWorkData();
         if(this.isValid()) {
-            ListNBT residentList = new ListNBT();
+            ListTag residentList = new ListTag();
             //for (Resident resident : residents) {
             //    residentList.add(resident.serialize());
             //}
@@ -129,7 +129,7 @@ public class HouseTileEntity extends AbstractTownWorkerTileEntity{
     }
 
     @Override
-    public void setWorkData(CompoundNBT data) {
+    public void setWorkData(CompoundTag data) {
         setBasicWorkData(data);
         if(this.isValid()) {
             //residents = new ArrayList<>();
@@ -303,12 +303,12 @@ public class HouseTileEntity extends AbstractTownWorkerTileEntity{
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT compoundNBT, boolean isPacket) {
+    public void readCustomNBT(CompoundTag compoundNBT, boolean isPacket) {
         endpoint.load(compoundNBT, isPacket);
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT compoundNBT, boolean isPacket) {
+    public void writeCustomNBT(CompoundTag compoundNBT, boolean isPacket) {
         endpoint.save(compoundNBT, isPacket);
     }
 

@@ -26,9 +26,9 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 
 public abstract class UnlockList<T> implements Iterable<T> {
     Set<T> s = new HashSet<>();
@@ -37,7 +37,7 @@ public abstract class UnlockList<T> implements Iterable<T> {
 
     }
 
-    public UnlockList(ListNBT nbt) {
+    public UnlockList(ListTag nbt) {
         this();
         load(nbt);
     }
@@ -72,8 +72,8 @@ public abstract class UnlockList<T> implements Iterable<T> {
         return s.iterator();
     }
 
-    public void load(ListNBT nbt) {
-        for (INBT in : nbt) {
+    public void load(ListTag nbt) {
+        for (Tag in : nbt) {
             s.add(getObject(in.getAsString()));
         }
     }
@@ -92,10 +92,10 @@ public abstract class UnlockList<T> implements Iterable<T> {
         s.removeAll(key);
     }
 
-    public ListNBT serialize() {
-        ListNBT ln = new ListNBT();
+    public ListTag serialize() {
+        ListTag ln = new ListTag();
         for (T t : s)
-            ln.add(StringNBT.valueOf(getString(t)));
+            ln.add(StringTag.valueOf(getString(t)));
         return ln;
     }
 

@@ -4,8 +4,8 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.FHNetwork;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkEvent;
 /**
  * A Message should:<br/>
@@ -16,7 +16,7 @@ import net.minecraftforge.fml.network.NetworkEvent;
  * */
 public interface FHMessage {
 
-	void encode(PacketBuffer buffer);
+	void encode(FriendlyByteBuf buffer);
 
 	void handle(Supplier<NetworkEvent.Context> context);
 	

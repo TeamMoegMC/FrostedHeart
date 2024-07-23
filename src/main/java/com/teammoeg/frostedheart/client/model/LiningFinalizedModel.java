@@ -29,19 +29,19 @@ import javax.annotation.Nullable;
 import com.google.common.primitives.Ints;
 import com.teammoeg.frostedheart.FHMain;
 
-import net.minecraft.block.BlockState;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.model.BakedQuad;
-import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.model.ItemCameraTransforms;
-import net.minecraft.client.renderer.model.ItemOverrideList;
-import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.renderer.block.model.ItemOverrides;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.client.model.ModelLoader;
 
-public class LiningFinalizedModel implements IBakedModel {
+public class LiningFinalizedModel implements BakedModel {
 
     public static ResourceLocation buffCoatFeetTexture = FHMain.rl("item/lining_overlay/buff_coat_feet");
     public static ResourceLocation buffCoatHelmetTexture = FHMain.rl("item/lining_overlay/buff_coat_helmet");
@@ -74,9 +74,9 @@ public class LiningFinalizedModel implements IBakedModel {
 
     public static ResourceLocation strawLiningTorsoTexture = FHMain.rl("item/lining_overlay/straw_lining_torso");
 
-    private IBakedModel parentModel;
+    private BakedModel parentModel;
     private ResourceLocation overlay;
-    public LiningFinalizedModel(IBakedModel i_parentModel, ResourceLocation texture) {
+    public LiningFinalizedModel(BakedModel i_parentModel, ResourceLocation texture) {
         parentModel = i_parentModel;
         overlay = texture;
     }
@@ -232,11 +232,11 @@ public class LiningFinalizedModel implements IBakedModel {
         return new BakedQuad(vertexDataAll, itemRenderLayer, face, texture, APPLY_DIFFUSE_LIGHTING);
     }
     @Override
-    public ItemCameraTransforms getTransforms() {
+    public ItemTransforms getTransforms() {
         return parentModel.getTransforms();
     }
     private TextureAtlasSprite getItemSprite(ResourceLocation modelLocation) {
-        AtlasTexture blocksStitchedTextures = ModelLoader.instance().getSpriteMap().getAtlas(AtlasTexture.LOCATION_BLOCKS);
+        TextureAtlas blocksStitchedTextures = ModelLoader.instance().getSpriteMap().getAtlas(TextureAtlas.LOCATION_BLOCKS);
         return blocksStitchedTextures.getSprite(modelLocation);
     }
     private List<BakedQuad> getLiningQuads() {
@@ -248,7 +248,7 @@ public class LiningFinalizedModel implements IBakedModel {
     }
 
     @Override
-    public ItemOverrideList getOverrides() {
+    public ItemOverrides getOverrides() {
         throw new UnsupportedOperationException("The finalised model does not have an override list.");
     }
     @Override

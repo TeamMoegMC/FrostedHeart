@@ -2,12 +2,12 @@ package com.teammoeg.frostedheart.content.scenario.runner.target.trigger;
 
 import com.teammoeg.frostedheart.content.scenario.runner.target.SingleExecuteTargetTrigger;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 public class MovementTrigger extends SingleExecuteTargetTrigger {
-	Vector3d pos;
-	public MovementTrigger(PlayerEntity pe) {
+	Vec3 pos;
+	public MovementTrigger(Player pe) {
 		super(null);
 		this.test=t->t.getPlayer().position().distanceToSqr(this.pos)>0.25;
 		pos=pe.position();

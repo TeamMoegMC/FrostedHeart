@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.trade;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 public class PlayerRelationData {
     public static final PlayerRelationData EMPTY = new PlayerRelationData();
@@ -28,7 +28,7 @@ public class PlayerRelationData {
 
     long lastUpdated;
 
-    public void deserialize(CompoundNBT data) {
+    public void deserialize(CompoundTag data) {
 
         sawmurder = data.getInt("murder");
         totalbenefit = data.getInt("benefit");
@@ -36,7 +36,7 @@ public class PlayerRelationData {
         lastUpdated = data.getLong("last");
     }
 
-    public CompoundNBT serialize(CompoundNBT data) {
+    public CompoundTag serialize(CompoundTag data) {
 
         data.putInt("murder", sawmurder);
         data.putInt("benefit", totalbenefit);

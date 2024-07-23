@@ -29,20 +29,20 @@ import javax.annotation.Nullable;
 import com.teammoeg.frostedheart.FHMain;
 
 import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
 
 public class FHTextUtil {
 
-    public static List<ITextComponent> get(List<String> orig, String type, Supplier<String> pid) {
+    public static List<Component> get(List<String> orig, String type, Supplier<String> pid) {
         String s = pid.get();
-        List<ITextComponent> li = new ArrayList<>();
+        List<Component> li = new ArrayList<>();
         if (orig.isEmpty()) {
             int i = 0;
             while (true) {
                 final int fi = i;
                 i++;
-                ITextComponent it = null;
+                Component it = null;
                 it = getOptional(null, type, () -> s + "." + fi);
                 if (it != null)
                     li.add(it);
@@ -59,7 +59,7 @@ public class FHTextUtil {
     }
 
     @Nonnull
-    public static ITextComponent get(String orig, String type, Supplier<String> pid) {
+    public static Component get(String orig, String type, Supplier<String> pid) {
         if (orig == null || orig.isEmpty())
             return ClientTextComponentUtils.parse("{" + type + "." + FHMain.MODID + "." + pid.get() + "}");
         if (orig.startsWith("@")) {
@@ -72,7 +72,7 @@ public class FHTextUtil {
     }
 
     @Nullable
-    public static ITextComponent getOptional(String orig, String type, Supplier<String> pid) {
+    public static Component getOptional(String orig, String type, Supplier<String> pid) {
         if (orig == null || orig.isEmpty()) {
             String key = type + "." + FHMain.MODID + "." + pid.get();
             if (I18n.exists(key))

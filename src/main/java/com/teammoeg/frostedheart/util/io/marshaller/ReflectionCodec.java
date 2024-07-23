@@ -8,8 +8,8 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.MapLike;
 import com.mojang.serialization.RecordBuilder;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTDynamicOps;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 
 public class ReflectionCodec<A> extends MapCodec<A> {
 	ClassInfo info;
@@ -18,15 +18,15 @@ public class ReflectionCodec<A> extends MapCodec<A> {
 	}
 	@Override
 	public <T> DataResult<A> decode(DynamicOps<T> ops, MapLike<T> input) {
-		CompoundNBT nbt=new CompoundNBT();
-		input.entries().forEach(o->nbt.put(NBTDynamicOps.INSTANCE.getStringValue(ops.convertTo(NBTDynamicOps.INSTANCE, o.getFirst())).result().orElse(""), ops.convertTo(NBTDynamicOps.INSTANCE, o.getSecond())));
+		CompoundTag nbt=new CompoundTag();
+		input.entries().forEach(o->nbt.put(NbtOps.INSTANCE.getStringValue(ops.convertTo(NbtOps.INSTANCE, o.getFirst())).result().orElse(""), ops.convertTo(NbtOps.INSTANCE, o.getSecond())));
 		return DataResult.success((A)info.fromNBT(nbt));
 	}
 	@Override
 	public <T> RecordBuilder<T> encode(A input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
-		CompoundNBT nbt=(CompoundNBT) info.toNBT(input);
+		CompoundTag nbt=(CompoundTag) info.toNBT(input);
 		for(String in:nbt.getAllKeys())
-			prefix.add(in, NBTDynamicOps.INSTANCE.convertTo(ops, nbt.get(in)));
+			prefix.add(in, NbtOps.INSTANCE.convertTo(ops, nbt.get(in)));
 		return prefix;
 	}
 	@Override

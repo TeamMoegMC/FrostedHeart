@@ -4,12 +4,12 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkH
 import com.teammoeg.frostedheart.content.town.house.HouseBlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.CommandBlockBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.CommandBlock;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ColumnPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ColumnPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.Tags;
 
 import java.util.Objects;
@@ -20,7 +20,7 @@ public class HuntingBaseBlockScanner extends HouseBlockScanner {
     private int tanningRackNum = 0;
 
 
-    public HuntingBaseBlockScanner(World world, BlockPos startPos) {
+    public HuntingBaseBlockScanner(Level world, BlockPos startPos) {
         super(world, startPos);
     }
 
@@ -41,7 +41,7 @@ public class HuntingBaseBlockScanner extends HouseBlockScanner {
         addDecoration(pos);
         if(blockState.is(BlockTags.BEDS)) bedNum++;
         if(blockState.is(Tags.Blocks.CHESTS)) chestNum++;
-        if(Objects.requireNonNull(blockState.getBlock().getRegistryName()).getPath().equals("tanning_rack") || blockState.getBlock() instanceof CommandBlockBlock) tanningRackNum++;
+        if(Objects.requireNonNull(blockState.getBlock().getRegistryName()).getPath().equals("tanning_rack") || blockState.getBlock() instanceof CommandBlock) tanningRackNum++;
     }
 
     @Override

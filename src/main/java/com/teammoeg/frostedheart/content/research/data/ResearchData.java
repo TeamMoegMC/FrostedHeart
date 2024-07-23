@@ -36,9 +36,9 @@ import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.io.codec.BooleansCodec;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.Constants;
 
@@ -65,7 +65,7 @@ public class ResearchData implements IEnvironment {
         }
 
         @Override
-        public boolean commitItem(ServerPlayerEntity player) {
+        public boolean commitItem(ServerPlayer player) {
             return false;
         }
 
@@ -75,7 +75,7 @@ public class ResearchData implements IEnvironment {
         }
 
         @Override
-        public void deserialize(CompoundNBT cn) {
+        public void deserialize(CompoundTag cn) {
             super.deserialize(cn);
         }
 
@@ -120,7 +120,7 @@ public class ResearchData implements IEnvironment {
         }
 
         @Override
-        public void read(PacketBuffer pb) {
+        public void read(FriendlyByteBuf pb) {
             super.read(pb);
         }
 
@@ -129,7 +129,7 @@ public class ResearchData implements IEnvironment {
         }
 
         @Override
-        public CompoundNBT serialize() {
+        public CompoundTag serialize() {
             return super.serialize();
         }
 
@@ -146,7 +146,7 @@ public class ResearchData implements IEnvironment {
         }
 
         @Override
-        public void write(PacketBuffer pb) {
+        public void write(FriendlyByteBuf pb) {
             super.write(pb);
         }
 
@@ -180,7 +180,7 @@ public class ResearchData implements IEnvironment {
         this.rs = r;
         this.parent = parent;
     }
-    public ResearchData(Supplier<Research> r, CompoundNBT nc, TeamResearchData parent) {
+    public ResearchData(Supplier<Research> r, CompoundTag nc, TeamResearchData parent) {
         this(r, parent);
         deserialize(nc);
     }
@@ -232,7 +232,7 @@ public class ResearchData implements IEnvironment {
         }
     }
 
-    public boolean commitItem(ServerPlayerEntity player) {
+    public boolean commitItem(ServerPlayer player) {
         Research research = getResearch();
         if (research.isInCompletable()) return false;
         for (Research par : research.getParents()) {
@@ -258,14 +258,14 @@ public class ResearchData implements IEnvironment {
         return pts;
     }
 
-    public void deserialize(CompoundNBT cn) {
+    public void deserialize(CompoundTag cn) {
         committed = cn.getInt("committed");
         active = cn.getBoolean("active");
         finished = cn.getBoolean("finished");
         if (cn.contains("level"))
             level = cn.getInt("level");
         data.clear();
-        cn.getList("clues", Constants.NBT.TAG_COMPOUND).stream().map(t -> (CompoundNBT) t).forEach(e -> data.put(e.getInt("id"), ClueDatas.read(e.getCompound("data"))));
+        cn.getList("clues", Constants.NBT.TAG_COMPOUND).stream().map(t -> (CompoundTag) t).forEach(e -> data.put(e.getInt("id"), ClueDatas.read(e.getCompound("data"))));
         // rs=FHResearch.getResearch(cn.getInt("research"));
     }
 
@@ -336,7 +336,7 @@ public class ResearchData implements IEnvironment {
         return true;
     }
 
-    public void read(PacketBuffer pb) {
+    public void read(FriendlyByteBuf pb) {
         committed = pb.readVarInt();
         boolean[] bs = SerializeUtil.readBooleans(pb);
         active = bs[0];
@@ -347,8 +347,8 @@ public class ResearchData implements IEnvironment {
         getResearch().sendProgressPacket(parent.getHolder(), this);
     }
 
-    public CompoundNBT serialize() {
-        CompoundNBT cnbt = new CompoundNBT();
+    public CompoundTag serialize() {
+        CompoundTag cnbt = new CompoundTag();
         cnbt.putLong("committed", committed);
         cnbt.putBoolean("active", active);
         cnbt.putBoolean("finished", finished);
@@ -382,7 +382,7 @@ public class ResearchData implements IEnvironment {
         this.level = level;
     }
 
-    public void write(PacketBuffer pb) {
+    public void write(FriendlyByteBuf pb) {
         pb.writeVarInt(committed);
         SerializeUtil.writeBooleans(pb, active, finished);
     }

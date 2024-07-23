@@ -3,14 +3,14 @@ package com.teammoeg.frostedheart.util.io.marshaller;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 
 public class NBTInstanceMarshaller<T> implements Marshaller {
-	final BiConsumer<T,CompoundNBT> from;
-	final Function<T,CompoundNBT> to;
+	final BiConsumer<T,CompoundTag> from;
+	final Function<T,CompoundTag> to;
 	final Class<T> objcls;
-	public NBTInstanceMarshaller(Class<T> objcls, BiConsumer<T,CompoundNBT> from, Function<T, CompoundNBT> to) {
+	public NBTInstanceMarshaller(Class<T> objcls, BiConsumer<T,CompoundTag> from, Function<T, CompoundTag> to) {
 		super();
 		this.from = from;
 		this.to = to;
@@ -18,15 +18,15 @@ public class NBTInstanceMarshaller<T> implements Marshaller {
 	}
 
 	@Override
-	public INBT toNBT(Object o) {
+	public Tag toNBT(Object o) {
 		return to.apply((T) o);
 	}
 
 	@Override
-	public Object fromNBT(INBT nbt) {
-		if(!(nbt instanceof CompoundNBT))return null;
+	public Object fromNBT(Tag nbt) {
+		if(!(nbt instanceof CompoundTag))return null;
 		T ret=ClassInfo.createInstance(objcls);
-		from.accept(ret, (CompoundNBT) nbt);
+		from.accept(ret, (CompoundTag) nbt);
 		return ret;
 		
 	}

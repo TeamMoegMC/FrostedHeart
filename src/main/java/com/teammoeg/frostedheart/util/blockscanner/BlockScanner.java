@@ -9,15 +9,15 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.PlantBlockHelper;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.NetherVines;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ColumnPos;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ColumnPos;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.Level;
 
 /**
  * 提供了一些扫描方块用的静态方法
@@ -32,14 +32,14 @@ public class BlockScanner {
     protected Set<BlockPos> scanningBlocks;
     protected Set<BlockPos> scanningBlocksNew = new HashSet<>();
     protected final BlockPos startPos;
-    public final World world;
+    public final Level world;
     public static final Direction[] PLANE_DIRECTIONS= {Direction.SOUTH, Direction.EAST, Direction.NORTH, Direction.WEST};
     public static final Predicate<BlockPos> PREDICATE_TRUE = (useless)->true;
     public static final Predicate<BlockPos> PREDICATE_FALSE = (useless)->false;
     public static final Consumer<BlockPos> CONSUMER_NULL = (useless)->{};
     public boolean isValid = true;//it can be changed in methods, scan should stop when this is false
 
-    public BlockScanner (World world, BlockPos startPos){
+    public BlockScanner (Level world, BlockPos startPos){
         this.startPos = startPos;
         this.scanningBlocks = new HashSet<>();
         this.scanningBlocks.add(startPos);
@@ -48,7 +48,7 @@ public class BlockScanner {
         this.scannedBlocks = new HashSet<>();
     }
 
-    public BlockScanner(World world, BlockPos startPos, Set<BlockPos> scannedBlocks){
+    public BlockScanner(Level world, BlockPos startPos, Set<BlockPos> scannedBlocks){
         this.startPos = startPos;
         this.scanningBlocks = new HashSet<>();
         this.scanningBlocks.add(startPos);
@@ -81,7 +81,7 @@ public class BlockScanner {
     }
 
 
-    public static int countBlocksAdjacent(World world, BlockPos startPos, Block targetBlock){
+    public static int countBlocksAdjacent(Level world, BlockPos startPos, Block targetBlock){
         return countBlocksAdjacent(startPos, (pos)->world.getBlockState(pos).getBlock() == targetBlock);
     }
 
@@ -155,7 +155,7 @@ public class BlockScanner {
     /**
      * 找到与startPos相邻的一个门方块。若有多个门，则只返回其中一个的坐标。
      */
-    public static BlockPos getDoorAdjacent(World world, BlockPos startPos){
+    public static BlockPos getDoorAdjacent(Level world, BlockPos startPos){
         for(Direction direction : Direction.values()){
             if(world.getBlockState(startPos.relative(direction)).is(BlockTags.DOORS)){
                 return startPos.relative(direction);
@@ -235,7 +235,7 @@ public class BlockScanner {
     /**
      * @return  返回pos对应方块x,z方向相邻的4个方块，以及这4个方块向上一格和向下一格的8个方块
      */
-    public static ArrayList<BlockPos> getPossibleFloor(IWorld world, BlockPos pos){
+    public static ArrayList<BlockPos> getPossibleFloor(LevelAccessor world, BlockPos pos){
         ArrayList<BlockPos> blocks = new ArrayList<>();
         blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos));
         blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.above()));
@@ -273,19 +273,19 @@ public class BlockScanner {
      * 默认本身为完整方块，且上方两格为均空气的方块为合法的地板。若有不同需求请用上面那个方法
      */
     public ArrayList<BlockPos> getFloorAdjacent(BlockPos pos){
-        return getFloorAdjacent(pos, (BlockPos)-> world.getBlockState(pos).isRedstoneConductor(world, pos) && PlantBlockHelper.isValidGrowthState(world.getBlockState(pos.above())) && PlantBlockHelper.isValidGrowthState(world.getBlockState(pos.above(2))));
+        return getFloorAdjacent(pos, (BlockPos)-> world.getBlockState(pos).isRedstoneConductor(world, pos) && NetherVines.isValidGrowthState(world.getBlockState(pos.above())) && NetherVines.isValidGrowthState(world.getBlockState(pos.above(2))));
     }
 
     public boolean isOpenAir(BlockPos pos){
-        return countBlocksAbove(pos, blockPos -> !PlantBlockHelper.isValidGrowthState(world.getBlockState(blockPos))).getValue();
+        return countBlocksAbove(pos, blockPos -> !NetherVines.isValidGrowthState(world.getBlockState(blockPos))).getValue();
     }
 
     /**
      * 判断一个方块是否是空气/无碰撞箱方块/梯子
      */
-    public static boolean isAirOrLadder(World world, BlockPos pos) {
+    public static boolean isAirOrLadder(Level world, BlockPos pos) {
         BlockState state = world.getBlockState(pos);
-        return PlantBlockHelper.isValidGrowthState(state) || state.is(BlockTags.CLIMBABLE) || state.getBlockSupportShape(world, pos).isEmpty();
+        return NetherVines.isValidGrowthState(state) || state.is(BlockTags.CLIMBABLE) || state.getBlockSupportShape(world, pos).isEmpty();
     }
 
     /**

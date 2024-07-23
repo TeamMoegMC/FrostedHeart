@@ -29,23 +29,23 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.UseAction;
-import net.minecraft.tags.ITag;
-import net.minecraft.tags.TagCollectionManager;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.tags.Tag;
+import net.minecraft.tags.SerializationTags;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.Level;
 
-import net.minecraft.item.Item.Properties;
+import net.minecraft.world.item.Item.Properties;
 
 public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
     public final static int max_fuel = 800;
@@ -79,11 +79,11 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
-        list.add(TranslateUtils.translateTooltip("handstove.add_fuel").withStyle(TextFormatting.GRAY));
+    public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> list, TooltipFlag flag) {
+        list.add(TranslateUtils.translateTooltip("handstove.add_fuel").withStyle(ChatFormatting.GRAY));
         if (getAshAmount(stack) >= 800)
-            list.add(TranslateUtils.translateTooltip("handstove.trash_ash").withStyle(TextFormatting.RED));
-        list.add(TranslateUtils.translateTooltip("handstove.fuel", getFuelAmount(stack) / 2).withStyle(TextFormatting.GRAY));
+            list.add(TranslateUtils.translateTooltip("handstove.trash_ash").withStyle(ChatFormatting.RED));
+        list.add(TranslateUtils.translateTooltip("handstove.fuel", getFuelAmount(stack) / 2).withStyle(ChatFormatting.GRAY));
     }
 
 
@@ -94,8 +94,8 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 
 
     @Override
-    public UseAction getUseAnimation(ItemStack stack) {
-        return UseAction.EAT;
+    public UseAnim getUseAnimation(ItemStack stack) {
+        return UseAnim.EAT;
     }
 
     @Override
@@ -110,29 +110,29 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
     }
 
     @Override
-    public ActionResult<ItemStack> use(World worldIn, PlayerEntity playerIn, Hand handIn) {
+    public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
         ItemStack stack = playerIn.getItemInHand(handIn);
-        ActionResult<ItemStack> FAIL = new ActionResult<>(ActionResultType.FAIL, stack);
+        InteractionResultHolder<ItemStack> FAIL = new InteractionResultHolder<>(InteractionResult.FAIL, stack);
         if (getAshAmount(playerIn.getItemInHand(handIn)) >= 800) {
             playerIn.startUsingItem(handIn);
-            return new ActionResult<>(ActionResultType.SUCCESS, stack);
+            return new InteractionResultHolder<>(InteractionResult.SUCCESS, stack);
         }
         return FAIL;
     }
 
     @Override
-    public ItemStack finishUsingItem(ItemStack stack, World worldIn, LivingEntity entityLiving) {
+    public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
         int ash = getAshAmount(stack);
         if (ash >= 800) {
-            ITag<Item> item = TagCollectionManager.getInstance().getItems().getTag(ashitem);
+            Tag<Item> item = SerializationTags.getInstance().getItems().getTag(ashitem);
             setAshAmount(stack, ash - 800);
             if (getFuelAmount(stack) < 2)
                 stack.getTag().putInt("CustomModelData", 0);
             else
                 stack.getTag().putInt("CustomModelData", 1);
-            if (item != null && entityLiving instanceof PlayerEntity && !item.getValues().isEmpty()) {
+            if (item != null && entityLiving instanceof Player && !item.getValues().isEmpty()) {
                 ItemStack ret = new ItemStack(item.getValues().get(0));
-                FHUtils.giveItem((PlayerEntity) entityLiving, ret);
+                FHUtils.giveItem((Player) entityLiving, ret);
             }
         }
         return stack;

@@ -33,58 +33,58 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Widget;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.item.crafting.Ingredient.IItemList;
-import net.minecraft.item.crafting.Ingredient.SingleItemList;
-import net.minecraft.item.crafting.Ingredient.TagList;
-import net.minecraft.tags.ITag;
-import net.minecraft.tags.TagCollectionManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.Ingredient.Value;
+import net.minecraft.world.item.crafting.Ingredient.ItemValue;
+import net.minecraft.world.item.crafting.Ingredient.TagValue;
+import net.minecraft.tags.Tag;
+import net.minecraft.tags.SerializationTags;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.crafting.CompoundIngredient;
 import net.minecraftforge.common.crafting.NBTIngredient;
 
 public class IngredientEditor extends BaseEditDialog {
-    public static final Editor<SingleItemList> EDITOR_ITEMLIST = (p, l, v, c) -> SelectItemStackDialog.EDITOR.open(p, l, (v == null || v.item == null) ? new ItemStack(Items.AIR) : v.item, s -> {
+    public static final Editor<ItemValue> EDITOR_ITEMLIST = (p, l, v, c) -> SelectItemStackDialog.EDITOR.open(p, l, (v == null || v.item == null) ? new ItemStack(Items.AIR) : v.item, s -> {
         s = s.copy();
         s.setCount(1);
-        c.accept(new SingleItemList(s));
+        c.accept(new ItemValue(s));
     });
-    public static final Editor<TagList> EDITOR_TAGLIST = (p, l, v, c) -> {
+    public static final Editor<TagValue> EDITOR_TAGLIST = (p, l, v, c) -> {
 
 
         String vx = "";
         if (v != null) {
-            ITag<Item> tag = v.tag;
+            Tag<Item> tag = v.tag;
             try {
-                vx = TagCollectionManager.getInstance().getItems().getIdOrThrow(tag).toString();
+                vx = SerializationTags.getInstance().getItems().getIdOrThrow(tag).toString();
             } catch (Exception ex) {
                 FHMain.LOGGER.error("Error creating editor tag list",ex);
             }
         }
-        EditBtnDialog.EDITOR_ITEM_TAGS.open(p, l, vx, s -> c.accept(new TagList(TagCollectionManager.getInstance().getItems().getTagOrEmpty(new ResourceLocation(s)))));
+        EditBtnDialog.EDITOR_ITEM_TAGS.open(p, l, vx, s -> c.accept(new TagValue(SerializationTags.getInstance().getItems().getTagOrEmpty(new ResourceLocation(s)))));
     };
-    public static final Editor<IItemList> EDITOR_LIST = (p, l, v, c) -> {
+    public static final Editor<Value> EDITOR_LIST = (p, l, v, c) -> {
         if (v == null)
             new EditorSelector<>(p, l, c).addEditor("Tag", EDITOR_TAGLIST).addEditor("Stack", EDITOR_ITEMLIST).open();
-        else if (v instanceof TagList)
-            EDITOR_TAGLIST.open(p, l, (TagList) v, c::accept);
-        else if (v instanceof SingleItemList)
-            EDITOR_ITEMLIST.open(p, l, (SingleItemList) v, c::accept);
+        else if (v instanceof TagValue)
+            EDITOR_TAGLIST.open(p, l, (TagValue) v, c::accept);
+        else if (v instanceof ItemValue)
+            EDITOR_ITEMLIST.open(p, l, (ItemValue) v, c::accept);
     };
 
 
-    public static final Editor<Collection<IItemList>> EDITOR_LIST_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, EDITOR_LIST, IngredientEditor::getText, c).open();
+    public static final Editor<Collection<Value>> EDITOR_LIST_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, EDITOR_LIST, IngredientEditor::getText, c).open();
     public static final Editor<Ingredient> EDITOR_SIMPLE = (p, l, v, c) -> {
-        IItemList vx = null;
+        Value vx = null;
         if (v != null)
             vx = v.values[0];
         EDITOR_LIST.open(p, l, vx, e -> c.accept(Ingredient.fromValues(Stream.of(e))));
     };
     public static final Editor<Ingredient> EDITOR_MULTIPLE = (p, l, v, c) -> {
-        Collection<IItemList> list = null;
+        Collection<Value> list = null;
         if (v != null) list = Arrays.asList(v.values);
         EDITOR_LIST_LIST.open(p, l, list, e -> c.accept(Ingredient.fromValues(e.stream())));
     };
@@ -107,8 +107,8 @@ public class IngredientEditor extends BaseEditDialog {
     };
     public static final Editor<Ingredient> TAG_EDITOR = (p, l, v, c) -> {
 
-        if (v != null && v.values.length > 0 && v.values[0] instanceof TagList)
-            EDITOR_TAGLIST.open(p, l, (TagList) v.values[0], e -> c.accept(Ingredient.fromValues(Stream.of(e))));
+        if (v != null && v.values.length > 0 && v.values[0] instanceof TagValue)
+            EDITOR_TAGLIST.open(p, l, (TagValue) v.values[0], e -> c.accept(Ingredient.fromValues(Stream.of(e))));
         else
             EDITOR_TAGLIST.open(p, l, null, e -> c.accept(Ingredient.fromValues(Stream.of(e))));
     };
@@ -170,15 +170,15 @@ public class IngredientEditor extends BaseEditDialog {
 
     }
 
-    private static String getText(IItemList li) {
-        if (li instanceof TagList) {
+    private static String getText(Value li) {
+        if (li instanceof TagValue) {
             try {
-                return "Tag:" + TagCollectionManager.getInstance().getItems().getIdOrThrow(((TagList) li).tag);
+                return "Tag:" + SerializationTags.getInstance().getItems().getIdOrThrow(((TagValue) li).tag);
             } catch (Exception ex) {
                 return "Unknown tag list";
             }
-        } else if (li instanceof SingleItemList)
-            return "Item: " + ((SingleItemList) li).item.getHoverName().getString();
+        } else if (li instanceof ItemValue)
+            return "Item: " + ((ItemValue) li).item.getHoverName().getString();
         else
             return "Unknown item list";
     }

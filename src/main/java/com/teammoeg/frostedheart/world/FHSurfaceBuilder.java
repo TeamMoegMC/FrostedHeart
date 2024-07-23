@@ -21,20 +21,20 @@ package com.teammoeg.frostedheart.world;
 
 import com.cannolicatfish.rankine.init.RankineBlocks;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.util.registry.WorldGenRegistries;
-import net.minecraft.world.gen.surfacebuilders.ConfiguredSurfaceBuilder;
-import net.minecraft.world.gen.surfacebuilders.ISurfaceBuilderConfig;
-import net.minecraft.world.gen.surfacebuilders.SurfaceBuilder;
-import net.minecraft.world.gen.surfacebuilders.SurfaceBuilderConfig;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.data.BuiltinRegistries;
+import net.minecraft.world.level.levelgen.surfacebuilders.ConfiguredSurfaceBuilder;
+import net.minecraft.world.level.levelgen.surfacebuilders.SurfaceBuilderConfiguration;
+import net.minecraft.world.level.levelgen.surfacebuilders.SurfaceBuilder;
+import net.minecraft.world.level.levelgen.surfacebuilders.SurfaceBuilderBaseConfiguration;
 
 public class FHSurfaceBuilder {
-    public static final ConfiguredSurfaceBuilder<SurfaceBuilderConfig> VOLCANIC = register("volcanic",
-            SurfaceBuilder.DEFAULT.configured(new SurfaceBuilderConfig(RankineBlocks.BASALTIC_TUFF.get().defaultBlockState(), Blocks.STONE.defaultBlockState(), Blocks.GRAVEL.defaultBlockState())));
+    public static final ConfiguredSurfaceBuilder<SurfaceBuilderBaseConfiguration> VOLCANIC = register("volcanic",
+            SurfaceBuilder.DEFAULT.configured(new SurfaceBuilderBaseConfiguration(RankineBlocks.BASALTIC_TUFF.get().defaultBlockState(), Blocks.STONE.defaultBlockState(), Blocks.GRAVEL.defaultBlockState())));
 
-    public static final ConfiguredSurfaceBuilder<SurfaceBuilderConfig> FROZEN_FOREST = register("frozen_forest",
+    public static final ConfiguredSurfaceBuilder<SurfaceBuilderBaseConfiguration> FROZEN_FOREST = register("frozen_forest",
             SurfaceBuilder.DEFAULT.configured(
-                    new SurfaceBuilderConfig(
+                    new SurfaceBuilderBaseConfiguration(
                             Blocks.GRASS_BLOCK.defaultBlockState(),//表层方块
                             Blocks.STONE.defaultBlockState(),//表层下方块
                             Blocks.SAND.defaultBlockState()//水下方块
@@ -42,7 +42,7 @@ public class FHSurfaceBuilder {
             )
     );
 
-    private static <SC extends ISurfaceBuilderConfig> ConfiguredSurfaceBuilder<SC> register(String name, ConfiguredSurfaceBuilder<SC> configuredSurfaceBuilder) {
-        return WorldGenRegistries.register(WorldGenRegistries.CONFIGURED_SURFACE_BUILDER, name, configuredSurfaceBuilder);
+    private static <SC extends SurfaceBuilderConfiguration> ConfiguredSurfaceBuilder<SC> register(String name, ConfiguredSurfaceBuilder<SC> configuredSurfaceBuilder) {
+        return BuiltinRegistries.register(BuiltinRegistries.CONFIGURED_SURFACE_BUILDER, name, configuredSurfaceBuilder);
     }
 }

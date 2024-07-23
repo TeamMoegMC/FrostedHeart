@@ -6,13 +6,13 @@ import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
 
-import net.minecraft.client.gui.RenderComponentsUtil;
-import net.minecraft.util.IReorderingProcessor;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.components.ComponentRenderUtils;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.network.chat.Component;
 
 public class GLTextContent extends GLLayerContent{
 	
-	public GLTextContent(ITextComponent text, float x, float y, float w, float h, boolean b) {
+	public GLTextContent(Component text, float x, float y, float w, float h, boolean b) {
 		super(x, y, w, h);
 		this.shadow = b;
 		this.text = text;
@@ -22,7 +22,7 @@ public class GLTextContent extends GLLayerContent{
 	public RenderableContent copy() {
 		return new GLTextContent(text,x, y, width, height, z, shadow,resize);
 	}
-	public GLTextContent(ITextComponent text,float x, float y, float width, float height, int z, boolean shadow, float resize) {
+	public GLTextContent(Component text,float x, float y, float width, float height, int z, boolean shadow, float resize) {
 		super(x, y, width, height, z);
 		this.shadow = shadow;
 		this.resize = resize;
@@ -39,11 +39,11 @@ public class GLTextContent extends GLLayerContent{
 	public void setShadow(boolean shadow) {
 		this.shadow = shadow;
 	}
-	public ITextComponent text;
+	public Component text;
 	@Override
 	public void renderContents(RenderParams params) {
 		
-		List<IReorderingProcessor> li=RenderComponentsUtil.wrapComponents(text,params.getContentWidth() ,params.getMinecraft().font);
+		List<FormattedCharSequence> li=ComponentRenderUtils.wrapComponents(text,params.getContentWidth() ,params.getMinecraft().font);
 
 		int y=0;
 		int ty=params.getContentY();
@@ -54,7 +54,7 @@ public class GLTextContent extends GLLayerContent{
 		 params.getMatrixStack().pushPose();
 		 params.getMatrixStack().translate(params.getContentX(),ty, 0);
 		 params.getMatrixStack().scale(resize, resize, resize);
-		for(IReorderingProcessor i:li) {
+		for(FormattedCharSequence i:li) {
 			int w=params.getMinecraft().font.width(ClientScene.toString(i));
 			int tx=0;
 			if(centerH) {

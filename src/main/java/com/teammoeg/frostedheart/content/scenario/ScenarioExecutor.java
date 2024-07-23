@@ -39,10 +39,10 @@ import com.teammoeg.frostedheart.util.client.Point;
 import com.teammoeg.frostedheart.util.client.Rect;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.math.vector.Vector3f;
-import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import com.mojang.math.Vector3f;
+import net.minecraft.core.Vec3i;
 
 public class ScenarioExecutor<T> {
     private static class MethodInfo<T> implements ScenarioMethod<T> {
@@ -192,7 +192,7 @@ public class ScenarioExecutor<T> {
     		castParamType(r,p,int.class,s->s+"y",0,n),
     		castParamType(r,p,int.class,s->s+"z",0,n)
     		));
-    	addTypeAdapter(Vector3i.class,(r,n,p)->new Vector3i(
+    	addTypeAdapter(Vec3i.class,(r,n,p)->new Vec3i(
     		castParamType(r,p,int.class,s->s+"x",0,n),
     		castParamType(r,p,int.class,s->s+"y",0,n),
     		castParamType(r,p,int.class,s->s+"z",0,n)
@@ -202,7 +202,7 @@ public class ScenarioExecutor<T> {
     		castParamType(r,p,float.class,s->s+"y",0f,n),
     		castParamType(r,p,float.class,s->s+"z",0f,n)
     		));
-    	addTypeAdapter(Vector3d.class,(r,n,p)->new Vector3d(
+    	addTypeAdapter(Vec3.class,(r,n,p)->new Vec3(
     		castParamType(r,p,double.class,s->s+"x",0d,n),
     		castParamType(r,p,double.class,s->s+"y",0d,n),
     		castParamType(r,p,double.class,s->s+"z",0d,n)

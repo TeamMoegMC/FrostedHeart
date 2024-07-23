@@ -25,16 +25,16 @@ import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import gloridifice.watersource.registry.EffectRegistry;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.EffectType;
-import net.minecraft.potion.Effects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.effect.MobEffects;
 
-public class AnemiaEffect extends Effect {
+public class AnemiaEffect extends MobEffect {
 
-    public AnemiaEffect(EffectType typeIn, int liquidColorIn) {
+    public AnemiaEffect(MobEffectCategory typeIn, int liquidColorIn) {
         super(typeIn, liquidColorIn);
     }
 
@@ -50,9 +50,9 @@ public class AnemiaEffect extends Effect {
 
     @Override
     public void applyEffectTick(LivingEntity entityLivingBaseIn, int amplifier) {
-        entityLivingBaseIn.addEffect(FHUtils.noHeal(new EffectInstance(Effects.MOVEMENT_SLOWDOWN, 100, amplifier)));
-        entityLivingBaseIn.addEffect(FHUtils.noHeal(new EffectInstance(Effects.DIG_SLOWDOWN, 100, amplifier)));
-        entityLivingBaseIn.addEffect(FHUtils.noHeal(new EffectInstance(Effects.WEAKNESS, 100, amplifier * 2)));
-        entityLivingBaseIn.addEffect(FHUtils.noHeal(new EffectInstance(EffectRegistry.THIRST, 100, amplifier * 2)));
+        entityLivingBaseIn.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, amplifier)));
+        entityLivingBaseIn.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, amplifier)));
+        entityLivingBaseIn.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.WEAKNESS, 100, amplifier * 2)));
+        entityLivingBaseIn.addEffect(FHUtils.noHeal(new MobEffectInstance(EffectRegistry.THIRST, 100, amplifier * 2)));
     }
 }

@@ -44,9 +44,9 @@ import com.teammoeg.frostedheart.content.research.gui.editor.SelectItemStackDial
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.Widget;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.resources.ResourceLocation;
 
 public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     private static class Building extends EffectEditor<EffectBuilding> {
@@ -140,7 +140,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
                 e.item = null;
                 e.itemStack = s;
             }));
-            add(new OpenEditorButton<>(this, "Edit Recipe IDs", EditListDialog.STRING_LIST, e.unlocks.stream().map(IRecipe::getId).map(String::valueOf).collect(Collectors.toList()), s -> {
+            add(new OpenEditorButton<>(this, "Edit Recipe IDs", EditListDialog.STRING_LIST, e.unlocks.stream().map(Recipe::getId).map(String::valueOf).collect(Collectors.toList()), s -> {
                 e.setList(s);
                 e.item = null;
                 e.itemStack = null;

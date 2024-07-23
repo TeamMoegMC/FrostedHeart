@@ -39,8 +39,8 @@ import com.teammoeg.frostedheart.content.scenario.runner.target.IScenarioTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.util.evaluator.Evaluator;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
 
 public abstract class ScenarioVM implements IScenarioThread{
 	protected Scenario sp;//current scenario
@@ -84,7 +84,7 @@ public abstract class ScenarioVM implements IScenarioThread{
         return nodeNum;
     }
 
-	public abstract PlayerEntity getPlayer() ;
+	public abstract Player getPlayer() ;
 
 	public void jump(String scenario,String label) {
 		if(scenario==null)
@@ -290,7 +290,7 @@ public abstract class ScenarioVM implements IScenarioThread{
 			cparams.put(i.getKey(), sb.toString());
 		}
 		if(macros.containsKey(name)) {
-			CompoundNBT mp=new CompoundNBT();
+			CompoundTag mp=new CompoundTag();
 			for(Entry<String, String> e:cparams.entrySet()) {
 				mp.putString(e.getKey(), e.getValue());
 			}

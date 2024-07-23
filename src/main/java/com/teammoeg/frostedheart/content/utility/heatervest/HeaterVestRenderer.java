@@ -27,25 +27,25 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.IEntityRenderer;
-import net.minecraft.client.renderer.entity.layers.LayerRenderer;
-import net.minecraft.client.renderer.entity.model.BipedModel;
+import net.minecraft.client.renderer.entity.RenderLayerParent;
+import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.ModList;
 
-public class HeaterVestRenderer<E extends LivingEntity, M extends BipedModel<E>> extends LayerRenderer<E, M> {
+public class HeaterVestRenderer<E extends LivingEntity, M extends HumanoidModel<E>> extends RenderLayer<E, M> {
     public static boolean rendersAssigned = false;
     public static Map<UUID, Pair<ItemStack, Integer>> HEATER_VEST_PLAYERS = new HashMap<>();
 
@@ -53,14 +53,14 @@ public class HeaterVestRenderer<E extends LivingEntity, M extends BipedModel<E>>
         HEATER_VEST_PLAYERS.put(living.getUUID(), Pair.of(heaterVest, 5));
     }
 
-    public HeaterVestRenderer(IEntityRenderer<E, M> entityRendererIn) {
+    public HeaterVestRenderer(RenderLayerParent<E, M> entityRendererIn) {
         super(entityRendererIn);
     }
 
     @Override
     @ParametersAreNonnullByDefault
-    public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, E living, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-        ItemStack chest = living.getItemBySlot(EquipmentSlotType.CHEST);
+    public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, E living, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+        ItemStack chest = living.getItemBySlot(EquipmentSlot.CHEST);
         if (!chest.isEmpty() && (chest.getItem() == FHItems.heater_vest.get() || ItemNBTHelper.hasKey(chest, FHUtils.NBT_HEATER_VEST))) {
             ItemStack heaterVest = chest.getItem() == FHItems.heater_vest.get() ? chest : ItemNBTHelper.getItemStack(chest, FHUtils.NBT_HEATER_VEST);
             addWornHeaterVest(living, heaterVest);
@@ -81,13 +81,13 @@ public class HeaterVestRenderer<E extends LivingEntity, M extends BipedModel<E>>
         }
     }
 
-    private void renderHeaterVest(ItemStack heaterVest, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, E living, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+    private void renderHeaterVest(ItemStack heaterVest, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, E living, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         if (!heaterVest.isEmpty()) {
-            BipedModel<E> model = FHItems.heater_vest.get().getArmorModel(living, heaterVest, EquipmentSlotType.CHEST, null);
+            HumanoidModel<E> model = FHItems.heater_vest.get().getArmorModel(living, heaterVest, EquipmentSlot.CHEST, null);
             if (model != null) {
                 model.setupAnim(living, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
                 RenderType type = model.renderType(
-                        new ResourceLocation(FHItems.heater_vest.get().getArmorTexture(heaterVest, living, EquipmentSlotType.CHEST, null))
+                        new ResourceLocation(FHItems.heater_vest.get().getArmorTexture(heaterVest, living, EquipmentSlot.CHEST, null))
                 );
                 model.renderToBuffer(matrixStackIn, bufferIn.getBuffer(type), packedLightIn, OverlayTexture.NO_OVERLAY, 1F, 1F, 1F, 1F);
             }

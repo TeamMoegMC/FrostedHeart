@@ -23,13 +23,13 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Random;
 
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.CampfireCookingRecipe;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CampfireCookingRecipe;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
 public class CampfireDefrostRecipe extends CampfireCookingRecipe implements DefrostRecipe {
@@ -41,7 +41,7 @@ public class CampfireDefrostRecipe extends CampfireCookingRecipe implements Defr
         }
 
         @Override
-        public void toNetwork(PacketBuffer buffer, CampfireDefrostRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buffer, CampfireDefrostRecipe recipe) {
             super.toNetwork(buffer, recipe);
             buffer.writeFloat(recipe.getExperience());
             buffer.writeVarInt(recipe.getCookingTime());
@@ -49,7 +49,7 @@ public class CampfireDefrostRecipe extends CampfireCookingRecipe implements Defr
 
     }
 
-    public static RegistryObject<IRecipeSerializer<CampfireDefrostRecipe>> SERIALIZER;
+    public static RegistryObject<RecipeSerializer<CampfireDefrostRecipe>> SERIALIZER;
 
     public static Map<ResourceLocation, CampfireDefrostRecipe> recipeList = Collections.emptyMap();
 
@@ -64,7 +64,7 @@ public class CampfireDefrostRecipe extends CampfireCookingRecipe implements Defr
     }
 
     @Override
-    public ItemStack assemble(IInventory inv) {
+    public ItemStack assemble(Container inv) {
         if (iss.length == 0)
             return ItemStack.EMPTY;
         return iss[recipeRNG.nextInt(getIss().length)].copy();
@@ -83,7 +83,7 @@ public class CampfireDefrostRecipe extends CampfireCookingRecipe implements Defr
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getSerializer() {
         return SERIALIZER.get();
     }
 

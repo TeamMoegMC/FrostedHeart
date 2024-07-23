@@ -32,12 +32,12 @@ import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.block.BlockState;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.UUIDCodec;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ColumnPos;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.SerializableUUID;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ColumnPos;
+import net.minecraft.server.level.ServerLevel;
 
 /**
  * Town data for a whole team.
@@ -53,9 +53,9 @@ public class TeamTownData implements SpecialData{
 			CodecUtil.defaultValue(CodecUtil.mapCodec(TownResourceType.CODEC, Codec.INT), ImmutableMap.of()).fieldOf("resource").forGetter(o->o.resources),
 			CodecUtil.defaultValue(CodecUtil.mapCodec(TownResourceType.CODEC, Codec.INT), ImmutableMap.of()).fieldOf("backupResource").forGetter(o->o.backupResources),
 			CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "data", TownWorkerData.CODEC), ImmutableMap.of()).fieldOf("blocks").forGetter(o->o.blocks),
-			CodecUtil.defaultValue(CodecUtil.mapCodec("uuid",UUIDCodec.CODEC,"data",Resident.CODEC), ImmutableMap.of()).fieldOf("residents").forGetter(o->o.residents),
-            CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "residents", Codec.list(UUIDCodec.CODEC)), ImmutableMap.of()).fieldOf("workAssignStatus").forGetter(o->o.workAssigningStatus),
-            CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "residents", Codec.list(UUIDCodec.CODEC)), ImmutableMap.of()).fieldOf("houseAllocatingStatus").forGetter(o->o.houseAllocatingStatus)
+			CodecUtil.defaultValue(CodecUtil.mapCodec("uuid",SerializableUUID.CODEC,"data",Resident.CODEC), ImmutableMap.of()).fieldOf("residents").forGetter(o->o.residents),
+            CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "residents", Codec.list(SerializableUUID.CODEC)), ImmutableMap.of()).fieldOf("workAssignStatus").forGetter(o->o.workAssigningStatus),
+            CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "residents", Codec.list(SerializableUUID.CODEC)), ImmutableMap.of()).fieldOf("houseAllocatingStatus").forGetter(o->o.houseAllocatingStatus)
 
     ).apply(t, TeamTownData::new));
     /**
@@ -115,7 +115,7 @@ public class TeamTownData implements SpecialData{
      *
      * @param world server world instance
      */
-    public void tick(ServerWorld world) {
+    public void tick(ServerLevel world) {
         removeNonTownBlocks(world);
         PriorityQueue<TownWorkerData> pq = new PriorityQueue<>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
         for(TownWorkerData workerData : blocks.values()){
@@ -149,7 +149,7 @@ public class TeamTownData implements SpecialData{
         itt.finishWork();
     }
 
-    public void tickMorning(ServerWorld world){
+    public void tickMorning(ServerLevel world){
         this.removeNonTownBlocks(world);
         this.checkOccupiedAreaOverlap(world);
         this.residentAllocatingCheck(world);
@@ -157,28 +157,28 @@ public class TeamTownData implements SpecialData{
         this.assignWork();
     }
 
-    void removeNonTownBlocks(ServerWorld world) {
+    void removeNonTownBlocks(ServerLevel world) {
         blocks.values().removeIf(v -> {
             BlockPos pos = v.getPos();
             v.loaded = false;
             if (world.hasChunkAt(pos)) {
                 v.loaded = true;
                 BlockState bs = world.getBlockState(pos);
-                TileEntity te = Utils.getExistingTileEntity(world, pos);
+                BlockEntity te = Utils.getExistingTileEntity(world, pos);
                 TownWorkerType twt = v.getType();
                 return twt.getBlock() != bs.getBlock() || !(te instanceof TownTileEntity);
             }
             return false;
         });
     }
-    void removeAllInvalidTiles(ServerWorld world){
+    void removeAllInvalidTiles(ServerLevel world){
         blocks.values().removeIf(v -> {
             BlockPos pos = v.getPos();
             v.loaded = false;
             if (world.hasChunkAt(pos)) {
                 v.loaded = true;
                 BlockState bs = world.getBlockState(pos);
-                TileEntity te = Utils.getExistingTileEntity(world, pos);
+                BlockEntity te = Utils.getExistingTileEntity(world, pos);
                 TownWorkerType twt = v.getType();
                 return twt.getBlock() != bs.getBlock() || !(te instanceof TownTileEntity) || !(((TownTileEntity)te).isWorkValid());
             }
@@ -191,7 +191,7 @@ public class TeamTownData implements SpecialData{
 
 	}
 
-    private void checkOccupiedAreaOverlap(ServerWorld world){
+    private void checkOccupiedAreaOverlap(ServerLevel world){
         //removeNonTownBlocks(world);
         Collection<TownWorkerData> workerDataCollection =  new ArrayList<>(blocks.values());
         List<TownWorkerData> workerDataList = new ArrayList<>(workerDataCollection);
@@ -240,7 +240,7 @@ public class TeamTownData implements SpecialData{
     //1 每天早上检查存在blocks里面的TownTileEntity是否存在
     // 2 每天早上检查house/workAllocatingStatus里面不存在的blocks，以及大于上限的Resident
     // 3 在house/workAllocatingStatus里面添加存在于blocks里面的合适worker
-    private void residentAllocatingCheck(ServerWorld world){
+    private void residentAllocatingCheck(ServerLevel world){
         ArrayList<TownWorkerData> availableWorkersConsumingResidents = new ArrayList<>();
         ArrayList<TownWorkerData> availableHouse = new ArrayList<>();
 

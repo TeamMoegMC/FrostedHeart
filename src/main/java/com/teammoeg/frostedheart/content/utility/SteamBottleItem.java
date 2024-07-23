@@ -29,24 +29,24 @@ import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
 
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import net.minecraft.advancements.CriteriaTriggers;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.UseAction;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.stats.Stats;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.core.NonNullList;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.Level;
 
-import net.minecraft.item.Item.Properties;
+import net.minecraft.world.item.Item.Properties;
 
 public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, ITempAdjustFood, EnergyHelper.IIEEnergyItem {
 
@@ -56,14 +56,14 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
         String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
-        tooltip.add(TranslateUtils.translateTooltip("meme.steam_bottle").withStyle(TextFormatting.GRAY));
-        tooltip.add(TranslateUtils.translateTooltip("steam_stored", stored).withStyle(TextFormatting.GOLD));
+        tooltip.add(TranslateUtils.translateTooltip("meme.steam_bottle").withStyle(ChatFormatting.GRAY));
+        tooltip.add(TranslateUtils.translateTooltip("steam_stored", stored).withStyle(ChatFormatting.GOLD));
     }
 
     @Override
-    public void fillItemCategory(ItemGroup group, NonNullList<ItemStack> items) {
+    public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> items) {
         if (this.allowdedIn(group)) {
             ItemStack is = new ItemStack(this);
             this.receiveEnergy(is, this.getMaxEnergyStored(is), false);
@@ -87,8 +87,8 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
      * returns the action that specifies what animation to play when the items is being used
      */
     @Override
-    public UseAction getUseAnimation(ItemStack stack) {
-        return UseAction.DRINK;
+    public UseAnim getUseAnimation(ItemStack stack) {
+        return UseAnim.DRINK;
     }
 
 
@@ -101,7 +101,7 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
     }
 
     @Override
-    public void onCraftedBy(ItemStack stack, World worldIn, PlayerEntity playerIn) {
+    public void onCraftedBy(ItemStack stack, Level worldIn, Player playerIn) {
         super.onCraftedBy(stack, worldIn, playerIn);
         this.receiveEnergy(stack, 240, false);
     }
@@ -111,9 +111,9 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
      * {@link #onItemUse}.
      */
     @Override
-    public ActionResult<ItemStack> use(World worldIn, PlayerEntity playerIn, Hand handIn) {
+    public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
         playerIn.startUsingItem(handIn);
-        return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getItemInHand(handIn));
+        return new InteractionResultHolder<>(InteractionResult.SUCCESS, playerIn.getItemInHand(handIn));
     }
 
     /**
@@ -121,14 +121,14 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
      * the Item before the action is complete.
      */
     @Override
-    public ItemStack finishUsingItem(ItemStack stack, World worldIn, LivingEntity entityLiving) {
-        PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
+    public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
+        Player entityplayer = entityLiving instanceof Player ? (Player) entityLiving : null;
         if (entityplayer == null || !entityplayer.abilities.instabuild) {
             stack.shrink(1);
         }
 
-        if (entityplayer instanceof ServerPlayerEntity) {
-            CriteriaTriggers.CONSUME_ITEM.trigger((ServerPlayerEntity) entityplayer, stack);
+        if (entityplayer instanceof ServerPlayer) {
+            CriteriaTriggers.CONSUME_ITEM.trigger((ServerPlayer) entityplayer, stack);
         }
 
         if (entityplayer != null) {

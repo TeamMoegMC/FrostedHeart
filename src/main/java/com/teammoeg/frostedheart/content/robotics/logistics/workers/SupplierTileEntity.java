@@ -9,20 +9,20 @@ import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.inventory.ItemStackHelper;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.items.ItemStackHandler;
 
 @SuppressWarnings("unused")
-public class SupplierTileEntity extends FHBaseTileEntity implements TaskableLogisticStorage,ItemChangeListener,ITickableTileEntity {
+public class SupplierTileEntity extends FHBaseTileEntity implements TaskableLogisticStorage,ItemChangeListener,TickableBlockEntity {
 	ItemStackHandler container=new ItemStackHandler(27);
 	ItemHandlerListener handler=new ItemHandlerListener(container,this);
 	LogisticTask[] tasks=new LogisticTask[27];
 
-	public SupplierTileEntity(TileEntityType<? extends TileEntity> type) {
+	public SupplierTileEntity(BlockEntityType<? extends BlockEntity> type) {
 		super(type);
 	}
 
@@ -39,14 +39,14 @@ public class SupplierTileEntity extends FHBaseTileEntity implements TaskableLogi
 	}
 
 	@Override
-	public void readCustomNBT(CompoundNBT arg0, boolean arg1) {
+	public void readCustomNBT(CompoundTag arg0, boolean arg1) {
 		if(!arg1) {
 			arg0.put("container", container.serializeNBT());
 		}
 	}
 
 	@Override
-	public void writeCustomNBT(CompoundNBT arg0, boolean arg1) {
+	public void writeCustomNBT(CompoundTag arg0, boolean arg1) {
 		container.deserializeNBT(arg0.getCompound("container"));
 	}
 

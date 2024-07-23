@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.network.FHDrawingDeskOperationPacket;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 public class ClientResearchGame implements Consumer<ResearchGame> {
     ResearchGame rg;

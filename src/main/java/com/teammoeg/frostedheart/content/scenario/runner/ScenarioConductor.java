@@ -37,11 +37,11 @@ import com.teammoeg.frostedheart.content.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.ListTag;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 
@@ -89,12 +89,12 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 		acts.put(global, new Act(this,global));
 	}
 
-    public void init(ServerPlayerEntity player) {
+    public void init(ServerPlayer player) {
     	if(!isInited())inited=true;
 		this.player = player.getUUID();
 	}
 
-    public ScenarioConductor(ServerPlayerEntity player) {
+    public ScenarioConductor(ServerPlayer player) {
 		super();
 		this.player = player.getUUID();
 		setCurrentAct(new Act(this,init));
@@ -300,7 +300,7 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 	private void setCurrentAct(Act currentAct) {
 		this.currentAct = currentAct;
 	}
-    public static LazyOptional<ScenarioConductor> getCapability(@Nullable PlayerEntity player) {
+    public static LazyOptional<ScenarioConductor> getCapability(@Nullable Player player) {
     	return FHCapabilities.SCENARIO.getCapability(player);
     }
 
@@ -308,12 +308,12 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 		return inited;
 	}
 	@Override
-	public void save(CompoundNBT data, boolean isPacket) {
+	public void save(CompoundTag data, boolean isPacket) {
     	if(varData.snapshot==null)
     		data.put("vars", varData.extraData);
     	else
     		data.put("vars", varData.snapshot);
-    	ListNBT lacts=new ListNBT();
+    	ListTag lacts=new ListTag();
     	for(Act v:acts.values()) {
     		if(v.name.isAct())
     			lacts.add(v.save());
@@ -325,13 +325,13 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
     	}
 	}
 	@Override
-	public void load(CompoundNBT data, boolean isPacket) {
+	public void load(CompoundTag data, boolean isPacket) {
 		// TODO Auto-generated method stub
 		varData.extraData=data.getCompound("vars");
     	varData.snapshot=varData.extraData;
-    	ListNBT lacts=data.getList("acts", Constants.NBT.TAG_COMPOUND);
-    	for(INBT v:lacts) {
-    		Act i=new Act(this,(CompoundNBT) v);
+    	ListTag lacts=data.getList("acts", Constants.NBT.TAG_COMPOUND);
+    	for(Tag v:lacts) {
+    		Act i=new Act(this,(CompoundTag) v);
     		acts.put(i.name, i);
     	}
     	lastQuest=new ActNamespace(data.getString("chapter"),data.getString("act"));
@@ -339,7 +339,7 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
     	//if(currentAct==null)
     	//currentAct=acts.get(empty);
 	}
-	public ServerPlayerEntity getPlayer() {
+	public ServerPlayer getPlayer() {
         return FHTeamDataManager.getServer().getPlayerList().getPlayer(player);
     }
     public String getLang() {

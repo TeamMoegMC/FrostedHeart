@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.scenario.client.dialog;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.LayerManager;
@@ -11,9 +11,9 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParam
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	public float dialogX=0.1f;
@@ -31,7 +31,7 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		ticksSinceLastSpace=20;
 		return escapes<=0;
 	}
-	public ImageScreenDialog(ITextComponent titleIn) {
+	public ImageScreenDialog(Component titleIn) {
 		super(titleIn);
 	}
 	@Override
@@ -57,7 +57,7 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 
 	}
 
-	public void renderBackground(MatrixStack matrixStack) {
+	public void renderBackground(PoseStack matrixStack) {
 		
 		
 	}
@@ -74,7 +74,7 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	}
 	float lpartialTicks;
 	float cpartialTicks;
-	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 		//AbstractGui.fill(matrixStack, 0, 0, width, height, 0xffffffff);
 		partialTicks=handlePt(partialTicks);
 		this.width=ClientScene.fromRelativeXW(1);
@@ -87,7 +87,7 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		RenderSystem.enableAlphaTest();
 		RenderSystem.enableBlend();
 		if(!chatlist.isEmpty())
-			AbstractGui.fill(matrixStack, ClientScene.fromRelativeXW(dialogX)-2,ClientScene.fromRelativeYH(dialogY)-2, ClientScene.fromRelativeXW(dialogW)+2+ClientScene.fromRelativeXW(dialogX), h+ClientScene.fromRelativeYH(dialogY)-2, 0xC0000000);
+			GuiComponent.fill(matrixStack, ClientScene.fromRelativeXW(dialogX)-2,ClientScene.fromRelativeYH(dialogY)-2, ClientScene.fromRelativeXW(dialogW)+2+ClientScene.fromRelativeXW(dialogX), h+ClientScene.fromRelativeYH(dialogY)-2, 0xC0000000);
 		//this.fillGradient(matrixStack, ClientScene.fromRelativeXW(dialogX)-2, ClientScene.fromRelativeYH(dialogY)-2, ClientScene.fromRelativeXW(dialogW)+4, h, 0xC0101010, 0xD0101010);
 		for(TextInfo i:chatlist) {
 			int x=(ClientScene.fromRelativeXW(dialogW)-i.getCurLen())/2+ClientScene.fromRelativeXW(dialogX)+12;
