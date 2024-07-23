@@ -38,7 +38,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fmllegacy.RegistryObject;
+import net.minecraftforge.registries.RegistryObject;
 
 public class ShapelessCopyDataRecipe extends ShapelessRecipe implements FinishedRecipe {
     public static class Serializer extends IERecipeSerializer<ShapelessCopyDataRecipe> {

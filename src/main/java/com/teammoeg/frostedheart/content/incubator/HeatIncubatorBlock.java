@@ -20,9 +20,7 @@
 package com.teammoeg.frostedheart.content.incubator;
 
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraftforge.fmllegacy.RegistryObject;
-
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+import net.minecraftforge.registries.RegistryObject;
 
 public class HeatIncubatorBlock extends IncubatorBlock {
 

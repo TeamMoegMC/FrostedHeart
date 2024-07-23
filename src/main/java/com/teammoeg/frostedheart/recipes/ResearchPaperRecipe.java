@@ -29,7 +29,7 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fmllegacy.RegistryObject;
+import net.minecraftforge.registries.RegistryObject;
 
 public class ResearchPaperRecipe extends IESerializableRecipe {
     public static class Serializer extends IERecipeSerializer<ResearchPaperRecipe> {

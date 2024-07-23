@@ -52,7 +52,7 @@ import net.minecraft.world.food.Foods;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.fmllegacy.RegistryObject;
+import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -101,7 +101,7 @@ public class FHItems {
     public static RegistryObject<Item> rubbing_tool = register("rubbing_tool",n->new RubbingTool(createProps().durability(5).setNoRepair()));
     public static RegistryObject<Item> rubbing_pad = register("rubbing_pad",n->new FHBaseItem( createProps().stacksTo(1)));
     public static RegistryObject<Item> buff_coat = register("buff_coat",n->new FHBaseItem( createProps().defaultDurability(384)).setRepairItem(raw_hide.get()));
-    public static RegistryObject<Item> gambeson = register("gambeson",n->new FHBaseItem( createProps().defaultDurability(384)).setRepairItem(Items.WHITE_WOOL));
+    public static RegistryObject<Item> gambeson = register("gambeson", n->new FHBaseItem( createProps().defaultDurability(384)).setRepairItem(Items.WHITE_WOOL));
     public static RegistryObject<Item> kelp_lining = register("kelp_lining",n->new FHBaseItem( createProps().defaultDurability(256)).setRepairItem(Items.KELP));
     public static RegistryObject<Item> straw_lining = register("straw_lining",n->new FHBaseItem( createProps().defaultDurability(256)));
     public static RegistryObject<Item> hay_boots = register("hay_boots",n->new FHBaseArmorItem( FHArmorMaterial.HAY, EquipmentSlot.FEET, createProps()));

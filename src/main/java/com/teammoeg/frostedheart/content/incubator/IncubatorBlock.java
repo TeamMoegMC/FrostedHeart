@@ -40,9 +40,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fmllegacy.RegistryObject;
-
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+import net.minecraftforge.registries.RegistryObject;
 
 public class IncubatorBlock extends FHGuiBlock {
     static DirectionProperty HORIZONTAL_FACING = BlockStateProperties.HORIZONTAL_FACING;

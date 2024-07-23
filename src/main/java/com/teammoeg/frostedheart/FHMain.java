@@ -23,6 +23,7 @@ import java.io.File;
 
 import javax.annotation.Nonnull;
 
+import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -74,8 +75,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
-import net.minecraftforge.fmlserverevents.FMLServerAboutToStartEvent;
-import net.minecraftforge.fmlserverevents.FMLServerStoppedEvent;
+import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 @Mod(FHMain.MODID)
@@ -206,7 +206,7 @@ public class FHMain {
         }
     }
 
-    private void serverStart(final FMLServerAboutToStartEvent event) {
+    private void serverStart(final ServerAboutToStartEvent event) {
         new FHTeamDataManager(event.getServer());
         FHResearch.load();
         FHTeamDataManager.INSTANCE.load();
@@ -214,7 +214,7 @@ public class FHMain {
     }
 
     @SuppressWarnings("unused")
-    private void serverStop(final FMLServerStoppedEvent event) {
+    private void serverStop(final ServerStoppedEvent event) {
         FHTeamDataManager.INSTANCE = null;
     }
 

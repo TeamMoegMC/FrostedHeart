@@ -35,7 +35,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fmllegacy.RegistryObject;
+import net.minecraftforge.registries.RegistryObject;
 
 public class ModifyDamageRecipe extends ShapelessRecipe {
     public static class Serializer extends IERecipeSerializer<ModifyDamageRecipe> {

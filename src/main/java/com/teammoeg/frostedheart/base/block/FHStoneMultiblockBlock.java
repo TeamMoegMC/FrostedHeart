@@ -32,7 +32,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fmllegacy.RegistryObject;
+import net.minecraftforge.registries.RegistryObject;
 
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 

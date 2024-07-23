@@ -28,7 +28,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.core.Registry;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraftforge.common.BiomeManager;
-import net.minecraftforge.fmllegacy.RegistryObject;
+import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
