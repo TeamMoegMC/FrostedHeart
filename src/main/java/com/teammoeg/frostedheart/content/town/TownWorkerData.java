@@ -24,8 +24,9 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import net.minecraft.nbt.ByteNBT;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTDynamicOps;
+import net.minecraft.nbt.INBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
@@ -41,6 +42,8 @@ import java.util.Objects;
  * The work data is especially important, as it stores additional data that
  * should be synced with the entire town. It is an interface between the town
  * and the worker.
+ * Work data consist of 2 parts: tileEntity and town. tileEntity stores the
+ * data from the tile entity, and town stores the data from the town.
  * <p>
  * There can be multiple worker data with the same worker type.
  */
@@ -51,6 +54,7 @@ public class TownWorkerData {
 		CompoundNBT.CODEC.fieldOf("data").forGetter(o->o.workData),
 		Codec.INT.fieldOf("priority").forGetter(o->o.priority)
 		).apply(t,TownWorkerData::new));
+    public static final String KEY_IS_OVERLAPPED = "isOverlapped";
     private TownWorkerType type;
     private BlockPos pos;
     private CompoundNBT workData;
@@ -92,8 +96,41 @@ public class TownWorkerData {
 
     public void fromTileEntity(TownTileEntity te) {
         type = te.getWorkerType();
-        workData = te.getWorkData();
+        workData = new CompoundNBT();
+        workData.put("tileEntity", te.getWorkData());
         priority = te.getPriority();
+    }
+
+    public void toTileEntity(TownTileEntity te){
+        te.setWorkData(workData.getCompound("town"));
+    }
+
+    public void updateFromTileEntity(ServerWorld world){
+        if(loaded){
+            TownTileEntity te = (TownTileEntity) world.getTileEntity(pos);
+            if(te != null){
+                workData.put("tileEntity", te.getWorkData());
+            }
+        }
+    }
+
+    public void toTileEntity(ServerWorld world){
+        if(loaded){
+            TownTileEntity te = (TownTileEntity) world.getTileEntity(pos);
+            if(te != null){
+                te.setWorkData(workData.getCompound("town"));
+            }
+        }
+    }
+
+    public void setDataFromTown(String key, INBT nbt){
+        CompoundNBT nbt0 = workData.getCompound("town");
+        nbt0.put(key, nbt);
+        workData.put("town", nbt0);
+    }
+
+    public void setOverlappingState(boolean b){
+        this.setDataFromTown(KEY_IS_OVERLAPPED, b? ByteNBT.ONE: ByteNBT.ZERO);
     }
 
     public BlockPos getPos() {
@@ -125,6 +162,7 @@ public class TownWorkerData {
         return data;
     }
 
+    @Deprecated
     public void setData(ServerWorld w) {
         if (loaded) {
             TileEntity te = Utils.getExistingTileEntity(w, pos);
@@ -136,13 +174,6 @@ public class TownWorkerData {
 
     public void setWorkData(CompoundNBT workData) {
         this.workData = workData;
-    }
-
-    public void setWorkData(ServerWorld w){
-        TileEntity te = Utils.getExistingTileEntity(w, pos);
-        if (te instanceof TownTileEntity) {
-            this.workData = ((AbstractTownWorkerTileEntity) te).getWorkData();
-        }
     }
 
     public boolean work(Town resource) {

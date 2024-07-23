@@ -30,7 +30,6 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
     private int chest;
     private double temperature;
     private double rating;
-    private boolean addedToSchedulerQueue = false;
 
     public MineBaseTileEntity(){
         super(FHTileTypes.MINE_BASE.get());
@@ -51,9 +50,7 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
                 startPos = startPos.down();
             }
             MineBaseBlockScanner scanner = new MineBaseBlockScanner(world, startPos);
-            //FHMain.LOGGER.info("New scanner created; Start pos: " + startPos);
             if(scanner.scan()){
-                //FHMain.LOGGER.info("scan successful");
                 this.area = scanner.getArea();
                 this.volume = scanner.getVolume();
                 this.rack = scanner.getRack();
@@ -100,16 +97,11 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
     public CompoundNBT getWorkData() {
         CompoundNBT nbt = getBasicWorkData();
         if(this.isValid()) {
-            nbt.putInt("volume", this.volume);
-            nbt.putInt("area", this.area);
-            nbt.putInt("rack", this.rack);
-            nbt.putInt("chest", this.chest);
             ListNBT list = new ListNBT();
             for (BlockPos pos : this.linkedMines) {
                 list.add(LongNBT.valueOf(pos.toLong()));
             }
             nbt.put("linkedMines", list);
-            nbt.putDouble("temperature", this.temperature);
             nbt.putDouble("rating", this.rating);
         }
         return nbt;
@@ -118,15 +110,6 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
     @Override
     public void setWorkData(CompoundNBT data) {
         setBasicWorkData(data);
-        if(this.isValid()) {
-            this.volume = data.getInt("volume");
-            this.area = data.getInt("area");
-            this.rack = data.getInt("rack");
-            this.chest = data.getInt("chest");
-            this.linkedMines.clear();
-            ListNBT list = data.getList("linkedMines", TAG_LONG);
-            list.forEach(nbt-> this.linkedMines.add( BlockPos.fromLong( ((LongNBT)nbt).getLong() )));
-        }
     }
 
     public double getRating(){
@@ -138,9 +121,6 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
     }
     public int getVolume(){
         return this.isWorkValid()?this.volume:0;
-    }
-    public Set<BlockPos> getLinkedMines() {
-        return this.linkedMines;
     }
     public int getArea() {
         return this.isWorkValid() ? this.area : 0;
@@ -155,17 +135,14 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
         return this.isWorkValid() ? this.temperature : 0;
     }
 
-    public void setLinkedBaseToAllLinkedMines(){
-        if(this.isWorkValid()) {
-            for(BlockPos minePos:this.linkedMines){
-                assert world != null;
-                MineTileEntity mineTileEntity = (MineTileEntity) world.getTileEntity(minePos);
-                if(mineTileEntity!=null)
-                    mineTileEntity.setLinkedBase(this.getPos(),this.getRating());
-            }
+
+    //由于需要寻找Mine，MineBase可能需要扫描更远的位置，因此设置需要加载的区块更远。
+    @Override
+    public void refresh_safe(){
+        if(world != null && world.isAreaLoaded(pos,63)){
+            this.refresh();
         }
     }
-
 
     public void refresh() {
         if(this.isOccupiedAreaOverlapped()){
@@ -175,12 +152,6 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
         this.workerState = isStructureValid() ? TownWorkerState.VALID : TownWorkerState.NOT_VALID;
     }
 
-    // ScheduledTaskTileEntity
-    @Override
-    public void executeTask() {
-        this.refresh();
-        this.setLinkedBaseToAllLinkedMines();
-    }
     @Override
     public boolean isStillValid() {
         return this.isWorkValid();

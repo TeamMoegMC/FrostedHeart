@@ -28,16 +28,23 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.SpecialData;
 import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.content.town.mine.MineBaseTileEntity;
+import com.teammoeg.frostedheart.content.town.mine.MineTileEntity;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.thermopolium.Contents;
 import net.minecraft.block.BlockState;
+import net.minecraft.nbt.ByteNBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.LongNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.UUIDCodec;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ColumnPos;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.util.Constants;
 
 /**
  * Town data for a whole team.
@@ -120,7 +127,8 @@ public class TeamTownData implements SpecialData{
         PriorityQueue<TownWorkerData> pq = new PriorityQueue<>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
         for(TownWorkerData workerData : blocks.values()){
             if(world.isAreaLoaded(workerData.getPos(), 1)){
-                workerData.setWorkData(world);
+                workerData.toTileEntity(world);
+                workerData.updateFromTileEntity(world);
             }
             if(AbstractTownWorkerTileEntity.isValid(workerData)){
                 //由于已经使用了自动刷新城镇方块的功能，已经不需要通过isWorkValid来在获取合法性信息时刷新。
@@ -146,15 +154,17 @@ public class TeamTownData implements SpecialData{
         for (TownWorkerData t : pq) {
             t.lastWork(itt);
         }
-        for (TownWorkerData t : pq) {
-            t.setData(world);
-        }
+        //for (TownWorkerData t : pq) {
+        //    t.setData(world);
+        //}
+        //在目前的运行逻辑中，work方法不会改变任何应存储在TileEntity中的信息，因此暂时将此内容放在所有work之前。
         itt.finishWork();
     }
 
     public void tickMorning(ServerWorld world){
         this.removeNonTownBlocks(world);
         this.checkOccupiedAreaOverlap(world);
+        this.connectMineAndBase();
         this.residentAllocatingCheck(world);
         this.allocateHouse();
         this.assignWork();
@@ -229,17 +239,10 @@ public class TeamTownData implements SpecialData{
             }
         }
         for(TownWorkerData data : workerDataCollection){
-            if(overlappedWorkers.contains(data)){
-                if(AbstractTownWorkerTileEntity.getWorkerState(data) != TownWorkerState.OCCUPIED_AREA_OVERLAPPED){
-                    TownTileEntity townTileEntity = (TownTileEntity) Utils.getExistingTileEntity(world, data.getPos());
-                    townTileEntity.setWorkerState(TownWorkerState.OCCUPIED_AREA_OVERLAPPED);
-                }
-            }else if(AbstractTownWorkerTileEntity.getWorkerState(data) != TownWorkerState.OCCUPIED_AREA_OVERLAPPED){
-                TownTileEntity townTileEntity = (TownTileEntity) Utils.getExistingTileEntity(world, data.getPos());
-                townTileEntity.setWorkerState(TownWorkerState.NOT_INITIALIZED);
-            }
+            data.setOverlappingState(overlappedWorkers.contains(data));
         }
     }
+
     //1 每天早上检查存在blocks里面的TownTileEntity是否存在
     // 2 每天早上检查house/workAllocatingStatus里面不存在的blocks，以及大于上限的Resident
     // 3 在house/workAllocatingStatus里面添加存在于blocks里面的合适worker
@@ -317,6 +320,25 @@ public class TeamTownData implements SpecialData{
             workAssigningStatus.get(pos).forEach(uuid -> residents.get(uuid).setHousePos(null));
             workAssigningStatus.remove(pos);
         }
+    }
+
+    private void connectMineAndBase(){
+        ArrayList<TownWorkerData> mineBases = new ArrayList<>();
+        HashMap<TownWorkerData, BlockPos> mineMap = new HashMap<>();        //TownWorkerData: mine, BlockPos: basePos
+        for(TownWorkerData data : blocks.values()){
+            if(data.getType() == TownWorkerType.MINE_BASE && AbstractTownWorkerTileEntity.isValid(data)){
+                mineBases.add(data);
+            }
+            if(data.getType() == TownWorkerType.MINE){
+                mineMap.put(data, null);
+            }
+        }
+        for(TownWorkerData mineBase : mineBases){
+            mineBase.getWorkData().getCompound("tileEntity").getList("linkedMines", Constants.NBT.TAG_LONG).stream()
+                    .map(nbt -> BlockPos.fromLong(((LongNBT)nbt).getLong()))
+                    .forEach(pos -> mineMap.put(blocks.get(pos), mineBase.getPos()));
+        }
+        mineMap.forEach(MineTileEntity::setLinkedBase);
     }
 
     private void allocateHouse(){
