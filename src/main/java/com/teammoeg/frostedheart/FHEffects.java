@@ -30,12 +30,12 @@ import com.teammoeg.frostedheart.effects.SaunaEffect;
 
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
-import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.fmllegacy.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHEffects {
-    public static final DeferredRegister<MobEffect> EFFECTS=DeferredRegister.create(ForgeRegistries.POTIONS, FHMain.MODID);
+    public static final DeferredRegister<MobEffect> EFFECTS=DeferredRegister.create(ForgeRegistries.MOB_EFFECTS, FHMain.MODID);
     public static final RegistryObject<MobEffect> HYPOTHERMIA = register("hypothermia",()->  new HypothermiaEffect(MobEffectCategory.HARMFUL, 0x57BDE8));
     public static final RegistryObject<MobEffect> HYPERTHERMIA = register("hyperthermia",()->  new HyperthermiaEffect(MobEffectCategory.HARMFUL, 0xFF9800));
     public static final RegistryObject<MobEffect> NYCTALOPIA = register("nyctalopia",()->  new BaseEffect(MobEffectCategory.HARMFUL, 0x787dab) {

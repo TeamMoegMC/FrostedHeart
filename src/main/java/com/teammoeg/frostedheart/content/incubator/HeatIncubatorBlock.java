@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.incubator;
 
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.fmllegacy.RegistryObject;
 
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 

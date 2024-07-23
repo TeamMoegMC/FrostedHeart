@@ -55,13 +55,13 @@ import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerTileEntity
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.fmllegacy.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHTileTypes {
     public static final DeferredRegister<BlockEntityType<?>> REGISTER = DeferredRegister.create(
-            ForgeRegistries.TILE_ENTITIES, FHMain.MODID);
+            ForgeRegistries.BLOCK_ENTITIES, FHMain.MODID);
     private static final CreateRegistrate REGISTRATE = FHMain.registrate.get()
         .itemGroup(() -> FHMain.itemGroup);
     public static final RegistryObject<BlockEntityType<T1GeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(

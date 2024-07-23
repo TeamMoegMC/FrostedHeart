@@ -36,7 +36,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.fmllegacy.RegistryObject;
 
 public class GeneratorSteamRecipe extends IESerializableRecipe {
     public static class Serializer extends IERecipeSerializer<GeneratorSteamRecipe> {

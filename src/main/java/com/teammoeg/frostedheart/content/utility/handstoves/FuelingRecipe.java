@@ -34,7 +34,7 @@ import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.fmllegacy.RegistryObject;
 
 public class FuelingRecipe extends CustomRecipe {
     public static class Serializer extends IERecipeSerializer<FuelingRecipe> {
