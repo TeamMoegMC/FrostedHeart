@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.utility;
 
-import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.*;
-
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -95,7 +93,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
         super.addInformation(stack, worldIn, tooltip, flagIn);
         tooltip.add(TranslateUtils.translateTooltip("meme.thermos").mergeStyle(TextFormatting.GRAY));
 
-        if (stack.getChildTag(FLUID_NBT_KEY) != null) {
+        if (stack.getChildTag(FluidHandlerItemStack.FLUID_NBT_KEY) != null) {
             FluidUtil.getFluidHandler(stack).ifPresent(f -> {
                 tooltip.add(((TextComponent) f.getFluidInTank(0).getDisplayName()).appendString(String.format(": %d / %dmB", f.getFluidInTank(0).getAmount(), capacity)).mergeStyle(TextFormatting.GRAY));
                 FluidStack fs = f.getFluidInTank(0);

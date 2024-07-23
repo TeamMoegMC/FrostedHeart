@@ -7,6 +7,7 @@ import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.PlantBlockHelper;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ColumnPos;
@@ -17,8 +18,6 @@ import se.mickelus.tetra.blocks.rack.RackBlock;
 import java.util.AbstractMap;
 import java.util.HashSet;
 import java.util.Set;
-
-import static net.minecraft.block.PlantBlockHelper.isAir;
 
 //矿场基地需要有铁轨连通到矿场，因此不做任何的密封性要求，有个顶就行。
 public class MineBaseBlockScanner extends FloorBlockScanner {
@@ -56,7 +55,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
                 rack++;
                 return false;
             }
-            if(isAir(world.getBlockState(pos1))){
+            if(PlantBlockHelper.isAir(world.getBlockState(pos1))){
                 temperature += ChunkHeatData.getTemperature(world, pos1);
                 counter_for_temperature++;
                 return false;
@@ -114,7 +113,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
         @Override
         public boolean isValidFloor(BlockPos pos){
             if(world.getBlockState(pos).isIn(BlockTags.RAILS)){
-                return isAir(world.getBlockState(pos.up()));
+                return PlantBlockHelper.isAir(world.getBlockState(pos.up()));
             } else if(world.getBlockState(pos).getBlock().equals(FHBlocks.mine.get())){
                 linkedMines.add(pos);
             }

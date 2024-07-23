@@ -19,9 +19,6 @@
 
 package com.teammoeg.frostedheart;
 
-import static com.simibubi.create.foundation.data.ModelGen.*;
-import static com.teammoeg.frostedheart.util.constants.FHProps.*;
-
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -30,6 +27,7 @@ import com.simibubi.create.AllTags;
 import com.simibubi.create.Create;
 import com.simibubi.create.content.AllSections;
 import com.simibubi.create.foundation.data.CreateRegistrate;
+import com.simibubi.create.foundation.data.ModelGen;
 import com.simibubi.create.repack.registrate.util.entry.BlockEntry;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
@@ -69,6 +67,7 @@ import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerBlock;
 
+import com.teammoeg.frostedheart.util.constants.FHProps;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -95,25 +94,25 @@ public class FHBlocks {
 		
 		return register(name, block,name,item);
 	}
-    public static RegistryObject<Block> generator_brick = register("generator_brick",()->new FHBaseBlock(stoneDecoProps));
+    public static RegistryObject<Block> generator_brick = register("generator_brick",()->new FHBaseBlock(FHProps.stoneDecoProps));
 
-    public static RegistryObject<Block> blood_block = register("blood_block", ()->new bloodBlock(stoneProps));
-    public static RegistryObject<Block> bone_block = register("bone_block", ()->new BoneBlock(grassProps));
+    public static RegistryObject<Block> blood_block = register("blood_block", ()->new bloodBlock(FHProps.stoneProps));
+    public static RegistryObject<Block> bone_block = register("bone_block", ()->new BoneBlock(FHProps.grassProps));
     //public static RegistryObject<Block> desk = register("desk", ()->new DeskBlock(redStoneProps));
-    public static RegistryObject<Block> small_garage = register("small_garage", ()->new SmallGarage(grassProps));
-    public static RegistryObject<Block> package_block = register("package_block", ()->new PackageBlock(woodenProps));
-    public static RegistryObject<Block> pebble_block = register("pebble_block", ()->new PebbleBlock(stoneProps));
-    public static RegistryObject<Block> odd_mark = register("odd_mark", ()->new OddMark(redStoneProps));
-    public static RegistryObject<Block> wooden_box = register("wooden_box", ()->new WoodenBox(woodenProps));
-    public static RegistryObject<Block> generator_core_t1 = register("generator_core_t1",()->new FHBaseBlock( stoneDecoProps));
-    public static RegistryObject<Block> generator_amplifier_r1 = register("generator_amplifier_r1",()->new FHBaseBlock( stoneDecoProps));
-    public static RegistryObject<Block> rye_block = register("rye_block",()->new RyeBlock( WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, cropProps));
-    public static RegistryObject<Block> wolfberry_bush_block = register("wolfberry_bush_block",()->new WolfBerryBushBlock( WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, berryBushBlocks, 2),"wolfberries",t->new FoodBlockItem(t, FHItems.createProps(), FHFoods.WOLFBERRIES));
-    public static RegistryObject<Block> white_turnip_block = register("white_turnip_block",()->new WhiteTurnipBlock( WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, cropProps),(block) -> new FoodBlockItem(block, new Item.Properties().group(FHMain.itemGroup), FHFoods.WHITE_TURNIP));
-    public static RegistryObject<Block> copper_gravel = register("copper_gravel",()->new FHBaseBlock( ore_gravel));
+    public static RegistryObject<Block> small_garage = register("small_garage", ()->new SmallGarage(FHProps.grassProps));
+    public static RegistryObject<Block> package_block = register("package_block", ()->new PackageBlock(FHProps.woodenProps));
+    public static RegistryObject<Block> pebble_block = register("pebble_block", ()->new PebbleBlock(FHProps.stoneProps));
+    public static RegistryObject<Block> odd_mark = register("odd_mark", ()->new OddMark(FHProps.redStoneProps));
+    public static RegistryObject<Block> wooden_box = register("wooden_box", ()->new WoodenBox(FHProps.woodenProps));
+    public static RegistryObject<Block> generator_core_t1 = register("generator_core_t1",()->new FHBaseBlock(FHProps.stoneDecoProps));
+    public static RegistryObject<Block> generator_amplifier_r1 = register("generator_amplifier_r1",()->new FHBaseBlock(FHProps.stoneDecoProps));
+    public static RegistryObject<Block> rye_block = register("rye_block",()->new RyeBlock( WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps));
+    public static RegistryObject<Block> wolfberry_bush_block = register("wolfberry_bush_block",()->new WolfBerryBushBlock( WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.berryBushBlocks, 2),"wolfberries", t->new FoodBlockItem(t, FHItems.createProps(), FHFoods.WOLFBERRIES));
+    public static RegistryObject<Block> white_turnip_block = register("white_turnip_block",()->new WhiteTurnipBlock( WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps),(block) -> new FoodBlockItem(block, new Item.Properties().group(FHMain.itemGroup), FHFoods.WHITE_TURNIP));
+    public static RegistryObject<Block> copper_gravel = register("copper_gravel",()->new FHBaseBlock(FHProps.ore_gravel));
     public static RegistryObject<Block> relic_chest = register("relic_chest", RelicChestBlock::new);
-    public static RegistryObject<Block> incubator1 = register("incubator",()->new IncubatorBlock( stoneDecoProps, FHTileTypes.INCUBATOR));
-    public static RegistryObject<Block> incubator2 = register("heat_incubator",()->new HeatIncubatorBlock( metalDecoProps, FHTileTypes.INCUBATOR2));
+    public static RegistryObject<Block> incubator1 = register("incubator",()->new IncubatorBlock(FHProps.stoneDecoProps, FHTileTypes.INCUBATOR));
+    public static RegistryObject<Block> incubator2 = register("heat_incubator",()->new HeatIncubatorBlock(FHProps.metalDecoProps, FHTileTypes.INCUBATOR2));
   //public static RegistryObject<Block> access_control = register("access_control",()->new AccessControlBlock());
   //public static RegistryObject<Block> gate = register("gate", ()->new FHBaseBlock(AbstractBlock.Properties.from(Blocks.BEDROCK)));
     public static RegistryObject<Block> fluorite_ore =register("fluorite_ore",()->new FHOreBlock( RankineBlocks.DEF_ORE.harvestLevel(3)));
@@ -216,7 +215,7 @@ public class FHBlocks {
             .notSolid())
         .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
         .item()
-        .transform(customItemModel())
+        .transform(ModelGen.customItemModel())
         .register();
     public static void init() {
     	Create.registrate().addToSection(steam_core, AllSections.KINETICS);

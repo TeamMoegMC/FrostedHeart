@@ -3,13 +3,11 @@ package com.teammoeg.frostedheart.content.town;
 import net.minecraft.nbt.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ColumnPos;
+import net.minecraftforge.common.util.Constants;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
-import static net.minecraftforge.common.util.Constants.NBT.TAG_INT;
-import static net.minecraftforge.common.util.Constants.NBT.TAG_LONG;
 
 public class OccupiedArea {
     private final Set<ColumnPos> occupiedArea;
@@ -145,11 +143,11 @@ public class OccupiedArea {
 
     public static OccupiedArea fromNBT(CompoundNBT nbt){
         Set<ColumnPos> occupiedArea = new HashSet<>();
-        ListNBT list = nbt.getList("occupiedAreaList", TAG_LONG);
+        ListNBT list = nbt.getList("occupiedAreaList", Constants.NBT.TAG_LONG);
         list.forEach(nbt1 -> {
             occupiedArea.add(new ColumnPos(BlockPos.unpackX(((LongNBT) nbt1).getLong()), BlockPos.unpackZ(((LongNBT) nbt1).getLong())));
         });
-        list = nbt.getList("maxOccupiedCoordinates", TAG_INT);
+        list = nbt.getList("maxOccupiedCoordinates", Constants.NBT.TAG_INT);
         Iterator<INBT> iterator = list.iterator();
         int maxX = ((IntNBT) (iterator.next()) ).getInt();
         int maxZ = ((IntNBT) (iterator.next()) ).getInt();

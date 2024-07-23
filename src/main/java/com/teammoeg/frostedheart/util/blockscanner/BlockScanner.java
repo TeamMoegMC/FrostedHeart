@@ -1,7 +1,5 @@
 package com.teammoeg.frostedheart.util.blockscanner;
 
-import static net.minecraft.block.PlantBlockHelper.*;
-
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,6 +11,7 @@ import java.util.function.Predicate;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.PlantBlockHelper;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
@@ -274,11 +273,11 @@ public class BlockScanner {
      * 默认本身为完整方块，且上方两格为均空气的方块为合法的地板。若有不同需求请用上面那个方法
      */
     public ArrayList<BlockPos> getFloorAdjacent(BlockPos pos){
-        return getFloorAdjacent(pos, (BlockPos)-> world.getBlockState(pos).isNormalCube(world, pos) && isAir(world.getBlockState(pos.up())) && isAir(world.getBlockState(pos.up(2))));
+        return getFloorAdjacent(pos, (BlockPos)-> world.getBlockState(pos).isNormalCube(world, pos) && PlantBlockHelper.isAir(world.getBlockState(pos.up())) && PlantBlockHelper.isAir(world.getBlockState(pos.up(2))));
     }
 
     public boolean isOpenAir(BlockPos pos){
-        return countBlocksAbove(pos, blockPos -> !isAir(world.getBlockState(blockPos))).getValue();
+        return countBlocksAbove(pos, blockPos -> !PlantBlockHelper.isAir(world.getBlockState(blockPos))).getValue();
     }
 
     /**
@@ -286,7 +285,7 @@ public class BlockScanner {
      */
     public static boolean isAirOrLadder(World world, BlockPos pos) {
         BlockState state = world.getBlockState(pos);
-        return isAir(state) || state.isIn(BlockTags.CLIMBABLE) || state.getCollisionShape(world, pos).isEmpty();
+        return PlantBlockHelper.isAir(state) || state.isIn(BlockTags.CLIMBABLE) || state.getCollisionShape(world, pos).isEmpty();
     }
 
     /**

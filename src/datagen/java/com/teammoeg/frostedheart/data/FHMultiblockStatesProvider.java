@@ -18,8 +18,6 @@
 
 package com.teammoeg.frostedheart.data;
 
-import static blusunrize.immersiveengineering.ImmersiveEngineering.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,6 +28,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import blusunrize.immersiveengineering.ImmersiveEngineering;
 import com.cannolicatfish.rankine.blocks.RankineOreBlock;
 import com.cannolicatfish.rankine.util.WorldgenUtils;
 import com.google.common.base.Preconditions;
@@ -133,14 +132,14 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 
 	private ModelFile cubeTwo(String name, ResourceLocation top, ResourceLocation bottom, ResourceLocation side,
 			ResourceLocation front) {
-		ModelFile baseModel = obj(name, rl("block/stone_multiblocks/cube_two.obj"),
+		ModelFile baseModel = obj(name, ImmersiveEngineering.rl("block/stone_multiblocks/cube_two.obj"),
 				ImmutableMap.<String, ResourceLocation>builder().put("side", side).put("top", top).put("bottom", bottom)
 						.put("front", front).build());
 		return splitModel(name + "_split", baseModel, CUBE_TWO, false);
 	}
 
 	private ModelFile cubeThree(String name, ResourceLocation def, ResourceLocation front) {
-		ModelFile baseModel = obj(name, rl("block/stone_multiblocks/cube_three.obj"),
+		ModelFile baseModel = obj(name, ImmersiveEngineering.rl("block/stone_multiblocks/cube_three.obj"),
 				ImmutableMap.of("side", def, "front", front));
 		return splitModel(name + "_split", baseModel, CUBE_THREE, false);
 	}

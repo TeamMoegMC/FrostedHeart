@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.climate;
 
-import static com.teammoeg.frostedheart.content.climate.WorldTemperature.*;
-
 import java.util.Random;
 
 import com.mojang.datafixers.util.Pair;
@@ -55,19 +53,19 @@ public class ClimateEvent {
         int add=(int) Math.max(0,10-(startTime/secondsPerDay-15)/10);
         switch (random.nextInt(10)+add) {
             case 0:
-                bottomTemp += COLD_PERIOD_BOTTOM_T8;
+                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T8;
                 break;
             case 1:
             case 2:
-                bottomTemp += COLD_PERIOD_BOTTOM_T7;
+                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T7;
                 break;
             case 3:
             case 4:
             case 5:
-                bottomTemp += COLD_PERIOD_BOTTOM_T6;
+                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T6;
                 break;
             default:
-                bottomTemp += COLD_PERIOD_BOTTOM_T5;
+                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T5;
                 break;
         }
 
@@ -77,7 +75,7 @@ public class ClimateEvent {
         long padding = 8 * 50 + random.nextInt(16 * 50);
         peakTime = startTime + padding; // reach peak within 8-24h
         bottomTime = startTime + padding + (length - padding) / 4;
-        peakTemp = BLIZZARD_WARM_PEAK - (float) Math.abs(random.nextGaussian());
+        peakTemp = WorldTemperature.BLIZZARD_WARM_PEAK - (float) Math.abs(random.nextGaussian());
         bottomTemp += (float) (random.nextGaussian());
         long calmLength = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
         long calmEndTime = endTime + calmLength;
@@ -135,19 +133,19 @@ public class ClimateEvent {
         float peakTemp = 0, bottomTemp = 0;
         switch (random.nextInt(10)) {
             case 0:
-                bottomTemp += COLD_PERIOD_BOTTOM_T4;
+                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T4;
                 break;
             case 1:
             case 2:
-                bottomTemp += COLD_PERIOD_BOTTOM_T3;
+                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T3;
                 break;
             case 3:
             case 4:
             case 5:
-                bottomTemp += COLD_PERIOD_BOTTOM_T2;
+                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T2;
                 break;
             default:
-                bottomTemp += COLD_PERIOD_BOTTOM_T1;
+                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T1;
                 break;
         }
 
@@ -157,7 +155,7 @@ public class ClimateEvent {
         long padding = 8 * 50 + random.nextInt(16 * 50);
         peakTime = startTime + padding; // reach peak within 8-24h
         bottomTime = startTime + padding + (length - padding) / 4;
-        peakTemp = COLD_PERIOD_PEAK - (float) Math.abs(random.nextGaussian());
+        peakTemp = WorldTemperature.COLD_PERIOD_PEAK - (float) Math.abs(random.nextGaussian());
         bottomTemp += (float) (random.nextGaussian());
         long calmLength = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
         long calmEndTime = endTime + calmLength;
@@ -173,7 +171,7 @@ public class ClimateEvent {
         endTime = startTime + length;
         long padding = 8 * 50 + random.nextInt(16 * 50); // 8-24h
         peakTime = startTime + padding + (length - padding) / 2;
-        peakTemp = WARM_PERIOD_PEAK - 2 * (float) Math.abs(random.nextGaussian());
+        peakTemp = WorldTemperature.WARM_PERIOD_PEAK - 2 * (float) Math.abs(random.nextGaussian());
 
         long calmLength = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
         long calmEndTime = endTime + calmLength;

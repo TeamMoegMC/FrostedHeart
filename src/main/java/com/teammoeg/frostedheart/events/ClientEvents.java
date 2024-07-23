@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static net.minecraft.util.text.TextFormatting.*;
-
 import java.util.List;
 import java.util.Map;
 
@@ -210,7 +208,7 @@ public class ClientEvents {
         ItemStack stack = event.getItemStack();
         Item i = stack.getItem();
         if (i == Items.FLINT) {
-            event.getToolTip().add(TranslateUtils.translateTooltip("double_flint_ignition").mergeStyle(GRAY));
+            event.getToolTip().add(TranslateUtils.translateTooltip("double_flint_ignition").mergeStyle(TextFormatting.GRAY));
         }
     }
 

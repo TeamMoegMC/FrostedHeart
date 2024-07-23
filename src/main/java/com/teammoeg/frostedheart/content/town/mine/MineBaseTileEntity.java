@@ -14,14 +14,13 @@ import net.minecraft.nbt.LongNBT;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.common.util.Constants;
 
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHouseBlock;
 import static java.lang.Math.exp;
-import static net.minecraftforge.common.util.Constants.NBT.TAG_LONG;
 
 public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
     public Set<BlockPos> linkedMines = new HashSet<>();
@@ -46,7 +45,7 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
             assert floorBelowDoor != null;
             BlockPos startPos = floorBelowDoor.offset(direction);//找到门下方块旁边的方块
             if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(world), startPos)) {//如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
-                if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(world), startPos.down()) || isHouseBlock(world, startPos.up(2))) {//如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
+                if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(world), startPos.down()) || FloorBlockScanner.isHouseBlock(world, startPos.up(2))) {//如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
                     continue;
                 }
                 startPos = startPos.down();
@@ -125,7 +124,7 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
             this.rack = data.getInt("rack");
             this.chest = data.getInt("chest");
             this.linkedMines.clear();
-            ListNBT list = data.getList("linkedMines", TAG_LONG);
+            ListNBT list = data.getList("linkedMines", Constants.NBT.TAG_LONG);
             list.forEach(nbt-> this.linkedMines.add( BlockPos.fromLong( ((LongNBT)nbt).getLong() )));
         }
     }

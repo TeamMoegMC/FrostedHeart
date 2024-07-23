@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static net.minecraft.inventory.container.PlayerContainer.*;
-
 import java.util.Map;
 import java.util.function.Function;
 
@@ -193,7 +191,7 @@ public class ClientRegistryEvents {
 
     @SubscribeEvent
     public static void onTextureStitchEvent(TextureStitchEvent.Pre event) {
-        if (event.getMap().getTextureLocation() == LOCATION_BLOCKS_TEXTURE) {
+        if (event.getMap().getTextureLocation() == PlayerContainer.LOCATION_BLOCKS_TEXTURE) {
             event.addSprite(LiningFinalizedModel.buffCoatFeetTexture);
             event.addSprite(LiningFinalizedModel.buffCoatLegsTexture);
             event.addSprite(LiningFinalizedModel.buffCoatHelmetTexture);

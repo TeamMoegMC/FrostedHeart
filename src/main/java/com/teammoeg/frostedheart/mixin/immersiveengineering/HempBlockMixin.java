@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.mixin.immersiveengineering;
 
-import static blusunrize.immersiveengineering.common.blocks.plant.HempBlock.*;
-
 import java.util.Random;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -79,16 +77,16 @@ public class HempBlockMixin {
                 return;
             }
             // FH Ends
-            EnumHempGrowth growth = state.get(GROWTH);
+            EnumHempGrowth growth = state.get(HempBlock.GROWTH);
             if (growth == EnumHempGrowth.TOP0)
                 return;
             float speed = this.fh$getGrowthSpeed(world, pos, state, light);
             if (random.nextInt((int) (50F / speed) + 1) == 0) {
                 if (fh$getMaxGrowth(growth) != growth) {
-                    world.setBlockState(pos, state.with(GROWTH, growth.next()));
+                    world.setBlockState(pos, state.with(HempBlock.GROWTH, growth.next()));
                 }
                 if (growth == fh$getMaxGrowth(growth) && world.isAirBlock(pos.add(0, 1, 0)))
-                    world.setBlockState(pos.add(0, 1, 0), state.with(GROWTH, EnumHempGrowth.TOP0));
+                    world.setBlockState(pos.add(0, 1, 0), state.with(HempBlock.GROWTH, EnumHempGrowth.TOP0));
             }
         }
     }

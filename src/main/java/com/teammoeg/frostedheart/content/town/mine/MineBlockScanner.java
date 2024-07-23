@@ -4,6 +4,7 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkH
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.PlantBlockHelper;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ColumnPos;
 import net.minecraft.world.World;
@@ -12,8 +13,6 @@ import net.minecraftforge.common.Tags;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
-
-import static net.minecraft.block.PlantBlockHelper.isAir;
 
 public class MineBlockScanner extends ConfinedSpaceScanner {
     private final int startX;
@@ -52,7 +51,7 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
 
     @Override
     protected boolean isValidAir(BlockPos pos){
-        return Math.abs(pos.getZ()-startZ) < 6 && Math.abs(pos.getX()-startX) < 6 && Math.abs(pos.getY()-startY) < 5 && isAir(world.getBlockState(pos));
+        return Math.abs(pos.getZ()-startZ) < 6 && Math.abs(pos.getX()-startX) < 6 && Math.abs(pos.getY()-startY) < 5 && PlantBlockHelper.isAir(world.getBlockState(pos));
     }
 
     @Override

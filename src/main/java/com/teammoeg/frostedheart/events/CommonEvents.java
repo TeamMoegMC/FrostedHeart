@@ -19,9 +19,6 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static net.minecraft.entity.EntityType.*;
-import static net.minecraft.world.biome.Biome.Category.*;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -123,7 +120,7 @@ public class CommonEvents {
 
     static ResourceLocation ft = new ResourceLocation("storagedrawers:drawers");
 
-    private static final Set<EntityType<?>> VANILLA_ENTITIES = Sets.newHashSet(COW, SHEEP, PIG, CHICKEN);
+    private static final Set<EntityType<?>> VANILLA_ENTITIES = Sets.newHashSet(EntityType.COW, EntityType.SHEEP, EntityType.PIG, EntityType.CHICKEN);
     @SubscribeEvent
     public static void checkSleep(SleepingTimeCheckEvent event) {
         if (event.getPlayer().getSleepTimer() >= 100 && !event.getPlayer().getEntityWorld().isRemote) {
@@ -176,7 +173,7 @@ public class CommonEvents {
     public static void addOreGenFeatures(BiomeLoadingEvent event) {
         if (event.getName() != null) {
             Biome.Category category = event.getCategory();
-            if (category != NETHER && category != THEEND) {
+            if (category != Biome.Category.NETHER && category != Biome.Category.THEEND) {
                 FHGeneration.generate_overworld_ores(event);
             }
             //else if(category == NETHER) { generate_nether_ores(event);

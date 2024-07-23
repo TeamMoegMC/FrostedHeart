@@ -20,8 +20,6 @@
 package com.teammoeg.frostedheart.util.noise;
 
 
-import static com.teammoeg.frostedheart.util.noise.NoiseUtil.*;
-
 public class Cellular3D implements INoise3D {
     private final int seed;
     private final float jitter;
@@ -69,9 +67,9 @@ public class Cellular3D implements INoise3D {
 
         float cellularJitter = 0.39614353f * jitter;
 
-        int xPrimed = (xr - 1) * PRIME_X;
-        int yPrimedBase = (yr - 1) * PRIME_Y;
-        int zPrimedBase = (zr - 1) * PRIME_Z;
+        int xPrimed = (xr - 1) * NoiseUtil.PRIME_X;
+        int yPrimedBase = (yr - 1) * NoiseUtil.PRIME_Y;
+        int zPrimedBase = (zr - 1) * NoiseUtil.PRIME_Z;
 
         for (int xi = xr - 1; xi <= xr + 1; xi++) {
             int yPrimed = yPrimedBase;
@@ -83,9 +81,9 @@ public class Cellular3D implements INoise3D {
                     int hash = NoiseUtil.hashPrimed(seed, xPrimed, yPrimed, zPrimed);
                     int idx = hash & (255 << 2);
 
-                    float vecX = (xi - x) + RANDOM_VECTORS_3D[idx] * cellularJitter;
-                    float vecY = (yi - y) + RANDOM_VECTORS_3D[idx | 1] * cellularJitter;
-                    float vecZ = (zi - z) + RANDOM_VECTORS_3D[idx | 2] * cellularJitter;
+                    float vecX = (xi - x) + NoiseUtil.RANDOM_VECTORS_3D[idx] * cellularJitter;
+                    float vecY = (yi - y) + NoiseUtil.RANDOM_VECTORS_3D[idx | 1] * cellularJitter;
+                    float vecZ = (zi - z) + NoiseUtil.RANDOM_VECTORS_3D[idx | 2] * cellularJitter;
 
                     float newDistance = vecX * vecX + vecY * vecY + vecZ * vecZ;
 
@@ -97,11 +95,11 @@ public class Cellular3D implements INoise3D {
                         centerY = vecY + y;
                         centerZ = vecZ + z;
                     }
-                    zPrimed += PRIME_Z;
+                    zPrimed += NoiseUtil.PRIME_Z;
                 }
-                yPrimed += PRIME_Y;
+                yPrimed += NoiseUtil.PRIME_Y;
             }
-            xPrimed += PRIME_X;
+            xPrimed += NoiseUtil.PRIME_X;
         }
 
         centerX /= frequency;

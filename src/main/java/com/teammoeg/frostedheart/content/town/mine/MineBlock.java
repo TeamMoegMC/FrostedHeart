@@ -28,8 +28,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static net.minecraftforge.common.util.Constants.NBT.TAG_LONG;
-
 //矿场方块，不是我的方块
 public class MineBlock extends AbstractTownWorkerBlock {
 

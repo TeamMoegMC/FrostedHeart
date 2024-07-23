@@ -29,13 +29,11 @@ import net.minecraftforge.event.world.BiomeLoadingEvent;
 import java.util.List;
 import java.util.function.Supplier;
 
-import static net.minecraft.world.biome.Biome.Category.*;
-
 public class FHGeneration {
     public static void generate_overworld_ores(final BiomeLoadingEvent event){
         // Generate gravel and clay disks
         Biome.Category category = event.getCategory();
-        if (category == RIVER || category == BEACH) {
+        if (category == Biome.Category.RIVER || category == Biome.Category.BEACH) {
             for (ConfiguredFeature<?, ?> feature : FHFeatures.FH_DISK)
                 event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
         }
@@ -43,7 +41,7 @@ public class FHGeneration {
         for (ConfiguredFeature<?, ?> feature : FHFeatures.FH_ORES)
             event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
         // Generate clay and gravel deposit
-        if (category != TAIGA && category != EXTREME_HILLS && category != OCEAN && category != DESERT && category != RIVER) {
+        if (category != Biome.Category.TAIGA && category != Biome.Category.EXTREME_HILLS && category != Biome.Category.OCEAN && category != Biome.Category.DESERT && category != Biome.Category.RIVER) {
             event.getGeneration().withFeature(GenerationStage.Decoration.LOCAL_MODIFICATIONS, FHFeatures.clay_deposit);
             event.getGeneration().withFeature(GenerationStage.Decoration.LOCAL_MODIFICATIONS, FHFeatures.gravel_deposit);
         }
@@ -62,11 +60,11 @@ public class FHGeneration {
 
         Biome.Category category = event.getCategory();
 
-        if (category == EXTREME_HILLS || category == TAIGA) {
+        if (category == Biome.Category.EXTREME_HILLS || category == Biome.Category.TAIGA) {
             event.getGeneration().withStructure(FHStructureFeatures.OBSERVATORY_FEATURE);
         }
 
-        if(category.name().equals("volcanic") || category == PLAINS || category == MESA || category == EXTREME_HILLS) {
+        if(category.name().equals("volcanic") || category == Biome.Category.PLAINS || category == Biome.Category.MESA || category == Biome.Category.EXTREME_HILLS) {
             List<Supplier<StructureFeature<?, ?>>> structures = event.getGeneration().getStructures();
             structures.add(() -> FHStructures.DESTROYED_GENERATOR.get().withConfiguration(IFeatureConfig.NO_FEATURE_CONFIG));
         }

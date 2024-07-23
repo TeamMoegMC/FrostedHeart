@@ -9,11 +9,9 @@ import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 
-import static com.teammoeg.frostedheart.content.town.TownWorkerState.NOT_INITIALIZED;
-
 public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity implements
         TownTileEntity, ScheduledTaskTileEntity, ITickableTileEntity, FHBlockInterfaces.IActiveState {
-    public TownWorkerState workerState = NOT_INITIALIZED;
+    public TownWorkerState workerState = TownWorkerState.NOT_INITIALIZED;
     public OccupiedArea occupiedArea;
     protected boolean addedToSchedulerQueue = false;
     public AbstractTownWorkerTileEntity(TileEntityType<? extends TileEntity> type)  {
@@ -46,7 +44,7 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
 
     @Override
     public boolean isWorkValid(){
-        if(workerState==NOT_INITIALIZED) this.refresh();
+        if(workerState== TownWorkerState.NOT_INITIALIZED) this.refresh();
         return workerState.isValid();
     }
 

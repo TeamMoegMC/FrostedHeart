@@ -5,7 +5,9 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockScanner;
+import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tags.BlockTags;
@@ -17,8 +19,6 @@ import net.minecraftforge.common.util.LazyOptional;
 import javax.annotation.Nonnull;
 import java.util.*;
 
-import static com.teammoeg.frostedheart.content.town.house.HouseTileEntity.*;
-import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHouseBlock;
 import static java.util.AbstractMap.SimpleEntry;
 
 public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
@@ -82,7 +82,7 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
                 assert floorBelowDoor != null;
                 BlockPos startPos = floorBelowDoor.offset(direction);//找到门下方块旁边的方块
                 if (!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(world), startPos)) {//如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
-                    if(!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(world), startPos.down()) || isHouseBlock(world, startPos.up(2))){//如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
+                    if(!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(world), startPos.down()) || FloorBlockScanner.isHouseBlock(world, startPos.up(2))){//如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
                         continue;
                     }
                     startPos = startPos.down();
@@ -107,7 +107,7 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
 
     public boolean isTemperatureValid(){
         double effective = temperature + temperatureModifier;
-        return effective >= MIN_TEMP_HOUSE && effective <= MAX_TEMP_HOUSE;
+        return effective >= HouseTileEntity.MIN_TEMP_HOUSE && effective <= HouseTileEntity.MAX_TEMP_HOUSE;
     }
 
     public double getTemperatureModifier() {
@@ -120,8 +120,8 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
 
     private double computeRating() {
         if(this.isValid()){
-            return (calculateSpaceRating(this.volume, this.area) * (2 + calculateDecorationRating(this.decorations, this.area))
-                    + 2 * calculateTemperatureRating(this.temperature + this.temperatureModifier) +
+            return (HouseTileEntity.calculateSpaceRating(this.volume, this.area) * (2 + HouseTileEntity.calculateDecorationRating(this.decorations, this.area))
+                    + 2 * HouseTileEntity.calculateTemperatureRating(this.temperature + this.temperatureModifier) +
                     (1-Math.exp(-this.maxResident - chestNum)) ) / 6;
         }
         else return 0;
@@ -129,7 +129,7 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
 
     private int calculateMaxResidents(){
         if(this.isValid()){
-            return Math.min((int)(calculateSpaceRating(this.volume, this.area) / 16 * this.area), Math.min(this.tanningRackNum, this.bedNum));
+            return Math.min((int)(HouseTileEntity.calculateSpaceRating(this.volume, this.area) / 16 * this.area), Math.min(this.tanningRackNum, this.bedNum));
         }
         else return 0;
     }
@@ -139,7 +139,7 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
         assert world != null;
         if (!world.isRemote) {
             if (endpoint.tryDrainHeat(1)) {
-                temperatureModifier = Math.max(endpoint.getTemperatureLevel() * 10, COMFORTABLE_TEMP_HOUSE);
+                temperatureModifier = Math.max(endpoint.getTemperatureLevel() * 10, HouseTileEntity.COMFORTABLE_TEMP_HOUSE);
                 if (setActive(true)) {
                     markDirty();
                 }
