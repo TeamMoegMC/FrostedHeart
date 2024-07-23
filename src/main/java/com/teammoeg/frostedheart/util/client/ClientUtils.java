@@ -45,19 +45,19 @@ public class ClientUtils {
     }
 
     public static World getWorld() {
-        return mc().world;
+        return mc().level;
     }
     public static float partialTicks() {
-    	return mc().getRenderPartialTicks();
+    	return mc().getFrameTime();
     }
     public static Minecraft mc() {
         return Minecraft.getInstance();
     }
     public static void bindTexture(ResourceLocation texture) {
-    	mc().getTextureManager().bindTexture(texture);
+    	mc().getTextureManager().bind(texture);
     }
     public static void refreshResearchGui() {
-        Screen cur = mc().currentScreen;
+        Screen cur = mc().screen;
         if (cur instanceof IScreenWrapper) {
             BaseScreen bs = ((IScreenWrapper) cur).getGui();
             if (bs instanceof ResearchGui) {
@@ -80,19 +80,19 @@ public class ClientUtils {
 
     public static void spawnSmokeParticles(World worldIn, BlockPos pos) {
         Random random = worldIn.getRandom();
-        worldIn.addOptionalParticle(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, pos.getX() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + random.nextDouble() + random.nextDouble(), pos.getZ() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.05D, 0.0D);
+        worldIn.addAlwaysVisibleParticle(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, pos.getX() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + random.nextDouble() + random.nextDouble(), pos.getZ() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.05D, 0.0D);
         worldIn.addParticle(ParticleTypes.SMOKE, pos.getX() + 0.25D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.25D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.002D, 0.01D, 0.0D);
     }
 
     public static void spawnT2SmokeParticles(World worldIn, BlockPos pos) {
         Random random = worldIn.getRandom();
-        worldIn.addOptionalParticle(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, pos.getX() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.5D + random.nextDouble() + random.nextDouble(), pos.getZ() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.12D, 0.0D);
+        worldIn.addAlwaysVisibleParticle(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, pos.getX() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.5D + random.nextDouble() + random.nextDouble(), pos.getZ() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.12D, 0.0D);
         worldIn.addParticle(ParticleTypes.SMOKE, pos.getX() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.05D, 0.0D);
     }
 
     public static void spawnCustomParticles(World worldIn, BlockPos pos, IParticleData particle, double posX, double posY, double posZ, double velX, double velY, double velZ) {
         // Spawn the specified particle type without randomness in position and velocity
-        worldIn.addOptionalParticle(particle, true, pos.getX() + posX, pos.getY() + posY, pos.getZ() + posZ, velX, velY, velZ);
+        worldIn.addAlwaysVisibleParticle(particle, true, pos.getX() + posX, pos.getY() + posY, pos.getZ() + posZ, velX, velY, velZ);
         worldIn.addParticle(particle, pos.getX() + posX, pos.getY() + posY, pos.getZ() + posZ, velX, velY, velZ);
     }
 
@@ -119,7 +119,7 @@ public class ClientUtils {
 
     public static void spawnSteamParticles(World worldIn, BlockPos pos) {
         Random random = worldIn.getRandom();
-        worldIn.addOptionalParticle(FHParticleTypes.STEAM.get(), true, pos.getX() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.5D + random.nextDouble() + random.nextDouble(), pos.getZ() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.12D, 0.0D);
+        worldIn.addAlwaysVisibleParticle(FHParticleTypes.STEAM.get(), true, pos.getX() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.5D + random.nextDouble() + random.nextDouble(), pos.getZ() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.12D, 0.0D);
         worldIn.addParticle(FHParticleTypes.STEAM.get(), pos.getX() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.05D, 0.0D);
     }
 

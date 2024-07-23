@@ -67,7 +67,7 @@ public class AddLootModifier extends LootModifier {
         if (!isAdding) {
             try {
                 isAdding = true;
-                List<ItemStack> nl = loot.generate(context);
+                List<ItemStack> nl = loot.getRandomItems(context);
                 generatedLoot.addAll(nl);
             } finally {
                 isAdding = false;

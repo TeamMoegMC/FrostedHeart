@@ -41,14 +41,14 @@ public class FHGuiHelper {
     // hack to access render state protected members
     public static class RenderStateAccess extends RenderState {
         public static RenderType.State getLineState(double width) {
-            return RenderType.State.getBuilder().line(new RenderState.LineState(OptionalDouble.of(width)))// width
-                    .layer(VIEW_OFFSET_Z_LAYERING).target(MAIN_TARGET).writeMask(COLOR_DEPTH_WRITE).build(true);
+            return RenderType.State.builder().setLineState(new RenderState.LineState(OptionalDouble.of(width)))// width
+                    .setLayeringState(VIEW_OFFSET_Z_LAYERING).setOutputState(MAIN_TARGET).setWriteMaskState(COLOR_DEPTH_WRITE).createCompositeState(true);
         }
 
         public static RenderType.State getRectState() {
-            return RenderType.State.getBuilder()
+            return RenderType.State.builder()
                     // width
-                    .layer(VIEW_OFFSET_Z_LAYERING).target(MAIN_TARGET).writeMask(COLOR_DEPTH_WRITE).build(true);
+                    .setLayeringState(VIEW_OFFSET_Z_LAYERING).setOutputState(MAIN_TARGET).setWriteMaskState(COLOR_DEPTH_WRITE).createCompositeState(true);
         }
 
         public RenderStateAccess(String p_i225973_1_, Runnable p_i225973_2_, Runnable p_i225973_3_) {
@@ -57,7 +57,7 @@ public class FHGuiHelper {
 
     }
 
-    public static final RenderType BOLD_LINE_TYPE = RenderType.makeType("fh_line_bold",
+    public static final RenderType BOLD_LINE_TYPE = RenderType.create("fh_line_bold",
             DefaultVertexFormats.POSITION_COLOR, GL11.GL_LINES, 128, RenderStateAccess.getLineState(4));
 
     private static void drawVertexLine(Matrix4f mat, IVertexBuilder renderBuffer, Color4I color, int startX, int startY,
@@ -65,9 +65,9 @@ public class FHGuiHelper {
     	//RenderSystem.disableTexture();
         RenderSystem.enableColorMaterial();
         //RenderSystem.colorMask(false, false, false, false);
-        renderBuffer.pos(mat, startX, startY, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+        renderBuffer.vertex(mat, startX, startY, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
                 .endVertex();
-        renderBuffer.pos(mat, endX, endY,z).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+        renderBuffer.vertex(mat, endX, endY,z).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
                 .endVertex();
         //RenderSystem.enableTexture();
     }
@@ -77,35 +77,35 @@ public class FHGuiHelper {
 		RenderSystem.enableColorMaterial();
 		//RenderSystem.colorMask(false, false, false, false);
 	
-		renderBuffer.pos(mat, startX, 0, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
-		renderBuffer.pos(mat, endX,   0, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
-		renderBuffer.pos(mat, 0, startY, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
-		renderBuffer.pos(mat, 0, endY  , z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
+		renderBuffer.vertex(mat, startX, 0, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
+		renderBuffer.vertex(mat, endX,   0, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
+		renderBuffer.vertex(mat, 0, startY, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
+		renderBuffer.vertex(mat, 0, endY  , z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
 		RenderSystem.enableTexture();
 	}
     // draw a line from start to end by color, ABSOLUTE POSITION
     public static void drawLine(MatrixStack matrixStack, Color4I color, int startX, int startY, int endX, int endY,float z) {
     	Tessellator t=Tessellator.getInstance();
-        BufferBuilder vertexBuilderLines = t.getBuffer();
+        BufferBuilder vertexBuilderLines = t.getBuilder();
         vertexBuilderLines.begin(GL11C.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-        drawVertexLine(matrixStack.getLast().getMatrix(), vertexBuilderLines, color, startX, startY, endX, endY,z);
-        t.draw();
+        drawVertexLine(matrixStack.last().pose(), vertexBuilderLines, color, startX, startY, endX, endY,z);
+        t.end();
     }
 
     // draw a line from start to end by color, ABSOLUTE POSITION
     public static void drawLine(MatrixStack matrixStack, Color4I color, int startX, int startY, int endX, int endY) {
-        IVertexBuilder vertexBuilderLines = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource()
+        IVertexBuilder vertexBuilderLines = Minecraft.getInstance().renderBuffers().bufferSource()
                 .getBuffer(BOLD_LINE_TYPE);
-        drawVertexLine(matrixStack.getLast().getMatrix(), vertexBuilderLines, color, startX, startY, endX, endY,0f);
+        drawVertexLine(matrixStack.last().pose(), vertexBuilderLines, color, startX, startY, endX, endY,0f);
     }
 
     private static void drawRect(Matrix4f mat, IVertexBuilder renderBuffer, Color4I color, int x, int y, int w, int h) {
-        renderBuffer.pos(mat, x, y, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
-        renderBuffer.pos(mat, x + w, y, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+        renderBuffer.vertex(mat, x, y, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
+        renderBuffer.vertex(mat, x + w, y, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
                 .endVertex();
-        renderBuffer.pos(mat, x, y + h, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+        renderBuffer.vertex(mat, x, y + h, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
                 .endVertex();
-        renderBuffer.pos(mat, x + w, y + h, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+        renderBuffer.vertex(mat, x + w, y + h, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
                 .endVertex();
     }
 
@@ -119,10 +119,10 @@ public class FHGuiHelper {
         float f5 = (colorB >> 16 & 255) / 255.0F;
         float f6 = (colorB >> 8 & 255) / 255.0F;
         float f7 = (colorB & 255) / 255.0F;
-        builder.pos(matrix, x2, y2, 0f).color(f1, f2, f3, f).endVertex();
-        builder.pos(matrix, x2, y1, 0f).color(f1, f2, f3, f).endVertex();
-        builder.pos(matrix, x1, y1, 0f).color(f5, f6, f7, f4).endVertex();
-        builder.pos(matrix, x1, y2, 0f).color(f5, f6, f7, f4).endVertex();
+        builder.vertex(matrix, x2, y2, 0f).color(f1, f2, f3, f).endVertex();
+        builder.vertex(matrix, x2, y1, 0f).color(f1, f2, f3, f).endVertex();
+        builder.vertex(matrix, x1, y1, 0f).color(f5, f6, f7, f4).endVertex();
+        builder.vertex(matrix, x1, y2, 0f).color(f5, f6, f7, f4).endVertex();
     }
 
     // draw a rectangle
@@ -133,10 +133,10 @@ public class FHGuiHelper {
         RenderSystem.defaultBlendFunc();
         RenderSystem.shadeModel(7425);
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBuffer();
+        BufferBuilder bufferbuilder = tessellator.getBuilder();
         bufferbuilder.begin(7, DefaultVertexFormats.POSITION_COLOR);
-        fillGradient(matrixStack.getLast().getMatrix(), bufferbuilder, x1, y1, x2, y2, colorFrom, colorTo);
-        tessellator.draw();
+        fillGradient(matrixStack.last().pose(), bufferbuilder, x1, y1, x2, y2, colorFrom, colorTo);
+        tessellator.end();
         RenderSystem.shadeModel(7424);
         RenderSystem.disableBlend();
         RenderSystem.enableAlphaTest();

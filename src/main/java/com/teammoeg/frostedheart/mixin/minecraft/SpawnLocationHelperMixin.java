@@ -44,34 +44,34 @@ public class SpawnLocationHelperMixin {
      */
     @Overwrite
     @Nullable
-    public static BlockPos func_241092_a_(ServerWorld p_241092_0_, int p_241092_1_, int p_241092_2_,
+    public static BlockPos getOverworldRespawnPos(ServerWorld p_241092_0_, int p_241092_1_, int p_241092_2_,
                                           boolean p_241092_3_) {
         BlockPos.Mutable blockpos$mutable = new BlockPos.Mutable(p_241092_1_, 0, p_241092_2_);
         Biome biome = p_241092_0_.getBiome(blockpos$mutable);
-        boolean flag = p_241092_0_.getDimensionType().getHasCeiling();
-        BlockState blockstate = biome.getGenerationSettings().getSurfaceBuilderConfig().getTop();
-        if (p_241092_3_ && !blockstate.getBlock().isIn(BlockTags.VALID_SPAWN)) {
+        boolean flag = p_241092_0_.dimensionType().hasCeiling();
+        BlockState blockstate = biome.getGenerationSettings().getSurfaceBuilderConfig().getTopMaterial();
+        if (p_241092_3_ && !blockstate.getBlock().is(BlockTags.VALID_SPAWN)) {
             return null;
         }
         Chunk chunk = p_241092_0_.getChunk(p_241092_1_ >> 4, p_241092_2_ >> 4);
-        int i = flag ? p_241092_0_.getChunkProvider().getChunkGenerator().getGroundHeight()
-                : chunk.getTopBlockY(Heightmap.Type.MOTION_BLOCKING, p_241092_1_ & 15, p_241092_2_ & 15);
+        int i = flag ? p_241092_0_.getChunkSource().getGenerator().getSpawnHeight()
+                : chunk.getHeight(Heightmap.Type.MOTION_BLOCKING, p_241092_1_ & 15, p_241092_2_ & 15);
         if (i < 0) {
             return null;
         }
-        int j = chunk.getTopBlockY(Heightmap.Type.WORLD_SURFACE, p_241092_1_ & 15, p_241092_2_ & 15);
-        if (j <= i && j > chunk.getTopBlockY(Heightmap.Type.OCEAN_FLOOR, p_241092_1_ & 15, p_241092_2_ & 15)) {
+        int j = chunk.getHeight(Heightmap.Type.WORLD_SURFACE, p_241092_1_ & 15, p_241092_2_ & 15);
+        if (j <= i && j > chunk.getHeight(Heightmap.Type.OCEAN_FLOOR, p_241092_1_ & 15, p_241092_2_ & 15)) {
             return null;
         }
         for (int k = i + 3; k >= 0; --k) {
-            blockpos$mutable.setPos(p_241092_1_, k, p_241092_2_);
+            blockpos$mutable.set(p_241092_1_, k, p_241092_2_);
             BlockState blockstate1 = p_241092_0_.getBlockState(blockpos$mutable);
             if (!blockstate1.getFluidState().isEmpty()) {
                 break;
             }
 
-            if (blockstate1.equals(blockstate) || blockstate1.getBlock().isIn(BlockTags.VALID_SPAWN)) {
-                return blockpos$mutable.up().toImmutable();
+            if (blockstate1.equals(blockstate) || blockstate1.getBlock().is(BlockTags.VALID_SPAWN)) {
+                return blockpos$mutable.above().immutable();
             }
         }
 

@@ -54,13 +54,13 @@ public class GasParticle extends SpriteTexturedParticle {
         super(world, x, y, z, motionX, motionY, motionZ);
         this.initialScale = 1.0F;
         this.scaleSpeed = 0.02F;
-        this.maxAge = (int) (100.0D / (Math.random() * 0.2D + 0.8D));
+        this.lifetime = (int) (100.0D / (Math.random() * 0.2D + 0.8D));
         // default gas physical properties
         this.density = 1.0;
         this.airResistance = 0.01;
         this.temperature = 300;
         // compute the effective gravity
-        this.particleGravity = getEffectiveGravity();
+        this.gravity = getEffectiveGravity();
     }
 
     protected float getEffectiveGravity() {
@@ -77,47 +77,47 @@ public class GasParticle extends SpriteTexturedParticle {
     }
 
     @Override
-    public void renderParticle(IVertexBuilder worldRendererIn, ActiveRenderInfo entityIn, float pt) {
+    public void render(IVertexBuilder worldRendererIn, ActiveRenderInfo entityIn, float pt) {
         // simulate age-based particle scaling and alpha decay
-        float ageFraction = MathHelper.clamp((this.age + pt) / maxAge, 0.0F, 1.0F);
+        float ageFraction = MathHelper.clamp((this.age + pt) / lifetime, 0.0F, 1.0F);
         // the particle will fade out as it ages
-        super.particleAlpha = MathHelper.clamp(1 - ageFraction, 0.0F, 1.0F);
+        super.alpha = MathHelper.clamp(1 - ageFraction, 0.0F, 1.0F);
         // the particle will grow as it ages
-        super.particleScale = initialScale * (1 + (this.age + pt) * scaleSpeed);
-        super.renderParticle(worldRendererIn, entityIn, pt);
+        super.quadSize = initialScale * (1 + (this.age + pt) * scaleSpeed);
+        super.render(worldRendererIn, entityIn, pt);
     }
 
     public void tick() {
         // update previous position
-        this.prevPosX = posX;
-        this.prevPosY = posY;
-        this.prevPosZ = posZ;
+        this.xo = x;
+        this.yo = y;
+        this.zo = z;
 
         // kill the particle if it's too old
-        if (age >= maxAge)
-            setExpired();
+        if (age >= lifetime)
+            remove();
         this.age++;
 
         // Apply gravity acceleration
-        motionY += particleGravity;
+        yd += gravity;
 
-        move(motionX, motionY, motionZ);
+        move(xd, yd, zd);
 
         // Simulate air resistance
-        motionX *= (1 - airResistance);
-        motionY *= (1 - airResistance);
-        motionZ *= (1 - airResistance);
+        xd *= (1 - airResistance);
+        yd *= (1 - airResistance);
+        zd *= (1 - airResistance);
 
         // Friction increases by 33% when on ground
         if (onGround) {
-            this.motionX *= (1 - airResistance) * 0.67D;
-            this.motionZ *= (1 - airResistance) * 0.67D;
+            this.xd *= (1 - airResistance) * 0.67D;
+            this.zd *= (1 - airResistance) * 0.67D;
         }
 
         // Spread hitting a ceiling or other obstacle
-        if (posY == prevPosY) {
-            motionX += motionY;
-            motionZ += motionY;
+        if (y == yo) {
+            xd += yd;
+            zd += yd;
         }
     }
 

@@ -36,6 +36,8 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class FHBerryBushBlock extends SweetBerryBushBlock {
 
     private int growTemperature;
@@ -55,7 +57,7 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
     }
 
     @Override
-    public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, BlockState state) {
+    public boolean isBonemealSuccess(World worldIn, Random rand, BlockPos pos, BlockState state) {
         float temp = ChunkHeatData.getTemperature(worldIn, pos);
         return temp >= growTemperature;
     }
@@ -66,14 +68,14 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
     }
 
     @Override
-    public void onEntityCollision(BlockState state, World worldIn, BlockPos pos, Entity entityIn) {
+    public void entityInside(BlockState state, World worldIn, BlockPos pos, Entity entityIn) {
         if (entityIn instanceof LivingEntity && entityIn.getType() != EntityType.FOX && entityIn.getType() != EntityType.BEE) {
-            entityIn.setMotionMultiplier(state, new Vector3d(0.8F, 0.75D, 0.8F));
-            if (!worldIn.isRemote && state.get(AGE) > 0 && (entityIn.lastTickPosX != entityIn.getPosX() || entityIn.lastTickPosZ != entityIn.getPosZ())) {
-                double d0 = Math.abs(entityIn.getPosX() - entityIn.lastTickPosX);
-                double d1 = Math.abs(entityIn.getPosZ() - entityIn.lastTickPosZ);
+            entityIn.makeStuckInBlock(state, new Vector3d(0.8F, 0.75D, 0.8F));
+            if (!worldIn.isClientSide && state.getValue(AGE) > 0 && (entityIn.xOld != entityIn.getX() || entityIn.zOld != entityIn.getZ())) {
+                double d0 = Math.abs(entityIn.getX() - entityIn.xOld);
+                double d1 = Math.abs(entityIn.getZ() - entityIn.zOld);
                 if (d0 >= (double) 0.003F || d1 >= (double) 0.003F) {
-                    entityIn.attackEntityFrom(DamageSource.SWEET_BERRY_BUSH, 0.0F);//remove damage
+                    entityIn.hurt(DamageSource.SWEET_BERRY_BUSH, 0.0F);//remove damage
                 }
             }
 
@@ -82,19 +84,19 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
 
     @Override
     public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
-        int i = state.get(AGE);
+        int i = state.getValue(AGE);
         float temp = ChunkHeatData.getTemperature(worldIn, pos);
         boolean bz = WorldClimate.isBlizzard(worldIn);
         if (temp < this.growTemperature || bz) {
             if ((bz || temp < this.growTemperature - 5) && worldIn.getRandom().nextInt(3) == 0) {
-                worldIn.setBlockState(pos, this.getDefaultState(), 2);
+                worldIn.setBlock(pos, this.defaultBlockState(), 2);
             }
         } else if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
             if (worldIn.getRandom().nextInt(3) == 0) {
-                worldIn.setBlockState(pos, this.getDefaultState(), 2);
+                worldIn.setBlock(pos, this.defaultBlockState(), 2);
             }
-        } else if (i < 3 && worldIn.getLightSubtracted(pos.up(), 0) >= 9 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt(50) < this.growSpeed)) {
-            worldIn.setBlockState(pos, state.with(AGE, i + 1), 2);
+        } else if (i < 3 && worldIn.getRawBrightness(pos.above(), 0) >= 9 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt(50) < this.growSpeed)) {
+            worldIn.setBlock(pos, state.setValue(AGE, i + 1), 2);
             net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state);
         }
     }

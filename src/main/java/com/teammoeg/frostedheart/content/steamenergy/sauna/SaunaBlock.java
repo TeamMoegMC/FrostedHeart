@@ -44,18 +44,20 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class SaunaBlock extends FHBaseBlock{
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public SaunaBlock(Properties blockProps) {
         super(blockProps);
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING, Direction.SOUTH));
+        this.registerDefaultState(this.stateDefinition.any().setValue(LIT, Boolean.FALSE).setValue(BlockStateProperties.FACING, Direction.SOUTH));
     }
 
     @Override
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
-        if (stateIn.get(LIT)) {
+        if (stateIn.getValue(LIT)) {
             ClientUtils.spawnSteamParticles(worldIn, pos);
         }
     }
@@ -67,8 +69,8 @@ public class SaunaBlock extends FHBaseBlock{
     }
 
     @Override
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
         builder.add(BlockStateProperties.FACING);
         builder.add(LIT);
     }
@@ -79,9 +81,9 @@ public class SaunaBlock extends FHBaseBlock{
     }
 
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
-        ActionResultType superResult = super.onBlockActivated(state, world, pos, player, hand, hit);
-        if (superResult.isSuccessOrConsume() || player.isSneaking())
+    public ActionResultType use(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
+        ActionResultType superResult = super.use(state, world, pos, player, hand, hit);
+        if (superResult.consumesAction() || player.isShiftKeyDown())
             return superResult;
         TileEntity te = Utils.getExistingTileEntity(world, pos);
         if (te instanceof SaunaTileEntity) {

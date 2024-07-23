@@ -29,62 +29,62 @@ import net.minecraftforge.common.ToolType;
 
 public class FHProps {
     public static final AbstractBlock.Properties stoneDecoProps = AbstractBlock.Properties
-            .create(Material.ROCK)
+            .of(Material.STONE)
             .sound(SoundType.STONE)
-            .setRequiresTool()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.PICKAXE)
-            .hardnessAndResistance(2, 10);
+            .strength(2, 10);
 
     public static final AbstractBlock.Properties metalDecoProps = AbstractBlock.Properties
-            .create(Material.IRON)
+            .of(Material.METAL)
             .sound(SoundType.METAL)
-            .setRequiresTool()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.PICKAXE)
-            .hardnessAndResistance(2, 10);
+            .strength(2, 10);
     public static final AbstractBlock.Properties cropProps = AbstractBlock.Properties
-            .create(Material.PLANTS)
-            .doesNotBlockMovement()
-            .tickRandomly()
-            .zeroHardnessAndResistance()
+            .of(Material.PLANT)
+            .noCollission()
+            .randomTicks()
+            .instabreak()
             .sound(SoundType.CROP);
     public static final AbstractBlock.Properties ore_gravel = AbstractBlock.Properties
-            .create(Material.SAND)
-            .sound(SoundType.GROUND)
-            .setRequiresTool()
+            .of(Material.SAND)
+            .sound(SoundType.GRAVEL)
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.SHOVEL)
-            .hardnessAndResistance(0.6F);
+            .strength(0.6F);
     public static final AbstractBlock.Properties redStoneProps = AbstractBlock.Properties
-            .create(Material.REDSTONE_LIGHT)
-            .doesNotBlockMovement()
-            .zeroHardnessAndResistance()
+            .of(Material.BUILDABLE_GLASS)
+            .noCollission()
+            .instabreak()
             .sound(SoundType.STONE);
 
     public static final AbstractBlock.Properties stoneProps = AbstractBlock.Properties
-            .create(Material.ROCK)
+            .of(Material.STONE)
             .sound(SoundType.STONE)
-            .doesNotBlockMovement()
-            .setRequiresTool()
+            .noCollission()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.PICKAXE)
-            .hardnessAndResistance(2, 10);
+            .strength(2, 10);
 
     public static final AbstractBlock.Properties woodenProps = AbstractBlock.Properties
-            .create(Material.WOOD)
-            .doesNotBlockMovement()
-            .setRequiresTool()
+            .of(Material.WOOD)
+            .noCollission()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.AXE)
             .sound(SoundType.WOOD)
-            .hardnessAndResistance(0.6F);
+            .strength(0.6F);
 
     public static final AbstractBlock.Properties grassProps = AbstractBlock.Properties
-            .create(Material.PLANTS)
-            .doesNotBlockMovement()
-            .setRequiresTool()
+            .of(Material.PLANT)
+            .noCollission()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.AXE)
-            .sound(SoundType.PLANT)
-            .hardnessAndResistance(0.3F);
+            .sound(SoundType.GRASS)
+            .strength(0.3F);
 
-    public static final Item.Properties itemProps = new Item.Properties().group(FHMain.itemGroup);
-    public static final AbstractBlock.Properties berryBushBlocks = AbstractBlock.Properties.create(Material.PLANTS).tickRandomly().doesNotBlockMovement().sound(SoundType.SWEET_BERRY_BUSH);
+    public static final Item.Properties itemProps = new Item.Properties().tab(FHMain.itemGroup);
+    public static final AbstractBlock.Properties berryBushBlocks = AbstractBlock.Properties.of(Material.PLANT).randomTicks().noCollission().sound(SoundType.SWEET_BERRY_BUSH);
     public static void init() {
     }
 }

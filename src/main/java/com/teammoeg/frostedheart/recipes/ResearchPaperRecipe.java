@@ -41,18 +41,18 @@ public class ResearchPaperRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public ResearchPaperRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            return new ResearchPaperRecipe(recipeId, Ingredient.read(buffer), buffer.readVarInt());
+        public ResearchPaperRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+            return new ResearchPaperRecipe(recipeId, Ingredient.fromNetwork(buffer), buffer.readVarInt());
         }
 
         @Override
         public ResearchPaperRecipe readFromJson(ResourceLocation arg0, JsonObject arg1) {
-            return new ResearchPaperRecipe(arg0, Ingredient.deserialize(arg1.get("item")), arg1.get("level").getAsInt());
+            return new ResearchPaperRecipe(arg0, Ingredient.fromJson(arg1.get("item")), arg1.get("level").getAsInt());
         }
 
         @Override
-        public void write(PacketBuffer buffer, ResearchPaperRecipe recipe) {
-            recipe.paper.write(buffer);
+        public void toNetwork(PacketBuffer buffer, ResearchPaperRecipe recipe) {
+            recipe.paper.toNetwork(buffer);
             buffer.writeVarInt(recipe.maxlevel);
         }
 
@@ -75,7 +75,7 @@ public class ResearchPaperRecipe extends IESerializableRecipe {
     }
 
     @Override
-    public ItemStack getRecipeOutput() {
+    public ItemStack getResultItem() {
         return ItemStack.EMPTY;
     }
 }

@@ -42,21 +42,23 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
+import net.minecraft.item.Item.Properties;
+
 public class SoilThermometer extends FHBaseItem {
     public SoilThermometer(Properties properties) {
         super(properties);
     }
 
     @Override
-    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-        tooltip.add(TranslateUtils.translateTooltip("thermometer.usage").mergeStyle(TextFormatting.GRAY));
+    public void appendHoverText(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        tooltip.add(TranslateUtils.translateTooltip("thermometer.usage").withStyle(TextFormatting.GRAY));
     }
 
     /**
      * returns the action that specifies what animation to play when the items is being used
      */
     @Override
-    public UseAction getUseAction(ItemStack stack) {
+    public UseAction getUseAnimation(ItemStack stack) {
         return UseAction.SPEAR;
     }
 
@@ -66,29 +68,29 @@ public class SoilThermometer extends FHBaseItem {
     }
 
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-        playerIn.sendStatusMessage(TranslateUtils.translateMessage("thermometer.testing"), true);
-        playerIn.setActiveHand(handIn);
-        if (playerIn instanceof ServerPlayerEntity && playerIn.abilities.isCreativeMode) {
-            BlockRayTraceResult brtr = rayTrace(worldIn, playerIn, FluidMode.ANY);
+    public ActionResult<ItemStack> use(World worldIn, PlayerEntity playerIn, Hand handIn) {
+        playerIn.displayClientMessage(TranslateUtils.translateMessage("thermometer.testing"), true);
+        playerIn.startUsingItem(handIn);
+        if (playerIn instanceof ServerPlayerEntity && playerIn.abilities.instabuild) {
+            BlockRayTraceResult brtr = getPlayerPOVHitResult(worldIn, playerIn, FluidMode.ANY);
             if (brtr.getType() != Type.MISS) {
 
-            	playerIn.sendMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(ChunkHeatData.getTemperature(playerIn.world, brtr.getPos()))), playerIn.getUniqueID());
+            	playerIn.sendMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(ChunkHeatData.getTemperature(playerIn.level, brtr.getBlockPos()))), playerIn.getUUID());
             }
 
         }
-        return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
+        return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getItemInHand(handIn));
     }
 
     @Override
-    public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
-        if (worldIn.isRemote) return stack;
+    public ItemStack finishUsingItem(ItemStack stack, World worldIn, LivingEntity entityLiving) {
+        if (worldIn.isClientSide) return stack;
         PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
         if (entityplayer instanceof ServerPlayerEntity) {
-            BlockRayTraceResult brtr = rayTrace(worldIn, entityplayer, FluidMode.ANY);
+            BlockRayTraceResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, FluidMode.ANY);
             if (brtr.getType() == Type.MISS) return stack;
             TemperatureDisplayHelper.sendTemperature((ServerPlayerEntity) entityLiving,
-                    "info.soil_thermometerbody", (int) (ChunkHeatData.getTemperature(entityLiving.world, brtr.getPos()) * 10) / 10f);
+                    "info.soil_thermometerbody", (int) (ChunkHeatData.getTemperature(entityLiving.level, brtr.getBlockPos()) * 10) / 10f);
         }
         return stack;
     }

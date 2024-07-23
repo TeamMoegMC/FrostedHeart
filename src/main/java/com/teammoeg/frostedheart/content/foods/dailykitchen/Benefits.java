@@ -39,7 +39,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
 
 class Benefits {
-    private final Effect[] basicEffects = new Effect[]{Effects.STRENGTH, Effects.SPEED, Effects.HASTE};
+    private final Effect[] basicEffects = new Effect[]{Effects.DAMAGE_BOOST, Effects.MOVEMENT_SPEED, Effects.DIG_SPEED};
     private final ServerPlayerEntity player;
     private final WantedFoodCapability capability;
     private final int eatenFoodsAmount;
@@ -66,13 +66,13 @@ class Benefits {
      */
     private void giveBasicEffects(int amount) {
         if (amount == 1) {
-            player.addPotionEffect(new EffectInstance(basicEffects[random.nextInt(2)], basicEffectDuration, 0));
+            player.addEffect(new EffectInstance(basicEffects[random.nextInt(2)], basicEffectDuration, 0));
 
         } else if (amount == 2) {
             int notGiveEffect = random.nextInt(2);
             for (int i = 0; i < 2; i++) {
                 if (i != notGiveEffect) {
-                    player.addPotionEffect(new EffectInstance(basicEffects[i], basicEffectDuration, 0));
+                    player.addEffect(new EffectInstance(basicEffects[i], basicEffectDuration, 0));
                 }
             }
         }
@@ -83,13 +83,13 @@ class Benefits {
             this.giveBasicEffects(amount);
         } else if (amount == 3)
             for (int i = 0; i < 3; i++) {
-                player.addPotionEffect(new EffectInstance(basicEffects[i], basicEffectDuration, potionLevel[i]));
+                player.addEffect(new EffectInstance(basicEffects[i], basicEffectDuration, potionLevel[i]));
             }
         else FHMain.LOGGER.error("Invalid effect amount input!");
     }
 
     private void giveHealthRegen(int duration) {
-        this.player.addPotionEffect(new EffectInstance(Effects.REGENERATION, duration));
+        this.player.addEffect(new EffectInstance(Effects.REGENERATION, duration));
     }
 
 
@@ -142,7 +142,7 @@ class Benefits {
         this.giveEnergy();
         capability.countEatenTimes();
 
-        player.sendStatusMessage(TranslateUtils.translateMessage("eat_wanted_food"), false);
+        player.displayClientMessage(TranslateUtils.translateMessage("eat_wanted_food"), false);
     }
 
     public void tryGive(Item food) {

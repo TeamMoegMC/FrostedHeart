@@ -47,6 +47,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
+import net.minecraft.block.AbstractBlock.Properties;
+
 /**
  * Mark machine owner for research
  * <p>
@@ -62,7 +64,7 @@ public class BlockMixin extends Block {
 
     @Inject(at = @At("HEAD"), method = "onBlockActivated(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/math/BlockRayTraceResult;)Lnet/minecraft/util/ActionResultType;")
     public void fh$on$onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit, CallbackInfoReturnable<ActionResultType> r) {
-        if (!worldIn.isRemote && !(player instanceof FakePlayer)) {
+        if (!worldIn.isClientSide && !(player instanceof FakePlayer)) {
             TileEntity te = Utils.getExistingTileEntity(worldIn, pos);
             if (te instanceof MultiblockPartTileEntity) {
                 te = ((MultiblockPartTileEntity<?>) te).master();
@@ -73,8 +75,8 @@ public class BlockMixin extends Block {
 
     //@Inject(at=@At("HEAD"),method="onBlockPlacedBy(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;)V")
     @Override
-    public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-        super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
+    public void setPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(worldIn, pos, state, placer, stack);
 
         if (placer instanceof ServerPlayerEntity && !(placer instanceof FakePlayer))
             IOwnerTile.trySetOwner(Utils.getExistingTileEntity(worldIn, pos), FHTeamDataManager.get((PlayerEntity) placer).getId());

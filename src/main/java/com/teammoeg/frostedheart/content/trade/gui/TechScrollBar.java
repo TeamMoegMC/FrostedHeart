@@ -27,6 +27,8 @@ import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 
+import dev.ftb.mods.ftblibrary.ui.ScrollBar.Plane;
+
 public class TechScrollBar extends PanelScrollBar {
     // Have to do this hack since FTBL fields are private.
     private static final Theme dtheme = new Theme() {

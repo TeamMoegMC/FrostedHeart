@@ -73,43 +73,43 @@ public class TemperatureUpdate {
             double calculatedTarget = PlayerTemperatureData.getCapability(event.player).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
             if (!(player.isCreative() || player.isSpectator())) {
                 if (calculatedTarget > 1 || calculatedTarget < -1) {
-                    if (!player.isPotionActive(FHEffects.HYPERTHERMIA.get())
-                            && !player.isPotionActive(FHEffects.HYPOTHERMIA.get())) {
+                    if (!player.hasEffect(FHEffects.HYPERTHERMIA.get())
+                            && !player.hasEffect(FHEffects.HYPOTHERMIA.get())) {
                         if (calculatedTarget > 1) { // too hot
                             if (calculatedTarget <= 2) {
-                                player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA.get(), 100, 0));
-                                player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
+                                player.addEffect(new EffectInstance(FHEffects.HYPERTHERMIA.get(), 100, 0));
+                                player.addEffect(FHUtils.noHeal(new EffectInstance(Effects.DIG_SLOWDOWN, 100, 0)));
                             } else if (calculatedTarget <= 3) {
-                                player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA.get(), 100, 1));
-                                player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.NAUSEA, 100, 2)));
-                                player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
+                                player.addEffect(new EffectInstance(FHEffects.HYPERTHERMIA.get(), 100, 1));
+                                player.addEffect(FHUtils.noHeal(new EffectInstance(Effects.CONFUSION, 100, 2)));
+                                player.addEffect(FHUtils.noHeal(new EffectInstance(Effects.DIG_SLOWDOWN, 100, 0)));
                             } else if (calculatedTarget <= 5) {
-                                player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA.get(), 100, 2));
-                                player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.NAUSEA, 100, 2)));
-                                player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
+                                player.addEffect(new EffectInstance(FHEffects.HYPERTHERMIA.get(), 100, 2));
+                                player.addEffect(FHUtils.noHeal(new EffectInstance(Effects.CONFUSION, 100, 2)));
+                                player.addEffect(FHUtils.noHeal(new EffectInstance(Effects.DIG_SLOWDOWN, 100, 0)));
                             } else {
-                                player.addPotionEffect(
+                                player.addEffect(
                                         new EffectInstance(FHEffects.HYPERTHERMIA.get(), 100, (int) (calculatedTarget - 2)));
-                                player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.NAUSEA, 100, 2)));
-                                player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
+                                player.addEffect(FHUtils.noHeal(new EffectInstance(Effects.CONFUSION, 100, 2)));
+                                player.addEffect(FHUtils.noHeal(new EffectInstance(Effects.DIG_SLOWDOWN, 100, 0)));
                             }
                         } else { // too cold
                             if (calculatedTarget >= -2) {
-                                player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA.get(), 100, 0));
-                                player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
+                                player.addEffect(new EffectInstance(FHEffects.HYPOTHERMIA.get(), 100, 0));
+                                player.addEffect(FHUtils.noHeal(new EffectInstance(Effects.DIG_SLOWDOWN, 100, 0)));
                             } else if (calculatedTarget >= -3) {
-                                player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA.get(), 100, 1));
-                                player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.NAUSEA, 100, 2)));
-                                player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
+                                player.addEffect(new EffectInstance(FHEffects.HYPOTHERMIA.get(), 100, 1));
+                                player.addEffect(FHUtils.noHeal(new EffectInstance(Effects.CONFUSION, 100, 2)));
+                                player.addEffect(FHUtils.noHeal(new EffectInstance(Effects.DIG_SLOWDOWN, 100, 0)));
                             } else if (calculatedTarget >= -5) {
-                                player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA.get(), 100, 2));
-                                player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.NAUSEA, 100, 2)));
-                                player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
+                                player.addEffect(new EffectInstance(FHEffects.HYPOTHERMIA.get(), 100, 2));
+                                player.addEffect(FHUtils.noHeal(new EffectInstance(Effects.CONFUSION, 100, 2)));
+                                player.addEffect(FHUtils.noHeal(new EffectInstance(Effects.DIG_SLOWDOWN, 100, 0)));
                             } else {
-                                player.addPotionEffect(
+                                player.addEffect(
                                         new EffectInstance(FHEffects.HYPOTHERMIA.get(), 100, (int) (-calculatedTarget - 2)));
-                                player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.NAUSEA, 100, 2)));
-                                player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
+                                player.addEffect(FHUtils.noHeal(new EffectInstance(Effects.CONFUSION, 100, 2)));
+                                player.addEffect(FHUtils.noHeal(new EffectInstance(Effects.DIG_SLOWDOWN, 100, 0)));
                             }
                         }
                     }
@@ -135,33 +135,33 @@ public class TemperatureUpdate {
                 return;*/
             PlayerTemperatureData data= PlayerTemperatureData.getCapability(event.player).orElse(null);
             if(data==null)return;
-            if (player.ticksExisted % 10 == 0) {
+            if (player.tickCount % 10 == 0) {
                 //soak in water modifier
                 if (player.isInWater()) {
                     boolean hasArmor = false;
-                    for (ItemStack is : player.getArmorInventoryList()) {
+                    for (ItemStack is : player.getArmorSlots()) {
                         if (!is.isEmpty()) {
                             hasArmor = true;
                             break;
                         }
                     }
-                    EffectInstance current = player.getActivePotionEffect(FHEffects.WET.get());
+                    EffectInstance current = player.getEffect(FHEffects.WET.get());
                     if (hasArmor)
-                        player.addPotionEffect(new EffectInstance(FHEffects.WET.get(), 400, 0));// punish for wet clothes
+                        player.addEffect(new EffectInstance(FHEffects.WET.get(), 400, 0));// punish for wet clothes
                     else if (current == null || current.getDuration() < 100)
-                        player.addPotionEffect(new EffectInstance(FHEffects.WET.get(), 100, 0));
+                        player.addEffect(new EffectInstance(FHEffects.WET.get(), 100, 0));
                 }
                 //load current data
                 float current = PlayerTemperatureData.getCapability(event.player).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
                 double tspeed = FHConfig.SERVER.tempSpeed.get();
                 if (current < 0) {
                     float delt = (float) (FHConfig.SERVER.tdiffculty.get().self_heat.apply(player) * tspeed);
-                    player.addExhaustion(Math.min(delt, -current) * 0.5f);//cost hunger for cold.
+                    player.causeFoodExhaustion(Math.min(delt, -current) * 0.5f);//cost hunger for cold.
                     current += delt;
                 }
                 //world and chunk temperature
-                World world = player.getEntityWorld();
-                BlockPos pos = new BlockPos(player.getPosX(), player.getPosYEye(), player.getPosZ());
+                World world = player.getCommandSenderWorld();
+                BlockPos pos = new BlockPos(player.getX(), player.getEyeY(), player.getZ());
 
                 //Temperature from generators
                 float envtemp = ChunkHeatData.getAdditionTemperature(world, pos);
@@ -170,25 +170,25 @@ public class TemperatureUpdate {
                 //Temperature from climate
                 envtemp += WorldTemperature.getClimateTemperature(world);
                 //Surrounding temperature
-                Pair<Float, Float> btp = new SurroundingTemperatureSimulator(player).getBlockTemperatureAndWind(player.getPosX(), player.getPosYEye()-0.7f, player.getPosZ());
+                Pair<Float, Float> btp = new SurroundingTemperatureSimulator(player).getBlockTemperatureAndWind(player.getX(), player.getEyeY()-0.7f, player.getZ());
                 float bt=btp.getFirst();
                 //int wind=btp.getSecond()+WorldTemperature.getClimateWind(world);
                 //Day-night temperature
-                float skyLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(pos);
+                float skyLight = world.getChunkSource().getLightEngine().getLayerListener(LightType.SKY).getLightValue(pos);
                 float gameTime = world.getDayTime() % 24000L;
                 gameTime = gameTime / ((float) 200 / 3);
                 gameTime = MathHelper.sin((float) Math.toRadians(gameTime));
                 envtemp += bt;
                 envtemp += skyLight > 5.0F ?
                         (world.isRaining() ?
-                                (FHUtils.isRainingAt(player.getPosition(), world) ? -8F : -5f)
+                                (FHUtils.isRainingAt(player.blockPosition(), world) ? -8F : -5f)
                                 : (gameTime * 5.0F))
                         : -5F;
                 // burning heat
-                if (player.isBurning())
+                if (player.isOnFire())
                     envtemp += 150F;
                 player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).removeModifier(envTempId);
-                player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).applyNonPersistentModifier(new AttributeModifier(envTempId,"player environment modifier", envtemp, Operation.ADDITION));
+                player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).addTransientModifier(new AttributeModifier(envTempId,"player environment modifier", envtemp, Operation.ADDITION));
                 
                 
                 envtemp=(float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
@@ -207,7 +207,7 @@ public class TemperatureUpdate {
                     	efftemp+=((IHeatingEquipment) it).getEffectiveTempAdded(EquipmentCuriosSlotType.fromCurios(is.getFirst()), is.getSecond(), efftemp, current);
                 }
                 for (EquipmentSlotType slot : EquipmentSlotType.values()) {
-                	ItemStack is=player.getItemStackFromSlot(slot);
+                	ItemStack is=player.getItemBySlot(slot);
                     if (is.isEmpty())
                         continue;
                     Item it = is.getItem();
@@ -233,9 +233,9 @@ public class TemperatureUpdate {
                 float dheat = HEAT_EXCHANGE_CONSTANT * ((efftemp-37F) - current);
                 //Attack player if temperature changes too much
                 if (dheat > 0.1)
-                    player.attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (dheat) * 10);
+                    player.hurt(FHDamageSources.HYPERTHERMIA_INSTANT, (dheat) * 10);
                 else if (dheat < -0.1)
-                    player.attackEntityFrom(FHDamageSources.HYPOTHERMIA_INSTANT, (-dheat) * 10);
+                    player.hurt(FHDamageSources.HYPOTHERMIA_INSTANT, (-dheat) * 10);
                 if (!player.isCreative()&&!player.isSpectator())//no modify body temp when creative or spectator
                 	current += (float) (dheat * tspeed);
                 if (current < -10)

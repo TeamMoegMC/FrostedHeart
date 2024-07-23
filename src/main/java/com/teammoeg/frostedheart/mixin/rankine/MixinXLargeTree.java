@@ -36,10 +36,10 @@ import net.minecraft.world.server.ServerWorld;
 @Mixin({EasternHemlockTree.class, WesternHemlockTree.class})
 public abstract class MixinXLargeTree extends Tree {
     @Override
-    public boolean attemptGrowTree(ServerWorld world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,
+    public boolean growTree(ServerWorld world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,
                                    Random rand) {
         if (FHUtils.canTreeGenerate(world, pos, rand, 42))
-            return super.attemptGrowTree(world, chunkGenerator, pos, state, rand);
+            return super.growTree(world, chunkGenerator, pos, state, rand);
         return false;
     }
 

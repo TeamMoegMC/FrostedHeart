@@ -9,8 +9,8 @@ public class MovementTrigger extends SingleExecuteTargetTrigger {
 	Vector3d pos;
 	public MovementTrigger(PlayerEntity pe) {
 		super(null);
-		this.test=t->t.getPlayer().getPositionVec().squareDistanceTo(this.pos)>0.25;
-		pos=pe.getPositionVec();
+		this.test=t->t.getPlayer().position().distanceToSqr(this.pos)>0.25;
+		pos=pe.position();
 	}
 
 }

@@ -64,7 +64,7 @@ public class EffectItemReward extends Effect {
         if (rewards.isEmpty())
             return "Reward nothing";
 
-        return "Reward " + rewards.get(0).getDisplayName().getString() + (rewards.size() > 1 ? " ..." : "");
+        return "Reward " + rewards.get(0).getHoverName().getString() + (rewards.size() > 1 ? " ..." : "");
     }
 
     @Override
@@ -85,9 +85,9 @@ public class EffectItemReward extends Effect {
         List<ITextComponent> tooltip = new ArrayList<>();
         for (ItemStack stack : rewards) {
             if (stack.getCount() == 1)
-                tooltip.add(stack.getDisplayName());
+                tooltip.add(stack.getHoverName());
             else
-                tooltip.add(((IFormattableTextComponent) stack.getDisplayName()).appendSibling(TranslateUtils.str(" x " + stack.getCount())));
+                tooltip.add(((IFormattableTextComponent) stack.getHoverName()).append(TranslateUtils.str(" x " + stack.getCount())));
         }
         return tooltip;
     }

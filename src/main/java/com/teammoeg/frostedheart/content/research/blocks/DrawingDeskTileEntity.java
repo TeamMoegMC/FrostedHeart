@@ -97,7 +97,7 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
         if (inventory.get(PAPER_SLOT).isEmpty()) return;
         int lvl = ResearchListeners.fetchGameLevel(player);
         if (lvl < 0) return;
-        Optional<ResearchPaperRecipe> pr = FHUtils.filterRecipes(this.getWorld().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.get(PAPER_SLOT))).findAny();
+        Optional<ResearchPaperRecipe> pr = FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.get(PAPER_SLOT))).findAny();
         if (!pr.isPresent()) return;
         if (EnergyCore.getEnergy(player)<=0) return;
         if (!damageInk(player, 5, lvl)) return;
@@ -120,7 +120,7 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
         ItemStack is = inventory.get(PAPER_SLOT);
         if (is.isEmpty()) return false;
         int lvl = ResearchListeners.fetchGameLevel();
-        return FHUtils.filterRecipes(this.getWorld().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.maxlevel >= lvl && r.paper.test(is));
+        return FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.maxlevel >= lvl && r.paper.test(is));
     }
 
     @Override
@@ -130,7 +130,7 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
         else if (slot == INK_SLOT)
             return item.getItem() instanceof IPen && ((IPen) item.getItem()).canUse(null, item, 1);
         else if (slot == PAPER_SLOT)
-            return FHUtils.filterRecipes(this.getWorld().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.paper.test(item));
+            return FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.paper.test(item));
         else
             return false;
     }

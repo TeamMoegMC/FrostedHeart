@@ -46,12 +46,12 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
 
     public static boolean isStoneOrOre(World world, BlockPos pos){
         BlockState state = world.getBlockState(pos);
-        return state.isIn(Tags.Blocks.ORES) || state.isIn(Tags.Blocks.STONE);
+        return state.is(Tags.Blocks.ORES) || state.is(Tags.Blocks.STONE);
     }
 
     @Override
     protected boolean isValidAir(BlockPos pos){
-        return Math.abs(pos.getZ()-startZ) < 6 && Math.abs(pos.getX()-startX) < 6 && Math.abs(pos.getY()-startY) < 5 && PlantBlockHelper.isAir(world.getBlockState(pos));
+        return Math.abs(pos.getZ()-startZ) < 6 && Math.abs(pos.getX()-startX) < 6 && Math.abs(pos.getY()-startY) < 5 && PlantBlockHelper.isValidGrowthState(world.getBlockState(pos));
     }
 
     @Override

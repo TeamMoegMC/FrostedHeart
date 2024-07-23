@@ -69,12 +69,12 @@ public class FlintWorkbenchTileEntityMixin extends TileEntity {
      */
     @Overwrite(remap = false)
     private List<FlintWorkbenchRecipe> findMatchingRecipes() {
-        assert this.world != null;
+        assert this.level != null;
 
         if (stacks.stream().allMatch(ItemStack::isEmpty))
             return ImmutableList.of();
-        List<FlintWorkbenchRecipe> ret = this.world.getRecipeManager().getRecipes(FlintWorkbenchRecipe.flint_workbench,
-                inventoryWrapper, this.world);
+        List<FlintWorkbenchRecipe> ret = this.level.getRecipeManager().getRecipesFor(FlintWorkbenchRecipe.flint_workbench,
+                inventoryWrapper, this.level);
         ret.removeIf(r -> !ResearchListeners.canUseRecipe(pe, r));
 
         return ret;
@@ -86,7 +86,7 @@ public class FlintWorkbenchTileEntityMixin extends TileEntity {
      */
     @Overwrite(remap = false)
     private List<FlintWorkbenchRecipe> findMatchingRecipes(@Nonnull ItemStack heldItemMainhand) {
-        assert this.world != null;
+        assert this.level != null;
 
         return findMatchingRecipes().stream()
                 .filter(flintWorkbenchRecipe -> flintWorkbenchRecipe.testTool(heldItemMainhand)).findFirst().map(ImmutableList::of).orElseGet(ImmutableList::of);

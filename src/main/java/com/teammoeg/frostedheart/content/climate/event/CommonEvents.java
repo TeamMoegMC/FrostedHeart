@@ -125,7 +125,7 @@ public class CommonEvents {
     @SubscribeEvent
     public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
         Block growBlock = event.getState().getBlock();
-        BlockPos belowPos=event.getPos().down();
+        BlockPos belowPos=event.getPos().below();
         Block belowGrowBlock=event.getWorld().getBlockState(belowPos).getBlock();
         float temp = ChunkHeatData.getTemperature(event.getWorld(), event.getPos());
         boolean bz = WorldClimate.isBlizzard(event.getWorld());
@@ -144,27 +144,27 @@ public class CommonEvents {
             if (FHUtils.isBlizzardHarming(event.getWorld(), event.getPos())) {
             	FluidState curstate=event.getWorld().getFluidState(cur);
             	if(curstate.isEmpty())
-            		event.getWorld().setBlockState(cur, Blocks.AIR.getDefaultState(), 2);
+            		event.getWorld().setBlock(cur, Blocks.AIR.defaultBlockState(), 2);
             	else
-            		event.getWorld().setBlockState(cur, curstate.getBlockState(), 2);
+            		event.getWorld().setBlock(cur, curstate.createLegacyBlock(), 2);
             } else if (event.getWorld().getRandom().nextInt(3) == 0) {
             	//FluidState curstate=event.getWorld().getFluidState(cur);
 
-                event.getWorld().setBlockState(cur,growBlock.getDefaultState(), 2);
+                event.getWorld().setBlock(cur,growBlock.defaultBlockState(), 2);
             }
             event.setResult(Event.Result.DENY);
         } else if (growBlock instanceof FHCropBlock) {
-        } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
+        } else if (growBlock.is(IEBlocks.Misc.hempPlant)) {
             if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE) {
                 if (event.getWorld().getRandom().nextInt(3) == 0) {
-                    event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
+                    event.getWorld().setBlock(event.getPos(), growBlock.defaultBlockState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
             } else if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
                 if (event.getWorld().getRandom().nextInt(3) == 0) {
                     BlockState cbs = event.getWorld().getBlockState(event.getPos());
-                    if (cbs.matchesBlock(growBlock))
-                        event.getWorld().setBlockState(event.getPos(), Blocks.AIR.getDefaultState(), 2);
+                    if (cbs.is(growBlock))
+                        event.getWorld().setBlock(event.getPos(), Blocks.AIR.defaultBlockState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
             }
@@ -173,15 +173,15 @@ public class CommonEvents {
                 // Set back to default state, might not be necessary
                 if (event.getWorld().getRandom().nextInt(3) == 0) {
                     BlockState cbs = event.getWorld().getBlockState(event.getPos());
-                    if (cbs.matchesBlock(growBlock) && cbs != growBlock.getDefaultState())
-                        event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
+                    if (cbs.is(growBlock) && cbs != growBlock.defaultBlockState())
+                        event.getWorld().setBlock(event.getPos(), growBlock.defaultBlockState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
             } else if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
                 if (event.getWorld().getRandom().nextInt(3) == 0) {
                     BlockState cbs = event.getWorld().getBlockState(event.getPos());
-                    if (cbs.matchesBlock(growBlock))
-                        event.getWorld().setBlockState(event.getPos(), Blocks.AIR.getDefaultState(), 2);
+                    if (cbs.is(growBlock))
+                        event.getWorld().setBlock(event.getPos(), Blocks.AIR.defaultBlockState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
             }
@@ -193,7 +193,7 @@ public class CommonEvents {
     }
     @SubscribeEvent
     public static void finishedEatingFood(LivingEntityUseItemEvent.Finish event) {
-        if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote
+        if (event.getEntityLiving() != null && !event.getEntityLiving().level.isClientSide
                 && event.getEntityLiving() instanceof ServerPlayerEntity) {
             ItemStack is = event.getItem();
             Item it = event.getItem().getItem();
@@ -211,9 +211,9 @@ public class CommonEvents {
                 float min = adj.getMinTemp(event.getItem());
                 float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(PlayerTemperatureData::getEnvTemp).orElse(0f));
                 if (heat > 1) {
-                    event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
+                    event.getEntityLiving().hurt(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
                 } else if (heat < -1)
-                    event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPOTHERMIA_INSTANT, (heat) * 2);
+                    event.getEntityLiving().hurt(FHDamageSources.HYPOTHERMIA_INSTANT, (heat) * 2);
                 if (heat > 0) {
                     if (current >= max)
                         return;
@@ -237,22 +237,22 @@ public class CommonEvents {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onArmorDamage(LivingHurtEvent event) {
-        if (event.getEntityLiving() instanceof PlayerEntity && (event.getSource().isFireDamage() || !event.getSource().isUnblockable())) {
+        if (event.getEntityLiving() instanceof PlayerEntity && (event.getSource().isFire() || !event.getSource().isBypassArmor())) {
             PlayerEntity player = (PlayerEntity) event.getEntityLiving();
             float damage = event.getAmount();
             DamageSource p_234563_1_ = event.getSource();
             if (damage > 0) {
                 damage = damage / 8.0F;
-                if (p_234563_1_.isFireDamage())// fire damage more
+                if (p_234563_1_.isFire())// fire damage more
                     damage *= 2;
                 else if (p_234563_1_.isExplosion())// explode add a lot
                     damage *= 4;
                 int amount = (int) damage;
                 if (amount != damage)
-                    amount += player.getRNG().nextDouble() < (damage - amount) ? 1 : 0;
+                    amount += player.getRandom().nextDouble() < (damage - amount) ? 1 : 0;
                 if (amount <= 0)
                     return;
-                for (ItemStack itemstack : player.getArmorInventoryList()) {
+                for (ItemStack itemstack : player.getArmorSlots()) {
                     if (itemstack.isEmpty())
                         continue;
                     CompoundNBT cn = itemstack.getTag();
@@ -263,8 +263,8 @@ public class CommonEvents {
                         continue;
                     if (cn.getBoolean("inner_bounded")) {
                         int dmg = cn.getInt("inner_damage");
-                        if (dmg < itemstack.getDamage()) {
-                            dmg = itemstack.getDamage();
+                        if (dmg < itemstack.getDamageValue()) {
+                            dmg = itemstack.getDamageValue();
                         }
                         dmg += amount;
                         if (dmg >= itemstack.getMaxDamage()) {
@@ -272,7 +272,7 @@ public class CommonEvents {
                             cn.remove("inner_cover_tag");
                             cn.remove("inner_bounded");
                             cn.remove("inner_damage");
-                            player.sendBreakAnimation(MobEntity.getSlotForItemStack(itemstack));
+                            player.broadcastBreakEvent(MobEntity.getEquipmentSlotForItem(itemstack));
                         } else cn.putInt("inner_damage", dmg);
                         continue;
                     }
@@ -281,7 +281,7 @@ public class CommonEvents {
                     int j = 0;
                     if (i > 0)
                         for (int k = 0; k < amount; ++k) {
-                            if (UnbreakingEnchantment.negateDamage(itemstack, i, player.getRNG())) {
+                            if (UnbreakingEnchantment.shouldIgnoreDurabilityDrop(itemstack, i, player.getRandom())) {
                                 ++j;
                             }
                         }
@@ -296,7 +296,7 @@ public class CommonEvents {
                         cn.remove("inner_cover");
                         cn.remove("inner_cover_tag");
                         cn.remove("inner_bounded");
-                        player.sendBreakAnimation(MobEntity.getSlotForItemStack(itemstack));
+                        player.broadcastBreakEvent(MobEntity.getEquipmentSlotForItem(itemstack));
                     } else {
                         cnbt.putInt("Damage", crdmg);
                         cn.put("inner_cover_tag", cnbt);
@@ -317,30 +317,30 @@ public class CommonEvents {
             if (growBlock instanceof IGrowable) {
                 if (growBlock instanceof SaplingBlock) {
                     if (temp < -5) {
-                    	player.sendStatusMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(-6)), true);
+                    	player.displayClientMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(-6)), true);
                     }
                 } else if (growBlock instanceof FHCropBlock) {
                     int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
                     if (temp < growTemp) {
                         event.setCanceled(true);
-                        player.sendStatusMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(growTemp)), true);
+                        player.displayClientMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(growTemp)), true);
                     }
                 } else if (growBlock instanceof FHBerryBushBlock) {
                     int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature();
                     if (temp < growTemp) {
                         event.setCanceled(true);
-                        player.sendStatusMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(growTemp)), true);
+                        player.displayClientMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(growTemp)), true);
                     }
-                } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
+                } else if (growBlock.is(IEBlocks.Misc.hempPlant)) {
                     if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE) {
                         event.setCanceled(true);
-                        player.sendStatusMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(WorldTemperature.HEMP_GROW_TEMPERATURE)), true);
+                        player.displayClientMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(WorldTemperature.HEMP_GROW_TEMPERATURE)), true);
                     }
                 } else if (growBlock == Blocks.NETHERRACK) {
 
                 } else if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE) {
                     event.setCanceled(true);
-                    player.sendStatusMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE)), true);
+                    player.displayClientMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE)), true);
 
                 }
             }
@@ -358,7 +358,7 @@ public class CommonEvents {
     public static void onServerTick(TickEvent.WorldTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.START) {
             World world = event.world;
-            if (!world.isRemote && world instanceof ServerWorld) {
+            if (!world.isClientSide && world instanceof ServerWorld) {
                 ServerWorld serverWorld = (ServerWorld) world;
 
                 // Scheduled checks (e.g. town structures)
@@ -367,7 +367,7 @@ public class CommonEvents {
                 // Town logic tick
                 int i = 0;
                 for (TeamDataHolder trd : FHTeamDataManager.INSTANCE.getAllData()) {
-                    if (serverWorld.getDimensionKey().equals(trd.getData(SpecialDataTypes.GENERATOR_DATA).dimension)) {
+                    if (serverWorld.dimension().equals(trd.getData(SpecialDataTypes.GENERATOR_DATA).dimension)) {
                         if (serverWorld.getGameTime() % 20 == i % 20) {//Split town calculations to multiple seconds
                             if (trd.getTeam().map(t -> t.getOnlineMembers().size()).orElse(0) > 0) {
                                 trd.getData(SpecialDataTypes.TOWN_DATA).tick(serverWorld);
@@ -406,29 +406,29 @@ public class CommonEvents {
                 int growTemp = ((FHCropBlock) growBlock).getGrowTemperature() + WorldTemperature.BONEMEAL_TEMPERATURE;
                 if (temp < growTemp) {
                     event.setCanceled(true);
-                    player.sendStatusMessage(TranslateUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(growTemp)), true);
+                    player.displayClientMessage(TranslateUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(growTemp)), true);
                 }
             } else if (growBlock instanceof FHBerryBushBlock) {
                 int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature() + WorldTemperature.BONEMEAL_TEMPERATURE;
                 if (temp < growTemp) {
                     event.setCanceled(true);
-                    player.sendStatusMessage(TranslateUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(growTemp)), true);
+                    player.displayClientMessage(TranslateUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(growTemp)), true);
                 }
-            } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
+            } else if (growBlock.is(IEBlocks.Misc.hempPlant)) {
                 if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE) {
                     event.setCanceled(true);
-                    player.sendStatusMessage(TranslateUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(WorldTemperature.HEMP_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE)), true);
+                    player.displayClientMessage(TranslateUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(WorldTemperature.HEMP_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE)), true);
                 }
             } else if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE) {
                 event.setCanceled(true);
-                player.sendStatusMessage(TranslateUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE)), true);
+                player.displayClientMessage(TranslateUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE)), true);
             }
         }
     }
     @SubscribeEvent
     public static void syncDataToClient(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayerEntity) {
-            ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
+            ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getLevel();
             PacketTarget currentPlayer=PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer());
             FHResearch.sendSyncPacket(currentPlayer);
             for(DataType type:DataType.types)
@@ -443,7 +443,7 @@ public class CommonEvents {
     @SubscribeEvent
     public static void syncDataWhenDimensionChanged(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getEntity() instanceof ServerPlayerEntity) {
-            ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
+            ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getLevel();
 
             FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHClimatePacket(WorldClimate.get(serverWorld)));

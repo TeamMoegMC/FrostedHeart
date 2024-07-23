@@ -36,8 +36,8 @@ public class ServerScenarioCommandPacket implements FHMessage {
     Map<String, String> params;
 
     public ServerScenarioCommandPacket(PacketBuffer buffer) {
-        commandName = buffer.readString();
-        params = SerializeUtil.readStringMap(buffer, new HashMap<>(), PacketBuffer::readString);
+        commandName = buffer.readUtf();
+        params = SerializeUtil.readStringMap(buffer, new HashMap<>(), PacketBuffer::readUtf);
     }
 
     
@@ -48,8 +48,8 @@ public class ServerScenarioCommandPacket implements FHMessage {
     }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeString(commandName);
-        SerializeUtil.writeStringMap(buffer, params, (v, p) -> p.writeString(v));
+        buffer.writeUtf(commandName);
+        SerializeUtil.writeStringMap(buffer, params, (v, p) -> p.writeUtf(v));
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {

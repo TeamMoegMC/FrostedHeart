@@ -37,7 +37,7 @@ public class ClimateCommand {
         LiteralArgumentBuilder<CommandSource> get = Commands.literal("get")
                 .executes((ct) -> {
                     try {
-                        ct.getSource().sendFeedback(TranslateUtils.str(String.valueOf(WorldClimate.get(ct.getSource().getWorld()))), true);
+                        ct.getSource().sendSuccess(TranslateUtils.str(String.valueOf(WorldClimate.get(ct.getSource().getLevel()))), true);
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -45,55 +45,55 @@ public class ClimateCommand {
                 });
         LiteralArgumentBuilder<CommandSource> rebuild = Commands.literal("rebuild").then(Commands.literal("cache").executes(ct -> {
 
-                    WorldClimate.get(ct.getSource().getWorld()).rebuildCache(ct.getSource().getWorld());
-                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    WorldClimate.get(ct.getSource().getLevel()).rebuildCache(ct.getSource().getLevel());
+                    ct.getSource().sendSuccess(TranslateUtils.str("Succeed!").withStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 }))
                 .executes((ct) -> {
 
-                    WorldClimate.get(ct.getSource().getWorld()).resetTempEvent(ct.getSource().getWorld());
-                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    WorldClimate.get(ct.getSource().getLevel()).resetTempEvent(ct.getSource().getLevel());
+                    ct.getSource().sendSuccess(TranslateUtils.str("Succeed!").withStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 });
         LiteralArgumentBuilder<CommandSource> init = Commands.literal("init")
                 .executes((ct) -> {
-                    WorldClimate.get(ct.getSource().getWorld()).addInitTempEvent(ct.getSource().getWorld());
-                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    WorldClimate.get(ct.getSource().getLevel()).addInitTempEvent(ct.getSource().getLevel());
+                    ct.getSource().sendSuccess(TranslateUtils.str("Succeed!").withStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 });
 
         LiteralArgumentBuilder<CommandSource> app = Commands.literal("append").then(
                 Commands.literal("warm").executes(ct -> {
-                    WorldClimate.get(ct.getSource().getWorld()).appendTempEvent(ClimateEvent::getWarmClimateEvent);
-                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(ClimateEvent::getWarmClimateEvent);
+                    ct.getSource().sendSuccess(TranslateUtils.str("Succeed!").withStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })
         ).then(
                 Commands.literal("cold").executes(ct -> {
-                    WorldClimate.get(ct.getSource().getWorld()).appendTempEvent(ClimateEvent::getColdClimateEvent);
-                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(ClimateEvent::getColdClimateEvent);
+                    ct.getSource().sendSuccess(TranslateUtils.str("Succeed!").withStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })
         ).then(
                 Commands.literal("blizzard").executes(ct -> {
-                    WorldClimate.get(ct.getSource().getWorld()).appendTempEvent(ClimateEvent::getBlizzardClimateEvent);
-                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(ClimateEvent::getBlizzardClimateEvent);
+                    ct.getSource().sendSuccess(TranslateUtils.str("Succeed!").withStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })
         ).executes(ct -> {
-            WorldClimate.get(ct.getSource().getWorld()).appendTempEvent(ClimateEvent::getClimateEvent);
-            ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+            WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(ClimateEvent::getClimateEvent);
+            ct.getSource().sendSuccess(TranslateUtils.str("Succeed!").withStyle(TextFormatting.GREEN), false);
             return Command.SINGLE_SUCCESS;
         });
         LiteralArgumentBuilder<CommandSource> reset = Commands.literal("resetVanilla")
                 .executes((ct) -> {
-                    IServerWorldInfo serverWorldInfo=ct.getSource().getWorld().serverWorldInfo;
+                    IServerWorldInfo serverWorldInfo=ct.getSource().getLevel().serverLevelData;
                     serverWorldInfo.setThunderTime(0);
                     serverWorldInfo.setRainTime(0);
                     serverWorldInfo.setClearWeatherTime(0);
                     return Command.SINGLE_SUCCESS;
                 });
 
-        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermissionLevel(2)).then(Commands.literal("climate").then(get).then(init).then(rebuild).then(reset).then(app)));
+        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermission(2)).then(Commands.literal("climate").then(get).then(init).then(rebuild).then(reset).then(app)));
     }
 }

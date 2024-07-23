@@ -82,8 +82,8 @@ public class DebugCommand {
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
         LiteralArgumentBuilder<CommandSource> add = Commands.literal("debug")
                 .then(Commands.literal("generate_airship").executes(ct -> {
-                    FHFeatures.spacecraft_feature.generate(((ServerWorld) ct.getSource().asPlayer().world), ((ServerWorld) ct.getSource().asPlayer().world).getChunkProvider().getChunkGenerator(), ct.getSource().asPlayer().world.rand,
-                            ct.getSource().asPlayer().getPosition());
+                    FHFeatures.spacecraft_feature.place(((ServerWorld) ct.getSource().getPlayerOrException().level), ((ServerWorld) ct.getSource().getPlayerOrException().level).getChunkSource().getGenerator(), ct.getSource().getPlayerOrException().level.random,
+                            ct.getSource().getPlayerOrException().blockPosition());
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("export_food").executes(ct -> {
                     Set<Item> items = new HashSet<>();
@@ -104,11 +104,11 @@ public class DebugCommand {
                                         ps.println(item + "," + parts[1]);
                                     } else {
                                         items.add(it);
-                                        Food f = it.getFood();
+                                        Food f = it.getFoodProperties();
                                         if (f == null)
                                             ps.println(item + "," + parts[1]);
                                         else
-                                            ps.println(item + "," + f.getHealing());
+                                            ps.println(item + "," + f.getNutrition());
                                     }
                                 }
                             }
@@ -116,18 +116,18 @@ public class DebugCommand {
                         for (Item ix : RegistryUtils.getItems()) {
                             if (ix == null || ix == Items.AIR) continue;
                             if (items.contains(ix)) continue;
-                            if (!ix.isFood()) continue;
+                            if (!ix.isEdible()) continue;
                             if (ix instanceof StewItem) continue;
                             items.add(ix);
-                            Food f = ix.getFood();
+                            Food f = ix.getFoodProperties();
                             if (f != null)
-                                ps.println(RegistryUtils.getRegistryName(ix) + "," + f.getHealing());
+                                ps.println(RegistryUtils.getRegistryName(ix) + "," + f.getNutrition());
                         }
                     } catch (Exception e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
-                    ct.getSource().sendFeedback(TranslateUtils.str("Exported " + items.size() + " Foods"), true);
+                    ct.getSource().sendSuccess(TranslateUtils.str("Exported " + items.size() + " Foods"), true);
                     return Command.SINGLE_SUCCESS;
                 }))
 
@@ -291,11 +291,11 @@ public class DebugCommand {
                                 packet.sendToAll(ct.getSource().getServer());
                             }
                         }
-                    ct.getSource().sendFeedback(TranslateUtils.str("Fixed " + tchunks.val + " Chunks"), true);
+                    ct.getSource().sendSuccess(TranslateUtils.str("Fixed " + tchunks.val + " Chunks"), true);
                     return Command.SINGLE_SUCCESS;
                 }));
 
-        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermissionLevel(2)).then(add));
+        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermission(2)).then(add));
     }
 
 }

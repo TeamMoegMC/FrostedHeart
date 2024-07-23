@@ -51,7 +51,7 @@ public class ReplaceLootModifier extends LootModifier {
 
         JsonObject toJson() {
             JsonObject jo = new JsonObject();
-            jo.add("from", from.serialize());
+            jo.add("from", from.toJson());
             jo.addProperty("to", RegistryUtils.getRegistryName(to).toString());
             return jo;
         }
@@ -64,7 +64,7 @@ public class ReplaceLootModifier extends LootModifier {
             List<ReplacePair> changes = new ArrayList<>();
             for (JsonElement je : ja) {
                 if (je.isJsonObject()) {
-                    changes.add(new ReplacePair(Ingredient.deserialize(je.getAsJsonObject().get("from")), RegistryUtils.getItem(new ResourceLocation(je.getAsJsonObject().get("to").getAsString()))));
+                    changes.add(new ReplacePair(Ingredient.fromJson(je.getAsJsonObject().get("from")), RegistryUtils.getItem(new ResourceLocation(je.getAsJsonObject().get("to").getAsString()))));
                 }
             }
             return new ReplaceLootModifier(conditions, changes);

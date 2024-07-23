@@ -91,9 +91,9 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	IIntArray base=new IntArray(4);
 		@Override
 		public int get(int index) {
-			if(index<base.size())
+			if(index<base.getCount())
 				return base.get(index);
-			index-=base.size();
+			index-=base.getCount();
 			switch(index) {
 			case 0:return (int) (getTemperatureLevel()*100);
 			case 1:return (int) (getRangeLevel()*100);
@@ -105,11 +105,11 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 		@Override
 		public void set(int index, int value) {
 			
-			if(index<base.size()) {
+			if(index<base.getCount()) {
 				base.set(index,value);
 				return;
 			}
-			index-=base.size();
+			index-=base.getCount();
 			switch(index) {
 			case 0:setTemperatureLevel(value/100f);break;
 			case 1:setRangeLevel(value/100f);break;
@@ -118,8 +118,8 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 		}
 
 		@Override
-		public int size() {
-			return base.size()+3;
+		public int getCount() {
+			return base.getCount()+3;
 		}
     	
     };
@@ -179,7 +179,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     @Nonnull
     @Override
     public VoxelShape getBlockBounds(@Nullable ISelectionContext ctx) {
-        return VoxelShapes.fullCube();
+        return VoxelShapes.block();
     }
 
     @Nonnull
@@ -212,7 +212,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA));
     }
     public final Optional<GeneratorData> getData() {
-        return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA)).filter(t -> master().pos.equals(t.actualPos));
+        return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA)).filter(t -> master().worldPosition.equals(t.actualPos));
     }
 
     @Nullable
@@ -246,7 +246,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         return false;
     }
     public GeneratorRecipe findRecipe(ItemStack input) {
-        for (GeneratorRecipe recipe : FHUtils.filterRecipes(this.getWorld().getRecipeManager(), GeneratorRecipe.TYPE))
+        for (GeneratorRecipe recipe : FHUtils.filterRecipes(this.getLevel().getRecipeManager(), GeneratorRecipe.TYPE))
             if (recipe.input.test(input))
                 return recipe;
         return null;
@@ -269,7 +269,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         ItemStackHelper.loadAllItems(nbt, linventory);
         hasFuel = nbt.getBoolean("hasFuel");
         isBroken = nbt.getBoolean("isBroken");
-        if(!descPacket&&this.getWorld() instanceof ServerWorld) {
+        if(!descPacket&&this.getLevel() instanceof ServerWorld) {
             Optional<GeneratorData> data = this.getData();
             data.ifPresent(t -> {
                 this.isOverdrive=t.isOverdrive;
@@ -279,10 +279,10 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
     @Override
-    public boolean receiveClientEvent(int id, int arg) {
+    public boolean triggerEvent(int id, int arg) {
         if (id == 0)
             this.formed = arg == 1;
-        markDirty();
+        setChanged();
         this.markContainingBlockForUpdate(null);
         return true;
     }
@@ -293,7 +293,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     		upgradeStructure(player);
     	}
     };
-    private final List<IngredientWithSize> repair=Arrays.asList(new IngredientWithSize(Ingredient.fromTag(ItemTags.createOptional(new ResourceLocation("forge","ingots/copper"))),32),new IngredientWithSize(Ingredient.fromTag(ItemTags.createOptional(new ResourceLocation("forge","stone"))),8));
+    private final List<IngredientWithSize> repair=Arrays.asList(new IngredientWithSize(Ingredient.of(ItemTags.createOptional(new ResourceLocation("forge","ingots/copper"))),32),new IngredientWithSize(Ingredient.of(ItemTags.createOptional(new ResourceLocation("forge","stone"))),8));
     public final List<IngredientWithSize> getRepairCost(){
     	return repair;
     };
@@ -301,7 +301,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	IETemplateMultiblock ietm=getNextLevelMultiblock();
         if(ietm!=null) {
         	if(upgrade==null) {
-        		upgrade=Arrays.stream(ietm.getTotalMaterials()).filter(Ingredient.fromItems(FHBlocks.generator_core_t1.get()).negate()).map(IngredientWithSize::of).collect(Collectors.toList());
+        		upgrade=Arrays.stream(ietm.getTotalMaterials()).filter(Ingredient.of(FHBlocks.generator_core_t1.get()).negate()).map(IngredientWithSize::of).collect(Collectors.toList());
         	}
         	return upgrade;
         }
@@ -312,20 +312,20 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	IETemplateMultiblock ietm=getNextLevelMultiblock();
     	if(ietm==null)
     		return false;
-    	Vector3i csize=this.multiblockInstance.getSize(world);
-    	Vector3i nsize=ietm.getSize(world);
+    	Vector3i csize=this.multiblockInstance.getSize(level);
+    	Vector3i nsize=ietm.getSize(level);
     	BlockPos masterOffset=ietm.getMasterFromOriginOffset().subtract(this.multiblockInstance.getMasterFromOriginOffset());
     	BlockPos negMasterOffset=this.multiblockInstance.getMasterFromOriginOffset().subtract(ietm.getMasterFromOriginOffset());
-    	AxisAlignedBB aabb=new AxisAlignedBB(masterOffset,masterOffset.add(csize));
+    	AxisAlignedBB aabb=new AxisAlignedBB(masterOffset,masterOffset.offset(csize));
     	
     	for(int x=0;x<nsize.getX();x++) {
     		for(int y=0;y<nsize.getY();y++) {
     			for(int z=0;z<nsize.getZ();z++) {
     				if(aabb.contains(x,y,z))
     					continue;
-    				BlockPos cpos=negMasterOffset.add(x, y, z);
+    				BlockPos cpos=negMasterOffset.offset(x, y, z);
     				BlockPos actual=this.getBlockPosForPos(cpos);
-    				if(world.getBlockState(actual).getBlock()!=Blocks.AIR) {
+    				if(level.getBlockState(actual).getBlock()!=Blocks.AIR) {
     					return false;
     				}
     	    	}
@@ -343,7 +343,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	BlockPos negMasterOffset=this.multiblockInstance.getMasterFromOriginOffset().subtract(getNextLevelMultiblock().getMasterFromOriginOffset());
         Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, getFacing().getOpposite());
         ((MultiBlockAccess) getNextLevelMultiblock()).setPlayer(entityplayer);
-        ((MultiBlockAccess) getNextLevelMultiblock()).callForm(world, getBlockPosForPos(negMasterOffset), rot, Mirror.NONE, getFacing());
+        ((MultiBlockAccess) getNextLevelMultiblock()).callForm(level, getBlockPosForPos(negMasterOffset), rot, Mirror.NONE, getFacing());
 
     }
     public void repairStructure(ServerPlayerEntity entityplayer) {
@@ -363,7 +363,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         if (message.contains("isOverdrive", Constants.NBT.TAG_BYTE))
             setOverdrive(message.getBoolean("isOverdrive"));
         this.markContainingBlockForUpdate(null);
-        this.markDirty();
+        this.setChanged();
        /* if (message.contains("temperatureLevel", Constants.NBT.TAG_INT))
             setTemperatureLevel(message.getInt("temperatureLevel"));
         if (message.contains("rangeLevel", Constants.NBT.TAG_INT))
@@ -372,24 +372,24 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     public void regist() {
     	getDataNoCheck().ifPresent(t -> {
-        	if(!master().pos.equals(t.actualPos))
+        	if(!master().worldPosition.equals(t.actualPos))
         		t.onPosChange();
         	this.setWorking(t.isWorking);
         	this.setOverdrive(t.isOverdrive);
-            t.actualPos = master().pos;
-            t.dimension = this.world.getDimensionKey();
+            t.actualPos = master().worldPosition;
+            t.dimension = this.level.dimension();
         });
     }
     
     public void tryRegist() {
     	getDataNoCheck().ifPresent(t -> {
     		if(BlockPos.ZERO.equals(t.actualPos)) {
-	        	if(!master().pos.equals(t.actualPos))
+	        	if(!master().worldPosition.equals(t.actualPos))
 	        		t.onPosChange();
 	        	this.setWorking(t.isWorking);
 	        	this.setOverdrive(t.isOverdrive);
-	            t.actualPos = master().pos;
-	            t.dimension = this.world.getDimensionKey();
+	            t.actualPos = master().worldPosition;
+	            t.dimension = this.level.dimension();
     		}
         });
     }
@@ -423,7 +423,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
             t.isOverdrive = this.isOverdrive;
             t.isWorking = this.isWorking;
         });
-        data.ifPresent(t -> t.tick(this.getWorld()));
+        data.ifPresent(t -> t.tick(this.getLevel()));
         boolean isWorking=data.map(t -> t.isActive).orElse(false);
         setTemperatureLevel(data.map(t -> t.TLevel).orElse(0F));
         setRangeLevel(data.map(t -> t.RLevel).orElse(0F));
@@ -439,12 +439,12 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         if(remTicks>0) {
         	if(remTicks%5==0) {
 	        	BlockPos pos=this.getBlockPosForPos(
-	        			new BlockPos(world.rand.nextInt(multiblockInstance.getSize(world).getX()),
-	        						world.rand.nextInt(multiblockInstance.getSize(world).getY()),
-	        						world.rand.nextInt(multiblockInstance.getSize(world).getZ())));
-	            for(PlayerEntity serverplayerentity : this.world.getPlayers()) {
-	                if (serverplayerentity.getPosition().distanceSq(pos) < 4096.0D) {
-	                   ((ServerPlayerEntity)serverplayerentity).connection.sendPacket(new SExplosionPacket(pos.getX(), pos.getY(), pos.getZ(), 8, Arrays.asList(), null));
+	        			new BlockPos(level.random.nextInt(multiblockInstance.getSize(level).getX()),
+	        						level.random.nextInt(multiblockInstance.getSize(level).getY()),
+	        						level.random.nextInt(multiblockInstance.getSize(level).getZ())));
+	            for(PlayerEntity serverplayerentity : this.level.players()) {
+	                if (serverplayerentity.blockPosition().distSqr(pos) < 4096.0D) {
+	                   ((ServerPlayerEntity)serverplayerentity).connection.send(new SExplosionPacket(pos.getX(), pos.getY(), pos.getZ(), 8, Arrays.asList(), null));
 	                }
 	             }
         	}

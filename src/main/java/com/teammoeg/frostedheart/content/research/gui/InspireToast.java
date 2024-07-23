@@ -38,26 +38,26 @@ public class InspireToast implements IToast {
         this.level = level;
     }
 
-    public IToast.Visibility func_230444_a_(MatrixStack matrixStack, ToastGui gui, long time) {
-        gui.getMinecraft().getTextureManager().bindTexture(TEXTURE_TOASTS);
+    public IToast.Visibility render(MatrixStack matrixStack, ToastGui gui, long time) {
+        gui.getMinecraft().getTextureManager().bind(TEXTURE);
         RenderSystem.color3f(1.0F, 1.0F, 1.0F);
-        gui.blit(matrixStack, 0, 0, 0, 0, this.func_230445_a_(), this.func_238540_d_());
+        gui.blit(matrixStack, 0, 0, 0, 0, this.width(), this.height());
 
-        List<IReorderingProcessor> list = gui.getMinecraft().fontRenderer.trimStringToWidth(TranslateUtils.translateMessage("inspire.toast.gain_point"), 125);
+        List<IReorderingProcessor> list = gui.getMinecraft().font.split(TranslateUtils.translateMessage("inspire.toast.gain_point"), 125);
         int i = 16776960;
         if (list.size() == 1) {
-            gui.getMinecraft().fontRenderer.drawText(matrixStack, TranslateUtils.translateMessage("inspire.toast.level",level), 30.0F, 7.0F, i | -16777216);
-            gui.getMinecraft().fontRenderer.func_238422_b_(matrixStack, list.get(0), 30.0F, 18.0F, -1);
+            gui.getMinecraft().font.draw(matrixStack, TranslateUtils.translateMessage("inspire.toast.level",level), 30.0F, 7.0F, i | -16777216);
+            gui.getMinecraft().font.draw(matrixStack, list.get(0), 30.0F, 18.0F, -1);
         } else {
             if (time < 1500L) {
                 int k = MathHelper.floor(MathHelper.clamp((1500L - time) / 300.0F, 0.0F, 1.0F) * 255.0F) << 24 | 67108864;
-                gui.getMinecraft().fontRenderer.drawText(matrixStack, TranslateUtils.translateMessage("inspire.toast.level",level), 30.0F, 11.0F, i | k);
+                gui.getMinecraft().font.draw(matrixStack, TranslateUtils.translateMessage("inspire.toast.level",level), 30.0F, 11.0F, i | k);
             } else {
                 int i1 = MathHelper.floor(MathHelper.clamp((time - 1500L) / 300.0F, 0.0F, 1.0F) * 252.0F) << 24 | 67108864;
-                int l = this.func_238540_d_() / 2 - list.size() * 9 / 2;
+                int l = this.height() / 2 - list.size() * 9 / 2;
 
                 for (IReorderingProcessor ireorderingprocessor : list) {
-                    gui.getMinecraft().fontRenderer.func_238422_b_(matrixStack, ireorderingprocessor, 30.0F, l, 16777215 | i1);
+                    gui.getMinecraft().font.draw(matrixStack, ireorderingprocessor, 30.0F, l, 16777215 | i1);
                     l += 9;
                 }
             }

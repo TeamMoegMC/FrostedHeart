@@ -188,7 +188,7 @@ public class FHScenario {
 	static final FolderName dataFolder = new FolderName("fhscenario");
 /*
 	public static ScenarioConductor load(ServerPlayerEntity player) {
-		local = FHResearchDataManager.server.func_240776_a_(dataFolder);
+		local = FHResearchDataManager.server.getWorldPath(dataFolder);
 		local.toFile().mkdirs();
 		File pfile = new File(local.toFile(), player.getUniqueID() + ".nbt");
 		if (pfile.exists())

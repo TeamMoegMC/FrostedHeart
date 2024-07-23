@@ -48,7 +48,7 @@ public class TipHUD extends AbstractGui {
         float BGAlpha = defaultBGAlpha;
         float fontAlpha = 1.0F;
 
-        Point mainWindow = new Point(mc.getMainWindow().getScaledWidth(), mc.getMainWindow().getScaledHeight());
+        Point mainWindow = new Point(mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
         int x = (int)(mainWindow.getX() * 0.7)-extendedWidth;
         int y = (int)(mainWindow.getY() * 0.3)-extendedHeight;
         Point renderPos2 = new Point((int)(mainWindow.getX() * 0.99F), lineSpace);
@@ -69,7 +69,7 @@ public class TipHUD extends AbstractGui {
                 if (descLines >= element.contents.size() && x > mainWindow.getX() * 0.5) {
                     extendedWidth += 24;
                 } else {
-                    GuiUtil.drawWrapString(I18n.format("tips." + FHMain.MODID + ".too_long"), ms,
+                    GuiUtil.drawWrapString(I18n.get("tips." + FHMain.MODID + ".too_long"), ms,
                             8, 8, (int)(mainWindow.getX()*0.5F), element.fontColor, lineSpace, true);
                 }
             }
@@ -103,18 +103,18 @@ public class TipHUD extends AbstractGui {
         float yaw = 0;
         float pitch = 0;
         if (mc.player != null) {
-            if (mc.isGamePaused()) {
-                yaw   = mc.player.getYaw(mc.getRenderPartialTicks()) - mc.player.renderArmYaw;
-                pitch = mc.player.getPitch(mc.getRenderPartialTicks()) - mc.player.renderArmPitch;
+            if (mc.isPaused()) {
+                yaw   = mc.player.getViewYRot(mc.getFrameTime()) - mc.player.yBob;
+                pitch = mc.player.getViewXRot(mc.getFrameTime()) - mc.player.xBob;
             } else {
-                yaw   = mc.player.getYaw(mc.getRenderPartialTicks())
-                        - MathHelper.lerp(mc.getRenderPartialTicks(), mc.player.prevRenderArmYaw, mc.player.renderArmYaw);
-                pitch = mc.player.getPitch(mc.getRenderPartialTicks())
-                        - MathHelper.lerp(mc.getRenderPartialTicks(), mc.player.prevRenderArmPitch, mc.player.renderArmPitch);
+                yaw   = mc.player.getViewYRot(mc.getFrameTime())
+                        - MathHelper.lerp(mc.getFrameTime(), mc.player.yBobO, mc.player.yBob);
+                pitch = mc.player.getViewXRot(mc.getFrameTime())
+                        - MathHelper.lerp(mc.getFrameTime(), mc.player.xBobO, mc.player.xBob);
             }
         }
 
-        ms.push();
+        ms.pushPose();
         ms.translate(-yaw*0.1F + fadeProgress*16 - 16, -pitch*0.1F, 1000);
 
         renderContent(element.contents, x, y, fontColor, renderPos2, BGColor);
@@ -131,17 +131,17 @@ public class TipHUD extends AbstractGui {
             if (lineProgress == 0) {
                 fadeOut = true;
             } else {
-                ms.push();
+                ms.pushPose();
                 ms.translate(lx, ly, 0);
                 ms.scale(lineProgress, 1, 1);
                 fill(ms, 0, 0, x2, 1, fontColor);
-                ms.pop();
+                ms.popPose();
             }
         } else if (isAlwaysVisible() || fadeIn) {
             fill(ms, x - 4, y + (titleLines+1)*lineSpace,
                     renderPos2.getX(), y + (titleLines+1)*lineSpace + 1, fontColor);
         }
-        ms.pop();
+        ms.popPose();
     }
 
     private void renderContent(List<ITextComponent> texts, int x, int y, int fontColor, Point renderPos2, int BGColor) {
@@ -174,8 +174,8 @@ public class TipHUD extends AbstractGui {
     }
 
     private void renderButton(int x, int y, int color) {
-        if (!isFading() && (mc.currentScreen != null || InputMappings.isKeyDown(mc.getMainWindow().getHandle(), 258))) {
-            if (mc.currentScreen == null) mc.displayGuiScreen(new EmptyScreen());
+        if (!isFading() && (mc.screen != null || InputMappings.isKeyDown(mc.getWindow().getWindow(), 258))) {
+            if (mc.screen == null) mc.setScreen(new EmptyScreen());
 
             if (GuiUtil.renderIconButton(ms, IconButton.ICON_CROSS, GuiUtil.getMouseX(), GuiUtil.getMouseY(), x, y, color, 0)) {
                 if (!isFading()) {

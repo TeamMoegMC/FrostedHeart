@@ -59,15 +59,15 @@ public class BlizzardRenderer {
                               double cameraX,
                               double cameraY,
                               double cameraZ) {
-        float rainStrength = world.getThunderStrength(partialTicks);
-        lightTexture.enableLightmap();
+        float rainStrength = world.getThunderLevel(partialTicks);
+        lightTexture.turnOnLightLayer();
 
         int cameraBlockPosX = MathHelper.floor(cameraX);
         int cameraBlockPosY = MathHelper.floor(cameraY);
         int cameraBlockPosZ = MathHelper.floor(cameraZ);
 
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.getBuffer();
+        BufferBuilder bufferBuilder = tessellator.getBuilder();
         RenderSystem.enableAlphaTest();
         RenderSystem.disableCull();
         RenderSystem.normal3f(0.0F, 1.0F, 0.0F);
@@ -80,8 +80,8 @@ public class BlizzardRenderer {
         // cameraX - renderRadius <= x <= cameraX + renderRadius
         // cameraZ - renderRadius <= z <= cameraZ + renderRadius
         // For y, it is the same rule, while in addition y should > *altitude of first solid block*
-        int renderRadius = Minecraft.isFancyGraphicsEnabled() ? 5 : 8;
-        RenderSystem.depthMask(Minecraft.isFabulousGraphicsEnabled());
+        int renderRadius = Minecraft.useFancyGraphics() ? 5 : 8;
+        RenderSystem.depthMask(Minecraft.useShaderTransparency());
 
         int i1 = -1;
         float ticksAndPartialTicks = ticks + partialTicks;
@@ -103,9 +103,9 @@ public class BlizzardRenderer {
                 // Size of snowflake
                 double rainSizeX = rainSizeXMemento[rainSizeIdx] * 0.5D;
                 double rainSizeZ = rainSizeZMemento[rainSizeIdx] * 0.5D;
-                blockPos.setPos(currentlyRenderingX, 0, currentlyRenderingZ);
+                blockPos.set(currentlyRenderingX, 0, currentlyRenderingZ);
 
-                int altitudeOfHighestSolidBlock = mc.world.getHeight(Heightmap.Type.MOTION_BLOCKING, blockPos.getX(), blockPos.getZ());
+                int altitudeOfHighestSolidBlock = mc.level.getHeight(Heightmap.Type.MOTION_BLOCKING, blockPos.getX(), blockPos.getZ());
                 int renderingYLowerBound = Math.max(cameraBlockPosY - renderRadius, altitudeOfHighestSolidBlock);
                 int renderingYUpperBound = Math.max(cameraBlockPosY + renderRadius, altitudeOfHighestSolidBlock);
 
@@ -115,14 +115,14 @@ public class BlizzardRenderer {
                 // nothing will be rendered.
                 if (renderingYLowerBound != renderingYUpperBound) {
 
-                    blockPos.setPos(currentlyRenderingX, renderingYLowerBound, currentlyRenderingZ);
+                    blockPos.set(currentlyRenderingX, renderingYLowerBound, currentlyRenderingZ);
 
                     if (i1 != 1) {
 
                         i1 = 1;
                         mc.getTextureManager()
-                                .bindTexture(new ResourceLocation("minecraft:textures/environment/snow.png"));
-                        bufferBuilder.begin(7, DefaultVertexFormats.PARTICLE_POSITION_TEX_COLOR_LMAP);
+                                .bind(new ResourceLocation("minecraft:textures/environment/snow.png"));
+                        bufferBuilder.begin(7, DefaultVertexFormats.PARTICLE);
                     }
 
                     float f7 = (float) (random.nextDouble()
@@ -133,58 +133,58 @@ public class BlizzardRenderer {
                     double d5 = currentlyRenderingZ + 0.5F - cameraZ;
                     float f9 = (float) ((d3 * d3 + d5 * d5) / (renderRadius * renderRadius));
                     float ticksAndPartialTicks0 = ((1.0F - f9) * 0.3F + 0.5F) * rainStrength;
-                    blockPos.setPos(currentlyRenderingX, posY2, currentlyRenderingZ);
-                    int k3 = WorldRenderer.getCombinedLight(world, blockPos);
+                    blockPos.set(currentlyRenderingX, posY2, currentlyRenderingZ);
+                    int k3 = WorldRenderer.getLightColor(world, blockPos);
                     int l3 = k3 >> 16 & '\uffff';
                     int i4 = (k3 & '\uffff') * 3;
                     int j4 = (l3 * 3 + 240) / 4;
                     int k4 = (i4 * 3 + 240) / 4;
 
-                    bufferBuilder.pos(
+                    bufferBuilder.vertex(
                                     currentlyRenderingX - cameraX - rainSizeX + 0.5D + random.nextGaussian() * 2,
                                     renderingYUpperBound - cameraY,
                                     currentlyRenderingZ - cameraZ - rainSizeZ + 0.5D + random.nextGaussian())
-                            .tex(0.0F + f7, renderingYLowerBound * 0.25F - Math.abs(fallSpeed))
+                            .uv(0.0F + f7, renderingYLowerBound * 0.25F - Math.abs(fallSpeed))
                             .color(1.0F, 1.0F, 1.0F, ticksAndPartialTicks0)
-                            .lightmap(k4, j4)
+                            .uv2(k4, j4)
                             .endVertex();
-                    bufferBuilder.pos(
+                    bufferBuilder.vertex(
                                     currentlyRenderingX - cameraX + rainSizeX + 0.5D + random.nextGaussian() * 2,
                                     renderingYUpperBound - cameraY,
                                     currentlyRenderingZ - cameraZ + rainSizeZ + 0.5D + random.nextGaussian())
-                            .tex(1.0F + f7, renderingYLowerBound * 0.25F - Math.abs(fallSpeed))
+                            .uv(1.0F + f7, renderingYLowerBound * 0.25F - Math.abs(fallSpeed))
                             .color(1.0F, 1.0F, 1.0F, ticksAndPartialTicks0)
-                            .lightmap(k4, j4)
+                            .uv2(k4, j4)
                             .endVertex();
-                    bufferBuilder.pos(
+                    bufferBuilder.vertex(
                                     currentlyRenderingX - cameraX + rainSizeX + 0.5D + random.nextGaussian() * 2,
                                     renderingYLowerBound - cameraY,
                                     currentlyRenderingZ - cameraZ + rainSizeZ + 0.5D + random.nextGaussian())
-                            .tex(1.0F + f7, renderingYUpperBound * 0.25F - Math.abs(fallSpeed))
+                            .uv(1.0F + f7, renderingYUpperBound * 0.25F - Math.abs(fallSpeed))
                             .color(1.0F, 1.0F, 1.0F, ticksAndPartialTicks0)
-                            .lightmap(k4, j4)
+                            .uv2(k4, j4)
                             .endVertex();
-                    bufferBuilder.pos(
+                    bufferBuilder.vertex(
                                     currentlyRenderingX - cameraX - rainSizeX + 0.5D + random.nextGaussian() * 2,
                                     renderingYLowerBound - cameraY,
                                     currentlyRenderingZ - cameraZ - rainSizeZ + 0.5D + random.nextGaussian())
-                            .tex(0.0F + f7, renderingYUpperBound * 0.25F - Math.abs(fallSpeed))
+                            .uv(0.0F + f7, renderingYUpperBound * 0.25F - Math.abs(fallSpeed))
                             .color(1.0F, 1.0F, 1.0F, ticksAndPartialTicks0)
-                            .lightmap(k4, j4)
+                            .uv2(k4, j4)
                             .endVertex();
                 }
             }
         }
 
         if (i1 >= 0) {
-            tessellator.draw();
+            tessellator.end();
         }
 
         RenderSystem.enableCull();
         RenderSystem.disableBlend();
         RenderSystem.defaultAlphaFunc();
         RenderSystem.disableAlphaTest();
-        lightTexture.disableLightmap();
+        lightTexture.turnOffLightLayer();
     }
 
     public BlizzardRenderer() {

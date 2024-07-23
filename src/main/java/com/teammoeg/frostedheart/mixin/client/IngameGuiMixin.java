@@ -44,22 +44,22 @@ public class IngameGuiMixin extends AbstractGui {
     @Overwrite
     public void renderItemName(MatrixStack matrixStack) {
         Minecraft mc = Minecraft.getInstance();
-        int scaledWidth = mc.getMainWindow().getScaledWidth();
-        int scaledHeight = mc.getMainWindow().getScaledHeight();
+        int scaledWidth = mc.getWindow().getGuiScaledWidth();
+        int scaledHeight = mc.getWindow().getGuiScaledHeight();
         IngameGuiAccess access = (IngameGuiAccess) this;
 
-        mc.getProfiler().startSection("selectedItemName");
+        mc.getProfiler().push("selectedItemName");
         if (access.getRemainingHighlightTicks() > 0 && !access.getHighlightingItemStack().isEmpty()) {
-            IFormattableTextComponent iformattabletextcomponent = (TranslateUtils.str("")).appendSibling(access.getHighlightingItemStack().getDisplayName()).mergeStyle(access.getHighlightingItemStack().getRarity().color);
-            if (access.getHighlightingItemStack().hasDisplayName()) {
-                iformattabletextcomponent.mergeStyle(TextFormatting.ITALIC);
+            IFormattableTextComponent iformattabletextcomponent = (TranslateUtils.str("")).append(access.getHighlightingItemStack().getHoverName()).withStyle(access.getHighlightingItemStack().getRarity().color);
+            if (access.getHighlightingItemStack().hasCustomHoverName()) {
+                iformattabletextcomponent.withStyle(TextFormatting.ITALIC);
             }
 
             ITextComponent highlightTip = access.getHighlightingItemStack().getHighlightTip(iformattabletextcomponent);
-            int i = mc.fontRenderer.getStringPropertyWidth(highlightTip);
+            int i = mc.font.width(highlightTip);
             int j = (scaledWidth - i) / 2;
             int k = scaledHeight - 59;
-            if (!mc.playerController.shouldDrawHUD()) {
+            if (!mc.gameMode.canHurtPlayer()) {
                 k += 14;
             }
             // FH STARTS
@@ -76,19 +76,19 @@ public class IngameGuiMixin extends AbstractGui {
                 RenderSystem.pushMatrix();
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
-                fill(matrixStack, j - 2, k - 2, j + i + 2, k + 9 + 2, mc.gameSettings.getChatBackgroundColor(0));
+                fill(matrixStack, j - 2, k - 2, j + i + 2, k + 9 + 2, mc.options.getBackgroundColor(0));
                 FontRenderer font = access.getHighlightingItemStack().getItem().getFontRenderer(access.getHighlightingItemStack());
                 if (font == null) {
-                    mc.fontRenderer.drawTextWithShadow(matrixStack, highlightTip, (float) j, (float) k, 16777215 + (l << 24));
+                    mc.font.drawShadow(matrixStack, highlightTip, (float) j, (float) k, 16777215 + (l << 24));
                 } else {
-                    j = (scaledWidth - font.getStringPropertyWidth(highlightTip)) / 2;
-                    font.drawTextWithShadow(matrixStack, highlightTip, (float) j, (float) k, 16777215 + (l << 24));
+                    j = (scaledWidth - font.width(highlightTip)) / 2;
+                    font.drawShadow(matrixStack, highlightTip, (float) j, (float) k, 16777215 + (l << 24));
                 }
                 RenderSystem.disableBlend();
                 RenderSystem.popMatrix();
             }
         }
 
-        mc.getProfiler().endSection();
+        mc.getProfiler().pop();
     }
 }

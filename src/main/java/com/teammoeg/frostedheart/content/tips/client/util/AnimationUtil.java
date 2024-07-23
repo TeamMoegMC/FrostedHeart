@@ -14,7 +14,7 @@ public class AnimationUtil {
             newAnimation(animationLength, id);
         }
 
-        float progress = animationList.get(id).getProgress(Util.milliTime());
+        float progress = animationList.get(id).getProgress(Util.getMillis());
         if (loop && progress >= 1.0F) {removeAnimation(id);}
         return Math.min(progress, 1.0F);
     }
@@ -54,7 +54,7 @@ public class AnimationUtil {
     }
 
     public static long lastCalcDelta(String id) {
-        return animationList.get(id) != null ? Util.milliTime() - animationList.get(id).lastGet : 0;
+        return animationList.get(id) != null ? Util.getMillis() - animationList.get(id).lastGet : 0;
     }
 
     public static void removeAnimation(String id) {
@@ -62,7 +62,7 @@ public class AnimationUtil {
     }
 
     private static void newAnimation(int animationLength, String id) {
-        animationList.put(id, new AnimationElement(animationLength, Util.milliTime()));
+        animationList.put(id, new AnimationElement(animationLength, Util.getMillis()));
     }
 }
 

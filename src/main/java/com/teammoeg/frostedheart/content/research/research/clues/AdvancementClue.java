@@ -71,10 +71,10 @@ public class AdvancementClue extends TickListenerClue {
     public ITextComponent getDescription() {
         ITextComponent itc = super.getDescription();
         if (itc != null) return itc;
-        ClientAdvancementManager cam = ClientUtils.getPlayer().connection.getAdvancementManager();
-        Advancement adv = cam.getAdvancementList().getAdvancement(advancement);
+        ClientAdvancementManager cam = ClientUtils.getPlayer().connection.getAdvancements();
+        Advancement adv = cam.getAdvancements().get(advancement);
         if (adv != null)
-            return adv.getDisplayText();
+            return adv.getChatComponent();
         else
             return null;
 
@@ -94,17 +94,17 @@ public class AdvancementClue extends TickListenerClue {
 
     @Override
     public boolean isCompleted(TeamResearchData t, ServerPlayerEntity player) {
-        Advancement a = player.server.getAdvancementManager().getAdvancement(advancement);
+        Advancement a = player.server.getAdvancements().getAdvancement(advancement);
         if (a == null) {
             return false;
         }
 
-        AdvancementProgress progress = player.getAdvancements().getProgress(a);
+        AdvancementProgress progress = player.getAdvancements().getOrStartProgress(a);
 
         if (criterion.isEmpty()) {
             return progress.isDone();
         }
-        CriterionProgress criterionProgress = progress.getCriterionProgress(criterion);
-        return criterionProgress != null && criterionProgress.isObtained();
+        CriterionProgress criterionProgress = progress.getCriterion(criterion);
+        return criterionProgress != null && criterionProgress.isDone();
     }
 }

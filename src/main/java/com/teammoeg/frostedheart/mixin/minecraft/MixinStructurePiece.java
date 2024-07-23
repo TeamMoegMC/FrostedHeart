@@ -52,13 +52,13 @@ public class MixinStructurePiece {
     @Overwrite
     protected boolean generateChest(IServerWorld worldIn, MutableBoundingBox boundsIn, Random rand, BlockPos posIn,
                                     ResourceLocation resourceLocationIn, @Nullable BlockState p_191080_6_) {
-        if (boundsIn.isVecInside(posIn) && !worldIn.getBlockState(posIn).matchesBlock(StructureUtils.getChest())) {
+        if (boundsIn.isInside(posIn) && !worldIn.getBlockState(posIn).is(StructureUtils.getChest())) {
             if (p_191080_6_ == null) {
-                p_191080_6_ = StructurePiece.correctFacing(worldIn, posIn, StructureUtils.getChest().getDefaultState());
+                p_191080_6_ = StructurePiece.reorient(worldIn, posIn, StructureUtils.getChest().defaultBlockState());
             }
 
-            worldIn.setBlockState(posIn, p_191080_6_, 2);
-            TileEntity tileentity = worldIn.getTileEntity(posIn);
+            worldIn.setBlock(posIn, p_191080_6_, 2);
+            TileEntity tileentity = worldIn.getBlockEntity(posIn);
             if (tileentity instanceof LockableLootTileEntity) {
                 ((LockableLootTileEntity) tileentity).setLootTable(resourceLocationIn, rand.nextLong());
             }

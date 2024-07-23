@@ -32,7 +32,7 @@ public class MCCommands {
 		if (count == 0) count = 1;
 		ItemStack is = new ItemStack(i, count);
 		if (nbt != null)
-			is.setTag(JsonToNBT.getTagFromJson(nbt));
+			is.setTag(JsonToNBT.parseTag(nbt));
 		FHUtils.giveItem(runner.getPlayer(), is);
 	}
 
@@ -50,26 +50,26 @@ public class MCCommands {
 		ServerPlayerEntity triggerPlayer = (ServerPlayerEntity) runner.getPlayer();
 		overrides.put("p", triggerPlayer.getGameProfile().getName());
 
-		BlockPos pos = triggerPlayer.getPosition();
+		BlockPos pos = triggerPlayer.blockPosition();
 		overrides.put("x", pos.getX());
 		overrides.put("y", pos.getY());
 		overrides.put("z", pos.getZ());
-		OpEntry opent= FHTeamDataManager.getServer().getPlayerList().getOppedPlayers().getEntry(triggerPlayer.getGameProfile());
+		OpEntry opent= FHTeamDataManager.getServer().getPlayerList().getOps().get(triggerPlayer.getGameProfile());
 		if(op>0)
 			if(opent==null){
-				FHTeamDataManager.getServer().getPlayerList().addOp(triggerPlayer.getGameProfile());
+				FHTeamDataManager.getServer().getPlayerList().op(triggerPlayer.getGameProfile());
 			}
-		Commands cmds = FHTeamDataManager.getServer().getCommandManager();
-		CommandSource source = asp>0?triggerPlayer.getCommandSource(): FHTeamDataManager.getServer().getCommandSource();
+		Commands cmds = FHTeamDataManager.getServer().getCommands();
+		CommandSource source = asp>0?triggerPlayer.createCommandSourceStack(): FHTeamDataManager.getServer().createCommandSourceStack();
 		for (Map.Entry<String, Object> entry : overrides.entrySet()) {
 			if (entry.getValue() != null) {
 				s = s.replace("@" + entry.getKey(), entry.getValue().toString());
 			}
 		}
-		cmds.handleCommand(source, s);
+		cmds.performCommand(source, s);
 		if(op>0)
 			if(opent==null){
-				FHTeamDataManager.getServer().getPlayerList().removeOp(triggerPlayer.getGameProfile());
+				FHTeamDataManager.getServer().getPlayerList().deop(triggerPlayer.getGameProfile());
 			}
 	}
 }

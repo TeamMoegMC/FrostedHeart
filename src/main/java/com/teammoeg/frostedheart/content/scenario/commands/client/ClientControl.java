@@ -60,7 +60,7 @@ import net.minecraft.util.text.event.ClickEvent;
 
 public class ClientControl implements IClientControlCommand {
 	public void link(IClientScene runner,@Param("lid")String linkId) {
-		runner.setPreset(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"fh$scenario$link:"+linkId)).setUnderlined(true));
+		runner.setPreset(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"fh$scenario$link:"+linkId)).setUnderlined(true));
 	}
 	public void endlink(IClientScene runner) {
 		runner.setPreset(null);
@@ -93,11 +93,11 @@ public class ClientControl implements IClientControlCommand {
 		ITextComponent t1=null,t2=null;
 		if(t!=null) {
 			t1=ClientTextComponentUtils.parse(t);
-			ClientUtils.mc().ingameGUI.renderTitles(t1,null,i1==null?-1:i1,i2==null?-1:i2, i3==null?-1:i3);
+			ClientUtils.mc().gui.setTitles(t1,null,i1==null?-1:i1,i2==null?-1:i2, i3==null?-1:i3);
 		}
 		if(st!=null) {
 			t2=ClientTextComponentUtils.parse(st);
-			ClientUtils.mc().ingameGUI.renderTitles(null,t2,i1==null?-1:i1,i2==null?-1:i2, i3==null?-1:i3);
+			ClientUtils.mc().gui.setTitles(null,t2,i1==null?-1:i1,i2==null?-1:i2, i3==null?-1:i3);
 		}
 		
 	}
@@ -128,7 +128,7 @@ public class ClientControl implements IClientControlCommand {
 					if(ClientScene.INSTANCE.dialog!=null)
 						ClientScene.INSTANCE.dialog.closeDialog();
 					ClientScene.INSTANCE.dialog=id;
-					ClientUtils.mc().displayGuiScreen(id);
+					ClientUtils.mc().setScreen(id);
 				}else {
 					id=(ImageScreenDialog) ClientScene.INSTANCE.dialog;
 				}
@@ -250,26 +250,26 @@ public class ClientControl implements IClientControlCommand {
 	@Override
 	public void bgm(IClientScene runner,@Param("n")@Param("name")String name) {
 		//ISound sound=SimpleSound.music();
-		ClientUtils.mc().getMusicTicker().stop();
-		ClientUtils.mc().getMusicTicker().selectRandomBackgroundMusic(new BackgroundMusicSelector(new SoundEvent(FHScenarioClient.getPathOf(new ResourceLocation(name),"")), 0, 0, true));
+		ClientUtils.mc().getMusicManager().stopPlaying();
+		ClientUtils.mc().getMusicManager().startPlaying(new BackgroundMusicSelector(new SoundEvent(FHScenarioClient.getPathOf(new ResourceLocation(name),"")), 0, 0, true));
 	
 	}
 	@Override
 	public void stopbgm(IClientScene runner) {
 		//ISound sound=SimpleSound.music();
-		ClientUtils.mc().getMusicTicker().stop();
+		ClientUtils.mc().getMusicManager().stopPlaying();
 	}
 	List<ISound> current=new ArrayList<>();
 	@Override
 	public void sound(IClientScene runner,@Param("n")@Param("name")String name,@Param("repeat")int rep) {
 		//ISound sound=SimpleSound.music();
 		ISound sound=new SimpleSound(FHScenarioClient.getPathOf(new ResourceLocation(name),""), SoundCategory.MASTER,1, 1, rep>0, 0, AttenuationType.LINEAR, 0, 0, 0, true);
-		ClientUtils.mc().getSoundHandler().play(sound);
+		ClientUtils.mc().getSoundManager().play(sound);
 		current.add(sound);
 	}
 	@Override
 	public void stopAllsounds(IClientScene runner) {
-		current.forEach(ClientUtils.mc().getSoundHandler()::stop);
+		current.forEach(ClientUtils.mc().getSoundManager()::stop);
 		current.clear();
 		
 	}

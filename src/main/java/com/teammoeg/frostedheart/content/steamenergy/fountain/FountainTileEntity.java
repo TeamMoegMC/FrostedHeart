@@ -112,7 +112,7 @@ public class FountainTileEntity extends IEBaseTileEntity implements
     @Override
     public void tick() {
         // server side logic
-        if (!world.isRemote) {
+        if (!level.isClientSide) {
             // power logic
             if (network.hasValidNetwork()) {
                 // start refill if power is below REFILL_THRESHOLD
@@ -133,10 +133,10 @@ public class FountainTileEntity extends IEBaseTileEntity implements
 
                             // Configure blockstates for nozzles
                             for (int i = 0; i < height; i++) {
-                                BlockPos nozzle = pos.offset(Direction.UP, i + 1);
-                                world.setBlockState(nozzle,
-                                        FHBlocks.fountain_nozzle.get().getDefaultState()
-                                                .with(FountainNozzleBlock.HEIGHT, i + 1),
+                                BlockPos nozzle = worldPosition.relative(Direction.UP, i + 1);
+                                level.setBlock(nozzle,
+                                        FHBlocks.fountain_nozzle.get().defaultBlockState()
+                                                .setValue(FountainNozzleBlock.HEIGHT, i + 1),
                                         Constants.BlockFlags.DEFAULT_AND_RERENDER
                                 );
                             }
@@ -150,26 +150,26 @@ public class FountainTileEntity extends IEBaseTileEntity implements
                     // if not refilling, consume power
                     power--;
                 }
-                markDirty();
+                setChanged();
                 this.markContainingBlockForUpdate(null);
             } else this.setActive(false);
 
             // grant player effect if structure is valid
             if (height > 0 && power > 0) {
-                markDirty();
+                setChanged();
                 this.markContainingBlockForUpdate(null);
                 adjustHeat(getRange());
 
-                for (PlayerEntity p : this.getWorld().getPlayers()) {
+                for (PlayerEntity p : this.getLevel().players()) {
                     removeWarmth((ServerPlayerEntity) p);
 
-                    if (p.getDistanceSq(
-                            this.getPos().getX() + 0.5,
-                            this.getPos().getY() + 0.5,
-                            this.getPos().getZ() + 0.5) < (getRange() * getRange()) &&
+                    if (p.distanceToSqr(
+                            this.getBlockPos().getX() + 0.5,
+                            this.getBlockPos().getY() + 0.5,
+                            this.getBlockPos().getZ() + 0.5) < (getRange() * getRange()) &&
                             p.isInWater() &&
-                            p.getPosY() > this.getPos().getY() - 0.5 &&
-                            p.getPosY() < this.getPos().getY() + height + 0.5
+                            p.getY() > this.getBlockPos().getY() - 0.5 &&
+                            p.getY() < this.getBlockPos().getY() + height + 0.5
                     ) {
                         grantWarmth((ServerPlayerEntity) p);
                     }
@@ -179,10 +179,10 @@ public class FountainTileEntity extends IEBaseTileEntity implements
             }
         } else {
             // make water steamy
-            if (world.rand.nextInt(4) == 0) {
+            if (level.random.nextInt(4) == 0) {
                 BlockPos water = findWater();
                 if (water != null) {
-                    ClientUtils.spawnSteamParticles(world, water);
+                    ClientUtils.spawnSteamParticles(level, water);
                 }
             }
         }
@@ -195,14 +195,14 @@ public class FountainTileEntity extends IEBaseTileEntity implements
         BlockPos pos = null;
         int tries = 0;
 
-        while (!state.getFluidState().isTagged(FluidTags.WATER)) {
+        while (!state.getFluidState().is(FluidTags.WATER)) {
             if (tries > 2) return null;
 
             tries++;
-            state = world.getBlockState(
-                    pos = getPos()
-                            .north(world.rand.nextInt(getRange() * 2) - getRange())
-                            .east(world.rand.nextInt(getRange() * 2) - getRange())
+            state = level.getBlockState(
+                    pos = getBlockPos()
+                            .north(level.random.nextInt(getRange() * 2) - getRange())
+                            .east(level.random.nextInt(getRange() * 2) - getRange())
             );
         }
 
@@ -214,7 +214,7 @@ public class FountainTileEntity extends IEBaseTileEntity implements
     }
 
     private void grantWarmth(ServerPlayerEntity player) {
-        player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).applyNonPersistentModifier(
+        player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).addTransientModifier(
                 new AttributeModifier(WARMTH_EFFECT_UUID, "fountain warmth", lastTemp * 25, AttributeModifier.Operation.ADDITION)
         );
     }
@@ -225,11 +225,11 @@ public class FountainTileEntity extends IEBaseTileEntity implements
 
 
     private int findNozzleHeight() {
-        assert world != null;
+        assert level != null;
 
         for (int i = 0; i < MAX_HEIGHT; i++) {
-            BlockPos nozzle = pos.offset(Direction.UP, i + 1);
-            if (world.getBlockState(nozzle).getBlock() != FHBlocks.fountain_nozzle.get())
+            BlockPos nozzle = worldPosition.relative(Direction.UP, i + 1);
+            if (level.getBlockState(nozzle).getBlock() != FHBlocks.fountain_nozzle.get())
                 return i;
         }
 
@@ -251,7 +251,7 @@ public class FountainTileEntity extends IEBaseTileEntity implements
         lastTemp = networkTemp;
 
         removeHeat();
-        ChunkHeatData.addPillarTempAdjust(world, pos, (heatRange = range), height + 1,1, (int) lastTemp * 15);
+        ChunkHeatData.addPillarTempAdjust(level, worldPosition, (heatRange = range), height + 1,1, (int) lastTemp * 15);
         heatAdjusted = true;
     }
 
@@ -260,16 +260,16 @@ public class FountainTileEntity extends IEBaseTileEntity implements
     }
 
     @Override
-    public void remove() {
-        super.remove();
+    public void setRemoved() {
+        super.setRemoved();
         removeHeat();
 
         for (int i = 0; i < MAX_HEIGHT; i++) {
-            BlockPos nozzle = pos.offset(Direction.UP, i + 1);
-            if (world.getBlockState(nozzle).getBlock() == FHBlocks.fountain_nozzle.get()) {
-                world.setBlockState(nozzle,
-                        FHBlocks.fountain_nozzle.get().getDefaultState()
-                                .with(FountainNozzleBlock.HEIGHT, 0),
+            BlockPos nozzle = worldPosition.relative(Direction.UP, i + 1);
+            if (level.getBlockState(nozzle).getBlock() == FHBlocks.fountain_nozzle.get()) {
+                level.setBlock(nozzle,
+                        FHBlocks.fountain_nozzle.get().defaultBlockState()
+                                .setValue(FountainNozzleBlock.HEIGHT, 0),
                         Constants.BlockFlags.DEFAULT_AND_RERENDER
                 );
             }
@@ -279,7 +279,7 @@ public class FountainTileEntity extends IEBaseTileEntity implements
     private void removeHeat() {
         if (!heatAdjusted) return;
 
-        ChunkHeatData.removeTempAdjust(world, pos);
+        ChunkHeatData.removeTempAdjust(level, worldPosition);
         heatAdjusted = false;
     }
 }

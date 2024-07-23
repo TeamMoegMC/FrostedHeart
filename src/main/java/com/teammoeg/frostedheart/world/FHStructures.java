@@ -57,30 +57,30 @@ public class FHStructures {
 
     public static <F extends Structure<?>> void setupMapSpacingAndLand(F structure, StructureSeparationSettings structureSeparationSettings,
                                                                        boolean transformSurroundingLand) {
-        Structure.NAME_STRUCTURE_BIMAP.put(structure.getRegistryName().toString(), structure);
+        Structure.STRUCTURES_REGISTRY.put(structure.getRegistryName().toString(), structure);
 
         if (transformSurroundingLand) {
-            Structure.field_236384_t_ = ImmutableList.<Structure<?>>builder()
-                    .addAll(Structure.field_236384_t_)
+            Structure.NOISE_AFFECTING_FEATURES = ImmutableList.<Structure<?>>builder()
+                    .addAll(Structure.NOISE_AFFECTING_FEATURES)
                     .add(structure)
                     .build();
         }
 
-        DimensionStructuresSettings.field_236191_b_ =
+        DimensionStructuresSettings.DEFAULTS =
                 ImmutableMap.<Structure<?>, StructureSeparationSettings>builder()
-                        .putAll(DimensionStructuresSettings.field_236191_b_)
+                        .putAll(DimensionStructuresSettings.DEFAULTS)
                         .put(structure, structureSeparationSettings)
                         .build();
 
 
 
-        WorldGenRegistries.NOISE_SETTINGS.getEntries().forEach(settings -> {
-            Map<Structure<?>, StructureSeparationSettings> structureMap = settings.getValue().getStructures().func_236195_a_();
+        WorldGenRegistries.NOISE_GENERATOR_SETTINGS.entrySet().forEach(settings -> {
+            Map<Structure<?>, StructureSeparationSettings> structureMap = settings.getValue().structureSettings().structureConfig();
 
             if (structureMap instanceof ImmutableMap) {
                 Map<Structure<?>, StructureSeparationSettings> tempMap = new HashMap<>(structureMap);
                 tempMap.put(structure, structureSeparationSettings);
-                settings.getValue().getStructures().func_236195_a_();
+                settings.getValue().structureSettings().structureConfig();
 
             } else {
                 structureMap.put(structure, structureSeparationSettings);
@@ -112,7 +112,7 @@ public class FHStructures {
     }
 
     public static void registerStructureGenerate() {
-        Structure.NAME_STRUCTURE_BIMAP.put(RegistryUtils.getRegistryName(FHStructures.OBSERVATORY).toString(), FHStructures.OBSERVATORY);
+        Structure.STRUCTURES_REGISTRY.put(RegistryUtils.getRegistryName(FHStructures.OBSERVATORY).toString(), FHStructures.OBSERVATORY);
 //        Structure.NAME_STRUCTURE_BIMAP.put(FHStructures.VOLCANIC_VENT.getRegistryName().toString(), FHStructures.VOLCANIC_VENT);
 
         HashMap<Structure<?>, StructureSeparationSettings> StructureSettingMap = new HashMap<>();
@@ -120,20 +120,20 @@ public class FHStructures {
 //        StructureSettingMap.put(VOLCANIC_VENT,new StructureSeparationSettings(12,8,123456));
 
 
-        DimensionStructuresSettings.field_236191_b_ = ImmutableMap.<Structure<?>, StructureSeparationSettings>builder()
-                .putAll(DimensionStructuresSettings.field_236191_b_)
+        DimensionStructuresSettings.DEFAULTS = ImmutableMap.<Structure<?>, StructureSeparationSettings>builder()
+                .putAll(DimensionStructuresSettings.DEFAULTS)
                 .putAll(StructureSettingMap)
                 .build();
-        Structure.field_236384_t_ = ImmutableList.<Structure<?>>builder()
-                .addAll(Structure.field_236384_t_)
+        Structure.NOISE_AFFECTING_FEATURES = ImmutableList.<Structure<?>>builder()
+                .addAll(Structure.NOISE_AFFECTING_FEATURES)
                 .add(FHStructures.OBSERVATORY.getStructure())
                 .build();
-        WorldGenRegistries.NOISE_SETTINGS.forEach(settings -> {
-            Map<Structure<?>, StructureSeparationSettings> structureMap = settings.getStructures().func_236195_a_();
+        WorldGenRegistries.NOISE_GENERATOR_SETTINGS.forEach(settings -> {
+            Map<Structure<?>, StructureSeparationSettings> structureMap = settings.structureSettings().structureConfig();
             if (structureMap instanceof ImmutableMap) {
                 Map<Structure<?>, StructureSeparationSettings> tempMap = new HashMap<>(structureMap);
                 tempMap.putAll(StructureSettingMap);
-                settings.getStructures().field_236193_d_ = tempMap;
+                settings.structureSettings().structureConfig = tempMap;
             } else structureMap.putAll(StructureSettingMap);
         });
     }

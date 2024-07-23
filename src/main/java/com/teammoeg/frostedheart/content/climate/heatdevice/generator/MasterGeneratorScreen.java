@@ -37,6 +37,8 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 
+import blusunrize.immersiveengineering.client.gui.elements.GuiButtonIE.IIEPressable;
+
 public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> extends IEContainerScreen<MasterGeneratorContainer<T>> {
 	T tile;
 	public static final int TEXW=512;
@@ -79,32 +81,32 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 	public MasterGeneratorScreen(MasterGeneratorContainer<T> inventorySlotsIn, PlayerInventory inv, ITextComponent title) {
 		super(inventorySlotsIn, inv, title);
 		tile=inventorySlotsIn.tile;
-		this.ySize=222;
+		this.imageHeight=222;
 		
 	}
 	public void blit(MatrixStack matrixStack, int x, int y,int w,int h, int u, int v, int uWidth, int vHeight) {
-		AbstractGui.blit(matrixStack,guiLeft + x,guiTop+y, w, h, u, v, uWidth, vHeight, TEXW, TEXH);
+		AbstractGui.blit(matrixStack,leftPos + x,topPos+y, w, h, u, v, uWidth, vHeight, TEXW, TEXH);
 	}
 	public void blit(MatrixStack matrixStack, int x, int y,int w,int h, int u, int v) {
 		blit(matrixStack,x,y, w, h, u, v, w, h);
 	}
-	public MasterGeneratorContainer<T> getContainer() {
-		return container;
+	public MasterGeneratorContainer<T> getMenu() {
+		return menu;
 	}
 	@Override
-	protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int x, int y) {
+	protected void renderBg(MatrixStack matrixStack, float partialTicks, int x, int y) {
 		ClientUtils.bindTexture(TEXTURE);
 		//background
-		this.blit(matrixStack, 0, 0, this.xSize, this.ySize, 0, 0);
+		this.blit(matrixStack, 0, 0, this.imageWidth, this.imageHeight, 0, 0);
 
 		//System.out.println(ininvarrx+","+ininvarry+"-"+inarryl);
 		//range circle
 		int actualRangeLvl=(int) (tile.getRangeLevel()+0.05);
-		rangeicons.blitAtlas(matrixStack, guiLeft, guiTop, rangePoint, actualRangeLvl);
+		rangeicons.blitAtlas(matrixStack, leftPos, topPos, rangePoint, actualRangeLvl);
 		
 		//fuel slots
-		Point in=container.getSlotIn();
-		Point out=container.getSlotOut();
+		Point in=menu.getSlotIn();
+		Point out=menu.getSlotOut();
 
 
 		int ininvarry=in.getY()+6;
@@ -119,10 +121,10 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		//slot background
 		this.blit(matrixStack,in.getX()-2, in.getY()-2, 20, 20, 404, 128);
 		this.blit(matrixStack,out.getX()-2, out.getY()-2, 20, 20, 424, 128);
-		if(container.getTank()!=null) {
+		if(menu.getTank()!=null) {
 			this.blit(matrixStack,133,55, 20, 64, 384, 128);
 			this.blit(matrixStack,98, 84, 34, 4, 444, 128);
-			GuiHelper.handleGuiTank(matrixStack, container.getTank(), guiLeft + 135, guiTop + 57, 16, 60, 0, 0, 0, 0, x, y, TEXTURE, null);
+			GuiHelper.handleGuiTank(matrixStack, menu.getTank(), leftPos + 135, topPos + 57, 16, 60, 0, 0, 0, 0, x, y, TEXTURE, null);
 			ClientUtils.bindTexture(TEXTURE);
 		}
 		
@@ -131,29 +133,29 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		this.blit(matrixStack, 85, 93, 6, 22, 412, 148);
 
 		//generator symbol
-		generatorSymbol.blitAtlas(matrixStack, guiLeft, guiTop, generatorPos,((tile.isWorking()&&tile.guiData.get(MasterGeneratorTileEntity.PROCESS)>0)?2:1),(container.getTier()-1));
+		generatorSymbol.blitAtlas(matrixStack, leftPos, topPos, generatorPos,((tile.isWorking()&&tile.guiData.get(MasterGeneratorTileEntity.PROCESS)>0)?2:1),(menu.getTier()-1));
 		
 		
 		//range gauge
-		minorPointer.blitRotated(matrixStack, guiLeft, guiTop, rangeGauge, tile.getRangeLevel()/4f*271f);
+		minorPointer.blitRotated(matrixStack, leftPos, topPos, rangeGauge, tile.getRangeLevel()/4f*271f);
 		//temp gauge
-		majorPointer.blitRotated(matrixStack, guiLeft, guiTop, tempGauge, (tile.getTemperatureLevel())/4f*271f);
+		majorPointer.blitRotated(matrixStack, leftPos, topPos, tempGauge, (tile.getTemperatureLevel())/4f*271f);
 		//overdrive gauge
-		minorPointer.blitRotated(matrixStack, guiLeft, guiTop, overGauge, container.data.get(MasterGeneratorTileEntity.OVERDRIVE)/1000f*271f);
+		minorPointer.blitRotated(matrixStack, leftPos, topPos, overGauge, menu.data.get(MasterGeneratorTileEntity.OVERDRIVE)/1000f*271f);
 	}
 	private void drawCenterText(MatrixStack matrixStack,int x,int y,String s,int clr) {
-		this.font.drawText(matrixStack,TranslateUtils.str(s),x- (float) this.font.getStringWidth(s) /2, y-4, clr);
+		this.font.draw(matrixStack,TranslateUtils.str(s),x- (float) this.font.width(s) /2, y-4, clr);
 	}
-	protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int x, int y) {
+	protected void renderLabels(MatrixStack matrixStack, int x, int y) {
 		//titles
-	    this.font.drawText(matrixStack, this.title, this.titleX, this.titleY, 0xff404040);
+	    this.font.draw(matrixStack, this.title, this.titleLabelX, this.titleLabelY, 0xff404040);
 	    //this.font.drawText(matrixStack, this.playerInventory.getDisplayName(), this.playerInventoryTitleX, this.playerInventoryTitleY+5, 0xff404040);
 	    //temp level
 	    drawCenterText(matrixStack,88,40, TemperatureDisplayHelper.toTemperatureDeltaInt( tile.getActualTemp())+"",0xffffffff);
 	    //range level
 	    drawCenterText(matrixStack,35,45, tile.getActualRange()+"",0xffffffff);
 	    //overdrive level
-	    drawCenterText(matrixStack,141,45,  container.data.get(MasterGeneratorTileEntity.OVERDRIVE)/10+"",0xffffffff);
+	    drawCenterText(matrixStack,141,45,  menu.data.get(MasterGeneratorTileEntity.OVERDRIVE)/10+"",0xffffffff);
 	}
 	boolean validStructure;
 	
@@ -162,7 +164,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         super.init();
         this.buttons.clear();
         validStructure=tile.isValidStructure();
-        this.addButton(new MasterGeneratorGuiButtonBoolean(guiLeft + 5, guiTop + 24, 11, 22, tile.isWorking(), 472, 148,
+        this.addButton(new MasterGeneratorGuiButtonBoolean(leftPos + 5, topPos + 24, 11, 22, tile.isWorking(), 472, 148,
                 btn -> {
                     CompoundNBT tag = new CompoundNBT();
                     tile.setWorking(!btn.getState());
@@ -170,7 +172,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
                     ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(tile.master(), tag));
                     fullInit();
                 }));
-        this.addButton(new MasterGeneratorGuiButtonBoolean(guiLeft + 160, guiTop + 24, 11, 22, tile.isOverdrive(),450, 148,
+        this.addButton(new MasterGeneratorGuiButtonBoolean(leftPos + 160, topPos + 24, 11, 22, tile.isOverdrive(),450, 148,
                 btn -> {
                     CompoundNBT tag = new CompoundNBT();
                     tile.setOverdrive(!btn.getState());
@@ -190,7 +192,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         		 level=0;
         	 }
         }
-        this.addButton(upgrade=new MasterGeneratorGuiButtonUpgrade(guiLeft + 75, guiTop + 116, 26, 18, level,424, 148,
+        this.addButton(upgrade=new MasterGeneratorGuiButtonUpgrade(leftPos + 75, topPos + 116, 26, 18, level,424, 148,
                 btn -> {
                 	
                 	FHNetwork.sendToServer(new GeneratorModifyPacket());
@@ -203,9 +205,9 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
     public void render(MatrixStack transform, int mouseX, int mouseY, float partial) {
         super.render(transform, mouseX, mouseY, partial);
         List<ITextComponent> tooltip = new ArrayList<>();
-        if(container.getTank()!=null) {
+        if(menu.getTank()!=null) {
         	
-        	GuiHelper.handleGuiTank(transform, container.getTank(), guiLeft + 135, guiTop + 57, 16, 60, 384, 192, 16, 60, mouseX, mouseY, TEXTURE, tooltip);
+        	GuiHelper.handleGuiTank(transform, menu.getTank(), leftPos + 135, topPos + 57, 16, 60, 384, 192, 16, 60, mouseX, mouseY, TEXTURE, tooltip);
         }
         if (isMouseIn(mouseX, mouseY, 5, 24, 11, 22)) {
             if (tile.isWorking()) {
@@ -224,21 +226,21 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         }
 
         if (isMouseIn(mouseX, mouseY, 63, 0, 50, 50)) {
-            tooltip.add(TranslateUtils.translateGui("generator.temperature.level").appendString(TemperatureDisplayHelper.toTemperatureDeltaIntString( tile.getActualTemp())));
+            tooltip.add(TranslateUtils.translateGui("generator.temperature.level").append(TemperatureDisplayHelper.toTemperatureDeltaIntString( tile.getActualTemp())));
         }
 
         if (isMouseIn(mouseX, mouseY, 18, 18, 32, 32)) {
-            tooltip.add(TranslateUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
+            tooltip.add(TranslateUtils.translateGui("generator.range.level").append(Integer.toString(tile.getActualRange())));
         }
         if (isMouseIn(mouseX, mouseY, 124, 18, 32, 32)) {
-            tooltip.add(TranslateUtils.translateGui("generator.over.level",container.data.get(MasterGeneratorTileEntity.OVERDRIVE)/10f));
+            tooltip.add(TranslateUtils.translateGui("generator.over.level",menu.data.get(MasterGeneratorTileEntity.OVERDRIVE)/10f));
         }
         if (isMouseIn(mouseX, mouseY, 75, 116, 26, 18)) {
         	Optional<GeneratorData> generatorData=tile.getDataNoCheck();
         	if(tile.getNextLevelMultiblock()!=null&&!tile.isBroken) {
         		upgrade.setStateByInt(1);
         		if(!validStructure) {
-        			Vector3i v3i=tile.getNextLevelMultiblock().getSize(ClientUtils.mc().world);
+        			Vector3i v3i=tile.getNextLevelMultiblock().getSize(ClientUtils.mc().level);
         			tooltip.add(TranslateUtils.translateGui("generator.no_enough_space",v3i.getX(),v3i.getY(),v3i.getZ()));
         		}else if(!ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock())) {
         			tooltip.add(TranslateUtils.translateGui("generator.incomplete_research"));
@@ -249,11 +251,11 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         			boolean isOk=true;;
         			for(IngredientWithSize iws:tile.getUpgradeCost()) {
         				ItemStack[] iss=iws.getMatchingStacks();
-        				IFormattableTextComponent iftc=TranslateUtils.str(iws.getCount()+"x ").appendSibling(iss[(int) ((new Date().getTime()/1000)%iss.length)].getDisplayName());
+        				IFormattableTextComponent iftc=TranslateUtils.str(iws.getCount()+"x ").append(iss[(int) ((new Date().getTime()/1000)%iss.length)].getHoverName());
         				if(bs.get(i))
-        					iftc=iftc.mergeStyle(TextFormatting.GREEN);
+        					iftc=iftc.withStyle(TextFormatting.GREEN);
         				else
-        					iftc=iftc.mergeStyle(TextFormatting.RED);
+        					iftc=iftc.withStyle(TextFormatting.RED);
         				isOk&=bs.get(i);
         				i++;
         				tooltip.add(iftc);
@@ -267,11 +269,11 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
     			boolean isOk=true;;
     			for(IngredientWithSize iws:tile.getRepairCost()) {
     				ItemStack[] iss=iws.getMatchingStacks();
-    				IFormattableTextComponent iftc=TranslateUtils.str(iws.getCount()+"x ").appendSibling(iss[(int) ((new Date().getTime()/1000)%iss.length)].getDisplayName());
+    				IFormattableTextComponent iftc=TranslateUtils.str(iws.getCount()+"x ").append(iss[(int) ((new Date().getTime()/1000)%iss.length)].getHoverName());
     				if(bs.get(i))
-    					iftc=iftc.mergeStyle(TextFormatting.GREEN);
+    					iftc=iftc.withStyle(TextFormatting.GREEN);
     				else
-    					iftc=iftc.mergeStyle(TextFormatting.RED);
+    					iftc=iftc.withStyle(TextFormatting.RED);
     				isOk&=bs.get(i);
     				i++;
     				tooltip.add(iftc);

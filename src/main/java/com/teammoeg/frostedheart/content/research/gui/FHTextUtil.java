@@ -75,7 +75,7 @@ public class FHTextUtil {
     public static ITextComponent getOptional(String orig, String type, Supplier<String> pid) {
         if (orig == null || orig.isEmpty()) {
             String key = type + "." + FHMain.MODID + "." + pid.get();
-            if (I18n.hasKey(key))
+            if (I18n.exists(key))
                 return ClientTextComponentUtils.parse("{" + key + "}");
             return null;
         }

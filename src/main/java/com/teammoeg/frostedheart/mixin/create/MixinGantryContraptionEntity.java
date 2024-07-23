@@ -48,9 +48,9 @@ public abstract class MixinGantryContraptionEntity extends AbstractContraptionEn
     protected void checkPinionShaft(CallbackInfo cbi) {
         Direction facing = ((GantryContraption) contraption).getFacing();
         Vector3d currentPosition = getAnchorVec().add(.5, .5, .5);
-        BlockPos gantryShaftPos = new BlockPos(currentPosition).offset(facing.getOpposite());
+        BlockPos gantryShaftPos = new BlockPos(currentPosition).relative(facing.getOpposite());
 
-        TileEntity te = world.getTileEntity(gantryShaftPos);
+        TileEntity te = level.getBlockEntity(gantryShaftPos);
         if (te instanceof IGantryShaft) {
             GantryShaftTileEntity gte = (GantryShaftTileEntity) te;
             ((IGantryShaft) gte).setEntity(this);

@@ -46,16 +46,16 @@ public abstract class MooshroomMixin extends AnimalEntity {
 
     @Inject(at = @At("HEAD"), method = "getEntityInteractionResult", cancellable = true)
     public void fhmo$getEntityInteractionResult(PlayerEntity playerIn, Hand hand, CallbackInfoReturnable<ActionResultType> cbi) {
-        ItemStack itemstack = playerIn.getHeldItem(hand);
-        if (itemstack.getItem() == Items.BOWL && !this.isChild()) {
+        ItemStack itemstack = playerIn.getItemInHand(hand);
+        if (itemstack.getItem() == Items.BOWL && !this.isBaby()) {
             CowEntityMixin ot = (CowEntityMixin) (Object) this;
 
             if (ot.milk <= 0) {
-                if (!world.isRemote) {
+                if (!level.isClientSide) {
                     if (ot.feeded <= 0)
-                        playerIn.sendStatusMessage(TranslateUtils.translateMessage("cow.nomilk.hungry"), true);
+                        playerIn.displayClientMessage(TranslateUtils.translateMessage("cow.nomilk.hungry"), true);
                     else
-                        playerIn.sendStatusMessage(TranslateUtils.translateMessage("cow.nomilk.digest"), true);
+                        playerIn.displayClientMessage(TranslateUtils.translateMessage("cow.nomilk.digest"), true);
                 }
                 cbi.setReturnValue(ActionResultType.PASS);
             }

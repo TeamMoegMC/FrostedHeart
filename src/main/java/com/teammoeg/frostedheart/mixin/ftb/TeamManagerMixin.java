@@ -67,7 +67,7 @@ public abstract class TeamManagerMixin {
         for (ServerPlayerEntity player : server.getPlayerList().getPlayers()) {
             FTBFixUtils.networkPlayer = player;
             new SyncTeamsMessage(clientManager, getPlayerTeam(player)).sendTo(player);
-            server.getPlayerList().updatePermissionLevel(player);
+            server.getPlayerList().sendPlayerPermissionLevel(player);
         }
     }
 }

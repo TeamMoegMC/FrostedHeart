@@ -25,7 +25,7 @@ public class PrerenderParams {
 
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_DEFAULT);
 		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-		scale=ClientUtils.mc().getMainWindow().getGuiScaleFactor()/2;
+		scale=ClientUtils.mc().getWindow().getGuiScale()/2;
 	}
 	public Graphics2D getG2d() {
 		return g2d;
@@ -78,7 +78,7 @@ public class PrerenderParams {
 		for (int y = 0; y < cur.getHeight(); y++) {
 			for (int x = 0; x < cur.getWidth(); x++) {
 				int pixel = pixels[y * cur.getWidth() + x];
-				texture.setPixelRGBA(x, y,NativeImage.getCombined((pixel >> 24) & 0xFF,pixel & 0xFF,(pixel >> 8) & 0xFF, (pixel >> 16) & 0xFF));
+				texture.setPixelRGBA(x, y,NativeImage.combine((pixel >> 24) & 0xFF,pixel & 0xFF,(pixel >> 8) & 0xFF, (pixel >> 16) & 0xFF));
 			}
 		}
 		/*try {

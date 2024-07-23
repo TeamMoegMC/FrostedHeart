@@ -22,11 +22,11 @@ public abstract class GLLayerContent extends OrderedRenderableContent {
 		this.x = x;
 		this.y = y;
 		if(w<0) {
-			w=ClientUtils.mc().getMainWindow().getScaledWidth();
+			w=ClientUtils.mc().getWindow().getGuiScaledWidth();
 		}
 		this.width = w;
 		if(h<0) {
-			h=ClientUtils.mc().getMainWindow().getScaledHeight();
+			h=ClientUtils.mc().getWindow().getGuiScaledHeight();
 		}
 		this.height = h;
 	}
@@ -43,9 +43,9 @@ public abstract class GLLayerContent extends OrderedRenderableContent {
 	@Override
 	public void render(RenderParams params) {
 		params=params.copyWithCurrent(this);
-		GuiHelper.pushScissor(params.getMinecraft().getMainWindow(), params.getX(), params.getY(), params.getWidth(), params.getHeight());
+		GuiHelper.pushScissor(params.getMinecraft().getWindow(), params.getX(), params.getY(), params.getWidth(), params.getHeight());
 		this.renderContents(params);
-		GuiHelper.popScissor(params.getMinecraft().getMainWindow());
+		GuiHelper.popScissor(params.getMinecraft().getWindow());
 	}
 	public float getOpacity() {
 		return opacity;

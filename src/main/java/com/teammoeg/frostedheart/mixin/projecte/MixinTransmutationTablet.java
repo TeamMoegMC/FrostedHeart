@@ -48,23 +48,23 @@ import net.minecraft.world.server.ServerWorld;
 public class MixinTransmutationTablet {
     @Inject(method = "onItemRightClick", at = @At("HEAD"), cancellable = true)
     public void onItemRightClick(World world, PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cbi) {
-        if (!world.isRemote) {
+        if (!world.isClientSide) {
             ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
 
             ServerWorld serverWorld = (ServerWorld) world;
-            serverPlayerEntity.addPotionEffect(new EffectInstance(Effects.BLINDNESS, (int) (1000 * (world.rand.nextDouble() + 0.5)), 3));
-            serverPlayerEntity.addPotionEffect(new EffectInstance(Effects.NAUSEA, (int) (1000 * (world.rand.nextDouble() + 0.5)), 5));
-            serverPlayerEntity.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE, TranslateUtils.translateMessage("too_cold_to_transmute")));
-            serverPlayerEntity.connection.sendPacket(new STitlePacket(STitlePacket.Type.SUBTITLE, TranslateUtils.translateMessage("magical_backslash")));
+            serverPlayerEntity.addEffect(new EffectInstance(Effects.BLINDNESS, (int) (1000 * (world.random.nextDouble() + 0.5)), 3));
+            serverPlayerEntity.addEffect(new EffectInstance(Effects.CONFUSION, (int) (1000 * (world.random.nextDouble() + 0.5)), 5));
+            serverPlayerEntity.connection.send(new STitlePacket(STitlePacket.Type.TITLE, TranslateUtils.translateMessage("too_cold_to_transmute")));
+            serverPlayerEntity.connection.send(new STitlePacket(STitlePacket.Type.SUBTITLE, TranslateUtils.translateMessage("magical_backslash")));
 
-            double posX = serverPlayerEntity.getPosX() + (world.rand.nextDouble() - world.rand.nextDouble()) * 4.5D;
-            double posY = serverPlayerEntity.getPosY() + world.rand.nextInt(3) - 1;
-            double posZ = serverPlayerEntity.getPosZ() + (world.rand.nextDouble() - world.rand.nextDouble()) * 4.5D;
-            if (world.hasNoCollisions(EntityType.WITCH.getBoundingBoxWithSizeApplied(posX, posY, posZ))
-                    && EntitySpawnPlacementRegistry.canSpawnEntity(EntityType.WITCH, serverWorld, SpawnReason.NATURAL, new BlockPos(posX, posY, posZ), world.getRandom())) {
+            double posX = serverPlayerEntity.getX() + (world.random.nextDouble() - world.random.nextDouble()) * 4.5D;
+            double posY = serverPlayerEntity.getY() + world.random.nextInt(3) - 1;
+            double posZ = serverPlayerEntity.getZ() + (world.random.nextDouble() - world.random.nextDouble()) * 4.5D;
+            if (world.noCollision(EntityType.WITCH.getAABB(posX, posY, posZ))
+                    && EntitySpawnPlacementRegistry.checkSpawnRules(EntityType.WITCH, serverWorld, SpawnReason.NATURAL, new BlockPos(posX, posY, posZ), world.getRandom())) {
                 FHUtils.spawnMob(serverWorld, new BlockPos(posX, posY, posZ), new CompoundNBT(), new ResourceLocation("minecraft", "witch"));
             }
         }
-        cbi.setReturnValue(ActionResult.resultConsume(player.getHeldItem(hand)));
+        cbi.setReturnValue(ActionResult.consume(player.getItemInHand(hand)));
     }
 }

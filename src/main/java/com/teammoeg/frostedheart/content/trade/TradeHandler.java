@@ -25,13 +25,13 @@ import net.minecraftforge.fml.network.NetworkHooks;
 
 public class TradeHandler {
     public static void openTradeScreen(ServerPlayerEntity spe, FHVillagerData vd) {
-        vd.update(spe.getServerWorld(), spe);
+        vd.update(spe.getLevel(), spe);
         NetworkHooks.openGui(spe, vd, e -> {
-            e.writeVarInt(vd.parent.getEntityId());
+            e.writeVarInt(vd.parent.getId());
             CompoundNBT tag = new CompoundNBT();
-            e.writeCompoundTag(vd.serializeForSend(tag));
+            e.writeNbt(vd.serializeForSend(tag));
             tag = new CompoundNBT();
-            e.writeCompoundTag(vd.getRelationDataForRead(spe).serialize(tag));
+            e.writeNbt(vd.getRelationDataForRead(spe).serialize(tag));
             vd.getRelationShip(spe).write(e);
         });
     }

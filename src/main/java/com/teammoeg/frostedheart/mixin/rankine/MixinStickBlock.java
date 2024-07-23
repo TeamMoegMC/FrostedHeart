@@ -26,6 +26,8 @@ import com.cannolicatfish.rankine.blocks.StickBlock;
 
 import net.minecraft.block.Block;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 @Mixin(StickBlock.class)
 public class MixinStickBlock extends Block {
 

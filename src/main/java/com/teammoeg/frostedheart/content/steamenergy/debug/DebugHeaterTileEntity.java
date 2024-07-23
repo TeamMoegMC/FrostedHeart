@@ -35,7 +35,7 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements  ITickabl
 
     HeatEnergyNetwork manager = new HeatEnergyNetwork(this, c -> {
         for (Direction d : Direction.values()) {
-            c.accept(pos.offset(d), d.getOpposite());
+            c.accept(worldPosition.relative(d), d.getOpposite());
         }
     });
     HeatProviderEndPoint endpoint=new HeatProviderEndPoint(-1, Integer.MAX_VALUE, Integer.MAX_VALUE);

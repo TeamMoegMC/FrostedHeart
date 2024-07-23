@@ -46,25 +46,25 @@ public class ModifyDamageRecipe extends ShapelessRecipe {
 
         @Nullable
         @Override
-        public ModifyDamageRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            Ingredient input = Ingredient.read(buffer);
-            Ingredient input2 = Ingredient.read(buffer);
+        public ModifyDamageRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+            Ingredient input = Ingredient.fromNetwork(buffer);
+            Ingredient input2 = Ingredient.fromNetwork(buffer);
             int dura = buffer.readVarInt();
             return new ModifyDamageRecipe(recipeId, input, input2, dura);
         }
 
         @Override
         public ModifyDamageRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            Ingredient input = Ingredient.deserialize(json.get("tool"));
-            Ingredient input2 = Ingredient.deserialize(json.get("item"));
+            Ingredient input = Ingredient.fromJson(json.get("tool"));
+            Ingredient input2 = Ingredient.fromJson(json.get("item"));
             int dura = JsonHelper.getIntOrDefault(json, "modify", 1);
             return new ModifyDamageRecipe(recipeId, input, input2, dura);
         }
 
         @Override
-        public void write(PacketBuffer buffer, ModifyDamageRecipe recipe) {
-            recipe.tool.write(buffer);
-            recipe.repair.write(buffer);
+        public void toNetwork(PacketBuffer buffer, ModifyDamageRecipe recipe) {
+            recipe.tool.toNetwork(buffer);
+            recipe.repair.toNetwork(buffer);
 
             buffer.writeVarInt(recipe.modify);
         }
@@ -76,7 +76,7 @@ public class ModifyDamageRecipe extends ShapelessRecipe {
     public final int modify;
 
     public ModifyDamageRecipe(ResourceLocation idIn, Ingredient torepair, Ingredient material, int mod) {
-        super(idIn, "", torepair.getMatchingStacks()[0], NonNullList.from(Ingredient.EMPTY, torepair, material));
+        super(idIn, "", torepair.getItems()[0], NonNullList.of(Ingredient.EMPTY, torepair, material));
         repair = material;
         tool = torepair;
         modify = mod;
@@ -85,19 +85,19 @@ public class ModifyDamageRecipe extends ShapelessRecipe {
     /**
      * Used to determine if this recipe can fit in a grid of the given width/height
      */
-    public boolean canFit(int width, int height) {
+    public boolean canCraftInDimensions(int width, int height) {
         return width * height >= 2;
     }
 
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack getCraftingResult(CraftingInventory inv) {
-        for (int j = 0; j < inv.getSizeInventory(); ++j) {
-            ItemStack in = inv.getStackInSlot(j);
+    public ItemStack assemble(CraftingInventory inv) {
+        for (int j = 0; j < inv.getContainerSize(); ++j) {
+            ItemStack in = inv.getItem(j);
             if (tool.test(in)) {
                 in = in.copy();
-                in.setDamage(in.getDamage() - modify);
+                in.setDamageValue(in.getDamageValue() - modify);
                 return in;
             }
         }
@@ -112,8 +112,8 @@ public class ModifyDamageRecipe extends ShapelessRecipe {
     public boolean matches(CraftingInventory inv, World worldIn) {
         boolean hasArmor = false;
         boolean hasItem = false;
-        for (int i = 0; i < inv.getSizeInventory(); ++i) {
-            ItemStack itemstack = inv.getStackInSlot(i);
+        for (int i = 0; i < inv.getContainerSize(); ++i) {
+            ItemStack itemstack = inv.getItem(i);
             if (itemstack == null || itemstack.isEmpty()) {
                 continue;
             }
@@ -125,7 +125,7 @@ public class ModifyDamageRecipe extends ShapelessRecipe {
                 if (hasArmor)
                     return false;
                 if (tool.test(itemstack)) {
-                    int newdmg = itemstack.getDamage() - modify;
+                    int newdmg = itemstack.getDamageValue() - modify;
                     if (newdmg < 0 || newdmg > itemstack.getMaxDamage())
                         return false;
 

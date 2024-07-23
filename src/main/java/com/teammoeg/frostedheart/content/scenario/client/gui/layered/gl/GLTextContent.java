@@ -43,7 +43,7 @@ public class GLTextContent extends GLLayerContent{
 	@Override
 	public void renderContents(RenderParams params) {
 		
-		List<IReorderingProcessor> li=RenderComponentsUtil.func_238505_a_(text,params.getContentWidth() ,params.getMinecraft().fontRenderer);
+		List<IReorderingProcessor> li=RenderComponentsUtil.wrapComponents(text,params.getContentWidth() ,params.getMinecraft().font);
 
 		int y=0;
 		int ty=params.getContentY();
@@ -51,23 +51,23 @@ public class GLTextContent extends GLLayerContent{
 			ty=Math.max((int) ((params.getContentHeight()-li.size()*9*resize)/2),0)+params.getContentY();
 		// RenderSystem.enableBlend();
 		 //RenderSystem.enableAlphaTest();
-		 params.getMatrixStack().push();
+		 params.getMatrixStack().pushPose();
 		 params.getMatrixStack().translate(params.getContentX(),ty, 0);
 		 params.getMatrixStack().scale(resize, resize, resize);
 		for(IReorderingProcessor i:li) {
-			int w=params.getMinecraft().fontRenderer.getStringWidth(ClientScene.toString(i));
+			int w=params.getMinecraft().font.width(ClientScene.toString(i));
 			int tx=0;
 			if(centerH) {
 				tx=(int) Math.max(0,(params.getContentWidth()/resize-w)/2);
 			}
 			if(shadow)
-				params.getMinecraft().fontRenderer.drawTextWithShadow(params.getMatrixStack(), i, tx, y, color|(((int)(0xFF*params.getOpacity()))<<24));
+				params.getMinecraft().font.drawShadow(params.getMatrixStack(), i, tx, y, color|(((int)(0xFF*params.getOpacity()))<<24));
 			else
-				params.getMinecraft().fontRenderer.func_238422_b_(params.getMatrixStack(), i,tx, y, color|(((int)(0xFF*params.getOpacity()))<<24));
+				params.getMinecraft().font.draw(params.getMatrixStack(), i,tx, y, color|(((int)(0xFF*params.getOpacity()))<<24));
 			y+=9;
 			if(y>params.getContentHeight()+params.getContentY())break;
 		}
-		params.getMatrixStack().pop();
+		params.getMatrixStack().popPose();
 		 
 		//RenderSystem.disableBlend();
 	}

@@ -19,6 +19,7 @@ plugins {
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'maven-publish'
+apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
 
 group = 'com.teammoeg'
 version = "${minecraft_version}-${mod_version}"
@@ -47,7 +48,7 @@ sourceSets {
     }
 }
 minecraft {
-    mappings channel: 'snapshot', version: '20210309-1.16.5'
+    mappings channel: 'official', version: '1.16.5'
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     runs {
@@ -76,7 +77,7 @@ minecraft {
                 jvmArgs "-Dorg.lwjgl.glfw.libname=${System.env.LIBGLFW_PATH}/lib/libglfw.so"
             }
 
-            arg "-mixin.config=" + "frostedheart.mixins.json"
+//            arg "-mixin.config=" + "frostedheart.mixins.json"
             mods {
                 frostedheart {
                     source sourceSets.main
@@ -90,7 +91,7 @@ minecraft {
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
-            arg "-mixin.config=" + "frostedheart.mixins.json"
+//            arg "-mixin.config=" + "frostedheart.mixins.json"
             mods {
                 frostedheart {
                     source sourceSets.main
@@ -119,9 +120,9 @@ sourceSets.main.resources {
     srcDir 'src/generated/resources'
 }
 
-mixin {
-    add sourceSets.main, "frostedheart.refmap.json"
-}
+//mixin {
+//    add sourceSets.main, "frostedheart.refmap.json"
+//}
 
 repositories {
     mavenLocal()
@@ -260,7 +261,7 @@ jar {
                 "Implementation-Version"  : project.version,
                 "Implementation-Vendor"   : "TeamMoeg",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                "MixinConfigs": "frostedheart.mixins.json"
+//                "MixinConfigs": "frostedheart.mixins.json"
         ])
     }
 }

@@ -49,9 +49,9 @@ public abstract class RecipeManagerMixin {
     public <C extends IInventory, T extends IRecipe<C>> Optional<T> getRecipe(IRecipeType<T> recipeTypeIn,
                                                                               C inventoryIn, World worldIn) {
         if (recipeTypeIn == IRecipeType.CRAFTING && ForgeHooks.getCraftingPlayer() != null) {
-            return this.getRecipes(recipeTypeIn).values().stream().flatMap((recipe) -> Util.streamOptional(recipeTypeIn.matches(recipe, worldIn, inventoryIn))).filter(t -> ResearchListeners.canUseRecipe(ForgeHooks.getCraftingPlayer(), t)).findFirst();
+            return this.getRecipes(recipeTypeIn).values().stream().flatMap((recipe) -> Util.toStream(recipeTypeIn.tryMatch(recipe, worldIn, inventoryIn))).filter(t -> ResearchListeners.canUseRecipe(ForgeHooks.getCraftingPlayer(), t)).findFirst();
         }
-        return this.getRecipes(recipeTypeIn).values().stream().flatMap((recipe) -> Util.streamOptional(recipeTypeIn.matches(recipe, worldIn, inventoryIn))).findFirst();
+        return this.getRecipes(recipeTypeIn).values().stream().flatMap((recipe) -> Util.toStream(recipeTypeIn.tryMatch(recipe, worldIn, inventoryIn))).findFirst();
     }
 
     @Shadow

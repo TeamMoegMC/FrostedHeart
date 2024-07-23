@@ -54,8 +54,8 @@ public abstract class ClientTeamManagerMixin {
      */
     @Overwrite(remap = false)
     public void write(PacketBuffer buffer, long now) {
-        buffer.writeUniqueId(getId());
-        UUID puuid = FTBFixUtils.networkPlayer.getUniqueID();
+        buffer.writeUUID(getId());
+        UUID puuid = FTBFixUtils.networkPlayer.getUUID();
         Set<ClientTeam> tosendteam = new HashSet<>();
         Set<KnownClientPlayer> tosendplayer = new HashSet<>();
         for (ClientTeam i : teamMap.values()) {
@@ -71,7 +71,7 @@ public abstract class ClientTeamManagerMixin {
             }
         }
         for (ServerPlayerEntity p : FHTeamDataManager.getServer().getPlayerList().getPlayers()) {
-            KnownClientPlayer kcp = knownPlayers.get(p.getUniqueID());
+            KnownClientPlayer kcp = knownPlayers.get(p.getUUID());
             if (kcp != null)
                 tosendplayer.add(kcp);
         }
@@ -83,11 +83,11 @@ public abstract class ClientTeamManagerMixin {
                 t.write(buffer, now);
                 //((IFTBSecondWritable)t).write2(buffer, now);
             } else {
-                buffer.writeUniqueId(t.getId());
+                buffer.writeUUID(t.getId());
                 buffer.writeByte(t.getType().ordinal());
                 t.properties.write(buffer);
                 buffer.writeVarInt(0);
-                buffer.writeCompoundTag(t.getExtraData());
+                buffer.writeNbt(t.getExtraData());
             }
         }
 

@@ -105,7 +105,7 @@ public class EnergyCore implements NBTSerializable {
     public static void applySleep(ServerPlayerEntity player) {
         EnergyCore data=getCapability(player).orElse(null);
         long lsd = data.lastsleepdate;
-        long csd = (player.world.getDayTime() + 12000L) / 24000L;
+        long csd = (player.level.getDayTime() + 12000L) / 24000L;
         //System.out.println("slept");
         if (csd == lsd) return;
         //System.out.println("sleptx");
@@ -117,7 +117,7 @@ public class EnergyCore implements NBTSerializable {
     }
 
     public float getModifier(ServerPlayerEntity player) {
-    	boolean isBodyNotWell = player.getActivePotionEffect(FHEffects.HYPERTHERMIA.get()) != null || player.getActivePotionEffect(FHEffects.HYPOTHERMIA.get()) != null;
+    	boolean isBodyNotWell = player.getEffect(FHEffects.HYPERTHERMIA.get()) != null || player.getEffect(FHEffects.HYPOTHERMIA.get()) != null;
     	if(isBodyNotWell)return 0;
     	TeamResearchData trd = ResearchDataAPI.getData(player);
     	double initValue=(1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
@@ -159,7 +159,7 @@ public class EnergyCore implements NBTSerializable {
     }
 
     public static void reportEnergy(PlayerEntity player) {
-    	getCapability(player).ifPresent(data->player.sendMessage(TranslateUtils.str("Energy:" + data.level + ",Persist Energy: " + data.persistLevel), player.getUniqueID()));
+    	getCapability(player).ifPresent(data->player.sendMessage(TranslateUtils.str("Energy:" + data.level + ",Persist Energy: " + data.persistLevel), player.getUUID()));
     }
  
 

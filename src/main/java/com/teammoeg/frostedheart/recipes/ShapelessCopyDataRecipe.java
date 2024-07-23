@@ -46,8 +46,8 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishe
             NonNullList<Ingredient> nonnulllist = NonNullList.create();
 
             for (int i = 0; i < ingredientArray.size(); ++i) {
-                Ingredient ingredient = Ingredient.deserialize(ingredientArray.get(i));
-                if (!ingredient.hasNoMatchingItems()) {
+                Ingredient ingredient = Ingredient.fromJson(ingredientArray.get(i));
+                if (!ingredient.isEmpty()) {
                     nonnulllist.add(ingredient);
                 }
             }
@@ -60,30 +60,30 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishe
             return new ItemStack(Blocks.CRAFTING_TABLE);
         }
 
-        public ShapelessCopyDataRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+        public ShapelessCopyDataRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
 
-            NonNullList<Ingredient> nonnulllist = NonNullList.from(Ingredient.EMPTY,
-                    SerializeUtil.readList(buffer, Ingredient::read).toArray(new Ingredient[0]));
-            ItemStack itemstack = buffer.readItemStack();
+            NonNullList<Ingredient> nonnulllist = NonNullList.of(Ingredient.EMPTY,
+                    SerializeUtil.readList(buffer, Ingredient::fromNetwork).toArray(new Ingredient[0]));
+            ItemStack itemstack = buffer.readItem();
             return new ShapelessCopyDataRecipe(recipeId, itemstack, nonnulllist);
         }
 
         public ShapelessCopyDataRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            NonNullList<Ingredient> nonnulllist = readIngredients(JSONUtils.getJsonArray(json, "ingredients"));
+            NonNullList<Ingredient> nonnulllist = readIngredients(JSONUtils.getAsJsonArray(json, "ingredients"));
             if (nonnulllist.isEmpty()) {
                 throw new JsonParseException("No ingredients for shapeless recipe");
             } else if (nonnulllist.size() > 9) {
                 throw new JsonParseException("Too many ingredients for shapeless recipe the max is 9");
             } else {
-                ItemStack itemstack = ShapedRecipe.deserializeItem(JSONUtils.getJsonObject(json, "result"));
+                ItemStack itemstack = ShapedRecipe.itemFromJson(JSONUtils.getAsJsonObject(json, "result"));
                 return new ShapelessCopyDataRecipe(recipeId, itemstack, nonnulllist);
             }
         }
 
-        public void write(PacketBuffer buffer, ShapelessCopyDataRecipe recipe) {
+        public void toNetwork(PacketBuffer buffer, ShapelessCopyDataRecipe recipe) {
 
-            SerializeUtil.writeList(buffer, recipe.getIngredients(), Ingredient::write);
-            buffer.writeItemStack(recipe.getRecipeOutput());
+            SerializeUtil.writeList(buffer, recipe.getIngredients(), Ingredient::toNetwork);
+            buffer.writeItem(recipe.getResultItem());
         }
     }
     public static RegistryObject<IERecipeSerializer<ShapelessCopyDataRecipe>> SERIALIZER;
@@ -96,24 +96,24 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishe
     }
 
     @Override
-    public ResourceLocation getAdvancementID() {
+    public ResourceLocation getAdvancementId() {
         return null;
     }
 
 
     @Override
-    public JsonObject getAdvancementJson() {
+    public JsonObject serializeAdvancement() {
         return null;
     }
 
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack getCraftingResult(CraftingInventory inv) {
-        for (int j = 0; j < inv.getSizeInventory(); ++j) {
-            ItemStack in = inv.getStackInSlot(j);
+    public ItemStack assemble(CraftingInventory inv) {
+        for (int j = 0; j < inv.getContainerSize(); ++j) {
+            ItemStack in = inv.getItem(j);
             if (tool.test(in)) {
-                ItemStack out = super.getCraftingResult(inv);
+                ItemStack out = super.assemble(inv);
                 out.setTag(in.getTag());
                 return out;
             }
@@ -123,7 +123,7 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishe
     }
 
     @Override
-    public ResourceLocation getID() {
+    public ResourceLocation getId() {
         return getId();
     }
 
@@ -132,19 +132,19 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishe
     }
 
     @Override
-    public void serialize(JsonObject json) {
+    public void serializeRecipeData(JsonObject json) {
 
         JsonArray jsonarray = new JsonArray();
 
         for (Ingredient ingredient : this.getIngredients()) {
-            jsonarray.add(ingredient.serialize());
+            jsonarray.add(ingredient.toJson());
         }
 
         json.add("ingredients", jsonarray);
         JsonObject jsonobject = new JsonObject();
-        jsonobject.addProperty("item", RegistryUtils.getRegistryName(this.getRecipeOutput().getItem()).toString());
-        if (this.getRecipeOutput().getCount() > 1) {
-            jsonobject.addProperty("count", this.getRecipeOutput().getCount());
+        jsonobject.addProperty("item", RegistryUtils.getRegistryName(this.getResultItem().getItem()).toString());
+        if (this.getResultItem().getCount() > 1) {
+            jsonobject.addProperty("count", this.getResultItem().getCount());
         }
 
         json.add("result", jsonobject);

@@ -51,7 +51,7 @@ public class RequirementSlot extends Widget {
     public void addMouseOverText(TooltipList list) {
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         //list.add(cur.getDisplayName());
-        cur.getTooltip(ClientUtils.getPlayer(), ITooltipFlag.TooltipFlags.NORMAL).forEach(list::add);
+        cur.getTooltipLines(ClientUtils.getPlayer(), ITooltipFlag.TooltipFlags.NORMAL).forEach(list::add);
     }
 
     @Override
@@ -59,19 +59,19 @@ public class RequirementSlot extends Widget {
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         GuiHelper.setupDrawing();
         TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
-        matrixStack.push();
+        matrixStack.pushPose();
         matrixStack.translate(0, 0, 100);
         GuiHelper.drawItem(matrixStack, cur, x, y, w / 16F, h / 16F, true, null);
         if (cnt > 1) {
-            matrixStack.push();
+            matrixStack.pushPose();
             matrixStack.translate(0, 0, 100);
             int dx = 5;
             if (cnt >= 10)
                 dx = 0;
             theme.drawString(matrixStack, String.valueOf(cnt), dx + x + 8, y + 9, Color4I.WHITE, Theme.SHADOW);
-            matrixStack.pop();
+            matrixStack.popPose();
         }
-        matrixStack.pop();
+        matrixStack.popPose();
     }
 
     @Override

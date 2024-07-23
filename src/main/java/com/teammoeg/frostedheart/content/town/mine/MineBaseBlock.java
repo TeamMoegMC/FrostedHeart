@@ -15,6 +15,8 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 //矿场基地方块，不是矿场的BaseBlock
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class MineBaseBlock extends AbstractTownWorkerBlock {
 
     public MineBaseBlock(Properties blockProps) {
@@ -27,19 +29,19 @@ public class MineBaseBlock extends AbstractTownWorkerBlock {
     }
 
     //test
-    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (!worldIn.isRemote && handIn == Hand.MAIN_HAND) {
-            MineBaseTileEntity te = (MineBaseTileEntity) worldIn.getTileEntity(pos);
+    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+        if (!worldIn.isClientSide && handIn == Hand.MAIN_HAND) {
+            MineBaseTileEntity te = (MineBaseTileEntity) worldIn.getBlockEntity(pos);
             if (te == null) {
                 return ActionResultType.FAIL;
             }
-            player.sendStatusMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.sendStatusMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.sendStatusMessage(new StringTextComponent("Area: " + (te.getArea())), false);
-            player.sendStatusMessage(new StringTextComponent("Volume: " + (te.getVolume())), false);
-            player.sendStatusMessage(new StringTextComponent("Chest: " + (te.getChest())), false);
-            player.sendStatusMessage(new StringTextComponent("Rack: " + (te.getRack())), false);
-            player.sendStatusMessage(new StringTextComponent("Linked mines: " + (te.linkedMines)), false);
+            player.displayClientMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            player.displayClientMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(new StringTextComponent("Area: " + (te.getArea())), false);
+            player.displayClientMessage(new StringTextComponent("Volume: " + (te.getVolume())), false);
+            player.displayClientMessage(new StringTextComponent("Chest: " + (te.getChest())), false);
+            player.displayClientMessage(new StringTextComponent("Rack: " + (te.getRack())), false);
+            player.displayClientMessage(new StringTextComponent("Linked mines: " + (te.linkedMines)), false);
             return ActionResultType.SUCCESS;
         }
         return ActionResultType.PASS;

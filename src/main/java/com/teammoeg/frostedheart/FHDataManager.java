@@ -210,7 +210,7 @@ public class FHDataManager implements IResourceManagerReloadListener {
 	}
 
 	public static Float getWorldTemp(World w) {
-		WorldTempData data = FHDataManager.get(World).get(w.getDimensionKey().getLocation());
+		WorldTempData data = FHDataManager.get(World).get(w.dimension().location());
 		if (data != null)
 			return data.getTemp();
 		return null;
@@ -255,7 +255,7 @@ public class FHDataManager implements IResourceManagerReloadListener {
 		StructureUtils.addBanedBlocks();
 		WorldTemperature.clear();
 		for (DataType<?> dat : DataType.types) {
-			for (ResourceLocation rl : manager.getAllResourceLocations(dat.getLocation(), (s) -> s.endsWith(".json"))) {
+			for (ResourceLocation rl : manager.listResources(dat.getLocation(), (s) -> s.endsWith(".json"))) {
 				try (
 					IResource rc = manager.getResource(rl);
 					InputStream stream = rc.getInputStream();

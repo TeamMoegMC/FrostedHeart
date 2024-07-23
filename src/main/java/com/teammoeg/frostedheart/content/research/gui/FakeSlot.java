@@ -51,7 +51,7 @@ public class FakeSlot extends Widget {
 
     public FakeSlot(Panel panel, Ingredient is) {
         super(panel);
-        this.i = is.getMatchingStacks();
+        this.i = is.getItems();
         this.setSize(16, 16);
     }
 
@@ -66,7 +66,7 @@ public class FakeSlot extends Widget {
         if (i == null) return;
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         //list.add(cur.getDisplayName());
-        cur.getTooltip(ClientUtils.getPlayer(), ITooltipFlag.TooltipFlags.NORMAL).forEach(list::add);
+        cur.getTooltipLines(ClientUtils.getPlayer(), ITooltipFlag.TooltipFlags.NORMAL).forEach(list::add);
         if (tooltip != null)
             tooltip.accept(list);
     }
@@ -81,23 +81,23 @@ public class FakeSlot extends Widget {
         if (i == null) return;
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         GuiHelper.setupDrawing();
-        matrixStack.push();
+        matrixStack.pushPose();
         matrixStack.translate(0, 0, 100);
         GuiHelper.drawItem(matrixStack, cur, x, y, w / 16F, h / 16F, true, null);
         if (cnt != 1) {
-            matrixStack.push();
+            matrixStack.pushPose();
             matrixStack.translate(0, 0, 100);
             int dx = 5;
             if (cnt >= 10)
                 dx = 0;
             theme.drawString(matrixStack, String.valueOf(cnt), dx + x + 8, y + 9, Color4I.WHITE, Theme.SHADOW);
-            matrixStack.pop();
+            matrixStack.popPose();
         }
         matrixStack.translate(0, 0, 100);
         if (overlay != null)
             overlay.draw(matrixStack, x, y, ovlw, ovlh);
 
-        matrixStack.pop();
+        matrixStack.popPose();
     }
 
     public Icon getOverlay() {
@@ -140,7 +140,7 @@ public class FakeSlot extends Widget {
     }
 
     public void setSlot(Ingredient is) {
-        this.i = is.getMatchingStacks();
+        this.i = is.getItems();
     }
 
     public void setSlot(ItemStack iss) {

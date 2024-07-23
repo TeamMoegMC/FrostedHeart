@@ -38,12 +38,12 @@ public class WeatherDataMixin {
      */
     @Overwrite(remap = false)
     public static void trySetEndlessStorm(ServerWorld world) {
-        final WeatherData cap = world.getCapability(WeatherData.CAPABILITY).orElseThrow(() -> new IllegalStateException("Expected WeatherData to exist on World " + world.getDimensionKey() + " / " + world.getDimensionType()));
+        final WeatherData cap = world.getCapability(WeatherData.CAPABILITY).orElseThrow(() -> new IllegalStateException("Expected WeatherData to exist on World " + world.dimension() + " / " + world.dimensionType()));
         WeatherDataAccess dataAccess = (WeatherDataAccess) cap;
         if (!dataAccess.getAlreadySetWorldToWinter()) {
             dataAccess.setAlreadySetWorldToWinter(true);
-            if (Config.COMMON.isWinterDimension(world.getDimensionKey().getLocation())) {
-                world.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(true, world.getServer());
+            if (Config.COMMON.isWinterDimension(world.dimension().location())) {
+                world.getGameRules().getRule(GameRules.RULE_WEATHER_CYCLE).set(true, world.getServer());
                 //world.setWeather(0, 64000, true, true);
                 WorldClimate.getCapability(world).ifPresent(t->t.addInitTempEvent(world));
             }

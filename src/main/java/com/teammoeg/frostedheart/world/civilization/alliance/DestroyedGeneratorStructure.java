@@ -43,6 +43,8 @@ import net.minecraft.world.gen.feature.structure.VillageConfig;
 import net.minecraft.world.gen.feature.template.TemplateManager;
 import com.teammoeg.frostedheart.FHMain;
 
+import net.minecraft.world.gen.feature.structure.Structure.IStartFactory;
+
 public class DestroyedGeneratorStructure extends Structure<NoFeatureConfig> {
 
     public DestroyedGeneratorStructure() {
@@ -50,7 +52,7 @@ public class DestroyedGeneratorStructure extends Structure<NoFeatureConfig> {
     }
 
     @Override
-    public GenerationStage.Decoration getDecorationStage() {
+    public GenerationStage.Decoration step() {
         return GenerationStage.Decoration.SURFACE_STRUCTURES;
     }
 
@@ -75,7 +77,7 @@ public class DestroyedGeneratorStructure extends Structure<NoFeatureConfig> {
         }
 
         @Override //GeneratePieces
-        public void func_230364_a_(DynamicRegistries dynamicRegistryManager, ChunkGenerator chunkGenerator,
+        public void generatePieces(DynamicRegistries dynamicRegistryManager, ChunkGenerator chunkGenerator,
                                    TemplateManager templateManagerIn, int chunkX, int chunkZ, Biome biome,
                                    NoFeatureConfig config) {
 
@@ -84,39 +86,39 @@ public class DestroyedGeneratorStructure extends Structure<NoFeatureConfig> {
             int z = (chunkZ << 4) + 7;
 
             BlockPos centerOfChunk = new BlockPos(x, 0, z);
-            int y = chunkGenerator.getHeight(centerOfChunk.getX(), centerOfChunk.getZ(), Heightmap.Type.WORLD_SURFACE_WG);
+            int y = chunkGenerator.getBaseHeight(centerOfChunk.getX(), centerOfChunk.getZ(), Heightmap.Type.WORLD_SURFACE_WG);
 
             BlockPos blockpos = new BlockPos(x, y, z);
 
             //addpieces()
-            JigsawManager.func_242837_a(dynamicRegistryManager,
-                    new VillageConfig(() -> dynamicRegistryManager.getRegistry(Registry.JIGSAW_POOL_KEY)
-                            .getOrDefault(new ResourceLocation(FHMain.MODID, "destroyed_generator/start_pool")),
+            JigsawManager.addPieces(dynamicRegistryManager,
+                    new VillageConfig(() -> dynamicRegistryManager.registryOrThrow(Registry.TEMPLATE_POOL_REGISTRY)
+                            .get(new ResourceLocation(FHMain.MODID, "destroyed_generator/start_pool")),
                             5), //Pool size
                     AbstractVillagePiece::new,
                     chunkGenerator,
                     templateManagerIn,
                     blockpos,
-                    this.components,
-                    this.rand,
+                    this.pieces,
+                    this.random,
                     false,
                     false);
 
-            this.recalculateStructureSize();
+            this.calculateBoundingBox();
 //            FHMain.LOGGER.log(Level.DEBUG, "Observatory at " + (blockpos.getX()) + " " + blockpos.getY() + " " + (blockpos.getZ()));
         }
     }
 
     @Override
-    protected boolean func_230363_a_(ChunkGenerator chunkGenerator, BiomeProvider biomeSource,
+    protected boolean isFeatureChunk(ChunkGenerator chunkGenerator, BiomeProvider biomeSource,
                                      long seed, SharedSeedRandom chunkRandom, int chunkX, int chunkZ,
                                      Biome biome, ChunkPos chunkPos, NoFeatureConfig featureConfig) {
 
         BlockPos centerOfChunk = new BlockPos((chunkX << 4) + 7, 0, (chunkZ << 4) + 7);
 
-        int landHeight = chunkGenerator.getHeight(centerOfChunk.getX(), centerOfChunk.getZ(), Heightmap.Type.WORLD_SURFACE_WG);
-        IBlockReader columnOfBlocks = chunkGenerator.func_230348_a_(centerOfChunk.getX(), centerOfChunk.getZ());
-        BlockState topBlock = columnOfBlocks.getBlockState(centerOfChunk.up(landHeight));
+        int landHeight = chunkGenerator.getBaseHeight(centerOfChunk.getX(), centerOfChunk.getZ(), Heightmap.Type.WORLD_SURFACE_WG);
+        IBlockReader columnOfBlocks = chunkGenerator.getBaseColumn(centerOfChunk.getX(), centerOfChunk.getZ());
+        BlockState topBlock = columnOfBlocks.getBlockState(centerOfChunk.above(landHeight));
 
         return topBlock.getFluidState().isEmpty(); //This Func verifies if fluid exists on the area..
     }

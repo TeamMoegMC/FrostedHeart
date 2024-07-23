@@ -47,7 +47,7 @@ import net.minecraftforge.common.crafting.CompoundIngredient;
 import net.minecraftforge.common.crafting.NBTIngredient;
 
 public class IngredientEditor extends BaseEditDialog {
-    public static final Editor<SingleItemList> EDITOR_ITEMLIST = (p, l, v, c) -> SelectItemStackDialog.EDITOR.open(p, l, (v == null || v.stack == null) ? new ItemStack(Items.AIR) : v.stack, s -> {
+    public static final Editor<SingleItemList> EDITOR_ITEMLIST = (p, l, v, c) -> SelectItemStackDialog.EDITOR.open(p, l, (v == null || v.item == null) ? new ItemStack(Items.AIR) : v.item, s -> {
         s = s.copy();
         s.setCount(1);
         c.accept(new SingleItemList(s));
@@ -59,12 +59,12 @@ public class IngredientEditor extends BaseEditDialog {
         if (v != null) {
             ITag<Item> tag = v.tag;
             try {
-                vx = TagCollectionManager.getManager().getItemTags().getValidatedIdFromTag(tag).toString();
+                vx = TagCollectionManager.getInstance().getItems().getIdOrThrow(tag).toString();
             } catch (Exception ex) {
                 FHMain.LOGGER.error("Error creating editor tag list",ex);
             }
         }
-        EditBtnDialog.EDITOR_ITEM_TAGS.open(p, l, vx, s -> c.accept(new TagList(TagCollectionManager.getManager().getItemTags().getTagByID(new ResourceLocation(s)))));
+        EditBtnDialog.EDITOR_ITEM_TAGS.open(p, l, vx, s -> c.accept(new TagList(TagCollectionManager.getInstance().getItems().getTagOrEmpty(new ResourceLocation(s)))));
     };
     public static final Editor<IItemList> EDITOR_LIST = (p, l, v, c) -> {
         if (v == null)
@@ -80,39 +80,39 @@ public class IngredientEditor extends BaseEditDialog {
     public static final Editor<Ingredient> EDITOR_SIMPLE = (p, l, v, c) -> {
         IItemList vx = null;
         if (v != null)
-            vx = v.acceptedItems[0];
-        EDITOR_LIST.open(p, l, vx, e -> c.accept(Ingredient.fromItemListStream(Stream.of(e))));
+            vx = v.values[0];
+        EDITOR_LIST.open(p, l, vx, e -> c.accept(Ingredient.fromValues(Stream.of(e))));
     };
     public static final Editor<Ingredient> EDITOR_MULTIPLE = (p, l, v, c) -> {
         Collection<IItemList> list = null;
-        if (v != null) list = Arrays.asList(v.acceptedItems);
-        EDITOR_LIST_LIST.open(p, l, list, e -> c.accept(Ingredient.fromItemListStream(e.stream())));
+        if (v != null) list = Arrays.asList(v.values);
+        EDITOR_LIST_LIST.open(p, l, list, e -> c.accept(Ingredient.fromValues(e.stream())));
     };
     public static final Editor<Ingredient> VANILLA_EDITOR_CHOICE = (p, l, v, c) -> new EditorSelector<>(p, l, (t, s) -> true, v, c).addEditor("Single", EDITOR_SIMPLE).addEditor("Multiple", EDITOR_MULTIPLE).open();
     public static final Editor<Ingredient> VANILLA_EDITOR = (p, l, v, c) -> {
-        if (v == null || v.acceptedItems.length == 0) {
+        if (v == null || v.values.length == 0) {
             VANILLA_EDITOR_CHOICE.open(p, l, null, c);
-        } else if (v.acceptedItems.length == 1) {
+        } else if (v.values.length == 1) {
             EDITOR_SIMPLE.open(p, l, v, c);
         } else {
             EDITOR_MULTIPLE.open(p, l, v, c);
         }
     };
     public static final Editor<Ingredient> NBT_EDITOR = (p, l, v, c) -> {
-        if (v == null || v.hasNoMatchingItems()) {
+        if (v == null || v.isEmpty()) {
             SelectItemStackDialog.EDITOR.open(p, l, new ItemStack(Items.AIR), e -> c.accept(FHUtils.createIngredient(e)));
         } else {
-            SelectItemStackDialog.EDITOR.open(p, l, v.getMatchingStacks()[0], e -> c.accept(FHUtils.createIngredient(e)));
+            SelectItemStackDialog.EDITOR.open(p, l, v.getItems()[0], e -> c.accept(FHUtils.createIngredient(e)));
         }
     };
     public static final Editor<Ingredient> TAG_EDITOR = (p, l, v, c) -> {
 
-        if (v != null && v.acceptedItems.length > 0 && v.acceptedItems[0] instanceof TagList)
-            EDITOR_TAGLIST.open(p, l, (TagList) v.acceptedItems[0], e -> c.accept(Ingredient.fromItemListStream(Stream.of(e))));
+        if (v != null && v.values.length > 0 && v.values[0] instanceof TagList)
+            EDITOR_TAGLIST.open(p, l, (TagList) v.values[0], e -> c.accept(Ingredient.fromValues(Stream.of(e))));
         else
-            EDITOR_TAGLIST.open(p, l, null, e -> c.accept(Ingredient.fromItemListStream(Stream.of(e))));
+            EDITOR_TAGLIST.open(p, l, null, e -> c.accept(Ingredient.fromValues(Stream.of(e))));
     };
-    public static final Editor<Ingredient> EDITOR_JSON = (p, l, v, c) -> EditPrompt.JSON_EDITOR.open(p, l, v == null ? null : v.serialize(), e -> c.accept(Ingredient.deserialize(e)));
+    public static final Editor<Ingredient> EDITOR_JSON = (p, l, v, c) -> EditPrompt.JSON_EDITOR.open(p, l, v == null ? null : v.toJson(), e -> c.accept(Ingredient.fromJson(e)));
     public static final Editor<Ingredient> EDITOR_INGREDIENT = (p, l, v, c) -> {
         if (v == null) {
             new EditorSelector<>(p, l, c).addEditor("ItemStack", NBT_EDITOR).addEditor("TAG", TAG_EDITOR).addEditor("Advanced", VANILLA_EDITOR).open();
@@ -127,7 +127,7 @@ public class IngredientEditor extends BaseEditDialog {
         EditorSelector<Ingredient> igd = new EditorSelector<>(p, l, (o, t) -> true, v, c);
         igd.addEditor("Edit", EDITOR_INGREDIENT);
         if (v != null) {
-            if (v.acceptedItems.length == 1)
+            if (v.values.length == 1)
                 igd.addEditor("Change to Multiple", EDITOR_MULTIPLE);
             else
                 igd.addEditor("Change to Single", EDITOR_SIMPLE);
@@ -153,16 +153,16 @@ public class IngredientEditor extends BaseEditDialog {
 
     public static String getODesc(Ingredient i) {
         if (i instanceof NBTIngredient) {
-            if (!i.hasNoMatchingItems())
-                return "Stack " + i.getMatchingStacks()[0].getDisplayName().getString();
+            if (!i.isEmpty())
+                return "Stack " + i.getItems()[0].getHoverName().getString();
             return "NBT empty";
         } else if (i instanceof CompoundIngredient) {
-            if (!i.hasNoMatchingItems())
-                return "Compound " + i.getMatchingStacks()[0].getDisplayName().getString();
+            if (!i.isEmpty())
+                return "Compound " + i.getItems()[0].getHoverName().getString();
             return "Compound empty";
         } else if (i.isVanilla()) {
-            if (i.acceptedItems.length > 0 && !i.hasNoMatchingItems()) {
-                return "Item " + i.getMatchingStacks()[0].getDisplayName().getString();
+            if (i.values.length > 0 && !i.isEmpty()) {
+                return "Item " + i.getItems()[0].getHoverName().getString();
             }
             return "Vanilla empty";
         } else
@@ -173,12 +173,12 @@ public class IngredientEditor extends BaseEditDialog {
     private static String getText(IItemList li) {
         if (li instanceof TagList) {
             try {
-                return "Tag:" + TagCollectionManager.getManager().getItemTags().getValidatedIdFromTag(((TagList) li).tag);
+                return "Tag:" + TagCollectionManager.getInstance().getItems().getIdOrThrow(((TagList) li).tag);
             } catch (Exception ex) {
                 return "Unknown tag list";
             }
         } else if (li instanceof SingleItemList)
-            return "Item: " + ((SingleItemList) li).stack.getDisplayName().getString();
+            return "Item: " + ((SingleItemList) li).item.getHoverName().getString();
         else
             return "Unknown item list";
     }
@@ -201,7 +201,7 @@ public class IngredientEditor extends BaseEditDialog {
     public void addWidgets() {
         add(new OpenEditorButton<>(this, "Edit Ingredient", EDITOR_INGREDIENT, orig, orig == null ? Icon.EMPTY : FHIcons.getIcon(orig), e -> orig = e));
         if (orig != null) {
-            if (orig.acceptedItems.length == 1)
+            if (orig.values.length == 1)
                 add(new OpenEditorButton<>(this, "Change to Multiple", EDITOR_MULTIPLE, orig, e -> orig = e));
             else
                 add(new OpenEditorButton<>(this, "Change to Single", EDITOR_SIMPLE, orig, e -> orig = e));

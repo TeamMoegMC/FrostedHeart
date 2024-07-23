@@ -91,7 +91,7 @@ public class LogisticNetwork {
 	
 	public <T extends TileEntity & ILogisticsStorage> void update(T tile) {
 		TileEntityLogisticsStorage storage = new TileEntityLogisticsStorage(tile);
-		TileEntityLogisticsStorage ostor=storageList.put(tile.getPos(), storage);
+		TileEntityLogisticsStorage ostor=storageList.put(tile.getBlockPos(), storage);
 		if(ostor.getTe()!=tile) {
 			storages.add(storage);		
 			ItemStackHandler inv = storage.getInventory();

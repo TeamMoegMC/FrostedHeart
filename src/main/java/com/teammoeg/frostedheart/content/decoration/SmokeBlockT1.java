@@ -28,6 +28,8 @@ import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class SmokeBlockT1 extends FHBaseBlock {
 
     public SmokeBlockT1(Properties blockProps) {
@@ -38,8 +40,8 @@ public class SmokeBlockT1 extends FHBaseBlock {
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
         for (int i = 0; i < rand.nextInt(2) + 2; ++i) {
-            ClientUtils.spawnSmokeParticles(worldIn, pos.up());
-            ClientUtils.spawnFireParticles(worldIn, pos.up());
+            ClientUtils.spawnSmokeParticles(worldIn, pos.above());
+            ClientUtils.spawnFireParticles(worldIn, pos.above());
         }
     }
 }

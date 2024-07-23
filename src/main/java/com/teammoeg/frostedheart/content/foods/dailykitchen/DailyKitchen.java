@@ -80,7 +80,7 @@ public class DailyKitchen {
         WantedFoodsGenerator generator = new WantedFoodsGenerator(foodsEaten, eatenFoodsAmount);
 
         wantedFoodCapability.setWantedFoods(generator.generate());
-        player.sendStatusMessage(generator.getWantedFoodsText(), false);
+        player.displayClientMessage(generator.getWantedFoodsText(), false);
     }
 
 

@@ -49,6 +49,8 @@ import net.minecraft.world.IWorld;
 import net.minecraft.world.TickPriority;
 import net.minecraft.world.World;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock implements IWaterLoggable {
 	Class<T> type;
 	protected int lightOpacity;
@@ -74,17 +76,17 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 
 		this.type = type;
 
-		BlockState defaultState = getDefaultState().with(BlockStateProperties.WATERLOGGED, false).with(CASING, false);
+		BlockState defaultState = defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, false).setValue(CASING, false);
 		for (Direction d : Direction.values()) {
-			defaultState = defaultState.with(FACING_TO_PROPERTY_MAP.get(d), false);
-			defaultState = defaultState.with(RIM_PROPERTY_MAP.get(d), false);
+			defaultState = defaultState.setValue(PROPERTY_BY_DIRECTION.get(d), false);
+			defaultState = defaultState.setValue(RIM_PROPERTY_MAP.get(d), false);
 		}
 
-		this.setDefaultState(defaultState);
+		this.registerDefaultState(defaultState);
 	}
 
 	@Override
-	public boolean allowsMovement(BlockState state, IBlockReader worldIn, BlockPos pos, PathType type) {
+	public boolean isPathfindable(BlockState state, IBlockReader worldIn, BlockPos pos, PathType type) {
 		return false;
 	}
 
@@ -93,18 +95,18 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 	}
 
 	@Override
-	protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(net.minecraft.state.StateContainer.Builder<Block, BlockState> builder) {
 		builder.add(NORTH, EAST, SOUTH, WEST, UP, DOWN, BlockStateProperties.WATERLOGGED);
 		builder.add(RNORTH, REAST, RSOUTH, RWEST, RUP, RDOWN, CASING);
-		super.fillStateContainer(builder);
+		super.createBlockStateDefinition(builder);
 	}
 
 	@Nullable
 	private Axis getAxis(IBlockReader world, BlockPos pos, BlockState state) {
-		if (!state.matchesBlock(this)) return null;
+		if (!state.is(this)) return null;
 		for (Axis axis : Axis.values()) {
-			Direction d1 = Direction.getFacingFromAxis(AxisDirection.NEGATIVE, axis);
-			Direction d2 = Direction.getFacingFromAxis(AxisDirection.POSITIVE, axis);
+			Direction d1 = Direction.get(AxisDirection.NEGATIVE, axis);
+			Direction d2 = Direction.get(AxisDirection.POSITIVE, axis);
 			boolean openAt1 = isOpenAt(state, d1);
 			boolean openAt2 = isOpenAt(state, d2);
 			if (openAt1 && openAt2) {
@@ -115,20 +117,20 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 	}
 
 	public BlockState getAxisState(Axis axis) {
-		BlockState defaultState = getDefaultState();
+		BlockState defaultState = defaultBlockState();
 		for (Direction d : Direction.values())
-			defaultState = defaultState.with(FACING_TO_PROPERTY_MAP.get(d), d.getAxis() == axis);
+			defaultState = defaultState.setValue(PROPERTY_BY_DIRECTION.get(d), d.getAxis() == axis);
 		return defaultState;
 	}
 
 	@Override
 	public FluidState getFluidState(BlockState state) {
-		return state.get(BlockStateProperties.WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : Fluids.EMPTY.getDefaultState();
+		return state.getValue(BlockStateProperties.WATERLOGGED) ? Fluids.WATER.getSource(false) : Fluids.EMPTY.defaultFluidState();
 	}
 
 	@Override
-	public int getOpacity(BlockState state, IBlockReader worldIn, BlockPos pos) {
-		if (state.isOpaqueCube(worldIn, pos))
+	public int getLightBlock(BlockState state, IBlockReader worldIn, BlockPos pos) {
+		if (state.isSolidRender(worldIn, pos))
 			return lightOpacity;
 		else
 			return state.propagatesSkylightDown(worldIn, pos) ? 0 : 1;
@@ -136,11 +138,11 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 
 	@Override
 	public BlockState getStateForPlacement(BlockItemUseContext context) {
-		FluidState FluidState = context.getWorld()
-			.getFluidState(context.getPos());
-		return updateBlockState(getDefaultState(), context.getNearestLookingDirection(), null, context.getWorld(),
-			context.getPos()).with(BlockStateProperties.WATERLOGGED,
-                FluidState.getFluid() == Fluids.WATER);
+		FluidState FluidState = context.getLevel()
+			.getFluidState(context.getClickedPos());
+		return updateBlockState(defaultBlockState(), context.getNearestLookingDirection(), null, context.getLevel(),
+			context.getClickedPos()).setValue(BlockStateProperties.WATERLOGGED,
+                FluidState.getType() == Fluids.WATER);
 	}
 
 	@Override
@@ -149,12 +151,12 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 	}
 
 	public boolean isCornerOrEndPipe(IBlockDisplayReader world, BlockPos pos, BlockState state) {
-		return (state.matchesBlock(this)) && getAxis(world, pos, state) == null
+		return (state.is(this)) && getAxis(world, pos, state) == null
 			&& !shouldDrawCasing(world, pos, state);
 	}
 
 	public boolean isOpenAt(BlockState state, Direction direction) {
-		return state.get(FACING_TO_PROPERTY_MAP.get(direction));
+		return state.getValue(PROPERTY_BY_DIRECTION.get(direction));
 	}
 
 	public T setLightOpacity(int opacity) {
@@ -163,7 +165,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 	}
 
 	public boolean shouldDrawCasing(IBlockDisplayReader world, BlockPos pos, BlockState state) {
-		if (!state.matchesBlock(this))
+		if (!state.is(this))
 			return false;
 		Axis axis = getAxis(world, pos, state);
 		if (axis == null) return false;
@@ -177,9 +179,9 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 		Direction direction) {
 		if (!isOpenAt(state, direction))
 			return false;
-		BlockPos offsetPos = pos.offset(direction);
+		BlockPos offsetPos = pos.relative(direction);
 		BlockState facingState = world.getBlockState(offsetPos);
-		if (!facingState.matchesBlock(this))
+		if (!facingState.is(this))
 			return true;
 		if (!canConnectTo(world, offsetPos, facingState, direction))
 			return true;
@@ -197,8 +199,8 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 		PipeTileEntity te=FHUtils.getExistingTileEntity(world, pos, PipeTileEntity.class);
 		if(te!=null) {
 			for (Direction d : Direction.values()) {
-				if(old.get(FACING_TO_PROPERTY_MAP.get(d))!=neo.get(FACING_TO_PROPERTY_MAP.get(d)))
-					te.onFaceChange(d, neo.get(FACING_TO_PROPERTY_MAP.get(d)));
+				if(old.getValue(PROPERTY_BY_DIRECTION.get(d))!=neo.getValue(PROPERTY_BY_DIRECTION.get(d)))
+					te.onFaceChange(d, neo.getValue(PROPERTY_BY_DIRECTION.get(d)));
 			}
 		}
 	}
@@ -206,30 +208,30 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 		IWorld world, BlockPos pos) {
 		
 		if (direction != null) {
-			state = state.with(FACING_TO_PROPERTY_MAP.get(direction), canConnectTo(world, pos.offset(direction), world.getBlockState(pos.offset(direction)), direction));
+			state = state.setValue(PROPERTY_BY_DIRECTION.get(direction), canConnectTo(world, pos.relative(direction), world.getBlockState(pos.relative(direction)), direction));
 		} else {
 			for (Direction d : Direction.values())
 				if (d != ignore) {
-					state = state.with(FACING_TO_PROPERTY_MAP.get(d), canConnectTo(world, pos.offset(d), world.getBlockState(pos.offset(d)), d));
+					state = state.setValue(PROPERTY_BY_DIRECTION.get(d), canConnectTo(world, pos.relative(d), world.getBlockState(pos.relative(d)), d));
 				}
 		}
 		for (Direction d : Direction.values())
 			if (d != ignore) {
-				state = state.with(RIM_PROPERTY_MAP.get(d), this.shouldDrawRim(world, pos, state, d));
+				state = state.setValue(RIM_PROPERTY_MAP.get(d), this.shouldDrawRim(world, pos, state, d));
 
 			}
-		state = state.with(CASING, this.shouldDrawCasing(world, pos, state));
+		state = state.setValue(CASING, this.shouldDrawCasing(world, pos, state));
 		return state;
 	}
 
 	@Override
-	public BlockState updatePostPlacement(BlockState state, Direction direction, BlockState neighbourState,
+	public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState,
 		IWorld world, BlockPos pos, BlockPos neighbourPos) {
-		if (state.get(BlockStateProperties.WATERLOGGED))
-			world.getPendingFluidTicks()
-				.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
+		if (state.getValue(BlockStateProperties.WATERLOGGED))
+			world.getLiquidTicks()
+				.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
 		if (isOpenAt(state, direction) && neighbourState.hasProperty(BlockStateProperties.WATERLOGGED))
-			world.getPendingBlockTicks().scheduleTick(pos, this, 1, TickPriority.HIGH);
+			world.getBlockTicks().scheduleTick(pos, this, 1, TickPriority.HIGH);
 		BlockState newstate= updateBlockState(state, direction,null , world, pos);
 		//System.out.println("Update post placement");
 		checkNewConnection(world,pos,state,newstate);
@@ -243,15 +245,15 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 		//Direction d = FHUtils.dirBetween(fromPos, pos);
 		BlockState updated=updateBlockState(state, null, null, worldIn, pos);
 		checkNewConnection(worldIn,pos,state,updated);
-		worldIn.setBlockState(pos,updated);
+		worldIn.setBlockAndUpdate(pos,updated);
 	}
 
 	@Override
-	public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
-		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
+	public void setPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+		super.setPlacedBy(worldIn, pos, state, placer, stack);
 		BlockState updated=updateBlockState(state, null, null, worldIn, pos);
 		checkNewConnection(worldIn,pos,state,updated);
-		worldIn.setBlockState(pos,updated);
+		worldIn.setBlockAndUpdate(pos,updated);
 	}
 	
 

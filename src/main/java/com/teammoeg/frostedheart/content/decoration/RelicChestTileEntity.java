@@ -87,7 +87,7 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
     }
 
     @Override
-    public int getSizeInventory() {
+    public int getContainerSize() {
         return 15;
     }
 
@@ -102,22 +102,22 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
     }
 
     @Override
-    public void read(BlockState state, CompoundNBT nbt) {
-        super.read(state, nbt);
-        this.inventory = NonNullList.withSize(this.getSizeInventory(), ItemStack.EMPTY);
-        if (!this.checkLootAndRead(nbt)) {
+    public void load(BlockState state, CompoundNBT nbt) {
+        super.load(state, nbt);
+        this.inventory = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
+        if (!this.tryLoadLootTable(nbt)) {
             ItemStackHelper.loadAllItems(nbt, this.inventory);
         }
 
     }
 
-    public boolean receiveClientEvent(int id, int type) {
+    public boolean triggerEvent(int id, int type) {
         if (id == 1) {
-            BlockState state = this.world.getBlockState(this.pos);
-            this.world.notifyBlockUpdate(this.pos, state, state, 3);
+            BlockState state = this.level.getBlockState(this.worldPosition);
+            this.level.sendBlockUpdated(this.worldPosition, state, state, 3);
             return true;
         }
-        return super.receiveClientEvent(id, type);
+        return super.triggerEvent(id, type);
     }
 
     @Override
@@ -126,9 +126,9 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
     }
 
     @Override
-    public CompoundNBT write(CompoundNBT compound) {
-        super.write(compound);
-        if (!this.checkLootAndWrite(compound)) {
+    public CompoundNBT save(CompoundNBT compound) {
+        super.save(compound);
+        if (!this.trySaveLootTable(compound)) {
             ItemStackHelper.saveAllItems(compound, this.inventory);
         }
 

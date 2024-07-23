@@ -66,22 +66,22 @@ public class TradeContainer extends Container {
         }
 
         @Override
-        public void onSlotChange(ItemStack oldStackIn, ItemStack newStackIn) {
-            super.onSlotChange(oldStackIn, newStackIn);
+        public void onQuickCraft(ItemStack oldStackIn, ItemStack newStackIn) {
+            super.onQuickCraft(oldStackIn, newStackIn);
             redetect();
 
         }
 
         @Override
-        public void onSlotChanged() {
-            super.onSlotChanged();
+        public void setChanged() {
+            super.setChanged();
             redetect();
         }
 
         private void redetect() {
             isSaleable = false;
             for (BuyData bd : policy.getBuys()) {
-                if (bd.getItem().test(this.getStack())) {
+                if (bd.getItem().test(this.getItem())) {
                     if (bd.getStore() != 0) {
                         isSaleable = true;
                         break;
@@ -129,14 +129,14 @@ public class TradeContainer extends Container {
 
     public TradeContainer(int id, PlayerInventory inventoryPlayer, PacketBuffer pb) {
         this(id, inventoryPlayer,
-                (VillagerEntity) inventoryPlayer.player.getEntityWorld().getEntityByID(pb.readVarInt()));
+                (VillagerEntity) inventoryPlayer.player.getCommandSenderWorld().getEntity(pb.readVarInt()));
 
         data = new FHVillagerData(ve);
-        CompoundNBT d = pb.readCompoundTag();
+        CompoundNBT d = pb.readNbt();
         // System.out.println(d);
         data.deserializeFromRecv(d);
         pld = new PlayerRelationData();
-        pld.deserialize(pb.readCompoundTag());
+        pld.deserialize(pb.readNbt());
         relations = new RelationList();
         relations.read(pb);
         policy = data.getPolicy();
@@ -161,13 +161,13 @@ public class TradeContainer extends Container {
                 addSlot(new SlotItemHandler(inv, j + i * 4, 62 + j * 16, 18 + i * 16) {
 
                     @Override
-                    public void onSlotChange(ItemStack oldStackIn, ItemStack newStackIn) {
-                        super.onSlotChange(oldStackIn, newStackIn);
+                    public void onQuickCraft(ItemStack oldStackIn, ItemStack newStackIn) {
+                        super.onQuickCraft(oldStackIn, newStackIn);
                     }
 
                     @Override
-                    public void onSlotChanged() {
-                        super.onSlotChanged();
+                    public void setChanged() {
+                        super.setChanged();
                         recalc();
                         fireClientUpdateTrade();
                     }
@@ -182,8 +182,8 @@ public class TradeContainer extends Container {
 
     }
 
-    public boolean canInteractWith(PlayerEntity playerIn) {
-        return ve.getCustomer() == playerIn;
+    public boolean stillValid(PlayerEntity playerIn) {
+        return ve.getTradingPlayer() == playerIn;
     }
 
     public void commitTrade(ServerPlayerEntity pe) {
@@ -197,8 +197,8 @@ public class TradeContainer extends Container {
                 for (BuyData bd : policy.getBuys()) {
                     if (bd.getItem().test(is)) {
                         int cnt = Math.min(is.getCount(), bd.getStore());
-                        if (ve.func_230293_i_(is)) {
-                            ve.getVillagerInventory().addItem(ItemHandlerHelper.copyStackWithSize(is, cnt));
+                        if (ve.wantsToPickUp(is)) {
+                            ve.getInventory().addItem(ItemHandlerHelper.copyStackWithSize(is, cnt));
                         }
                         if (cnt == is.getCount())
                             inv.setStackInSlot(i, ItemStack.EMPTY);
@@ -265,18 +265,18 @@ public class TradeContainer extends Container {
     }
 
     @Override
-    public void onContainerClosed(PlayerEntity pPlayer) {
-        this.ve.setCustomer(null);
+    public void removed(PlayerEntity pPlayer) {
+        this.ve.setTradingPlayer(null);
         if (!pPlayer.isAlive()
                 || pPlayer instanceof ServerPlayerEntity && ((ServerPlayerEntity) pPlayer).hasDisconnected()) {
             for (int j = 0; j < inv.getSlots(); ++j) {
-                pPlayer.dropItem(inv.getStackInSlot(j), false);
+                pPlayer.drop(inv.getStackInSlot(j), false);
             }
         } else {
             PlayerInventory inventory = pPlayer.inventory;
             if (inventory.player instanceof ServerPlayerEntity) {
                 for (int i = 0; i < inv.getSlots(); ++i) {
-                    inventory.placeItemBackInInventory(pPlayer.world, inv.getStackInSlot(i));
+                    inventory.placeItemBackInInventory(pPlayer.level, inv.getStackInSlot(i));
                 }
             }
         }
@@ -348,15 +348,15 @@ public class TradeContainer extends Container {
     }
 
     @Override
-    public ItemStack transferStackInSlot(PlayerEntity player, int slot) {
+    public ItemStack quickMoveStack(PlayerEntity player, int slot) {
         ItemStack itemstack = ItemStack.EMPTY;
-        Slot slotObject = super.inventorySlots.get(slot);
+        Slot slotObject = super.slots.get(slot);
         final int slotCount = 12;
-        if (slotObject != null && slotObject.getHasStack()) {
-            ItemStack itemstack1 = slotObject.getStack();
+        if (slotObject != null && slotObject.hasItem()) {
+            ItemStack itemstack1 = slotObject.getItem();
             itemstack = itemstack1.copy();
             if (slot < slotCount) {
-                if (!this.mergeItemStack(itemstack1, slotCount, this.inventorySlots.size(), true)) {
+                if (!this.moveItemStackTo(itemstack1, slotCount, this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
             } else if (!this.tryMergeStack(itemstack1, 0, slotCount)) {
@@ -364,9 +364,9 @@ public class TradeContainer extends Container {
             }
 
             if (itemstack1.isEmpty()) {
-                slotObject.putStack(ItemStack.EMPTY);
+                slotObject.set(ItemStack.EMPTY);
             } else {
-                slotObject.onSlotChanged();
+                slotObject.setChanged();
             }
         }
 
@@ -377,9 +377,9 @@ public class TradeContainer extends Container {
         boolean inAllowedRange = true;
         int allowedStart = pStartIndex;
         for (int i = pStartIndex; i < pEndIndex; i++) {
-            boolean mayplace = this.inventorySlots.get(i).isItemValid(pStack);
+            boolean mayplace = this.slots.get(i).mayPlace(pStack);
             if (inAllowedRange && (!mayplace || i == pEndIndex - 1)) {
-                if (this.mergeItemStack(pStack, allowedStart, i, false))
+                if (this.moveItemStackTo(pStack, allowedStart, i, false))
                     return true;
                 inAllowedRange = false;
             } else if (!inAllowedRange && mayplace) {

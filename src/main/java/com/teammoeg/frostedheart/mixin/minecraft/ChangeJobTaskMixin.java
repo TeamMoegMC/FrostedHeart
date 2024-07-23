@@ -46,7 +46,7 @@ public abstract class ChangeJobTaskMixin extends Task<VillagerEntity> {
      * @reason Disable vanilla profession
      */
     @Overwrite
-    protected boolean shouldExecute(ServerWorld worldIn, VillagerEntity owner) {
+    protected boolean checkExtraStartConditions(ServerWorld worldIn, VillagerEntity owner) {
         return false;
     }
 

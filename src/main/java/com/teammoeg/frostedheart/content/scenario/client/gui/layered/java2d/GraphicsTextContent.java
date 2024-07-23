@@ -52,7 +52,7 @@ public class GraphicsTextContent extends GraphicLayerContent {
 		params.getG2d().setClip(r.getX(),r.getY(),r.getW(),r.getH());
 		int size=(int) (r.getW()*1f/width*this.size);
 		params.getG2d().setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
-		RenderComponentsUtil.func_238505_a_(text,(int) (r.getW()/(size/7f)), Minecraft.getInstance().fontRenderer).get(0).accept(new GraphicGlyphRenderer(params.getG2d(),params.calculateScaledX(x),params.calculateScaledY(y),size,shadow));
+		RenderComponentsUtil.wrapComponents(text,(int) (r.getW()/(size/7f)), Minecraft.getInstance().font).get(0).accept(new GraphicGlyphRenderer(params.getG2d(),params.calculateScaledX(x),params.calculateScaledY(y),size,shadow));
 		params.getG2d().setComposite(AlphaComposite.SrcOver);
 		params.getG2d().setClip(0, 0, params.getWidth(),params.getHeight());
 	}

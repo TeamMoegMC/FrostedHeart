@@ -54,13 +54,13 @@ import net.minecraftforge.common.ToolType;
 import net.minecraftforge.fml.network.NetworkHooks;
 
 public class RelicChestBlock extends FHBaseBlock {
-    protected static final VoxelShape X_SHAPE = Block.makeCuboidShape(0D, 0D, 2D, 16D, 13D, 14D);
-    protected static final VoxelShape Z_SHAPE = Block.makeCuboidShape(2D, 0D, 0D, 14D, 13D, 16D);
+    protected static final VoxelShape X_SHAPE = Block.box(0D, 0D, 2D, 16D, 13D, 14D);
+    protected static final VoxelShape Z_SHAPE = Block.box(2D, 0D, 0D, 14D, 13D, 16D);
     public static final EnumProperty<Direction.Axis> HORIZONTAL_AXIS = BlockStateProperties.HORIZONTAL_AXIS;
 
     public RelicChestBlock() {
-        super(Block.Properties.create(Material.IRON).sound(SoundType.STONE).setRequiresTool()
-                .harvestTool(ToolType.PICKAXE).hardnessAndResistance(35, 600).notSolid());
+        super(Block.Properties.of(Material.METAL).sound(SoundType.STONE).requiresCorrectToolForDrops()
+                .harvestTool(ToolType.PICKAXE).strength(35, 600).noOcclusion());
     }
 
     @Nullable
@@ -70,20 +70,20 @@ public class RelicChestBlock extends FHBaseBlock {
     }
 
     @Override
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
         builder.add(HORIZONTAL_AXIS);
     }
 
     @Override
     public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-        if (state.get(HORIZONTAL_AXIS) == Direction.Axis.X)
+        if (state.getValue(HORIZONTAL_AXIS) == Direction.Axis.X)
             return X_SHAPE;
         return Z_SHAPE;
     }
 
     @Override
     public BlockState getStateForPlacement(BlockItemUseContext context) {
-        return this.getDefaultState().with(HORIZONTAL_AXIS, context.getPlacementHorizontalFacing().rotateY().getAxis());
+        return this.defaultBlockState().setValue(HORIZONTAL_AXIS, context.getHorizontalDirection().getClockWise().getAxis());
     }
 
     @Override
@@ -91,26 +91,26 @@ public class RelicChestBlock extends FHBaseBlock {
         return true;
     }
 
-    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (!worldIn.isRemote) {
-            RelicChestTileEntity tile = (RelicChestTileEntity) worldIn.getTileEntity(pos);
+    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+        if (!worldIn.isClientSide) {
+            RelicChestTileEntity tile = (RelicChestTileEntity) worldIn.getBlockEntity(pos);
             if (tile != null) {
-                NetworkHooks.openGui((ServerPlayerEntity) player, tile, tile.getPos());
-                worldIn.playSound(null, pos, SoundEvents.BLOCK_LAVA_EXTINGUISH, SoundCategory.BLOCKS, 0.3F, 1.5F);
+                NetworkHooks.openGui((ServerPlayerEntity) player, tile, tile.getBlockPos());
+                worldIn.playSound(null, pos, SoundEvents.LAVA_EXTINGUISH, SoundCategory.BLOCKS, 0.3F, 1.5F);
             }
         }
         return ActionResultType.SUCCESS;
     }
 
     @Override
-    public void onReplaced(BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
-        if (!state.matchesBlock(newState.getBlock())) {
-            TileEntity tileentity = worldIn.getTileEntity(pos);
+    public void onRemove(BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!state.is(newState.getBlock())) {
+            TileEntity tileentity = worldIn.getBlockEntity(pos);
             if (tileentity instanceof IIEInventory) {
-                InventoryHelper.dropInventoryItems(worldIn, pos, (IInventory) tileentity);
+                InventoryHelper.dropContents(worldIn, pos, (IInventory) tileentity);
             }
 
-            super.onReplaced(state, worldIn, pos, newState, isMoving);
+            super.onRemove(state, worldIn, pos, newState, isMoving);
         }
     }
 
@@ -118,11 +118,11 @@ public class RelicChestBlock extends FHBaseBlock {
         switch (rot) {
             case COUNTERCLOCKWISE_90:
             case CLOCKWISE_90:
-                switch (state.get(HORIZONTAL_AXIS)) {
+                switch (state.getValue(HORIZONTAL_AXIS)) {
                     case Z:
-                        return state.with(HORIZONTAL_AXIS, Direction.Axis.X);
+                        return state.setValue(HORIZONTAL_AXIS, Direction.Axis.X);
                     case X:
-                        return state.with(HORIZONTAL_AXIS, Direction.Axis.Z);
+                        return state.setValue(HORIZONTAL_AXIS, Direction.Axis.Z);
                     default:
                         return state;
                 }

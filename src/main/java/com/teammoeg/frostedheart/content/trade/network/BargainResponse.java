@@ -70,7 +70,7 @@ public class BargainResponse implements FHMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
-            Container cont = player.openContainer;
+            Container cont = player.containerMenu;
             if (cont instanceof TradeContainer) {
                 TradeContainer trade = (TradeContainer) cont;
                 trade.relations.copy(relation);

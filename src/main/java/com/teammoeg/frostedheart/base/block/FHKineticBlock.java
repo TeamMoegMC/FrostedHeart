@@ -25,19 +25,21 @@ import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public abstract class FHKineticBlock extends HorizontalKineticBlock {
     protected int lightOpacity;
 
     public FHKineticBlock(Properties blockProps) {
-        super(blockProps.variableOpacity());
+        super(blockProps.dynamicShape());
         lightOpacity = 15;
 
     }
 
 
     @Override
-    public int getOpacity(BlockState state, IBlockReader worldIn, BlockPos pos) {
-        if (state.isOpaqueCube(worldIn, pos))
+    public int getLightBlock(BlockState state, IBlockReader worldIn, BlockPos pos) {
+        if (state.isSolidRender(worldIn, pos))
             return lightOpacity;
         else
             return state.propagatesSkylightDown(worldIn, pos) ? 0 : 1;

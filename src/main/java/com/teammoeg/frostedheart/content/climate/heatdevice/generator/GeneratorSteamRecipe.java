@@ -47,7 +47,7 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
 
         @Nullable
         @Override
-        public GeneratorSteamRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+        public GeneratorSteamRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
             FluidTagInput input = FluidTagInput.read(buffer);
             float power = buffer.readFloat();
             float tempMod = buffer.readFloat();
@@ -56,14 +56,14 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
 
         @Override
         public GeneratorSteamRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            FluidTagInput input = FluidTagInput.deserialize(JSONUtils.getJsonObject(json, "input"));
-            float power = JSONUtils.getFloat(json, "energy");
-            float tempMod = JSONUtils.getFloat(json, "level");
+            FluidTagInput input = FluidTagInput.deserialize(JSONUtils.getAsJsonObject(json, "input"));
+            float power = JSONUtils.getAsFloat(json, "energy");
+            float tempMod = JSONUtils.getAsFloat(json, "level");
             return new GeneratorSteamRecipe(recipeId, input, power, tempMod);
         }
 
         @Override
-        public void write(PacketBuffer buffer, GeneratorSteamRecipe recipe) {
+        public void toNetwork(PacketBuffer buffer, GeneratorSteamRecipe recipe) {
             recipe.input.write(buffer);
             buffer.writeFloat(recipe.power);
             buffer.writeFloat(recipe.level);
@@ -102,7 +102,7 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
     }
 
     @Override
-    public ItemStack getRecipeOutput() {
+    public ItemStack getResultItem() {
         return super.outputDummy;
     }
 }

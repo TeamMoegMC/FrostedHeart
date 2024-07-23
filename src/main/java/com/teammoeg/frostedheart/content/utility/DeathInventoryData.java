@@ -50,28 +50,28 @@ public class DeathInventoryData implements NBTSerializable {
             super();
             ItemStackHelper.loadAllItems(nbt.getCompound("main"), inv);
             ItemStackHelper.loadAllItems(nbt.getCompound("armor"), armor);
-            this.offhand = ItemStack.read(nbt.getCompound("off"));
+            this.offhand = ItemStack.of(nbt.getCompound("off"));
 
         }
 
         public CopyInventory(PlayerInventory othis) {
             for (int i = 0; i < 9; i++) {
-                ItemStack itemstack = othis.mainInventory.get(i);
+                ItemStack itemstack = othis.items.get(i);
                 if (!itemstack.isEmpty()) {
-                    if (itemstack.isDamageable() || !itemstack.getToolTypes().isEmpty()) {
+                    if (itemstack.isDamageableItem() || !itemstack.getToolTypes().isEmpty()) {
                         inv.set(i, itemstack);
-                        othis.setInventorySlotContents(i, ItemStack.EMPTY);
+                        othis.setItem(i, ItemStack.EMPTY);
                     }
                 }
             }
-            ItemStack offhand = othis.offHandInventory.get(0);
-            if (offhand.isDamageable() || !offhand.getToolTypes().isEmpty()) {
+            ItemStack offhand = othis.offhand.get(0);
+            if (offhand.isDamageableItem() || !offhand.getToolTypes().isEmpty()) {
                 this.offhand = offhand;
-                othis.offHandInventory.set(0, ItemStack.EMPTY);
+                othis.offhand.set(0, ItemStack.EMPTY);
             }
             for (int i = 0; i < 4; i++) {
-                armor.set(i, othis.armorInventory.get(i));
-                othis.armorInventory.set(i, ItemStack.EMPTY);
+                armor.set(i, othis.armor.get(i));
+                othis.armor.set(i, ItemStack.EMPTY);
             }
         }
 
@@ -79,15 +79,15 @@ public class DeathInventoryData implements NBTSerializable {
             for (int i = 0; i < 9; i++) {
                 ItemStack ret = inv.get(i);
                 if (!ret.isEmpty())
-                    othis.setInventorySlotContents(i, ret);
+                    othis.setItem(i, ret);
             }
             for (int i = 0; i < 4; i++) {
                 ItemStack ret = armor.get(i);
                 if (!ret.isEmpty())
-                    othis.armorInventory.set(i, ret);
+                    othis.armor.set(i, ret);
             }
             if (offhand != null && !offhand.isEmpty()) {
-                othis.offHandInventory.set(0, offhand);
+                othis.offhand.set(0, offhand);
             }
         }
 

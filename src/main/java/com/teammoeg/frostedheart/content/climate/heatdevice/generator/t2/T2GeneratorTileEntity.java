@@ -109,8 +109,8 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 
     @Override
     public AxisAlignedBB getRenderBoundingBox() {
-        return new AxisAlignedBB(pos.getX() - 2, pos.getY() - 2, pos.getZ() - 2, pos.getX() + 2, pos.getY() + 6,
-                pos.getZ() + 2);
+        return new AxisAlignedBB(worldPosition.getX() - 2, worldPosition.getY() - 2, worldPosition.getZ() - 2, worldPosition.getX() + 2, worldPosition.getY() + 6,
+                worldPosition.getZ() + 2);
     }
 
     @Override
@@ -124,7 +124,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     @Override
     protected void tickControls() {
         super.tickControls();
-        int power = this.world.getStrongPower(getBlockPosForPos(redstone));
+        int power = this.level.getDirectSignalTo(getBlockPosForPos(redstone));
         if (power > 0) {
             if (power > 10) {
                 if (!this.isOverdrive()) this.setOverdrive(true);
@@ -141,16 +141,16 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     @Override
     protected void tickEffects(boolean isActive) {
         if (isActive) {
-            BlockPos blockpos = this.getPos().offset(Direction.UP, 5);
-            Random random = world.rand;
+            BlockPos blockpos = this.getBlockPos().relative(Direction.UP, 5);
+            Random random = level.random;
             if (random.nextFloat() < (isOverdrive() ? 0.8F : 0.5F)) {
                 // for (int i = 0; i < random.nextInt(2)+1; ++i) {
 //                if (this.liquidtick != 0 && random.nextFloat() < 0.06F) {
 //                    ClientUtils.spawnSteamParticles(world, blockpos);
 //                }
-                ClientUtils.spawnT2FireParticles(world, blockpos);
+                ClientUtils.spawnT2FireParticles(level, blockpos);
                 Vector3d wind = new Vector3d(0, 0, 0);
-                ClientUtils.spawnInvertedConeSteam(world, blockpos, wind);
+                ClientUtils.spawnInvertedConeSteam(level, blockpos, wind);
             }
             /*
             if (this.isWorking() && this.getHeated() == getMaxHeated() && this.tickUntilStopBoom > 0) {
@@ -186,7 +186,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     		 manager = new HeatEnergyNetwork(this, c -> {
     		        Direction dir = this.getFacing();
 
-    		        c.accept(getBlockPosForPos(networkTile).offset(dir.getOpposite()), dir.getOpposite());
+    		        c.accept(getBlockPosForPos(networkTile).relative(dir.getOpposite()), dir.getOpposite());
 
     		    });
     	}

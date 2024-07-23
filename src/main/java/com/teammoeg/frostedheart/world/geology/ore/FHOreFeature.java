@@ -41,7 +41,7 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
     }
 
     @Override
-    public boolean generate(ISeedReader reader, ChunkGenerator generator, Random rand, BlockPos pos, FHOreFeatureConfig config) {
+    public boolean place(ISeedReader reader, ChunkGenerator generator, Random rand, BlockPos pos, FHOreFeatureConfig config) {
 
         if (pos.getY() > reader.getHeight
                 (Heightmap.Type.OCEAN_FLOOR_WG, pos.getX(), pos.getZ()) + 3) {
@@ -53,7 +53,7 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
         for (int x = pos.getX() - 4; x < pos.getX() + 4; x += 2) {
             for (int y = pos.getY() - 2; y < pos.getY() + 2; ++y) {
                 for (int z = pos.getZ() - 4; z < pos.getZ() + 4; z += 2) {
-                    blockpos$mutable.setPos(x, y, z);
+                    blockpos$mutable.set(x, y, z);
                     if (config.target.test(reader.getBlockState(blockpos$mutable), rand)) {
                         pos = blockpos$mutable;
                         float f = rand.nextFloat() * (float) Math.PI;
@@ -146,13 +146,13 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
                                         int packedLocation = dx - startX + (dy - startY) * maxSizeXZ + (dz - startZ) * maxSizeXZ * maxSizeY;
                                         if (!generated.get(packedLocation)) {//do not overwrite
                                             generated.set(packedLocation);
-                                            blockpos$mutable.setPos(dx, dy, dz);
+                                            blockpos$mutable.set(dx, dy, dz);
                                             Block b = worldIn.getBlockState(blockpos$mutable).getBlock();
                                             if (config.target.test(worldIn.getBlockState(blockpos$mutable), random)) {
                                                 if (WorldgenUtils.ORE_STONES.contains(b)) {
-                                                    worldIn.setBlockState(blockpos$mutable, config.state.getBlock().getDefaultState().with(RankineOreBlock.TYPE, WorldgenUtils.ORE_STONES.indexOf(b)), 19);
+                                                    worldIn.setBlock(blockpos$mutable, config.state.getBlock().defaultBlockState().setValue(RankineOreBlock.TYPE, WorldgenUtils.ORE_STONES.indexOf(b)), 19);
                                                 } else {
-                                                    worldIn.setBlockState(blockpos$mutable, config.state.getBlock().getDefaultState(), 19);
+                                                    worldIn.setBlock(blockpos$mutable, config.state.getBlock().defaultBlockState(), 19);
                                                 }
                                                 ++totalGenerated;
                                             }

@@ -62,7 +62,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class FHTileTypes {
     public static final DeferredRegister<TileEntityType<?>> REGISTER = DeferredRegister.create(
             ForgeRegistries.TILE_ENTITIES, FHMain.MODID);
-    private static final CreateRegistrate REGISTRATE = FHMain.registrate.getValue()
+    private static final CreateRegistrate REGISTRATE = FHMain.registrate.get()
         .itemGroup(() -> FHMain.itemGroup);
     public static final RegistryObject<TileEntityType<T1GeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(
             "generator", makeType(T1GeneratorTileEntity::new, () -> FHMultiblocks.generator)

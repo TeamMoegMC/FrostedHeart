@@ -72,7 +72,7 @@ public class TownWorkerData {
 
 	public TownWorkerData(CompoundNBT data) {
         super();
-        this.pos = BlockPos.fromLong(data.getLong("pos"));
+        this.pos = BlockPos.of(data.getLong("pos"));
         this.type = TownWorkerType.valueOf(data.getString("type"));
         this.workData = data.getCompound("data");
         this.priority = data.getInt("priority");
@@ -118,7 +118,7 @@ public class TownWorkerData {
 
     public CompoundNBT serialize() {
         CompoundNBT data = new CompoundNBT();
-        data.putLong("pos", pos.toLong());
+        data.putLong("pos", pos.asLong());
         data.putString("type", type.name());
         data.put("data", workData);
         data.putInt("priority", priority);

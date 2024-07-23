@@ -36,6 +36,8 @@ import net.minecraft.block.MushroomBlock;
 import net.minecraft.block.SaplingBlock;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraft.block.AbstractBlock.Properties;
+
 /**
  * Disable any tree from growing when blizzard
  * */
@@ -49,7 +51,7 @@ public abstract class SaplingBlockMixin extends BushBlock implements IGrowable {
     @Inject(at = @At("HEAD"), method = "randomTick", cancellable = true)
     public void fh$randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random, CallbackInfo cbi) {
         if (FHUtils.isBlizzardHarming(worldIn, pos)) {
-            worldIn.setBlockState(pos, Blocks.AIR.getDefaultState(), 2);
+            worldIn.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
             cbi.cancel();
         } else if (!FHUtils.canTreeGrow(worldIn, pos, random))
             cbi.cancel();

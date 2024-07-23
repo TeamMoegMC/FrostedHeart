@@ -29,6 +29,8 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 //矿场方块，不是我的方块
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class MineBlock extends AbstractTownWorkerBlock {
 
     public MineBlock(Properties blockProps){
@@ -41,25 +43,25 @@ public class MineBlock extends AbstractTownWorkerBlock {
     }
 
     //test
-    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (!worldIn.isRemote && handIn == Hand.MAIN_HAND) {
-            MineTileEntity te = (MineTileEntity) worldIn.getTileEntity(pos);
+    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+        if (!worldIn.isClientSide && handIn == Hand.MAIN_HAND) {
+            MineTileEntity te = (MineTileEntity) worldIn.getBlockEntity(pos);
             if (te == null) {
                 return ActionResultType.FAIL;
             }
             te.refresh();
-            player.sendStatusMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.sendStatusMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.sendStatusMessage(new StringTextComponent("Valid stone: " + (te.getValidStoneOrOre())), false);
-            player.sendStatusMessage(new StringTextComponent("Average light level: " + (te.getAvgLightLevel())), false);
+            player.displayClientMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            player.displayClientMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(new StringTextComponent("Valid stone: " + (te.getValidStoneOrOre())), false);
+            player.displayClientMessage(new StringTextComponent("Average light level: " + (te.getAvgLightLevel())), false);
             return ActionResultType.SUCCESS;
         }
         return ActionResultType.PASS;
     }
 
     @Override
-    public void onBlockPlacedBy(World world, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
-        super.onBlockPlacedBy(world, pos, state, entity, stack);
+    public void setPlacedBy(World world, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(world, pos, state, entity, stack);
         MineTileEntity te = (MineTileEntity) Utils.getExistingTileEntity(world, pos);
         if (te != null) {
             if (entity instanceof ServerPlayerEntity) {
@@ -76,7 +78,7 @@ public class MineBlock extends AbstractTownWorkerBlock {
                             mineBaseTileEntity.refresh();
                             return mineBaseTileEntity.getLinkedMines().contains(pos);
                         })
-                        .forEach(mineBaseTileEntity -> te.setLinkedBase(mineBaseTileEntity.getPos(), mineBaseTileEntity.getRating()));
+                        .forEach(mineBaseTileEntity -> te.setLinkedBase(mineBaseTileEntity.getBlockPos(), mineBaseTileEntity.getRating()));
             }
         }
     }

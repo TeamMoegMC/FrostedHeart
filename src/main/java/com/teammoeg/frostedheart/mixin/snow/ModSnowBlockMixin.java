@@ -34,9 +34,11 @@ import snownee.snow.ModUtil;
 import snownee.snow.SnowCommonConfig;
 import snownee.snow.block.ModSnowBlock;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 @Mixin(ModSnowBlock.class)
 public abstract class ModSnowBlockMixin extends SnowBlock {
-    private static final VoxelShape[] SHAPES = new VoxelShape[]{VoxelShapes.empty(), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 2.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 4.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 6.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 8.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 10.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 14.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 16.0D, 16.0D)};
+    private static final VoxelShape[] SHAPES = new VoxelShape[]{VoxelShapes.empty(), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 2.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 4.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 6.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 8.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 10.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 14.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 16.0D, 16.0D)};
 
     public ModSnowBlockMixin(Properties properties) {
         super(properties);
@@ -49,12 +51,12 @@ public abstract class ModSnowBlockMixin extends SnowBlock {
     @Overwrite(remap = false)
     public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
         if (!ModUtil.terraforged && SnowCommonConfig.thinnerBoundingBox) {
-            int layers = state.get(LAYERS);
+            int layers = state.getValue(LAYERS);
             if (layers == 8) {
-                return VoxelShapes.fullCube();
+                return VoxelShapes.block();
             } else if (layers > 5) {
-                BlockState upState = worldIn.getBlockState(pos.up());
-                return !upState.getBlock().isAir(upState, worldIn, pos) ? VoxelShapes.fullCube() : SHAPES[layers - 5];
+                BlockState upState = worldIn.getBlockState(pos.above());
+                return !upState.getBlock().isAir(upState, worldIn, pos) ? VoxelShapes.block() : SHAPES[layers - 5];
             } else {
                 return VoxelShapes.empty();
             }

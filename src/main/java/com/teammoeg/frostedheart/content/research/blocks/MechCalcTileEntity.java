@@ -65,15 +65,15 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
         boolean flag = true;
         float spd = MathHelper.abs(super.getSpeed());
         if (spd > 64) {
-            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.too_fast").mergeStyle(TextFormatting.RED));
+            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.too_fast").withStyle(TextFormatting.RED));
             flag = false;
         }
         if (this.currentPoints >= maxPoints) {
-            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.full").mergeStyle(TextFormatting.RED));
+            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.full").withStyle(TextFormatting.RED));
             flag = false;
         }
         if (flag && spd > 0)
-            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.working").mergeStyle(TextFormatting.GREEN));
+            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.working").withStyle(TextFormatting.GREEN));
         tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.points", currentPoints, maxPoints));
         return true;
     }
@@ -106,19 +106,19 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
     }
 
     public Axis getAxis() {
-        return this.getDirection().rotateY().getAxis();
+        return this.getDirection().getClockWise().getAxis();
     }
 
     public Direction getDirection() {
-        return this.getBlockState().get(BlockStateProperties.HORIZONTAL_FACING);
+        return this.getBlockState().getValue(BlockStateProperties.HORIZONTAL_FACING);
     }
 
     public ActionResultType onClick(PlayerEntity pe) {
-        if (!pe.world.isRemote) {
+        if (!pe.level.isClientSide) {
             currentPoints = (int) ResearchDataAPI.getData(pe).doResearch(currentPoints);
             updatePoints();
         }
-        return ActionResultType.func_233537_a_(pe.world.isRemote);
+        return ActionResultType.sidedSuccess(pe.level.isClientSide);
     }
 
     @Override
@@ -139,7 +139,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
     @Override
     public void tick() {
         super.tick();
-        if (!world.isRemote) {
+        if (!level.isClientSide) {
             float spd = MathHelper.abs(super.getSpeed());
 
             if (spd > 0 && spd <= 64 && currentPoints <= maxPoints - 20) {
@@ -147,7 +147,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
                 int curact = process / 1067;
                 if (lastact != curact) {
                     lastact = curact;
-                    world.playSound(null, pos, FHSounds.MC_BELL.get(), SoundCategory.BLOCKS, 0.1f, 1f);
+                    level.playSound(null, worldPosition, FHSounds.MC_BELL.get(), SoundCategory.BLOCKS, 0.1f, 1f);
                 }
                 if (process >= processMax) {
                     process = 0;
@@ -160,7 +160,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 
                 if (ticsSlp <= 0) {
                     float pitch = MathHelper.clamp((spd / 32f) + 0.5f, 0.5f, 2f);
-                    world.playSound(null, pos, FHSounds.MC_ROLL.get(), SoundCategory.BLOCKS, 0.3f, pitch);
+                    level.playSound(null, worldPosition, FHSounds.MC_ROLL.get(), SoundCategory.BLOCKS, 0.3f, pitch);
                     ticsSlp = MathHelper.ceil(20 / pitch);
                 } else ticsSlp--;
                 this.notifyUpdate();

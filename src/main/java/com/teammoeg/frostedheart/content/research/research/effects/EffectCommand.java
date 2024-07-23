@@ -94,14 +94,14 @@ public class EffectCommand extends Effect {
         Map<String, Object> overrides = new HashMap<>();
         overrides.put("p", triggerPlayer.getGameProfile().getName());
 
-        BlockPos pos = triggerPlayer.getPosition();
+        BlockPos pos = triggerPlayer.blockPosition();
         overrides.put("x", pos.getX());
         overrides.put("y", pos.getY());
         overrides.put("z", pos.getZ());
 
         overrides.put("t", team.getHolder().getTeam().get().getStringID());
-        Commands cmds = FHTeamDataManager.getServer().getCommandManager();
-        CommandSource source = FHTeamDataManager.getServer().getCommandSource();
+        Commands cmds = FHTeamDataManager.getServer().getCommands();
+        CommandSource source = FHTeamDataManager.getServer().createCommandSourceStack();
         for (String s : rewards) {
 
             for (Map.Entry<String, Object> entry : overrides.entrySet()) {
@@ -110,7 +110,7 @@ public class EffectCommand extends Effect {
                 }
             }
 
-            cmds.handleCommand(source, s);
+            cmds.performCommand(source, s);
         }
 
         return true;

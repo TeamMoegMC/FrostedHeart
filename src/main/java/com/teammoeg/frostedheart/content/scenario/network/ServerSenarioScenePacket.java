@@ -17,7 +17,7 @@ public class ServerSenarioScenePacket implements FHMessage {
     private final RunStatus status;
     private final boolean isWaitClick;
     public ServerSenarioScenePacket(PacketBuffer buffer) {
-        text = buffer.readString(1024 * 300);
+        text = buffer.readUtf(1024 * 300);
         isReline = buffer.readBoolean();
         isNowait = buffer.readBoolean();
         resetScene=buffer.readBoolean();
@@ -40,7 +40,7 @@ public class ServerSenarioScenePacket implements FHMessage {
 
 
 	public void encode(PacketBuffer buffer) {
-        buffer.writeString(text, 1024 * 300);
+        buffer.writeUtf(text, 1024 * 300);
         buffer.writeBoolean(isReline);
         buffer.writeBoolean(isNowait);
         buffer.writeBoolean(resetScene);

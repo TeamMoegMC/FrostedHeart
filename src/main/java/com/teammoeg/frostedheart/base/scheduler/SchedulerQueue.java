@@ -42,13 +42,13 @@ public class SchedulerQueue {
     double tasksPerTickCounter = 0;//if taskPerTick is not integer, use this to decide when to execute an extra task
 
     public static void add(TileEntity te) {
-        queues.computeIfAbsent(te.getWorld().getDimensionKey(), e -> new SchedulerQueue())
-                .add(te.getPos());
+        queues.computeIfAbsent(te.getLevel().dimension(), e -> new SchedulerQueue())
+                .add(te.getBlockPos());
 
     }
 
     public static void tickAll(ServerWorld serverWorld) {
-        SchedulerQueue q = queues.get(serverWorld.getDimensionKey());
+        SchedulerQueue q = queues.get(serverWorld.dimension());
         if (q != null)
             q.tick(serverWorld);
     }

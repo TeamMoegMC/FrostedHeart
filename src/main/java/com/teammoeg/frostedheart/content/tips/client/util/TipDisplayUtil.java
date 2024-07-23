@@ -172,7 +172,7 @@ public class TipDisplayUtil {
 
     public static void openDebugScreen() {
         if (Minecraft.getInstance().player != null) {
-            Minecraft.getInstance().displayGuiScreen(new DebugScreen());
+            Minecraft.getInstance().setScreen(new DebugScreen());
         }
     }
 }

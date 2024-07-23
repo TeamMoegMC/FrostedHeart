@@ -137,17 +137,17 @@ public class SelectDialog<T> extends EditDialog {
             wrap(IMultiblock::getUniqueName)
     ).open();
     public static final Editor<ResourceLocation> EDITOR_ADVANCEMENT = (p, l, v, c) -> {
-        ClientAdvancementManager cam = ClientUtils.mc().player.connection.getAdvancementManager();
-        Advancement adv = cam.getAdvancementList().getAdvancement(v);
+        ClientAdvancementManager cam = ClientUtils.mc().player.connection.getAdvancements();
+        Advancement adv = cam.getAdvancements().get(v);
 
-        new SelectDialog<>(p, l, adv, e -> c.accept(e.getId()), () -> cam.getAdvancementList().getAll(),
-                Advancement::getDisplayText, advx -> new String[]{advx.getDisplayText().getString(), advx.getId().toString()},
+        new SelectDialog<>(p, l, adv, e -> c.accept(e.getId()), () -> cam.getAdvancements().getAllAdvancements(),
+                Advancement::getChatComponent, advx -> new String[]{advx.getChatComponent().getString(), advx.getId().toString()},
                 advx -> FHIcons.getIcon(advx.getDisplay().getIcon())
         ).open();
     };
-    public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, RegistryUtils::getEntities, EntityType::getName, e -> new String[]{e.getName().getString(), RegistryUtils.getRegistryName(e).toString()}
+    public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, RegistryUtils::getEntities, EntityType::getDescription, e -> new String[]{e.getDescription().getString(), RegistryUtils.getRegistryName(e).toString()}
     ).open();
-    public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, () -> Minecraft.getInstance().world.getTags().getItemTags().getRegisteredTags().stream().map(ResourceLocation::toString).collect(Collectors.toSet())).open();
+    public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, () -> Minecraft.getInstance().level.getTagManager().getItems().getAvailableTags().stream().map(ResourceLocation::toString).collect(Collectors.toSet())).open();
     String lbl;
     T val;
     Consumer<T> cb;

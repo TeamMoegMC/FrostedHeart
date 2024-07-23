@@ -50,16 +50,16 @@ public class TradeUpdatePacket implements FHMessage {
     }
 
     public TradeUpdatePacket(PacketBuffer buffer) {
-        data = buffer.readCompoundTag();
-        player = buffer.readCompoundTag();
+        data = buffer.readNbt();
+        player = buffer.readNbt();
         relations = new RelationList();
         relations.read(buffer);
         isReset = buffer.readBoolean();
     }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeCompoundTag(data);
-        buffer.writeCompoundTag(player);
+        buffer.writeNbt(data);
+        buffer.writeNbt(player);
         relations.write(buffer);
         buffer.writeBoolean(isReset);
     }
@@ -67,7 +67,7 @@ public class TradeUpdatePacket implements FHMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
-            Container cont = player.openContainer;
+            Container cont = player.containerMenu;
             if (cont instanceof TradeContainer) {
                 TradeContainer trade = (TradeContainer) cont;
                 trade.update(data, this.player, relations, isReset);

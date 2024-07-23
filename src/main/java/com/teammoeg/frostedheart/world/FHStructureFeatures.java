@@ -28,7 +28,7 @@ import net.minecraft.world.gen.feature.IFeatureConfig;
 import net.minecraft.world.gen.feature.StructureFeature;
 
 public class FHStructureFeatures {
-    public static final StructureFeature<?, ?> OBSERVATORY_FEATURE = FHStructures.OBSERVATORY.withConfiguration(IFeatureConfig.NO_FEATURE_CONFIG);
+    public static final StructureFeature<?, ?> OBSERVATORY_FEATURE = FHStructures.OBSERVATORY.configured(IFeatureConfig.NONE);
 //    public static final StructureFeature<?, ?> VOLCANIC_VENT_FEATURE = FHStructures.VOLCANIC_VENT.withConfiguration(IFeatureConfig.NO_FEATURE_CONFIG);
 
 

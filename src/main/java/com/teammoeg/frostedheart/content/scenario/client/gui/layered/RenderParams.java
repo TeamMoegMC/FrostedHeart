@@ -74,10 +74,10 @@ public class RenderParams {
 		this.offsetY = 0;
 	}
 	public int getScreenWidth() {
-		return ClientUtils.mc().getMainWindow().getScaledWidth();
+		return ClientUtils.mc().getWindow().getGuiScaledWidth();
 	}
 	public int getScreenHeight() {
-		return ClientUtils.mc().getMainWindow().getScaledHeight();
+		return ClientUtils.mc().getWindow().getGuiScaledHeight();
 	}
 	public RenderParams copy() {
 		return new RenderParams(screen, matrixStack, mouseX, mouseY, partialTicks, opacity, x, y, width, height,xzoom,yzoom,offsetX,offsetY,contentWidth,contentHeight);

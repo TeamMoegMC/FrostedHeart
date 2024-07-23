@@ -33,7 +33,7 @@ public class WithFlagCondition implements PolicyCondition {
     }
 
     public WithFlagCondition(PacketBuffer buffer) {
-        this(buffer.readString());
+        this(buffer.readUtf());
     }
 
     public WithFlagCondition(String name) {
@@ -55,7 +55,7 @@ public class WithFlagCondition implements PolicyCondition {
 
     @Override
     public void write(PacketBuffer buffer) {
-        buffer.writeString(name);
+        buffer.writeUtf(name);
     }
 
 }

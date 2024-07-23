@@ -25,7 +25,7 @@ public class ReflectionCodec<A> extends MapCodec<A> {
 	@Override
 	public <T> RecordBuilder<T> encode(A input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
 		CompoundNBT nbt=(CompoundNBT) info.toNBT(input);
-		for(String in:nbt.keySet())
+		for(String in:nbt.getAllKeys())
 			prefix.add(in, NBTDynamicOps.INSTANCE.convertTo(ops, nbt.get(in)));
 		return prefix;
 	}

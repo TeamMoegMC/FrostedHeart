@@ -40,7 +40,7 @@ public class HypothermiaEffect extends Effect {
         return ImmutableList.of();
     }
 
-    public boolean isReady(int duration, int amplifier) {
+    public boolean isDurationEffectTick(int duration, int amplifier) {
 
         int k = 60 >> Math.max(amplifier - 2, 0);
         if (k > 1) {
@@ -50,18 +50,18 @@ public class HypothermiaEffect extends Effect {
     }
 
     @Override
-    public void performEffect(LivingEntity entityLivingBaseIn, int amplifier) {
+    public void applyEffectTick(LivingEntity entityLivingBaseIn, int amplifier) {
         if (entityLivingBaseIn instanceof ServerPlayerEntity) {
-            ((ServerPlayerEntity) entityLivingBaseIn).addExhaustion(amplifier < 2 ? 0.044f * (amplifier + 1) : 0.132f);
+            ((ServerPlayerEntity) entityLivingBaseIn).causeFoodExhaustion(amplifier < 2 ? 0.044f * (amplifier + 1) : 0.132f);
             if (amplifier > 1) {
                 if (entityLivingBaseIn.getHealth() > 20.0F) {
-                    entityLivingBaseIn.attackEntityFrom(FHDamageSources.HYPOTHERMIA, 1F);
+                    entityLivingBaseIn.hurt(FHDamageSources.HYPOTHERMIA, 1F);
                 } else if (entityLivingBaseIn.getHealth() > 10.0F) {
-                    entityLivingBaseIn.attackEntityFrom(FHDamageSources.HYPOTHERMIA, 0.5F);
+                    entityLivingBaseIn.hurt(FHDamageSources.HYPOTHERMIA, 0.5F);
                 } else if (entityLivingBaseIn.getHealth() > 5.0F) {
-                    entityLivingBaseIn.attackEntityFrom(FHDamageSources.HYPOTHERMIA, 0.3F);
+                    entityLivingBaseIn.hurt(FHDamageSources.HYPOTHERMIA, 0.3F);
                 } else {
-                    entityLivingBaseIn.attackEntityFrom(FHDamageSources.HYPOTHERMIA, 0.2F);
+                    entityLivingBaseIn.hurt(FHDamageSources.HYPOTHERMIA, 0.2F);
                 }
             }
         }

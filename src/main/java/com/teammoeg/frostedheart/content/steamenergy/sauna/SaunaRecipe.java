@@ -45,21 +45,21 @@ public class SaunaRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public SaunaRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+        public SaunaRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
             // read effect from buffer
-            CompoundNBT effectNBT = buffer.readCompoundTag();
+            CompoundNBT effectNBT = buffer.readNbt();
             Effect effect = null;
             int duration = 0;
             int amplifier = 0;
             if (effectNBT.contains("Id")) {
-                effect = Effect.get(effectNBT.getInt("Id"));
+                effect = Effect.byId(effectNBT.getInt("Id"));
                 duration = effectNBT.getInt("Duration");
                 amplifier = effectNBT.getInt("Amplifier");
             }
             // read time from buffer
             int time = buffer.readInt();
             // read ingredient from buffer
-            Ingredient input = Ingredient.read(buffer);
+            Ingredient input = Ingredient.fromNetwork(buffer);
             return new SaunaRecipe(recipeId, input, time, effect, duration, amplifier);
         }
 
@@ -69,19 +69,19 @@ public class SaunaRecipe extends IESerializableRecipe {
             Effect effect = null;
             int duration = 0, amplifier = 0;
             if (json.has("effect")) {
-                JsonObject effectJson = JSONUtils.getJsonObject(json, "effect");
-                ResourceLocation effectID = new ResourceLocation(JSONUtils.getString(effectJson, "id"));
-                duration = JSONUtils.getInt(effectJson, "duration");
-                amplifier = JSONUtils.getInt(effectJson, "amplifier");
+                JsonObject effectJson = JSONUtils.getAsJsonObject(json, "effect");
+                ResourceLocation effectID = new ResourceLocation(JSONUtils.getAsString(effectJson, "id"));
+                duration = JSONUtils.getAsInt(effectJson, "duration");
+                amplifier = JSONUtils.getAsInt(effectJson, "amplifier");
                 // Get Effect from effectID from Registry
                 effect = RegistryUtils.getEffect(effectID);
             }
-            return new SaunaRecipe(id, Ingredient.deserialize(json.get("input")), JSONUtils.getInt(json, "time"),
+            return new SaunaRecipe(id, Ingredient.fromJson(json.get("input")), JSONUtils.getAsInt(json, "time"),
                     effect, duration, amplifier);
         }
 
         @Override
-        public void write(PacketBuffer buffer, SaunaRecipe recipe) {
+        public void toNetwork(PacketBuffer buffer, SaunaRecipe recipe) {
             // write effect to buffer
             CompoundNBT effectNBT = new CompoundNBT();
             if (recipe.effect != null) {
@@ -89,11 +89,11 @@ public class SaunaRecipe extends IESerializableRecipe {
                 effectNBT.putInt("Duration", recipe.duration);
                 effectNBT.putInt("Amplifier", recipe.amplifier);
             }
-            buffer.writeCompoundTag(effectNBT);
+            buffer.writeNbt(effectNBT);
             // write time to buffer
             buffer.writeInt(recipe.time);
             // write ingredient to buffer
-            recipe.input.write(buffer);
+            recipe.input.toNetwork(buffer);
         }
 
     }
@@ -122,7 +122,7 @@ public class SaunaRecipe extends IESerializableRecipe {
     }
 
     @Override
-    public ItemStack getRecipeOutput() {
+    public ItemStack getResultItem() {
         return ItemStack.EMPTY;
     }
 }

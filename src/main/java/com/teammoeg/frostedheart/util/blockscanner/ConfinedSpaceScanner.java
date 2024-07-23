@@ -35,7 +35,7 @@ public class ConfinedSpaceScanner extends BlockScanner {
     protected HashSet<BlockPos> nextScanningBlocks(BlockPos pos, Consumer<BlockPos> operation){//接下来是找到下一批需要扫描的方块的内容
         HashSet<BlockPos> nextScanningBlocks = new HashSet<>();//这个HashSet暂存下一批的ScanningBlock
         for(Direction direction : Direction.values()){
-            BlockPos pos1 = pos.offset(direction);// pos1: 用于存储与pos相邻的方块
+            BlockPos pos1 = pos.relative(direction);// pos1: 用于存储与pos相邻的方块
             if (this.getScannedBlocks().contains(pos1)) continue;
             if (!isValidAir(pos1)) {
                 operation.accept(pos1);
@@ -61,14 +61,14 @@ public class ConfinedSpaceScanner extends BlockScanner {
     //基本上和getBlocksAbove是相同的，为了减少lambda的使用单列一个方法
     private AbstractMap.SimpleEntry<HashSet<BlockPos>, Boolean> getAirsAbove(BlockPos startPos){
         BlockPos scanningBlock;
-        scanningBlock = startPos.up();
+        scanningBlock = startPos.above();
         HashSet<BlockPos> blocks = new HashSet<>();
         while(scanningBlock.getY() < 256){
             if( scannedBlocks.contains(scanningBlock) || !isValidAir(scanningBlock) ){
                 return new AbstractMap.SimpleEntry<>(blocks, true);
             }
             blocks.add(scanningBlock);
-            scanningBlock = scanningBlock.up();
+            scanningBlock = scanningBlock.above();
         }
         return new AbstractMap.SimpleEntry<>(blocks, false);
     }

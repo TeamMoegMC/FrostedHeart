@@ -49,7 +49,7 @@ public class TradeCommitPacket implements FHMessage {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            Container cont = context.get().getSender().openContainer;
+            Container cont = context.get().getSender().containerMenu;
             if (cont instanceof TradeContainer) {
                 TradeContainer trade = (TradeContainer) cont;
                 trade.setOrder(offer);

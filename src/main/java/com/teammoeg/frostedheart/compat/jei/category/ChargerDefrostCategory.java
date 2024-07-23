@@ -50,7 +50,7 @@ public class ChargerDefrostCategory implements IRecipeCategory<CampfireDefrostRe
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "charger_defrost");
     private IDrawable BACKGROUND;
     private IDrawable ICON;
-    private StaticBlock charger = new StaticBlock(FHBlocks.charger.get().getDefaultState().with(BlockStateProperties.FACING, Direction.EAST));
+    private StaticBlock charger = new StaticBlock(FHBlocks.charger.get().defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
 
     public ChargerDefrostCategory(IGuiHelper guiHelper) {
         this.ICON = new DoubleItemIcon(() -> new ItemStack(FHBlocks.charger.get()), () -> new ItemStack(FHItems.frozen_seeds.get()));
@@ -97,7 +97,7 @@ public class ChargerDefrostCategory implements IRecipeCategory<CampfireDefrostRe
 
     @Override
     public void setIngredients(CampfireDefrostRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.getIngredients().get(0).getMatchingStacks())));
+        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.getIngredients().get(0).getItems())));
         ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.getIss())));
     }
 

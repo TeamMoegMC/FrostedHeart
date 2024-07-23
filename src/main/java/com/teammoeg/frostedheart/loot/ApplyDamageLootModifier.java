@@ -37,7 +37,7 @@ public class ApplyDamageLootModifier extends LootModifier {
     public static class Serializer extends GlobalLootModifierSerializer<ApplyDamageLootModifier> {
         @Override
         public ApplyDamageLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
-            return new ApplyDamageLootModifier(conditions, RandomValueRange.of(object.get("min").getAsFloat(), object.get("max").getAsFloat()));
+            return new ApplyDamageLootModifier(conditions, RandomValueRange.between(object.get("min").getAsFloat(), object.get("max").getAsFloat()));
         }
 
         @Override
@@ -60,8 +60,8 @@ public class ApplyDamageLootModifier extends LootModifier {
     @Override
     protected List<ItemStack> doApply(List<ItemStack> generatedLoot, LootContext context) {
         generatedLoot.forEach(e -> {
-            if (e.getDamage() == 0 && e.isDamageable()) {
-                e.setDamage((int) (e.getMaxDamage() * dmg.generateFloat(context.getRandom())));
+            if (e.getDamageValue() == 0 && e.isDamageableItem()) {
+                e.setDamageValue((int) (e.getMaxDamage() * dmg.getFloat(context.getRandom())));
             }
         });
         return generatedLoot;

@@ -39,7 +39,7 @@ public class FHClientSettingsPacket implements FHMessage {
 
     public FHClientSettingsPacket() {
         super();
-        this.scale=Minecraft.getInstance().getMainWindow().getGuiScaleFactor();
+        this.scale=Minecraft.getInstance().getWindow().getGuiScale();
     }
 
 

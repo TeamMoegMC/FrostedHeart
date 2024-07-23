@@ -11,7 +11,7 @@ public class SingleTipPacket implements FHMessage {
     private final String ID;
 
     public SingleTipPacket(PacketBuffer buffer) {
-        ID = buffer.readString(Short.MAX_VALUE);
+        ID = buffer.readUtf(Short.MAX_VALUE);
     }
 
     public SingleTipPacket(String ID) {
@@ -19,7 +19,7 @@ public class SingleTipPacket implements FHMessage {
     }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeString(this.ID);
+        buffer.writeUtf(this.ID);
     }
 
     @Override

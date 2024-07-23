@@ -86,21 +86,21 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
     }
 
     protected void drawCookTime(SmokingDefrostRecipe recipe, MatrixStack matrixStack, int y) {
-        int cookTime = recipe.getCookTime();
+        int cookTime = recipe.getCookingTime();
         if (cookTime > 0) {
             int cookTimeSeconds = cookTime / 20;
             
             ITextComponent timeString = TranslateUtils.translate("gui.jei.category.smelting.time.seconds", cookTimeSeconds);
             Minecraft minecraft = Minecraft.getInstance();
-            FontRenderer fontRenderer = minecraft.fontRenderer;
-            int stringWidth = fontRenderer.getStringPropertyWidth(timeString);
-            fontRenderer.drawText(matrixStack, timeString, BACKGROUND.getWidth() - stringWidth, y, 0xFF808080);
+            FontRenderer fontRenderer = minecraft.font;
+            int stringWidth = fontRenderer.width(timeString);
+            fontRenderer.draw(matrixStack, timeString, BACKGROUND.getWidth() - stringWidth, y, 0xFF808080);
         }
     }
 
 
     protected IDrawableAnimated getArrow(SmokingDefrostRecipe recipe) {
-        int cookTime = recipe.getCookTime();
+        int cookTime = recipe.getCookingTime();
         if (cookTime <= 0) {
             cookTime = 100;
         }
@@ -133,7 +133,7 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
 
     @Override
     public void setIngredients(SmokingDefrostRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.getIngredient().getMatchingStacks())));
+        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.getIngredient().getItems())));
         ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.getIss())));
     }
 

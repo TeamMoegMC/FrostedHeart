@@ -43,15 +43,15 @@ public class VolcanicVentStructure extends Structure<NoFeatureConfig> {
         }
 
         @Override
-        public void func_230364_a_(DynamicRegistries dynamic, ChunkGenerator generator, TemplateManager template, int chunkX, int chunkZ, Biome biome, NoFeatureConfig config) {
+        public void generatePieces(DynamicRegistries dynamic, ChunkGenerator generator, TemplateManager template, int chunkX, int chunkZ, Biome biome, NoFeatureConfig config) {
 
             int x = chunkX << 4;
             int z = chunkZ << 4;
-            int surfaceY = generator.getNoiseHeightMinusOne(x, z, Heightmap.Type.WORLD_SURFACE_WG);
+            int surfaceY = generator.getFirstOccupiedHeight(x, z, Heightmap.Type.WORLD_SURFACE_WG);
             BlockPos blockpos = new BlockPos(x, surfaceY, z);
 
-            this.components.add(new VolcanicVentPiece(blockpos));
-            this.recalculateStructureSize();
+            this.pieces.add(new VolcanicVentPiece(blockpos));
+            this.calculateBoundingBox();
 //            FHMain.LOGGER.debug( "volcanic at " + (blockpos.getX()) + " " + blockpos.getY() + " " + (blockpos.getZ()));
         }
     }
@@ -62,13 +62,13 @@ public class VolcanicVentStructure extends Structure<NoFeatureConfig> {
     }
 
     @Override
-    protected boolean func_230363_a_(ChunkGenerator generator, BiomeProvider biomeprovider, long p_230363_3_, SharedSeedRandom seed, int chunkX, int chunkZ, Biome biome, ChunkPos chunkPos, NoFeatureConfig p_230363_10_) {
+    protected boolean isFeatureChunk(ChunkGenerator generator, BiomeProvider biomeprovider, long p_230363_3_, SharedSeedRandom seed, int chunkX, int chunkZ, Biome biome, ChunkPos chunkPos, NoFeatureConfig p_230363_10_) {
         return true;
     }
 
 
     @Override
-    public GenerationStage.Decoration getDecorationStage() {
+    public GenerationStage.Decoration step() {
         return GenerationStage.Decoration.SURFACE_STRUCTURES;
     }
 

@@ -119,12 +119,12 @@ public class FHIcons {
             GuiHelper.setupDrawing();
             if (large != null)
                 large.draw(ms, x, y, w, h);
-            ms.push();
+            ms.pushPose();
             ms.translate(0, 0, 110);// let's get top most
             GuiHelper.setupDrawing();
             if (small != null)
                 small.draw(ms, x + w / 2, y + h / 2, w / 2, h / 2);
-            ms.pop();
+            ms.popPose();
         }
     }
 
@@ -171,12 +171,12 @@ public class FHIcons {
 
         public FHIngredientIcon(Ingredient i) {
             igd = i;
-            for (ItemStack stack : igd.getMatchingStacks())
+            for (ItemStack stack : igd.getItems())
                 icons.add(new FHItemIcon(stack));
         }
 
         public FHIngredientIcon(JsonElement elm) {
-            this(Ingredient.deserialize(elm.getAsJsonObject().get("ingredient")));
+            this(Ingredient.fromJson(elm.getAsJsonObject().get("ingredient")));
         }
     }
 
@@ -206,10 +206,10 @@ public class FHIcons {
             itemRenderer.renderItemAndEffectIntoGUI(stack, x, y);
             itemRenderer.renderItemOverlayIntoGUI(font, stack, x, y, null);
             itemRenderer.zLevel = 0.0F;*/
-        	matrixStack.push();
+        	matrixStack.pushPose();
         	matrixStack.translate(0,0, 199);
         	GuiHelper.drawItem(matrixStack, stack, x, y, w/16f, h/16f, true, null);
-            matrixStack.pop();
+            matrixStack.popPose();
             /*ClientUtils.mc().getItemRenderer().renderItem(stack, TransformType.GUI,LightTexture., y, matrixStack, null);
             if (stack != null && stack.getCount() > 1) {
                 matrixStack.push();
@@ -254,16 +254,16 @@ public class FHIcons {
         @Override
         public void draw(MatrixStack ms, int x, int y, int w, int h) {
 
-            ms.push();
+            ms.pushPose();
             ms.translate(x, y, 0);
             ms.scale(w / 16f, h / 16f, 0);
 
-            ms.push();
+            ms.pushPose();
 
             ms.scale(2.286f, 2.286f, 0);// scale font height 7 to height 16
-            ClientUtils.mc().fontRenderer.drawStringWithShadow(ms, text, 0, 0, 0xFFFFFFFF);
-            ms.pop();
-            ms.pop();
+            ClientUtils.mc().font.drawShadow(ms, text, 0, 0, 0xFFFFFFFF);
+            ms.popPose();
+            ms.popPose();
             GuiHelper.setupDrawing();
         }
 
@@ -523,7 +523,7 @@ public class FHIcons {
     }
 
     public static FHIcon getIcon(Collection<IItemProvider> items) {
-        return new FHIngredientIcon(Ingredient.fromItems(items.toArray(new IItemProvider[0])));
+        return new FHIngredientIcon(Ingredient.of(items.toArray(new IItemProvider[0])));
     }
 
     public static FHIcon getIcon(FHIcon base, FHIcon small) {
@@ -535,7 +535,7 @@ public class FHIcons {
     }
 
     public static FHIcon getIcon(IItemProvider[] items) {
-        return new FHIngredientIcon(Ingredient.fromItems(items));
+        return new FHIngredientIcon(Ingredient.of(items));
     }
 
     public static FHIcon getIcon(Ingredient i) {
@@ -578,7 +578,7 @@ public class FHIcons {
      * This does not preserve nbt on save
      */
     public static FHIcon getStackIcons(Collection<ItemStack> rewards) {
-        return new FHIngredientIcon(Ingredient.fromStacks(rewards.stream()));
+        return new FHIngredientIcon(Ingredient.of(rewards.stream()));
     }
 
     public static FHIcon nop() {

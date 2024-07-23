@@ -39,7 +39,7 @@ public class FHEnergyDataSyncPacket extends NBTMessage {
     }
 
     public FHEnergyDataSyncPacket(PacketBuffer buffer) {
-        super(buffer.readCompoundTag());
+        super(buffer.readNbt());
     }
 
 

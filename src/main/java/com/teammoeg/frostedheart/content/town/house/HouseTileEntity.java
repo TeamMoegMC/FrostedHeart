@@ -189,24 +189,24 @@ public class HouseTileEntity extends AbstractTownWorkerTileEntity{
      * @return whether the house structure is valid
      */
     public boolean isStructureValid() {
-        BlockPos housePos = this.getPos();
-        List<BlockPos> doorPosSet = BlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(world).getBlockState(pos).isIn(BlockTags.DOORS));
+        BlockPos housePos = this.getBlockPos();
+        List<BlockPos> doorPosSet = BlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS));
         if (doorPosSet.isEmpty()) return false;
         for (BlockPos doorPos : doorPosSet) {
-            BlockPos floorBelowDoor = BlockScanner.getBlockBelow((pos)->!(Objects.requireNonNull(world).getBlockState(pos).isIn(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
+            BlockPos floorBelowDoor = BlockScanner.getBlockBelow((pos)->!(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
             for (Direction direction : BlockScanner.PLANE_DIRECTIONS) {
                 //FHMain.LOGGER.debug("HouseScanner: creating new HouseBlockScanner");
                 assert floorBelowDoor != null;
-                BlockPos startPos = floorBelowDoor.offset(direction);//找到门下方块旁边的方块
+                BlockPos startPos = floorBelowDoor.relative(direction);//找到门下方块旁边的方块
                 //FHMain.LOGGER.debug("HouseScanner: start pos 1" + startPos);
-                if (!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(world), startPos)) {//如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
-                    if(!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(world), startPos.down()) || FloorBlockScanner.isHouseBlock(world, startPos.up(2))){//如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
+                if (!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos)) {//如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
+                    if(!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos.below()) || FloorBlockScanner.isHouseBlock(level, startPos.above(2))){//如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
                         continue;
                     }
-                    startPos = startPos.down();
+                    startPos = startPos.below();
                     //FHMain.LOGGER.debug("HouseScanner: start pos 2" + startPos);
                 }
-                HouseBlockScanner scanner = new HouseBlockScanner(this.world, startPos);
+                HouseBlockScanner scanner = new HouseBlockScanner(this.level, startPos);
                 if (scanner.scan()) {
                     //FHMain.LOGGER.debug("HouseScanner: scan successful");
                     this.volume = scanner.getVolume();
@@ -283,21 +283,21 @@ public class HouseTileEntity extends AbstractTownWorkerTileEntity{
 
     @Override
     public void tick() {
-        assert world != null;
-        if (!world.isRemote) {
+        assert level != null;
+        if (!level.isClientSide) {
             if (endpoint.tryDrainHeat(1)) {
                 temperatureModifier = Math.max(endpoint.getTemperatureLevel() * 10, COMFORTABLE_TEMP_HOUSE);
                 if (setActive(true)) {
-                    markDirty();
+                    setChanged();
                 }
             } else {
                 temperatureModifier = 0;
                 if (setActive(false)) {
-                    markDirty();
+                    setChanged();
                 }
             }
         } else if (getIsActive()) {
-            ClientUtils.spawnSteamParticles(world, pos);
+            ClientUtils.spawnSteamParticles(level, worldPosition);
         }
         this.addToSchedulerQueue();
     }

@@ -40,6 +40,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Random;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 /**
  * A house in the town.
  */
@@ -56,31 +58,31 @@ public class HouseBlock extends AbstractTownWorkerBlock {
     @Override
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
-        if (stateIn.get(AbstractTownWorkerBlock.LIT)) {
+        if (stateIn.getValue(AbstractTownWorkerBlock.LIT)) {
             ClientUtils.spawnSteamParticles(worldIn, pos);
         }
     }
 
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (!worldIn.isRemote && handIn == Hand.MAIN_HAND) {
-            HouseTileEntity te = (HouseTileEntity) worldIn.getTileEntity(pos);
+    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+        if (!worldIn.isClientSide && handIn == Hand.MAIN_HAND) {
+            HouseTileEntity te = (HouseTileEntity) worldIn.getBlockEntity(pos);
             if (te == null) {
                 return ActionResultType.FAIL;
             }
             te.refresh();
-            player.sendStatusMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.sendStatusMessage(new StringTextComponent(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
-            player.sendStatusMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.sendStatusMessage(new StringTextComponent("Raw temperature: " +
+            player.displayClientMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            player.displayClientMessage(new StringTextComponent(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
+            player.displayClientMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(new StringTextComponent("Raw temperature: " +
                     MathUtils.round(te.getTemperature(), 2)), false);
-            player.sendStatusMessage(new StringTextComponent("Temperature modifier: " +
+            player.displayClientMessage(new StringTextComponent("Temperature modifier: " +
                     MathUtils.round(te.getTemperatureModifier(), 2)), false);
-            player.sendStatusMessage(new StringTextComponent("Effective temperature: " +
+            player.displayClientMessage(new StringTextComponent("Effective temperature: " +
                     MathUtils.round(te.getEffectiveTemperature(), 2)), false);
-            player.sendStatusMessage(new StringTextComponent("Volume: " + (te.getVolume())), false);
-            player.sendStatusMessage(new StringTextComponent("Area: " + (te.getArea())), false);
-            player.sendStatusMessage(new StringTextComponent("Rating: " +
+            player.displayClientMessage(new StringTextComponent("Volume: " + (te.getVolume())), false);
+            player.displayClientMessage(new StringTextComponent("Area: " + (te.getArea())), false);
+            player.displayClientMessage(new StringTextComponent("Rating: " +
                     MathUtils.round(te.getRating(), 2)), false);
             return ActionResultType.SUCCESS;
         }

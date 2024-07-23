@@ -55,7 +55,7 @@ public abstract class TemplateMultiblockMixin implements IMultiblock, MultiBlock
     @Inject(at = @At(value = "INVOKE", target = "Lblusunrize/immersiveengineering/api/multiblocks/TemplateMultiblock;form"), method = "createStructure", remap = false)
     public void fh$on$createStructure(World world, BlockPos pos, Direction side, PlayerEntity player, CallbackInfoReturnable<Boolean> cbi) {
     	pe = null;
-    	if (!world.isRemote)
+    	if (!world.isClientSide)
             pe = (ServerPlayerEntity) player;
     }
 

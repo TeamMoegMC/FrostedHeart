@@ -20,21 +20,21 @@ import net.minecraft.world.World;
 public class DeskBlock extends FHBaseBlock {
     private static Integer typeCount = 4;
     private static IntegerProperty TYPE = IntegerProperty.create("desktype", 0, typeCount - 1);
-    static final VoxelShape shape = Block.makeCuboidShape(0, 0, 0, 16, 16, 32);
+    static final VoxelShape shape = Block.box(0, 0, 0, 16, 16, 32);
 
     public DeskBlock(AbstractBlock.Properties blockProps) {
         super(blockProps);
-        this.setDefaultState(this.stateContainer.getBaseState().with(TYPE, 0));
+        this.registerDefaultState(this.stateDefinition.any().setValue(TYPE, 0));
     }
 
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
         builder.add(TYPE);
     }
 
-    public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+    public void setPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         Integer finalType = Math.abs(RANDOM.nextInt()) % typeCount;
-        BlockState newState = this.stateContainer.getBaseState().with(TYPE, finalType);
-        worldIn.setBlockState(pos, newState);
+        BlockState newState = this.stateDefinition.any().setValue(TYPE, finalType);
+        worldIn.setBlockAndUpdate(pos, newState);
     }
 
     @Override

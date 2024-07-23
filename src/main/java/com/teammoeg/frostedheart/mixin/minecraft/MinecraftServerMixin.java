@@ -37,13 +37,13 @@ import net.minecraft.world.storage.IServerWorldInfo;
  * */
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {
-    @Inject(at = @At("TAIL"), method = "func_240786_a_")
+    @Inject(at = @At("TAIL"), method = "setInitialSpawn")
     private static void spacecraftGenerate(ServerWorld serverWorld, IServerWorldInfo info, boolean hasBonusChest, boolean p_240786_3_, boolean p_240786_4_, CallbackInfo ci) {
         int y = 256, h;
         // store these as temporary variables to reduce procedural calls in loop
         int seaLevel = serverWorld.getSeaLevel();
-        int xStart = info.getSpawnX() - 8, xEnd = xStart + 16;
-        int zStart = info.getSpawnZ() - 8, zEnd = zStart + 16;
+        int xStart = info.getXSpawn() - 8, xEnd = xStart + 16;
+        int zStart = info.getZSpawn() - 8, zEnd = zStart + 16;
         // scan the 16x16 area around the spawn point
         // find the minimum surface point that is above sea level.
         for (int x = xStart; x <= xEnd; x++) {
@@ -58,10 +58,10 @@ public class MinecraftServerMixin {
         // this case should not happen because there is no known features that does so.
         if (y == 256)
             y = seaLevel;
-        info.setSpawnY(y - 1);
-        FHFeatures.spacecraft_feature.generate(serverWorld, serverWorld.getChunkProvider().getChunkGenerator(), serverWorld.rand,
-                new BlockPos(info.getSpawnX(), info.getSpawnY(), info.getSpawnZ()));
-        serverWorld.setSpawnLocation(new BlockPos(info.getSpawnX(), y - 1, info.getSpawnZ()), info.getSpawnAngle());
+        info.setYSpawn(y - 1);
+        FHFeatures.spacecraft_feature.place(serverWorld, serverWorld.getChunkSource().getGenerator(), serverWorld.random,
+                new BlockPos(info.getXSpawn(), info.getYSpawn(), info.getZSpawn()));
+        serverWorld.setDefaultSpawnPos(new BlockPos(info.getXSpawn(), y - 1, info.getZSpawn()), info.getSpawnAngle());
 
     }
 }

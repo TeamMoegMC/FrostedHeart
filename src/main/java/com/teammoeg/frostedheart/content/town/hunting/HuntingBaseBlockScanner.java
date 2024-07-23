@@ -39,8 +39,8 @@ public class HuntingBaseBlockScanner extends HouseBlockScanner {
     protected void addSpecialBlock(BlockPos pos){
         BlockState blockState = world.getBlockState(pos);
         addDecoration(pos);
-        if(blockState.isIn(BlockTags.BEDS)) bedNum++;
-        if(blockState.isIn(Tags.Blocks.CHESTS)) chestNum++;
+        if(blockState.is(BlockTags.BEDS)) bedNum++;
+        if(blockState.is(Tags.Blocks.CHESTS)) chestNum++;
         if(Objects.requireNonNull(blockState.getBlock().getRegistryName()).getPath().equals("tanning_rack") || blockState.getBlock() instanceof CommandBlockBlock) tanningRackNum++;
     }
 
@@ -59,7 +59,7 @@ public class HuntingBaseBlockScanner extends HouseBlockScanner {
         //FHMain.LOGGER.debug("HouseScanner: first scan completed");
 
         //第二次扫描，判断房间是否密闭
-        ConfinedSpaceScanner airScanner = new ConfinedSpaceScanner(world, startPos.up());
+        ConfinedSpaceScanner airScanner = new ConfinedSpaceScanner(world, startPos.above());
         airScanner.scan(MAX_SCANNING_TIMES_VOLUME, (pos) -> {//对每一个空气方块执行的操作：统计温度、统计体积、统计温度
                     this.temperature += ChunkHeatData.getTemperature(world, pos);
                     this.volume++;

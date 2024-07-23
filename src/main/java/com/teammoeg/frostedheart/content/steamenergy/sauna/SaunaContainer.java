@@ -30,12 +30,12 @@ public class SaunaContainer extends IEBaseContainer<SaunaTileEntity> {
         // medicine slot
         addSlot(new Slot(this.inv, 0, 98, 26) {
             @Override
-            public int getSlotStackLimit() {
+            public int getMaxStackSize() {
                 return 4;
             }
 
             @Override
-            public boolean isItemValid(ItemStack stack) {
+            public boolean mayPlace(ItemStack stack) {
                 return tile.isStackValid(0, stack);
             }
         });

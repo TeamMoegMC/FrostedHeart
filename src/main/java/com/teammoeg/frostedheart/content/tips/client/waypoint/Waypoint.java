@@ -30,18 +30,18 @@ public class Waypoint {
         if (!this.visible) return;
 
         Vector2f screenPos = GuiUtil.worldPosToScreenPos(this.target);
-        double x = MathHelper.clamp(screenPos.x, 10, MC.getMainWindow().getScaledWidth()-10);
-        double y = MathHelper.clamp(screenPos.y, 10, MC.getMainWindow().getScaledHeight()-10);
-        double xP = x / MC.getMainWindow().getScaledWidth();
-        double yP = y / MC.getMainWindow().getScaledHeight();
+        double x = MathHelper.clamp(screenPos.x, 10, MC.getWindow().getGuiScaledWidth()-10);
+        double y = MathHelper.clamp(screenPos.y, 10, MC.getWindow().getGuiScaledHeight()-10);
+        double xP = x / MC.getWindow().getGuiScaledWidth();
+        double yP = y / MC.getWindow().getGuiScaledHeight();
 
-        ms.push();
+        ms.pushPose();
         ms.translate(x, y, 0);
         if (xP >= 0.45 && xP <= 0.55 && yP >= 0.45 && yP <= 0.55) {
             renderText(ms);
         }
         renderMain(ms);
-        ms.pop();
+        ms.popPose();
     }
 
     public void renderMain(MatrixStack ms) {
@@ -53,27 +53,27 @@ public class Waypoint {
     }
 
     public void renderText(MatrixStack ms) {
-        float textWidth = MC.fontRenderer.getStringWidth(this.id)*0.5F;
+        float textWidth = MC.font.width(this.id)*0.5F;
         AbstractGui.fill(ms, (int)(-textWidth)-2, -19, (int)(textWidth)+2, -7, 0x80000000);
-        MC.fontRenderer.drawString(ms, this.id, -textWidth, -17, this.color);
+        MC.font.draw(ms, this.id, -textWidth, -17, this.color);
 
-        if (MC.player.isSneaking()) {
+        if (MC.player.isShiftKeyDown()) {
             Vector3d v = new Vector3d(this.target);
-            String distance = "Distance: " + (int)v.distanceTo(MC.player.getPositionVec()) + " blocks";
-            float textWidth1 = MC.fontRenderer.getStringWidth(distance)*0.5F;
+            String distance = "Distance: " + (int)v.distanceTo(MC.player.position()) + " blocks";
+            float textWidth1 = MC.font.width(distance)*0.5F;
             AbstractGui.fill(ms, (int)(-textWidth1)-2, 8, (int)(textWidth1)+2, 20, 0x80000000);
-            MC.fontRenderer.drawString(ms, distance, -textWidth1, 10, this.color);
+            MC.font.draw(ms, distance, -textWidth1, 10, this.color);
 
             String pos = "[X: %.2f, Y: %.2f, Z: %.2f]";
-            pos = String.format(pos, this.target.getX(), this.target.getY(), this.target.getZ());
-            float textWidth2 = MC.fontRenderer.getStringWidth(pos)*0.5F;
+            pos = String.format(pos, this.target.x(), this.target.y(), this.target.z());
+            float textWidth2 = MC.font.width(pos)*0.5F;
             AbstractGui.fill(ms, (int)(-textWidth2)-2, 20, (int)(textWidth2)+2, 32, 0x80000000);
-            MC.fontRenderer.drawString(ms, pos, -textWidth2, 22, this.color);
+            MC.font.draw(ms, pos, -textWidth2, 22, this.color);
         }
     }
 
     @Override
     public String toString() {
-        return "ID: '" + id + "' [" + target.getX() + ", " + target.getY() + ", " + target.getZ() + "]";
+        return "ID: '" + id + "' [" + target.x() + ", " + target.y() + ", " + target.z() + "]";
     }
 }

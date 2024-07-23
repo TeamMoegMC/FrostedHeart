@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.content.incubator;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.fml.RegistryObject;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class HeatIncubatorBlock extends IncubatorBlock {
 
     public HeatIncubatorBlock(Properties p, RegistryObject<TileEntityType<?>> incubator2) {

@@ -40,7 +40,7 @@ public abstract class MixinSmartTileEntity extends TileEntity {
      * @reason fixed crash in dev environment.
      */
     @Overwrite(remap = false)
-    public World getWorld() {
-        return world;
+    public World getLevel() {
+        return level;
     }
 }

@@ -30,7 +30,7 @@ import net.minecraftforge.fml.network.NetworkEvent;
 public class ClientLinkClickedPacket implements FHMessage {
     final String link;
     public ClientLinkClickedPacket(PacketBuffer buffer) {
-    	link=buffer.readString();
+    	link=buffer.readUtf();
     }
 
 
@@ -41,7 +41,7 @@ public class ClientLinkClickedPacket implements FHMessage {
 	}
 
 	public void encode(PacketBuffer buffer) {
-		buffer.writeString(link);
+		buffer.writeUtf(link);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {

@@ -31,7 +31,7 @@ public class FHClientReadyPacket implements FHMessage {
     String lang;
 
     public FHClientReadyPacket(PacketBuffer buffer) {
-        lang = buffer.readString();
+        lang = buffer.readUtf();
     }
 
 
@@ -42,7 +42,7 @@ public class FHClientReadyPacket implements FHMessage {
 
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeString(lang);
+        buffer.writeUtf(lang);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {

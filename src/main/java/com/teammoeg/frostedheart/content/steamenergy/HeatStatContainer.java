@@ -54,7 +54,7 @@ public class HeatStatContainer extends Container {
     }
     
 
-    public boolean canInteractWith(PlayerEntity playerIn) {
+    public boolean stillValid(PlayerEntity playerIn) {
         return true;
     }
 

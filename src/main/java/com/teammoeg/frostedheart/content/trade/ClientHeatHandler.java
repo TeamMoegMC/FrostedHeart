@@ -11,11 +11,11 @@ import net.minecraft.inventory.container.Container;
 
 public class ClientHeatHandler {
 	public static void loadEndPoint(Collection<EndPointData> data) {
-		Container c=ClientUtils.mc().player.openContainer;
+		Container c=ClientUtils.mc().player.containerMenu;
 		if(c instanceof HeatStatContainer) {
 			((HeatStatContainer)c).data=data;
-			if(ClientUtils.mc().currentScreen instanceof MenuScreenWrapper) {
-				MenuScreenWrapper<?> msw=(MenuScreenWrapper<?>) ClientUtils.mc().currentScreen;
+			if(ClientUtils.mc().screen instanceof MenuScreenWrapper) {
+				MenuScreenWrapper<?> msw=(MenuScreenWrapper<?>) ClientUtils.mc().screen;
 				msw.getGui().refreshWidgets();
 			}
 		}

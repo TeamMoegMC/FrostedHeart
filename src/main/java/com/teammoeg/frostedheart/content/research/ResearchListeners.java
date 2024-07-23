@@ -212,7 +212,7 @@ public class ResearchListeners {
 
         @Override
         public IRecipe<?> getObject(String s) {
-            return FHTeamDataManager.getRecipeManager().getRecipe(new ResourceLocation(s)).orElse(null);
+            return FHTeamDataManager.getRecipeManager().byKey(new ResourceLocation(s)).orElse(null);
         }
 
         @Override
@@ -244,7 +244,7 @@ public class ResearchListeners {
     public static boolean canUseBlock(PlayerEntity player, Block b) {
         if (block.has(b)) {
             if (player instanceof FakePlayer) return false;
-            if (player.getEntityWorld().isRemote)
+            if (player.getCommandSenderWorld().isClientSide)
                 return ClientResearchDataAPI.getData().block.has(b);
             return ResearchDataAPI.getData(player).block.has(b);
         }
@@ -263,7 +263,7 @@ public class ResearchListeners {
         if (s == null)
             return canUseRecipe(r);
         if (recipe.has(r)) {
-            if (s.getEntityWorld().isRemote)
+            if (s.getCommandSenderWorld().isClientSide)
                 return ClientResearchDataAPI.getData().crafting.has(r);
             return ResearchDataAPI.getData(s).crafting.has(r);
         }
@@ -372,7 +372,7 @@ public class ResearchListeners {
     }
     @OnlyIn(Dist.CLIENT)
     public static void reloadEditor() {
-        if (!Minecraft.getInstance().isSingleplayer())
+        if (!Minecraft.getInstance().hasSingleplayerServer())
             FHResearch.editor = false;
     }
 
@@ -408,7 +408,7 @@ public class ResearchListeners {
                 }
                 trd.getCurrentResearch().ifPresent(r -> RubbingTool.setResearch(i, r.getId()));
             }
-            for (InspireRecipe ir : FHUtils.filterRecipes(s.getServerWorld().getRecipeManager(), InspireRecipe.TYPE)) {
+            for (InspireRecipe ir : FHUtils.filterRecipes(s.getLevel().getRecipeManager(), InspireRecipe.TYPE)) {
                 if (ir.item.test(i)) {
                     i.shrink(1);
                     EnergyCore.addPersistentEnergy(s, ir.inspire);

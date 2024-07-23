@@ -69,7 +69,7 @@ public abstract class MixinClockworkBearingTileEntity extends KineticTileEntity 
 
     @Inject(at = @At("TAIL"), method = "tick")
     public void FH_MICR_tick(CallbackInfo cbi) {
-        if ((!world.isRemote) && super.hasNetwork())
+        if ((!level.isClientSide) && super.hasNetwork())
             getOrCreateNetwork().updateStressFor(this, calculateStressApplied());
     }
 }

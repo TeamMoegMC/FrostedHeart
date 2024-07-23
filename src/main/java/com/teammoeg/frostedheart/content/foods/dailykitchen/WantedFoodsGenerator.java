@@ -71,7 +71,7 @@ class WantedFoodsGenerator {
         for (Item food : foodsEaten) {
             if (wantedFoodsNumber.contains(i) && (isNotBadFood(food)) && !(food instanceof ItemFluidContainer/*Don't eat thermos!*/)) {
                 wantedFoods.add(food);
-                wantedFoodsText.appendSibling(TranslateUtils.translate(food.getTranslationKey())).appendSibling(TranslateUtils.str("  "));
+                wantedFoodsText.append(TranslateUtils.translate(food.getDescriptionId())).append(TranslateUtils.str("  "));
             }
             i++;
         }

@@ -40,6 +40,8 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkHooks;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class FHGuiBlock extends FHBaseBlock {
 
     public FHGuiBlock(Properties blockProps) {
@@ -52,42 +54,42 @@ public class FHGuiBlock extends FHBaseBlock {
     }
 
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
-        ActionResultType superResult = super.onBlockActivated(state, world, pos, player, hand, hit);
-        if (superResult.isSuccessOrConsume())
+    public ActionResultType use(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
+        ActionResultType superResult = super.use(state, world, pos, player, hand, hit);
+        if (superResult.consumesAction())
             return superResult;
-        final Direction side = hit.getFace();
-        final float hitX = (float) hit.getHitVec().x - pos.getX();
-        final float hitY = (float) hit.getHitVec().y - pos.getY();
-        final float hitZ = (float) hit.getHitVec().z - pos.getZ();
-        ItemStack heldItem = player.getHeldItem(hand);
-        TileEntity tile = world.getTileEntity(pos);
+        final Direction side = hit.getDirection();
+        final float hitX = (float) hit.getLocation().x - pos.getX();
+        final float hitY = (float) hit.getLocation().y - pos.getY();
+        final float hitZ = (float) hit.getLocation().z - pos.getZ();
+        ItemStack heldItem = player.getItemInHand(hand);
+        TileEntity tile = world.getBlockEntity(pos);
         if (tile instanceof IDirectionalTile && Utils.isHammer(heldItem) && ((IDirectionalTile) tile).canHammerRotate(
                 side,
-                hit.getHitVec().subtract(Vector3d.copy(pos)),
-                player) && !world.isRemote) {
+                hit.getLocation().subtract(Vector3d.atLowerCornerOf(pos)),
+                player) && !world.isClientSide) {
             Direction f = ((IDirectionalTile) tile).getFacing();
             Direction oldF = f;
             PlacementLimitation limit = ((IDirectionalTile) tile).getFacingLimitation();
             switch (limit) {
                 case SIDE_CLICKED:
-                    f = DirectionUtils.VALUES[Math.floorMod(f.ordinal() + (player.isSneaking() ? -1 : 1), DirectionUtils.VALUES.length)];
+                    f = DirectionUtils.VALUES[Math.floorMod(f.ordinal() + (player.isShiftKeyDown() ? -1 : 1), DirectionUtils.VALUES.length)];
                     break;
                 case PISTON_LIKE:
-                    f = player.isSneaking() != (side.getAxisDirection() == AxisDirection.NEGATIVE) ? DirectionUtils.rotateAround(f, side.getAxis()).getOpposite() : DirectionUtils.rotateAround(f, side.getAxis());
+                    f = player.isShiftKeyDown() != (side.getAxisDirection() == AxisDirection.NEGATIVE) ? DirectionUtils.rotateAround(f, side.getAxis()).getOpposite() : DirectionUtils.rotateAround(f, side.getAxis());
                     break;
                 case HORIZONTAL:
                 case HORIZONTAL_PREFER_SIDE:
                 case HORIZONTAL_QUADRANT:
                 case HORIZONTAL_AXIS:
-                    f = player.isSneaking() != side.equals(Direction.DOWN) ? f.rotateYCCW() : f.rotateY();
+                    f = player.isShiftKeyDown() != side.equals(Direction.DOWN) ? f.getCounterClockWise() : f.getClockWise();
                     break;
             }
             ((IDirectionalTile) tile).setFacing(f);
             ((IDirectionalTile) tile).afterRotation(oldF, f);
-            tile.markDirty();
-            world.notifyBlockUpdate(pos, state, state, 3);
-            world.addBlockEvent(tile.getPos(), tile.getBlockState().getBlock(), 255, 0);
+            tile.setChanged();
+            world.sendBlockUpdated(pos, state, state, 3);
+            world.blockEvent(tile.getBlockPos(), tile.getBlockState().getBlock(), 255, 0);
             return ActionResultType.SUCCESS;
         }
         if (tile instanceof IPlayerInteraction) {
@@ -95,11 +97,11 @@ public class FHGuiBlock extends FHBaseBlock {
             if (b)
                 return ActionResultType.SUCCESS;
         }
-        if (tile instanceof IInteractionObjectIE && hand == Hand.MAIN_HAND && !player.isSneaking()) {
+        if (tile instanceof IInteractionObjectIE && hand == Hand.MAIN_HAND && !player.isShiftKeyDown()) {
             IInteractionObjectIE interaction = (IInteractionObjectIE) tile;
             interaction = interaction.getGuiMaster();
-            if (interaction != null && interaction.canUseGui(player) && !world.isRemote)
-                NetworkHooks.openGui((ServerPlayerEntity) player, interaction, ((TileEntity) interaction).getPos());
+            if (interaction != null && interaction.canUseGui(player) && !world.isClientSide)
+                NetworkHooks.openGui((ServerPlayerEntity) player, interaction, ((TileEntity) interaction).getBlockPos());
             return ActionResultType.SUCCESS;
         }
         return superResult;

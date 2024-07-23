@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.base.item;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
+import net.minecraft.item.Item.Properties;
+
 public class FHBaseItem extends Item {
     Item repair;
 
@@ -30,7 +32,7 @@ public class FHBaseItem extends Item {
     }
 
     @Override
-    public boolean getIsRepairable(ItemStack toRepair, ItemStack repair) {
+    public boolean isValidRepairItem(ItemStack toRepair, ItemStack repair) {
         if (repair == null) return false;
         return repair.getItem() == this.repair;
     }

@@ -92,12 +92,12 @@ public class ResearchHierarchyPanel extends Panel {
 
         @Override
         public void addMouseOverText(TooltipList list) {
-            list.add(research.getName().mergeStyle(TextFormatting.BOLD));
+            list.add(research.getName().withStyle(TextFormatting.BOLD));
             if (!research.isUnlocked()) {
-                list.add(TranslateUtils.translateTooltip("research_is_locked").mergeStyle(TextFormatting.RED));
+                list.add(TranslateUtils.translateTooltip("research_is_locked").withStyle(TextFormatting.RED));
                 for (Research parent : research.getParents()) {
                     if (!parent.isCompleted()) {
-                        list.add(parent.getName().mergeStyle(TextFormatting.GRAY));
+                        list.add(parent.getName().withStyle(TextFormatting.GRAY));
                     }
                 }
             }
@@ -111,11 +111,11 @@ public class ResearchHierarchyPanel extends Panel {
             if (FHResearch.editor || research.isShowable()) {
                 this.drawIcon(matrixStack, theme, x + 2, y + 2, 32, 32);
                 if (research.isCompleted()) {
-                    matrixStack.push();
+                    matrixStack.pushPose();
                     matrixStack.translate(0, 0, 300);
                     GuiHelper.setupDrawing();
                     TechIcons.FIN.draw(matrixStack, x + 2, y + 2, 32, 32);
-                    matrixStack.pop();
+                    matrixStack.popPose();
                 }
             } else
                 TechIcons.Question.draw(matrixStack, x + 2, y + 2, 32, 32);
@@ -165,12 +165,12 @@ public class ResearchHierarchyPanel extends Panel {
 
         @Override
         public void addMouseOverText(TooltipList list) {
-            list.add(research.getName().mergeStyle(TextFormatting.BOLD));
+            list.add(research.getName().withStyle(TextFormatting.BOLD));
             if ((parent == null && !research.isUnlocked()) || (parent != null && !parent.isUnlocked())) {
-                list.add(TranslateUtils.translateTooltip("research_is_locked").mergeStyle(TextFormatting.RED));
+                list.add(TranslateUtils.translateTooltip("research_is_locked").withStyle(TextFormatting.RED));
                 for (Research parent : research.getParents()) {
                     if (!parent.isCompleted()) {
-                        list.add(parent.getName().mergeStyle(TextFormatting.GRAY));
+                        list.add(parent.getName().withStyle(TextFormatting.GRAY));
                     }
                 }
             }
@@ -183,11 +183,11 @@ public class ResearchHierarchyPanel extends Panel {
             if (FHResearch.editor || research.isShowable()) {
                 this.drawIcon(matrixStack, theme, x + 4, y + 4, 16, 16);
                 if (research.isCompleted()) {
-                    matrixStack.push();
+                    matrixStack.pushPose();
                     matrixStack.translate(0, 0, 300);
                     GuiHelper.setupDrawing();
                     TechIcons.FIN.draw(matrixStack, x + 4, y + 4, 16, 16);
-                    matrixStack.pop();
+                    matrixStack.popPose();
                 }
             } else
                 TechIcons.Question.draw(matrixStack, x + 4, y + 4, 16, 16);

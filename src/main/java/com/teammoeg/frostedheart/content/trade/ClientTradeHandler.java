@@ -28,7 +28,7 @@ import net.minecraft.client.gui.screen.Screen;
 
 public class ClientTradeHandler {
     public static void updateAll() {
-        Screen scr = ClientUtils.mc().currentScreen;
+        Screen scr = ClientUtils.mc().screen;
         if (scr instanceof MenuScreenWrapper) {
             BaseScreen scr2 = ((MenuScreenWrapper<?>) scr).getGui();
             if (scr2 instanceof TradeScreen) {
@@ -40,7 +40,7 @@ public class ClientTradeHandler {
     }
 
     public static void updateBargain() {
-        Screen scr = ClientUtils.mc().currentScreen;
+        Screen scr = ClientUtils.mc().screen;
         if (scr instanceof MenuScreenWrapper) {
             BaseScreen scr2 = ((MenuScreenWrapper<?>) scr).getGui();
             if (scr2 instanceof TradeScreen) {
@@ -51,7 +51,7 @@ public class ClientTradeHandler {
     }
 
     public static void updateTrade() {
-        Screen scr = ClientUtils.mc().currentScreen;
+        Screen scr = ClientUtils.mc().screen;
         if (scr instanceof MenuScreenWrapper) {
             BaseScreen scr2 = ((MenuScreenWrapper<?>) scr).getGui();
             if (scr2 instanceof TradeScreen) {

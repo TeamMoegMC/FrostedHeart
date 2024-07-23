@@ -31,10 +31,10 @@ public class FHFoods {
     public static final Food DRIED_WOLFBERRIES = buildStew(1);
 
     private static Food buildStew(int hunger) {
-        return (new Food.Builder()).hunger(hunger).saturation(0.6F).build();
+        return (new Food.Builder()).nutrition(hunger).saturationMod(0.6F).build();
     }
 
     private static Food buildStew(int hunger, float saturation) {
-        return (new Food.Builder()).hunger(hunger).saturation(saturation).build();
+        return (new Food.Builder()).nutrition(hunger).saturationMod(saturation).build();
     }
 }

@@ -94,7 +94,7 @@ public class FHDrawingDeskOperationPacket implements FHMessage {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            ServerWorld world = Objects.requireNonNull(context.get().getSender()).getServerWorld();
+            ServerWorld world = Objects.requireNonNull(context.get().getSender()).getLevel();
             TileEntity tile = Utils.getExistingTileEntity(world, pos);
             if (tile instanceof DrawingDeskTileEntity) {
                // ResearchGame rg = ((DrawingDeskTileEntity) tile).getGame();
@@ -115,7 +115,7 @@ public class FHDrawingDeskOperationPacket implements FHMessage {
                 }
                 if (flag) {
                     ((DrawingDeskTileEntity) tile).updateGame(context.get().getSender());
-                    tile.markDirty();
+                    tile.setChanged();
                     ((DrawingDeskTileEntity) tile).markContainingBlockForUpdate(null);
                 }
             }

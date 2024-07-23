@@ -30,11 +30,11 @@ public class TileEntityLogisticsStorage implements ILogisticsStorage {
 	}
 
 	public BlockPos getActualPos() {
-		return te.getPos();
+		return te.getBlockPos();
 	}
 
 	public World getActualWorld() {
-		return te.getWorld();
+		return te.getLevel();
 	}
 
 	public boolean isRemoved() {

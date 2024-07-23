@@ -65,7 +65,7 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;resetCustomer()V", ordinal = 0), method = "updateAITasks", cancellable = true, require = 1)
     public void fh$updateTask(CallbackInfo cbi) {
-        super.updateAITasks();
+        super.customServerAiStep();
         cbi.cancel();
     }
 
@@ -81,13 +81,13 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
      * @reason disable villager trade for our system
      */
     @Overwrite
-    public ActionResultType getEntityInteractionResult(PlayerEntity playerIn, Hand hand) {
-        ItemStack itemstack = playerIn.getHeldItem(hand);
-        if (itemstack.getItem() != Items.VILLAGER_SPAWN_EGG && this.isAlive() && !this.hasCustomer()
+    public ActionResultType mobInteract(PlayerEntity playerIn, Hand hand) {
+        ItemStack itemstack = playerIn.getItemInHand(hand);
+        if (itemstack.getItem() != Items.VILLAGER_SPAWN_EGG && this.isAlive() && !this.isTrading()
                 && !this.isSleeping() && !playerIn.isSecondaryUseActive()) {
-            if (this.isChild()) {
+            if (this.isBaby()) {
                 this.shakeHead();
-                return ActionResultType.func_233537_a_(this.world.isRemote);
+                return ActionResultType.sidedSuccess(this.level.isClientSide);
             }
 			/*boolean flag = this.getOffers().isEmpty();
 			if (hand == Hand.MAIN_HAND) {
@@ -98,9 +98,9 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
 				playerIn.addStat(Stats.TALKED_TO_VILLAGER);
 			}*/
 			/*if (flag) {
-				return ActionResultType.func_233537_a_(this.world.isRemote);
+				return ActionResultType.sidedSuccess(this.world.isRemote);
 			}*/
-            if (!this.world.isRemote) {
+            if (!this.level.isClientSide) {
                 //return fh$data.trade(playerIn);
             	/*fh$data.update((ServerWorld) super.world, playerIn);
             	RelationList list=fh$data.getRelationShip(playerIn);
@@ -108,8 +108,8 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
 	                this.shakeHead();
 	                playerIn.sendMessage(GuiUtils.translateMessage("village.unknown"), playerIn.getUniqueID());
             	}*/
-                playerIn.addStat(Stats.TALKED_TO_VILLAGER);
-                setCustomer(playerIn);
+                playerIn.awardStat(Stats.TALKED_TO_VILLAGER);
+                setTradingPlayer(playerIn);
                 //System.out.println(this.getCustomer());
                 TradeHandler.openTradeScreen((ServerPlayerEntity) playerIn, fh$data);
 
@@ -120,9 +120,9 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
 				this.displayMerchantGui(playerIn);
 			}*/
 
-            return ActionResultType.func_233537_a_(this.world.isRemote);
+            return ActionResultType.sidedSuccess(this.level.isClientSide);
         }
-        return super.getEntityInteractionResult(playerIn, hand);
+        return super.mobInteract(playerIn, hand);
     }
 
     @Override
@@ -135,7 +135,7 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
     }
 
     @Shadow
-    public abstract void setCustomer(@Nullable PlayerEntity player);
+    public abstract void setTradingPlayer(@Nullable PlayerEntity player);
 
     @Shadow
     protected abstract void shakeHead();

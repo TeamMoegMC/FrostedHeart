@@ -69,11 +69,11 @@ public class UV extends Rect {
         this(uv.x, uv.y, uv.w, uv.h,uv.textureW,uv.textureH);
     }
 	public void blitRotated(MatrixStack matrixStack, int targetX, int targetY,int centerX,int centerY,float degrees) {
-		matrixStack.push();
+		matrixStack.pushPose();
 		matrixStack.translate(targetX + centerX, targetY + centerY, 0);//move to gauge center
-		matrixStack.rotate(new Quaternion(new Vector3f(0,0,1),degrees,true));//rotate around Z
+		matrixStack.mulPose(new Quaternion(new Vector3f(0,0,1),degrees,true));//rotate around Z
 		AbstractGui.blit(matrixStack,-centerX,-centerY, w, h, x, y, w, h, textureW, textureH);//draw with center offset
-		matrixStack.pop();
+		matrixStack.popPose();
 	}
     //blit with width transition and  custom texture size
     public void blitRotated(MatrixStack matrixStack, int targetX, int targetY,Point loc,int centerX,int centerY,float degrees) {

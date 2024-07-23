@@ -53,7 +53,7 @@ public class DietValueRecipe extends IESerializableRecipe {
             return ItemStack.EMPTY;
         }
         @Override
-        public DietValueRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+        public DietValueRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
             return new DietValueRecipe(recipeId, DietGroupCodec.read(buffer), buffer.readRegistryId());
         }
         @Override
@@ -65,7 +65,7 @@ public class DietValueRecipe extends IESerializableRecipe {
             return new DietValueRecipe(id, m, i);
         }
         @Override
-        public void write(PacketBuffer buffer, DietValueRecipe recipe) {
+        public void toNetwork(PacketBuffer buffer, DietValueRecipe recipe) {
             DietGroupCodec.write(buffer, recipe.groups);
             buffer.writeRegistryId(recipe.item);
         }
@@ -98,7 +98,7 @@ public class DietValueRecipe extends IESerializableRecipe {
     }
 
     @Override
-    public ItemStack getRecipeOutput() {
+    public ItemStack getResultItem() {
         return ItemStack.EMPTY;
     }
 

@@ -26,19 +26,21 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ToolType;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public abstract class AbstractTownWorkerBlock extends FHBaseBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
     public static final Properties TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY = Block.Properties
-            .create(Material.WOOD)
+            .of(Material.WOOD)
             .sound(SoundType.WOOD)
-            .setRequiresTool()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.AXE)
-            .hardnessAndResistance(2, 6)
-            .notSolid();
+            .strength(2, 6)
+            .noOcclusion();
 
     public AbstractTownWorkerBlock(Properties blockProps) {
         super(blockProps);
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING, Direction.SOUTH));
+        this.registerDefaultState(this.stateDefinition.any().setValue(LIT, Boolean.FALSE).setValue(BlockStateProperties.FACING, Direction.SOUTH));
     }
 
     @Override
@@ -47,16 +49,16 @@ public abstract class AbstractTownWorkerBlock extends FHBaseBlock {
     }
 
     @Override
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
         builder.add(LIT,BlockStateProperties.FACING);
     }
 
     public abstract TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world);
 
     @Override
-    public void onBlockPlacedBy(World world, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
-        super.onBlockPlacedBy(world, pos, state, entity, stack);
+    public void setPlacedBy(World world, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(world, pos, state, entity, stack);
         TownTileEntity te = (TownTileEntity) Utils.getExistingTileEntity(world, pos);    //这玩意原本是写在HouseBlock里面的，这里的强制转型原本转为了HouseTileEntity，现在改成TownTileEntity不知道是否可行
         if (te != null) {
             // register the house to the town
@@ -71,6 +73,6 @@ public abstract class AbstractTownWorkerBlock extends FHBaseBlock {
     @Nullable
     @Override
     public BlockState getStateForPlacement(BlockItemUseContext context) {
-        return this.getDefaultState().with(BlockStateProperties.FACING, context.getFace().getOpposite());
+        return this.defaultBlockState().setValue(BlockStateProperties.FACING, context.getClickedFace().getOpposite());
     }
 }

@@ -40,7 +40,7 @@ public class ProductionData extends BaseData {
 
     public ProductionData(PacketBuffer pb) {
         super(pb);
-        item = pb.readItemStack();
+        item = pb.readItem();
     }
 
     public ProductionData(String id, int maxstore, float recover, int price, ItemStack item) {
@@ -73,6 +73,6 @@ public class ProductionData extends BaseData {
     public void write(PacketBuffer buffer) {
         buffer.writeVarInt(1);
         super.write(buffer);
-        buffer.writeItemStack(item);
+        buffer.writeItem(item);
     }
 }

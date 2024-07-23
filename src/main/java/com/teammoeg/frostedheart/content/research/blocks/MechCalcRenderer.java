@@ -52,19 +52,19 @@ public class MechCalcRenderer extends TileEntityRenderer<MechCalcTileEntity> {
     @Override
     public void render(MechCalcTileEntity te, float partialTicks, MatrixStack matrixStack,
                        IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
-        BlockPos blockPos = te.getPos();
-        BlockState state = te.getWorld().getBlockState(blockPos);
+        BlockPos blockPos = te.getBlockPos();
+        BlockState state = te.getLevel().getBlockState(blockPos);
         if (state.getBlock() != FHBlocks.mech_calc.get())
             return;
-        matrixStack.push();
-        Direction rd = te.getDirection().rotateY();
+        matrixStack.pushPose();
+        Direction rd = te.getDirection().getClockWise();
         double forward = ((double) te.process / 1067) / 16d;
-        matrixStack.translate(rd.getXOffset() * forward, 0, rd.getZOffset() * forward);
+        matrixStack.translate(rd.getStepX() * forward, 0, rd.getStepZ() * forward);
         List<BakedQuad> quads = MODEL.getNullQuads(te.getDirection(), state, new SinglePropertyModelData<>(register, Model.IE_OBJ_STATE));
-        RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.getSolid()), matrixStack, combinedLightIn, combinedOverlayIn);
-        matrixStack.pop();
+        RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
+        matrixStack.popPose();
         Direction fw = te.getDirection();
-        matrixStack.push();
+        matrixStack.pushPose();
         int deg = 0, dx = 0, dz = 0;
         switch (fw) {
             case SOUTH:
@@ -81,18 +81,18 @@ public class MechCalcRenderer extends TileEntityRenderer<MechCalcTileEntity> {
                 dx = -1;
                 break;
         }
-        matrixStack.rotate(new Quaternion(0, deg, 0, true));
+        matrixStack.mulPose(new Quaternion(0, deg, 0, true));
         matrixStack.translate(dx, 0, dz);
 
         matrixStack.translate(0, 13.75 / 16, 7d / 16);
         float rotn = ((te.process) % 160) * 2.25f;
         Quaternion rot = new Quaternion(rotn, 0f, 0f, true);
-        matrixStack.rotate(rot);
+        matrixStack.mulPose(rot);
 
         matrixStack.translate(0, -1.5 / 16, -1.5 / 16);
         quads = MODEL.getNullQuads(Direction.NORTH, state, new SinglePropertyModelData<>(drum, Model.IE_OBJ_STATE));
-        RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.getSolid()), matrixStack, combinedLightIn, combinedOverlayIn);
-        matrixStack.pop();
+        RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
+        matrixStack.popPose();
     }
 
 }

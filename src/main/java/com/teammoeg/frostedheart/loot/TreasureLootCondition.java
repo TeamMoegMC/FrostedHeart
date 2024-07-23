@@ -51,12 +51,12 @@ public class TreasureLootCondition implements ILootCondition {
     }
 
     @Override
-    public LootConditionType getConditionType() {
+    public LootConditionType getType() {
         return TYPE;
     }
 
     @Override
     public boolean test(LootContext t) {
-        return t.getLootTable(t.getQueriedLootTableId()).getParameterSet() == LootParameterSets.CHEST;
+        return t.getLootTable(t.getQueriedLootTableId()).getParamSet() == LootParameterSets.CHEST;
     }
 }

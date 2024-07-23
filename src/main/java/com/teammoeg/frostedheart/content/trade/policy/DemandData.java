@@ -34,12 +34,12 @@ public class DemandData extends BaseData {
 
     public DemandData(JsonObject jo) {
         super(jo);
-        item = Ingredient.deserialize(jo.get("demand"));
+        item = Ingredient.fromJson(jo.get("demand"));
     }
 
     public DemandData(PacketBuffer pb) {
         super(pb);
-        item = Ingredient.read(pb);
+        item = Ingredient.fromNetwork(pb);
     }
 
     public DemandData(String id, int maxstore, float recover, int price, Ingredient item) {
@@ -62,7 +62,7 @@ public class DemandData extends BaseData {
     @Override
     public JsonElement serialize() {
         JsonObject jo = super.serialize().getAsJsonObject();
-        jo.add("demand", item.serialize());
+        jo.add("demand", item.toJson());
         return jo;
     }
 
@@ -70,7 +70,7 @@ public class DemandData extends BaseData {
     public void write(PacketBuffer buffer) {
         buffer.writeVarInt(2);
         super.write(buffer);
-        item.write(buffer);
+        item.toNetwork(buffer);
     }
 
 }

@@ -43,7 +43,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 
     @Inject(at = @At("HEAD"), method = "dropInventory")
     public void fh$dropInventory(CallbackInfo cbi) {
-        super.dropInventory();
+        super.dropEquipment();
         if (((Object) this) instanceof FakePlayer)
             return;
         DeathInventoryData dit = DeathInventoryData.get((PlayerEntity) ((Object) this));

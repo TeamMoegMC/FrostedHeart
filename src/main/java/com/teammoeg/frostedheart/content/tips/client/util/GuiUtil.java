@@ -30,8 +30,8 @@ import java.util.regex.Pattern;
 
 public class GuiUtil {
     private static final Minecraft mc = Minecraft.getInstance();
-    private static final FontRenderer font = mc.fontRenderer;
-    private static final ActiveRenderInfo info = mc.gameRenderer.getActiveRenderInfo();
+    private static final FontRenderer font = mc.font;
+    private static final ActiveRenderInfo info = mc.gameRenderer.getMainCamera();
     private static final Map<String, List<String>> textWrapCache = new HashMap<>();
     private static int leftClicked = 0;
 
@@ -61,11 +61,11 @@ public class GuiUtil {
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             RenderSystem.color4f(r, g, b, alpha);
-            mc.getTextureManager().bindTexture(resourceLocation);
+            mc.getTextureManager().bind(resourceLocation);
             AbstractGui.blit(matrixStack, x, y, w, h, uOffset, vOffset, uWidth, vHeight, textureW, textureH);
             RenderSystem.disableBlend();
         } else {
-            mc.getTextureManager().bindTexture(resourceLocation);
+            mc.getTextureManager().bind(resourceLocation);
             AbstractGui.blit(matrixStack, x, y, w, h, uOffset, vOffset, uWidth, vHeight, textureW, textureH);
         }
 
@@ -86,11 +86,11 @@ public class GuiUtil {
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             RenderSystem.color4f(r, g, b, alpha);
-            mc.getTextureManager().bindTexture(IconButton.ICON_LOCATION);
+            mc.getTextureManager().bind(IconButton.ICON_LOCATION);
             AbstractGui.blit(matrixStack, x, y, 10, 10, icon.getX(), icon.getY(), 10, 10, 80, 80);
             RenderSystem.disableBlend();
         } else {
-            mc.getTextureManager().bindTexture(IconButton.ICON_LOCATION);
+            mc.getTextureManager().bind(IconButton.ICON_LOCATION);
             AbstractGui.blit(matrixStack, x, y, 10, 10, icon.getX(), icon.getY(), 10, 10, 80, 80);
         }
     }
@@ -100,7 +100,7 @@ public class GuiUtil {
     }
 
     public static boolean isLeftDown() {
-        return GLFW.glfwGetMouseButton(mc.getMainWindow().getHandle(), 0) == 1;
+        return GLFW.glfwGetMouseButton(mc.getWindow().getWindow(), 0) == 1;
     }
 
     public static boolean isLeftClicked() {
@@ -114,11 +114,11 @@ public class GuiUtil {
     }
 
     public static int getMouseX() {
-        return (int)(mc.mouseHelper.getMouseX() * (double)mc.getMainWindow().getScaledWidth() / (double)mc.getMainWindow().getWidth());
+        return (int)(mc.mouseHandler.xpos() * (double)mc.getWindow().getGuiScaledWidth() / (double)mc.getWindow().getScreenWidth());
     }
 
     public static int getMouseY() {
-        return (int)(mc.mouseHelper.getMouseY() * (double)mc.getMainWindow().getScaledHeight() / (double)mc.getMainWindow().getHeight());
+        return (int)(mc.mouseHandler.ypos() * (double)mc.getWindow().getGuiScaledHeight() / (double)mc.getWindow().getScreenHeight());
     }
 
     public static int formatAndDraw(ITextComponent component, MatrixStack ms, float x, float y, int maxWidth, int color, int lineSpace, boolean shadow) {
@@ -138,15 +138,15 @@ public class GuiUtil {
         for (int i = 0; i < lines.size(); i++) {
             if (i == 0) {
                 if (shadow) {
-                    font.drawStringWithShadow(ms, lines.get(i), x, y, color);
+                    font.drawShadow(ms, lines.get(i), x, y, color);
                 } else {
-                    font.drawString(ms, lines.get(i), x, y, color);
+                    font.draw(ms, lines.get(i), x, y, color);
                 }
             } else {
                 if (shadow) {
-                    font.drawStringWithShadow(ms, lines.get(i), x, y + (i * lineSpace), color);
+                    font.drawShadow(ms, lines.get(i), x, y + (i * lineSpace), color);
                 } else {
-                    font.drawString(ms, lines.get(i), x, y + (i * lineSpace), color);
+                    font.draw(ms, lines.get(i), x, y + (i * lineSpace), color);
                 }
             }
         }
@@ -167,10 +167,10 @@ public class GuiUtil {
             StringBuilder line = new StringBuilder();
             String[] words = text.split(" ");
             for (String word : words) {
-                if (font.getStringWidth(word) > maxWidth) {
+                if (font.width(word) > maxWidth) {
                     for (char c : word.toCharArray()) {
                         String potentialLine = line.toString() + c;
-                        int width = font.getStringWidth(potentialLine);
+                        int width = font.width(potentialLine);
 
                         if (width > maxWidth) {
                             if (line.toString().endsWith("\u00A7")) {
@@ -188,7 +188,7 @@ public class GuiUtil {
                     line.append(" ");
                 } else {
                     String potentialLine = line + word + " ";
-                    int width = font.getStringWidth(potentialLine);
+                    int width = font.width(potentialLine);
 
                     if (width > maxWidth) {
                         if (line.toString().endsWith("\u00A7")) {
@@ -252,18 +252,18 @@ public class GuiUtil {
         RenderSystem.disableCull();
 
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
+        BufferBuilder bufferBuilder = Tessellator.getInstance().getBuilder();
 
         bufferBuilder.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION);
-        bufferBuilder.pos(x, y, 0).endVertex();
+        bufferBuilder.vertex(x, y, 0).endVertex();
         for (int i = -180; i <= 360*partial-180; i++) { //为了让圆顺时针绘制
             double angle = i * Math.PI / 180;
             double x2 = x + Math.sin(-angle) * radius;
             double y2 = y + Math.cos(angle) * radius;
-            bufferBuilder.pos(x2, y2, 0).endVertex();
+            bufferBuilder.vertex(x2, y2, 0).endVertex();
         }
 
-        tessellator.draw();
+        tessellator.end();
 
         RenderSystem.enableCull();
         RenderSystem.disableBlend();
@@ -287,18 +287,18 @@ public class GuiUtil {
         RenderSystem.defaultBlendFunc();
 
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
+        BufferBuilder bufferBuilder = Tessellator.getInstance().getBuilder();
 
         bufferBuilder.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION);
-        bufferBuilder.pos(x, y, 0).endVertex();
+        bufferBuilder.vertex(x, y, 0).endVertex();
         for (int i = 0; i <= sides; i++) {
             double angle = i * (360F/sides) * Math.PI / 180;
             double x2 = x + Math.sin(angle) * radius;
             double y2 = y + Math.cos(angle) * radius;
-            bufferBuilder.pos(x2, y2, 0).endVertex();
+            bufferBuilder.vertex(x2, y2, 0).endVertex();
         }
 
-        tessellator.draw();
+        tessellator.end();
 
         RenderSystem.disableBlend();
     }
@@ -310,23 +310,23 @@ public class GuiUtil {
     public static Vector2f worldPosToScreenPos(Vector3f pos) {
         if (mc.player == null) return Vector2f.ZERO;
 
-        int screenWidth = mc.getMainWindow().getScaledWidth();
-        int screenHeight = mc.getMainWindow().getScaledHeight();
+        int screenWidth = mc.getWindow().getGuiScaledWidth();
+        int screenHeight = mc.getWindow().getGuiScaledHeight();
         //透视矩阵
-        Matrix4f projectionMatrix = mc.gameRenderer.getProjectionMatrix(info, mc.getRenderPartialTicks(), true);
+        Matrix4f projectionMatrix = mc.gameRenderer.getProjectionMatrix(info, mc.getFrameTime(), true);
 
         //摄像机坐标
-        Vector3d cameraPos = info.getProjectedView();
+        Vector3d cameraPos = info.getPosition();
         Matrix4f cameraPosM = new Matrix4f();
         cameraPosM.setIdentity();
         //转换为摄像机坐标系
         cameraPosM.setTranslation((float)-cameraPos.x, (float)-cameraPos.y, (float)-cameraPos.z);
 
         //摄像机旋转
-        Quaternion cameraRotation = info.getRotation().copy();
+        Quaternion cameraRotation = info.rotation().copy();
         //调整摄像机旋转
-        cameraRotation.multiply(new Quaternion(Vector3f.YN, 180, true));
-        cameraRotation.conjugate();
+        cameraRotation.mul(new Quaternion(Vector3f.YN, 180, true));
+        cameraRotation.conj();
 
         Vector4f finalVector = new Vector4f(pos);
         //应用摄像机坐标
@@ -339,8 +339,8 @@ public class GuiUtil {
             float screenX, screenY;
             float halfScreenWidth = screenWidth * 0.5F;
             float halfScreenHeight = screenHeight * 0.5F;
-            float x = finalVector.getX();
-            float y = finalVector.getY();
+            float x = finalVector.x();
+            float y = finalVector.y();
 
             if (x < 0) {
                 screenY = halfScreenHeight + y / x * halfScreenWidth;
@@ -360,8 +360,8 @@ public class GuiUtil {
         finalVector.transform(projectionMatrix);
         finalVector.perspectiveDivide();
 
-        float screenX = (finalVector.getX() * 0.5F + 0.5F) * screenWidth;
-        float screenY = screenHeight - ((finalVector.getY() * 0.5F + 0.5F) * screenHeight);
+        float screenX = (finalVector.x() * 0.5F + 0.5F) * screenWidth;
+        float screenY = screenHeight - ((finalVector.y() * 0.5F + 0.5F) * screenHeight);
         return new Vector2f(screenX, screenY);
     }
 
@@ -370,32 +370,32 @@ public class GuiUtil {
      * @param pos 世界坐标
      */
     public static boolean isPosInView(Vector3f pos) {
-        Quaternion cameraRotation = info.getRotation().copy();
-        cameraRotation.multiply(new Quaternion(Vector3f.YN, 180, true));
-        cameraRotation.conjugate();
+        Quaternion cameraRotation = info.rotation().copy();
+        cameraRotation.mul(new Quaternion(Vector3f.YN, 180, true));
+        cameraRotation.conj();
 
-        return isPosInView(pos, cameraRotation, mc.gameRenderer.getProjectionMatrix(info, mc.getRenderPartialTicks(), true));
+        return isPosInView(pos, cameraRotation, mc.gameRenderer.getProjectionMatrix(info, mc.getFrameTime(), true));
     }
 
     public static boolean isPosInView(Vector3f pos, Quaternion cameraRotation, Matrix4f projection) {
         ClippingHelper clippingHelper = new ClippingHelper(new Matrix4f(cameraRotation), projection);
-        Vector3d cameraPos = info.getProjectedView();
+        Vector3d cameraPos = info.getPosition();
         AxisAlignedBB pointAABB;
 
         float distance = (float)cameraPos.distanceTo(new Vector3d(pos));
         if (distance > 512) {
-            double x = (pos.getX() - cameraPos.x) / distance;
-            double y = (pos.getY() - cameraPos.y) / distance;
-            double z = (pos.getZ() - cameraPos.z) / distance;
+            double x = (pos.x() - cameraPos.x) / distance;
+            double y = (pos.y() - cameraPos.y) / distance;
+            double z = (pos.z() - cameraPos.z) / distance;
 
             pointAABB = new AxisAlignedBB(x, y, z, x, y, z);
-            clippingHelper.setCameraPosition(0,0, 0);
+            clippingHelper.prepare(0,0, 0);
         } else {
-            pointAABB = new AxisAlignedBB(pos.getX(), pos.getY(), pos.getZ(), pos.getX(), pos.getY(), pos.getZ());
-            clippingHelper.setCameraPosition(cameraPos.x, cameraPos.y, cameraPos.z);
+            pointAABB = new AxisAlignedBB(pos.x(), pos.y(), pos.z(), pos.x(), pos.y(), pos.z());
+            clippingHelper.prepare(cameraPos.x, cameraPos.y, cameraPos.z);
         }
 
-        return clippingHelper.isBoundingBoxInFrustum(pointAABB);
+        return clippingHelper.isVisible(pointAABB);
     }
 
     public static float getTheta(Vector3d viewDirection, Vector3f cameraToPoint) {

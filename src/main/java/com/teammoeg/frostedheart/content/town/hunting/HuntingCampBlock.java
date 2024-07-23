@@ -14,6 +14,8 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class HuntingCampBlock extends AbstractTownWorkerBlock {
     public HuntingCampBlock(Properties blockProps) {
         super(blockProps);
@@ -25,13 +27,13 @@ public class HuntingCampBlock extends AbstractTownWorkerBlock {
     }
 
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (!worldIn.isRemote && handIn == Hand.MAIN_HAND) {
-            HuntingCampTileEntity te = (HuntingCampTileEntity) worldIn.getTileEntity(pos);
+    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+        if (!worldIn.isClientSide && handIn == Hand.MAIN_HAND) {
+            HuntingCampTileEntity te = (HuntingCampTileEntity) worldIn.getBlockEntity(pos);
             if (te == null) {
                 return ActionResultType.FAIL;
             }
-            player.sendStatusMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            player.displayClientMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
             return ActionResultType.SUCCESS;
         }
         return ActionResultType.PASS;

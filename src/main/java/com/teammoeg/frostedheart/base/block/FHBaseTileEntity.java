@@ -33,9 +33,9 @@ public abstract class FHBaseTileEntity extends IEBaseTileEntity {
 
     @Override
     public void markBlockForUpdate(BlockPos pos, BlockState newState) {
-        BlockState state = world.getBlockState(pos);
+        BlockState state = level.getBlockState(pos);
         if (newState == null)
             newState = state;
-        world.notifyBlockUpdate(pos, state, newState, 3);
+        level.sendBlockUpdated(pos, state, newState, 3);
     }
 }

@@ -21,6 +21,8 @@ import java.util.*;
 
 import static java.util.AbstractMap.SimpleEntry;
 
+import java.util.AbstractMap.SimpleEntry;
+
 public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
     private double rating = 0;
     private int volume;
@@ -73,21 +75,21 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
 
 
     public boolean isStructureValid() {
-        BlockPos housePos = this.getPos();
-        List<BlockPos> doorPosSet = BlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(world).getBlockState(pos).isIn(BlockTags.DOORS));
+        BlockPos housePos = this.getBlockPos();
+        List<BlockPos> doorPosSet = BlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS));
         if (doorPosSet.isEmpty()) return false;
         for (BlockPos doorPos : doorPosSet) {
-            BlockPos floorBelowDoor = BlockScanner.getBlockBelow((pos)->!(Objects.requireNonNull(world).getBlockState(pos).isIn(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
+            BlockPos floorBelowDoor = BlockScanner.getBlockBelow((pos)->!(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
             for (Direction direction : BlockScanner.PLANE_DIRECTIONS) {
                 assert floorBelowDoor != null;
-                BlockPos startPos = floorBelowDoor.offset(direction);//找到门下方块旁边的方块
-                if (!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(world), startPos)) {//如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
-                    if(!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(world), startPos.down()) || FloorBlockScanner.isHouseBlock(world, startPos.up(2))){//如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
+                BlockPos startPos = floorBelowDoor.relative(direction);//找到门下方块旁边的方块
+                if (!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos)) {//如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
+                    if(!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos.below()) || FloorBlockScanner.isHouseBlock(level, startPos.above(2))){//如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
                         continue;
                     }
-                    startPos = startPos.down();
+                    startPos = startPos.below();
                 }
-                HuntingBaseBlockScanner scanner = new HuntingBaseBlockScanner(this.world, startPos);
+                HuntingBaseBlockScanner scanner = new HuntingBaseBlockScanner(this.level, startPos);
                 if (scanner.scan()) {
                     //FHMain.LOGGER.debug("HouseScanner: scan successful");
                     this.volume = scanner.getVolume();
@@ -136,21 +138,21 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
 
     @Override
     public void tick() {
-        assert world != null;
-        if (!world.isRemote) {
+        assert level != null;
+        if (!level.isClientSide) {
             if (endpoint.tryDrainHeat(1)) {
                 temperatureModifier = Math.max(endpoint.getTemperatureLevel() * 10, HouseTileEntity.COMFORTABLE_TEMP_HOUSE);
                 if (setActive(true)) {
-                    markDirty();
+                    setChanged();
                 }
             } else {
                 temperatureModifier = 0;
                 if (setActive(false)) {
-                    markDirty();
+                    setChanged();
                 }
             }
         } else if (getIsActive()) {
-            ClientUtils.spawnSteamParticles(world, pos);
+            ClientUtils.spawnSteamParticles(level, worldPosition);
         }
         this.addToSchedulerQueue();
     }
@@ -242,7 +244,7 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
                     for(TownWorkerData data : campsUnchecked){
                         SimpleEntry<TownWorkerData,Double> dataPair = new SimpleEntry<>(data, data.getWorkData().getDouble("rating") * baseRating * 2);//double: 考虑到与之距离过近的camp之后新计算的rating    *2:下面遍历的时候会遍历到它自己
                         for(TownWorkerData data2 : campsUnchecked){
-                            if(data2.getPos().distanceSq(data.getPos()) < 128) dataPair.setValue( dataPair.getValue() * (0.5 + 0.5 * (data2.getPos().distanceSq(data.getPos())) / 128));
+                            if(data2.getPos().distSqr(data.getPos()) < 128) dataPair.setValue( dataPair.getValue() * (0.5 + 0.5 * (data2.getPos().distSqr(data.getPos())) / 128));
                         }
                         camps.add(dataPair);
                     }

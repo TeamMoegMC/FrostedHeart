@@ -35,12 +35,12 @@ public class StaticBlock extends AnimatedKinetics {
 
     @Override
     public void draw(MatrixStack matrixStack, int xOffset, int yOffset) {
-        matrixStack.push();
+        matrixStack.pushPose();
         matrixStack.translate(xOffset, yOffset, 0);
         matrixStack.translate(0, 0, 200);
         matrixStack.translate(2, 22, 0);
-        matrixStack.rotate(Vector3f.XP.rotationDegrees(-15.5f));
-        matrixStack.rotate(Vector3f.YP.rotationDegrees(22.5f + 90));
+        matrixStack.mulPose(Vector3f.XP.rotationDegrees(-15.5f));
+        matrixStack.mulPose(Vector3f.YP.rotationDegrees(22.5f + 90));
         int scale = 30;
 
         blockElement(bs)
@@ -48,7 +48,7 @@ public class StaticBlock extends AnimatedKinetics {
                 .scale(scale)
                 .render(matrixStack);
 
-        matrixStack.pop();
+        matrixStack.popPose();
     }
 
 }

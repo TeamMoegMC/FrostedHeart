@@ -48,9 +48,9 @@ public abstract class MixinSawTileEntity extends BlockBreakingKineticTileEntity 
             ordinal = 0, remap = false),
             method = "onBlockBroken", cancellable = true, remap = false)
     private void FH$onBroken(BlockState state, CallbackInfo cbi) {
-        if (world == null)
+        if (level == null)
             return;
-        BlockState up = world.getBlockState(pos.up());
+        BlockState up = level.getBlockState(worldPosition.above());
         if (TreeCutter.isVerticalPlant(state) && !TreeCutter.isVerticalPlant(up))
             cbi.cancel();
         if (TreeCutter.isChorus(state) && !TreeCutter.isChorus(up))

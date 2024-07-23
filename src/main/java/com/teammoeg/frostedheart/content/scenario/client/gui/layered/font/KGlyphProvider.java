@@ -32,7 +32,7 @@ public class KGlyphProvider extends ReloadListener<Object>{
 	
 	}
 	public GlyphData getGlyph(int code) {
-		if(ClientUtils.mc().gameSettings.forceUnicodeFont) {
+		if(ClientUtils.mc().options.forceUnicodeFont) {
 			return unicodeData.get(code);
 		}
 		return data.get(code);
@@ -142,7 +142,7 @@ public class KGlyphProvider extends ReloadListener<Object>{
 		rm=resourceManager;
 		JsonParser jp=new JsonParser();
 		try {
-			Collection<ResourceLocation> cls=rm.getAllResourceLocations("font", (p_215274_0_) -> p_215274_0_.endsWith(".json"));
+			Collection<ResourceLocation> cls=rm.listResources("font", (p_215274_0_) -> p_215274_0_.endsWith(".json"));
 			for(ResourceLocation rl:cls) {
 				FHMain.LOGGER.info("Reloaded " + rl);
 				if(rl.getPath().contains("default"))
@@ -168,6 +168,6 @@ public class KGlyphProvider extends ReloadListener<Object>{
 	}
 	public static void addListener() {
 		if(Minecraft.getInstance()!=null&&Minecraft.getInstance().getResourceManager()!=null)
-			((IReloadableResourceManager)Minecraft.getInstance().getResourceManager()).addReloadListener(INSTANCE);
+			((IReloadableResourceManager)Minecraft.getInstance().getResourceManager()).registerReloadListener(INSTANCE);
 	}
 }

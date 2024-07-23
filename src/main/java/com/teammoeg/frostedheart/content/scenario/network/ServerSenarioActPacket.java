@@ -13,8 +13,8 @@ public class ServerSenarioActPacket implements FHMessage {
     private final String title;
     private final String subtitle;
     public ServerSenarioActPacket(PacketBuffer buffer) {
-    	title =  SerializeUtil.readOptional(buffer, PacketBuffer::readString).orElse(null);
-    	subtitle = SerializeUtil.readOptional(buffer, PacketBuffer::readString).orElse(null);
+    	title =  SerializeUtil.readOptional(buffer, PacketBuffer::readUtf).orElse(null);
+    	subtitle = SerializeUtil.readOptional(buffer, PacketBuffer::readUtf).orElse(null);
     }
 	public ServerSenarioActPacket(String title, String subtitle) {
 		super();
@@ -22,8 +22,8 @@ public class ServerSenarioActPacket implements FHMessage {
 		this.subtitle = subtitle;
 	}
 	public void encode(PacketBuffer buffer) {
-        SerializeUtil.writeOptional2(buffer, title, PacketBuffer::writeString);
-        SerializeUtil.writeOptional2(buffer, subtitle, PacketBuffer::writeString);
+        SerializeUtil.writeOptional2(buffer, title, PacketBuffer::writeUtf);
+        SerializeUtil.writeOptional2(buffer, subtitle, PacketBuffer::writeUtf);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {

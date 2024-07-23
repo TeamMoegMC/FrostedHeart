@@ -43,13 +43,13 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
     @Override
     public void tick() {
         super.tick();
-        if (!world.isRemote) {
+        if (!level.isClientSide) {
             if(network.tryDrainHeat(FHConfig.COMMON.steamCorePowerIntake.get().floatValue())){
                 this.setActive(true);
                 if(this.getSpeed() == 0f){
                     this.updateGeneratedRotation();
                 }
-                markDirty();
+                setChanged();
             }else {
                 this.setActive(false);
                 this.updateGeneratedRotation();
@@ -66,14 +66,14 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
     LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
     @Override
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-		if(cap==FHCapabilities.HEAT_EP.capability()&&side==this.getBlockState().get(BlockStateProperties.FACING).getOpposite()) {
+		if(cap==FHCapabilities.HEAT_EP.capability()&&side==this.getBlockState().getValue(BlockStateProperties.FACING).getOpposite()) {
 			return heatcap.cast();
 		}
 		return super.getCapability(cap, side);
 	}
 
 	public Direction getDirection() {
-        return this.getBlockState().get(BlockStateProperties.FACING);
+        return this.getBlockState().getValue(BlockStateProperties.FACING);
     }
 
     @Override
@@ -95,12 +95,12 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
 
     @Override
     public void setState(BlockState blockState) {
-        if (this.getWorldNonnull().getBlockState(this.pos) == this.getState()) {
-            this.getWorldNonnull().setBlockState(this.pos, blockState);
+        if (this.getWorldNonnull().getBlockState(this.worldPosition) == this.getState()) {
+            this.getWorldNonnull().setBlockAndUpdate(this.worldPosition, blockState);
         }
     }
 
     public World getWorldNonnull() {
-        return Objects.requireNonNull(super.getWorld());
+        return Objects.requireNonNull(super.getLevel());
     }
 }

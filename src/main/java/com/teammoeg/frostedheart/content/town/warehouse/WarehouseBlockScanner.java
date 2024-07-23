@@ -29,13 +29,13 @@ public class WarehouseBlockScanner extends FloorBlockScanner {
 
     @Override
     public boolean isValidFloor(BlockPos pos){
-        return isFloorBlock(pos) && isAirOrLadder(world, pos.up()) && isAirOrLadder(world, pos.up(2));
+        return isFloorBlock(pos) && isAirOrLadder(world, pos.above()) && isAirOrLadder(world, pos.above(2));
     }
 
     public boolean scan(){
         return scan(MAX_SCANNING_TIMES, (pos1)->{
             this.area++;
-            AbstractMap.SimpleEntry<Integer, Boolean> floorInformation = countBlocksAbove(pos1, (pos2)->!PlantBlockHelper.isAir(world.getBlockState(pos2)));
+            AbstractMap.SimpleEntry<Integer, Boolean> floorInformation = countBlocksAbove(pos1, (pos2)->!PlantBlockHelper.isValidGrowthState(world.getBlockState(pos2)));
             if(!floorInformation.getValue()) this.isValid=false;
             this.volume += floorInformation.getKey();
             occupiedArea.add(toColumnPos(pos1));

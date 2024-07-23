@@ -161,7 +161,7 @@ public class TeamTownData implements SpecialData{
         blocks.values().removeIf(v -> {
             BlockPos pos = v.getPos();
             v.loaded = false;
-            if (world.isBlockLoaded(pos)) {
+            if (world.hasChunkAt(pos)) {
                 v.loaded = true;
                 BlockState bs = world.getBlockState(pos);
                 TileEntity te = Utils.getExistingTileEntity(world, pos);
@@ -175,7 +175,7 @@ public class TeamTownData implements SpecialData{
         blocks.values().removeIf(v -> {
             BlockPos pos = v.getPos();
             v.loaded = false;
-            if (world.isBlockLoaded(pos)) {
+            if (world.hasChunkAt(pos)) {
                 v.loaded = true;
                 BlockState bs = world.getBlockState(pos);
                 TileEntity te = Utils.getExistingTileEntity(world, pos);

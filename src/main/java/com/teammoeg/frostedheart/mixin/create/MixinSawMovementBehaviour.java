@@ -41,7 +41,7 @@ public abstract class MixinSawMovementBehaviour extends BlockBreakingMovementBeh
     private void FH$onBroken(MovementContext context, BlockPos pos, BlockState brokenState, CallbackInfo cbi) {
         if (context.world == null)
             return;
-        BlockState up = context.world.getBlockState(pos.up());
+        BlockState up = context.world.getBlockState(pos.above());
         if (TreeCutter.isVerticalPlant(brokenState) && !TreeCutter.isVerticalPlant(up))
             cbi.cancel();
         if (TreeCutter.isChorus(brokenState) && !TreeCutter.isChorus(up))

@@ -33,7 +33,7 @@ public class LogisticInternalRequestTask implements LogisticTask {
 	@Override
 	public void work(LogisticNetwork network, int msize) {
 		if(to==null) {
-			to=new LogisticSlot(network.getStorage(tile.getPos()),slot);
+			to=new LogisticSlot(network.getStorage(tile.getBlockPos()),slot);
 		}
 		SlotSet slot=network.findSlotsFor(filter, useNBT);
 		if(!slot.isEmpty())

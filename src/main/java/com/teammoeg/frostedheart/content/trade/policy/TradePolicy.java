@@ -53,7 +53,7 @@ public class TradePolicy extends IESerializableRecipe {
 
         @Nullable
         @Override
-        public TradePolicy read(ResourceLocation recipeId, PacketBuffer buffer) {
+        public TradePolicy fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
             ResourceLocation name = SerializeUtil.readOptional(buffer, PacketBuffer::readResourceLocation).orElse(null);
             List<PolicyGroup> groups = SerializeUtil.readList(buffer, PolicyGroup::read);
             int root = buffer.readVarInt();
@@ -79,7 +79,7 @@ public class TradePolicy extends IESerializableRecipe {
         }
 
         @Override
-        public void write(PacketBuffer buffer, TradePolicy recipe) {
+        public void toNetwork(PacketBuffer buffer, TradePolicy recipe) {
             SerializeUtil.writeOptional2(buffer, recipe.name, PacketBuffer::writeResourceLocation);
             SerializeUtil.writeList(buffer, recipe.groups, PolicyGroup::write);
             buffer.writeVarInt(recipe.weight);
@@ -160,7 +160,7 @@ public class TradePolicy extends IESerializableRecipe {
     }
 
     @Override
-    public ItemStack getRecipeOutput() {
+    public ItemStack getResultItem() {
         return ItemStack.EMPTY;
     }
 }

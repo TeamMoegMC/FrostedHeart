@@ -41,6 +41,8 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class DebugHeaterBlock extends FHBaseBlock {
     public DebugHeaterBlock(Properties blockProps) {
         super(blockProps);
@@ -56,9 +58,9 @@ public class DebugHeaterBlock extends FHBaseBlock {
     }
 
     @Override
-    protected void fillStateContainer(Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
-        builder.add(BlockStateProperties.LEVEL_1_8);
+    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
+        builder.add(BlockStateProperties.LEVEL_FLOWING);
     }
 
 
@@ -69,16 +71,16 @@ public class DebugHeaterBlock extends FHBaseBlock {
 
 
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player,
+    public ActionResultType use(BlockState state, World world, BlockPos pos, PlayerEntity player,
                                              Hand hand, BlockRayTraceResult hit) {
-        ActionResultType superResult = super.onBlockActivated(state, world, pos, player, hand, hit);
-        if (superResult.isSuccessOrConsume() || player.isSneaking())
+        ActionResultType superResult = super.use(state, world, pos, player, hand, hit);
+        if (superResult.consumesAction() || player.isShiftKeyDown())
             return superResult;
-        ItemStack item = player.getHeldItem(hand);
-        if (item.getItem().equals(Item.getItemFromBlock(this))) {
-            state = state.cycleValue(BlockStateProperties.LEVEL_1_8);
-            world.setBlockState(pos, state);
-            player.sendStatusMessage(TranslateUtils.str(String.valueOf(state.get(BlockStateProperties.LEVEL_1_8))), true);
+        ItemStack item = player.getItemInHand(hand);
+        if (item.getItem().equals(Item.byBlock(this))) {
+            state = state.cycle(BlockStateProperties.LEVEL_FLOWING);
+            world.setBlockAndUpdate(pos, state);
+            player.displayClientMessage(TranslateUtils.str(String.valueOf(state.getValue(BlockStateProperties.LEVEL_FLOWING))), true);
             return ActionResultType.SUCCESS;
         }
         return superResult;

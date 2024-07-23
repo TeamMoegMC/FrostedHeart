@@ -139,8 +139,8 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
 
     @Override
     protected void tickEffects(boolean isActive) {
-        if (world != null && world.isRemote && isActive && world.rand.nextFloat() < 0.2) {
-            ClientUtils.spawnSteamParticles(world, this.getPos());
+        if (level != null && level.isClientSide && isActive && level.random.nextFloat() < 0.2) {
+            ClientUtils.spawnSteamParticles(level, this.getBlockPos());
         }
     }
     @Override

@@ -61,20 +61,20 @@ public class FrozenForestBiome {
 
         // 设置生物群系的降水类型、类别、深度、大小、温度和降雨量
         biomeBuilder.precipitation(Biome.RainType.SNOW)
-                .category(Biome.Category.NONE)
+                .biomeCategory(Biome.Category.NONE)
                 .depth(1.0F)
                 .scale(0.1F)
                 .temperature(0.1F)
                 .downfall(1.0F)
 
                 // 设置生物群系的环境效果，如水的颜色、雾的颜色、雾的颜色、天空颜色、心情音效和粒子效果
-                .setEffects((new BiomeAmbience.Builder())
-                        .setWaterColor(4159204)
-                        .setWaterFogColor(329011)
-                        .setFogColor(12638463)
-                        .withSkyColor(calculateSkyColor(0.8F))
-                        .setMoodSound(MoodSoundAmbience.DEFAULT_CAVE)
-                        .setParticle(new ParticleEffectAmbience(ParticleTypes.WHITE_ASH, 0.068093334F))
+                .specialEffects((new BiomeAmbience.Builder())
+                        .waterColor(4159204)
+                        .waterFogColor(329011)
+                        .fogColor(12638463)
+                        .skyColor(calculateSkyColor(0.8F))
+                        .ambientMoodSound(MoodSoundAmbience.LEGACY_CAVE_SETTINGS)
+                        .ambientParticle(new ParticleEffectAmbience(ParticleTypes.WHITE_ASH, 0.068093334F))
                         .build());
 
         // 创建一个BiomeGenerationSettings.Builder对象，用于构建生成的生物群系的设置
@@ -84,7 +84,7 @@ public class FrozenForestBiome {
         this.Generation(biomeGenBuilder);
 
         // 将生成的生物群系设置添加到biomeBuilder中
-        biomeBuilder.withGenerationSettings(biomeGenBuilder.build());
+        biomeBuilder.generationSettings(biomeGenBuilder.build());
 
         // 创建一个MobSpawnInfo.Builder对象，用于构建生物群系的生物生成设置
         MobSpawnInfo.Builder mobSpawnBuilder = new MobSpawnInfo.Builder();
@@ -93,7 +93,7 @@ public class FrozenForestBiome {
         this.MobSpawn(mobSpawnBuilder);
 
         // 将生物群系的生物生成设置添加到biomeBuilder中
-        biomeBuilder.withMobSpawnSettings(mobSpawnBuilder.build());
+        biomeBuilder.mobSpawnSettings(mobSpawnBuilder.build());
 
         // 构建并返回最终的Biome对象
         return biomeBuilder.build();
@@ -103,27 +103,27 @@ public class FrozenForestBiome {
     public int calculateSkyColor(float temperature) {
         float lvt_1_1_ = temperature / 3.0F;
         lvt_1_1_ = MathHelper.clamp(lvt_1_1_, -1.0F, 1.0F);
-        return MathHelper.hsvToRGB(0.62222224F - lvt_1_1_ * 0.05F, 0.5F + lvt_1_1_ * 0.1F, 1.0F);
+        return MathHelper.hsvToRgb(0.62222224F - lvt_1_1_ * 0.05F, 0.5F + lvt_1_1_ * 0.1F, 1.0F);
     }
 
     public void Generation(BiomeGenerationSettings.Builder builder) {
 
-        builder.withSurfaceBuilder(FHSurfaceBuilder.FROZEN_FOREST);
+        builder.surfaceBuilder(FHSurfaceBuilder.FROZEN_FOREST);
 
         // 添加雪地森林的生成特征
-        ConfiguredFeature<?, ?> BARETREE = Feature.TREE.withConfiguration((
+        ConfiguredFeature<?, ?> BARETREE = Feature.TREE.configured((
                 new BaseTreeFeatureConfig.Builder(
-                        new SimpleBlockStateProvider(Blocks.OAK_LOG.getDefaultState()),
-                        new SimpleBlockStateProvider(Blocks.AIR.getDefaultState()),
+                        new SimpleBlockStateProvider(Blocks.OAK_LOG.defaultBlockState()),
+                        new SimpleBlockStateProvider(Blocks.AIR.defaultBlockState()),
                         new PineFoliagePlacer(
-                                FeatureSpread.create(3),
-                                FeatureSpread.create(2),
-                                FeatureSpread.create(1)),
+                                FeatureSpread.fixed(3),
+                                FeatureSpread.fixed(2),
+                                FeatureSpread.fixed(1)),
                         new ForkyTrunkPlacer(3, 2, 1),
                         new TwoLayerFeature(2, 0, 2))
-        ).setIgnoreVines().build()).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).count(9);
+        ).ignoreVines().build()).decorated(Features.Placements.HEIGHTMAP_SQUARE).count(9);
 
-        builder.withFeature(
+        builder.addFeature(
                 GenerationStage.Decoration.VEGETAL_DECORATION,
                 BARETREE
         );
@@ -131,7 +131,7 @@ public class FrozenForestBiome {
 
     public void MobSpawn(MobSpawnInfo.Builder builder) {
 
-        DefaultBiomeFeatures.withSnowyBiomeMobs(builder);
+        DefaultBiomeFeatures.snowySpawns(builder);
     }
 
 }

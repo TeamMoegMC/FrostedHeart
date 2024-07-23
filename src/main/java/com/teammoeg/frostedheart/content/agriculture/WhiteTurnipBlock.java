@@ -36,14 +36,14 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
 public class WhiteTurnipBlock extends FHCropBlock {
-    public static final IntegerProperty WhiteTurnip_AGE = BlockStateProperties.AGE_0_7;
-    private static final VoxelShape[] SHAPE = new VoxelShape[]{Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 2.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 4.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 6.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 8.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 10.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 14.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 16.0D, 16.0D)};
+    public static final IntegerProperty WhiteTurnip_AGE = BlockStateProperties.AGE_7;
+    private static final VoxelShape[] SHAPE = new VoxelShape[]{Block.box(0.0D, 0.0D, 0.0D, 16.0D, 2.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 4.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 6.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 8.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 10.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 14.0D, 16.0D), Block.box(0.0D, 0.0D, 0.0D, 16.0D, 16.0D, 16.0D)};
 
     public WhiteTurnipBlock(int growTemp, AbstractBlock.Properties properties) {
         super(growTemp, properties);
     }
 
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
         builder.add(WhiteTurnip_AGE);
     }
 
@@ -52,19 +52,19 @@ public class WhiteTurnipBlock extends FHCropBlock {
     }
 
     protected int getBonemealAgeIncrease(World worldIn) {
-        return MathHelper.nextInt(worldIn.rand, 0, 1);
+        return MathHelper.nextInt(worldIn.random, 0, 1);
     }
 
     public int getMaxAge() {
         return 7;
     }
 
-    protected IItemProvider getSeedsItem() {
+    protected IItemProvider getBaseSeedId() {
         return FHBlocks.white_turnip_block.get().asItem();
     }
 
     public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-        return SHAPE[state.get(this.getAgeProperty())];
+        return SHAPE[state.getValue(this.getAgeProperty())];
     }
 }
 

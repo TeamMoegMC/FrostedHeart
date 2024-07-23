@@ -48,11 +48,11 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
     private static BlockPos lastSupportPos;
     public T1GeneratorTileEntity() {
         super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR_T1.get(), false);
-        this.generatorDriveHandler = new GeneratorDriveHandler(world);
+        this.generatorDriveHandler = new GeneratorDriveHandler(level);
         lastSupportPos = new BlockPos(0,0,0);
     }
     public boolean isExistNeighborTileEntity() {
-        Vector3i vec = this.multiblockInstance.getSize(world);
+        Vector3i vec = this.multiblockInstance.getSize(level);
         int xLow = -1, xHigh = vec.getX(), yLow = 0, yHigh = vec.getY(), zLow = -1, zHigh = vec.getZ();
         int blastBlockCount = 0, alloySmelterCount = 0;
         for (int x = xLow; x <= xHigh; ++x)
@@ -61,11 +61,11 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
                     BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
                     // Enum a seamless NoUpandDown hollow cube
                     if ( ( (z>zLow && z<zHigh) && ((x==xLow) || (x==xHigh)) ) || ((z==zLow || z==zHigh) && (x>xLow && x<xHigh)) ) {
-                        TileEntity te = Utils.getExistingTileEntity(world, actualPos);
+                        TileEntity te = Utils.getExistingTileEntity(level, actualPos);
                         if (te instanceof BlastFurnaceTileEntity) {
                             if (++blastBlockCount == 9) {
                             	BlastFurnaceTileEntity master=((BlastFurnaceTileEntity) te).master();
-                                lastSupportPos = master.getPos();
+                                lastSupportPos = master.getBlockPos();
                                 return true;
                             }
                         }
@@ -96,13 +96,13 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
     @Override
     protected void tickEffects(boolean isActive) {
         if (isActive) {
-            BlockPos blockpos = this.getPos();
-            Random random = world.rand;
+            BlockPos blockpos = this.getBlockPos();
+            Random random = level.random;
             if (random.nextFloat() < 0.2F) {
                 //for (int i = 0; i < random.nextInt(2) + 2; ++i) {
-                ClientUtils.spawnSmokeParticles(world, blockpos.offset(Direction.UP, 1));
-                ClientUtils.spawnSmokeParticles(world, blockpos);
-                ClientUtils.spawnFireParticles(world, blockpos);
+                ClientUtils.spawnSmokeParticles(level, blockpos.relative(Direction.UP, 1));
+                ClientUtils.spawnSmokeParticles(level, blockpos);
+                ClientUtils.spawnFireParticles(level, blockpos);
                 //}
             }
         }

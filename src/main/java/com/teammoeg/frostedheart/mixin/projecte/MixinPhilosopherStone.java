@@ -48,24 +48,24 @@ import net.minecraft.world.server.ServerWorld;
 public class MixinPhilosopherStone {
     @Inject(method = "onItemUse", at = @At(value = "HEAD"), cancellable = true)
     public void hibernation(ItemUseContext ctx, CallbackInfoReturnable<ActionResultType> cir) {
-        World world = ctx.getWorld();
+        World world = ctx.getLevel();
         PlayerEntity player = ctx.getPlayer();
-        BlockPos pos = ctx.getPos();
-        if (!world.isRemote && player != null) {
+        BlockPos pos = ctx.getClickedPos();
+        if (!world.isClientSide && player != null) {
             ServerWorld serverWorld = (ServerWorld) world;
             ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
 
-            serverPlayerEntity.addPotionEffect(new EffectInstance(Effects.BLINDNESS, (int) (100 * (world.rand.nextDouble() + 0.5)), 3));
-            serverPlayerEntity.addPotionEffect(new EffectInstance(Effects.NAUSEA, (int) (1000 * (world.rand.nextDouble() + 0.5)), 5));
+            serverPlayerEntity.addEffect(new EffectInstance(Effects.BLINDNESS, (int) (100 * (world.random.nextDouble() + 0.5)), 3));
+            serverPlayerEntity.addEffect(new EffectInstance(Effects.CONFUSION, (int) (1000 * (world.random.nextDouble() + 0.5)), 5));
 
-            serverPlayerEntity.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE, TranslateUtils.translateMessage("too_cold_to_transmute")));
-            serverPlayerEntity.connection.sendPacket(new STitlePacket(STitlePacket.Type.SUBTITLE, TranslateUtils.translateMessage("magical_backslash")));
+            serverPlayerEntity.connection.send(new STitlePacket(STitlePacket.Type.TITLE, TranslateUtils.translateMessage("too_cold_to_transmute")));
+            serverPlayerEntity.connection.send(new STitlePacket(STitlePacket.Type.SUBTITLE, TranslateUtils.translateMessage("magical_backslash")));
 
-            double posX = pos.getX() + (world.rand.nextDouble() - world.rand.nextDouble()) * 4.5D;
-            double posY = pos.getY() + world.rand.nextInt(3) - 1;
-            double posZ = pos.getZ() + (world.rand.nextDouble() - world.rand.nextDouble()) * 4.5D;
-            if (world.hasNoCollisions(EntityType.WITCH.getBoundingBoxWithSizeApplied(posX, posY, posZ))
-                    && EntitySpawnPlacementRegistry.canSpawnEntity(EntityType.WITCH, serverWorld, SpawnReason.NATURAL, new BlockPos(posX, posY, posZ), world.getRandom())) {
+            double posX = pos.getX() + (world.random.nextDouble() - world.random.nextDouble()) * 4.5D;
+            double posY = pos.getY() + world.random.nextInt(3) - 1;
+            double posZ = pos.getZ() + (world.random.nextDouble() - world.random.nextDouble()) * 4.5D;
+            if (world.noCollision(EntityType.WITCH.getAABB(posX, posY, posZ))
+                    && EntitySpawnPlacementRegistry.checkSpawnRules(EntityType.WITCH, serverWorld, SpawnReason.NATURAL, new BlockPos(posX, posY, posZ), world.getRandom())) {
                 FHUtils.spawnMob(serverWorld, new BlockPos(posX, posY, posZ), new CompoundNBT(), new ResourceLocation("minecraft", "witch"));
             }
         }

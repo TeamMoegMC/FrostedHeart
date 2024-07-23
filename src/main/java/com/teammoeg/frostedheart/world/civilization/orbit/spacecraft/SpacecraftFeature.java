@@ -44,7 +44,7 @@ public class SpacecraftFeature extends Feature<NoFeatureConfig> {
     }
 
     @Override
-    public boolean generate(ISeedReader reader, ChunkGenerator generator, Random rand, BlockPos pos, NoFeatureConfig config) {
+    public boolean place(ISeedReader reader, ChunkGenerator generator, Random rand, BlockPos pos, NoFeatureConfig config) {
       /*  List<Integer> listX = IntStream.rangeClosed(chunkpos.getXStart(), chunkpos.getXEnd()).boxed().collect(Collectors.toList());
         Collections.shuffle(listX, rand);
         List<Integer> listZ = IntStream.rangeClosed(chunkpos.getZStart(), chunkpos.getZEnd()).boxed().collect(Collectors.toList());
@@ -55,18 +55,18 @@ public class SpacecraftFeature extends Feature<NoFeatureConfig> {
         BlockPos start = new BlockPos(pos.getX() - 9, pos.getY() - 1 /*generator.getNoiseHeightMinusOne(pos.getX(),pos.getZ(), Heightmap.Type.WORLD_SURFACE_WG)*/, pos.getZ() - 7);
 
         //if (reader.isAirBlock(blockpos$mutable) || reader.getBlockState(blockpos$mutable).getCollisionShapeUncached(reader, blockpos$mutable).isEmpty()) {
-        Rotation rot = Rotation.randomRotation(rand);
+        Rotation rot = Rotation.getRandom(rand);
 
-        PlacementSettings settings = (new PlacementSettings()).setCenterOffset(new BlockPos(/*9*/9, 2, 7/*8*/)).setRotation(rot).setMirror(Mirror.NONE).addProcessor(BlockIgnoreStructureProcessor.STRUCTURE_BLOCK);
-        settings.field_204765_h = false;
-        Template template = reader.getWorld().getStructureTemplateManager().getTemplate(new ResourceLocation(FHMain.MODID, "relic/spacecraft"));
-        MutableBoundingBox boundingBox = template.getMutableBoundingBox(settings, start);
+        PlacementSettings settings = (new PlacementSettings()).setRotationPivot(new BlockPos(/*9*/9, 2, 7/*8*/)).setRotation(rot).setMirror(Mirror.NONE).addProcessor(BlockIgnoreStructureProcessor.STRUCTURE_BLOCK);
+        settings.keepLiquids = false;
+        Template template = reader.getLevel().getStructureManager().get(new ResourceLocation(FHMain.MODID, "relic/spacecraft"));
+        MutableBoundingBox boundingBox = template.getBoundingBox(settings, start);
 
 
-        Vector3i vector3i = boundingBox.func_215126_f();
+        Vector3i vector3i = boundingBox.getCenter();
 
         //                        FHMain.LOGGER.debug( "spacecraft at " + (start.getX()) + " " + start.getY() + " " + (start.getZ())+" "+rot);
-        return template.func_237146_a_(reader, start, new BlockPos(vector3i.getX(), vector3i.getY(), vector3i.getZ()), settings, reader.getRandom(), 2);
+        return template.placeInWorld(reader, start, new BlockPos(vector3i.getX(), vector3i.getY(), vector3i.getZ()), settings, reader.getRandom(), 2);
         //}
         // }
         // }

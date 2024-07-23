@@ -228,15 +228,15 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
         return 64;
     }
     public boolean canBeCatalyst(ItemStack catalyst) {
-        return FHUtils.filterRecipes(this.getWorld().getRecipeManager(),IncubateRecipe.TYPE).stream().filter(r -> r.catalyst != null).anyMatch(r -> r.catalyst.testIgnoringSize(catalyst));
+        return FHUtils.filterRecipes(this.getLevel().getRecipeManager(),IncubateRecipe.TYPE).stream().filter(r -> r.catalyst != null).anyMatch(r -> r.catalyst.testIgnoringSize(catalyst));
     }
 
     public boolean canBeInput(ItemStack input) {
-        return FHUtils.filterRecipes(this.getWorld().getRecipeManager(),IncubateRecipe.TYPE).stream().anyMatch(r -> r.input.testIgnoringSize(input));
+        return FHUtils.filterRecipes(this.getLevel().getRecipeManager(),IncubateRecipe.TYPE).stream().anyMatch(r -> r.input.testIgnoringSize(input));
     }
 
     public IncubateRecipe findRecipe(ItemStack in, ItemStack catalyst) {
-        return FHUtils.filterRecipes(this.getWorld().getRecipeManager(),IncubateRecipe.TYPE).stream().filter(t -> t.input.test(in)).filter(t -> t.catalyst == null || t.catalyst.test(catalyst)).findAny().orElse(null);
+        return FHUtils.filterRecipes(this.getLevel().getRecipeManager(),IncubateRecipe.TYPE).stream().filter(t -> t.input.test(in)).filter(t -> t.catalyst == null || t.catalyst.test(catalyst)).findAny().orElse(null);
     }
     @Override
     public boolean isStackValid(int i, ItemStack itemStack) {
@@ -246,7 +246,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
         if (i == 1)
             return canBeCatalyst(itemStack) || itemStack.getItem() == Items.ROTTEN_FLESH;
         if (i == 2)
-            return canBeInput(itemStack) || itemStack.isFood();
+            return canBeInput(itemStack) || itemStack.isEdible();
         return i != 3;
     }
 
@@ -266,13 +266,13 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                 last = new ResourceLocation(compound.getString("last"));
             water = compound.getInt("water");
             ItemStackHelper.loadAllItems(compound, this.inventory);
-            out = ItemStack.read(compound.getCompound("out"));
+            out = ItemStack.of(compound.getCompound("out"));
             outfluid = FluidStack.loadFluidStackFromNBT(compound.getCompound("outfluid"));
         }
     }
     @Override
     public void tick() {
-        if (!this.world.isRemote) {
+        if (!this.level.isClientSide) {
             if (process > 0) {
                 if (efficiency <= 0.005) {
                     out = ItemStack.EMPTY;
@@ -281,7 +281,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                     efficiency = 0;
                     lprocess = 0;
                     this.setActive(false);
-                    this.markDirty();
+                    this.setChanged();
                     this.markContainingBlockForUpdate(null);
                     return;
                 }
@@ -310,7 +310,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                             } else
                                 efficiency -= 0.005F;
                             this.setActive(false);
-                            this.markDirty();
+                            this.setChanged();
                             this.markContainingBlockForUpdate(null);
                             return;
                         }
@@ -329,7 +329,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                     this.setActive(false);
                 }
 
-                this.markDirty();
+                this.setChanged();
                 this.markContainingBlockForUpdate(null);
             } else if (!out.isEmpty() || !outfluid.isEmpty()) {
                 if (ItemHandlerHelper.canItemStacksStack(out, inventory.get(3))) {
@@ -367,7 +367,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                             outfluid = ir.output_fluid.copy();
                             isFoodRecipe = false;
                             lprocess = 0;
-                            this.markDirty();
+                            this.setChanged();
                             this.markContainingBlockForUpdate(null);
                             return;
                         }
@@ -376,18 +376,18 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                     ItemStack catalyst = inventory.get(1);
 
                     ItemStack in = inventory.get(2);
-                    if (!in.isEmpty() && in.isFood()) {
+                    if (!in.isEmpty() && in.isEdible()) {
                         if (!catalyst.isEmpty() && catalyst.getItem() == Items.ROTTEN_FLESH && (efficiency <= 0.01 || !isFoodRecipe)) {
                             isFoodRecipe = true;
                             last = food;
                             catalyst.shrink(1);
                             efficiency = 0.2f;
-                            this.markDirty();
+                            this.setChanged();
                             this.markContainingBlockForUpdate(null);
                             return;
                         }
                         if (efficiency > 0.01) {
-                            int value = in.getItem().getFood().getHealing();
+                            int value = in.getItem().getFoodProperties().getNutrition();
                             if (in.getItem() instanceof StewItem) {
                                 value = ThermopoliumApi.getInfo(in).healing;
 
@@ -401,7 +401,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                             process = processMax = 20 * 20 * value;
                             water = 1;
                             this.setActive(true);
-                            this.markDirty();
+                            this.setChanged();
                             this.markContainingBlockForUpdate(null);
                             return;
                         }
@@ -419,7 +419,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                 }
                 this.setActive(false);
                 if (changed) {
-                    this.markDirty();
+                    this.setChanged();
                     this.markContainingBlockForUpdate(null);
                 }
 

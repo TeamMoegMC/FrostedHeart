@@ -49,7 +49,7 @@ public class DismantleInnerRecipe extends SpecialRecipe {
 
         @Nullable
         @Override
-        public DismantleInnerRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+        public DismantleInnerRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
             return new DismantleInnerRecipe(recipeId);
         }
 
@@ -59,7 +59,7 @@ public class DismantleInnerRecipe extends SpecialRecipe {
         }
 
         @Override
-        public void write(PacketBuffer buffer, DismantleInnerRecipe recipe) {
+        public void toNetwork(PacketBuffer buffer, DismantleInnerRecipe recipe) {
         }
     }
 
@@ -84,7 +84,7 @@ public class DismantleInnerRecipe extends SpecialRecipe {
     }
 
     public static ItemStack tryDismantle(ItemStack item) {
-        EquipmentSlotType type = MobEntity.getSlotForItemStack(item);
+        EquipmentSlotType type = MobEntity.getEquipmentSlotForItem(item);
         if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND) {
             if (item.hasTag() && !item.getTag().getString("inner_cover").isEmpty())
                 return DismantleInnerRecipe.getDismantledResult(item);
@@ -99,21 +99,21 @@ public class DismantleInnerRecipe extends SpecialRecipe {
     /**
      * Used to determine if this recipe can fit in a grid of the given width/height
      */
-    public boolean canFit(int width, int height) {
+    public boolean canCraftInDimensions(int width, int height) {
         return width * height >= 1;
     }
 
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack getCraftingResult(CraftingInventory inv) {
+    public ItemStack assemble(CraftingInventory inv) {
         ItemStack armoritem = ItemStack.EMPTY;
-        for (int i = 0; i < inv.getSizeInventory(); ++i) {
-            ItemStack itemstack = inv.getStackInSlot(i);
+        for (int i = 0; i < inv.getContainerSize(); ++i) {
+            ItemStack itemstack = inv.getItem(i);
             if (itemstack != null && !itemstack.isEmpty()) {
                 if (!armoritem.isEmpty())
                     return ItemStack.EMPTY;
-                EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
+                EquipmentSlotType type = MobEntity.getEquipmentSlotForItem(itemstack);
                 if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND)
                     if (itemstack.hasTag()) {
                         CompoundNBT cnbt = itemstack.getTag();
@@ -134,16 +134,16 @@ public class DismantleInnerRecipe extends SpecialRecipe {
 
     @Override
     public NonNullList<ItemStack> getRemainingItems(CraftingInventory inv) {
-        NonNullList<ItemStack> nonnulllist = NonNullList.withSize(inv.getSizeInventory(), ItemStack.EMPTY);
+        NonNullList<ItemStack> nonnulllist = NonNullList.withSize(inv.getContainerSize(), ItemStack.EMPTY);
 
         for (int i = 0; i < nonnulllist.size(); ++i) {
-            ItemStack item = inv.getStackInSlot(i);
+            ItemStack item = inv.getItem(i);
             if (!item.isEmpty()) {
                 ItemStack real = item.copy();
                 real.setCount(1);
-                real.removeChildTag("inner_cover_tag");
-                real.removeChildTag("inner_cover");
-                real.removeChildTag("inner_bounded");
+                real.removeTagKey("inner_cover_tag");
+                real.removeTagKey("inner_cover");
+                real.removeTagKey("inner_bounded");
                 nonnulllist.set(i, real);
             }
         }
@@ -161,14 +161,14 @@ public class DismantleInnerRecipe extends SpecialRecipe {
      */
     public boolean matches(CraftingInventory inv, World worldIn) {
         boolean hasArmor = false;
-        for (int i = 0; i < inv.getSizeInventory(); ++i) {
-            ItemStack itemstack = inv.getStackInSlot(i);
+        for (int i = 0; i < inv.getContainerSize(); ++i) {
+            ItemStack itemstack = inv.getItem(i);
             if (itemstack == null || itemstack.isEmpty()) {
                 continue;
             }
             if (hasArmor)
                 return false;
-            EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
+            EquipmentSlotType type = MobEntity.getEquipmentSlotForItem(itemstack);
             if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND) {
                 if (itemstack.hasTag()) {
                     CompoundNBT cnbt = itemstack.getTag();

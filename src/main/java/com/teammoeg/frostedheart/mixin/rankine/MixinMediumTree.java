@@ -38,10 +38,10 @@ import net.minecraft.world.server.ServerWorld;
 @Mixin({PinyonPineTree.class, CoconutPalmTree.class, BlackWalnutTree.class, CoconutPalmTree.class, BlackBirchTree.class})
 public abstract class MixinMediumTree extends Tree {
     @Override
-    public boolean attemptGrowTree(ServerWorld world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,
+    public boolean growTree(ServerWorld world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,
                                    Random rand) {
         if (FHUtils.canTreeGenerate(world, pos, rand, 7))
-            return super.attemptGrowTree(world, chunkGenerator, pos, state, rand);
+            return super.growTree(world, chunkGenerator, pos, state, rand);
         return false;
     }
 

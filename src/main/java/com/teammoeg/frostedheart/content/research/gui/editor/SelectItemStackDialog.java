@@ -85,7 +85,7 @@ public class SelectItemStackDialog extends EditDialog {
         public void onClicked(MouseButton button) {
             playClickSound();
 
-            final CompoundNBT nbt = current.write(new CompoundNBT());
+            final CompoundNBT nbt = current.save(new CompoundNBT());
 
 
             EditPrompt.open(this, "caps", fromNBT(nbt.get("ForgeCaps")), s -> {
@@ -93,13 +93,13 @@ public class SelectItemStackDialog extends EditDialog {
                     nbt.remove("ForgeCaps");
                 } else {
                     try {
-                        nbt.put("ForgeCaps", JsonToNBT.getTagFromJson(s));
+                        nbt.put("ForgeCaps", JsonToNBT.parseTag(s));
                     } catch (CommandSyntaxException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
                 }
-                current = ItemStack.read(nbt);
+                current = ItemStack.of(nbt);
             });
         }
     }
@@ -122,23 +122,23 @@ public class SelectItemStackDialog extends EditDialog {
 
         @Override
         public void drawIcon(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-            matrixStack.push();
+            matrixStack.pushPose();
             matrixStack.translate(0, 0, 100);
             GuiHelper.drawItem(matrixStack, current, x, y, w / 16F, h / 16F, true, null);
-            matrixStack.pop();
+            matrixStack.popPose();
         }
 
         @Override
         public ITextComponent getTitle() {
-            return current.getDisplayName();
+            return current.getHoverName();
         }
 
         @Override
         public void onClicked(MouseButton button) {
             playClickSound();
-            EditPrompt.open(this, "Data", current.write(new CompoundNBT()).toString(), s -> {
+            EditPrompt.open(this, "Data", current.save(new CompoundNBT()).toString(), s -> {
                 try {
-                    current = ItemStack.read(JsonToNBT.getTagFromJson(s));
+                    current = ItemStack.of(JsonToNBT.parseTag(s));
                 } catch (CommandSyntaxException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -157,7 +157,7 @@ public class SelectItemStackDialog extends EditDialog {
             playClickSound();
             EditPrompt.open(this, "nbt", fromNBT(current.getTag()), s -> {
                 try {
-                    current.setTag(JsonToNBT.getTagFromJson(s));
+                    current.setTag(JsonToNBT.parseTag(s));
                 } catch (CommandSyntaxException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -188,7 +188,7 @@ public class SelectItemStackDialog extends EditDialog {
         @Override
         public void addMouseOverText(TooltipList list) {
             super.addMouseOverText(list);
-            list.add(activeMode.getDisplayName().mergeStyle(TextFormatting.GRAY).appendSibling(TranslateUtils.str(" [" + panelStacks.widgets.size() + "]").mergeStyle(TextFormatting.DARK_GRAY)));
+            list.add(activeMode.getDisplayName().withStyle(TextFormatting.GRAY).append(TranslateUtils.str(" [" + panelStacks.widgets.size() + "]").withStyle(TextFormatting.DARK_GRAY)));
         }
 
         @Override
@@ -232,7 +232,7 @@ public class SelectItemStackDialog extends EditDialog {
         @Override
         public ITextComponent getTitle() {
             if (title == null) {
-                title = stack.getDisplayName();
+                title = stack.getHoverName();
             }
 
             return title;
@@ -258,14 +258,14 @@ public class SelectItemStackDialog extends EditDialog {
                 return RegistryUtils.getRegistryName(stack.getItem()).getNamespace().contains(mod);
             }
 
-            return stack.getDisplayName().getString().toLowerCase().contains(search);
+            return stack.getHoverName().getString().toLowerCase().contains(search);
         }
     }
 
     public static Editor<ItemStack> EDITOR = (p, l, v, c) -> new SelectItemStackDialog(p, l, v, c).open();
 
     public static Editor<Block> EDITOR_BLOCK = (p, l, v, c) -> new SelectItemStackDialog(p, l + " (Blocks only)", new ItemStack(v), e -> {
-        Block b = Block.getBlockFromItem(e.getItem());
+        Block b = Block.byItem(e.getItem());
         if (b != Blocks.AIR)
             c.accept(b);
     }).open();
@@ -304,7 +304,7 @@ public class SelectItemStackDialog extends EditDialog {
 
     public static final Editor<Collection<ItemStack>> STACK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, new ItemStack(Items.AIR), EDITOR, SelectItemStackDialog::fromItemStack, ItemIcon::getItemIcon, c).open();
 
-    public static final Editor<Collection<Block>> BLOCK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, Blocks.AIR, EDITOR_BLOCK, e -> e.getTranslatedName().getString(), e -> ItemIcon.getItemIcon(e.asItem()), c).open();
+    public static final Editor<Collection<Block>> BLOCK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, Blocks.AIR, EDITOR_BLOCK, e -> e.getName().getString(), e -> ItemIcon.getItemIcon(e.asItem()), c).open();
 
     private final Consumer<ItemStack> callback;
     private ItemStack current;
@@ -316,7 +316,7 @@ public class SelectItemStackDialog extends EditDialog {
     public long update = Long.MAX_VALUE;
 
     private static String fromItemStack(ItemStack s) {
-        return s.getDisplayName().getString() + " x " + s.getCount();
+        return s.getHoverName().getString() + " x " + s.getCount();
     }
     private static String fromNBT(INBT nbt) {
         if (nbt == null)
@@ -389,7 +389,7 @@ public class SelectItemStackDialog extends EditDialog {
         };
 
         searchBox.setPosAndSize(27, 7, width - 16, 12);
-        searchBox.ghostText = I18n.format("gui.search_box");
+        searchBox.ghostText = I18n.get("gui.search_box");
         searchBox.setFocused(true);
 
         tabs = new Panel(this) {

@@ -39,10 +39,10 @@ public class SmokingDefrostRecipe extends SmokingRecipe implements DefrostRecipe
         }
 
         @Override
-        public void write(PacketBuffer buffer, SmokingDefrostRecipe recipe) {
-            super.write(buffer, recipe);
+        public void toNetwork(PacketBuffer buffer, SmokingDefrostRecipe recipe) {
+            super.toNetwork(buffer, recipe);
             buffer.writeFloat(recipe.getExperience());
-            buffer.writeVarInt(recipe.getCookTime());
+            buffer.writeVarInt(recipe.getCookingTime());
         }
 
     }
@@ -59,7 +59,7 @@ public class SmokingDefrostRecipe extends SmokingRecipe implements DefrostRecipe
     }
 
     @Override
-    public ItemStack getCraftingResult(IInventory inv) {
+    public ItemStack assemble(IInventory inv) {
         if (iss.length == 0) return ItemStack.EMPTY;
         return iss[recipeRNG.nextInt(getIss().length)].copy();
     }
@@ -74,12 +74,12 @@ public class SmokingDefrostRecipe extends SmokingRecipe implements DefrostRecipe
     }
 
     @Override
-    public ItemStack getRecipeOutput() {
+    public ItemStack getResultItem() {
         //ItemStack is=DistExecutor.unsafeCallWhenOn(Dist.CLIENT,()->(()->new ItemStack(FHItems.random_seeds)));
         //if(is==null)
 
 
-        return getCraftingResult(null);
+        return assemble(null);
     }
 
     @Override
@@ -88,7 +88,7 @@ public class SmokingDefrostRecipe extends SmokingRecipe implements DefrostRecipe
     }
 
     @Override
-    public boolean isDynamic() {
+    public boolean isSpecial() {
         return true;
     }
 }

@@ -27,7 +27,7 @@ import net.minecraft.item.Item;
 
 public class FHBlockItem extends BlockItem {
     public FHBlockItem(Block block) {
-        this(block, new Item.Properties().group(FHMain.itemGroup));
+        this(block, new Item.Properties().tab(FHMain.itemGroup));
     }
 
     public FHBlockItem(Block block, Item.Properties props) {
@@ -35,7 +35,7 @@ public class FHBlockItem extends BlockItem {
     }
 
     public FHBlockItem(Block block, Item.Properties props, String name) {
-        this(block, new Item.Properties().group(FHMain.itemGroup));
+        this(block, new Item.Properties().tab(FHMain.itemGroup));
         this.setRegistryName(FHMain.MODID, name);
     }
 }

@@ -34,19 +34,21 @@ import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class FHStoneMultiblockBlock<T extends MultiblockPartTileEntity<? super T>> extends IEMultiblockBlock<T> {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public FHStoneMultiblockBlock(String name, Properties props, RegistryObject<TileEntityType<T>> type) {
         super(name, props, type);
         this.lightOpacity = 0;
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
+        this.registerDefaultState(this.stateDefinition.any().setValue(LIT, Boolean.FALSE));
     }
 
     public FHStoneMultiblockBlock(String name, RegistryObject<TileEntityType<T>> type) {
-        super(name, Properties.create(Material.ROCK).hardnessAndResistance(2.0F, 20.0F).notSolid().setLightLevel(FHUtils.getLightValueLit(15)), type);
+        super(name, Properties.of(Material.STONE).strength(2.0F, 20.0F).noOcclusion().lightLevel(FHUtils.getLightValueLit(15)), type);
         this.lightOpacity = 0;
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
+        this.registerDefaultState(this.stateDefinition.any().setValue(LIT, Boolean.FALSE));
     }
 
     @Override
@@ -61,8 +63,8 @@ public class FHStoneMultiblockBlock<T extends MultiblockPartTileEntity<? super T
     }*/
 
     @Override
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
         builder.add(LIT);
     }
 }

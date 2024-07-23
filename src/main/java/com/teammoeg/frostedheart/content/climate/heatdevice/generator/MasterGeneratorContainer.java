@@ -37,7 +37,7 @@ public abstract class MasterGeneratorContainer<T extends MasterGeneratorTileEnti
         Point in=getSlotIn();
         this.addSlot(new IESlot(this, this.inv, 0, in.getX(), in.getY()) {
             @Override
-            public boolean isItemValid(ItemStack itemStack) {
+            public boolean mayPlace(ItemStack itemStack) {
                 return tile.isStackValid(0, itemStack);
             }
         });
@@ -52,7 +52,7 @@ public abstract class MasterGeneratorContainer<T extends MasterGeneratorTileEnti
         for (int i = 0; i < 9; i++)
             addSlot(new Slot(inventoryPlayer, i, 8 + i * 18, 198));
         data = tile.guiData;
-        trackIntArray(data);
+        addDataSlots(data);
     }
     public abstract Point getSlotIn();
     public abstract Point getSlotOut();

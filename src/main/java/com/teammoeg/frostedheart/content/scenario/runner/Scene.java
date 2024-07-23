@@ -51,8 +51,8 @@ public abstract class Scene {
 		savedLog.clear();
 		log.clear();
 		for (INBT s : logs) {
-			savedLog.add(s.getString());
-			log.add(new StringBuilder(s.getString()));
+			savedLog.add(s.getAsString());
+			log.add(new StringBuilder(s.getAsString()));
 		}
 	}
 

@@ -88,10 +88,10 @@ public class FHUtils {
 	public static final String FIRST_LOGIN_GIVE_MANUAL = "first";
 
     public static void applyEffectTo(EffectInstance effectinstance, PlayerEntity playerentity) {
-        if (effectinstance.getPotion().isInstant()) {
-            effectinstance.getPotion().affectEntity(playerentity, playerentity, playerentity, effectinstance.getAmplifier(), 1.0D);
+        if (effectinstance.getEffect().isInstantenous()) {
+            effectinstance.getEffect().applyInstantenousEffect(playerentity, playerentity, playerentity, effectinstance.getAmplifier(), 1.0D);
         } else {
-            playerentity.addPotionEffect(new EffectInstance(effectinstance));
+            playerentity.addEffect(new EffectInstance(effectinstance));
         }
     }
 
@@ -127,7 +127,7 @@ public class FHUtils {
     }
     public static Direction dirBetween(BlockPos from,BlockPos to) {
     	BlockPos delt=from.subtract(to);
-    	return Direction.byLong(MathHelper.clamp(delt.getX(), -1, 1), MathHelper.clamp(delt.getY(), -1, 1), MathHelper.clamp(delt.getZ(), -1, 1));
+    	return Direction.fromNormal(MathHelper.clamp(delt.getX(), -1, 1), MathHelper.clamp(delt.getY(), -1, 1), MathHelper.clamp(delt.getZ(), -1, 1));
     }
     public static TileEntity getExistingTileEntity(IWorld w,BlockPos pos) {
 		if(w==null)
@@ -136,8 +136,8 @@ public class FHUtils {
     	if(w instanceof World) {
     		te=Utils.getExistingTileEntity((World) w, pos);
     	}else {
-			if(w.isBlockLoaded(pos))
-				te=w.getTileEntity(pos);
+			if(w.hasChunkAt(pos))
+				te=w.getBlockEntity(pos);
     	}
     	return te;
     }
@@ -168,7 +168,7 @@ public class FHUtils {
     	int i=0;
         for (IngredientWithSize iws : costList) {
             int count = iws.getCount();
-            for (ItemStack it : player.inventory.mainInventory) {
+            for (ItemStack it : player.inventory.items) {
                 if (iws.testIgnoringSize(it)) {
                     count -= it.getCount();
                     if (count <= 0)
@@ -186,7 +186,7 @@ public class FHUtils {
     	int i=0;
         for (IngredientWithSize iws : costList) {
             int count = iws.getCount();
-            for (ItemStack it : player.inventory.mainInventory) {
+            for (ItemStack it : player.inventory.items) {
                 if (iws.testIgnoringSize(it)) {
                     count -= it.getCount();
                     if (count <= 0)
@@ -205,7 +205,7 @@ public class FHUtils {
         // first do simple verify
         for (IngredientWithSize iws : costList) {
             int count = iws.getCount();
-            for (ItemStack it : player.inventory.mainInventory) {
+            for (ItemStack it : player.inventory.items) {
                 if (iws.testIgnoringSize(it)) {
                     count -= it.getCount();
                     if (count <= 0)
@@ -220,7 +220,7 @@ public class FHUtils {
         List<ItemStack> ret = new ArrayList<>();
         for (IngredientWithSize iws : costList) {
             int count = iws.getCount();
-            for (ItemStack it : player.inventory.mainInventory) {
+            for (ItemStack it : player.inventory.items) {
                 if (iws.testIgnoringSize(it)) {
                     int redcount = Math.min(count, it.getCount());
                     ret.add(it.split(redcount));
@@ -239,20 +239,20 @@ public class FHUtils {
     }
     public static Ingredient createIngredient(ItemStack is) {
         if (is.hasTag()) return new NBTIngredientAccess(is);
-        return Ingredient.fromStacks(is);
+        return Ingredient.of(is);
     }
 
     public static Ingredient createIngredient(ResourceLocation tag) {
-        return Ingredient.fromTag(ItemTags.getCollection().get(tag));
+        return Ingredient.of(ItemTags.getAllTags().getTag(tag));
     }
 
     public static IngredientWithSize createIngredientWithSize(ItemStack is) {
         if (is.hasTag()) return new IngredientWithSize(new NBTIngredientAccess(is), is.getCount());
-        return new IngredientWithSize(Ingredient.fromStacks(is), is.getCount());
+        return new IngredientWithSize(Ingredient.of(is), is.getCount());
     }
 
     public static IngredientWithSize createIngredientWithSize(ResourceLocation tag, int count) {
-        return new IngredientWithSize(Ingredient.fromTag(ItemTags.getCollection().get(tag)), count);
+        return new IngredientWithSize(Ingredient.of(ItemTags.getAllTags().getTag(tag)), count);
     }
 
     public static ResourceLocation getEmptyLoot() {
@@ -265,7 +265,7 @@ public class FHUtils {
 
         for (int i = 0; i < listnbt.size(); ++i) {
             CompoundNBT compoundnbt = listnbt.getCompound(i);
-            ResourceLocation resourcelocation1 = ResourceLocation.tryCreate(compoundnbt.getString("id"));
+            ResourceLocation resourcelocation1 = ResourceLocation.tryParse(compoundnbt.getString("id"));
             if (resourcelocation1 != null && resourcelocation1.equals(resourcelocation)) {
                 return MathHelper.clamp(compoundnbt.getInt("lvl"), 0, 255);
             }
@@ -275,12 +275,12 @@ public class FHUtils {
     }
 
     public static ToIntFunction<BlockState> getLightValueLit(int lightValue) {
-        return (state) -> state.get(BlockStateProperties.LIT) ? lightValue : 0;
+        return (state) -> state.getValue(BlockStateProperties.LIT) ? lightValue : 0;
     }
 
     public static void giveItem(PlayerEntity pe, ItemStack is) {
-        if (!pe.addItemStackToInventory(is))
-            pe.world.addEntity(new ItemEntity(pe.world, pe.getPosition().getX(), pe.getPosition().getY(), pe.getPosition().getZ(), is));
+        if (!pe.addItem(is))
+            pe.level.addFreshEntity(new ItemEntity(pe.level, pe.blockPosition().getX(), pe.blockPosition().getY(), pe.blockPosition().getZ(), is));
     }
 
     public static boolean isBlizzardHarming(IWorld iWorld, BlockPos p) {
@@ -293,7 +293,7 @@ public class FHUtils {
             return false;
         } else if (!world.canSeeSky(pos)) {
             return false;
-        } else return world.getHeight(Type.MOTION_BLOCKING, pos).getY() <= pos.getY();
+        } else return world.getHeightmapPos(Type.MOTION_BLOCKING, pos).getY() <= pos.getY();
     }
 
     public static EffectInstance noHeal(EffectInstance ei) {
@@ -310,40 +310,40 @@ public class FHUtils {
     }
 
     public static void spawnMob(ServerWorld world, BlockPos blockpos, CompoundNBT nbt, ResourceLocation type) {
-        if (World.isInvalidPosition(blockpos)) {
+        if (World.isInSpawnableBounds(blockpos)) {
             CompoundNBT compoundnbt = nbt.copy();
             compoundnbt.putString("id", type.toString());
-            Entity entity = EntityType.loadEntityAndExecute(compoundnbt, world, (p_218914_1_) -> {
-                p_218914_1_.setLocationAndAngles(blockpos.getX(), blockpos.getY(), blockpos.getZ(), p_218914_1_.rotationYaw, p_218914_1_.rotationPitch);
+            Entity entity = EntityType.loadEntityRecursive(compoundnbt, world, (p_218914_1_) -> {
+                p_218914_1_.moveTo(blockpos.getX(), blockpos.getY(), blockpos.getZ(), p_218914_1_.yRot, p_218914_1_.xRot);
                 return p_218914_1_;
             });
             if (entity != null) {
                 if (entity instanceof MobEntity) {
-                    ((MobEntity) entity).onInitialSpawn(world, world.getDifficultyForLocation(entity.getPosition()), SpawnReason.NATURAL, null, null);
+                    ((MobEntity) entity).finalizeSpawn(world, world.getCurrentDifficultyAt(entity.blockPosition()), SpawnReason.NATURAL, null, null);
                 }
-                if (!world.addEntityAndUniquePassengers(entity)) {
+                if (!world.tryAddFreshEntityWithPassengers(entity)) {
                 }
             }
         }
     }
 
 	public static ItemStack Damage(ItemStack stack, int dmg) {
-	    stack.setDamage(dmg);
+	    stack.setDamageValue(dmg);
 	    return stack;
 	}
 
 	public static ItemStack ArmorNBT(ItemStack stack, int base, int mult) {
-	    stack.setDamage((int) (stack.getMaxDamage() - base - Math.random() * mult));
+	    stack.setDamageValue((int) (stack.getMaxDamage() - base - Math.random() * mult));
 	    return stack;
 	}
 	public static <R extends IRecipe<IInventory>> List<R> filterRecipes(@Nullable RecipeManager recipeManager, IRecipeType<R> recipeType) {
         if(recipeManager==null) {
-        	if(ClientUtils.mc().world!=null)
-        		recipeManager=ClientUtils.mc().world.getRecipeManager();
+        	if(ClientUtils.mc().level!=null)
+        		recipeManager=ClientUtils.mc().level.getRecipeManager();
         }
         if(recipeManager==null)
         	return ImmutableList.of();
-		return recipeManager.getRecipesForType(recipeType);
+		return recipeManager.getAllRecipesFor(recipeType);
     }
 	public static ItemStack ArmorLiningNBT(ItemStack stack) {
 	    stack.getOrCreateTag().putString("inner_cover", "frostedheart:straw_lining");

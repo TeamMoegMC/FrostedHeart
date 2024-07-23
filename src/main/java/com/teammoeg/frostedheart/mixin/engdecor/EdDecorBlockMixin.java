@@ -27,6 +27,8 @@ import net.minecraft.block.DirectionalBlock;
 import net.minecraft.util.Rotation;
 import wile.engineersdecor.blocks.DecorBlock;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 @Mixin(DecorBlock.DirectedWaterLoggable.class)
 public abstract class EdDecorBlockMixin extends AbstractBlock {
     public EdDecorBlockMixin(Properties properties) {
@@ -35,6 +37,6 @@ public abstract class EdDecorBlockMixin extends AbstractBlock {
 
     @Override
     public BlockState rotate(BlockState state, Rotation rot) {
-        return state.with(DirectionalBlock.FACING, rot.rotate(state.get(DirectionalBlock.FACING)));
+        return state.setValue(DirectionalBlock.FACING, rot.rotate(state.getValue(DirectionalBlock.FACING)));
     }
 }

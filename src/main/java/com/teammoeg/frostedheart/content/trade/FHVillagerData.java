@@ -86,11 +86,11 @@ public class FHVillagerData implements INamedContainerProvider {
     public void deserialize(CompoundNBT data) {
         CompoundNBT nbt = data.getCompound("storage");
         storage.clear();
-        for (String k : nbt.keySet())
+        for (String k : nbt.getAllKeys())
             storage.put(k, nbt.getFloat(k));
         flags.clear();
         nbt = data.getCompound("flags");
-        for (String ks : nbt.keySet())
+        for (String ks : nbt.getAllKeys())
             flags.put(ks, nbt.getInt(ks));
         setTradelevel(data.getInt("level"));
         totaltraded = data.getLong("total");
@@ -100,7 +100,7 @@ public class FHVillagerData implements INamedContainerProvider {
             CompoundNBT item = (CompoundNBT) u;
             PlayerRelationData prd = new PlayerRelationData();
             prd.deserialize(item);
-            relations.put(item.getUniqueId("id"), prd);
+            relations.put(item.getUUID("id"), prd);
         }
         if (data.contains("type"))
             policytype = new ResourceLocation(data.getString("type"));
@@ -110,11 +110,11 @@ public class FHVillagerData implements INamedContainerProvider {
     public void deserializeFromRecv(CompoundNBT data) {
         CompoundNBT nbt = data.getCompound("storage");
         storage.clear();
-        for (String k : nbt.keySet())
+        for (String k : nbt.getAllKeys())
             storage.put(k, nbt.getFloat(k));
         flags.clear();
         nbt = data.getCompound("flags");
-        for (String ks : nbt.keySet())
+        for (String ks : nbt.getAllKeys())
             flags.put(ks, nbt.getInt(ks));
         setTradelevel(data.getInt("level"));
         totaltraded = data.getLong("total");
@@ -138,16 +138,16 @@ public class FHVillagerData implements INamedContainerProvider {
     }
 
     public PlayerRelationData getRelationDataForRead(PlayerEntity pe) {
-        return relations.getOrDefault(pe.getUniqueID(), PlayerRelationData.EMPTY);
+        return relations.getOrDefault(pe.getUUID(), PlayerRelationData.EMPTY);
     }
 
     public PlayerRelationData getRelationDataForWrite(PlayerEntity pe) {
-        return relations.computeIfAbsent(pe.getUniqueID(), d -> new PlayerRelationData());
+        return relations.computeIfAbsent(pe.getUUID(), d -> new PlayerRelationData());
     }
 
     public RelationList getRelationShip(PlayerEntity pe) {
         RelationList list = new RelationList();
-        PlayerRelationData player = relations.getOrDefault(pe.getUniqueID(), PlayerRelationData.EMPTY);
+        PlayerRelationData player = relations.getOrDefault(pe.getUUID(), PlayerRelationData.EMPTY);
         list.put(RelationModifier.FOREIGNER, -10);
         if (!ResearchDataAPI.isResearchComplete(pe, "villager_language"))
             list.put(RelationModifier.UNKNOWN_LANGUAGE, -30);
@@ -158,10 +158,10 @@ public class FHVillagerData implements INamedContainerProvider {
         	killed = getStats(pe).getValue(Stats.ENTITY_KILLED.get(EntityType.VILLAGER));
         int kdc = (int) Math.min(killed, ResearchDataAPI.getVariantDouble(pe, ResearchVariant.VILLAGER_FORGIVENESS));
         list.put(RelationModifier.KILLED_HISTORY, (killed - kdc) * -5);
-        if (parent.getGossip().getReputation(pe.getUniqueID(), e -> e == GossipType.MINOR_NEGATIVE) > 0)
+        if (parent.getGossips().getReputation(pe.getUUID(), e -> e == GossipType.MINOR_NEGATIVE) > 0)
             list.put(RelationModifier.HURT, -10);
         list.put(RelationModifier.KILLED_SAW, -25 * player.sawmurder);
-        if (pe.getActivePotionEffect(Effects.HERO_OF_THE_VILLAGE) != null)
+        if (pe.getEffect(Effects.HERO_OF_THE_VILLAGE) != null)
             list.put(RelationModifier.SAVED_VILLAGE, 10);
         list.put(RelationModifier.RECENT_BARGAIN, -bargain * 10);
         list.put(RelationModifier.TRADE_LEVEL, getTradeLevel() * 5);
@@ -179,8 +179,8 @@ public class FHVillagerData implements INamedContainerProvider {
 
     public void initLegacy(VillagerEntity ve) {
         if (policytype == null) {
-            policytype = TradePolicy.random(ve.getRNG()).getName();
-            parent.setVillagerData(parent.getVillagerData().withProfession(getPolicyType().getProfession()));
+            policytype = TradePolicy.random(ve.getRandom()).getName();
+            parent.setVillagerData(parent.getVillagerData().setProfession(getPolicyType().getProfession()));
         }
     }
 
@@ -196,7 +196,7 @@ public class FHVillagerData implements INamedContainerProvider {
         data.put("flags", flag);
         for (Entry<UUID, PlayerRelationData> i : relations.entrySet()) {
             CompoundNBT items = new CompoundNBT();
-            items.putUniqueId("id", i.getKey());
+            items.putUUID("id", i.getKey());
             i.getValue().serialize(items);
             list.add(items);
         }
@@ -234,13 +234,13 @@ public class FHVillagerData implements INamedContainerProvider {
     }
 
     public ActionResultType trade(PlayerEntity pe) {
-        return ActionResultType.func_233537_a_(pe.world.isRemote);
+        return ActionResultType.sidedSuccess(pe.level.isClientSide);
     }
 
     public void update(ServerWorld w, PlayerEntity trigger) {
         initLegacy(parent);
         long day = WorldClimate.getWorldDay(w);
-        FHUtils.ofMap(relations, trigger.getUniqueID()).ifPresent(t -> t.update(day));
+        FHUtils.ofMap(relations, trigger.getUUID()).ifPresent(t -> t.update(day));
         if (lastUpdated == -1) {
             lastUpdated = day - 1;
         }

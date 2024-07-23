@@ -72,9 +72,9 @@ public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializab
 	@Override
 	public void save(CompoundNBT nbt, boolean isPacket) {
 		nbt.put("pipes",
-		SerializeUtil.toNBTList(propagated.entrySet(),(t,p)->p.compound().putLong("pos",t.getKey().toLong()).putInt("len", t.getValue())));
+		SerializeUtil.toNBTList(propagated.entrySet(),(t,p)->p.compound().putLong("pos",t.getKey().asLong()).putInt("len", t.getValue())));
 		nbt.put("endpoints",
-		SerializeUtil.toNBTList(data.entrySet(),(t,p)->p.compound().putLong("pos",t.getValue().pos.toLong()).putString("blk", RegistryUtils.getRegistryName(t.getValue().blk).toString())));
+		SerializeUtil.toNBTList(data.entrySet(),(t,p)->p.compound().putLong("pos",t.getValue().pos.asLong()).putString("blk", RegistryUtils.getRegistryName(t.getValue().blk).toString())));
 	}
 
 	@Override
@@ -83,14 +83,14 @@ public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializab
 		ListNBT cn=nbt.getList("pipes", Constants.NBT.TAG_COMPOUND);
 		for(INBT ccn:cn) {
 			CompoundNBT ccnbt=((CompoundNBT)ccn);
-			propagated.put(BlockPos.fromLong(ccnbt.getLong("pos")), ccnbt.getInt("len"));
+			propagated.put(BlockPos.of(ccnbt.getLong("pos")), ccnbt.getInt("len"));
 		}
 		epdataset.clear();
 		ListNBT cn2=nbt.getList("endpoints", Constants.NBT.TAG_COMPOUND);
 		for(INBT ccn:cn2) {
 			CompoundNBT ccnbt=((CompoundNBT)ccn);
 			epdataset.add(new EndPointData(RegistryUtils.getBlock(new ResourceLocation(ccnbt.getString("blk"))),
-					BlockPos.fromLong(ccnbt.getLong("pos"))));
+					BlockPos.of(ccnbt.getLong("pos"))));
 		}
 	}
     private BiConsumer<BlockPos, Direction> connect = (pos, d) -> {
@@ -103,7 +103,7 @@ public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializab
 	        if(cur instanceof INetworkConsumer) {
 	        	((INetworkConsumer) cur).tryConnectAt(this, d.getOpposite(), 0);
 	        }else if(cur!=null) {
-	        	cur.getCapability(FHCapabilities.HEAT_EP.capability(),d.getOpposite()).ifPresent(t->t.reciveConnection(getWorld(),cur.getPos(),this,d.getOpposite(),0));
+	        	cur.getCapability(FHCapabilities.HEAT_EP.capability(),d.getOpposite()).ifPresent(t->t.reciveConnection(getWorld(),cur.getBlockPos(),this,d.getOpposite(),0));
 	        }
     	}
     };
@@ -121,7 +121,7 @@ public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializab
     	return false;
     }
     public void startPropagation(HeatPipeTileEntity hpte,Direction dir) {
-    	hpte.connectTo(dir, this, propagated.getOrDefault(hpte.getPos(),-1));
+    	hpte.connectTo(dir, this, propagated.getOrDefault(hpte.getBlockPos(),-1));
     }
     public int getNetworkSize() {
     	return data.size()+propagated.size();
@@ -166,7 +166,7 @@ public class HeatEnergyNetwork  implements INamedContainerProvider,NBTSerializab
     }
     public World getWorld() {
     	if(world==null)
-            this.world = cur.getWorld();
+            this.world = cur.getLevel();
     	return world;
     }
     public void requestUpdate() {

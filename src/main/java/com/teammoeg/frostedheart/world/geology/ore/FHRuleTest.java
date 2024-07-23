@@ -43,7 +43,7 @@ public class FHRuleTest extends RuleTest {
 
     @Override
     protected IRuleTestType<?> getType() {
-        return IRuleTestType.ALWAYS_TRUE;
+        return IRuleTestType.ALWAYS_TRUE_TEST;
     }
 
 

@@ -51,7 +51,7 @@ class MainGamePanel extends Panel {
     public MainGamePanel(DrawDeskPanel panel, DrawDeskScreen p) {
         super(panel);
         ot = panel;
-        rg = new ClientResearchGame(p.getTile().getGame(), p.getTile().getPos());
+        rg = new ClientResearchGame(p.getTile().getGame(), p.getTile().getBlockPos());
         for (int i = 0; i < 9; i++)
             for (int j = 0; j < 9; j++) {
                 CardButton cb = new CardButton(this, rg, i, j);

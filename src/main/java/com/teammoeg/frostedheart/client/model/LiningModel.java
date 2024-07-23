@@ -47,8 +47,8 @@ public class LiningModel implements IBakedModel {
     }
 
     @Override
-    public ItemCameraTransforms getItemCameraTransforms() {
-        return baseArmorModel.getItemCameraTransforms();
+    public ItemCameraTransforms getTransforms() {
+        return baseArmorModel.getTransforms();
     }
 
     // This is a forge extension that is expected for blocks only.
@@ -64,8 +64,8 @@ public class LiningModel implements IBakedModel {
     }
 
     @Override
-    public TextureAtlasSprite getParticleTexture() {
-        return baseArmorModel.getParticleTexture();
+    public TextureAtlasSprite getParticleIcon() {
+        return baseArmorModel.getParticleIcon();
     }
 
     @Override
@@ -81,13 +81,13 @@ public class LiningModel implements IBakedModel {
     }
 
     @Override
-    public boolean isAmbientOcclusion() {
-        return baseArmorModel.isAmbientOcclusion();
+    public boolean useAmbientOcclusion() {
+        return baseArmorModel.useAmbientOcclusion();
     }
 
     @Override
-    public boolean isBuiltInRenderer() {
-        return baseArmorModel.isBuiltInRenderer();
+    public boolean isCustomRenderer() {
+        return baseArmorModel.isCustomRenderer();
     }
 
     @Override
@@ -96,7 +96,7 @@ public class LiningModel implements IBakedModel {
     }
 
     @Override
-    public boolean isSideLit() {
-        return baseArmorModel.isSideLit();
+    public boolean usesBlockLight() {
+        return baseArmorModel.usesBlockLight();
     }
 }

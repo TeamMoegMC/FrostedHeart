@@ -36,8 +36,8 @@ public class RelicChestScreen extends IEContainerScreen<RelicChestContainer> {
     }
 
     @Override
-    protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int x, int y) {
+    protected void renderBg(MatrixStack matrixStack, float partialTicks, int x, int y) {
         ClientUtils.bindTexture(TEXTURE);
-        this.blit(matrixStack, guiLeft, guiTop, 0, 0, xSize, ySize);
+        this.blit(matrixStack, leftPos, topPos, 0, 0, imageWidth, imageHeight);
     }
 }

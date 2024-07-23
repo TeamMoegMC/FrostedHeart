@@ -63,7 +63,7 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
         FIRE.draw(transform, 60, 30);
         SWITCH.draw(transform, 32, 32);
         String burnTime = recipe.time + " ticks";
-        ClientUtils.mc().fontRenderer.drawString(transform, burnTime, 80, 60, 0xFFFFFF);
+        ClientUtils.mc().font.draw(transform, burnTime, 80, 60, 0xFFFFFF);
     }
 
     @Override

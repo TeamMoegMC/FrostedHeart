@@ -45,16 +45,16 @@ public class ServerPlayNetHandlerMixin {
 
     @Inject(at = @At("TAIL"), method = "processPlayer(Lnet/minecraft/network/play/client/CPlayerPacket;)V")
     public void fh$processPlayer(CPlayerPacket packetIn, CallbackInfo cbi) {
-        if (player.getEntityWorld().getBlockState(player.getPosition()) == AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState() ||
-                player.getEntityWorld().getBlockState(player.getPosition().up()) == AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState()) {
+        if (player.getCommandSenderWorld().getBlockState(player.blockPosition()) == AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState() ||
+                player.getCommandSenderWorld().getBlockState(player.blockPosition().above()) == AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState()) {
             floating = false;
         }
     }
 
     @Inject(at = @At("TAIL"), method = "processVehicleMove(Lnet/minecraft/network/play/client/CMoveVehiclePacket;)V")
     public void fh$processVehicleMove(CMoveVehiclePacket packetIn, CallbackInfo cbi) {
-        if (player.getEntityWorld().getBlockState(player.getPosition()) == AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState() ||
-                player.getEntityWorld().getBlockState(player.getPosition().up()) == AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState()) {
+        if (player.getCommandSenderWorld().getBlockState(player.blockPosition()) == AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState() ||
+                player.getCommandSenderWorld().getBlockState(player.blockPosition().above()) == AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState()) {
             vehicleFloating = false;
         }
     }

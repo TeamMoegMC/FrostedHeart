@@ -106,15 +106,15 @@ public class TradeScreen extends BaseScreen {
         rels.setTooltip(c -> {
             int relation = cx.relations.sum();
             if (relation < TradeContainer.RELATION_TO_TRADE && !cx.order.isEmpty()) {
-                c.add(TranslateUtils.translateGui("trade.unwilling").mergeStyle(TextFormatting.DARK_RED));
+                c.add(TranslateUtils.translateGui("trade.unwilling").withStyle(TextFormatting.DARK_RED));
                 return;
             }
             if (cx.discountAmount != 0)
-                c.add(TranslateUtils.translateGui("trade.discount").appendSibling(TranslateUtils
-                        .str(" -" + (int) Math.ceil(cx.discountAmount / 10f)).mergeStyle(TextFormatting.GREEN)));
+                c.add(TranslateUtils.translateGui("trade.discount").append(TranslateUtils
+                        .str(" -" + (int) Math.ceil(cx.discountAmount / 10f)).withStyle(TextFormatting.GREEN)));
             if (cx.relationMinus > 0)
-                c.add(TranslateUtils.translateGui("trade.bad_relation").appendSibling(
-                        TranslateUtils.str(" " + (int) Math.ceil(cx.relationMinus / 10f)).mergeStyle(TextFormatting.RED)));
+                c.add(TranslateUtils.translateGui("trade.bad_relation").append(
+                        TranslateUtils.str(" " + (int) Math.ceil(cx.relationMinus / 10f)).withStyle(TextFormatting.RED)));
 
         });
         rels.setPos(110, 108);
@@ -167,16 +167,16 @@ public class TradeScreen extends BaseScreen {
         super.add(tab);
         ToolTipWidget ttw = new ToolTipWidget(this, list -> {
             int tot = cx.relations.sum();
-            list.add(TranslateUtils.translateGui("trade.relation").appendSibling(TranslateUtils.str(tot > 0 ? " +" + tot : "" + tot)
-                    .mergeStyle(tot > 0 ? TextFormatting.GREEN : TextFormatting.RED)));
+            list.add(TranslateUtils.translateGui("trade.relation").append(TranslateUtils.str(tot > 0 ? " +" + tot : "" + tot)
+                    .withStyle(tot > 0 ? TextFormatting.GREEN : TextFormatting.RED)));
 
             for (RelationModifier m : RelationModifier.values()) {
                 int rel = cx.relations.get(m);
                 if (rel == 0)
                     continue;
                 IFormattableTextComponent tx = TranslateUtils.str(rel > 0 ? " +" + rel : " " + rel)
-                        .mergeStyle(rel > 0 ? TextFormatting.GREEN : TextFormatting.RED);
-                list.add(m.getDesc().appendSibling(tx));
+                        .withStyle(rel > 0 ? TextFormatting.GREEN : TextFormatting.RED);
+                list.add(m.getDesc().append(tx));
 
             }
         });
@@ -215,9 +215,9 @@ public class TradeScreen extends BaseScreen {
         } else {
             TradeIcons.EXP.draw(matrixStack, 133 + x, 25 + y, 54, 5);
         }
-        InventoryScreen.drawEntityOnScreen(x + 28, y + 115, 30, (float) (x + 8) - this.getMouseX(),
+        InventoryScreen.renderEntityInInventory(x + 28, y + 115, 30, (float) (x + 8) - this.getMouseX(),
                 (float) (y + 75 - 50) - this.getMouseY(), ClientUtils.getPlayer());
-        InventoryScreen.drawEntityOnScreen(x + 160, y + 115, 30, (float) (x + 140) - this.getMouseX(),
+        InventoryScreen.renderEntityInInventory(x + 160, y + 115, 30, (float) (x + 140) - this.getMouseX(),
                 (float) (y + 75 - 50) - this.getMouseY(), cx.data.parent);
     }
 
@@ -226,7 +226,7 @@ public class TradeScreen extends BaseScreen {
         super.drawForeground(matrixStack, theme, x, y, w, h);
         for (DetectionSlot ds : cx.slots) {
             if (ds.isSaleable) {
-                TradeIcons.SALEABLE.draw(matrixStack, ds.xPos + x, ds.yPos + y, 7, 6);
+                TradeIcons.SALEABLE.draw(matrixStack, ds.x + x, ds.y + y, 7, 6);
             }
         }
     }
@@ -303,7 +303,7 @@ public class TradeScreen extends BaseScreen {
                     FakeSlot slot = slots[j++];
                     if (cur.getStore() == 0) {
                         slot.setOverlay(TradeIcons.NOBUY, 7, 6);
-                        slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.not_needed_now").mergeStyle(TextFormatting.RED)));
+                        slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.not_needed_now").withStyle(TextFormatting.RED)));
                     } else {
                         slot.resetOverlay();
                         slot.setTooltip(null);
@@ -325,18 +325,18 @@ public class TradeScreen extends BaseScreen {
                     if (sd.getStore() == 0) {
                         if (sd.canRestock(cx.data)) {
                             slot.setOverlay(TradeIcons.STOCKOUT, 7, 6);
-                            slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.no_stock").mergeStyle(TextFormatting.RED)));
+                            slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.no_stock").withStyle(TextFormatting.RED)));
                         } else {
                             slot.setOverlay(TradeIcons.NORESTOCK, 7, 6);
-                            slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.not_restocking").mergeStyle(TextFormatting.RED)));
+                            slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.not_restocking").withStyle(TextFormatting.RED)));
                         }
                     } else {
                         if (sd.isFullStock()) {
                             slot.setOverlay(TradeIcons.FULL, 7, 6);
-                            slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.full_stock").mergeStyle(TextFormatting.GREEN)));
+                            slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.full_stock").withStyle(TextFormatting.GREEN)));
                         } else if (sd.canRestock(cx.data)) {
                             slot.setOverlay(TradeIcons.RESTOCKS, 7, 6);
-                            slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.restocking").mergeStyle(TextFormatting.YELLOW)));
+                            slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.restocking").withStyle(TextFormatting.YELLOW)));
                         } else {
                             slot.resetOverlay();
                             slot.setTooltip(c -> c.add(TranslateUtils.translateGui("trade.not_restocking")));

@@ -52,11 +52,11 @@ public class LargeEffectWidget extends EffectWidget {
         TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
         icon.draw(matrixStack, x + 2, y + 2, w - 4, h - 4);
         if (e.isGranted()) {
-            matrixStack.push();
+            matrixStack.pushPose();
             matrixStack.translate(0, 0, 300);
             GuiHelper.setupDrawing();
             TechIcons.FIN.draw(matrixStack, x + 2, y + 2, 32, 32);
-            matrixStack.pop();
+            matrixStack.popPose();
         }
     }
 }

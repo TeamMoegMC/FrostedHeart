@@ -85,7 +85,7 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
      */
     @Inject(at = @At("TAIL"), method = "readAdditional(Lnet/minecraft/nbt/CompoundNBT;Z)V", remap = false)
     protected void readAdditional(CompoundNBT compound, boolean spawnPacket, CallbackInfo cbi) {
-        if (!world.isRemote)
+        if (!level.isClientSide)
             if (compound.getInt("spinst") != 2) {
                 shoulddisb = true;
             }
@@ -97,7 +97,7 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
      */
     @Inject(at = @At("TAIL"), method = "tick")
     protected void tick(CallbackInfo cbi) {
-        if (!world.isRemote)
+        if (!level.isClientSide)
             if (this.shoulddisb)
                 this.disassemble();
     }
@@ -108,7 +108,7 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
      */
     @Inject(at = @At("TAIL"), method = "writeAdditional(Lnet/minecraft/nbt/CompoundNBT;Z)V", remap = false)
     protected void writeAdditional(CompoundNBT compound, boolean spawnPacket, CallbackInfo cbi) {
-        if (!world.isRemote)
+        if (!level.isClientSide)
             compound.putInt("spinst", 2);
     }
 }

@@ -33,19 +33,19 @@ public class BlackListPredicate extends ItemPredicate {
     public BlackListPredicate(JsonObject jo) {
         JsonElement intern = new JsonParser().parse(jo.toString());
         intern.getAsJsonObject().remove("type");
-        white = ItemPredicate.deserialize(intern);
+        white = ItemPredicate.fromJson(intern);
     }
 
-    public JsonElement serialize() {
+    public JsonElement serializeToJson() {
         new Exception().printStackTrace();
 
-        JsonElement je = white.serialize();
+        JsonElement je = white.serializeToJson();
         je.getAsJsonObject().addProperty("type", FHMain.MODID + ":blacklist");
         return je;
     }
 
     @Override
-    public boolean test(ItemStack item) {
-        return !white.test(item);
+    public boolean matches(ItemStack item) {
+        return !white.matches(item);
     }
 }

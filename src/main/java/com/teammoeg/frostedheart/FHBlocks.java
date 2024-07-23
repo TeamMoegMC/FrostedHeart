@@ -79,7 +79,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHBlocks {
 	static final DeferredRegister<Block> registry=DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
-    private static final CreateRegistrate REGISTRATE = FHMain.registrate.getValue()
+    private static final CreateRegistrate REGISTRATE = FHMain.registrate.get()
         .itemGroup(() -> FHMain.itemGroup);
 	public static <T extends Block> RegistryObject<T> register(String name,Supplier<T> block,String itemName,Function<T,Item> item){
 		RegistryObject<T> blk=registry.register(name, block);
@@ -108,7 +108,7 @@ public class FHBlocks {
     public static RegistryObject<Block> generator_amplifier_r1 = register("generator_amplifier_r1",()->new FHBaseBlock(FHProps.stoneDecoProps));
     public static RegistryObject<Block> rye_block = register("rye_block",()->new RyeBlock( WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps));
     public static RegistryObject<Block> wolfberry_bush_block = register("wolfberry_bush_block",()->new WolfBerryBushBlock( WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.berryBushBlocks, 2),"wolfberries", t->new FoodBlockItem(t, FHItems.createProps(), FHFoods.WOLFBERRIES));
-    public static RegistryObject<Block> white_turnip_block = register("white_turnip_block",()->new WhiteTurnipBlock( WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps),(block) -> new FoodBlockItem(block, new Item.Properties().group(FHMain.itemGroup), FHFoods.WHITE_TURNIP));
+    public static RegistryObject<Block> white_turnip_block = register("white_turnip_block",()->new WhiteTurnipBlock( WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps),(block) -> new FoodBlockItem(block, new Item.Properties().tab(FHMain.itemGroup), FHFoods.WHITE_TURNIP));
     public static RegistryObject<Block> copper_gravel = register("copper_gravel",()->new FHBaseBlock(FHProps.ore_gravel));
     public static RegistryObject<Block> relic_chest = register("relic_chest", RelicChestBlock::new);
     public static RegistryObject<Block> incubator1 = register("incubator",()->new IncubatorBlock(FHProps.stoneDecoProps, FHTileTypes.INCUBATOR));
@@ -118,51 +118,51 @@ public class FHBlocks {
     public static RegistryObject<Block> fluorite_ore =register("fluorite_ore",()->new FHOreBlock( RankineBlocks.DEF_ORE.harvestLevel(3)));
     public static RegistryObject<Block> halite_ore=register("halite_ore",()->new FHOreBlock(RankineBlocks.DEF_ORE.harvestLevel(2)));
     public static RegistryObject<Block> heat_pipe = register("heat_pipe",()->new HeatPipeBlock( Block.Properties
-            .create(Material.ROCK).sound(SoundType.WOOD)
+            .of(Material.STONE).sound(SoundType.WOOD)
             .harvestTool(ToolType.PICKAXE)
-            .hardnessAndResistance(1, 5)
-            .notSolid()));
+            .strength(1, 5)
+            .noOcclusion()));
 
     public static RegistryObject<Block> debug_heater = register("debug_heater",()->new DebugHeaterBlock( Block.Properties
-            .create(Material.ROCK).sound(SoundType.STONE)
-            .setRequiresTool()
+            .of(Material.STONE).sound(SoundType.STONE)
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.PICKAXE)
-            .hardnessAndResistance(2, 10)
-            .notSolid()));
+            .strength(2, 10)
+            .noOcclusion()));
     public static RegistryObject<Block> charger = register("charger",()->new ChargerBlock( Block.Properties
-            .create(Material.ROCK)
+            .of(Material.STONE)
             .sound(SoundType.METAL)
-            .setRequiresTool()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.PICKAXE)
-            .hardnessAndResistance(2, 10)
-            .notSolid()));
+            .strength(2, 10)
+            .noOcclusion()));
     public static RegistryObject<Block> oilburner = register("oil_burner",()->new OilBurnerBlock( Block.Properties
-            .create(Material.ROCK)
+            .of(Material.STONE)
             .sound(SoundType.STONE)
-            .setRequiresTool()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.PICKAXE)
-            .hardnessAndResistance(2, 10)
-            .notSolid()));
+            .strength(2, 10)
+            .noOcclusion()));
     public static RegistryObject<Block> gasvent = register("gas_vent",()->new GasVentBlock( Block.Properties
-            .create(Material.IRON)
+            .of(Material.METAL)
             .sound(SoundType.METAL)
-            .setRequiresTool()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.PICKAXE)
-            .hardnessAndResistance(2, 10)
-            .notSolid()));
+            .strength(2, 10)
+            .noOcclusion()));
     public static RegistryObject<Block> drawing_desk = register("drawing_desk",()->new DrawingDeskBlock( Block.Properties
-            .create(Material.WOOD)
+            .of(Material.WOOD)
             .sound(SoundType.WOOD)
             .harvestTool(ToolType.AXE)
-            .hardnessAndResistance(2, 6)
-            .notSolid()));
+            .strength(2, 6)
+            .noOcclusion()));
     public static RegistryObject<Block> smoket1 = register("smoke_block_t1",()->new SmokeBlockT1(Block.Properties
-            .create(Material.ROCK)
+            .of(Material.STONE)
             .sound(SoundType.STONE)
-            .setRequiresTool()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.PICKAXE)
-            .hardnessAndResistance(2, 10)
-            .notSolid()));
+            .strength(2, 10)
+            .noOcclusion()));
     /*public static RegistryObject<Block> high_strength_concrete=register("high_strength_concrete",()->new FHBaseBlock( Block.Properties
             .create(Material.ROCK)
             .sound(SoundType.STONE)
@@ -172,33 +172,33 @@ public class FHBlocks {
             .harvestLevel(3)
             ,FHBlockItem::new));*/
     public static RegistryObject<Block> mech_calc = register("mechanical_calculator",()->new MechCalcBlock( Block.Properties
-            .create(Material.IRON)
+            .of(Material.METAL)
             .sound(SoundType.METAL)
-            .setRequiresTool()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.PICKAXE)
-            .hardnessAndResistance(2, 10)
-            .notSolid()));
+            .strength(2, 10)
+            .noOcclusion()));
     public static RegistryObject<Block> sauna = register("sauna_vent",()->new SaunaBlock( Block.Properties
-            .create(Material.ROCK)
+            .of(Material.STONE)
             .sound(SoundType.METAL)
-            .setRequiresTool()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.PICKAXE)
-            .hardnessAndResistance(2, 10)
-            .notSolid()));
+            .strength(2, 10)
+            .noOcclusion()));
     public static RegistryObject<Block> fountain = register("fountain_base",()-> new FountainBlock(Block.Properties
-            .create(Material.ROCK)
+            .of(Material.STONE)
             .sound(SoundType.METAL)
-            .setRequiresTool()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.PICKAXE)
-            .hardnessAndResistance(2, 10)
-            .notSolid()));
+            .strength(2, 10)
+            .noOcclusion()));
     public static RegistryObject<Block> fountain_nozzle = register("fountain_nozzle",()-> new FountainNozzleBlock(Block.Properties
-            .create(Material.IRON)
+            .of(Material.METAL)
             .sound(SoundType.METAL)
-            .setRequiresTool()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.PICKAXE)
-            .hardnessAndResistance(2, 10)
-            .notSolid()));
+            .strength(2, 10)
+            .noOcclusion()));
     public static RegistryObject<Block> house = register("house",()->new HouseBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
     public static RegistryObject<Block> warehouse = register("warehouse",()->new WarehouseBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
     public static RegistryObject<Block> mine = register("mine",()->new MineBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
@@ -206,13 +206,13 @@ public class FHBlocks {
     public static RegistryObject<Block> hunting_camp = register("hunting_camp", ()->new HuntingCampBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
     public static RegistryObject<Block> hunting_base = register("hunting_base", ()->new HuntingBaseBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
     public static final BlockEntry<SteamCoreBlock> steam_core = REGISTRATE.block("steam_core", SteamCoreBlock::new)
-        .initialProperties(Material.IRON)
+        .initialProperties(Material.METAL)
         .properties(t->t
             .sound(SoundType.METAL)
-            .setRequiresTool()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.PICKAXE)
-            .hardnessAndResistance(2, 10)
-            .notSolid())
+            .strength(2, 10)
+            .noOcclusion())
         .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
         .item()
         .transform(ModelGen.customItemModel())
@@ -223,19 +223,19 @@ public class FHBlocks {
 
     //Mixxs Section
     public static RegistryObject<Block> makeshift_generator_broken = register("makeshift_generator_broken",()->new FHBaseBlock( Block.Properties
-        .create(Material.ROCK)
+        .of(Material.STONE)
         .sound(SoundType.STONE)
-        .setRequiresTool()
+        .requiresCorrectToolForDrops()
         .harvestTool(ToolType.PICKAXE)
-        .hardnessAndResistance(45, 800)
+        .strength(45, 800)
         .harvestLevel(3)));
 
     public static RegistryObject<Block> broken_plate = register("broken_plate",()->new FHBaseBlock( Block.Properties
-            .create(Material.IRON)
+            .of(Material.METAL)
             .sound(SoundType.METAL)
-            .setRequiresTool()
+            .requiresCorrectToolForDrops()
             .harvestTool(ToolType.PICKAXE)
-            .hardnessAndResistance(45, 800)
+            .strength(45, 800)
             .harvestLevel(3)));
 
 }

@@ -77,10 +77,10 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
     public void fh$layegg(CallbackInfo cbi) {
         if (egg > 0) {
             egg--;
-            this.playSound(SoundEvents.ENTITY_CHICKEN_EGG, 1.0F,
-                    (this.rand.nextFloat() - this.rand.nextFloat()) * 0.2F + 1.0F);
-            this.entityDropItem(Items.EGG);
-            this.timeUntilNextEgg = this.rand.nextInt(6000) + 6000;
+            this.playSound(SoundEvents.CHICKEN_EGG, 1.0F,
+                    (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F);
+            this.spawnAtLocation(Items.EGG);
+            this.timeUntilNextEgg = this.random.nextInt(6000) + 6000;
         } else if (feeded > 0) {
             this.timeUntilNextEgg = 3000;
         } else
@@ -110,25 +110,25 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
      * change to our own milk logic
      */
     @Override
-    public ActionResultType getEntityInteractionResult(PlayerEntity playerIn, Hand hand) {
-        ItemStack itemstack = playerIn.getHeldItem(hand);
+    public ActionResultType mobInteract(PlayerEntity playerIn, Hand hand) {
+        ItemStack itemstack = playerIn.getItemInHand(hand);
 
-        if (!this.isChild() && !itemstack.isEmpty() && itemstack.getItem().getTags().contains(chicken_feed)) {
+        if (!this.isBaby() && !itemstack.isEmpty() && itemstack.getItem().getTags().contains(chicken_feed)) {
             if (feeded < 4) {
 
-                if (!this.world.isRemote)
-                    this.consumeItemFromStack(playerIn, itemstack);
+                if (!this.level.isClientSide)
+                    this.usePlayerItem(playerIn, itemstack);
                 feeded++;
-                return ActionResultType.func_233537_a_(this.world.isRemote);
+                return ActionResultType.sidedSuccess(this.level.isClientSide);
             }
         }
-        return super.getEntityInteractionResult(playerIn, hand);
+        return super.mobInteract(playerIn, hand);
     }
 
     @Override
     public void tick() {
         super.tick();
-        if (!this.world.isRemote) {
+        if (!this.level.isClientSide) {
 
             if (digestTimer > 0) {
                 digestTimer--;
@@ -143,14 +143,14 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
                 digestTimer = 6000;
             }
 
-            if (FHUtils.isBlizzardHarming(world, this.getPosition())) {
+            if (FHUtils.isBlizzardHarming(level, this.blockPosition())) {
                 if (hxteTimer < 20) {
                     hxteTimer++;
                 } else {
-                    this.attackEntityFrom(FHDamageSources.BLIZZARD, 1);
+                    this.hurt(FHDamageSources.BLIZZARD, 1);
                 }
             } else {
-                float temp = ChunkHeatData.getTemperature(this.getEntityWorld(), this.getPosition());
+                float temp = ChunkHeatData.getTemperature(this.getCommandSenderWorld(), this.blockPosition());
                 if (temp < WorldTemperature.ANIMAL_ALIVE_TEMPERATURE
                         || temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
                     if (hxteTimer < 100) {
@@ -162,7 +162,7 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
                                 return;
                             }
                         hxteTimer = 0;
-                        this.attackEntityFrom(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
+                        this.hurt(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
                     }
                 } else if (hxteTimer > 0)
                     hxteTimer--;

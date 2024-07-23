@@ -25,20 +25,20 @@ public class WarehouseTileEntity extends AbstractTownWorkerTileEntity{
     }
 
     public boolean isStructureValid(){
-        BlockPos warehousePos = this.getPos();
-        BlockPos doorPos = BlockScanner.getDoorAdjacent(world, warehousePos);
+        BlockPos warehousePos = this.getBlockPos();
+        BlockPos doorPos = BlockScanner.getDoorAdjacent(level, warehousePos);
         if (doorPos == null) return false;
-        BlockPos floorBelowDoor = BlockScanner.getBlockBelow((pos)->!(Objects.requireNonNull(world).getBlockState(pos).isIn(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
+        BlockPos floorBelowDoor = BlockScanner.getBlockBelow((pos)->!(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
         for (Direction direction : BlockScanner.PLANE_DIRECTIONS) {
             assert floorBelowDoor != null;
-            BlockPos startPos = floorBelowDoor.offset(direction);//找到门下方块旁边的方块
-            if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(world), startPos)) {//如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
-                if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(world), startPos.down()) || FloorBlockScanner.isHouseBlock(world, startPos.up(2))) {//如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
+            BlockPos startPos = floorBelowDoor.relative(direction);//找到门下方块旁边的方块
+            if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos)) {//如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
+                if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos.below()) || FloorBlockScanner.isHouseBlock(level, startPos.above(2))) {//如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
                     continue;
                 }
-                startPos = startPos.down();
+                startPos = startPos.below();
             }
-            WarehouseBlockScanner scanner = new WarehouseBlockScanner(world, startPos);
+            WarehouseBlockScanner scanner = new WarehouseBlockScanner(level, startPos);
             if(scanner.scan()){
                 this.area = scanner.getArea();
                 this.volume = scanner.getVolume();

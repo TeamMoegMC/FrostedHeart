@@ -107,7 +107,7 @@ public class WantedFoodCapability implements NBTSerializable{
     }
 
     private static Item turnStringNBTToItem(INBT nbt){
-        ResourceLocation itemResourceLocation = new ResourceLocation(nbt.getString());
+        ResourceLocation itemResourceLocation = new ResourceLocation(nbt.getAsString());
         return RegistryUtils.getItem(itemResourceLocation);
     }
 

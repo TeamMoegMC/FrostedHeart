@@ -51,8 +51,8 @@ public abstract class MixinGantryShaftTileEntity extends KineticTileEntity imple
                 //float impact = currentComp.getContraption().getBlocks().size()*4;
                 Direction facing = ((GantryContraption) currentComp.getContraption()).getFacing();
                 Vector3d currentPosition = currentComp.getAnchorVec().add(.5, .5, .5);
-                BlockPos gantryShaftPos = new BlockPos(currentPosition).offset(facing.getOpposite());
-                if (gantryShaftPos.equals(this.pos)) {
+                BlockPos gantryShaftPos = new BlockPos(currentPosition).relative(facing.getOpposite());
+                if (gantryShaftPos.equals(this.worldPosition)) {
                     ContraptionCostUtils.setSpeedAndCollect(currentComp, (int) speed);
                     this.lastStressApplied = ContraptionCostUtils.getCost(currentComp) + 0.5F;
                     return lastStressApplied;
@@ -77,7 +77,7 @@ public abstract class MixinGantryShaftTileEntity extends KineticTileEntity imple
     @Override
     public void tick() {
         super.tick();
-        if (!world.isRemote && super.hasNetwork() && currentComp != null) {
+        if (!level.isClientSide && super.hasNetwork() && currentComp != null) {
             this.getOrCreateNetwork().updateStressFor(this, calculateStressApplied());
         }
     }

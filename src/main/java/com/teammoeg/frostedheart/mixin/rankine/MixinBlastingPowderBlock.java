@@ -31,6 +31,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 @Mixin(BlastingPowderBlock.class)
 public class MixinBlastingPowderBlock extends FallingBlock {
 
@@ -47,7 +49,7 @@ public class MixinBlastingPowderBlock extends FallingBlock {
     public void catchFire(BlockState state, World world, BlockPos pos, net.minecraft.util.Direction face,
                           LivingEntity igniter) {
         world.removeBlock(pos, false);
-        world.createExplosion(igniter, pos.getX(), pos.getY() + 16 * .0625D, pos.getZ(), 2.4F, Explosion.Mode.BREAK);
+        world.explode(igniter, pos.getX(), pos.getY() + 16 * .0625D, pos.getZ(), 2.4F, Explosion.Mode.BREAK);
     }
 
 }

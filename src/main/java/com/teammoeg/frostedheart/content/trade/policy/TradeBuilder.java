@@ -339,7 +339,7 @@ public class TradeBuilder implements IFinishedRecipe {
          * @return returns buy
          */
         public GroupBuilder buy(int maxstore, float recover, int price, Item item) {
-            return this.buy(RegistryUtils.getRegistryName(item).toString(), maxstore, recover, price, Ingredient.fromItems(item));
+            return this.buy(RegistryUtils.getRegistryName(item).toString(), maxstore, recover, price, Ingredient.of(item));
         }
 
         /**
@@ -352,7 +352,7 @@ public class TradeBuilder implements IFinishedRecipe {
          * @return returns buy
          */
         public GroupBuilder buy(int maxstore, float recover, int price, ItemStack item) {
-            return this.buy(RegistryUtils.getRegistryName(item.getItem()).toString(), maxstore, recover, price, Ingredient.fromStacks(item));
+            return this.buy(RegistryUtils.getRegistryName(item.getItem()).toString(), maxstore, recover, price, Ingredient.of(item));
         }
 
         /**
@@ -573,22 +573,22 @@ public class TradeBuilder implements IFinishedRecipe {
     }
 
     @Override
-    public ResourceLocation getAdvancementID() {
+    public ResourceLocation getAdvancementId() {
         return null;
     }
 
     @Override
-    public JsonObject getAdvancementJson() {
+    public JsonObject serializeAdvancement() {
         return null;
     }
 
     @Override
-    public ResourceLocation getID() {
+    public ResourceLocation getId() {
         return id;
     }
 
     @Override
-    public IRecipeSerializer<?> getSerializer() {
+    public IRecipeSerializer<?> getType() {
         return TradePolicy.SERIALIZER.get();
     }
 
@@ -662,7 +662,7 @@ public class TradeBuilder implements IFinishedRecipe {
     }
 
     @Override
-    public void serialize(JsonObject arg0) {
+    public void serializeRecipeData(JsonObject arg0) {
         if (name != null)
             arg0.addProperty("name", name.toString());
         arg0.add("policies", SerializeUtil.toJsonList(groups, PolicyGroup::serialize));

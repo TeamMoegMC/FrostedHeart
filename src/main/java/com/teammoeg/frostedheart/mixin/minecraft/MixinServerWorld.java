@@ -72,11 +72,11 @@ public abstract class MixinServerWorld extends World {
      */
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/DimensionType;hasSkyLight()Z"))
     private void tick(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
-        if (!((BooleanValue)(((GameRuleAccessor)this.getGameRules()).getRules().get(GameRules.DO_WEATHER_CYCLE))).get())//vanilla rules
+        if (!((BooleanValue)(((GameRuleAccessor)this.getGameRules()).getRules().get(GameRules.RULE_WEATHER_CYCLE))).get())//vanilla rules
             return;
 
         // ignore nether and end etc.
-        if (!this.getDimensionType().hasSkyLight())
+        if (!this.dimensionType().hasSkyLight())
             return;
         // get hourly temp data
         //float currentTemp = WorldTemperature.getClimateTemperature(this);

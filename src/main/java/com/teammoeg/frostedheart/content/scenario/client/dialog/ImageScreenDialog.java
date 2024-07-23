@@ -79,7 +79,7 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		partialTicks=handlePt(partialTicks);
 		this.width=ClientScene.fromRelativeXW(1);
 		this.height=ClientScene.fromRelativeYH(1);
-		matrixStack.push();
+		matrixStack.pushPose();
 		getPrimary().render(new RenderParams(this,matrixStack,mouseX,mouseY,partialTicks));
 		int y=ClientScene.fromRelativeYH(dialogY);
 		int h=9*chatlist.size()+4;
@@ -91,13 +91,13 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		//this.fillGradient(matrixStack, ClientScene.fromRelativeXW(dialogX)-2, ClientScene.fromRelativeYH(dialogY)-2, ClientScene.fromRelativeXW(dialogW)+4, h, 0xC0101010, 0xD0101010);
 		for(TextInfo i:chatlist) {
 			int x=(ClientScene.fromRelativeXW(dialogW)-i.getCurLen())/2+ClientScene.fromRelativeXW(dialogX)+12;
-			this.minecraft.fontRenderer.drawTextWithShadow(matrixStack, i.asFinished(), x, y, 0xffffffff);
+			this.minecraft.font.drawShadow(matrixStack, i.asFinished(), x, y, 0xffffffff);
 			y+=9;
 		}
 		RenderSystem.disableBlend();
-		matrixStack.pop();
+		matrixStack.popPose();
 		if(escapes!=MAX_ESCAPE) {
-			this.minecraft.fontRenderer.drawTextWithShadow(matrixStack, TranslateUtils.translateMessage("escape_count",escapes), 10, 10, 0xFFAAAAAA);
+			this.minecraft.font.drawShadow(matrixStack, TranslateUtils.translateMessage("escape_count",escapes), 10, 10, 0xFFAAAAAA);
 		}
 	}
 
@@ -108,13 +108,13 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		int h=9*chatlist.size();
 		int dy=(int) (mouseY-y);
 		if(dy>0&&dy<h) {
-			int iline=dy/font.FONT_HEIGHT;
+			int iline=dy/font.lineHeight;
 			 TextInfo line = chatlist.get(iline);
 			 int crlen=line.getCurLen();
 			 int x=(ClientScene.fromRelativeXW(dialogW)-crlen)/2+ClientScene.fromRelativeXW(dialogX)+12;
 			 int dx=(int) (mouseX-x);
 			 if(dx>0&&dx<crlen) {
-				 return this.handleComponentClicked(font.getCharacterManager().func_243239_a(line.asFinished(), dx));
+				 return this.handleComponentClicked(font.getSplitter().componentStyleAtWidth(line.asFinished(), dx));
 
 			 }
 		}
@@ -136,14 +136,14 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		}
 	}
 	@Override
-	public void closeScreen() {
+	public void onClose() {
 		ClientScene.INSTANCE.dialog=null;
 		getPrimary().close();
-		super.closeScreen();
+		super.onClose();
 	}
 	@Override
 	public void closeDialog() {
-		closeScreen();
+		onClose();
 	}
 	public LayerManager getPrimary() {
 		return primary;

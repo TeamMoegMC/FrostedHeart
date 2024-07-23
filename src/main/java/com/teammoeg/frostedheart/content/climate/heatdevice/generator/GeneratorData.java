@@ -120,7 +120,7 @@ public class GeneratorData implements SpecialData{
         	}
         if (recipe == null)
             return null;
-        if (inventory.get(OUTPUT_SLOT).isEmpty() || (ItemStack.areItemsEqual(inventory.get(OUTPUT_SLOT), recipe.output)
+        if (inventory.get(OUTPUT_SLOT).isEmpty() || (ItemStack.isSame(inventory.get(OUTPUT_SLOT), recipe.output)
                 && inventory.get(OUTPUT_SLOT).getCount() + recipe.output.getCount() <= getSlotLimit(OUTPUT_SLOT))) {
             return recipe;
         }
@@ -144,7 +144,7 @@ public class GeneratorData implements SpecialData{
     	int rangedMax=getMaxRanged();
         if (isActive) {
             if(heated != heatedMax) {
-	            if (world.rand.nextFloat() < heatChance*(isOverdrive?2:1)) {
+	            if (world.random.nextFloat() < heatChance*(isOverdrive?2:1)) {
 	            	if (heated < heatedMax) {
 		                heated++;
 		            } else {
@@ -153,7 +153,7 @@ public class GeneratorData implements SpecialData{
 	            }
             } 
             if(ranged != rangedMax) {
-	            if (world.rand.nextFloat() < heatChance*(isOverdrive?2:1)) {
+	            if (world.random.nextFloat() < heatChance*(isOverdrive?2:1)) {
 	            	if (ranged < rangedMax) {
 	 	            	ranged++;
 	 	            } else {
@@ -163,7 +163,7 @@ public class GeneratorData implements SpecialData{
             }
         } else {
             if (heated > 0){
-                if (world.rand.nextFloat() < heatChance * 2) {
+                if (world.random.nextFloat() < heatChance * 2) {
                     heated--;
                 }
             }
@@ -251,7 +251,7 @@ public class GeneratorData implements SpecialData{
     	CodecUtil.path(new DiscreteListCodec<>(CodecUtil.ITEMSTACK_CODEC,ItemStack::isEmpty,()->ItemStack.EMPTY,"Slot"),"inv","Items").forGetter(o->o.inventory),
     	CodecUtil.defaultValue(CodecUtil.ITEMSTACK_CODEC, ItemStack.EMPTY).fieldOf("res").forGetter(o->o.currentItem),
     	CodecUtil.BLOCKPOS.fieldOf("actualPos").forGetter(o->o.actualPos),
-    	ResourceLocation.CODEC.optionalFieldOf("dim").forGetter(o->o.dimension==null?Optional.empty():Optional.of(o.dimension.getLocation()))
+    	ResourceLocation.CODEC.optionalFieldOf("dim").forGetter(o->o.dimension==null?Optional.empty():Optional.of(o.dimension.location()))
     	).apply(t,GeneratorData::new));
     
 	public GeneratorData(int process, int processMax, int steamProcess, int overdriveLevel, boolean[] flags, float steamLevel, float power, int heated, int ranged, Optional<Fluid> fluid, float tLevel, float rLevel, List<ItemStack> inventory, ItemStack currentItem, BlockPos actualPos, Optional<ResourceLocation> dimension) {
@@ -275,7 +275,7 @@ public class GeneratorData implements SpecialData{
 			this.inventory.set(i, inventory.get(i));
 		this.currentItem = currentItem;
 		this.actualPos = actualPos;
-		this.dimension = dimension.map(t->RegistryKey.getOrCreateKey(Registry.WORLD_KEY, t)).orElse(null);
+		this.dimension = dimension.map(t->RegistryKey.create(Registry.DIMENSION_REGISTRY, t)).orElse(null);
 	}
 	@Override
 	public void setHolder(SpecialDataHolder holder) {

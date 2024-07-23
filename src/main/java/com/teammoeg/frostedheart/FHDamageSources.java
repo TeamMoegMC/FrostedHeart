@@ -23,32 +23,32 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.DamageSource;
 
 public class FHDamageSources {
-    public static final DamageSource HYPOTHERMIA = (new DamageSource("hypothermia")).setDamageBypassesArmor().setDamageIsAbsolute();
-    public static final DamageSource HYPERTHERMIA = (new DamageSource("hyperthermia")).setDamageBypassesArmor().setDamageIsAbsolute();
-    public static final DamageSource BLIZZARD = (new DamageSource("blizzard")).setDamageBypassesArmor().setDamageIsAbsolute();
-    public static final DamageSource RAD = (new DamageSource("radiation")).setDamageBypassesArmor().setDamageIsAbsolute();
-    public static final DamageSource HYPOTHERMIA_INSTANT = (new DamageSource("hypothermia_instant")).setDamageBypassesArmor();
-    public static final DamageSource HYPERTHERMIA_INSTANT = (new DamageSource("hyperthermia_instant")).setDamageBypassesArmor();
+    public static final DamageSource HYPOTHERMIA = (new DamageSource("hypothermia")).bypassArmor().bypassMagic();
+    public static final DamageSource HYPERTHERMIA = (new DamageSource("hyperthermia")).bypassArmor().bypassMagic();
+    public static final DamageSource BLIZZARD = (new DamageSource("blizzard")).bypassArmor().bypassMagic();
+    public static final DamageSource RAD = (new DamageSource("radiation")).bypassArmor().bypassMagic();
+    public static final DamageSource HYPOTHERMIA_INSTANT = (new DamageSource("hypothermia_instant")).bypassArmor();
+    public static final DamageSource HYPERTHERMIA_INSTANT = (new DamageSource("hyperthermia_instant")).bypassArmor();
 
     public static DamageSource hyperthermiaFrom(Entity e) {
         return (new DamageSource("hyperthermia") {
 
             @Override
-            public Entity getTrueSource() {
+            public Entity getEntity() {
                 return e;
             }
 
-        }).setDamageBypassesArmor();
+        }).bypassArmor();
     }
 
     public static DamageSource hypothermiaFrom(Entity e) {
         return (new DamageSource("hypothermia") {
 
             @Override
-            public Entity getTrueSource() {
+            public Entity getEntity() {
                 return e;
             }
 
-        }).setDamageBypassesArmor();
+        }).bypassArmor();
     }
 }

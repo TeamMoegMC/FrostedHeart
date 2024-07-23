@@ -42,7 +42,7 @@ public class FHTemperatureDisplayPacket implements FHMessage {
     private final boolean isAction;
 
     public FHTemperatureDisplayPacket(PacketBuffer buffer) {
-        langKey = buffer.readString();
+        langKey = buffer.readUtf();
         temp = buffer.readVarIntArray();
         boolean[] bs = SerializeUtil.readBooleans(buffer);
         isStatus = bs[0];
@@ -86,7 +86,7 @@ public class FHTemperatureDisplayPacket implements FHMessage {
     }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeString(langKey);
+        buffer.writeUtf(langKey);
         buffer.writeVarIntArray(temp);
         SerializeUtil.writeBooleans(buffer, isStatus, isAction);
     }
@@ -101,9 +101,9 @@ public class FHTemperatureDisplayPacket implements FHMessage {
             
             TranslationTextComponent tosend = TranslateUtils.translateMessage(langKey, ss);
             if (isStatus)
-                player.sendStatusMessage(tosend, false);
+                player.displayClientMessage(tosend, false);
             else
-                player.sendMessage(tosend, player.getUniqueID());
+                player.sendMessage(tosend, player.getUUID());
 
         });
         context.get().setPacketHandled(true);

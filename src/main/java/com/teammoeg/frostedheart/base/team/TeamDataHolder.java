@@ -68,8 +68,8 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 		super.save(nbt, isPacket);
         if (ownerName != null)
             nbt.putString("owner", ownerName);
-        nbt.putUniqueId("uuid", id);
-        team.ifPresent(t->nbt.putUniqueId("teamId", t.getId()));//ftb team id
+        nbt.putUUID("uuid", id);
+        team.ifPresent(t->nbt.putUUID("teamId", t.getId()));//ftb team id
 	}
 	
 	@Override
@@ -82,7 +82,7 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
         if (nbt.contains("owner"))
             ownerName = nbt.getString("owner");
         if (nbt.contains("uuid"))
-            id = nbt.getUniqueId("uuid");
+            id = nbt.getUUID("uuid");
         //no need to deserialize ftb team
 	}
 	

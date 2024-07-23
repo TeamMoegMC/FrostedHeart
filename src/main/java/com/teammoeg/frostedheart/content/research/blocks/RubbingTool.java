@@ -44,6 +44,8 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
+import net.minecraft.item.Item.Properties;
+
 public class RubbingTool extends FHBaseItem {
 
     public static int getPoint(ItemStack stack) {
@@ -77,21 +79,21 @@ public class RubbingTool extends FHBaseItem {
     }
 
     @Override
-    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         if (hasResearch(stack)) {
             Research rs = FHResearch.getResearch(getResearch(stack)).get();
             if (rs != null)
-                tooltip.add(TranslateUtils.translateTooltip("rubbing.current", rs.getName()).mergeStyle(TextFormatting.GOLD));
+                tooltip.add(TranslateUtils.translateTooltip("rubbing.current", rs.getName()).withStyle(TextFormatting.GOLD));
             else
-                tooltip.add(TranslateUtils.translateTooltip("rubbing.current.empty").mergeStyle(TextFormatting.GRAY));
+                tooltip.add(TranslateUtils.translateTooltip("rubbing.current.empty").withStyle(TextFormatting.GRAY));
         } else
-            tooltip.add(TranslateUtils.translateTooltip("rubbing.current.empty").mergeStyle(TextFormatting.GRAY));
+            tooltip.add(TranslateUtils.translateTooltip("rubbing.current.empty").withStyle(TextFormatting.GRAY));
         int points = getPoint(stack);
         if (points > 0) {
             tooltip.add(TranslateUtils.translateTooltip("rubbing.points", points));
-            tooltip.add(TranslateUtils.translateTooltip("rubbing.points.hint").mergeStyle(TextFormatting.YELLOW));
+            tooltip.add(TranslateUtils.translateTooltip("rubbing.points.hint").withStyle(TextFormatting.YELLOW));
         }
-        super.addInformation(stack, worldIn, tooltip, flagIn);
+        super.appendHoverText(stack, worldIn, tooltip, flagIn);
 
     }
 
@@ -99,7 +101,7 @@ public class RubbingTool extends FHBaseItem {
      * returns the action that specifies what animation to play when the items is being used
      */
     @Override
-    public UseAction getUseAction(ItemStack stack) {
+    public UseAction getUseAnimation(ItemStack stack) {
         return UseAction.BLOCK;
     }
 
@@ -109,29 +111,29 @@ public class RubbingTool extends FHBaseItem {
     }
 
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-        playerIn.setActiveHand(handIn);
-        return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
+    public ActionResult<ItemStack> use(World worldIn, PlayerEntity playerIn, Hand handIn) {
+        playerIn.startUsingItem(handIn);
+        return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getItemInHand(handIn));
     }
 
     @Override
-    public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
-        if (worldIn.isRemote) return stack;
-        if (stack.getDamage() >= stack.getMaxDamage()) return stack;
+    public ItemStack finishUsingItem(ItemStack stack, World worldIn, LivingEntity entityLiving) {
+        if (worldIn.isClientSide) return stack;
+        if (stack.getDamageValue() >= stack.getMaxDamage()) return stack;
         if (!hasResearch(stack)) return stack;
         PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
         if (entityplayer instanceof ServerPlayerEntity) {
-            BlockRayTraceResult brtr = rayTrace(worldIn, entityplayer, FluidMode.NONE);
+            BlockRayTraceResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, FluidMode.NONE);
             if (brtr.getType() == Type.MISS) return stack;
 
-            TileEntity te = Utils.getExistingTileEntity(worldIn, brtr.getPos());
+            TileEntity te = Utils.getExistingTileEntity(worldIn, brtr.getBlockPos());
             if (te instanceof MechCalcTileEntity) {
                 MechCalcTileEntity mcte = (MechCalcTileEntity) te;
                 int crp = mcte.currentPoints;
                 mcte.currentPoints = 0;
                 mcte.updatePoints();
                 if (crp > 0) {
-                    stack.setDamage(stack.getDamage() + 1);
+                    stack.setDamageValue(stack.getDamageValue() + 1);
                     crp += getPoint(stack);
                     setPoint(stack, crp);
                 }

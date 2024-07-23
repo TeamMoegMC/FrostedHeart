@@ -37,7 +37,7 @@ public class RenderHUD {
         WaypointManager.renderWaypoints(event.getMatrixStack());
 
         if (renderQueue.isEmpty()) return;
-        Screen current = mc.currentScreen;
+        Screen current = mc.screen;
         if (current != null) {
             if (!(current instanceof ChatScreen) && !(current instanceof EmptyScreen) && !(current instanceof DebugScreen)) {
 
@@ -56,7 +56,7 @@ public class RenderHUD {
             TipDisplayUtil.removeCurrent();
             return;
 
-        } else if (!InputMappings.isKeyDown(mc.getMainWindow().getHandle(), 258) && current instanceof EmptyScreen) {
+        } else if (!InputMappings.isKeyDown(mc.getWindow().getWindow(), 258) && current instanceof EmptyScreen) {
             mc.popGuiLayer();
         }
 
@@ -67,10 +67,10 @@ public class RenderHUD {
     public static void renderOnGUI(GuiScreenEvent.DrawScreenEvent.Post event) {
         Screen gui = event.getGui();
         if (gui instanceof IngameMenuScreen || gui instanceof ChatScreen || gui instanceof EmptyScreen) {
-            int x = mc.getMainWindow().getScaledWidth()-12;
-            int y = mc.getMainWindow().getScaledHeight()-26;
+            int x = mc.getWindow().getGuiScaledWidth()-12;
+            int y = mc.getWindow().getGuiScaledHeight()-26;
             if (GuiUtil.renderIconButton(event.getMatrixStack(), IconButton.ICON_HISTORY, GuiUtil.getMouseX(), GuiUtil.getMouseY(), x, y, 0xFFFFFFFF, 0x80000000)) {
-                mc.displayGuiScreen(new TipListScreen(gui instanceof IngameMenuScreen));
+                mc.setScreen(new TipListScreen(gui instanceof IngameMenuScreen));
             }
         }
 

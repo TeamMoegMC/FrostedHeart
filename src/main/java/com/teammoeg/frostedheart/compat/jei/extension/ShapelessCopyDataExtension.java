@@ -43,7 +43,7 @@ public class ShapelessCopyDataExtension implements ICraftingCategoryExtension {
     @Override
     public void setIngredients(IIngredients ingredients) {
         ingredients.setInputIngredients(recipe.getIngredients());
-        ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
+        ingredients.setOutput(VanillaTypes.ITEM, recipe.getResultItem());
     }
 
 }

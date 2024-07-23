@@ -41,7 +41,7 @@ public class ModUtilMixin {
     public static boolean shouldMelt(World world, BlockPos pos) {
         if (SnowCommonConfig.snowNeverMelt)
             return false;
-        if (world.getLightFor(LightType.BLOCK, pos) > 11)
+        if (world.getBrightness(LightType.BLOCK, pos) > 11)
             return true;
         if (ChunkHeatData.getTemperature(world, pos) > 0.5)
             return true;

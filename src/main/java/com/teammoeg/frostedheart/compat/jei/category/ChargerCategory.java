@@ -48,7 +48,7 @@ public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "charge");
     private IDrawable BACKGROUND;
     private IDrawable ICON;
-    private StaticBlock charger = new StaticBlock(FHBlocks.charger.get().getDefaultState().with(BlockStateProperties.FACING, Direction.EAST));
+    private StaticBlock charger = new StaticBlock(FHBlocks.charger.get().defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
 
     public ChargerCategory(IGuiHelper guiHelper) {
         this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.charger.get()));

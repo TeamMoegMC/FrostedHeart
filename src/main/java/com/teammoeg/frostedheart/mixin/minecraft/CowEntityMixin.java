@@ -93,10 +93,10 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
         return false;
     }
     @Override
-    public void eatGrassBonus() {
+    public void ate() {
 
-        if (this.isChild()) {
-            this.addGrowth(60);
+        if (this.isBaby()) {
+            this.ageUp(60);
         } else if (feeded < 2)
             feeded++;
 
@@ -107,36 +107,36 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
      * @reason change to our own milk logic
      */
     @Overwrite
-    public ActionResultType getEntityInteractionResult(PlayerEntity playerIn, Hand hand) {
-        ItemStack itemstack = playerIn.getHeldItem(hand);
+    public ActionResultType mobInteract(PlayerEntity playerIn, Hand hand) {
+        ItemStack itemstack = playerIn.getItemInHand(hand);
         //FHMain.LOGGER.info("start feed"+this.isInLove());
-        if (!this.isChild() && !itemstack.isEmpty() && itemstack.getItem().getTags().contains(cow_feed)) {
+        if (!this.isBaby() && !itemstack.isEmpty() && itemstack.getItem().getTags().contains(cow_feed)) {
             if (feeded < 2) {
                 feeded++;
                 //FHMain.LOGGER.info("yield feed"+this.isInLove());
-                if (!this.world.isRemote)
-                    this.consumeItemFromStack(playerIn, itemstack);
+                if (!this.level.isClientSide)
+                    this.usePlayerItem(playerIn, itemstack);
                 //FHMain.LOGGER.info("ret feed"+this.isInLove());
-                return ActionResultType.func_233537_a_(this.world.isRemote);
+                return ActionResultType.sidedSuccess(this.level.isClientSide);
             }
         }
         //FHMain.LOGGER.info("end feed"+this.isInLove());
         if (itemstack.getItem() == Items.BUCKET) {
-            if (milk > 0 && !this.isChild()) {
-                playerIn.playSound(SoundEvents.ENTITY_COW_MILK, 1.0F, 1.0F);
-                ItemStack itemstack1 = DrinkHelper.fill(itemstack, playerIn, Items.MILK_BUCKET.getDefaultInstance());
-                playerIn.setHeldItem(hand, itemstack1);
+            if (milk > 0 && !this.isBaby()) {
+                playerIn.playSound(SoundEvents.COW_MILK, 1.0F, 1.0F);
+                ItemStack itemstack1 = DrinkHelper.createFilledResult(itemstack, playerIn, Items.MILK_BUCKET.getDefaultInstance());
+                playerIn.setItemInHand(hand, itemstack1);
                 milk--;
-                return ActionResultType.func_233537_a_(this.world.isRemote);
+                return ActionResultType.sidedSuccess(this.level.isClientSide);
             }
-            if (!world.isRemote) {
+            if (!level.isClientSide) {
                 if (feeded <= 0)
-                    playerIn.sendStatusMessage(TranslateUtils.translateMessage("cow.nomilk.hungry"), true);
+                    playerIn.displayClientMessage(TranslateUtils.translateMessage("cow.nomilk.hungry"), true);
                 else
-                    playerIn.sendStatusMessage(TranslateUtils.translateMessage("cow.nomilk.digest"), true);
+                    playerIn.displayClientMessage(TranslateUtils.translateMessage("cow.nomilk.digest"), true);
             }
         }
-        return super.getEntityInteractionResult(playerIn, hand);
+        return super.mobInteract(playerIn, hand);
     }
 
     @Override
@@ -145,8 +145,8 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
     }
 
     @Override
-    public void readAdditional(CompoundNBT compound) {
-        super.readAdditional(compound);
+    public void readAdditionalSaveData(CompoundNBT compound) {
+        super.readAdditionalSaveData(compound);
         milk = compound.getByte("milk_stored");
         feeded = compound.getByte("feed_stored");
         digestTimer = compound.getInt("feed_digest");
@@ -164,7 +164,7 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
         this.goalSelector.addGoal(0, new SwimGoal(this));
         this.goalSelector.addGoal(1, new PanicGoal(this, 2.0D));
         this.goalSelector.addGoal(2, new BreedGoal(this, 1.0D));
-        this.goalSelector.addGoal(3, new TemptGoal(this, 1.25D, Ingredient.fromItems(Items.WHEAT), false));
+        this.goalSelector.addGoal(3, new TemptGoal(this, 1.25D, Ingredient.of(Items.WHEAT), false));
         this.goalSelector.addGoal(4, new FollowParentGoal(this, 1.25D));
         this.goalSelector.addGoal(5, eatGrassGoal);
         this.goalSelector.addGoal(6, new WaterAvoidingRandomWalkingGoal(this, 1.0D));
@@ -180,7 +180,7 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
     @Override
     public void tick() {
         super.tick();
-        if (!this.world.isRemote) {
+        if (!this.level.isClientSide) {
             if (digestTimer > 0) {
                 digestTimer--;
                 if (digestTimer == 0) {
@@ -193,14 +193,14 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
             } else if (feeded > 0) {
                 digestTimer = 14400;
             }
-            if (FHUtils.isBlizzardHarming(world, this.getPosition())) {
+            if (FHUtils.isBlizzardHarming(level, this.blockPosition())) {
                 if (hxteTimer < 20) {
                     hxteTimer++;
                 } else {
-                    this.attackEntityFrom(FHDamageSources.BLIZZARD, 1);
+                    this.hurt(FHDamageSources.BLIZZARD, 1);
                 }
             } else {
-                float temp = ChunkHeatData.getTemperature(this.getEntityWorld(), this.getPosition());
+                float temp = ChunkHeatData.getTemperature(this.getCommandSenderWorld(), this.blockPosition());
                 if (temp < WorldTemperature.ANIMAL_ALIVE_TEMPERATURE
                         || temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
                     if (hxteTimer < 100) {
@@ -213,7 +213,7 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
                             }
 
                         hxteTimer = 0;
-                        this.attackEntityFrom(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
+                        this.hurt(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
                     }
                 } else if (hxteTimer > 0)
                     hxteTimer--;
@@ -222,8 +222,8 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
     }
 
     @Override
-    public void writeAdditional(CompoundNBT compound) {
-        super.writeAdditional(compound);
+    public void addAdditionalSaveData(CompoundNBT compound) {
+        super.addAdditionalSaveData(compound);
         compound.putByte("milk_stored", milk);
         compound.putByte("feed_stored", feeded);
         compound.putInt("feed_digest", digestTimer);

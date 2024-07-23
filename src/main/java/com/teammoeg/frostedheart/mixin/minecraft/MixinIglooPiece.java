@@ -56,10 +56,10 @@ public abstract class MixinIglooPiece extends TemplateStructurePiece {
     @Overwrite
     protected void handleDataMarker(String function, BlockPos pos, IServerWorld worldIn, Random rand, MutableBoundingBox sbb) {
         if ("chest".equals(function)) {
-            worldIn.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
-            TileEntity tileentity = worldIn.getTileEntity(pos.down());
+            worldIn.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+            TileEntity tileentity = worldIn.getBlockEntity(pos.below());
             if (tileentity instanceof LockableLootTileEntity) {
-                ((LockableLootTileEntity) tileentity).setLootTable(LootTables.CHESTS_IGLOO_CHEST, rand.nextLong());
+                ((LockableLootTileEntity) tileentity).setLootTable(LootTables.IGLOO_CHEST, rand.nextLong());
             }
 
         }

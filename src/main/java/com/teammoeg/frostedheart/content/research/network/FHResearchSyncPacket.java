@@ -38,12 +38,12 @@ public class FHResearchSyncPacket implements FHMessage {
 
     public FHResearchSyncPacket(PacketBuffer buffer) {
         r = CodecUtil.readCodec(buffer, Research.CODEC);
-        r.setId(buffer.readString());
+        r.setId(buffer.readUtf());
     }
 
     public void encode(PacketBuffer buffer) {
         CodecUtil.writeCodec(buffer, Research.CODEC, r);
-        buffer.writeString(r.getId());
+        buffer.writeUtf(r.getId());
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {

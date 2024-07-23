@@ -49,16 +49,18 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 import se.mickelus.tetra.properties.IToolProvider;
 
+import net.minecraft.item.Item.Properties;
+
 public class CoreSpade extends FHLeveledTool {
     public static ResourceLocation otag = new ResourceLocation("forge:ores");
     public static ResourceLocation stag = new ResourceLocation("forge:stone");
 
     public static ActionResultType doProspect(PlayerEntity player, World world, BlockPos blockpos, ItemStack is, Hand h) {
         if (player != null && (!(player instanceof FakePlayer))) {// fake players does not deserve XD
-            if (!world.isRemote && world.getBlockState(blockpos).getBlock().getTags().contains(otag)) {// early exit 'cause ore found
-                player.sendStatusMessage(
-                        TranslateUtils.translate(world.getBlockState(blockpos).getBlock().getTranslationKey())
-                                .mergeStyle(TextFormatting.GOLD),
+            if (!world.isClientSide && world.getBlockState(blockpos).getBlock().getTags().contains(otag)) {// early exit 'cause ore found
+                player.displayClientMessage(
+                        TranslateUtils.translate(world.getBlockState(blockpos).getBlock().getDescriptionId())
+                                .withStyle(TextFormatting.GOLD),
                         false);
                 return ActionResultType.SUCCESS;
             }
@@ -66,9 +68,9 @@ public class CoreSpade extends FHLeveledTool {
             int y = blockpos.getY();
             int z = blockpos.getZ();
 
-            is.damageItem(1, player, (player2) -> player2.sendBreakAnimation(h));
-            if (!world.isRemote) {
-                Random rnd = new Random(BlockPos.pack(x, y, z) ^ 0x9a6dc5270b92313dL);// randomize
+            is.hurtAndBreak(1, player, (player2) -> player2.broadcastBreakEvent(h));
+            if (!world.isClientSide) {
+                Random rnd = new Random(BlockPos.asLong(x, y, z) ^ 0x9a6dc5270b92313dL);// randomize
                 // This is predictable, but not any big problem. Cheaters can use x-ray or other
                 // things rather than hacking in this.
 
@@ -92,9 +94,9 @@ public class CoreSpade extends FHLeveledTool {
                             int BlockX = x + x2;
                             int BlockY = y + y2;
                             int BlockZ = z + z2;
-                            ore = world.getBlockState(mutable.setPos(BlockX, BlockY, BlockZ)).getBlock();
+                            ore = world.getBlockState(mutable.set(BlockX, BlockY, BlockZ)).getBlock();
                             if (!RegistryUtils.getRegistryName(ore).getNamespace().equals("minecraft") && tagdet.test(ore.getTags())) {
-                                founded.merge(ore.getTranslationKey(), 1, Integer::sum);
+                                founded.merge(ore.getDescriptionId(), 1, Integer::sum);
                             }
                         }
 
@@ -103,17 +105,17 @@ public class CoreSpade extends FHLeveledTool {
                     IFormattableTextComponent s = TranslateUtils.translateMessage("corespade.ore");
                     for (Entry<String, Integer> f : founded.entrySet()) {
                         if (rnd.nextInt((int) (f.getValue() * corr)) != 0) {
-                            s = s.appendSibling(TranslateUtils.translate(f.getKey())
-                                    .mergeStyle(TextFormatting.GREEN).appendString(","));
+                            s = s.append(TranslateUtils.translate(f.getKey())
+                                    .withStyle(TextFormatting.GREEN).append(","));
                             count++;
                         }
                     }
                     if (count > 0) {
-                        player.sendStatusMessage(s, false);
+                        player.displayClientMessage(s, false);
                         return ActionResultType.SUCCESS;
                     }
                 }
-                player.sendStatusMessage(TranslateUtils.translateMessage("corespade.nothing").mergeStyle(TextFormatting.GRAY),
+                player.displayClientMessage(TranslateUtils.translateMessage("corespade.nothing").withStyle(TextFormatting.GRAY),
                         false);
             }
         }
@@ -147,13 +149,13 @@ public class CoreSpade extends FHLeveledTool {
     }
 
     @Override
-    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-        tooltip.add(TranslateUtils.translateTooltip("meme.core_spade").mergeStyle(TextFormatting.GRAY));
+    public void appendHoverText(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        tooltip.add(TranslateUtils.translateTooltip("meme.core_spade").withStyle(TextFormatting.GRAY));
     }
 
     @Override
-    public ActionResultType onItemUse(ItemUseContext context) {
-        return doProspect(context.getPlayer(), context.getWorld(), context.getPos(), context.getItem(), context.getHand());
+    public ActionResultType useOn(ItemUseContext context) {
+        return doProspect(context.getPlayer(), context.getLevel(), context.getClickedPos(), context.getItemInHand(), context.getHand());
 
     }
 }

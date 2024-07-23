@@ -89,17 +89,17 @@ public abstract class MixinContraption implements ISpeedContraption {
         BlockState blockState = world.getBlockState(targetPos);
 
         if (sc < 20480)
-            if (!blockState.getCollisionShape(world, targetPos).isEmpty() && blockState.getBlockHardness(world, targetPos) != -1) {
+            if (!blockState.getBlockSupportShape(world, targetPos).isEmpty() && blockState.getDestroySpeed(world, targetPos) != -1) {
                 if (targetPos.getY() == 0)
-                    targetPos = targetPos.up();
-                if (!state.getCollisionShape(world, targetPos).isEmpty()) {
-                    world.playEvent(2001, targetPos, Block.getStateId(blockState));
-                    world.setBlockState(targetPos, state, 3 | BlockFlags.IS_MOVING);
-                    if (!blockState.getRequiresTool())
-                        Block.spawnDrops(blockState, world, targetPos, null);
+                    targetPos = targetPos.above();
+                if (!state.getBlockSupportShape(world, targetPos).isEmpty()) {
+                    world.levelEvent(2001, targetPos, Block.getId(blockState));
+                    world.setBlock(targetPos, state, 3 | BlockFlags.IS_MOVING);
+                    if (!blockState.requiresCorrectToolForDrops())
+                        Block.dropResources(blockState, world, targetPos, null);
                 } else {
-                    world.playEvent(2001, targetPos, Block.getStateId(state));
-                    Block.spawnDrops(state, world, targetPos, null);
+                    world.levelEvent(2001, targetPos, Block.getId(state));
+                    Block.dropResources(state, world, targetPos, null);
                 }
                 return true;
             }
@@ -116,7 +116,7 @@ public abstract class MixinContraption implements ISpeedContraption {
                                 Set<BlockPos> visited, CallbackInfoReturnable<Boolean> r, BlockPos pos, BlockState state, BlockPos posDown, BlockState stateBelow, Map<Direction, SuperGlueEntity> superglue) throws AssemblyException {
         // Slime blocks and super glue drag adjacent blocks if possible
         for (Direction offset : Iterate.directions) {
-            BlockPos offsetPos = pos.offset(offset);
+            BlockPos offsetPos = pos.relative(offset);
             BlockState blockState = world.getBlockState(offsetPos);
             if (isAnchoringBlockAt(offsetPos))
                 continue;
@@ -133,8 +133,8 @@ public abstract class MixinContraption implements ISpeedContraption {
             boolean brittle = BlockMovementChecks.isBrittle(blockState);
             boolean canStick = !brittle && state.canStickTo(blockState) && blockState.canStickTo(state);
             if (canStick) {
-                if (state.getPushReaction() == PushReaction.PUSH_ONLY
-                        || blockState.getPushReaction() == PushReaction.PUSH_ONLY) {
+                if (state.getPistonPushReaction() == PushReaction.PUSH_ONLY
+                        || blockState.getPistonPushReaction() == PushReaction.PUSH_ONLY) {
                     canStick = false;
                 }
                 if (BlockMovementChecks.isNotSupportive(state, offset)) {
@@ -184,7 +184,7 @@ public abstract class MixinContraption implements ISpeedContraption {
 
     private boolean isSupportive(BlockState s1, BlockState s2, World w, BlockPos p1, BlockPos p2, Direction offset) {
 
-        return VoxelShapes.compare(s1.getShape(w, p1).project(offset), s2.getShape(w, p2).project(offset.getOpposite()), IBooleanFunction.AND);
+        return VoxelShapes.joinIsNotEmpty(s1.getShape(w, p1).getFaceShape(offset), s2.getShape(w, p2).getFaceShape(offset.getOpposite()), IBooleanFunction.AND);
     }
 
     @Shadow(remap = false)

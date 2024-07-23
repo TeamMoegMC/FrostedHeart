@@ -108,7 +108,7 @@ public class DrawDeskPanel extends Panel {
 
             @Override
             public void onClicked(MouseButton arg0) {
-                FHNetwork.sendToServer(new FHDrawingDeskOperationPacket(dd.getTile().getPos(), 3));
+                FHNetwork.sendToServer(new FHDrawingDeskOperationPacket(dd.getTile().getBlockPos(), 3));
             }
 
         };

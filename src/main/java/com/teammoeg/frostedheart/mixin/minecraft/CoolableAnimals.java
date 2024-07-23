@@ -61,16 +61,16 @@ public class CoolableAnimals extends MobEntity {
     @Override
     public void tick() {
         super.tick();
-        if (!this.world.isRemote) {
+        if (!this.level.isClientSide) {
 
-            if (FHUtils.isBlizzardHarming(world, this.getPosition())) {
+            if (FHUtils.isBlizzardHarming(level, this.blockPosition())) {
                 if (hxteTimer < 20) {
                     hxteTimer++;
                 } else {
-                    this.attackEntityFrom(FHDamageSources.BLIZZARD, 1);
+                    this.hurt(FHDamageSources.BLIZZARD, 1);
                 }
             } else {
-                float temp = ChunkHeatData.getTemperature(this.getEntityWorld(), this.getPosition());
+                float temp = ChunkHeatData.getTemperature(this.getCommandSenderWorld(), this.blockPosition());
                 if (temp < WorldTemperature.ANIMAL_ALIVE_TEMPERATURE
                         || temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
                     if (hxteTimer < 100) {
@@ -84,7 +84,7 @@ public class CoolableAnimals extends MobEntity {
                                 }
                             }
                         hxteTimer = 0;
-                        this.attackEntityFrom(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
+                        this.hurt(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
                     }
                 } else if (hxteTimer > 0)
                     hxteTimer--;

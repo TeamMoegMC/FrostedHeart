@@ -49,20 +49,20 @@ public class T2GeneratorRenderer extends TileEntityRenderer<T2GeneratorTileEntit
     @Override
     public void render(T2GeneratorTileEntity te, float partialTicks, MatrixStack matrixStack,
                        IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
-        if (!te.formed || te.isDummy() || !te.getWorldNonnull().isBlockLoaded(te.getPos()))
+        if (!te.formed || te.isDummy() || !te.getWorldNonnull().hasChunkAt(te.getBlockPos()))
             return;
         if (!te.hasFuel())
         	return;
-        BlockPos blockPos = te.getPos();
-        BlockState state = te.getWorld().getBlockState(blockPos);
+        BlockPos blockPos = te.getBlockPos();
+        BlockState state = te.getLevel().getBlockState(blockPos);
         if (state.getBlock() != FHMultiblocks.generator_t2)
             return;
         IEObjState objState = new IEObjState(VisibilityList.showAll());
 
-        matrixStack.push();
+        matrixStack.pushPose();
         List<BakedQuad> quads = FUEL.getNullQuads(te.getFacing(), state, new SinglePropertyModelData<>(objState, Model.IE_OBJ_STATE));
-        RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.getSolid()), matrixStack, combinedLightIn, combinedOverlayIn);
-        matrixStack.pop();
+        RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
+        matrixStack.popPose();
     }
 
 }

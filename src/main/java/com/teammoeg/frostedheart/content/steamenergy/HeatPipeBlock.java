@@ -35,6 +35,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock>{
 
     public HeatPipeBlock(Properties blockProps) {
@@ -57,8 +59,8 @@ public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock>{
 
 
     @Override
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
     }
 
 

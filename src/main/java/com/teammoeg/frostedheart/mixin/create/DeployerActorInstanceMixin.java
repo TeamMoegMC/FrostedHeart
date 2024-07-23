@@ -87,7 +87,7 @@ public abstract class DeployerActorInstanceMixin extends ActorInstance {
             factor = .5f - MathHelper.clamp(MathHelper.lerp(AnimationTickHolder.getPartialTicks(), distance, nextDistance), 0, 1);
         }
 
-        Vector3d offset = Vector3d.copy(facing.getDirectionVec()).scale(factor);
+        Vector3d offset = Vector3d.atLowerCornerOf(facing.getNormal()).scale(factor);
 
         MatrixStack ms = new MatrixStack();
         MatrixTransformStack msr = MatrixTransformStack.of(ms);

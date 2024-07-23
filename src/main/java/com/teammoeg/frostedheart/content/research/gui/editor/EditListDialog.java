@@ -55,7 +55,7 @@ public class EditListDialog<T> extends EditDialog {
         public ButtonAddValue(Panel panel) {
             super(panel);
             setHeight(12);
-            setTitle(TranslateUtils.str("+ ").appendSibling(TranslateUtils.translate("gui.add")));
+            setTitle(TranslateUtils.str("+ ").append(TranslateUtils.translate("gui.add")));
         }
 
         @Override
@@ -181,7 +181,7 @@ public class EditListDialog<T> extends EditDialog {
             list = new ArrayList<>(vx);
         else
             list = new ArrayList<>();
-        title = TranslateUtils.str(label).mergeStyle(TextFormatting.BOLD);
+        title = TranslateUtils.str(label).withStyle(TextFormatting.BOLD);
         this.editor = editor;
         this.def = def;
         this.read = toread;

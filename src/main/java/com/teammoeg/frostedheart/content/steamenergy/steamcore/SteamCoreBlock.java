@@ -30,14 +30,16 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class SteamCoreBlock extends DirectionalKineticBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
-    static final VoxelShaper shape = VoxelShaper.forDirectional(VoxelShapes.or(Block.makeCuboidShape(0, 0, 0, 16, 16, 16)), Direction.SOUTH);
+    static final VoxelShaper shape = VoxelShaper.forDirectional(VoxelShapes.or(Block.box(0, 0, 0, 16, 16, 16)), Direction.SOUTH);
 
 
     public SteamCoreBlock( Properties blockProps) {
         super(blockProps);
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING, Direction.SOUTH));
+        this.registerDefaultState(this.stateDefinition.any().setValue(LIT, Boolean.FALSE).setValue(BlockStateProperties.FACING, Direction.SOUTH));
     }
 
 
@@ -53,29 +55,29 @@ public class SteamCoreBlock extends DirectionalKineticBlock {
     }
 
     @Override
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
         builder.add(LIT);
     }
 
     @Override
     public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-        return shape.get(state.get(BlockStateProperties.FACING));
+        return shape.get(state.getValue(BlockStateProperties.FACING));
     }
 
     @Override
     public Direction.Axis getRotationAxis(BlockState blockState) {
-        return blockState.get(BlockStateProperties.FACING).getAxis();
+        return blockState.getValue(BlockStateProperties.FACING).getAxis();
     }
 
     @Override
     public boolean hasShaftTowards(IWorldReader arg0, BlockPos arg1, BlockState state, Direction dir) {
-        return dir == state.get(BlockStateProperties.FACING);
+        return dir == state.getValue(BlockStateProperties.FACING);
     }
 
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
-        return super.onBlockActivated(state, world, pos, player, hand, hit);
+    public ActionResultType use(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
+        return super.use(state, world, pos, player, hand, hit);
     }
 
 	@Override
@@ -90,7 +92,7 @@ public class SteamCoreBlock extends DirectionalKineticBlock {
 	@Override
 	public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
 		super.animateTick(stateIn, worldIn, pos, rand);
-		if(stateIn.get(LIT)&&rand.nextBoolean())
+		if(stateIn.getValue(LIT)&&rand.nextBoolean())
 			ClientUtils.spawnSteamParticles(worldIn, pos);
 	}
 }

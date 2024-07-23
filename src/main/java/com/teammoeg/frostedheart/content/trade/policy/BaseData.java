@@ -76,7 +76,7 @@ public abstract class BaseData implements Writeable {
     }
 
     public BaseData(PacketBuffer pb) {
-        id = pb.readString();
+        id = pb.readUtf();
         maxstore = pb.readVarInt();
         recover = pb.readFloat();
         price = pb.readVarInt();
@@ -144,7 +144,7 @@ public abstract class BaseData implements Writeable {
 
     @Override
     public void write(PacketBuffer buffer) {
-        buffer.writeString(id);
+        buffer.writeUtf(id);
         buffer.writeVarInt(maxstore);
         buffer.writeFloat(recover);
         buffer.writeVarInt(price);

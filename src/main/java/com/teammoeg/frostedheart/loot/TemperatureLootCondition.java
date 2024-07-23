@@ -80,16 +80,16 @@ public class TemperatureLootCondition implements ILootCondition {
     }
 
     @Override
-    public LootConditionType getConditionType() {
+    public LootConditionType getType() {
         return TYPE;
     }
 
     @Override
     public boolean test(LootContext t) {
-        if (t.has(LootParameters.ORIGIN)) {
-            Vector3d v = t.get(LootParameters.ORIGIN);
+        if (t.hasParam(LootParameters.ORIGIN)) {
+            Vector3d v = t.getParamOrNull(LootParameters.ORIGIN);
             BlockPos bp = new BlockPos(v.x, v.y, v.z);
-            World w = t.getWorld();
+            World w = t.getLevel();
             return comparator.test(ChunkHeatData.getTemperature(w, bp), temp);
         }
         return false;

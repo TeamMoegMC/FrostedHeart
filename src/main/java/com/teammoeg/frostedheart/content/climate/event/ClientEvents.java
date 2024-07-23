@@ -28,27 +28,27 @@ public class ClientEvents {
         if (event.side == LogicalSide.CLIENT && event.phase == TickEvent.Phase.START
                 && event.player instanceof ClientPlayerEntity) {
             ClientPlayerEntity player = (ClientPlayerEntity) event.player;
-            if(ClientUtils.mc().currentScreen instanceof MasterGeneratorScreen&&player.ticksExisted%20==0) {
-            	((MasterGeneratorScreen)ClientUtils.mc().currentScreen).fullInit();
+            if(ClientUtils.mc().screen instanceof MasterGeneratorScreen&&player.tickCount%20==0) {
+            	((MasterGeneratorScreen)ClientUtils.mc().screen).fullInit();
             }
-            if (!player.isSpectator() && !player.isCreative() && player.world != null) {
-                if (player.ticksExisted % 60 <= 3) {
+            if (!player.isSpectator() && !player.isCreative() && player.level != null) {
+                if (player.tickCount % 60 <= 3) {
                 	 PlayerTemperatureData ptd=PlayerTemperatureData.getCapability(player).orElse(null);
                     float envTemp = ptd.getEnvTemp();
                     if (envTemp < -10.0F) {
                         // get the player's facing vector and make the particle spawn in front of the player
-                        double x = player.getPosX() + player.getLookVec().x * 0.3D;
-                        double z = player.getPosZ() + player.getLookVec().z * 0.3D;
-                        double y = player.getPosY() + 1.3D;
+                        double x = player.getX() + player.getLookAngle().x * 0.3D;
+                        double z = player.getZ() + player.getLookAngle().z * 0.3D;
+                        double y = player.getY() + 1.3D;
                         // the speed of the particle is based on the player's facing, so it looks like it's coming from their mouth
-                        double xSpeed = player.getLookVec().x * 0.03D;
-                        double ySpeed = player.getLookVec().y * 0.03D;
-                        double zSpeed = player.getLookVec().z * 0.03D;
+                        double xSpeed = player.getLookAngle().x * 0.03D;
+                        double ySpeed = player.getLookAngle().y * 0.03D;
+                        double zSpeed = player.getLookAngle().z * 0.03D;
                         // apply the player's motion to the particle
-                        xSpeed += player.getMotion().x;
-                        ySpeed += player.getMotion().y;
-                        zSpeed += player.getMotion().z;
-                        player.world.addParticle(FHParticleTypes.BREATH.get(), x, y, z, xSpeed, ySpeed, zSpeed);
+                        xSpeed += player.getDeltaMovement().x;
+                        ySpeed += player.getDeltaMovement().y;
+                        zSpeed += player.getDeltaMovement().z;
+                        player.level.addParticle(FHParticleTypes.BREATH.get(), x, y, z, xSpeed, ySpeed, zSpeed);
                     }
                 }
             }
@@ -65,14 +65,14 @@ public class ClientEvents {
             ClientPlayerEntity player = (ClientPlayerEntity) event.player;
             if(forstedSoundCd>0)
             	forstedSoundCd--;
-            if (!player.isSpectator() && !player.isCreative() && player.world != null&&forstedSoundCd>0) {
+            if (!player.isSpectator() && !player.isCreative() && player.level != null&&forstedSoundCd>0) {
             	
             	PlayerTemperatureData ptd=PlayerTemperatureData.getCapability(player).orElse(null);
                 float prevTemp = ptd.smoothedBodyPrev;
                 float currTemp = ptd.smoothedBody;
                 // play sound if currTemp transitions across integer threshold
                 if (currTemp <= 0.5F && MathHelper.floor(prevTemp - 0.5F) != MathHelper.floor(currTemp - 0.5F)) {
-                    player.world.playSound(player, player.getPosition(), FHSounds.ICE_CRACKING.get(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+                    player.level.playSound(player, player.blockPosition(), FHSounds.ICE_CRACKING.get(), SoundCategory.PLAYERS, 1.0F, 1.0F);
                     forstedSoundCd=20;
                 }
             }

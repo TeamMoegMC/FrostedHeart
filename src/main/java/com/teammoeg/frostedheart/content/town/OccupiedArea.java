@@ -129,7 +129,7 @@ public class OccupiedArea {
         CompoundNBT nbt = new CompoundNBT();
         ListNBT list = new ListNBT();
         for (ColumnPos pos : occupiedArea) {
-            list.add(LongNBT.valueOf(BlockPos.pack(pos.x, 0, pos.z)));
+            list.add(LongNBT.valueOf(BlockPos.asLong(pos.x, 0, pos.z)));
         }
         nbt.put("occupiedAreaList", list);
         list.clear();
@@ -145,14 +145,14 @@ public class OccupiedArea {
         Set<ColumnPos> occupiedArea = new HashSet<>();
         ListNBT list = nbt.getList("occupiedAreaList", Constants.NBT.TAG_LONG);
         list.forEach(nbt1 -> {
-            occupiedArea.add(new ColumnPos(BlockPos.unpackX(((LongNBT) nbt1).getLong()), BlockPos.unpackZ(((LongNBT) nbt1).getLong())));
+            occupiedArea.add(new ColumnPos(BlockPos.getX(((LongNBT) nbt1).getAsLong()), BlockPos.getZ(((LongNBT) nbt1).getAsLong())));
         });
         list = nbt.getList("maxOccupiedCoordinates", Constants.NBT.TAG_INT);
         Iterator<INBT> iterator = list.iterator();
-        int maxX = ((IntNBT) (iterator.next()) ).getInt();
-        int maxZ = ((IntNBT) (iterator.next()) ).getInt();
-        int minX = ((IntNBT) (iterator.next()) ).getInt();
-        int minZ = ((IntNBT) (iterator.next()) ).getInt();
+        int maxX = ((IntNBT) (iterator.next()) ).getAsInt();
+        int maxZ = ((IntNBT) (iterator.next()) ).getAsInt();
+        int minX = ((IntNBT) (iterator.next()) ).getAsInt();
+        int minZ = ((IntNBT) (iterator.next()) ).getAsInt();
         return new OccupiedArea(occupiedArea, maxX, maxZ, minX, minZ);
     }
 }

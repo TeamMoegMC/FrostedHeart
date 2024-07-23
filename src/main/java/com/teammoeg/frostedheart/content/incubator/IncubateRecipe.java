@@ -54,13 +54,13 @@ public class IncubateRecipe extends IESerializableRecipe {
 
         @Nullable
         @Override
-        public IncubateRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            return new IncubateRecipe(recipeId, IngredientWithSize.read(buffer), SerializeUtil.readOptional(buffer, IngredientWithSize::read).orElse(null), buffer.readItemStack(), buffer.readFluidStack(), buffer.readBoolean(), buffer.readVarInt(), buffer.readVarInt());
+        public IncubateRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+            return new IncubateRecipe(recipeId, IngredientWithSize.read(buffer), SerializeUtil.readOptional(buffer, IngredientWithSize::read).orElse(null), buffer.readItem(), buffer.readFluidStack(), buffer.readBoolean(), buffer.readVarInt(), buffer.readVarInt());
         }
 
         @Override
         public IncubateRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            IngredientWithSize input = IngredientWithSize.deserialize(JSONUtils.getJsonObject(json, "input"));
+            IngredientWithSize input = IngredientWithSize.deserialize(JSONUtils.getAsJsonObject(json, "input"));
             ItemStack output = ItemStack.EMPTY;
             if (json.has("output"))
                 output = readOutput(json.get("output"));
@@ -84,11 +84,11 @@ public class IncubateRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public void write(PacketBuffer buffer, IncubateRecipe recipe) {
+        public void toNetwork(PacketBuffer buffer, IncubateRecipe recipe) {
             recipe.input.write(buffer);
             SerializeUtil.writeOptional(buffer, recipe.catalyst, IngredientWithSize::write);
 
-            buffer.writeItemStack(recipe.output);
+            buffer.writeItem(recipe.output);
             buffer.writeFluidStack(recipe.output_fluid);
             buffer.writeBoolean(recipe.consume_catalyst);
             buffer.writeVarInt(recipe.water);
@@ -117,11 +117,11 @@ public class IncubateRecipe extends IESerializableRecipe {
         isFood = true;
         List<IItemProvider> items = new ArrayList<>();
         for (Item i : RegistryUtils.getItems()) {
-            if (i.isFood())
+            if (i.isEdible())
                 items.add(i);
         }
 
-        this.input = new IngredientWithSize(Ingredient.fromItems(items.toArray(new IItemProvider[0])), 1);
+        this.input = new IngredientWithSize(Ingredient.of(items.toArray(new IItemProvider[0])), 1);
         this.catalyst = IngredientWithSize.of(new ItemStack(Items.ROTTEN_FLESH));
         this.output = ItemStack.EMPTY;
         this.output_fluid = new FluidStack(IncubatorTileEntity.getProtein(), 25);
@@ -150,7 +150,7 @@ public class IncubateRecipe extends IESerializableRecipe {
     }
 
     @Override
-    public ItemStack getRecipeOutput() {
+    public ItemStack getResultItem() {
         return this.output;
     }
 }

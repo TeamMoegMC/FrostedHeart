@@ -33,7 +33,7 @@ public class SetFlagAction implements PolicyAction {
     }
 
     public SetFlagAction(PacketBuffer buffer) {
-        name = buffer.readString();
+        name = buffer.readUtf();
     }
 
     public SetFlagAction(String name) {
@@ -54,7 +54,7 @@ public class SetFlagAction implements PolicyAction {
 
     @Override
     public void write(PacketBuffer buffer) {
-        buffer.writeString(name);
+        buffer.writeUtf(name);
     }
 
 }

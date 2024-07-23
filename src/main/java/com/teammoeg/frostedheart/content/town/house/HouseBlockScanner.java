@@ -76,7 +76,7 @@ public class HouseBlockScanner extends BlockScanner {
 
     public static boolean isValidFloorOrLadder(World world, BlockPos pos) {
         // Determine whether the block satisfies type requirements
-        if (!FloorBlockScanner.isFloorBlock(world, pos) && !world.getBlockState(pos).isIn(BlockTags.CLIMBABLE)) return false;
+        if (!FloorBlockScanner.isFloorBlock(world, pos) && !world.getBlockState(pos).is(BlockTags.CLIMBABLE)) return false;
         AbstractMap.SimpleEntry<Integer, Boolean> information = countBlocksAbove(pos, (pos1)->FloorBlockScanner.isHouseBlock(world, pos1));
         // Determine whether the block has open air above it
         if (!information.getValue()) {
@@ -95,7 +95,7 @@ public class HouseBlockScanner extends BlockScanner {
     protected void addDecoration(BlockPos pos) {
         BlockState blockState = getBlockState(pos);
         Block block = blockState.getBlock();
-        if (blockState.isIn(FHTags.Blocks.DECORATIONS) || Objects.requireNonNull(block.getRegistryName()).getNamespace().equals("cfm")) {
+        if (blockState.is(FHTags.Blocks.DECORATIONS) || Objects.requireNonNull(block.getRegistryName()).getNamespace().equals("cfm")) {
             String name = block.toString();
             decorations.merge(name, 1, Integer::sum);
         }
@@ -121,7 +121,7 @@ public class HouseBlockScanner extends BlockScanner {
         //FHMain.LOGGER.debug("HouseScanner: first scan completed");
 
         //第二次扫描，判断房间是否密闭
-        ConfinedSpaceScanner airScanner = new ConfinedSpaceScanner(world, startPos.up());
+        ConfinedSpaceScanner airScanner = new ConfinedSpaceScanner(world, startPos.above());
         airScanner.scan(MAX_SCANNING_TIMES_VOLUME, (pos) -> {//对每一个空气方块执行的操作：统计温度、统计体积、统计温度
                     this.temperature += ChunkHeatData.getTemperature(world, pos);
                     this.volume++;

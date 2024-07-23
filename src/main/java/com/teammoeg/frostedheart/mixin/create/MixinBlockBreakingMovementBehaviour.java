@@ -57,7 +57,7 @@ public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehavi
     @Overwrite(remap = false)
     public void tickBreaker(MovementContext context) {
         CompoundNBT data = context.data;
-        if (context.world.isRemote)
+        if (context.world.isClientSide)
             return;
         if (!data.contains("BreakingPos"))
             return;
@@ -77,7 +77,7 @@ public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehavi
         int destroyProgress = data.getInt("Progress");
         int id = data.getInt("BreakerId");
         BlockState stateToBreak = world.getBlockState(breakingPos);
-        float blockHardness = stateToBreak.getBlockHardness(world, breakingPos);
+        float blockHardness = stateToBreak.getDestroySpeed(world, breakingPos);
 
         if (!canBreak(world, breakingPos, stateToBreak)) {
             if (destroyProgress != 0) {
@@ -85,7 +85,7 @@ public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehavi
                 data.remove("Progress");
                 data.remove("TicksUntilNextProgress");
                 data.remove("BreakingPos");
-                world.sendBlockBreakProgress(id, breakingPos, -1);
+                world.destroyBlockProgress(id, breakingPos, -1);
             }
             context.stall = false;
             return;
@@ -99,14 +99,14 @@ public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehavi
         world.playSound(null, breakingPos, stateToBreak.getSoundType().getHitSound(), SoundCategory.NEUTRAL, .25f, 1);
 
         if (destroyProgress >= 10000) {
-            world.sendBlockBreakProgress(id, breakingPos, -1);
+            world.destroyBlockProgress(id, breakingPos, -1);
 
             // break falling blocks from top to bottom
             BlockPos ogPos = breakingPos;
-            BlockState stateAbove = world.getBlockState(breakingPos.up());
+            BlockState stateAbove = world.getBlockState(breakingPos.above());
             while (stateAbove.getBlock() instanceof FallingBlock) {
-                breakingPos = breakingPos.up();
-                stateAbove = world.getBlockState(breakingPos.up());
+                breakingPos = breakingPos.above();
+                stateAbove = world.getBlockState(breakingPos.above());
             }
             stateToBreak = world.getBlockState(breakingPos);
 
@@ -122,7 +122,7 @@ public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehavi
         }
 
         ticksUntilNextProgress = (int) (blockHardness / breakSpeed);
-        world.sendBlockBreakProgress(id, breakingPos, MathHelper.clamp(destroyProgress / 1000, 1, 10));
+        world.destroyBlockProgress(id, breakingPos, MathHelper.clamp(destroyProgress / 1000, 1, 10));
         data.putInt("TicksUntilNextProgress", ticksUntilNextProgress);
         data.putInt("Progress", destroyProgress);
     }

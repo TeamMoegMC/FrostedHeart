@@ -16,7 +16,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 public class TipCommand {
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
         dispatcher.register(
-            Commands.literal("tips").requires((p_198820_0_) -> {return p_198820_0_.hasPermissionLevel(2);}).then(
+            Commands.literal("tips").requires((p_198820_0_) -> {return p_198820_0_.hasPermission(2);}).then(
             Commands.literal("add").then(
             Commands.argument("targets", EntityArgument.players()).then(
             Commands.argument("ID", StringArgumentType.string())

@@ -184,7 +184,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     }
     private static class ItemReward extends EffectEditor<EffectItemReward> {
         private static String fromItemStack(ItemStack s) {
-            return s.getDisplayName().getString() + " x " + s.getCount();
+            return s.getHoverName().getString() + " x " + s.getCount();
         }
 
         public ItemReward(Widget panel, String lbl, EffectItemReward e, Consumer<EffectItemReward> cb) {
@@ -249,7 +249,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         @Override
         public void addWidgets() {
             super.addWidgets();
-            add(new LabeledOpenEditorButton<>(this, e.blocks.isEmpty() ? "" : e.blocks.get(0).getTranslatedName().getString(), "Edit blocks", SelectItemStackDialog.BLOCK_LIST, e.blocks, e.blocks.isEmpty() ? Icon.EMPTY : ItemIcon.getItemIcon(e.blocks.get(0).asItem()), s -> e.blocks = new ArrayList<>(s)));
+            add(new LabeledOpenEditorButton<>(this, e.blocks.isEmpty() ? "" : e.blocks.get(0).getName().getString(), "Edit blocks", SelectItemStackDialog.BLOCK_LIST, e.blocks, e.blocks.isEmpty() ? Icon.EMPTY : ItemIcon.getItemIcon(e.blocks.get(0).asItem()), s -> e.blocks = new ArrayList<>(s)));
 
         }
 

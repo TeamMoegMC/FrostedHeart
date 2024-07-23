@@ -85,7 +85,7 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
 
     @Override
 	public String evalPathString(String path) {
-        return evalPath(path).getString();
+        return evalPath(path).getAsString();
     }
 
     @Override

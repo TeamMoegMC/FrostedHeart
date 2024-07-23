@@ -45,25 +45,25 @@ public class FluidReactionsMixin {
     @Overwrite(remap = false)
     public static void handlePipeSpillCollision(World world, BlockPos pos, Fluid pipeFluid, FluidState worldFluid) {
         Fluid pf = FluidHelper.convertToStill(pipeFluid);
-        Fluid wf = worldFluid.getFluid();
-        if (pf.isIn(FluidTags.WATER) && wf == Fluids.LAVA)
-            world.setBlockState(pos, ForgeEventFactory.fireFluidPlaceBlockEvent(world, pos, pos, Blocks.OBSIDIAN.getDefaultState()));
+        Fluid wf = worldFluid.getType();
+        if (pf.is(FluidTags.WATER) && wf == Fluids.LAVA)
+            world.setBlockAndUpdate(pos, ForgeEventFactory.fireFluidPlaceBlockEvent(world, pos, pos, Blocks.OBSIDIAN.defaultBlockState()));
         else if (pf == Fluids.WATER && wf == Fluids.FLOWING_LAVA)
-            world.setBlockState(pos, ForgeEventFactory.fireFluidPlaceBlockEvent(world, pos, pos, Blocks.COBBLESTONE.getDefaultState()));
+            world.setBlockAndUpdate(pos, ForgeEventFactory.fireFluidPlaceBlockEvent(world, pos, pos, Blocks.COBBLESTONE.defaultBlockState()));
         else if (pf == Fluids.LAVA && wf == Fluids.WATER)
-            world.setBlockState(pos, ForgeEventFactory.fireFluidPlaceBlockEvent(world, pos, pos, Blocks.STONE.getDefaultState()));
+            world.setBlockAndUpdate(pos, ForgeEventFactory.fireFluidPlaceBlockEvent(world, pos, pos, Blocks.STONE.defaultBlockState()));
         else if (pf == Fluids.LAVA && wf == Fluids.FLOWING_WATER)
-            world.setBlockState(pos, ForgeEventFactory.fireFluidPlaceBlockEvent(world, pos, pos, Blocks.COBBLESTONE.getDefaultState()));
+            world.setBlockAndUpdate(pos, ForgeEventFactory.fireFluidPlaceBlockEvent(world, pos, pos, Blocks.COBBLESTONE.defaultBlockState()));
 
         if (pf == Fluids.LAVA) {
             BlockState lavaInteraction = AllFluids.getLavaInteraction(worldFluid);
             if (lavaInteraction != null)
-                world.setBlockState(pos, lavaInteraction);
+                world.setBlockAndUpdate(pos, lavaInteraction);
         } else if (wf == Fluids.FLOWING_LAVA && FluidHelper.hasBlockState(pf)) {
             BlockState lavaInteraction = AllFluids.getLavaInteraction(FluidHelper.convertToFlowing(pf)
-                    .getDefaultState());
+                    .defaultFluidState());
             if (lavaInteraction != null)
-                world.setBlockState(pos, ForgeEventFactory.fireFluidPlaceBlockEvent(world, pos, pos, lavaInteraction));
+                world.setBlockAndUpdate(pos, ForgeEventFactory.fireFluidPlaceBlockEvent(world, pos, pos, lavaInteraction));
         }
     }
 }

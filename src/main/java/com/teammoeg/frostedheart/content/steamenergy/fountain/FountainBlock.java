@@ -44,18 +44,20 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class FountainBlock extends FHBaseBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public FountainBlock(Properties blockProps) {
         super(blockProps);
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
+        this.registerDefaultState(this.stateDefinition.any().setValue(LIT, Boolean.FALSE));
     }
 
     @Override
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
-        if (stateIn.get(LIT)) {
+        if (stateIn.getValue(LIT)) {
             ClientUtils.spawnSteamParticles(worldIn, pos);
         }
     }
@@ -67,8 +69,8 @@ public class FountainBlock extends FHBaseBlock {
     }
 
     @Override
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
         builder.add(LIT);
     }
 
@@ -79,10 +81,10 @@ public class FountainBlock extends FHBaseBlock {
 
     // Refill on click, (refilling reevaluates the height etc)
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult ctx) {
-        if (state.get(LIT).booleanValue()) return ActionResultType.PASS;
+    public ActionResultType use(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult ctx) {
+        if (state.getValue(LIT).booleanValue()) return ActionResultType.PASS;
 
-        TileEntity te = world.getTileEntity(pos);
+        TileEntity te = world.getBlockEntity(pos);
         if (te instanceof FountainTileEntity) {
             FountainTileEntity fte = (FountainTileEntity) te;
             fte.refill();

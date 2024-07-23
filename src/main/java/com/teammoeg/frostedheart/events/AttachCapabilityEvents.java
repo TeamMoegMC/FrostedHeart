@@ -43,8 +43,8 @@ public class AttachCapabilityEvents {
     @SubscribeEvent
     public static void attachToChunk(AttachCapabilitiesEvent<Chunk> event) {
         if (!event.getObject().isEmpty()) {
-            World world = event.getObject().getWorld();
-            if (!world.isRemote) {
+            World world = event.getObject().getLevel();
+            if (!world.isClientSide) {
                 event.addCapability(new ResourceLocation(FHMain.MODID, "chunk_data"), FHCapabilities.CHUNK_HEAT.provider());
                 event.addCapability(new ResourceLocation(FHMain.MODID, "chunk_town_resource"), FHCapabilities.CHUNK_TOWN_RESOURCE.provider());
             }
@@ -76,7 +76,7 @@ public class AttachCapabilityEvents {
     @SubscribeEvent
     public static void attachToWorld(AttachCapabilitiesEvent<World> event) {
         // only attach to dimension with skylight (i.e. overworld)
-        if (!event.getObject().getDimensionType().doesFixedTimeExist()) {
+        if (!event.getObject().dimensionType().hasFixedTime()) {
             event.addCapability(new ResourceLocation(FHMain.MODID, "climate_data"),FHCapabilities.CLIMATE_DATA.provider());
             event.addCapability(new ResourceLocation(FHMain.MODID, "logistic_data"),FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.provider());
         }

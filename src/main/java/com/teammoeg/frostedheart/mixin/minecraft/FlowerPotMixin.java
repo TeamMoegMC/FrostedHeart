@@ -26,6 +26,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.FlowerPotBlock;
+import net.minecraft.block.AbstractBlock.Properties;
+
 /**
  * Fix infinite glitch with rankine flower pot
  * For removal in later version

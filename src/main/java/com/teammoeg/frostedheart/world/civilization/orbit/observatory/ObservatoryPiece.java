@@ -61,13 +61,13 @@ public class ObservatoryPiece extends TemplateStructurePiece {
     }
 
     private void loadTemplate(TemplateManager manager) {
-        Template template = manager.getTemplateDefaulted(this.resource);
+        Template template = manager.getOrCreate(this.resource);
         PlacementSettings placementsettings = (new PlacementSettings()).setRotation(this.rotation).setMirror(Mirror.NONE);
         this.setup(template, this.templatePosition, placementsettings);
     }
 
-    protected void readAdditional(CompoundNBT tagCompound) {
-        super.readAdditional(tagCompound);
+    protected void addAdditionalSaveData(CompoundNBT tagCompound) {
+        super.addAdditionalSaveData(tagCompound);
         tagCompound.putString("Template", this.resource.toString());
         tagCompound.putString("Rot", this.rotation.name());
     }

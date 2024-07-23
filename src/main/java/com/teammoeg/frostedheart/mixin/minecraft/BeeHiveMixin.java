@@ -42,7 +42,7 @@ public class BeeHiveMixin extends TileEntity {
 
     @Inject(at = @At("HEAD"), method = "tick", cancellable = true)
     public void tick(CallbackInfo cbi) {
-        if (!world.isRemote && ChunkHeatData.getTemperature(world, pos) < 14)
+        if (!level.isClientSide && ChunkHeatData.getTemperature(level, worldPosition) < 14)
             cbi.cancel();
     }
 }

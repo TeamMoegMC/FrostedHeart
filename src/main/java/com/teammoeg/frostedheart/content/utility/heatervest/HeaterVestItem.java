@@ -45,6 +45,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+import net.minecraft.item.Item.Properties;
+
 /**
  * Heater Vest: wear it to warm yourself from the coldness.
  * 加温背心：穿戴抵御寒冷
@@ -56,10 +58,10 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
     }
 
     @Override
-    public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
         String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
-        list.add(TranslateUtils.translateTooltip("charger.heat_vest").mergeStyle(TextFormatting.GRAY));
-        list.add(TranslateUtils.translateTooltip("steam_stored", stored).mergeStyle(TextFormatting.GOLD));
+        list.add(TranslateUtils.translateTooltip("charger.heat_vest").withStyle(TextFormatting.GRAY));
+        list.add(TranslateUtils.translateTooltip("steam_stored", stored).withStyle(TextFormatting.GOLD));
     }
 
     @Override
@@ -69,8 +71,8 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
 
 
     @Override
-    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
-        if (this.isInGroup(group)) {
+    public void fillItemCategory(ItemGroup group, NonNullList<ItemStack> items) {
+        if (this.allowdedIn(group)) {
             items.add(new ItemStack(this));
             ItemStack is = new ItemStack(this);
             this.receiveEnergy(is, this.getMaxEnergyStored(is), false);

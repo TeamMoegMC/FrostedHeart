@@ -67,24 +67,24 @@ public abstract class MixinOceanRuinPiece extends TemplateStructurePiece {
     @Overwrite
     protected void handleDataMarker(String function, BlockPos pos, IServerWorld worldIn, Random rand, MutableBoundingBox sbb) {
         if ("chest".equals(function)) {
-            BlockState chest = StructureUtils.getChest().getDefaultState();
+            BlockState chest = StructureUtils.getChest().defaultBlockState();
             if (chest.hasProperty(BlockStateProperties.WATERLOGGED))
-                chest = chest.with(BlockStateProperties.WATERLOGGED, worldIn.getFluidState(pos).isTagged(FluidTags.WATER));
-            worldIn.setBlockState(pos, chest, 2);
-            TileEntity tileentity = worldIn.getTileEntity(pos);
+                chest = chest.setValue(BlockStateProperties.WATERLOGGED, worldIn.getFluidState(pos).is(FluidTags.WATER));
+            worldIn.setBlock(pos, chest, 2);
+            TileEntity tileentity = worldIn.getBlockEntity(pos);
             if (tileentity instanceof LockableLootTileEntity) {
-                ((LockableLootTileEntity) tileentity).setLootTable(this.isLarge ? LootTables.CHESTS_UNDERWATER_RUIN_BIG : LootTables.CHESTS_UNDERWATER_RUIN_SMALL, rand.nextLong());
+                ((LockableLootTileEntity) tileentity).setLootTable(this.isLarge ? LootTables.UNDERWATER_RUIN_BIG : LootTables.UNDERWATER_RUIN_SMALL, rand.nextLong());
             }
         } else if ("drowned".equals(function)) {
-            DrownedEntity drownedentity = EntityType.DROWNED.create(worldIn.getWorld());
-            drownedentity.enablePersistence();
-            drownedentity.moveToBlockPosAndAngles(pos, 0.0F, 0.0F);
-            drownedentity.onInitialSpawn(worldIn, worldIn.getDifficultyForLocation(pos), SpawnReason.STRUCTURE, null, null);
-            worldIn.func_242417_l(drownedentity);
+            DrownedEntity drownedentity = EntityType.DROWNED.create(worldIn.getLevel());
+            drownedentity.setPersistenceRequired();
+            drownedentity.moveTo(pos, 0.0F, 0.0F);
+            drownedentity.finalizeSpawn(worldIn, worldIn.getCurrentDifficultyAt(pos), SpawnReason.STRUCTURE, null, null);
+            worldIn.addFreshEntityWithPassengers(drownedentity);
             if (pos.getY() > worldIn.getSeaLevel()) {
-                worldIn.setBlockState(pos, Blocks.AIR.getDefaultState(), 2);
+                worldIn.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
             } else {
-                worldIn.setBlockState(pos, Blocks.WATER.getDefaultState(), 2);
+                worldIn.setBlock(pos, Blocks.WATER.defaultBlockState(), 2);
             }
         }
 

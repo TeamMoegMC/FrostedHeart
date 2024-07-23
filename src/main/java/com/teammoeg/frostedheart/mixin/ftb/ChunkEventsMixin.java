@@ -51,7 +51,7 @@ public class ChunkEventsMixin {
      */
     @Overwrite(remap = false)
     private void playerJoinedParty(PlayerJoinedPartyTeamEvent event) {
-        CommandSource sourceStack = event.getTeam().manager.server.getCommandSource();
+        CommandSource sourceStack = event.getTeam().manager.server.createCommandSourceStack();
         FTBChunksTeamData oldData = FTBChunksAPI.getManager().getData(event.getPreviousTeam());
         FTBChunksTeamData newData = FTBChunksAPI.getManager().getData(event.getTeam());
         newData.updateLimits(event.getPlayer());
@@ -94,7 +94,7 @@ public class ChunkEventsMixin {
         for (Map.Entry<RegistryKey<World>, List<SendChunkPacket.SingleChunk>> entry : chunksToUnclaim.entrySet()) {
             SendManyChunksPacket packet = new SendManyChunksPacket();
             packet.dimension = entry.getKey();
-            packet.teamId = Util.DUMMY_UUID;
+            packet.teamId = Util.NIL_UUID;
             packet.chunks = entry.getValue();
             packet.sendToAll(sourceStack.getServer());
         }

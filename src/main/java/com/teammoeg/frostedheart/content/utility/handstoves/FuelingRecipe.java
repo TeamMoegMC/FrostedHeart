@@ -45,22 +45,22 @@ public class FuelingRecipe extends SpecialRecipe {
 
         @Nullable
         @Override
-        public FuelingRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            Ingredient input = Ingredient.read(buffer);
+        public FuelingRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+            Ingredient input = Ingredient.fromNetwork(buffer);
             int f = buffer.readVarInt();
             return new FuelingRecipe(recipeId, input, f);
         }
 
         @Override
         public FuelingRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            Ingredient input = Ingredient.deserialize(json.get("input"));
+            Ingredient input = Ingredient.fromJson(json.get("input"));
             int fuel = JsonHelper.getIntOrDefault(json, "fuel", 400);
             return new FuelingRecipe(recipeId, input, fuel);
         }
 
         @Override
-        public void write(PacketBuffer buffer, FuelingRecipe recipe) {
-            recipe.type.write(buffer);
+        public void toNetwork(PacketBuffer buffer, FuelingRecipe recipe) {
+            recipe.type.toNetwork(buffer);
             buffer.writeVarInt(recipe.fuel);
         }
     }
@@ -79,18 +79,18 @@ public class FuelingRecipe extends SpecialRecipe {
     /**
      * Used to determine if this recipe can fit in a grid of the given width/height
      */
-    public boolean canFit(int width, int height) {
+    public boolean canCraftInDimensions(int width, int height) {
         return width * height >= 2;
     }
 
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack getCraftingResult(CraftingInventory inv) {
+    public ItemStack assemble(CraftingInventory inv) {
         ItemStack buffstack = ItemStack.EMPTY;
         ItemStack armoritem = ItemStack.EMPTY;
-        for (int i = 0; i < inv.getSizeInventory(); ++i) {
-            ItemStack itemstack = inv.getStackInSlot(i);
+        for (int i = 0; i < inv.getContainerSize(); ++i) {
+            ItemStack itemstack = inv.getItem(i);
             if (itemstack != null && !itemstack.isEmpty()) {
                 if (type.test(itemstack)) {
                     if (!buffstack.isEmpty()) return ItemStack.EMPTY;
@@ -130,8 +130,8 @@ public class FuelingRecipe extends SpecialRecipe {
     public boolean matches(CraftingInventory inv, World worldIn) {
         boolean hasArmor = false;
         boolean hasItem = false;
-        for (int i = 0; i < inv.getSizeInventory(); ++i) {
-            ItemStack itemstack = inv.getStackInSlot(i);
+        for (int i = 0; i < inv.getContainerSize(); ++i) {
+            ItemStack itemstack = inv.getItem(i);
             if (itemstack == null || itemstack.isEmpty()) {
                 continue;
             }

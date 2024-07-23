@@ -24,6 +24,8 @@ import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 
+import net.minecraft.item.Item.Properties;
+
 public class FHReusablePen extends FHBaseItem implements IPen {
     int lvl;
 
@@ -34,12 +36,12 @@ public class FHReusablePen extends FHBaseItem implements IPen {
 
     @Override
     public boolean canUse(PlayerEntity e, ItemStack stack, int val) {
-        return stack.getDamage() < stack.getMaxDamage() - val;
+        return stack.getDamageValue() < stack.getMaxDamage() - val;
     }
 
     @Override
     public void doDamage(PlayerEntity e, ItemStack stack, int val) {
-        stack.damageItem(val, e, ex -> {
+        stack.hurtAndBreak(val, e, ex -> {
         });
     }
 

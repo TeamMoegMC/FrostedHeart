@@ -49,7 +49,7 @@ public class FMLHandshakeAntiCheatMixin {
                 FHMain.LOGGER.warn("Rejected Connection: Blacklisted mods ");
                 ITextComponent t = TranslateUtils.str("警告：你有被认为是作弊的mod。");
                 c.get().getNetworkManager()
-                        .sendPacket(new SDisconnectLoginPacket(t), (p_211391_2_) -> c.get().getNetworkManager().closeChannel(t));
+                        .send(new SDisconnectLoginPacket(t), (p_211391_2_) -> c.get().getNetworkManager().disconnect(t));
 
 
                 cbi.cancel();

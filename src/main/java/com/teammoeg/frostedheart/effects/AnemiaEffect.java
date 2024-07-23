@@ -44,15 +44,15 @@ public class AnemiaEffect extends Effect {
     }
 
     @Override
-    public boolean isReady(int duration, int amplifier) {
+    public boolean isDurationEffectTick(int duration, int amplifier) {
         return duration % 100 == 0;
     }
 
     @Override
-    public void performEffect(LivingEntity entityLivingBaseIn, int amplifier) {
-        entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.SLOWNESS, 100, amplifier)));
-        entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, amplifier)));
-        entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.WEAKNESS, 100, amplifier * 2)));
-        entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(EffectRegistry.THIRST, 100, amplifier * 2)));
+    public void applyEffectTick(LivingEntity entityLivingBaseIn, int amplifier) {
+        entityLivingBaseIn.addEffect(FHUtils.noHeal(new EffectInstance(Effects.MOVEMENT_SLOWDOWN, 100, amplifier)));
+        entityLivingBaseIn.addEffect(FHUtils.noHeal(new EffectInstance(Effects.DIG_SLOWDOWN, 100, amplifier)));
+        entityLivingBaseIn.addEffect(FHUtils.noHeal(new EffectInstance(Effects.WEAKNESS, 100, amplifier * 2)));
+        entityLivingBaseIn.addEffect(FHUtils.noHeal(new EffectInstance(EffectRegistry.THIRST, 100, amplifier * 2)));
     }
 }

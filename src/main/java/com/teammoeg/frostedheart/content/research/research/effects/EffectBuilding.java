@@ -65,7 +65,7 @@ public class EffectBuilding extends Effect {
     public EffectBuilding(IETemplateMultiblock s, Block b) {
         super();
         super.icon = FHIcons.getIcon(b);
-        tooltip.add("@" + b.getTranslationKey());
+        tooltip.add("@" + b.getDescriptionId());
         multiblock = s;
 
     }
@@ -121,14 +121,14 @@ public class EffectBuilding extends Effect {
     @OnlyIn(Dist.CLIENT)
     @Override
     public void onClick() {
-        if (this.isGranted() && ClientUtils.getPlayer().inventory.hasAny(ImmutableSet.of(IEItems.Tools.manual))) {
+        if (this.isGranted() && ClientUtils.getPlayer().inventory.hasAnyOf(ImmutableSet.of(IEItems.Tools.manual))) {
             ResourceLocation loc = multiblock.getUniqueName();
             ResourceLocation manual = new ResourceLocation(loc.getNamespace(), loc.getPath().substring(loc.getPath().lastIndexOf("/") + 1));
             ManualScreen screen = ManualHelper.getManual().getGui();
             ManualEntry entry = ManualHelper.getManual().getEntry(manual);
             if (entry != null) {
 
-                ClientUtils.mc().displayGuiScreen(screen);
+                ClientUtils.mc().setScreen(screen);
                 //System.out.println(manual);
                 screen.setCurrentNode(entry.getTreeNode());
                 screen.page = 0;

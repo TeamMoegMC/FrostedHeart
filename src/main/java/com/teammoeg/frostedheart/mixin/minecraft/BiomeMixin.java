@@ -42,16 +42,16 @@ public abstract class BiomeMixin {
         if (this.getTemperature(water) >= 0.15F) {
             return false;
         }
-        if (water.getY() >= 0 && water.getY() < 256 && worldIn.getLightFor(LightType.BLOCK, water) < 10 && ChunkHeatData.getTemperature(worldIn, water) < 0) {
+        if (water.getY() >= 0 && water.getY() < 256 && worldIn.getBrightness(LightType.BLOCK, water) < 10 && ChunkHeatData.getTemperature(worldIn, water) < 0) {
             BlockState blockstate = worldIn.getBlockState(water);
             FluidState fluidstate = worldIn.getFluidState(water);
-            if (fluidstate.getFluid() == Fluids.WATER && blockstate.getBlock() instanceof FlowingFluidBlock) {
+            if (fluidstate.getType() == Fluids.WATER && blockstate.getBlock() instanceof FlowingFluidBlock) {
                 if (!mustBeAtEdge) {
                     return true;
                 }
 
-                boolean flag = worldIn.hasWater(water.west()) && worldIn.hasWater(water.east())
-                        && worldIn.hasWater(water.north()) && worldIn.hasWater(water.south());
+                boolean flag = worldIn.isWaterAt(water.west()) && worldIn.isWaterAt(water.east())
+                        && worldIn.isWaterAt(water.north()) && worldIn.isWaterAt(water.south());
                 return !flag;
             }
         }

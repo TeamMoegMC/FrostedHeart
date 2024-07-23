@@ -59,7 +59,7 @@ public class WorldMarker {
 		}
 	}
 	public static final Codec<WorldMarker> CODEC=RecordCodecBuilder.create(t->t.group(
-			CodecUtil.mapCodec("pos", Codec.LONG.xmap(ChunkPos::new, ChunkPos::asLong), "data", ChunkMarker.CODEC).fieldOf("data").forGetter(o->o.poss)
+			CodecUtil.mapCodec("pos", Codec.LONG.xmap(ChunkPos::new, ChunkPos::toLong), "data", ChunkMarker.CODEC).fieldOf("data").forGetter(o->o.poss)
 			).apply(t, WorldMarker::new));
 	Map<ChunkPos,ChunkMarker> poss=new HashMap<>();
 	Function<ChunkPos,ChunkMarker> getter=t->poss.computeIfAbsent(t, o->new ChunkMarker());

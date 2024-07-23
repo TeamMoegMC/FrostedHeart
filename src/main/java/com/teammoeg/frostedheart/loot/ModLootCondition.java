@@ -72,7 +72,7 @@ public class ModLootCondition implements ILootCondition {
     }
 
     @Override
-    public LootConditionType getConditionType() {
+    public LootConditionType getType() {
         return TYPE;
     }
 

@@ -91,12 +91,12 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 
     public void init(ServerPlayerEntity player) {
     	if(!isInited())inited=true;
-		this.player = player.getUniqueID();
+		this.player = player.getUUID();
 	}
 
     public ScenarioConductor(ServerPlayerEntity player) {
 		super();
-		this.player = player.getUniqueID();
+		this.player = player.getUUID();
 		setCurrentAct(new Act(this,init));
 		acts.put(init, getCurrentAct());
 		acts.put(global, new Act(this,global));
@@ -340,12 +340,12 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
     	//currentAct=acts.get(empty);
 	}
 	public ServerPlayerEntity getPlayer() {
-        return FHTeamDataManager.getServer().getPlayerList().getPlayerByUUID(player);
+        return FHTeamDataManager.getServer().getPlayerList().getPlayer(player);
     }
     public String getLang() {
     	return getPlayer().getLanguage();
     }
 	public void sendMessage(String s) {
-		getPlayer().sendStatusMessage(TranslateUtils.str(s), false);
+		getPlayer().displayClientMessage(TranslateUtils.str(s), false);
 	}
 }

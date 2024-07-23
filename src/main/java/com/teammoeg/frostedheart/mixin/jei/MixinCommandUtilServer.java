@@ -41,7 +41,7 @@ public class MixinCommandUtilServer {
         if (FHConfig.SERVER.fixEssJeiIssue.get()) {
             MinecraftServer s = sender.getServer();
             if (s != null)
-                cbib.setReturnValue(sender.getCommandSource().hasPermissionLevel(s.getOpPermissionLevel()));
+                cbib.setReturnValue(sender.createCommandSourceStack().hasPermission(s.getOperatorUserPermissionLevel()));
             else
                 cbib.setReturnValue(false);
         }

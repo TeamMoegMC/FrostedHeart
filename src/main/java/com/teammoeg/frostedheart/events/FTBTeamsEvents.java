@@ -45,7 +45,7 @@ public class FTBTeamsEvents {
 
     public static void syncDataWhenTeamCreated(TeamCreatedEvent event) {
         if (FTBTeamsAPI.isManagerLoaded()) {
-            PlayerTeam orig = FTBTeamsAPI.getManager().getInternalPlayerTeam(event.getCreator().getUniqueID());
+            PlayerTeam orig = FTBTeamsAPI.getManager().getInternalPlayerTeam(event.getCreator().getUUID());
 
             FHTeamDataManager.INSTANCE.transfer(orig.getId(), event.getTeam());
             for(ServerPlayerEntity p:event.getTeam().getOnlineMembers()) {

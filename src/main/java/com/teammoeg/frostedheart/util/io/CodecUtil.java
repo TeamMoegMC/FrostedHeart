@@ -149,9 +149,9 @@ public class CodecUtil {
 			CodecUtil.defaultSupply(CompoundNBT.CODEC,CompoundNBT::new).fieldOf("tag").forGetter(ItemStack::getTag))
 		.apply(t, ItemStack::new));
 	public static final Codec<Integer> POSITIVE_INT = Codec.intRange(0, Integer.MAX_VALUE);
-	public static final Codec<BlockPos> BLOCKPOS = alternative(BlockPos.class).add(BlockPos.CODEC).add(Codec.LONG.xmap(BlockPos::fromLong, BlockPos::toLong)).build();
+	public static final Codec<BlockPos> BLOCKPOS = alternative(BlockPos.class).add(BlockPos.CODEC).add(Codec.LONG.xmap(BlockPos::of, BlockPos::asLong)).build();
 	
-	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(JsonOps.INSTANCE,Ingredient::serialize,Ingredient::deserialize,Ingredient::write,Ingredient::read);
+	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(JsonOps.INSTANCE,Ingredient::toJson,Ingredient::fromJson,Ingredient::toNetwork,Ingredient::fromNetwork);
 	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=new PacketOrSchemaCodec<>(JsonOps.INSTANCE,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
 	static final Function<DynamicOps<?>, Codec<?>> schCodec=SerializeUtil.cached(CodecUtil::scCodec);
 	public static final Codec<boolean[]> BOOLEANS = Codec.BYTE.xmap(SerializeUtil::readBooleans, SerializeUtil::writeBooleans);
@@ -194,7 +194,7 @@ public class CodecUtil {
 		return codec.xmap(l->l.stream().collect(Collectors.toMap(Pair::getFirst, Pair::getSecond,(k1,k2)->k2,LinkedHashMap::new)), l->l.entrySet().stream().map(t->Pair.of(t.getKey(), t.getValue())).collect(Collectors.toList()));
 	}*/
 	public static <A> Codec<A> createIntCodec(SimpleRegistry<A> registry) {
-		return Codec.INT.xmap(registry::getByValue, registry::getId);
+		return Codec.INT.xmap(registry::byId, registry::getId);
 	}
 	static <K> Codec<K> scCodec(DynamicOps<K> op){
 		return new Codec<K>(){
@@ -323,10 +323,10 @@ public class CodecUtil {
 	public static <T> void writeCodecNBT(PacketBuffer pb, Codec<T> codec, T obj) {
 		DataResult<INBT> ob = codec.encodeStart(NBTDynamicOps.INSTANCE, obj);
 		Optional<INBT> ret = ob.resultOrPartial(EncoderException::new);
-		pb.writeCompoundTag((CompoundNBT) ret.get());
+		pb.writeNbt((CompoundNBT) ret.get());
 	}
 	public static <T> T readCodecNBT(PacketBuffer pb, Codec<T> codec) {
-		INBT readed = pb.readCompoundTag();
+		INBT readed = pb.readNbt();
 		DataResult<T> ob = codec.parse(NBTDynamicOps.INSTANCE, readed);
 		Optional<T> ret = ob.resultOrPartial(DecoderException::new);
 		return ret.get();

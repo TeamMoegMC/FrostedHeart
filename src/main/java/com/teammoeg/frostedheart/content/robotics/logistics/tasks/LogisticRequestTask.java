@@ -27,7 +27,7 @@ public class LogisticRequestTask implements LogisticTask {
 
 	@Override
 	public void work(LogisticNetwork network,int msize) {
-		int rets= network.fetchItemInto(filter, network.getStorage(storage.getPos()).getInventory(), fetchNBT, Math.min(msize, size));
+		int rets= network.fetchItemInto(filter, network.getStorage(storage.getBlockPos()).getInventory(), fetchNBT, Math.min(msize, size));
 		size-=rets;
 	}
 

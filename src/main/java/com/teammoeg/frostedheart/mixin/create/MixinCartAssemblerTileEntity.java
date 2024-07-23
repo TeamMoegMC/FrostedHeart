@@ -56,13 +56,13 @@ public abstract class MixinCartAssemblerTileEntity extends SmartTileEntity {
     public void tryAssemble(AbstractMinecartEntity cart, CallbackInfo cbi) {
         if (cart == null)
             return;
-        if (!cart.world.isRemote) {
+        if (!cart.level.isClientSide) {
 
 
             if (!isMinecartUpdateValid())
                 return;
             resetTicksSinceMinecartUpdate();
-            disassemble(world, pos, cart);
+            disassemble(level, worldPosition, cart);
             cbi.cancel();
 
         }

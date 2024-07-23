@@ -27,8 +27,8 @@ import net.minecraft.block.material.Material;
 
 public class AccessControlBlock extends FHBaseBlock {
     public AccessControlBlock() {
-        super(Block.Properties.create(Material.IRON).sound(SoundType.STONE).setRequiresTool()
-                .hardnessAndResistance(0, 2000).notSolid());
+        super(Block.Properties.of(Material.METAL).sound(SoundType.STONE).requiresCorrectToolForDrops()
+                .strength(0, 2000).noOcclusion());
 
     }
 }

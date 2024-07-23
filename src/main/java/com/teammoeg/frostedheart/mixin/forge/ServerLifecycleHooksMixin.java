@@ -53,8 +53,8 @@ public class ServerLifecycleHooksMixin {
     //automatically update serverconfig
     @Inject(at = @At("HEAD"), method = "handleServerAboutToStart", remap = false)
     private static void fh$updateConfig(MinecraftServer server, CallbackInfoReturnable cir) {
-        Path config = server.func_240776_a_(SERVERCONFIG);
-        Path configbkf = server.func_240776_a_(bkfconfig);
+        Path config = server.getWorldPath(SERVERCONFIG);
+        Path configbkf = server.getWorldPath(bkfconfig);
         FHMain.lastbkf = null;
         FHMain.saveNeedUpdate = false;
         File fconfig = config.toFile();

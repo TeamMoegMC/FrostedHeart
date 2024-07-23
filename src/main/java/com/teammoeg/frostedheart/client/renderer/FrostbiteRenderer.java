@@ -47,11 +47,11 @@ public class FrostbiteRenderer<T extends LivingEntity, M extends BipedModel<T> &
         ItemStack heaterVest = new ItemStack(FHItems.heater_vest.get());
         BipedModel<T> model = FHItems.heater_vest.get().getArmorModel(living, heaterVest, EquipmentSlotType.CHEST, null);
         if (model != null) {
-            model.setRotationAngles(living, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
-            RenderType type = model.getRenderType(
+            model.setupAnim(living, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+            RenderType type = model.renderType(
                     new ResourceLocation(FHItems.heater_vest.get().getArmorTexture(heaterVest, living, EquipmentSlotType.CHEST, null))
             );
-            model.render(matrixStackIn, bufferIn.getBuffer(type), packedLightIn, OverlayTexture.NO_OVERLAY, 1F, 1F, 1F, 1F);
+            model.renderToBuffer(matrixStackIn, bufferIn.getBuffer(type), packedLightIn, OverlayTexture.NO_OVERLAY, 1F, 1F, 1F, 1F);
         }
     }
 }

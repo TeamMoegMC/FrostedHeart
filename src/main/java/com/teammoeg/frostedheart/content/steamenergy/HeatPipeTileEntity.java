@@ -46,16 +46,16 @@ public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileE
         if(ntwk==null||ntwk.getNetworkSize()<network.getNetworkSize()) {
         	ntwk=network;
         }
-    	if (ntwk.shouldPropagate(getPos(),ndist)) {
+    	if (ntwk.shouldPropagate(getBlockPos(),ndist)) {
 	        this.propagate(to, ntwk, ndist);
         }
         return true;
     }
     public void connectTo(Direction d, HeatEnergyNetwork network, int lengthx) {
-    	BlockPos n = this.getPos().offset(d);
+    	BlockPos n = this.getBlockPos().relative(d);
 
         d=d.getOpposite();
-        HeatCapabilities.connect(network, getWorld(), n, d, lengthx+1);
+        HeatCapabilities.connect(network, getLevel(), n, d, lengthx+1);
 
     }
     protected void propagate(Direction from, HeatEnergyNetwork network, int lengthx) {
@@ -80,7 +80,7 @@ public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileE
         	cnt=10;
         	BlockState bs=this.getBlockState();
         	for(Direction dir:Direction.values()) {
-        		if(bs.get(FluidPipeBlock.FACING_TO_PROPERTY_MAP.get(dir))) {
+        		if(bs.getValue(FluidPipeBlock.PROPERTY_BY_DIRECTION.get(dir))) {
         			onFaceChange(dir,true);
         		}
         	}

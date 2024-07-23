@@ -68,17 +68,17 @@ public abstract class RabbitEntityMixin extends AnimalEntity implements IFeedSto
     }
 
     @Override
-    public ActionResultType getEntityInteractionResult(PlayerEntity playerIn, Hand hand) {
-        ItemStack itemstack = playerIn.getHeldItem(hand);
+    public ActionResultType mobInteract(PlayerEntity playerIn, Hand hand) {
+        ItemStack itemstack = playerIn.getItemInHand(hand);
 
-        if (!this.isChild() && !itemstack.isEmpty() && isBreedingItem(itemstack)) {
+        if (!this.isBaby() && !itemstack.isEmpty() && isFood(itemstack)) {
             if (feeded < 2) {
                 feeded++;
-                if (!this.world.isRemote)
-                    this.consumeItemFromStack(playerIn, itemstack);
-                return ActionResultType.func_233537_a_(this.world.isRemote);
+                if (!this.level.isClientSide)
+                    this.usePlayerItem(playerIn, itemstack);
+                return ActionResultType.sidedSuccess(this.level.isClientSide);
             }
         }
-        return super.getEntityInteractionResult(playerIn, hand);
+        return super.mobInteract(playerIn, hand);
     }
 }

@@ -23,7 +23,7 @@ public class LogisticInternalPushTask implements LogisticTask {
 	@Override
 	public void work(LogisticNetwork network, int msize) {
 		if(from==null) {
-			from=new LogisticSlot(network.getStorage(tile.getPos()),slot);
+			from=new LogisticSlot(network.getStorage(tile.getBlockPos()),slot);
 		}
 		network.importTransit(from, msize);
 

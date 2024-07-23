@@ -46,7 +46,7 @@ public abstract class IceMixin {
      */
     @Overwrite
     public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
-        if (worldIn.getLightFor(LightType.BLOCK, pos) > 11 - state.getOpacity(worldIn, pos) || ChunkHeatData.getTemperature(worldIn, pos) > 0.5) {
+        if (worldIn.getBrightness(LightType.BLOCK, pos) > 11 - state.getLightBlock(worldIn, pos) || ChunkHeatData.getTemperature(worldIn, pos) > 0.5) {
             this.turnIntoWater(state, worldIn, pos);
         }
 

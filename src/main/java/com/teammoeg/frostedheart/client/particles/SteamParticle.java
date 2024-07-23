@@ -35,9 +35,9 @@ public class SteamParticle extends GasParticle {
         }
 
         @Override
-        public Particle makeParticle(BasicParticleType typeIn, ClientWorld worldIn, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+        public Particle createParticle(BasicParticleType typeIn, ClientWorld worldIn, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
             SteamParticle steamParticle = new SteamParticle(worldIn, x, y, z, xSpeed, ySpeed, zSpeed);
-            steamParticle.selectSpriteRandomly(this.spriteSet);
+            steamParticle.pickSprite(this.spriteSet);
             return steamParticle;
         }
     }
@@ -45,14 +45,14 @@ public class SteamParticle extends GasParticle {
     public SteamParticle(ClientWorld world, double x, double y, double z, double motionX, double motionY, double motionZ) {
         super(world, x, y, z, motionX, motionY, motionZ);
         // steam is gray, with a random tint
-        this.particleRed = this.particleGreen = this.particleBlue = (float) (Math.random() * 0.2) + 0.8f;
-        this.maxAge = (int) (200D / (Math.random() * 0.2D + 0.8D));
+        this.rCol = this.gCol = this.bCol = (float) (Math.random() * 0.2) + 0.8f;
+        this.lifetime = (int) (200D / (Math.random() * 0.2D + 0.8D));
         this.initialScale = 0.5F;
         // steam physical properties
         this.density = 0.6;
         this.temperature = 373;
         this.airResistance = 0.05;
         // must call this after setting the physical properties
-        this.particleGravity = getEffectiveGravity();
+        this.gravity = getEffectiveGravity();
     }
 }

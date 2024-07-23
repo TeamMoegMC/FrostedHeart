@@ -39,21 +39,21 @@ public class FlowerCoveredDepositFeature extends Feature<BlockStateFeatureConfig
     }
 
     @Override
-    public boolean generate(ISeedReader reader, ChunkGenerator generator, Random rand, BlockPos pos, BlockStateFeatureConfig config) {
+    public boolean place(ISeedReader reader, ChunkGenerator generator, Random rand, BlockPos pos, BlockStateFeatureConfig config) {
         while (true) {
             moveDownUntilDirt:
             {
                 // check whether the block beneath pos is dirt
-                if (reader.getBlockState(pos).isIn(BlockTags.ICE))//do not generate in ice or
+                if (reader.getBlockState(pos).is(BlockTags.ICE))//do not generate in ice or
                     return false;
                 if (pos.getY() > 3) {
-                    if (reader.isAirBlock(pos.down())) {
+                    if (reader.isEmptyBlock(pos.below())) {
                         break moveDownUntilDirt;
                     }
                     if (!reader.getFluidState(pos).isEmpty())
                         return false;
 
-                    Block block = reader.getBlockState(pos.down()).getBlock();
+                    Block block = reader.getBlockState(pos.below()).getBlock();
                     if (!isDirt(block)) {
                         break moveDownUntilDirt;
                     }
@@ -70,15 +70,15 @@ public class FlowerCoveredDepositFeature extends Feature<BlockStateFeatureConfig
                 int depth = 1 + rand.nextInt(3);
                 double radius = (xWidth + zWidth + depth) * 0.333F + 0.5D;
                 int flowerCount = 0;
-                for (BlockPos blockpos : BlockPos.getAllInBoxMutable(pos.add(-xWidth, 0, -zWidth), pos.add(xWidth, 0, zWidth))) {
+                for (BlockPos blockpos : BlockPos.betweenClosed(pos.offset(-xWidth, 0, -zWidth), pos.offset(xWidth, 0, zWidth))) {
                     // randomly place flower
-                    if (rand.nextInt(5) == 0 && blockpos.distanceSq(pos) <= (radius * radius)) {
-                        BlockState flowerToPlace = Blocks.OXEYE_DAISY.getDefaultState();
+                    if (rand.nextInt(5) == 0 && blockpos.distSqr(pos) <= (radius * radius)) {
+                        BlockState flowerToPlace = Blocks.OXEYE_DAISY.defaultBlockState();
                         // valid plant position and open to air and not on ice
-                        if (flowerToPlace.isValidPosition(reader, blockpos) && reader.isAirBlock(pos.up())
-                                && !reader.getBlockState(pos.down()).getBlock().matchesBlock(Blocks.ICE)
+                        if (flowerToPlace.canSurvive(reader, blockpos) && reader.isEmptyBlock(pos.above())
+                                && !reader.getBlockState(pos.below()).getBlock().is(Blocks.ICE)
                         ) {
-                            reader.setBlockState(blockpos, Blocks.OXEYE_DAISY.getDefaultState(), 4);
+                            reader.setBlock(blockpos, Blocks.OXEYE_DAISY.defaultBlockState(), 4);
                             flowerCount++;
                         }
                     }
@@ -88,15 +88,15 @@ public class FlowerCoveredDepositFeature extends Feature<BlockStateFeatureConfig
                 }
 
                 // move pos down by two blocks to hide clay
-                pos = pos.down(2);
-                for (BlockPos blockpos : BlockPos.getAllInBoxMutable(pos.add(-xWidth, -depth, -zWidth), pos.add(xWidth, 0, zWidth))) {
-                    if (blockpos.distanceSq(pos.up(2)) <= (radius * radius)) {
+                pos = pos.below(2);
+                for (BlockPos blockpos : BlockPos.betweenClosed(pos.offset(-xWidth, -depth, -zWidth), pos.offset(xWidth, 0, zWidth))) {
+                    if (blockpos.distSqr(pos.above(2)) <= (radius * radius)) {
                         if (
-                                config.state.isValidPosition(reader, blockpos)
-                                        && !reader.isAirBlock(blockpos.up())  // not exposed in air or snow
-                                        && !reader.getBlockState(blockpos.up()).getBlock().matchesBlock(Blocks.SNOW)
+                                config.state.canSurvive(reader, blockpos)
+                                        && !reader.isEmptyBlock(blockpos.above())  // not exposed in air or snow
+                                        && !reader.getBlockState(blockpos.above()).getBlock().is(Blocks.SNOW)
                         )
-                            reader.setBlockState(blockpos, config.state, 4);
+                            reader.setBlock(blockpos, config.state, 4);
                     }
                 }
 
@@ -104,7 +104,7 @@ public class FlowerCoveredDepositFeature extends Feature<BlockStateFeatureConfig
             }
 
             // try next block beneath
-            pos = pos.down();
+            pos = pos.below();
         }
     }
 }

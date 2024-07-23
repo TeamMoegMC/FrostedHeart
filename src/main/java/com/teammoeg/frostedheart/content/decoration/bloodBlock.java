@@ -16,29 +16,31 @@ import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class bloodBlock extends FHBaseBlock {
     private static IntegerProperty BLDT = IntegerProperty.create("bloodtype", 0, 3);
     private static IntegerProperty BLDC = IntegerProperty.create("bloodcolor", 0, 1);
     public bloodBlock(Properties blockProps) {
         super(blockProps);
-        this.setDefaultState(this.stateContainer.getBaseState().with(BLDT, 0).with(BLDC, 0));
+        this.registerDefaultState(this.stateDefinition.any().setValue(BLDT, 0).setValue(BLDC, 0));
     }
 
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
         builder.add(BLDC);
         builder.add(BLDT);
     }
 
-    public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+    public void setPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         Integer finalType = Math.abs(RANDOM.nextInt()) % 4;
         Integer finalColor = Math.abs(RANDOM.nextInt()) % 2;
-        BlockState newState = this.stateContainer.getBaseState().with(BLDT, finalType).with(BLDC, finalColor);
-        worldIn.setBlockState(pos, newState);
+        BlockState newState = this.stateDefinition.any().setValue(BLDT, finalType).setValue(BLDC, finalColor);
+        worldIn.setBlockAndUpdate(pos, newState);
     }
 
     @Override
     public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-        return Block.makeCuboidShape(0, 0, 0, 16, 1, 16);
+        return Block.box(0, 0, 0, 16, 1, 16);
     }
 }
 

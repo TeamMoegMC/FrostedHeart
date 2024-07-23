@@ -23,34 +23,34 @@ import net.minecraft.world.World;
 public class WoodenBox extends FHBaseBlock {
     private static Integer colorCount = 5;
     private static IntegerProperty TYPE = IntegerProperty.create("boxcolor", 0, colorCount - 1);
-    static final VoxelShape shape = Block.makeCuboidShape(0, 0, 0, 16, 16, 16);
+    static final VoxelShape shape = Block.box(0, 0, 0, 16, 16, 16);
     public WoodenBox(AbstractBlock.Properties blockProps) {
         super(blockProps);
-        this.setDefaultState(this.stateContainer.getBaseState().with(TYPE, 0));
+        this.registerDefaultState(this.stateDefinition.any().setValue(TYPE, 0));
     }
 
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
         builder.add(TYPE);
     }
 
-    public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+    public void setPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         Integer finalColor = Math.abs(RANDOM.nextInt()) % colorCount;
-        BlockState newState = this.stateContainer.getBaseState().with(TYPE, finalColor);
-        worldIn.setBlockState(pos, newState);
+        BlockState newState = this.stateDefinition.any().setValue(TYPE, finalColor);
+        worldIn.setBlockAndUpdate(pos, newState);
     }
 
     @Override
-    public void onBlockHarvested(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
-        super.onBlockHarvested(worldIn, pos, state, player);
+    public void playerWillDestroy(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
+        super.playerWillDestroy(worldIn, pos, state, player);
         int count = Math.abs(RANDOM.nextInt()) % 5 + 1;
-        spawnAsEntity(worldIn, pos, new ItemStack(Items.POTATO, count));
+        popResource(worldIn, pos, new ItemStack(Items.POTATO, count));
     }
 
     @Override
-    public void onExplosionDestroy(World worldIn, BlockPos pos, Explosion explosionIn) {
-        super.onExplosionDestroy(worldIn, pos, explosionIn);
+    public void wasExploded(World worldIn, BlockPos pos, Explosion explosionIn) {
+        super.wasExploded(worldIn, pos, explosionIn);
         int count = Math.abs(RANDOM.nextInt()) % 2 + 1;
-        spawnAsEntity(worldIn, pos, new ItemStack(Items.POTATO, count));
+        popResource(worldIn, pos, new ItemStack(Items.POTATO, count));
     }
 
     @Override

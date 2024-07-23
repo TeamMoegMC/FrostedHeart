@@ -38,13 +38,13 @@ public class IncubatorT2Container extends IEBaseContainer<HeatIncubatorTileEntit
         });*/
         this.addSlot(new IESlot(this, this.inv, 1, 65, 44) {
             @Override
-            public boolean isItemValid(ItemStack itemStack) {
+            public boolean mayPlace(ItemStack itemStack) {
                 return tile.isStackValid(1, itemStack);
             }
         });
         this.addSlot(new IESlot(this, this.inv, 2, 65, 26) {
             @Override
-            public boolean isItemValid(ItemStack itemStack) {
+            public boolean mayPlace(ItemStack itemStack) {
                 return tile.isStackValid(2, itemStack);
             }
         });

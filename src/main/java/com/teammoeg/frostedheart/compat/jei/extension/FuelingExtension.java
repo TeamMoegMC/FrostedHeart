@@ -46,7 +46,7 @@ public class FuelingExtension implements ICraftingCategoryExtension {
 
     @Override
     public void setIngredients(IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Collections.singletonList(new ItemStack(FHItems.hand_stove.get())), Arrays.asList(fuel.getIngredient().getMatchingStacks())));
+        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Collections.singletonList(new ItemStack(FHItems.hand_stove.get())), Arrays.asList(fuel.getIngredient().getItems())));
         ItemStack out = new ItemStack(FHItems.hand_stove.get());
         CoalHandStove.setFuelAmount(out, fuel.getFuel());
         ingredients.setOutput(VanillaTypes.ITEM, out);

@@ -60,74 +60,76 @@ import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkHooks;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvider {
 
     public static final BooleanProperty IS_NOT_MAIN = BooleanProperty.create("not_multi_main");
     public static final DirectionProperty FACING = DirectionProperty.create("facing", Direction.Plane.HORIZONTAL);
     public static final BooleanProperty BOOK = BooleanProperty.create("has_book");
 
-    static final VoxelShape shape = Block.makeCuboidShape(0, 0, 0, 16, 15, 16);
-    static final VoxelShape shape2 = Block.makeCuboidShape(0, 0, 0, 16, 12, 16);
+    static final VoxelShape shape = Block.box(0, 0, 0, 16, 15, 16);
+    static final VoxelShape shape2 = Block.box(0, 0, 0, 16, 12, 16);
 
     private static Direction getNeighbourDirection(boolean b, Direction directionIn) {
         return !b ? directionIn : directionIn.getOpposite();
     }
 
     public static void setBlockhasbook(World worldIn, BlockPos pos, BlockState state, boolean hasBook) {
-        worldIn.setBlockState(pos, state.with(BOOK, hasBook), 3);
+        worldIn.setBlock(pos, state.setValue(BOOK, hasBook), 3);
     }
 
     public DrawingDeskBlock(Properties blockProps) {
         super(blockProps);
-        this.setDefaultState(this.stateContainer.getBaseState().with(IS_NOT_MAIN, false).with(BOOK, false));
+        this.registerDefaultState(this.stateDefinition.any().setValue(IS_NOT_MAIN, false).setValue(BOOK, false));
         super.setLightOpacity(0);
     }
 
     @Nullable
     @Override
     public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-        if (!state.get(IS_NOT_MAIN))
+        if (!state.getValue(IS_NOT_MAIN))
             return new DrawingDeskTileEntity();
         else return null;
     }
 
     @Override
-    public boolean eventReceived(BlockState state, World worldIn, BlockPos pos, int id, int param) {
-        super.eventReceived(state, worldIn, pos, id, param);
-        TileEntity tileentity = worldIn.getTileEntity(pos);
-        return tileentity != null && tileentity.receiveClientEvent(id, param);
+    public boolean triggerEvent(BlockState state, World worldIn, BlockPos pos, int id, int param) {
+        super.triggerEvent(state, worldIn, pos, id, param);
+        TileEntity tileentity = worldIn.getBlockEntity(pos);
+        return tileentity != null && tileentity.triggerEvent(id, param);
     }
 
     @Override
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
         builder.add(IS_NOT_MAIN, FACING, BOOK);
     }
 
     @Override
     public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos,
                                         ISelectionContext context) {
-        if (state.get(IS_NOT_MAIN))
+        if (state.getValue(IS_NOT_MAIN))
             return shape2;
         return shape;
     }
 
     @Override
     public BlockPos getModelOffset(BlockState arg0, Vector3i arg1) {
-        if (arg0.get(IS_NOT_MAIN))
+        if (arg0.getValue(IS_NOT_MAIN))
             return new BlockPos(1, 0, 0);
         return new BlockPos(0, 0, 0);
         //return null;
     }
 
     @Override
-    public PushReaction getPushReaction(BlockState state) {
+    public PushReaction getPistonPushReaction(BlockState state) {
         return PushReaction.DESTROY;
     }
 
     @Override
     public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-        if (state.get(IS_NOT_MAIN))
+        if (state.getValue(IS_NOT_MAIN))
             return shape2;
         return shape;
     }
@@ -135,81 +137,81 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
     @Nullable
     @Override
     public BlockState getStateForPlacement(BlockItemUseContext context) {
-        Direction direction = context.getPlacementHorizontalFacing().rotateY();
-        BlockPos blockpos = context.getPos();
-        BlockPos blockpos1 = blockpos.offset(direction);
-        return context.getWorld().getBlockState(blockpos1).isReplaceable(context) ? this.getDefaultState().with(FACING, direction) : null;
+        Direction direction = context.getHorizontalDirection().getClockWise();
+        BlockPos blockpos = context.getClickedPos();
+        BlockPos blockpos1 = blockpos.relative(direction);
+        return context.getLevel().getBlockState(blockpos1).canBeReplaced(context) ? this.defaultBlockState().setValue(FACING, direction) : null;
     }
 
     @Override
     public boolean hasTileEntity(BlockState state) {
-        return !state.get(IS_NOT_MAIN);
+        return !state.getValue(IS_NOT_MAIN);
     }
 
     @Override
     public BlockState mirror(BlockState state, Mirror mirrorIn) {
-        return state.rotate(mirrorIn.toRotation(state.get(FACING)));
+        return state.rotate(mirrorIn.getRotation(state.getValue(FACING)));
     }
 
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (!worldIn.isRemote && handIn == Hand.MAIN_HAND && !player.isSneaking()) {
-            if (!player.isCreative() && worldIn.getLight(pos) < 8) {
-                player.sendStatusMessage(TranslateUtils.translateMessage("research.too_dark"), true);
+    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+        if (!worldIn.isClientSide && handIn == Hand.MAIN_HAND && !player.isShiftKeyDown()) {
+            if (!player.isCreative() && worldIn.getMaxLocalRawBrightness(pos) < 8) {
+                player.displayClientMessage(TranslateUtils.translateMessage("research.too_dark"), true);
             } else if (!player.isCreative() && PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getBodyTemp).orElse(0f) < -0.2) {
-                player.sendStatusMessage(TranslateUtils.translateMessage("research.too_cold"), true);
+                player.displayClientMessage(TranslateUtils.translateMessage("research.too_cold"), true);
             } else {
-                if (state.get(IS_NOT_MAIN)) {
-                    pos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
+                if (state.getValue(IS_NOT_MAIN)) {
+                    pos = pos.relative(getNeighbourDirection(state.getValue(IS_NOT_MAIN), state.getValue(FACING)));
                 }
                 TileEntity ii = Utils.getExistingTileEntity(worldIn, pos);
                 UUID crid = FHTeamDataManager.get(player).getId();
                 IOwnerTile.trySetOwner(ii, crid);
                 if (crid != null && crid.equals(IOwnerTile.getOwner(ii)))
-                    NetworkHooks.openGui((ServerPlayerEntity) player, (IInteractionObjectIE) ii, ii.getPos());
+                    NetworkHooks.openGui((ServerPlayerEntity) player, (IInteractionObjectIE) ii, ii.getBlockPos());
                 else
-                    player.sendStatusMessage(TranslateUtils.translateMessage("research.not_owned"), true);
+                    player.displayClientMessage(TranslateUtils.translateMessage("research.not_owned"), true);
             }
         }
         return ActionResultType.SUCCESS;
     }
 
     @Override
-    public void onBlockHarvested(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
-        if (!worldIn.isRemote && player.isCreative()) {
-            boolean block = state.get(IS_NOT_MAIN);
+    public void playerWillDestroy(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
+        if (!worldIn.isClientSide && player.isCreative()) {
+            boolean block = state.getValue(IS_NOT_MAIN);
             if (!block) {
-                BlockPos blockpos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
+                BlockPos blockpos = pos.relative(getNeighbourDirection(state.getValue(IS_NOT_MAIN), state.getValue(FACING)));
                 BlockState blockstate = worldIn.getBlockState(blockpos);
-                if (blockstate.getBlock() == this && blockstate.get(IS_NOT_MAIN)) {
-                    worldIn.setBlockState(blockpos, Blocks.AIR.getDefaultState(), 35);
+                if (blockstate.getBlock() == this && blockstate.getValue(IS_NOT_MAIN)) {
+                    worldIn.setBlock(blockpos, Blocks.AIR.defaultBlockState(), 35);
                 }
             }
         }
-        super.onBlockHarvested(worldIn, pos, state, player);
+        super.playerWillDestroy(worldIn, pos, state, player);
     }
 
     @Override
-    public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-        if (!worldIn.isRemote) {
-            BlockPos blockpos = pos.offset(state.get(FACING));
-            worldIn.setBlockState(blockpos, state.with(IS_NOT_MAIN, true), 3);
-            worldIn.updateBlock(pos, Blocks.AIR);
-            state.updateNeighbours(worldIn, pos, 3);
+    public void setPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+        if (!worldIn.isClientSide) {
+            BlockPos blockpos = pos.relative(state.getValue(FACING));
+            worldIn.setBlock(blockpos, state.setValue(IS_NOT_MAIN, true), 3);
+            worldIn.blockUpdated(pos, Blocks.AIR);
+            state.updateNeighbourShapes(worldIn, pos, 3);
         }
     }
 
     @Override
     public BlockState rotate(BlockState state, IWorld world, BlockPos pos, Rotation direction) {
-        return state.with(FACING, direction.rotate(state.get(FACING)));
+        return state.setValue(FACING, direction.rotate(state.getValue(FACING)));
     }
 
     @Override
-    public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
-        if (facing == getNeighbourDirection(stateIn.get(IS_NOT_MAIN), stateIn.get(FACING)) && facingState.getBlock() != this) {
-            return Blocks.AIR.getDefaultState();
+    public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+        if (facing == getNeighbourDirection(stateIn.getValue(IS_NOT_MAIN), stateIn.getValue(FACING)) && facingState.getBlock() != this) {
+            return Blocks.AIR.defaultBlockState();
         }
-        return super.updatePostPlacement(stateIn, facing, facingState, worldIn, currentPos, facingPos);
+        return super.updateShape(stateIn, facing, facingState, worldIn, currentPos, facingPos);
     }
 }
 

@@ -66,8 +66,8 @@ public class SupplierTileEntity extends FHBaseTileEntity implements TaskableLogi
 
 	@Override
 	public void tick() {
-		FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.getCapability(this.world).resolve()
-		.map(t->t.getNetworkFor(world,pos))
+		FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.getCapability(this.level).resolve()
+		.map(t->t.getNetworkFor(level,worldPosition))
 		.ifPresent(t->t.update(this));
 	}
 

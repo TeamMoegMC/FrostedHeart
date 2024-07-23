@@ -46,18 +46,18 @@ public class ObservatoryStructure extends Structure<NoFeatureConfig> {
         }
 
         @Override
-        public void func_230364_a_(DynamicRegistries dynamic, ChunkGenerator generator, TemplateManager template, int chunkX, int chunkZ, Biome biome, NoFeatureConfig config) {
+        public void generatePieces(DynamicRegistries dynamic, ChunkGenerator generator, TemplateManager template, int chunkX, int chunkZ, Biome biome, NoFeatureConfig config) {
 
             int x = chunkX << 4;
             int z = chunkZ << 4;
-            int surfaceY = generator.getNoiseHeightMinusOne(x, z, Heightmap.Type.WORLD_SURFACE_WG);
+            int surfaceY = generator.getFirstOccupiedHeight(x, z, Heightmap.Type.WORLD_SURFACE_WG);
 
             BlockPos blockpos = new BlockPos(x, surfaceY, z);
 
-            Rotation rotation = Rotation.randomRotation(this.rand);
-            this.components.add(new ObservatoryPiece(template, blockpos, rotation));
+            Rotation rotation = Rotation.getRandom(this.random);
+            this.pieces.add(new ObservatoryPiece(template, blockpos, rotation));
 
-            this.recalculateStructureSize();
+            this.calculateBoundingBox();
 //            FHMain.LOGGER.log(Level.DEBUG, "Observatory at " + (blockpos.getX()) + " " + blockpos.getY() + " " + (blockpos.getZ()));
         }
     }
@@ -68,14 +68,14 @@ public class ObservatoryStructure extends Structure<NoFeatureConfig> {
     }
 
     @Override
-    protected boolean func_230363_a_(ChunkGenerator generator, BiomeProvider biomeprovider, long seed, SharedSeedRandom random, int chunkX, int chunkZ, Biome biome, ChunkPos chunkPos, NoFeatureConfig p_230363_10_) {
+    protected boolean isFeatureChunk(ChunkGenerator generator, BiomeProvider biomeprovider, long seed, SharedSeedRandom random, int chunkX, int chunkZ, Biome biome, ChunkPos chunkPos, NoFeatureConfig p_230363_10_) {
         BlockPos centerOfChunk = new BlockPos(chunkX * 16, 0, chunkZ * 16);
 
-        int landHeight = generator.getNoiseHeight(centerOfChunk.getX(), centerOfChunk.getZ(), Heightmap.Type.WORLD_SURFACE_WG);
+        int landHeight = generator.getFirstFreeHeight(centerOfChunk.getX(), centerOfChunk.getZ(), Heightmap.Type.WORLD_SURFACE_WG);
         if (landHeight < 100 || landHeight > 200) return false;
-        IBlockReader columnOfBlocks = generator.func_230348_a_(centerOfChunk.getX(), centerOfChunk.getZ());
+        IBlockReader columnOfBlocks = generator.getBaseColumn(centerOfChunk.getX(), centerOfChunk.getZ());
 
-        BlockState topBlock = columnOfBlocks.getBlockState(centerOfChunk.up(landHeight));
+        BlockState topBlock = columnOfBlocks.getBlockState(centerOfChunk.above(landHeight));
 
         return topBlock.getFluidState().isEmpty();
 
@@ -83,7 +83,7 @@ public class ObservatoryStructure extends Structure<NoFeatureConfig> {
 
 
     @Override
-    public GenerationStage.Decoration getDecorationStage() {
+    public GenerationStage.Decoration step() {
         return GenerationStage.Decoration.SURFACE_STRUCTURES;
     }
 

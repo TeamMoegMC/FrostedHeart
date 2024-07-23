@@ -74,7 +74,7 @@ public abstract class UnlockList<T> implements Iterable<T> {
 
     public void load(ListNBT nbt) {
         for (INBT in : nbt) {
-            s.add(getObject(in.getString()));
+            s.add(getObject(in.getAsString()));
         }
     }
 

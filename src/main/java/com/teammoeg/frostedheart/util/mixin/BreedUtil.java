@@ -50,7 +50,7 @@ public class BreedUtil {
     public static boolean isBreedingItem(EntityType<?> type, ItemStack itemStack) {
         IOptionalNamedTag<Item> t = tag.get(type);
         if (t != null)
-            return itemStack.getItem().isIn(t);
+            return itemStack.getItem().is(t);
         return false;
     }
 }

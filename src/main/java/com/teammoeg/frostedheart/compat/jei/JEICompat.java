@@ -135,7 +135,7 @@ public class JEICompat implements IModPlugin {
         cachedInfoAdd = false;
         Set<Item> items = new HashSet<>();
         for (IRecipe<?> i : ResearchListeners.recipe) {
-            ItemStack out = i.getRecipeOutput();
+            ItemStack out = i.getResultItem();
             if (out != null && !out.isEmpty()) {
                 items.add(out.getItem());
             }
@@ -175,7 +175,7 @@ public class JEICompat implements IModPlugin {
 
     public static void scheduleSyncJEI() {
         //cachedInfoAdd=true;
-        Minecraft.getInstance().runImmediately(JEICompat::syncJEI);
+        Minecraft.getInstance().executeBlocking(JEICompat::syncJEI);
     }
 
     public static void showJEICategory(ResourceLocation rl) {
@@ -210,7 +210,7 @@ public class JEICompat implements IModPlugin {
                 all.addAll(hs);
             }
             //System.out.println(i.getType().toString()+":"+String.join(",",all.stream().map(Object::toString).collect(Collectors.toList())));
-            ItemStack irs = i.getRecipeOutput();
+            ItemStack irs = i.getResultItem();
             IRecipe<?> ovrd = overrides.get(i.getId());
             if (!ClientResearchDataAPI.getData().crafting.has(i)) {
                 for (ResourceLocation rl : all) {
@@ -270,7 +270,7 @@ public class JEICompat implements IModPlugin {
         		else if(crafting.getItemStack()!=null)
         			item.add(crafting.getItemStack().getItem());
         		else if(crafting.getUnlocks()!=null)
-        			crafting.getUnlocks().stream().map(IRecipe::getRecipeOutput).filter(t->t!=null&&!t.isEmpty()).map(ItemStack::getItem).forEach(item::add);
+        			crafting.getUnlocks().stream().map(IRecipe::getResultItem).filter(t->t!=null&&!t.isEmpty()).map(ItemStack::getItem).forEach(item::add);
         		for(Item ix:item) {
         			research.computeIfAbsent(ix, i->new LinkedHashMap<>()).put(effect.parent.get().getId(), TranslateUtils.translateTooltip("research_unlockable", effect.parent.get().getName()));
         		}
@@ -307,7 +307,7 @@ public class JEICompat implements IModPlugin {
 			@Override
 			public Collection<IGuiClickableArea> getGuiClickableAreas(MasterGeneratorScreen<?> containerScreen, double mouseX, double mouseY) {
 				List<IGuiClickableArea> col=new ArrayList<>(2);
-				MasterGeneratorContainer<?> container=containerScreen.getContainer();
+				MasterGeneratorContainer<?> container=containerScreen.getMenu();
 				if(container.getTank()!=null)
 					col.add(IGuiClickableArea.createBasic(98, 84, 34, 4, GeneratorSteamCategory.UID));
 				Point in=container.getSlotIn();
@@ -343,7 +343,7 @@ public class JEICompat implements IModPlugin {
 
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
-        ClientWorld world = Minecraft.getInstance().world;
+        ClientWorld world = Minecraft.getInstance().level;
         checkNotNull(world, "minecraft world");
         RecipeManager recipeManager = world.getRecipeManager();
         CuttingCategory.matching = RegistryUtils.getItems().stream()
@@ -352,7 +352,7 @@ public class JEICompat implements IModPlugin {
         registration.addRecipes(FHUtils.filterRecipes(recipeManager,GeneratorRecipe.TYPE), GeneratorFuelCategory.UID);
         registration.addRecipes(GeneratorSteamRecipe.recipeList.values(), GeneratorSteamCategory.UID);
         registration.addRecipes(FHUtils.filterRecipes(recipeManager,ChargerRecipe.TYPE), ChargerCategory.UID);
-        registration.addRecipes(recipeManager.getRecipesForType(IRecipeType.SMOKING), ChargerCookingCategory.UID);
+        registration.addRecipes(recipeManager.getAllRecipesFor(IRecipeType.SMOKING), ChargerCookingCategory.UID);
         registration.addRecipes(CampfireDefrostRecipe.recipeList.values(),
                 CampfireDefrostCategory.UID);
  

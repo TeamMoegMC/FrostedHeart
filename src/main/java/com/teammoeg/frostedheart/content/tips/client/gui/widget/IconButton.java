@@ -9,6 +9,8 @@ import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
+import net.minecraft.client.gui.widget.button.Button.IPressable;
+
 public class IconButton extends Button {
     public static final ResourceLocation ICON_LOCATION = new ResourceLocation(FHMain.MODID, "textures/gui/hud_icon.png");
     public static final Point ICON_MOUSE_LEFT    = new Point(0 ,0 );
@@ -40,7 +42,7 @@ public class IconButton extends Button {
     }
 
     @Override
-    public void renderWidget(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (isHovered()) {
             fill(matrixStack, x, y, x+width, y+height, 50 << 24 | color & 0x00FFFFFF);
             renderToolTip(matrixStack, mouseX, mouseY);
@@ -52,7 +54,7 @@ public class IconButton extends Button {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.color4f(r, g, b, alpha);
-        Minecraft.getInstance().getTextureManager().bindTexture(ICON_LOCATION);
+        Minecraft.getInstance().getTextureManager().bind(ICON_LOCATION);
         blit(matrixStack, x, y, currentIcon.getX(), currentIcon.getY(), 10, 10, 80, 80);
         RenderSystem.disableBlend();
     }
@@ -62,14 +64,14 @@ public class IconButton extends Button {
         Minecraft mc = Minecraft.getInstance();
         String text = getMessage().getString();
         if (!text.isEmpty()) {
-            int textWidth = mc.fontRenderer.getStringWidth(text);
+            int textWidth = mc.font.width(text);
             int renderX = x-textWidth+8;
             if (renderX < 0) {
                 fill(matrixStack, x, y - 12, x+2 + textWidth, y, 50 << 24 | color & 0x00FFFFFF);
-                mc.fontRenderer.drawString(matrixStack, text, x+2, y-10, color);
+                mc.font.draw(matrixStack, text, x+2, y-10, color);
             } else {
                 fill(matrixStack, x+8 - textWidth, y - 12, x + 10, y, 50 << 24 | color & 0x00FFFFFF);
-                mc.fontRenderer.drawString(matrixStack, text, x-textWidth+width, y-10, color);
+                mc.font.draw(matrixStack, text, x-textWidth+width, y-10, color);
             }
         }
     }

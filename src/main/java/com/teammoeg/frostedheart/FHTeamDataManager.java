@@ -76,7 +76,7 @@ public class FHTeamDataManager {
     public static RecipeManager getRecipeManager() {
         if (getServer() != null)
             return getServer().getRecipeManager();
-        return ClientUtils.mc().world.getRecipeManager();
+        return ClientUtils.mc().level.getRecipeManager();
     }
 
     public FHTeamDataManager(MinecraftServer s) {
@@ -140,9 +140,9 @@ public class FHTeamDataManager {
         if (cn == null) {
             cn=UUID.randomUUID();
             dataByFTBId.put(team.getId(), cn);
-            GameProfile owner = getServer().getPlayerProfileCache().getProfileByUUID(team.getOwner());
+            GameProfile owner = getServer().getProfileCache().get(team.getOwner());
             
-            if (owner != null&&(!getServer().isServerInOnlineMode()||getServer().isSinglePlayer()))
+            if (owner != null&&(!getServer().usesAuthentication()||getServer().isSingleplayer()))
                 for (Entry<UUID, TeamDataHolder> dat : dataByFhId.entrySet()) {
                     if (owner.getName().equals(dat.getValue().getOwnerName())) {
                         this.transferByRid(dat.getKey(), team);
@@ -153,9 +153,9 @@ public class FHTeamDataManager {
         }
         TeamDataHolder data=dataByFhId.computeIfAbsent(cn, c -> new TeamDataHolder(c, OptionalLazy.of(()->team)));
         if (data.getOwnerName() == null) {
-            PlayerProfileCache cache = getServer().getPlayerProfileCache();
+            PlayerProfileCache cache = getServer().getProfileCache();
             if (cache != null) {
-                GameProfile gp = cache.getProfileByUUID(team.getOwner());
+                GameProfile gp = cache.get(team.getOwner());
                 if (gp != null) {
                 	data.setOwnerName(gp.getName());
                 }
@@ -181,9 +181,9 @@ public class FHTeamDataManager {
      */
     public void load() {
         
-        Path local=getServer().func_240776_a_(dataFolder);
+        Path local=getServer().getWorldPath(dataFolder);
         local.toFile().mkdirs();
-        Path olocal=getServer().func_240776_a_(oldDataFolder);
+        Path olocal=getServer().getWorldPath(oldDataFolder);
         Stream<File> strm1=null,strm2=null;
         //Compatible migration from old data folder
         if(local.toFile().exists())
@@ -212,9 +212,9 @@ public class FHTeamDataManager {
 	                
 	                CompoundNBT nbt = CompressedStreamTools.readCompressed(f);
 	                if(nbt.contains("teamId"))
-	                	tud=nbt.getUniqueId("teamId");
+	                	tud=nbt.getUUID("teamId");
 	                final UUID ftbid=tud;
-	                TeamDataHolder trd = new TeamDataHolder(nbt.getUniqueId("uuid"),OptionalLazy.of(() -> TeamManager.INSTANCE.getTeamByID(ftbid)));
+	                TeamDataHolder trd = new TeamDataHolder(nbt.getUUID("uuid"),OptionalLazy.of(() -> TeamManager.INSTANCE.getTeamByID(ftbid)));
 	
 	                trd.deserialize(nbt, false);
 	                dataByFTBId.put(ftbid, trd.getId());
@@ -234,7 +234,7 @@ public class FHTeamDataManager {
      * Save all data to disk.
      */
     public void save() {
-    	Path local=getServer().func_240776_a_(dataFolder);
+    	Path local=getServer().getWorldPath(dataFolder);
         Set<String> files = new HashSet<>(Arrays.asList(local.toFile().list((d, s) -> s.endsWith(".nbt"))));
         for (Entry<UUID, TeamDataHolder> entry : dataByFhId.entrySet()) {
             String fn = entry.getKey().toString() + ".nbt";
@@ -251,7 +251,7 @@ public class FHTeamDataManager {
         for (String todel : files) {
             local.resolve(todel).toFile().delete();
         }
-        Path olocal=getServer().func_240776_a_(oldDataFolder);
+        Path olocal=getServer().getWorldPath(oldDataFolder);
         if(olocal.toFile().exists()) {
         	try {
 				FileUtils.deleteDirectory(olocal.toFile());
@@ -273,7 +273,7 @@ public class FHTeamDataManager {
         TeamDataHolder odata = dataByFhId.get(rid);
         if (odata != null) {
             odata.setTeam(OptionalLazy.of(()->team));
-            odata.setOwnerName(getServer().getPlayerProfileCache().getProfileByUUID(team.getOwner()).getName());
+            odata.setOwnerName(getServer().getProfileCache().get(team.getOwner()).getName());
             dataByFTBId.put(team.getId(), rid);
         }else {
         	this.get(team);
@@ -285,7 +285,7 @@ public class FHTeamDataManager {
         TeamDataHolder odata = dataByFhId.get(rid);
         if (odata != null) {
             odata.setTeam(OptionalLazy.of(()->team));
-            odata.setOwnerName(getServer().getPlayerProfileCache().getProfileByUUID(team.getOwner()).getName());
+            odata.setOwnerName(getServer().getProfileCache().get(team.getOwner()).getName());
             dataByFTBId.put(team.getId(), rid);
         }
     }

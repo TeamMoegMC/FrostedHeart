@@ -50,7 +50,7 @@ public class ChargerCookingCategory implements IRecipeCategory<SmokingRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "charge_cooking");
     private IDrawable BACKGROUND;
     private IDrawable ICON;
-    private StaticBlock charger = new StaticBlock(FHBlocks.charger.get().getDefaultState().with(BlockStateProperties.FACING, Direction.EAST));
+    private StaticBlock charger = new StaticBlock(FHBlocks.charger.get().defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
 
     public ChargerCookingCategory(IGuiHelper guiHelper) {
         this.ICON = new DoubleItemIcon(() -> new ItemStack(FHBlocks.charger.get()), () -> new ItemStack(Items.COOKED_BEEF));
@@ -97,8 +97,8 @@ public class ChargerCookingCategory implements IRecipeCategory<SmokingRecipe> {
 
     @Override
     public void setIngredients(SmokingRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.getIngredients().get(0).getMatchingStacks())));
-        ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
+        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.getIngredients().get(0).getItems())));
+        ingredients.setOutput(VanillaTypes.ITEM, recipe.getResultItem());
     }
 
 

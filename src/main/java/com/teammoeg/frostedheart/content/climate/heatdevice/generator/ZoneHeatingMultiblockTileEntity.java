@@ -61,17 +61,17 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     @Override
     public void disassemble() {
         if (this == master())
-            ChunkHeatData.removeTempAdjust(world, getPos());
+            ChunkHeatData.removeTempAdjust(level, getBlockPos());
         super.disassemble();
     }
 
     public final void forEachBlock(Consumer<T> consumer) {
-        Vector3i vec = this.multiblockInstance.getSize(world);
+        Vector3i vec = this.multiblockInstance.getSize(level);
         for (int x = 0; x < vec.getX(); ++x)
             for (int y = 0; y < vec.getY(); ++y)
                 for (int z = 0; z < vec.getZ(); ++z) {
                     BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
-                    TileEntity te = Utils.getExistingTileEntity(world, actualPos);
+                    TileEntity te = Utils.getExistingTileEntity(level, actualPos);
                     callBlockConsumerWithTypeCheck(consumer, te);
                 }
     }
@@ -193,11 +193,11 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
         if (isDummy())
             return;
         // spawn smoke particle
-        if (world != null && world.isRemote && formed) {
+        if (level != null && level.isClientSide && formed) {
             tickEffects(getIsActive());
         }
 
-        if (!world.isRemote && formed) {
+        if (!level.isClientSide && formed) {
         	
             final boolean activeBeforeTick = getIsActive();
             boolean isActive=tickFuel();
@@ -212,17 +212,17 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
                 lastRLevel = nrlevel;
                 
                 if (nrlevel > 0 && ntlevel > 0) {
-                    ChunkHeatData.addPillarTempAdjust(world, getPos(), nrlevel, getUpperBound(),
+                    ChunkHeatData.addPillarTempAdjust(level, getBlockPos(), nrlevel, getUpperBound(),
                             getLowerBound(), ntlevel);
                 }else {
-                	ChunkHeatData.removeTempAdjust(world, getPos());
+                	ChunkHeatData.removeTempAdjust(level, getBlockPos());
                 }
             } else if (activeAfterTick) {
                 if (!initialized) {
                     initialized = true;
                 }
             }
-            this.markDirty();
+            this.setChanged();
             shutdownTick();
         }
     }

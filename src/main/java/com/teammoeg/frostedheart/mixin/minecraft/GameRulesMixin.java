@@ -20,11 +20,11 @@ public class GameRulesMixin{
 
     @Inject(method = "getBoolean", at = @At(value = "HEAD"), cancellable = true)
     public void disableWeatherCycle(GameRules.RuleKey<GameRules.BooleanValue> key, CallbackInfoReturnable<Boolean> cir) {
-        if (key == GameRules.DO_WEATHER_CYCLE) {
+        if (key == GameRules.RULE_WEATHER_CYCLE) {
             cir.setReturnValue(false);
         }
     }
     public boolean isWeatherCycle() {
-        return ((BooleanValue) rules.get(GameRules.DO_WEATHER_CYCLE)).get();
+        return ((BooleanValue) rules.get(GameRules.RULE_WEATHER_CYCLE)).get();
     }
 }

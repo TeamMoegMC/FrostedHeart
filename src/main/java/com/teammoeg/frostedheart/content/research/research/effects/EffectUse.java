@@ -67,7 +67,7 @@ public class EffectUse extends Effect {
     public String getBrief() {
         if (blocks.isEmpty())
             return "Use nothing";
-        return "Use " + blocks.get(0).getTranslatedName().getString() + (blocks.size() > 1 ? " ..." : "");
+        return "Use " + blocks.get(0).getName().getString() + (blocks.size() > 1 ? " ..." : "");
     }
 
     @Override
@@ -85,7 +85,7 @@ public class EffectUse extends Effect {
     public List<ITextComponent> getDefaultTooltip() {
         List<ITextComponent> tooltip = new ArrayList<>();
         for (Block b : blocks) {
-            tooltip.add(b.getTranslatedName());
+            tooltip.add(b.getName());
         }
 
         return tooltip;

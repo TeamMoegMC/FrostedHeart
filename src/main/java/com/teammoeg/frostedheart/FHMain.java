@@ -95,7 +95,7 @@ public class FHMain {
     public static final ItemGroup itemGroup = new ItemGroup(MODID) {
         @Override
         @Nonnull
-        public ItemStack createIcon() {
+        public ItemStack makeIcon() {
             return new ItemStack(FHBlocks.generator_core_t1.get().asItem());
         }
     };
@@ -184,9 +184,9 @@ public class FHMain {
 
     public void modification(FMLLoadCompleteEvent event) {
         for (Item i : RegistryUtils.getItems()) {
-            if (i.isFood()) {
+            if (i.isEdible()) {
                 if (RegistryUtils.getRegistryName(i).getNamespace().equals("crockpot")) {
-                    ((FoodAccess) i.getFood()).getEffectsSuppliers().removeIf(t -> t.getFirst().get().getPotion().isBeneficial());
+                    ((FoodAccess) i.getFoodProperties()).getEffectsSuppliers().removeIf(t -> t.getFirst().get().getEffect().isBeneficial());
                 }
             }
         }
@@ -246,7 +246,7 @@ public class FHMain {
         FHFeatures.initFeatures();
         SurroundingTemperatureSimulator.init();
         // modify default value
-        GameRules.GAME_RULES.put(GameRules.SPAWN_RADIUS, IntegerValue.create(0));
+        GameRules.GAME_RULE_TYPES.put(GameRules.RULE_SPAWN_RADIUS, IntegerValue.create(0));
 
     }
 }

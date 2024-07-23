@@ -27,7 +27,7 @@ public class RegistryCodec<A> implements Codec<A> {
 	@Override
 	public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
 		if(ops.compressMaps()) {
-			return Codec.INT.decode(ops, input).map(o->o.mapFirst(reg.get()::getByValue));
+			return Codec.INT.decode(ops, input).map(o->o.mapFirst(reg.get()::byId));
 		}
 		return reg.get().decode(ops, input);
 	}

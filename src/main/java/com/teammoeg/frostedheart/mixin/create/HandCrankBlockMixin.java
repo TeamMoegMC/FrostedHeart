@@ -47,9 +47,9 @@ public class HandCrankBlockMixin {
         if (player instanceof FakePlayer) {
             worldIn.destroyBlock(pos, true);
             ci.setReturnValue(ActionResultType.FAIL);
-        } else if (player.getFoodStats().getFoodLevel() < 4) {
-            if (player.getEntityWorld().isRemote)
-                player.sendStatusMessage(TranslateUtils.translateMessage("crank.feel_hunger"), true);
+        } else if (player.getFoodData().getFoodLevel() < 4) {
+            if (player.getCommandSenderWorld().isClientSide)
+                player.displayClientMessage(TranslateUtils.translateMessage("crank.feel_hunger"), true);
             ci.setReturnValue(ActionResultType.FAIL);
         }
     }

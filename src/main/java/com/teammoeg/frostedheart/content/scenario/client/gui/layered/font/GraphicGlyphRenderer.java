@@ -37,14 +37,14 @@ public class GraphicGlyphRenderer implements ICharacterConsumer{
 	public boolean accept(int p_accept_1_, Style p_accept_2_, int p_accept_3_) {
 		int c=0xFFFFFFFF;
 		if(p_accept_2_.getColor()!=null) {
-			c=p_accept_2_.getColor().getColor();
+			c=p_accept_2_.getColor().getValue();
 			//g2d.setXORMode(new java.awt.Color(c.getColor()>>16,c.getColor()>>8,c.getColor(),c.getColor()>>24));
 		}
 		if((c&0xFF000000)==0)
 			c|=0xFF000000;
 
 		GlyphData glyph=KGlyphProvider.INSTANCE.getGlyph(p_accept_3_);
-		if(p_accept_2_.getObfuscated()) {
+		if(p_accept_2_.isObfuscated()) {
 			
 		}
 		if(glyph==null||p_accept_3_==32) {
@@ -52,12 +52,12 @@ public class GraphicGlyphRenderer implements ICharacterConsumer{
 		}
 		int advance=0;
 		empty.setTransform(g2d.getTransform());
-		if(p_accept_2_.getItalic())
+		if(p_accept_2_.isItalic())
 			g2d.setTransform(italic);
 		if(shadow) {
 			int shadowX=2;
 			int shadowY=2;
-			if(p_accept_2_.getBold()) {
+			if(p_accept_2_.isBold()) {
 				shadowX+=1;
 				shadowY+=1;
 			}
@@ -65,7 +65,7 @@ public class GraphicGlyphRenderer implements ICharacterConsumer{
 			advance++;
 		}
 		advance+=glyph.renderFont(g2d, x, y, size,c);
-		if(p_accept_2_.getBold()) {
+		if(p_accept_2_.isBold()) {
 			for(int i=0;i<2;i++) {
 				for(int j=-1;j<1;j++) {
 					if(i==0&&j==0)continue;
@@ -79,12 +79,12 @@ public class GraphicGlyphRenderer implements ICharacterConsumer{
 		
 		g2d.setTransform(empty);
 		Stroke sp=g2d.getStroke();
-		if(p_accept_2_.getStrikethrough()) {
+		if(p_accept_2_.isStrikethrough()) {
 			int cy=(int) (y+0.5*size+1);
 			g2d.setStroke(new BasicStroke(3));
 			g2d.drawLine(x-1, cy, x+advance+2, cy);
 		}
-		if(p_accept_2_.getUnderlined()) {
+		if(p_accept_2_.isUnderlined()) {
 			int cy= y+size+3;
 			g2d.setStroke(new BasicStroke(3));
 			g2d.drawLine(x-1, cy, x+advance+2, cy);

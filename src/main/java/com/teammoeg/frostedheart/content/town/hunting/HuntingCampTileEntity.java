@@ -14,14 +14,14 @@ public class HuntingCampTileEntity extends AbstractTownWorkerTileEntity {
     }
 
     private boolean isStructureValid(){
-        ConfinedSpaceScanner confinedSpaceScanner = new ConfinedSpaceScanner(this.world, pos.up());
+        ConfinedSpaceScanner confinedSpaceScanner = new ConfinedSpaceScanner(this.level, worldPosition.above());
         return !confinedSpaceScanner.scan(256);
     }
 
     
     @Override
     public void refresh() {
-        this.occupiedArea.add(BlockScanner.toColumnPos(pos));
+        this.occupiedArea.add(BlockScanner.toColumnPos(worldPosition));
         if(this.workerState == TownWorkerState.OCCUPIED_AREA_OVERLAPPED) return;
         this.workerState = isStructureValid()?TownWorkerState.VALID:TownWorkerState.NOT_VALID;
     }

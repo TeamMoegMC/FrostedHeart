@@ -49,7 +49,7 @@ public class TexturedUV extends UV {
     	this(new ResourceLocation(FHMain.MODID,"textures/gui/"+texture), uv);
     }
     protected void bindTexture() {
-    	ClientUtils.mc().getTextureManager().bindTexture(texture);
+    	ClientUtils.mc().getTextureManager().bind(texture);
     }
 
 	@Override

@@ -44,7 +44,7 @@ public class RemoveLootModifier extends LootModifier {
             JsonArray ja = object.get("removed").getAsJsonArray();
             List<Ingredient> changes = new ArrayList<>();
             for (JsonElement je : ja) {
-                changes.add(Ingredient.deserialize(je));
+                changes.add(Ingredient.fromJson(je));
             }
             return new RemoveLootModifier(conditions, changes);
         }
@@ -53,7 +53,7 @@ public class RemoveLootModifier extends LootModifier {
         public JsonObject write(RemoveLootModifier instance) {
             JsonObject object = new JsonObject();
             JsonArray removed = new JsonArray();
-            instance.removed.stream().map(Ingredient::serialize).forEach(removed::add);
+            instance.removed.stream().map(Ingredient::toJson).forEach(removed::add);
             object.add("removed", removed);
             return object;
         }

@@ -62,7 +62,7 @@ public class ChunkHeatData{
      * Updates server side cache first.
      */
     private static void addChunkAdjust(IWorld world, ChunkPos chunkPos, IHeatArea adjx) {
-        if (world != null && !world.isRemote()) {
+        if (world != null && !world.isClientSide()) {
             IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
             ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
             if (data != null) {
@@ -199,9 +199,9 @@ public class ChunkHeatData{
         //if (data == null) {
         //System.out.println("no cache at"+pos);
         if (world instanceof IWorld)
-            return ((IWorld) world).getChunkProvider().isChunkLoaded(pos) ? getCapability(world.getChunk(pos.asBlockPos()))
+            return ((IWorld) world).getChunkSource().isEntityTickingChunk(pos) ? getCapability(world.getChunk(pos.getWorldPosition()))
                     .resolve() : Optional.empty();
-        return world.chunkExists(pos.x, pos.z) ? getCapability(world.getChunk(pos.asBlockPos())).resolve() : Optional.empty();
+        return world.hasChunk(pos.x, pos.z) ? getCapability(world.getChunk(pos.getWorldPosition())).resolve() : Optional.empty();
         //}
         //return data;
     }
@@ -264,7 +264,7 @@ public class ChunkHeatData{
      * Updates server side cache first. Then send a sync packet to every client.
      */
     private static void removeChunkAdjust(IWorld world, ChunkPos chunkPos, BlockPos src) {
-        if (world != null && !world.isRemote()) {
+        if (world != null && !world.isClientSide()) {
             IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
             ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
             // TODO: should use isPresent some how
@@ -279,7 +279,7 @@ public class ChunkHeatData{
      * Updates server side cache first. Then send a sync packet to every client.
      */
     private static void removeChunkAdjust(IWorld world, ChunkPos chunkPos, IHeatArea adj) {
-        if (world != null && !world.isRemote()) {
+        if (world != null && !world.isClientSide()) {
             IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
             ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
             if (data != null)

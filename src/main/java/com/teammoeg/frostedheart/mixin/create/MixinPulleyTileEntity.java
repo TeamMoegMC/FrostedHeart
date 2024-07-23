@@ -51,7 +51,7 @@ public abstract class MixinPulleyTileEntity extends KineticTileEntity {
         if (movedContraption != null && movedContraption.isAlive()) {
             fh$cooldown = 100;
             ContraptionCostUtils.setSpeedAndCollect(movedContraption, (int) speed);
-            if (getMotionVector().getY() < 0) {
+            if (getMotionVector().y() < 0) {
                 this.lastStressApplied = ContraptionCostUtils.getActorCost(movedContraption) + 0.5F;
                 return lastStressApplied;
             }
@@ -66,7 +66,7 @@ public abstract class MixinPulleyTileEntity extends KineticTileEntity {
 
     @Inject(at = @At("TAIL"), method = "tick")
     public void FH_MICR_tick(CallbackInfo cbi) {
-        if ((!world.isRemote) && super.hasNetwork())
+        if ((!level.isClientSide) && super.hasNetwork())
             getOrCreateNetwork().updateStressFor(this, calculateStressApplied());
     }
 

@@ -110,9 +110,9 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         @Override
         public void addWidgets() {
             super.addWidgets();
-            add(new LabeledOpenEditorButton<>(this, e.type == null ? "" : e.type.getName().getString(), "Select Entity", SelectDialog.EDITOR_ENTITY, e.type, c -> {
+            add(new LabeledOpenEditorButton<>(this, e.type == null ? "" : e.type.getDescription().getString(), "Select Entity", SelectDialog.EDITOR_ENTITY, e.type, c -> {
                 e.type = c;
-                desc.setText("@" + c.getTranslationKey());
+                desc.setText("@" + c.getDescriptionId());
             }));
         }
 

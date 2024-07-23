@@ -10,7 +10,7 @@ import net.minecraft.network.PacketBuffer;
 public abstract class NullableNBTMessage extends NBTMessage {
 
 	public NullableNBTMessage(PacketBuffer buffer) {
-		this(SerializeUtil.readOptional(buffer, PacketBuffer::readCompoundTag));
+		this(SerializeUtil.readOptional(buffer, PacketBuffer::readNbt));
 	}
 
 	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -20,7 +20,7 @@ public abstract class NullableNBTMessage extends NBTMessage {
 
 	@Override
 	public void encode(PacketBuffer buffer) {
-		SerializeUtil.writeOptional2(buffer, this.getTag(),PacketBuffer::writeCompoundTag);
+		SerializeUtil.writeOptional2(buffer, this.getTag(),PacketBuffer::writeNbt);
 	}
 
 }

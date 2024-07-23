@@ -109,8 +109,8 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
 
     @Override
     public void tick() {
-        if (this.world != null && !this.world.isRemote) {
-            TileEntity down = Utils.getExistingTileEntity(world, pos.offset(Direction.DOWN));
+        if (this.level != null && !this.level.isClientSide) {
+            TileEntity down = Utils.getExistingTileEntity(level, worldPosition.relative(Direction.DOWN));
             if (down != null) {
                 LazyOptional<IFluidHandler> cap = down.getCapability(ForgeCapabilities.FLUID_HANDLER, Direction.UP);
                 if (cap.isPresent()) {
@@ -138,7 +138,7 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
                 vals = Math.min(vals + drained / 5, 100);
             }
             if(vals>0)
-            	this.markDirty();
+            	this.setChanged();
             if (this.getIsActive()) {
                 vals--;
             } else if (vals > 20) {

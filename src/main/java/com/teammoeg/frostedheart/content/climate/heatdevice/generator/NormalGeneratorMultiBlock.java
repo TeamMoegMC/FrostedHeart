@@ -42,6 +42,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.fml.RegistryObject;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? super T>> extends FHStoneMultiblockBlock<T> {
     public NormalGeneratorMultiBlock(String name, Properties props, RegistryObject<TileEntityType<T>> type) {
         super(name, props, type);
@@ -53,19 +55,19 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
 
     @OnlyIn(Dist.CLIENT)
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
-        if (stateIn.get(LIT)) {
+        if (stateIn.getValue(LIT)) {
             if (rand.nextInt(5) == 0) {
-                worldIn.playSound((double) pos.getX() + 0.5D, (double) pos.getY() + 0.5D, (double) pos.getZ() + 0.5D,
-                        SoundEvents.BLOCK_FURNACE_FIRE_CRACKLE, SoundCategory.BLOCKS, 0.5F + rand.nextFloat(),
+                worldIn.playLocalSound((double) pos.getX() + 0.5D, (double) pos.getY() + 0.5D, (double) pos.getZ() + 0.5D,
+                        SoundEvents.FURNACE_FIRE_CRACKLE, SoundCategory.BLOCKS, 0.5F + rand.nextFloat(),
                         rand.nextFloat() * 0.7F + 0.6F, false);
             }
         }
     }
 
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player,
+    public ActionResultType use(BlockState state, World world, BlockPos pos, PlayerEntity player,
                                              Hand hand, BlockRayTraceResult hit) {
-        if (!world.isRemote) {
+        if (!world.isClientSide) {
             TileEntity te = Utils.getExistingTileEntity(world, pos);
             if (te instanceof MasterGeneratorTileEntity && !(player instanceof FakePlayer)) {
             	MasterGeneratorTileEntity<?> zte=(MasterGeneratorTileEntity<?>) te;
@@ -80,7 +82,7 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
 
             }
         }
-        return super.onBlockActivated(state, world, pos, player, hand, hit);
+        return super.use(state, world, pos, player, hand, hit);
     }
 
 }

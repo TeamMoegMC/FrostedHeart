@@ -129,20 +129,20 @@ public class ClientRegistryEvents {
 
         // Register translucent render type
 
-        RenderTypeLookup.setRenderLayer(FHBlocks.rye_block.get(), RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.white_turnip_block.get(), RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.wolfberry_bush_block.get(), RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHMultiblocks.generator, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHMultiblocks.generator_t2, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.drawing_desk.get(), RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.charger.get(), RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.mech_calc.get(), RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.steam_core.get(), RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHMultiblocks.radiator, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.debug_heater.get(), RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.relic_chest.get(), RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.fluorite_ore.get(), RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.halite_ore.get(), RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.rye_block.get(), RenderType.cutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.white_turnip_block.get(), RenderType.cutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.wolfberry_bush_block.get(), RenderType.cutout());
+        RenderTypeLookup.setRenderLayer(FHMultiblocks.generator, RenderType.cutout());
+        RenderTypeLookup.setRenderLayer(FHMultiblocks.generator_t2, RenderType.cutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.drawing_desk.get(), RenderType.cutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.charger.get(), RenderType.cutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.mech_calc.get(), RenderType.cutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.steam_core.get(), RenderType.cutout());
+        RenderTypeLookup.setRenderLayer(FHMultiblocks.radiator, RenderType.cutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.debug_heater.get(), RenderType.cutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.relic_chest.get(), RenderType.cutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.fluorite_ore.get(), RenderType.cutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.halite_ore.get(), RenderType.cutout());
 /*
         RenderTypeLookup.setRenderLayer(FHBlocks.blood_block, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.bone_block, RenderType.getCutout());
@@ -158,7 +158,7 @@ public class ClientRegistryEvents {
         key_skipDialog.setKeyConflictContext(KeyConflictContext.IN_GAME);
 		ClientRegistry.registerKeyBinding(key_skipDialog);
         // Register layers
-        Map<String, PlayerRenderer> skinMap = Minecraft.getInstance().getRenderManager().getSkinMap();
+        Map<String, PlayerRenderer> skinMap = Minecraft.getInstance().getEntityRenderDispatcher().getSkinMap();
         PlayerRenderer render = skinMap.get("default");
         render.addLayer(new HeaterVestRenderer<>(render));
         render = skinMap.get("slim");
@@ -191,7 +191,7 @@ public class ClientRegistryEvents {
 
     @SubscribeEvent
     public static void onTextureStitchEvent(TextureStitchEvent.Pre event) {
-        if (event.getMap().getTextureLocation() == PlayerContainer.LOCATION_BLOCKS_TEXTURE) {
+        if (event.getMap().location() == PlayerContainer.BLOCK_ATLAS) {
             event.addSprite(LiningFinalizedModel.buffCoatFeetTexture);
             event.addSprite(LiningFinalizedModel.buffCoatLegsTexture);
             event.addSprite(LiningFinalizedModel.buffCoatHelmetTexture);
@@ -213,8 +213,8 @@ public class ClientRegistryEvents {
 
     @SubscribeEvent
     public static void provideTextures(final TextureStitchEvent.Pre event) {
-        if (PlayerContainer.LOCATION_BLOCKS_TEXTURE.equals(event.getMap().getTextureLocation())) {
-            Minecraft.getInstance().getResourceManager().getAllResourceLocations("textures/item/module", s -> s.endsWith(".png")).stream()
+        if (PlayerContainer.BLOCK_ATLAS.equals(event.getMap().location())) {
+            Minecraft.getInstance().getResourceManager().listResources("textures/item/module", s -> s.endsWith(".png")).stream()
                     .filter(resourceLocation -> FHMain.MODID.equals(resourceLocation.getNamespace()))
                     // 9 is the length of "textures/" & 4 is the length of ".png"
 
@@ -226,21 +226,21 @@ public class ClientRegistryEvents {
 
     public static <C extends Container, S extends BaseScreen> void
     registerFTBScreen(ContainerType<C> type, Function<C, S> factory) {
-        ScreenManager.registerFactory(type, FTBScreenFactory(factory));
+        ScreenManager.register(type, FTBScreenFactory(factory));
     }
 
     public static <C extends Container, S extends Screen & IHasContainer<C>> void
     registerIEScreen(ResourceLocation containerName, ScreenManager.IScreenFactory<C, S> factory) {
         @SuppressWarnings("unchecked")
         ContainerType<C> type = (ContainerType<C>) GuiHandler.getContainerType(containerName);
-        ScreenManager.registerFactory(type, factory);
+        ScreenManager.register(type, factory);
     }
 
     @SubscribeEvent
     public static void registerParticleFactories(ParticleFactoryRegisterEvent event) {
-        Minecraft.getInstance().particles.registerFactory(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);
-        Minecraft.getInstance().particles.registerFactory(FHParticleTypes.BREATH.get(), BreathParticle.Factory::new);
-        Minecraft.getInstance().particles.registerFactory(FHParticleTypes.WET_STEAM.get(), WetSteamParticle.Factory::new);
+        Minecraft.getInstance().particleEngine.register(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);
+        Minecraft.getInstance().particleEngine.register(FHParticleTypes.BREATH.get(), BreathParticle.Factory::new);
+        Minecraft.getInstance().particleEngine.register(FHParticleTypes.WET_STEAM.get(), WetSteamParticle.Factory::new);
     }
 
 }

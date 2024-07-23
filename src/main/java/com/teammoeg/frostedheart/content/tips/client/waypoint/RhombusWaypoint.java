@@ -39,7 +39,7 @@ public class RhombusWaypoint extends Waypoint {
     @Override
     public void renderMain(MatrixStack ms) {
         if (focus) {
-            ms.rotate(Vector3f.ZN.rotationDegrees(45));
+            ms.mulPose(Vector3f.ZN.rotationDegrees(45));
             ms.scale(1.5F, 1.5F, 1.5F);
             GuiUtil.renderIcon(ms, focusIcon, -5, -5, this.color);
             //focus的动画效果
@@ -58,7 +58,7 @@ public class RhombusWaypoint extends Waypoint {
             return;
         }
 
-        ms.rotate(Vector3f.ZN.rotationDegrees(45));
+        ms.mulPose(Vector3f.ZN.rotationDegrees(45));
         //防止被MC的神必半透明材质覆盖
         ms.translate(0, 0, 1);
         GuiUtil.renderIcon(ms, icon, -5, -5, this.color);
@@ -71,22 +71,22 @@ public class RhombusWaypoint extends Waypoint {
         AbstractGui.fill(ms, -3, -2, -2, height, this.color);
         AbstractGui.fill(ms, -2, -2, maxTextWidth+2, height, 0x40000000);
 
-        maxTextWidth = MC.player.isSneaking() ? Math.max(96, maxTextWidth) : 96;
+        maxTextWidth = MC.player.isShiftKeyDown() ? Math.max(96, maxTextWidth) : 96;
         height = 10 * GuiUtil.drawWrapString(this.id, ms, 0, 0, maxTextWidth, this.color, 10, false);
         
-        if (MC.player.isSneaking()) {
+        if (MC.player.isShiftKeyDown()) {
             AbstractGui.fill(ms, -3, height, -2, height+30, this.color);
             AbstractGui.fill(ms, -2, height, maxTextWidth+2, height+30, 0x40000000);
 
             Vector3d v = new Vector3d(this.target);
-            String distance = "Distance: " + (int)v.distanceTo(MC.player.getPositionVec()) + " blocks";
-            maxTextWidth = Math.max(MC.fontRenderer.getStringWidth(distance), maxTextWidth);
-            MC.fontRenderer.drawString(ms, distance, 0, height+10, this.color);
+            String distance = "Distance: " + (int)v.distanceTo(MC.player.position()) + " blocks";
+            maxTextWidth = Math.max(MC.font.width(distance), maxTextWidth);
+            MC.font.draw(ms, distance, 0, height+10, this.color);
 
             String pos = "[X: %.2f, Y: %.2f, Z: %.2f]";
-            pos = String.format(pos, this.target.getX(), this.target.getY(), this.target.getZ());
-            maxTextWidth = Math.max(MC.fontRenderer.getStringWidth(pos), maxTextWidth);
-            MC.fontRenderer.drawString(ms, pos, 0, height+20, this.color);
+            pos = String.format(pos, this.target.x(), this.target.y(), this.target.z());
+            maxTextWidth = Math.max(MC.font.width(pos), maxTextWidth);
+            MC.font.draw(ms, pos, 0, height+20, this.color);
         }
         ms.translate(-15, 3.5F, 0);
     }

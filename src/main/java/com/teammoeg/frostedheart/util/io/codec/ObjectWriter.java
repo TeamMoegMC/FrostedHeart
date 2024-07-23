@@ -75,7 +75,7 @@ public class ObjectWriter {
 		case 4:pb.writeVarLong((Long) input.value);break;
 		case 5:pb.writeFloat((Float) input.value);break;
 		case 6:pb.writeDouble((Double) input.value);break;
-		case 7:pb.writeString((String) input.value);break;
+		case 7:pb.writeUtf((String) input.value);break;
 		case 8:SerializeUtil.writeEntry(pb, ((Map<Object,Object>)input.value),(t,p)->{
 			TypedValue key   = getTyped(t.getKey());
 			TypedValue value = getTyped(t.getValue());
@@ -87,7 +87,7 @@ public class ObjectWriter {
 		pb.writeByteArray(bs);break;
 		case 10:SerializeUtil.writeList(pb, ((List<Integer>)input.value), (t,p)->p.writeVarInt(t));break;
 		case 11:SerializeUtil.writeList(pb, ((List<Long>)input.value), (t,p)->p.writeLong(t));break;
-		case 12:SerializeUtil.writeList(pb, ((List<String>)input.value), (t,p)->p.writeString(t));break;
+		case 12:SerializeUtil.writeList(pb, ((List<String>)input.value), (t,p)->p.writeUtf(t));break;
 		case 13:SerializeUtil.writeList(pb, ((List<Map>)input.value), (t,p)->writeTyped(p,new TypedValue(8,t)));break;
 		case 14:{
 			List<Object> obj=(List<Object>) input.value;
@@ -110,7 +110,7 @@ public class ObjectWriter {
     	case 4:return pb.readVarLong();
     	case 5:return pb.readFloat();
     	case 6:return pb.readDouble();
-    	case 7:return pb.readString();
+    	case 7:return pb.readUtf();
     	case 8:return SerializeUtil.readEntry(pb, new HashMap<>(),(p,c)->{
     		int byt=pb.readByte();
     		Object key=readWithType((byt>>4)&15,pb);
@@ -121,7 +121,7 @@ public class ObjectWriter {
     	case 9:return DataOps.INSTANCE.createByteList(ByteBuffer.wrap(pb.readByteArray()));
     	case 10:return SerializeUtil.readList(pb, PacketBuffer::readVarInt);
     	case 11:return SerializeUtil.readList(pb, PacketBuffer::readLong);
-    	case 12:return SerializeUtil.readList(pb, PacketBuffer::readString);
+    	case 12:return SerializeUtil.readList(pb, PacketBuffer::readUtf);
     	case 13:return SerializeUtil.readList(pb, p->readWithType(8,p));
     	case 14:{
 			List<Object> obj=new ArrayList<>();

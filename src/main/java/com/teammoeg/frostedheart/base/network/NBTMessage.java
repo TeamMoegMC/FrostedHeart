@@ -7,7 +7,7 @@ public abstract class NBTMessage implements FHMessage{
 	private CompoundNBT tag;
 
 	public NBTMessage(PacketBuffer buffer) {
-		this(buffer.readCompoundTag());
+		this(buffer.readNbt());
 	}
 	public NBTMessage(CompoundNBT tag) {
 		super();
@@ -16,7 +16,7 @@ public abstract class NBTMessage implements FHMessage{
 
 	@Override
 	public void encode(PacketBuffer buffer) {
-		buffer.writeCompoundTag(tag);
+		buffer.writeNbt(tag);
 	}
 
 

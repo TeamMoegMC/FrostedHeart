@@ -313,7 +313,7 @@ public class FHResearch {
 			}
 
 		}
-		System.out.println(CodecUtil.INGREDIENT_CODEC.encodeStart(DataOps.COMPRESSED, Ingredient.fromItems(Items.ACACIA_BOAT)));
+		System.out.println(CodecUtil.INGREDIENT_CODEC.encodeStart(DataOps.COMPRESSED, Ingredient.of(Items.ACACIA_BOAT)));
 		PacketBuffer pb=new PacketBuffer(Unpooled.buffer());
 		Object prein=Research.CODEC.encodeStart(DataOps.COMPRESSED, new Research()).resultOrPartial(System.out::println).get();
 		System.out.println(prein);
@@ -411,7 +411,7 @@ public class FHResearch {
 
 	public static void load() {
 		FHResearch.editor = false;
-		Path local = FHTeamDataManager.getServer().func_240776_a_(dataFolder);
+		Path local = FHTeamDataManager.getServer().getWorldPath(dataFolder);
 		File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
 		FHResearch.clearAll();
 		if (regfile.exists()) {
@@ -438,7 +438,7 @@ public class FHResearch {
 	}
 
 	public static void save() {
-		Path local = FHTeamDataManager.getServer().func_240776_a_(dataFolder);
+		Path local = FHTeamDataManager.getServer().getWorldPath(dataFolder);
 		File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
 		File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
 		try {

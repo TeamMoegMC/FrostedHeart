@@ -47,11 +47,11 @@ public abstract class MixinSwampHutPiece extends ScatteredStructurePiece {
     }
 
     @Override
-    protected void setBlockState(ISeedReader worldIn, BlockState blockstateIn, int x, int y, int z,
+    protected void placeBlock(ISeedReader worldIn, BlockState blockstateIn, int x, int y, int z,
                                  MutableBoundingBox boundingboxIn) {
         if (blockstateIn != null && blockstateIn.getBlock() instanceof CraftingTableBlock) return;
 
-        super.setBlockState(worldIn, blockstateIn, x, y, z, boundingboxIn);
+        super.placeBlock(worldIn, blockstateIn, x, y, z, boundingboxIn);
     }
 
 }

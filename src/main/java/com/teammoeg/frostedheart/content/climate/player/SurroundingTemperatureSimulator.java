@@ -86,7 +86,7 @@ public class SurroundingTemperatureSimulator {
     private static final int rdiff = 10;//division of the unit square, changing this value would have no effect but improve precision
     private static final float v0 = .4f;//initial particle speed
     private static final VoxelShape EMPTY = VoxelShapes.empty();
-    private static final VoxelShape FULL = VoxelShapes.fullCube();
+    private static final VoxelShape FULL = VoxelShapes.block();
     private static Vector3d[] speedVectors;// Vp, speed vector list, this list is constant and considered a distributed ball mesh.
     private static final int num_rounds = 20;//propagate time-to-live for each particles
     private static int[][] speedVectorByDirection=new int[6][];// index: ordinal value of outbounding facing
@@ -146,7 +146,7 @@ public class SurroundingTemperatureSimulator {
     }
 
     public SurroundingTemperatureSimulator(ServerPlayerEntity player) {
-        int sourceX = MathHelper.floor(player.getPosX()), sourceY = MathHelper.floor(player.getPosYEye()), sourceZ = MathHelper.floor( player.getPosZ());
+        int sourceX = MathHelper.floor(player.getX()), sourceY = MathHelper.floor(player.getEyeY()), sourceZ = MathHelper.floor( player.getZ());
         // these are block position offset
         int offsetN = sourceZ - range;
         int offsetW = sourceX - range;
@@ -159,19 +159,19 @@ public class SurroundingTemperatureSimulator {
         origin = new BlockPos((chunkOffsetW + 1) << 4, (chunkOffsetD + 1) << 4, (chunkOffsetN + 1) << 4);
         // fetch all sections to lower calculation cost
         int i = 0;
-        world = player.getServerWorld();
+        world = player.getLevel();
         for (int x = chunkOffsetW; x <= chunkOffsetW + 1; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetN + 1; z++) {
             	Chunk cnk=world.getChunk(x, z);
                 ChunkSection[] css = cnk.getSections();
-                maps[i/2]=cnk.getHeightmap(Type.MOTION_BLOCKING_NO_LEAVES);
+                maps[i/2]=cnk.getOrCreateHeightmapUnprimed(Type.MOTION_BLOCKING_NO_LEAVES);
                 if(css.length>chunkOffsetD&&chunkOffsetD>=0)
                 	sections[i]=css[chunkOffsetD];
                 if(css.length>chunkOffsetD+1&&chunkOffsetD+1>=0)
                 	sections[i + 1]=css[chunkOffsetD + 1];
                 i += 2;
             }
-        rnd = new Random(player.getPosition().toLong()^(world.getGameTime()>>6));
+        rnd = new Random(player.blockPosition().asLong()^(world.getGameTime()>>6));
     }
 
     /**
@@ -180,7 +180,7 @@ public class SurroundingTemperatureSimulator {
      */
     public BlockState getBlock(int x, int y, int z) {
         if (x >= 16 || y >= 16 || z >= 16 || x < -16 || y < -16 || z < -16) // out of bounds
-            return Blocks.AIR.getDefaultState();
+            return Blocks.AIR.defaultBlockState();
         int i = 0;
         if (x >= 0)
             i += 4;
@@ -190,7 +190,7 @@ public class SurroundingTemperatureSimulator {
             i += 1;
         ChunkSection current = sections[i];
         if (current == null)
-            return Blocks.AIR.getDefaultState();
+            return Blocks.AIR.defaultBlockState();
         try {
             return current.getBlockState(x&15, y&15, z&15);
         } catch (Exception ex) {
@@ -205,7 +205,7 @@ public class SurroundingTemperatureSimulator {
             i += 2;
         if (z >= 0) 
             i += 1;
-        return maps[i].getHeight(x&15, z&15);
+        return maps[i].getFirstAvailable(x&15, z&15);
     }
     public int getOutboundSpeedFrom(Direction dir) {
     	if(dir==null)
@@ -239,13 +239,13 @@ public class SurroundingTemperatureSimulator {
             	Vector3d dvec=svec.add(curspeed);
             	BlockPos bpos=new BlockPos(dvec);
                 CachedBlockInfo info = getInfoCached(bpos);
-                if (info.shape != EMPTY &&(info.shape == FULL||info.shape.contains(MathHelper.frac(dvec.x),MathHelper.frac(dvec.y),MathHelper.frac(dvec.z)))) {
-                	BlockRayTraceResult brtr=AxisAlignedBB.rayTrace(info.shape.toBoundingBoxList(), svec, dvec, bpos);
+                if (info.shape != EMPTY &&(info.shape == FULL||info.shape.isFullWide(MathHelper.frac(dvec.x),MathHelper.frac(dvec.y),MathHelper.frac(dvec.z)))) {
+                	BlockRayTraceResult brtr=AxisAlignedBB.clip(info.shape.toAabbs(), svec, dvec, bpos);
                     if(brtr!=null) {
                     	if(rnd.nextDouble()<0.33f) {
                     		nid = rnd.nextInt(speedVectors.length);
                     	} else {
-                    		nid = getOutboundSpeedFrom(brtr.getFace());
+                    		nid = getOutboundSpeedFrom(brtr.getDirection());
                     	}
                     }else {
                     	nid = rnd.nextInt(speedVectors.length);
@@ -253,8 +253,8 @@ public class SurroundingTemperatureSimulator {
                 }
                 Qpos[i] = dvec;
                 vid[i] = nid;
-                heat += (float) (getHeat(bpos) * MathHelper.lerp(MathHelper.clamp(-curspeed.getY(), 0, 0.4) * 2.5, 1, 0.5)); // add heat
-                wind += getAir(bpos)? (float) MathHelper.lerp((MathHelper.clamp(Math.abs(curspeed.getY()), 0.2, 0.8) - 0.2) / 0.6, 2, 0.5) :0;
+                heat += (float) (getHeat(bpos) * MathHelper.lerp(MathHelper.clamp(-curspeed.y(), 0, 0.4) * 2.5, 1, 0.5)); // add heat
+                wind += getAir(bpos)? (float) MathHelper.lerp((MathHelper.clamp(Math.abs(curspeed.y()), 0.2, 0.8) - 0.2) / 0.6, 2, 0.5) :0;
             }
         }
         return Pair.of(heat / n, wind/n);
@@ -289,26 +289,26 @@ public class SurroundingTemperatureSimulator {
     	boolean isExpose=getTopY(pos.getX(),pos.getZ())<pos.getY();
         BlockTempData b = FHDataManager.getBlockData(bs.getBlock());
         if (b == null)
-            return new CachedBlockInfo(bs.getCollisionShape(world, pos),isExpose,bs);
+            return new CachedBlockInfo(bs.getBlockSupportShape(world, pos),isExpose,bs);
         float cblocktemp = 0;
         if (b.isLit()) {
-            boolean litOrActive = bs.hasProperty(BlockStateProperties.LIT) && bs.get(BlockStateProperties.LIT);
+            boolean litOrActive = bs.hasProperty(BlockStateProperties.LIT) && bs.getValue(BlockStateProperties.LIT);
             if (litOrActive)
                 cblocktemp += b.getTemp();
         } else
             cblocktemp += b.getTemp();
         if (b.isLevel()) {
-            if (bs.hasProperty(BlockStateProperties.LEVEL_0_15)) {
-                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_0_15) + 1) / 16;
-            } else if (bs.hasProperty(BlockStateProperties.LEVEL_0_8)) {
-                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_0_8) + 1) / 9;
-            } else if (bs.hasProperty(BlockStateProperties.LEVEL_1_8)) {
-                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_1_8)) / 8;
-            } else if (bs.hasProperty(BlockStateProperties.LEVEL_0_3)) {
-                cblocktemp *= (float) (bs.get(BlockStateProperties.LEVEL_0_3) + 1) / 4;
+            if (bs.hasProperty(BlockStateProperties.LEVEL)) {
+                cblocktemp *= (float) (bs.getValue(BlockStateProperties.LEVEL) + 1) / 16;
+            } else if (bs.hasProperty(BlockStateProperties.LEVEL_COMPOSTER)) {
+                cblocktemp *= (float) (bs.getValue(BlockStateProperties.LEVEL_COMPOSTER) + 1) / 9;
+            } else if (bs.hasProperty(BlockStateProperties.LEVEL_FLOWING)) {
+                cblocktemp *= (float) (bs.getValue(BlockStateProperties.LEVEL_FLOWING)) / 8;
+            } else if (bs.hasProperty(BlockStateProperties.LEVEL_CAULDRON)) {
+                cblocktemp *= (float) (bs.getValue(BlockStateProperties.LEVEL_CAULDRON) + 1) / 4;
             }
         }
-        return new CachedBlockInfo(bs.getCollisionShape(world, pos), cblocktemp,isExpose,bs);
+        return new CachedBlockInfo(bs.getBlockSupportShape(world, pos), cblocktemp,isExpose,bs);
     }
 
     /***
@@ -329,9 +329,9 @@ public class SurroundingTemperatureSimulator {
             return null;
         Vector3d svec=new Vector3d(sx, sy, sz);
         Vector3d vvec=new Vector3d(sx+vx, sy+vy, sz+vz);
-        BlockRayTraceResult brtr=AxisAlignedBB.rayTrace(info.shape.toBoundingBoxList(), svec, vvec, bpos);
+        BlockRayTraceResult brtr=AxisAlignedBB.clip(info.shape.toAabbs(), svec, vvec, bpos);
         if(brtr!=null)
-        	return brtr.getFace();
+        	return brtr.getDirection();
         return null;
     }
     private boolean isBlockade(double x, double y, double z) {
@@ -341,6 +341,6 @@ public class SurroundingTemperatureSimulator {
         if (info.shape == EMPTY)
             return false;
         double nx=MathHelper.frac(x),ny=MathHelper.frac(y),nz=MathHelper.frac(z);
-        return info.shape.contains(nx,ny,nz);
+        return info.shape.isFullWide(nx,ny,nz);
     }
 }

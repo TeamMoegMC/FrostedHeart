@@ -41,7 +41,7 @@ public class T1GeneratorMultiblock extends FHBaseMultiblock {
     public T1GeneratorMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/generator"),
                 new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 4, 3),
-                () -> FHMultiblocks.generator.getDefaultState());
+                () -> FHMultiblocks.generator.defaultBlockState());
     }
 
     @Override
@@ -61,7 +61,7 @@ public class T1GeneratorMultiblock extends FHBaseMultiblock {
         if (renderStack == null)
             renderStack = new ItemStack(FHMultiblocks.generator);
         transform.translate(1.5D, 1.5D, 1.5D);
-        ClientUtils.mc().getItemRenderer().renderItem(
+        ClientUtils.mc().getItemRenderer().renderStatic(
                 renderStack,
                 ItemCameraTransforms.TransformType.NONE,
                 0xf000f0,

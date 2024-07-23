@@ -41,16 +41,16 @@ public class TownCommand {
         LiteralArgumentBuilder<CommandSource> name =
                 Commands.literal("name")
                         .executes(ct -> {
-                            TeamTown town = TeamTown.from(ct.getSource().asPlayer());
-                            ct.getSource().sendFeedback(TranslateUtils.str(town.getName()), true);
+                            TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
+                            ct.getSource().sendSuccess(TranslateUtils.str(town.getName()), true);
                             return Command.SINGLE_SUCCESS;
                         });
 
         LiteralArgumentBuilder<CommandSource> listResources =
                 Commands.literal("list")
                         .executes(ct -> {
-                            TeamTown town = TeamTown.from(ct.getSource().asPlayer());
-                            ct.getSource().sendFeedback(TranslateUtils.str(town.getResources()), true);
+                            TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
+                            ct.getSource().sendSuccess(TranslateUtils.str(town.getResources()), true);
                             return Command.SINGLE_SUCCESS;
                         });
 
@@ -66,9 +66,9 @@ public class TownCommand {
                                         .executes(ct -> {
                                             double amount = DoubleArgumentType.getDouble(ct, "amount");
                                             String type = StringArgumentType.getString(ct, "type");
-                                            TeamTown town = TeamTown.from(ct.getSource().asPlayer());
+                                            TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                                             town.add(TownResourceType.from(type), amount, false);
-                                            ct.getSource().sendFeedback(TranslateUtils.str("Resource added"), true);
+                                            ct.getSource().sendSuccess(TranslateUtils.str("Resource added"), true);
                                             return Command.SINGLE_SUCCESS;
                                         })
                                 )
@@ -76,10 +76,10 @@ public class TownCommand {
 
         LiteralArgumentBuilder<CommandSource> listResidents =
                 Commands.literal("list").executes(ct -> {
-                    TeamTown town = TeamTown.from(ct.getSource().asPlayer());
+                    TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                             int size = town.getResidents().values().size();
-                            ct.getSource().sendFeedback(TranslateUtils.str("Total residents: " + size), true);
-                            ct.getSource().sendFeedback(TranslateUtils.str(town.getResidents().values()), true);
+                            ct.getSource().sendSuccess(TranslateUtils.str("Total residents: " + size), true);
+                            ct.getSource().sendSuccess(TranslateUtils.str(town.getResidents().values()), true);
                             return Command.SINGLE_SUCCESS;
                         });
 
@@ -87,26 +87,26 @@ public class TownCommand {
                 Commands.literal("add")
                         .then(Commands.argument("first_name", StringArgumentType.string())
                                 .then(Commands.argument("last_name", StringArgumentType.string()).executes(ct -> {
-                                    TeamTown town = TeamTown.from(ct.getSource().asPlayer());
+                                    TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                                     town.addResident(new Resident(StringArgumentType.getString(ct, "first_name"), StringArgumentType.getString(ct, "last_name")));
-                                    ct.getSource().sendFeedback(TranslateUtils.str("Resident added"), true);
+                                    ct.getSource().sendSuccess(TranslateUtils.str("Resident added"), true);
                                     return Command.SINGLE_SUCCESS;
                                 }))
                         );
 
         LiteralArgumentBuilder<CommandSource> listBlocks =
                 Commands.literal("list").executes(ct -> {
-                    TeamTown town = TeamTown.from(ct.getSource().asPlayer());
-                    ct.getSource().sendFeedback(TranslateUtils.str("Total blocks: " + town.getTownBlocks().size()), true);
+                    TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
+                    ct.getSource().sendSuccess(TranslateUtils.str("Total blocks: " + town.getTownBlocks().size()), true);
                     town.getTownBlocks().forEach((k, v) -> {
-                        String blockName = v.getType().getBlock().getTranslationKey();
-                        ct.getSource().sendFeedback(TranslateUtils.translate(blockName).appendSibling(TranslateUtils.str(" at " + k)), true);
+                        String blockName = v.getType().getBlock().getDescriptionId();
+                        ct.getSource().sendSuccess(TranslateUtils.translate(blockName).append(TranslateUtils.str(" at " + k)), true);
                     });
                     return Command.SINGLE_SUCCESS;
                 });
 
         dispatcher.register(Commands.literal(FHMain.MODID)
-                .requires(s -> s.hasPermissionLevel(2))
+                .requires(s -> s.hasPermission(2))
                 .then(Commands.literal("town")
                         .then(name)
                         .then(Commands.literal("resources")

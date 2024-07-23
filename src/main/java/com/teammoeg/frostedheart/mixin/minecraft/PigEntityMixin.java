@@ -58,14 +58,14 @@ public abstract class PigEntityMixin extends AnimalEntity implements IFeedStore 
 
     @Inject(at = @At("HEAD"), method = "getEntityInteractionResult", cancellable = true)
     public void fh$getEntityInteractionResult(PlayerEntity playerIn, Hand hand, CallbackInfoReturnable<ActionResultType> cbi) {
-        ItemStack itemstack = playerIn.getHeldItem(hand);
+        ItemStack itemstack = playerIn.getItemInHand(hand);
 
-        if (!itemstack.isEmpty() && isBreedingItem(itemstack)) {
+        if (!itemstack.isEmpty() && isFood(itemstack)) {
             if (feeded < 2) {
                 feeded++;
-                if (!this.world.isRemote)
-                    this.consumeItemFromStack(playerIn, itemstack);
-                cbi.setReturnValue(ActionResultType.func_233537_a_(this.world.isRemote));
+                if (!this.level.isClientSide)
+                    this.usePlayerItem(playerIn, itemstack);
+                cbi.setReturnValue(ActionResultType.sidedSuccess(this.level.isClientSide));
             }
         }
     }

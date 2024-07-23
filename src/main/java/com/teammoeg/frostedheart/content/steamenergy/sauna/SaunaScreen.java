@@ -55,24 +55,24 @@ public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
     }
 
     @Override
-    protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int x, int y) {
+    protected void renderBg(MatrixStack matrixStack, float partialTicks, int x, int y) {
         Minecraft mc = Minecraft.getInstance();
         ClientUtils.bindTexture(TEXTURE);
-        this.blit(matrixStack, guiLeft, guiTop, 0, 0, xSize, ySize);
+        this.blit(matrixStack, leftPos, topPos, 0, 0, imageWidth, imageHeight);
 
-        SaunaTileEntity tile = this.container.tile;
+        SaunaTileEntity tile = this.menu.tile;
 
         // draw the steam clock
         float powerFraction = tile.getPowerFraction();
 
         if (powerFraction < 0.25) {
-            clock1.blitAt(matrixStack, guiLeft, guiTop, clockPos);
+            clock1.blitAt(matrixStack, leftPos, topPos, clockPos);
         } else if (powerFraction < 0.5) {
-            clock2.blitAt(matrixStack, guiLeft, guiTop, clockPos);
+            clock2.blitAt(matrixStack, leftPos, topPos, clockPos);
         } else if (powerFraction < 0.75) {
-            clock3.blitAt(matrixStack, guiLeft, guiTop, clockPos);
+            clock3.blitAt(matrixStack, leftPos, topPos, clockPos);
         } else {
-            clock4.blitAt(matrixStack, guiLeft, guiTop, clockPos);
+            clock4.blitAt(matrixStack, leftPos, topPos, clockPos);
         }
 
         // draw flame if the sauna is on
@@ -83,27 +83,27 @@ public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
                 float effectFrac = tile.getEffectTimeFraction();
                 int height = (int) (flame2.getH() * effectFrac);
                 int offset = flame2.getH() - height;
-                if (effect.getPotion() == Effects.HASTE) {
-                    mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
+                if (effect.getEffect() == Effects.DIG_SPEED) {
+                    mc.gui.blit(matrixStack, leftPos + flamePos.getX(), topPos + flamePos.getY() + offset,
                             flame2.getX(), flame2.getY() + offset, flame2.getW(), height);
-                } else if (effect.getPotion() == Effects.ABSORPTION) {
-                    mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
+                } else if (effect.getEffect() == Effects.ABSORPTION) {
+                    mc.gui.blit(matrixStack, leftPos + flamePos.getX(), topPos + flamePos.getY() + offset,
                             flame3.getX(), flame3.getY() + offset, flame3.getW(), height);
-                } else if (effect.getPotion() == Effects.SPEED) {
-                    mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
+                } else if (effect.getEffect() == Effects.MOVEMENT_SPEED) {
+                    mc.gui.blit(matrixStack, leftPos + flamePos.getX(), topPos + flamePos.getY() + offset,
                             flame4.getX(), flame4.getY() + offset, flame4.getW(), height);
-                } else if (effect.getPotion() == Effects.JUMP_BOOST) {
-                    mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
+                } else if (effect.getEffect() == Effects.JUMP) {
+                    mc.gui.blit(matrixStack, leftPos + flamePos.getX(), topPos + flamePos.getY() + offset,
                             flame5.getX(), flame5.getY() + offset, flame5.getW(), height);
                 }
             } else {
-                flame1.blitAt(matrixStack, guiLeft, guiTop, flamePos);
+                flame1.blitAt(matrixStack, leftPos, topPos, flamePos);
             }
         }
     }
 
     @Override
-    protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int x, int y) {
-        super.drawGuiContainerForegroundLayer(matrixStack, x, y);
+    protected void renderLabels(MatrixStack matrixStack, int x, int y) {
+        super.renderLabels(matrixStack, x, y);
     }
 }

@@ -64,7 +64,7 @@ public class CompoundNBTBuilder<P> {
 		}
 
 		public CompoundNBTBuilder<P> putUniqueId(String key, UUID value) {
-			nbt.putUniqueId(key, value);
+			nbt.putUUID(key, value);
             return this;
 		}
 

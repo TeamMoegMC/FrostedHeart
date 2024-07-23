@@ -34,7 +34,7 @@ public class RadiatorMultiblock extends FHBaseMultiblock {
     public RadiatorMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/heat_radiator"),
                 new BlockPos(0, 0, 0), new BlockPos(0, 0, 0), new BlockPos(1, 3, 1),
-                () -> FHMultiblocks.radiator.getDefaultState());
+                () -> FHMultiblocks.radiator.defaultBlockState());
     }
 
     @Override

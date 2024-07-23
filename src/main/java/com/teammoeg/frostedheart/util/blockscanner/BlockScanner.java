@@ -93,7 +93,7 @@ public class BlockScanner {
     public static int countBlocksAdjacent( BlockPos startPos, Predicate<BlockPos> target){
         int num = 0;
         for(Direction direction : Direction.values()){
-            if(target.test(startPos.offset(direction))){
+            if(target.test(startPos.relative(direction))){
                 num++;
             }
         }
@@ -109,7 +109,7 @@ public class BlockScanner {
     public static AbstractMap.SimpleEntry<Integer, Boolean> countBlocksAbove(Predicate<BlockPos> target, BlockPos startPos, Predicate<BlockPos> stopAt){
         BlockPos scanningBlock;
         int num = 0;
-        scanningBlock = startPos.up();
+        scanningBlock = startPos.above();
         while(scanningBlock.getY() < 255){
             if(stopAt.test(scanningBlock)){
                 return new AbstractMap.SimpleEntry<>(num, true);
@@ -117,14 +117,14 @@ public class BlockScanner {
             if(target.test(scanningBlock)){
                 num++;
             }
-            scanningBlock = scanningBlock.up();
+            scanningBlock = scanningBlock.above();
         }
         return new AbstractMap.SimpleEntry<>(num, false);
     }
     public static int countBlocksAbove(Predicate<BlockPos> target, BlockPos startPos){
         BlockPos scanningBlock;
         int num = 0;
-        scanningBlock = startPos.up();
+        scanningBlock = startPos.above();
         while(scanningBlock.getY() < 255){
             if(target.test(scanningBlock)){
                 num++;
@@ -145,8 +145,8 @@ public class BlockScanner {
     public static ArrayList<BlockPos> getBlocksAdjacent( BlockPos startPos, Predicate<BlockPos> target){
         ArrayList<BlockPos> blocks = new ArrayList<>();
         for(Direction direction : Direction.values()){
-            if(target.test(startPos.offset(direction))){
-                blocks.add(startPos.offset(direction));
+            if(target.test(startPos.relative(direction))){
+                blocks.add(startPos.relative(direction));
             }
         }
         return blocks;
@@ -157,8 +157,8 @@ public class BlockScanner {
      */
     public static BlockPos getDoorAdjacent(World world, BlockPos startPos){
         for(Direction direction : Direction.values()){
-            if(world.getBlockState(startPos.offset(direction)).isIn(BlockTags.DOORS)){
-                return startPos.offset(direction);
+            if(world.getBlockState(startPos.relative(direction)).is(BlockTags.DOORS)){
+                return startPos.relative(direction);
             }
         }
         return null;
@@ -166,7 +166,7 @@ public class BlockScanner {
 
     public static ArrayList<BlockPos> getBlocksAbove(Predicate<BlockPos> target, BlockPos startPos, Predicate<BlockPos> stopAt){
         BlockPos scanningBlock;
-        scanningBlock = startPos.up();
+        scanningBlock = startPos.above();
         ArrayList<BlockPos> blocks = new ArrayList<>();
         while(scanningBlock.getY() < 256){
             if(stopAt.test(scanningBlock)){
@@ -175,7 +175,7 @@ public class BlockScanner {
             if(target.test(scanningBlock)){
                 blocks.add(scanningBlock);
             }
-            scanningBlock = scanningBlock.up();
+            scanningBlock = scanningBlock.above();
         }
         return blocks;
     }
@@ -189,7 +189,7 @@ public class BlockScanner {
 
     public static ArrayList<BlockPos> getBlocksBelow(Predicate<BlockPos> target, BlockPos startPos, Predicate<BlockPos> stopAt){
         BlockPos scanningBlock;
-        scanningBlock = startPos.down();
+        scanningBlock = startPos.below();
         ArrayList<BlockPos> blocks = new ArrayList<>();
         while(scanningBlock.getY() > 0){
             if(stopAt.test(scanningBlock)){
@@ -198,7 +198,7 @@ public class BlockScanner {
             if(target.test(scanningBlock)){
                 blocks.add(scanningBlock);
             }
-            scanningBlock = scanningBlock.down();
+            scanningBlock = scanningBlock.below();
         }
         return blocks;
     }
@@ -225,8 +225,8 @@ public class BlockScanner {
     public static ArrayList<BlockPos> getBlocksAdjacent_plane(Predicate<BlockPos> target, BlockPos scanningBlock){
         ArrayList<BlockPos> targetBlocks = new ArrayList<>();
         for(Direction direction : PLANE_DIRECTIONS){
-            if(target.test(scanningBlock.offset(direction))){
-                targetBlocks.add(scanningBlock.offset(direction));
+            if(target.test(scanningBlock.relative(direction))){
+                targetBlocks.add(scanningBlock.relative(direction));
             }
         }
         return targetBlocks;
@@ -238,8 +238,8 @@ public class BlockScanner {
     public static ArrayList<BlockPos> getPossibleFloor(IWorld world, BlockPos pos){
         ArrayList<BlockPos> blocks = new ArrayList<>();
         blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos));
-        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.up()));
-        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.down()));
+        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.above()));
+        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.below()));
         return blocks;
     }
     public ArrayList<BlockPos> getPossibleFloor(BlockPos pos){
@@ -249,9 +249,9 @@ public class BlockScanner {
     public ArrayList<BlockPos> getPossibleFloorNearLadder(BlockPos pos){
         ArrayList<BlockPos> blocks = new ArrayList<>();
         blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos));
-        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.up()));
-        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.down()));
-        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.down(2)));
+        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.above()));
+        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.below()));
+        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.below(2)));
         return blocks;
     }
 
@@ -273,11 +273,11 @@ public class BlockScanner {
      * 默认本身为完整方块，且上方两格为均空气的方块为合法的地板。若有不同需求请用上面那个方法
      */
     public ArrayList<BlockPos> getFloorAdjacent(BlockPos pos){
-        return getFloorAdjacent(pos, (BlockPos)-> world.getBlockState(pos).isNormalCube(world, pos) && PlantBlockHelper.isAir(world.getBlockState(pos.up())) && PlantBlockHelper.isAir(world.getBlockState(pos.up(2))));
+        return getFloorAdjacent(pos, (BlockPos)-> world.getBlockState(pos).isRedstoneConductor(world, pos) && PlantBlockHelper.isValidGrowthState(world.getBlockState(pos.above())) && PlantBlockHelper.isValidGrowthState(world.getBlockState(pos.above(2))));
     }
 
     public boolean isOpenAir(BlockPos pos){
-        return countBlocksAbove(pos, blockPos -> !PlantBlockHelper.isAir(world.getBlockState(blockPos))).getValue();
+        return countBlocksAbove(pos, blockPos -> !PlantBlockHelper.isValidGrowthState(world.getBlockState(blockPos))).getValue();
     }
 
     /**
@@ -285,7 +285,7 @@ public class BlockScanner {
      */
     public static boolean isAirOrLadder(World world, BlockPos pos) {
         BlockState state = world.getBlockState(pos);
-        return PlantBlockHelper.isAir(state) || state.isIn(BlockTags.CLIMBABLE) || state.getCollisionShape(world, pos).isEmpty();
+        return PlantBlockHelper.isValidGrowthState(state) || state.is(BlockTags.CLIMBABLE) || state.getBlockSupportShape(world, pos).isEmpty();
     }
 
     /**
@@ -293,12 +293,12 @@ public class BlockScanner {
      */
     public static BlockPos getBlockBelow(Predicate<BlockPos> target, BlockPos startPos){
         BlockPos scanningBlock;
-        scanningBlock = startPos.down();
+        scanningBlock = startPos.below();
         while(scanningBlock.getY() > 0){
             if(target.test(scanningBlock)){
                 return scanningBlock;
             }
-            else scanningBlock = scanningBlock.down();
+            else scanningBlock = scanningBlock.below();
         }
         return null;
     }
@@ -306,7 +306,7 @@ public class BlockScanner {
     public static HashSet<Long> toLongSet(Collection<BlockPos> collection){
         HashSet<Long> longSet = new HashSet<>();
         for(BlockPos pos : collection){
-            longSet.add(pos.toLong());
+            longSet.add(pos.asLong());
         }
         return longSet;
     }
@@ -314,7 +314,7 @@ public class BlockScanner {
     public static HashSet<BlockPos> toPosSet(Collection<Long> collection){
         HashSet<BlockPos> posSet = new HashSet<>();
         for(Long posLong : collection){
-            posSet.add(BlockPos.fromLong(posLong));
+            posSet.add(BlockPos.of(posLong));
         }
         return posSet;
     }

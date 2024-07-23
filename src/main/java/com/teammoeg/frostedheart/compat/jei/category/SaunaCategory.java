@@ -51,7 +51,7 @@ public class SaunaCategory implements IRecipeCategory<SaunaRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "sauna");
     private IDrawable BACKGROUND;
     private IDrawable ICON;
-    private StaticBlock sauna = new StaticBlock(FHBlocks.sauna.get().getDefaultState().with(BlockStateProperties.FACING, Direction.EAST));
+    private StaticBlock sauna = new StaticBlock(FHBlocks.sauna.get().defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
 
     public SaunaCategory(IGuiHelper guiHelper) {
         this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.sauna.get()));
@@ -112,7 +112,7 @@ public class SaunaCategory implements IRecipeCategory<SaunaRecipe> {
 
     @Override
     public void setIngredients(SaunaRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.input.getMatchingStacks())));
+        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.input.getItems())));
     }
 
     @Override

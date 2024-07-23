@@ -55,22 +55,22 @@ public class InstallInnerRecipe extends SpecialRecipe {
 
         @Nullable
         @Override
-        public InstallInnerRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            Ingredient input = Ingredient.read(buffer);
+        public InstallInnerRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+            Ingredient input = Ingredient.fromNetwork(buffer);
             int dura = buffer.readVarInt();
             return new InstallInnerRecipe(recipeId, input, dura);
         }
 
         @Override
         public InstallInnerRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            Ingredient input = Ingredient.deserialize(json.get("input"));
+            Ingredient input = Ingredient.fromJson(json.get("input"));
             int dura = JsonHelper.getIntOrDefault(json, "durable", 100);
             return new InstallInnerRecipe(recipeId, input, dura);
         }
 
         @Override
-        public void write(PacketBuffer buffer, InstallInnerRecipe recipe) {
-            recipe.type.write(buffer);
+        public void toNetwork(PacketBuffer buffer, InstallInnerRecipe recipe) {
+            recipe.type.toNetwork(buffer);
             buffer.writeVarInt(recipe.durability);
         }
     }
@@ -91,23 +91,23 @@ public class InstallInnerRecipe extends SpecialRecipe {
     /**
      * Used to determine if this recipe can fit in a grid of the given width/height
      */
-    public boolean canFit(int width, int height) {
+    public boolean canCraftInDimensions(int width, int height) {
         return width * height >= 2;
     }
 
     public ResourceLocation getBuffType() {
-        return Optional.fromNullable(type.getMatchingStacks()[0]).transform(e -> RegistryUtils.getRegistryName(e.getItem()))
+        return Optional.fromNullable(type.getItems()[0]).transform(e -> RegistryUtils.getRegistryName(e.getItem()))
                 .or(new ResourceLocation("minecraft", "air"));
     }
 
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack getCraftingResult(CraftingInventory inv) {
+    public ItemStack assemble(CraftingInventory inv) {
         ItemStack buffstack = ItemStack.EMPTY;
         ItemStack armoritem = ItemStack.EMPTY;
-        for (int i = 0; i < inv.getSizeInventory(); ++i) {
-            ItemStack itemstack = inv.getStackInSlot(i);
+        for (int i = 0; i < inv.getContainerSize(); ++i) {
+            ItemStack itemstack = inv.getItem(i);
             if (itemstack != null && !itemstack.isEmpty()) {
                 if (type.test(itemstack)) {
                     if (!buffstack.isEmpty())
@@ -116,7 +116,7 @@ public class InstallInnerRecipe extends SpecialRecipe {
                 } else {
                     if (!armoritem.isEmpty())
                         return ItemStack.EMPTY;
-                    EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
+                    EquipmentSlotType type = MobEntity.getEquipmentSlotForItem(itemstack);
                     if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND)
                         if (itemstack.hasTag()) {
                             if (!itemstack.getTag().getString("inner_cover").isEmpty()) return ItemStack.EMPTY;
@@ -147,7 +147,7 @@ public class InstallInnerRecipe extends SpecialRecipe {
 
     @Override
     public NonNullList<ItemStack> getRemainingItems(CraftingInventory inv) {
-        return NonNullList.withSize(inv.getSizeInventory(), ItemStack.EMPTY);
+        return NonNullList.withSize(inv.getContainerSize(), ItemStack.EMPTY);
     }
 
     @Override
@@ -161,8 +161,8 @@ public class InstallInnerRecipe extends SpecialRecipe {
     public boolean matches(CraftingInventory inv, World worldIn) {
         boolean hasArmor = false;
         boolean hasItem = false;
-        for (int i = 0; i < inv.getSizeInventory(); ++i) {
-            ItemStack itemstack = inv.getStackInSlot(i);
+        for (int i = 0; i < inv.getContainerSize(); ++i) {
+            ItemStack itemstack = inv.getItem(i);
             if (itemstack == null || itemstack.isEmpty()) {
                 continue;
             }
@@ -173,7 +173,7 @@ public class InstallInnerRecipe extends SpecialRecipe {
             } else {
                 if (hasArmor)
                     return false;
-                EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
+                EquipmentSlotType type = MobEntity.getEquipmentSlotForItem(itemstack);
                 if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND)
                     if (itemstack.hasTag()) {
                         if (!itemstack.getTag().getString("inner_cover").isEmpty()) return false;
@@ -185,7 +185,7 @@ public class InstallInnerRecipe extends SpecialRecipe {
     }
 
     public boolean matches(ItemStack itemstack) {
-        EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
+        EquipmentSlotType type = MobEntity.getEquipmentSlotForItem(itemstack);
         return type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND;
     }
 

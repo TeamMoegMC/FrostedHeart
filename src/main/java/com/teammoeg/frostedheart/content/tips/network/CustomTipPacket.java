@@ -14,8 +14,8 @@ public class CustomTipPacket implements FHMessage {
     private final boolean history;
 
     public CustomTipPacket(PacketBuffer buffer) {
-        title = buffer.readString();
-        content = buffer.readString();
+        title = buffer.readUtf();
+        content = buffer.readUtf();
         visibleTime = buffer.readInt();
         history = buffer.readBoolean();
     }
@@ -28,8 +28,8 @@ public class CustomTipPacket implements FHMessage {
     }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeString(this.title);
-        buffer.writeString(this.content);
+        buffer.writeUtf(this.title);
+        buffer.writeUtf(this.content);
         buffer.writeInt(this.visibleTime);
         buffer.writeBoolean(this.history);
     }

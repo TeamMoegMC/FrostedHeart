@@ -51,45 +51,45 @@ public class MarshallUtil {
     public static void initializeMarshallers() {
     	if(isBasicInitialized)return;
     		isBasicInitialized=true;
-    		basicMarshaller(byte.class, ByteNBT.class,ByteNBT::getByte,ByteNBT::valueOf,(byte)0);
-    		basicMarshaller(Byte.class, ByteNBT.class,ByteNBT::getByte,ByteNBT::valueOf);
+    		basicMarshaller(byte.class, ByteNBT.class,ByteNBT::getAsByte,ByteNBT::valueOf,(byte)0);
+    		basicMarshaller(Byte.class, ByteNBT.class,ByteNBT::getAsByte,ByteNBT::valueOf);
     		addCodec(byte.class, Codec.BYTE);
     		addCodec(Byte.class, Codec.BYTE);
 	    	
-	    	basicMarshaller(double.class,DoubleNBT.class,DoubleNBT::getDouble,DoubleNBT::valueOf,0d);
-	    	basicMarshaller(Double.class,DoubleNBT.class,DoubleNBT::getDouble,DoubleNBT::valueOf);
+	    	basicMarshaller(double.class,DoubleNBT.class,DoubleNBT::getAsDouble,DoubleNBT::valueOf,0d);
+	    	basicMarshaller(Double.class,DoubleNBT.class,DoubleNBT::getAsDouble,DoubleNBT::valueOf);
     		addCodec(double.class, Codec.DOUBLE);
     		addCodec(Double.class, Codec.DOUBLE);
 	    	
-	    	basicMarshaller(float.class, FloatNBT.class,FloatNBT::getFloat,FloatNBT::valueOf,0f);
-	    	basicMarshaller(Float.class, FloatNBT.class,FloatNBT::getFloat,FloatNBT::valueOf);
+	    	basicMarshaller(float.class, FloatNBT.class,FloatNBT::getAsFloat,FloatNBT::valueOf,0f);
+	    	basicMarshaller(Float.class, FloatNBT.class,FloatNBT::getAsFloat,FloatNBT::valueOf);
     		addCodec(float.class, Codec.FLOAT);
     		addCodec(Float.class, Codec.FLOAT);
 	    	
-	    	basicMarshaller(int.class, IntNBT.class,IntNBT::getInt,IntNBT::valueOf,0);
-	    	basicMarshaller(Integer.class, IntNBT.class,IntNBT::getInt,IntNBT::valueOf);
+	    	basicMarshaller(int.class, IntNBT.class,IntNBT::getAsInt,IntNBT::valueOf,0);
+	    	basicMarshaller(Integer.class, IntNBT.class,IntNBT::getAsInt,IntNBT::valueOf);
     		addCodec(int.class, Codec.INT);
     		addCodec(Integer.class, Codec.INT);
 	    	
-	    	basicMarshaller(long.class, LongNBT.class,LongNBT::getLong,LongNBT::valueOf, 0L);
-	    	basicMarshaller(Long.class, LongNBT.class,LongNBT::getLong,LongNBT::valueOf);
+	    	basicMarshaller(long.class, LongNBT.class,LongNBT::getAsLong,LongNBT::valueOf, 0L);
+	    	basicMarshaller(Long.class, LongNBT.class,LongNBT::getAsLong,LongNBT::valueOf);
 	    	addCodec(long.class, Codec.LONG);
     		addCodec(Long.class, Codec.LONG);
 	    	
-	       	basicMarshaller(short.class, ShortNBT.class,ShortNBT::getShort,ShortNBT::valueOf,(short)0);
-	    	basicMarshaller(Short.class, ShortNBT.class,ShortNBT::getShort,ShortNBT::valueOf);
+	       	basicMarshaller(short.class, ShortNBT.class,ShortNBT::getAsShort,ShortNBT::valueOf,(short)0);
+	    	basicMarshaller(Short.class, ShortNBT.class,ShortNBT::getAsShort,ShortNBT::valueOf);
 	    	addCodec(short.class, Codec.SHORT);
     		addCodec(Short.class, Codec.SHORT);
 	    	
-	       	basicMarshaller(String.class, StringNBT.class,StringNBT::getString,StringNBT::valueOf);
+	       	basicMarshaller(String.class, StringNBT.class,StringNBT::getAsString,StringNBT::valueOf);
 	       	addCodec(String.class, Codec.STRING);
 	    	
-	    	basicMarshaller(byte[].class, ByteArrayNBT.class,ByteArrayNBT::getByteArray,ByteArrayNBT::new);
-	    	basicMarshaller(int[].class, IntArrayNBT.class,IntArrayNBT::getIntArray,IntArrayNBT::new);
+	    	basicMarshaller(byte[].class, ByteArrayNBT.class,ByteArrayNBT::getAsByteArray,ByteArrayNBT::new);
+	    	basicMarshaller(int[].class, IntArrayNBT.class,IntArrayNBT::getAsIntArray,IntArrayNBT::new);
 	    	basicMarshaller(long[].class, LongArrayNBT.class,LongArrayNBT::getAsLongArray,LongArrayNBT::new);
-	    	basicMarshaller(BlockPos.class,LongNBT.class,o->BlockPos.fromLong(o.getLong()),o->LongNBT.valueOf(o.toLong()));
+	    	basicMarshaller(BlockPos.class,LongNBT.class,o->BlockPos.of(o.getAsLong()),o->LongNBT.valueOf(o.asLong()));
 	    	
-	    	nbtMarshaller(ItemStack.class,ItemStack::read,o->o.write(new CompoundNBT()));
+	    	nbtMarshaller(ItemStack.class,ItemStack::of,o->o.save(new CompoundNBT()));
 	    	
 	    	
     }

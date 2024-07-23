@@ -31,6 +31,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class FHCropBlock extends CropsBlock {
     private int growTemperature;
 
@@ -40,7 +42,7 @@ public class FHCropBlock extends CropsBlock {
     }
 
     @Override
-    public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, BlockState state) {
+    public boolean isBonemealSuccess(World worldIn, Random rand, BlockPos pos, BlockState state) {
         float temp = ChunkHeatData.getTemperature(worldIn, pos);
         return temp >= growTemperature;
     }
@@ -54,22 +56,22 @@ public class FHCropBlock extends CropsBlock {
     public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
         if (!worldIn.isAreaLoaded(pos, 1))
             return; // Forge: prevent loading unloaded chunks when checking neighbor's light
-        if (worldIn.getLightSubtracted(pos, 0) >= 9) {
+        if (worldIn.getRawBrightness(pos, 0) >= 9) {
             int i = this.getAge(state);
             float temp = ChunkHeatData.getTemperature(worldIn, pos);
             boolean bz = WorldClimate.isBlizzard(worldIn);
             if (temp < growTemperature || bz) {
                 if ((bz || temp < growTemperature - 10) && worldIn.getRandom().nextInt(3) == 0) {
-                    worldIn.setBlockState(pos, this.getDefaultState(), 2);
+                    worldIn.setBlock(pos, this.defaultBlockState(), 2);
                 }
             } else if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
                 if (worldIn.getRandom().nextInt(3) == 0) {
-                    worldIn.setBlockState(pos, this.getDefaultState(), 2);
+                    worldIn.setBlock(pos, this.defaultBlockState(), 2);
                 }
             } else if (i < this.getMaxAge()) {
-                float f = getGrowthChance(this, worldIn, pos);
+                float f = getGrowthSpeed(this, worldIn, pos);
                 if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt((int) (25.0F / f) + 1) == 0)) {
-                    worldIn.setBlockState(pos, this.withAge(i + 1), 2);
+                    worldIn.setBlock(pos, this.getStateForAge(i + 1), 2);
                     net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state);
                 }
             }

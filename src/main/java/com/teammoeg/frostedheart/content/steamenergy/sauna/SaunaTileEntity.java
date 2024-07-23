@@ -114,9 +114,9 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
         if (dist(crn, orig)) {
             if (poss.add(crn)) {
                 for (Direction dir : HORIZONTALS) {
-                    BlockPos act = crn.offset(dir);
+                    BlockPos act = crn.relative(dir);
                     // if crn connected to plank
-                    if (l.isBlockPresent(act) && (l.getBlockState(act).isIn(BlockTags.PLANKS) || l.getBlockState(act).getBlock().matchesBlock(FHBlocks.sauna.get()))) {
+                    if (l.isLoaded(act) && (l.getBlockState(act).is(BlockTags.PLANKS) || l.getBlockState(act).getBlock().is(FHBlocks.sauna.get()))) {
                         findNext(l, act, orig, poss, edges);
                     }
                     // otherwise, crn is an edge block
@@ -181,21 +181,21 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
         UUID t = FHTeamDataManager.get(p).getId();
         if (t == null || !t.equals(owner)) return;
         // add wet effect
-        if (world.getGameTime() % 200L == 0L) {
-            p.addPotionEffect(new EffectInstance(FHEffects.WET.get(), 200, 0, true, false));
+        if (level.getGameTime() % 200L == 0L) {
+            p.addEffect(new EffectInstance(FHEffects.WET.get(), 200, 0, true, false));
         }
 
         // add sauna effect
-        if (world.getGameTime() % 1000L == 0L && !p.isPotionActive(FHEffects.SAUNA.get())) {
+        if (level.getGameTime() % 1000L == 0L && !p.hasEffect(FHEffects.SAUNA.get())) {
             // initial reward
             EnergyCore.addEnergy(p, 1000);
             // whole day reward
-            p.addPotionEffect(new EffectInstance(FHEffects.SAUNA.get(), 23000, 0, true, false));
+            p.addEffect(new EffectInstance(FHEffects.SAUNA.get(), 23000, 0, true, false));
         }
         
         // add medical effect
         if (hasMedicine() && remainTime == 1) {
-            p.addPotionEffect(getEffectInstance());
+            p.addEffect(getEffectInstance());
         }
     }
 
@@ -213,12 +213,12 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
     }
 
     public ActionResultType onClick(PlayerEntity player) {
-        if (!player.world.isRemote) {
+        if (!player.level.isClientSide) {
             if (formed) {
                 // player.sendStatusMessage(GuiUtils.translateMessage("structure_formed"), true);
-                NetworkHooks.openGui((ServerPlayerEntity) player, this, this.getPos());
+                NetworkHooks.openGui((ServerPlayerEntity) player, this, this.getBlockPos());
             } else {
-                player.sendStatusMessage(TranslateUtils.translateMessage("structure_not_formed"), true);
+                player.displayClientMessage(TranslateUtils.translateMessage("structure_not_formed"), true);
             }
         }
         return ActionResultType.SUCCESS;
@@ -229,7 +229,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
         remainTime = nbt.getInt("time");
         maxTime = nbt.getInt("maxTime");
         if (nbt.contains("effect")) {
-            effect = Effect.get(nbt.getInt("effect"));
+            effect = Effect.byId(nbt.getInt("effect"));
             effectDuration = nbt.getInt("duration");
             effectAmplifier = nbt.getInt("amplifier");
         } else {
@@ -258,12 +258,12 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
         floor.clear();
         edges.clear();
         // collect connected floor and edges
-        findNext(this.getWorld(), this.getPos(), this.getPos(), floor, edges);
+        findNext(this.getLevel(), this.getBlockPos(), this.getBlockPos(), floor, edges);
         // check wall exist for each edge block
         for (BlockPos pos : edges) {
             for (int y = 1; y <= WALL_HEIGHT; y++) {
-                BlockState wall = world.getBlockState(pos.offset(Direction.UP, y));
-                if (!wall.isIn(BlockTags.PLANKS) && !wall.isIn(BlockTags.DOORS)) {
+                BlockState wall = level.getBlockState(pos.relative(Direction.UP, y));
+                if (!wall.is(BlockTags.PLANKS) && !wall.is(BlockTags.DOORS)) {
                     return false;
                 }
             }
@@ -272,8 +272,8 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
         }
         // check ceiling exist for each floor block
         for (BlockPos pos : floor) {
-            BlockState ceiling = world.getBlockState(pos.offset(Direction.UP, WALL_HEIGHT));
-            if (!ceiling.isIn(BlockTags.PLANKS) && !ceiling.isIn(BlockTags.TRAPDOORS)) {
+            BlockState ceiling = level.getBlockState(pos.relative(Direction.UP, WALL_HEIGHT));
+            if (!ceiling.is(BlockTags.PLANKS) && !ceiling.is(BlockTags.TRAPDOORS)) {
                 return false;
             }
         }
@@ -281,7 +281,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
     }
 
     public SaunaRecipe findRecipe(ItemStack input) {
-        for (SaunaRecipe recipe : FHUtils.filterRecipes(this.getWorld().getRecipeManager(), SaunaRecipe.TYPE))
+        for (SaunaRecipe recipe : FHUtils.filterRecipes(this.getLevel().getRecipeManager(), SaunaRecipe.TYPE))
             if (recipe.input.test(input))
                 return recipe;
         return null;
@@ -289,7 +289,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
     @Override
     public void tick() {
         // server side logic
-        if (!world.isRemote) {
+        if (!level.isClientSide) {
         	//Check formed
         	workPeriod--;
             if(workPeriod<0) {
@@ -300,7 +300,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
             // power logic
             if (formed&&network.tryDrainHeat(1)) {
             	this.setActive(true);
-                markDirty();
+                setChanged();
             } else this.setActive(false);
 
             // grant player effect if structure is valid
@@ -326,10 +326,10 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
                     }
                 }
 
-                markDirty();
+                setChanged();
 
-                for (PlayerEntity p : this.getWorld().getPlayers()) {
-                    if (floor.contains(p.getPosition().down()) || floor.contains(p.getPosition())) {
+                for (PlayerEntity p : this.getLevel().players()) {
+                    if (floor.contains(p.blockPosition().below()) || floor.contains(p.blockPosition())) {
                         grantEffects((ServerPlayerEntity) p);
                     }
                 }
@@ -337,7 +337,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
         }
         // client side render
         else if (getIsActive()) {
-            ClientUtils.spawnSteamParticles(this.getWorld(), pos);
+            ClientUtils.spawnSteamParticles(this.getLevel(), worldPosition);
         }
     }
 

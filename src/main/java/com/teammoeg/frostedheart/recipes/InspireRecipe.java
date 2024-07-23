@@ -41,18 +41,18 @@ public class InspireRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public InspireRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            return new InspireRecipe(recipeId, Ingredient.read(buffer), buffer.readInt());
+        public InspireRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+            return new InspireRecipe(recipeId, Ingredient.fromNetwork(buffer), buffer.readInt());
         }
 
         @Override
         public InspireRecipe readFromJson(ResourceLocation arg0, JsonObject arg1) {
-            return new InspireRecipe(arg0, Ingredient.deserialize(arg1.get("item")), arg1.get("amount").getAsInt());
+            return new InspireRecipe(arg0, Ingredient.fromJson(arg1.get("item")), arg1.get("amount").getAsInt());
         }
 
         @Override
-        public void write(PacketBuffer buffer, InspireRecipe recipe) {
-            recipe.item.write(buffer);
+        public void toNetwork(PacketBuffer buffer, InspireRecipe recipe) {
+            recipe.item.toNetwork(buffer);
             buffer.writeInt(recipe.inspire);
         }
 
@@ -75,7 +75,7 @@ public class InspireRecipe extends IESerializableRecipe {
     }
 
     @Override
-    public ItemStack getRecipeOutput() {
+    public ItemStack getResultItem() {
         return ItemStack.EMPTY;
     }
 }

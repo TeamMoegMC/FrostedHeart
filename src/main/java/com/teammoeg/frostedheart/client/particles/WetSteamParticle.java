@@ -36,9 +36,9 @@ public class WetSteamParticle extends SpriteTexturedParticle {
         }
 
         @Override
-        public Particle makeParticle(BasicParticleType typeIn, ClientWorld worldIn, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+        public Particle createParticle(BasicParticleType typeIn, ClientWorld worldIn, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
             WetSteamParticle steamParticle = new WetSteamParticle(worldIn, x, y, z, xSpeed, ySpeed, zSpeed);
-            steamParticle.selectSpriteRandomly(this.spriteSet);
+            steamParticle.pickSprite(this.spriteSet);
             return steamParticle;
         }
     }
@@ -46,19 +46,19 @@ public class WetSteamParticle extends SpriteTexturedParticle {
     // The motion is the distance we want the particle to move
     public WetSteamParticle(ClientWorld world, double x, double y, double z, double distanceX, double distanceY, double distanceZ) {
         super(world, x, y, z, 0.0, 0.0, 0.0);
-        this.particleRed = this.particleGreen = this.particleBlue = (float) (Math.random() * 0.15) + 0.7f;
-        this.particleAlpha = 0.8f;
-        this.particleScale = 0.2f;
+        this.rCol = this.gCol = this.bCol = (float) (Math.random() * 0.15) + 0.7f;
+        this.alpha = 0.8f;
+        this.quadSize = 0.2f;
 
         // This can be better, but i can't be bothered finding out the proper way to do it
-        this.maxAge = ((int) ((distanceY + 1) * -20)) + 30;
-        if (maxAge == 0) maxAge = 1;
+        this.lifetime = ((int) ((distanceY + 1) * -20)) + 30;
+        if (lifetime == 0) lifetime = 1;
 
-        this.particleGravity = 0.001f;
+        this.gravity = 0.001f;
 
-        this.motionY = -0.002 * distanceY;
-        this.motionX = (distanceX / maxAge * 0.9) * 3.2;
-        this.motionZ = (distanceZ / maxAge * 0.9) * 3.2;
+        this.yd = -0.002 * distanceY;
+        this.xd = (distanceX / lifetime * 0.9) * 3.2;
+        this.zd = (distanceZ / lifetime * 0.9) * 3.2;
     }
 
     @Override
@@ -67,29 +67,29 @@ public class WetSteamParticle extends SpriteTexturedParticle {
     }
 
     public void tick() {
-        if (!Double.isFinite(motionX) || !Double.isFinite(motionY) || !Double.isFinite(motionZ)) {
-            setExpired();
+        if (!Double.isFinite(xd) || !Double.isFinite(yd) || !Double.isFinite(zd)) {
+            remove();
             return;
         }
 
         // update previous position
-        this.prevPosX = posX;
-        this.prevPosY = posY;
-        this.prevPosZ = posZ;
+        this.xo = x;
+        this.yo = y;
+        this.zo = z;
 
         // kill the particle if it's too old
-        if (age >= maxAge)
-            setExpired();
+        if (age >= lifetime)
+            remove();
         this.age++;
 
         // apply gravity
-        this.motionY -= particleGravity;
+        this.yd -= gravity;
 
         // move the particle
-        move(motionX, motionY, motionZ);
+        move(xd, yd, zd);
 
         // natural friction decay
-        this.motionX *= 0.97D;
-        this.motionZ *= 0.97D;
+        this.xd *= 0.97D;
+        this.zd *= 0.97D;
     }
 }

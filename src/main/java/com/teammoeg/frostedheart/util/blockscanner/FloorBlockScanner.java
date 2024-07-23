@@ -29,17 +29,17 @@ public class FloorBlockScanner extends BlockScanner{
 
     protected boolean isFloorBlock(BlockPos pos) {
         BlockState blockState = getBlockState(pos);
-        return (blockState.isNormalCube(world, pos) || blockState.isIn(BlockTags.STAIRS) || blockState.isIn(BlockTags.SLABS));
+        return (blockState.isRedstoneConductor(world, pos) || blockState.is(BlockTags.STAIRS) || blockState.is(BlockTags.SLABS));
     }
 
     public static boolean isFloorBlock(World world, BlockPos pos) {
         BlockState blockState = world.getBlockState(pos);
-        return (blockState.isNormalCube(world, pos) || blockState.isIn(BlockTags.STAIRS) || blockState.isIn(BlockTags.SLABS));
+        return (blockState.isRedstoneConductor(world, pos) || blockState.is(BlockTags.STAIRS) || blockState.is(BlockTags.SLABS));
     }
 
     public static boolean isWallBlock(World world, BlockPos pos) {
         BlockState blockState = world.getBlockState(pos);
-        return (blockState.isNormalCube(world, pos) || blockState.isIn(FHTags.Blocks.WALL_BLOCKS) || blockState.isIn(BlockTags.DOORS) || blockState.isIn(BlockTags.WALLS) || blockState.isIn(Tags.Blocks.GLASS_PANES) || blockState.isIn(Tags.Blocks.FENCE_GATES) || blockState.isIn(Tags.Blocks.FENCES));
+        return (blockState.isRedstoneConductor(world, pos) || blockState.is(FHTags.Blocks.WALL_BLOCKS) || blockState.is(BlockTags.DOORS) || blockState.is(BlockTags.WALLS) || blockState.is(Tags.Blocks.GLASS_PANES) || blockState.is(Tags.Blocks.FENCE_GATES) || blockState.is(Tags.Blocks.FENCES));
     }
     protected boolean isWallBlock(BlockPos pos) {
         return isWallBlock(this.world, pos);
@@ -55,7 +55,7 @@ public class FloorBlockScanner extends BlockScanner{
 
     public static boolean isValidFloorOrLadder(World world, BlockPos pos) {
         // Determine whether the block satisfies type requirements
-        if (!FloorBlockScanner.isFloorBlock(world, pos) && !world.getBlockState(pos).isIn(BlockTags.CLIMBABLE)) return false;
+        if (!FloorBlockScanner.isFloorBlock(world, pos) && !world.getBlockState(pos).is(BlockTags.CLIMBABLE)) return false;
         AbstractMap.SimpleEntry<Integer, Boolean> information = countBlocksAbove(pos, (pos1)->FloorBlockScanner.isHouseBlock(world, pos1));
         // Determine whether the block has open air above it
         if (!information.getValue()) {
@@ -92,7 +92,7 @@ public class FloorBlockScanner extends BlockScanner{
     }
 
     protected boolean isValidLadder(BlockPos pos){
-        return world.getBlockState(pos).isIn(BlockTags.CLIMBABLE) && isAirOrLadder(world, pos.up()) && isAirOrLadder(world, pos.up(2));
+        return world.getBlockState(pos).is(BlockTags.CLIMBABLE) && isAirOrLadder(world, pos.above()) && isAirOrLadder(world, pos.above(2));
     }
 
     /**
@@ -105,15 +105,15 @@ public class FloorBlockScanner extends BlockScanner{
         HashSet<BlockPos> possibleFloors = new HashSet<>(getPossibleFloor(startPos));
         if(canUseLadder) {
             HashSet<BlockPos> possibleFloorsNearLadder = new HashSet<>();
-            if (getBlockState(startPos.up()).isIn(BlockTags.CLIMBABLE) || getBlockState(startPos.up(2)).isIn(BlockTags.CLIMBABLE)) {
-                for (BlockPos ladder : getBlocksAboveAndBelow(startPos.up(), (pos) -> !(getBlockState(pos).isIn(BlockTags.CLIMBABLE)))) {
+            if (getBlockState(startPos.above()).is(BlockTags.CLIMBABLE) || getBlockState(startPos.above(2)).is(BlockTags.CLIMBABLE)) {
+                for (BlockPos ladder : getBlocksAboveAndBelow(startPos.above(), (pos) -> !(getBlockState(pos).is(BlockTags.CLIMBABLE)))) {
                     if (isValidLadder(ladder))
                         possibleFloorsNearLadder.addAll(getPossibleFloor(ladder));
                 }
             }
             for (BlockPos blockPos : possibleFloors) {
-                if (getBlockState(blockPos).isIn(BlockTags.CLIMBABLE) || getBlockState(blockPos.up()).isIn(BlockTags.CLIMBABLE)) {
-                    for (BlockPos ladder : getBlocksAboveAndBelow(blockPos, (pos) -> !(getBlockState(pos).isIn(BlockTags.CLIMBABLE)))) {
+                if (getBlockState(blockPos).is(BlockTags.CLIMBABLE) || getBlockState(blockPos.above()).is(BlockTags.CLIMBABLE)) {
+                    for (BlockPos ladder : getBlocksAboveAndBelow(blockPos, (pos) -> !(getBlockState(pos).is(BlockTags.CLIMBABLE)))) {
                         if (isValidLadder(ladder))
                             possibleFloorsNearLadder.addAll(getPossibleFloorNearLadder(ladder));
                     }

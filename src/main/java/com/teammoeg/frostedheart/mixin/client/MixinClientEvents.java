@@ -42,7 +42,7 @@ public class MixinClientEvents {
     @Overwrite(remap = false)
     public static void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         MatrixStack ms = event.getMatrixStack();
-        IRenderTypeBuffer.Impl buffers = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
+        IRenderTypeBuffer.Impl buffers = Minecraft.getInstance().renderBuffers().bufferSource();
         int light = 15728880;
         int overlay = OverlayTexture.NO_OVERLAY;
         float pt = event.getPartialTicks();

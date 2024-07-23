@@ -48,7 +48,7 @@ public class GLImageContent extends GLLayerContent {
 				blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
 			}
 		}else {
-			texture.bindTexture();
+			texture.bind();
 			blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
 		}
 	}
@@ -59,22 +59,22 @@ public class GLImageContent extends GLLayerContent {
 
 	public static void innerBlit(MatrixStack matrixStack, int x1, int x2, int y1, int y2, int blitOffset, int uWidth, int vHeight, float uOffset, float vOffset, int textureWidth, int textureHeight,
 		float opacity) {
-		innerBlit(matrixStack.getLast().getMatrix(), x1, x2, y1, y2, blitOffset, (uOffset + 0.0F) / textureWidth, (uOffset + uWidth) / textureWidth,
+		innerBlit(matrixStack.last().pose(), x1, x2, y1, y2, blitOffset, (uOffset + 0.0F) / textureWidth, (uOffset + uWidth) / textureWidth,
 			(vOffset + 0.0F) / textureHeight, (vOffset + vHeight) / textureHeight, opacity);
 	}
 
 	public static void innerBlit(Matrix4f matrix, int x1, int x2, int y1, int y2, int blitOffset, float minU, float maxU, float minV, float maxV, float opacity) {
 		//RenderSystem.enableAlphaTest();
-		BufferBuilder bufferbuilder = Tessellator.getInstance().getBuffer();
+		BufferBuilder bufferbuilder = Tessellator.getInstance().getBuilder();
 		bufferbuilder.begin(GL11C.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
-		bufferbuilder.pos(matrix, x1, y2, blitOffset).color(1, 1, 1, opacity).tex(minU, maxV).endVertex();
-		bufferbuilder.pos(matrix, x2, y2, blitOffset).color(1, 1, 1, opacity).tex(maxU, maxV).endVertex();
-		bufferbuilder.pos(matrix, x2, y1, blitOffset).color(1, 1, 1, opacity).tex(maxU, minV).endVertex();
-		bufferbuilder.pos(matrix, x1, y1, blitOffset).color(1, 1, 1, opacity).tex(minU, minV).endVertex();
-		bufferbuilder.finishDrawing();
+		bufferbuilder.vertex(matrix, x1, y2, blitOffset).color(1, 1, 1, opacity).uv(minU, maxV).endVertex();
+		bufferbuilder.vertex(matrix, x2, y2, blitOffset).color(1, 1, 1, opacity).uv(maxU, maxV).endVertex();
+		bufferbuilder.vertex(matrix, x2, y1, blitOffset).color(1, 1, 1, opacity).uv(maxU, minV).endVertex();
+		bufferbuilder.vertex(matrix, x1, y1, blitOffset).color(1, 1, 1, opacity).uv(minU, minV).endVertex();
+		bufferbuilder.end();
 		RenderSystem.enableBlend();
 		RenderSystem.enableAlphaTest();
-		WorldVertexBufferUploader.draw(bufferbuilder);
+		WorldVertexBufferUploader.end(bufferbuilder);
 		RenderSystem.disableBlend();
 	}
 

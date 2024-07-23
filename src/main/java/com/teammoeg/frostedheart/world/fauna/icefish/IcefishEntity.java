@@ -34,27 +34,27 @@ public class IcefishEntity extends AbstractGroupFishEntity {
         super(p_i50246_1_, p_i50246_2_);
     }
 
-    public int getMaxGroupSize() {
+    public int getMaxSchoolSize() {
         return 5;
     }
 
-    protected ItemStack getFishBucket() {
+    protected ItemStack getBucketItemStack() {
         return new ItemStack(Items.SALMON_BUCKET);
     }
 
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.ENTITY_SALMON_AMBIENT;
+        return SoundEvents.SALMON_AMBIENT;
     }
 
     protected SoundEvent getDeathSound() {
-        return SoundEvents.ENTITY_SALMON_DEATH;
+        return SoundEvents.SALMON_DEATH;
     }
 
     protected SoundEvent getHurtSound(DamageSource p_184601_1_) {
-        return SoundEvents.ENTITY_SALMON_HURT;
+        return SoundEvents.SALMON_HURT;
     }
 
     protected SoundEvent getFlopSound() {
-        return SoundEvents.ENTITY_SALMON_FLOP;
+        return SoundEvents.SALMON_FLOP;
     }
 }

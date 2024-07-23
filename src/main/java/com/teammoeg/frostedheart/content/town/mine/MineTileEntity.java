@@ -30,7 +30,7 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
     }
 
     public boolean isStructureValid(){
-        MineBlockScanner scanner = new MineBlockScanner(world, this.getPos().up());
+        MineBlockScanner scanner = new MineBlockScanner(level, this.getBlockPos().above());
         if(scanner.scan()){
             this.avgLightLevel = scanner.getLight();
             this.validStoneOrOre = scanner.getValidStone();
@@ -42,9 +42,9 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
     }
 
     public void setLinkedBase(BlockPos basePos) {
-        assert world != null;
-        if(world.getTileEntity(basePos) instanceof MineBaseTileEntity){
-            this.setLinkedBase(basePos,  ((MineBaseTileEntity) Objects.requireNonNull(world.getTileEntity(basePos))).getRating());
+        assert level != null;
+        if(level.getBlockEntity(basePos) instanceof MineBaseTileEntity){
+            this.setLinkedBase(basePos,  ((MineBaseTileEntity) Objects.requireNonNull(level.getBlockEntity(basePos))).getRating());
         }
     }
     public void setLinkedBase(BlockPos basePos, double baseRating){
@@ -89,7 +89,7 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
         CompoundNBT nbt = getBasicWorkData();
         nbt.putBoolean("hasLinkedBase", this.hasLinkedBase);
         if(this.hasLinkedBase){
-            nbt.putLong("linkedBasePos", this.linkedBasePos.toLong());
+            nbt.putLong("linkedBasePos", this.linkedBasePos.asLong());
             nbt.putDouble("linkedBaseRating", this.linkedBaseRating);
         }
         if(this.isValid()){
@@ -112,7 +112,7 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
         this.setBasicWorkData(data);
         this.hasLinkedBase = data.getBoolean("hasLinkedBase");
         if(this.hasLinkedBase){
-            this.linkedBasePos = BlockPos.fromLong(data.getLong("linkedBasePos"));
+            this.linkedBasePos = BlockPos.of(data.getLong("linkedBasePos"));
             this.linkedBaseRating = data.getDouble("linkedBaseRating");
         }
 
@@ -137,9 +137,9 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
         }
         this.workerState = isStructureValid() ? TownWorkerState.VALID : TownWorkerState.NOT_VALID;
         if(this.isValid()) {
-            assert this.world != null;
+            assert this.level != null;
             if (this.resources == null || this.resources.isEmpty()) {
-                ChunkTownResourceCapability capability = FHCapabilities.CHUNK_TOWN_RESOURCE.getCapability(this.world.getChunk(pos)).orElseGet(ChunkTownResourceCapability::new);
+                ChunkTownResourceCapability capability = FHCapabilities.CHUNK_TOWN_RESOURCE.getCapability(this.level.getChunk(worldPosition)).orElseGet(ChunkTownResourceCapability::new);
                 AtomicDouble totalResources = new AtomicDouble(0);
                 this.resources = new HashMap<>();
                 Stream.of(ChunkTownResourceCapability.ChunkTownResourceType.values())
@@ -153,8 +153,8 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
                         });
             }
             if(this.hasLinkedBase){
-                if(world.getTileEntity(this.linkedBasePos) instanceof MineBaseTileEntity){
-                    this.linkedBaseRating = ((MineBaseTileEntity) Objects.requireNonNull(world.getTileEntity(this.linkedBasePos))).getRating();
+                if(level.getBlockEntity(this.linkedBasePos) instanceof MineBaseTileEntity){
+                    this.linkedBaseRating = ((MineBaseTileEntity) Objects.requireNonNull(level.getBlockEntity(this.linkedBasePos))).getRating();
                 } else this.hasLinkedBase = false;
             }
             this.computeRating();

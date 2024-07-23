@@ -58,80 +58,80 @@ public class ResearchCommand {
 
                     Research rs = FHResearch.getResearch(rsn).get();
                     if (rs == null) {
-                        ct.getSource().sendErrorMessage(TranslateUtils.str("Research not found").mergeStyle(TextFormatting.RED));
+                        ct.getSource().sendFailure(TranslateUtils.str("Research not found").withStyle(TextFormatting.RED));
                         return Command.SINGLE_SUCCESS;
                     }
-                    ResearchData rd = ResearchDataAPI.getData(ct.getSource().asPlayer()).getData(rs);
+                    ResearchData rd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException()).getData(rs);
                     rd.setFinished(true);
                     rd.announceCompletion();
 
-                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(TranslateUtils.str("Succeed!").withStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("all").executes(ct -> {
-                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().asPlayer());
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
                     for (Research r : FHResearch.getAllResearch()) {
                         if (r.isInCompletable()) continue;
                         ResearchData rd = trd.getData(r);
                         rd.setFinished(true);
                         rd.announceCompletion();
                     }
-                    ct.getSource().sendFeedback(TranslateUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(TranslateUtils.str("Succeed!").withStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
-                .then(Commands.literal("transfer").then(Commands.argument("from", UUIDArgument.func_239194_a_())
-                        .then(Commands.argument("to", UUIDArgument.func_239194_a_())).executes(ct -> {
-                            Team team = FTBTeamsAPI.getManager().getTeamByID(UUIDArgument.func_239195_a_(ct, "to"));
-                            FHTeamDataManager.INSTANCE.transfer(UUIDArgument.func_239195_a_(ct, "from"), team);
-                            ct.getSource().sendFeedback(TranslateUtils.str("Transfered to " + team.getDisplayName()).mergeStyle(TextFormatting.GREEN), false);
+                .then(Commands.literal("transfer").then(Commands.argument("from", UUIDArgument.uuid())
+                        .then(Commands.argument("to", UUIDArgument.uuid())).executes(ct -> {
+                            Team team = FTBTeamsAPI.getManager().getTeamByID(UUIDArgument.getUuid(ct, "to"));
+                            FHTeamDataManager.INSTANCE.transfer(UUIDArgument.getUuid(ct, "from"), team);
+                            ct.getSource().sendSuccess(TranslateUtils.str("Transfered to " + team.getDisplayName()).withStyle(TextFormatting.GREEN), false);
                             return Command.SINGLE_SUCCESS;
                         })))
                 .then(Commands.literal("edit").then(Commands.argument("enable", BoolArgumentType.bool()).executes(ct -> {
                     FHResearch.editor = ct.getArgument("enable", Boolean.class);
-                    ct.getSource().sendFeedback(TranslateUtils.str("Editing mode set " + FHResearch.editor).mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(TranslateUtils.str("Editing mode set " + FHResearch.editor).withStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
                 .then(Commands.literal("default").executes(ct -> Command.SINGLE_SUCCESS))
                 .then(Commands.literal("energy").executes(ct -> {
-                    EnergyCore.reportEnergy(ct.getSource().asPlayer());
+                    EnergyCore.reportEnergy(ct.getSource().getPlayerOrException());
                     return Command.SINGLE_SUCCESS;
                 }).then(Commands.literal("add").then(Commands.argument("amount", IntegerArgumentType.integer(0)).executes(ct -> {
                 	
-                    EnergyCore.addPoint(ct.getSource().asPlayer(), ct.getArgument("amount", Integer.class));
+                    EnergyCore.addPoint(ct.getSource().getPlayerOrException(), ct.getArgument("amount", Integer.class));
                     return Command.SINGLE_SUCCESS;
                 }))))
 
                 .then(Commands.literal("attribute").then(Commands.argument("name", StringArgumentType.string()).suggests((ct, s) -> {
-                            CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().asPlayer());
-                            cnbt.keySet().forEach(s::suggest);
+                            CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().getPlayerOrException());
+                            cnbt.getAllKeys().forEach(s::suggest);
                             return s.buildFuture();
 
                         }).executes(ct -> {
-                            CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().asPlayer());
+                            CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().getPlayerOrException());
                             String rsn = ct.getArgument("name", String.class);
-                            ct.getSource().sendFeedback(TranslateUtils.str(String.valueOf(cnbt.get(rsn))), false);
+                            ct.getSource().sendSuccess(TranslateUtils.str(String.valueOf(cnbt.get(rsn))), false);
                             return Command.SINGLE_SUCCESS;
                         })).then(Commands.literal("all").executes(ct -> {
 
-                            CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().asPlayer());
-                            ct.getSource().sendFeedback(TranslateUtils.str(cnbt.toString()), false);
+                            CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().getPlayerOrException());
+                            ct.getSource().sendSuccess(TranslateUtils.str(cnbt.toString()), false);
                             return Command.SINGLE_SUCCESS;
 
                         }))
 
                         .then(Commands.literal("set").then(Commands.argument("name", StringArgumentType.string()).suggests((ct, s) -> {
-                            CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().asPlayer());
-                            cnbt.keySet().forEach(s::suggest);
+                            CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().getPlayerOrException());
+                            cnbt.getAllKeys().forEach(s::suggest);
 
                             if ("all".startsWith(s.getRemaining()))
                                 s.suggest("all");
                             return s.buildFuture();
 
-                        }).then(Commands.argument("value", NBTTagArgument.func_218085_a()).executes(ct -> {
-                            CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().asPlayer());
+                        }).then(Commands.argument("value", NBTTagArgument.nbtTag()).executes(ct -> {
+                            CompoundNBT cnbt = ResearchDataAPI.getVariants(ct.getSource().getPlayerOrException());
                             String rsn = ct.getArgument("name", String.class);
                             INBT nbt = ct.getArgument("value", INBT.class);
                             cnbt.put(rsn, nbt);
-                            ResearchDataAPI.sendVariants(ct.getSource().asPlayer());
+                            ResearchDataAPI.sendVariants(ct.getSource().getPlayerOrException());
                             return Command.SINGLE_SUCCESS;
                         })))))
                 .then(Commands.literal("reset").then(Commands.argument("name", StringArgumentType.string()).suggests((ct, s) -> {
@@ -141,15 +141,15 @@ public class ResearchCommand {
                     return s.buildFuture();
                 }).executes(ct -> {
                     String rsn = ct.getArgument("name", String.class);
-                    ResearchDataAPI.getData(ct.getSource().asPlayer()).resetData(FHResearch.getResearch(rsn).get(), true);
+                    ResearchDataAPI.getData(ct.getSource().getPlayerOrException()).resetData(FHResearch.getResearch(rsn).get(), true);
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("all").executes(ct -> {
-                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().asPlayer());
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
                     for (Research r : FHResearch.getAllResearch()) {
                         trd.resetData(r, true);
                     }
                     return Command.SINGLE_SUCCESS;
                 })));
-        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermissionLevel(2)).then(add));
+        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermission(2)).then(add));
     }
 }

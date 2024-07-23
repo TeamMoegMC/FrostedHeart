@@ -71,7 +71,7 @@ public class ArrayNBTBuilder<P> {
 	}
 
 	public ArrayNBTBuilder<P> addUniqueId(UUID value) {
-		nbt.add(NBTUtil.func_240626_a_(value));
+		nbt.add(NBTUtil.createUUID(value));
         return this;
 	}
 

@@ -91,14 +91,14 @@ public class EffectCrafting extends Effect {
 		unlocks.ifLeft(t->{this.item=t;initItem();});
 		unlocks.ifRight(t->{
 			t.ifLeft(o->{this.itemStack=o;initStack();});
-			t.ifRight(o->o.stream().map(FHTeamDataManager.getRecipeManager()::getRecipe).filter(Optional::isPresent).map(Optional::get).forEach(this.unlocks::add));
+			t.ifRight(o->o.stream().map(FHTeamDataManager.getRecipeManager()::byKey).filter(Optional::isPresent).map(Optional::get).forEach(this.unlocks::add));
 		});
 
 	}
 
     public EffectCrafting(ResourceLocation recipe) {
         super("@gui." + FHMain.MODID + ".effect.crafting", new ArrayList<>());
-        Optional<? extends IRecipe<?>> r = FHTeamDataManager.getRecipeManager().getRecipe(recipe);
+        Optional<? extends IRecipe<?>> r = FHTeamDataManager.getRecipeManager().byKey(recipe);
 
         r.ifPresent(iRecipe -> unlocks.add(iRecipe));
     }
@@ -106,9 +106,9 @@ public class EffectCrafting extends Effect {
     @Override
     public String getBrief() {
         if (item != null)
-            return "Craft " + TranslateUtils.translate(item.getTranslationKey()).getString();
+            return "Craft " + TranslateUtils.translate(item.getDescriptionId()).getString();
         if (itemStack != null)
-            return "Craft " + itemStack.getDisplayName().getString();
+            return "Craft " + itemStack.getHoverName().getString();
         if (!unlocks.isEmpty())
             return "Craft" + unlocks.get(0).getId() + (unlocks.size() > 1 ? " ..." : "");
         return "Craft nothing";
@@ -123,8 +123,8 @@ public class EffectCrafting extends Effect {
         else {
             Set<ItemStack> stacks = new HashSet<>();
             for (IRecipe<?> r : unlocks) {
-                if (!r.getRecipeOutput().isEmpty()) {
-                    stacks.add(r.getRecipeOutput());
+                if (!r.getResultItem().isEmpty()) {
+                    stacks.add(r.getResultItem());
                 }
             }
             if (!stacks.isEmpty())
@@ -143,21 +143,21 @@ public class EffectCrafting extends Effect {
         List<ITextComponent> tooltip = new ArrayList<>();
 
         if (item != null)
-            tooltip.add(TranslateUtils.translate(item.getTranslationKey()));
+            tooltip.add(TranslateUtils.translate(item.getDescriptionId()));
         else if (itemStack != null)
-            tooltip.add(itemStack.getDisplayName());
+            tooltip.add(itemStack.getHoverName());
         else {
             Set<ItemStack> stacks = new HashSet<>();
             for (IRecipe<?> r : unlocks) {
-                if (!r.getRecipeOutput().isEmpty()) {
-                    stacks.add(r.getRecipeOutput());
+                if (!r.getResultItem().isEmpty()) {
+                    stacks.add(r.getResultItem());
                 }
             }
             if (stacks.isEmpty())
                 tooltip.add(TranslateUtils.translateGui("effect.recipe.error"));
             else
                 for (ItemStack is : stacks) {
-                    tooltip.add(is.getDisplayName());
+                    tooltip.add(is.getHoverName());
                 }
         }
 
@@ -178,7 +178,7 @@ public class EffectCrafting extends Effect {
     private void initItem() {
         unlocks.clear();
         for (IRecipe<?> r : FHTeamDataManager.getRecipeManager().getRecipes()) {
-            if (r.getRecipeOutput().getItem().equals(this.item)) {
+            if (r.getResultItem().getItem().equals(this.item)) {
                 unlocks.add(r);
             }
         }
@@ -188,7 +188,7 @@ public class EffectCrafting extends Effect {
     private void initStack() {
         unlocks.clear();
         for (IRecipe<?> r : FHTeamDataManager.getRecipeManager().getRecipes()) {
-            if (r.getRecipeOutput().equals(item)) {
+            if (r.getResultItem().equals(item)) {
                 unlocks.add(r);
             }
         }
@@ -211,7 +211,7 @@ public class EffectCrafting extends Effect {
         } else if (itemStack != null) {
             initStack();
         } else {
-            unlocks.replaceAll(o -> FHTeamDataManager.getRecipeManager().getRecipe(o.getId()).orElse(null));
+            unlocks.replaceAll(o -> FHTeamDataManager.getRecipeManager().byKey(o.getId()).orElse(null));
             unlocks.removeIf(Objects::isNull);
         }
     }
@@ -224,7 +224,7 @@ public class EffectCrafting extends Effect {
     public void setList(Collection<String> ls) {
         unlocks.clear();
         for (String s : ls) {
-            Optional<? extends IRecipe<?>> r = FHTeamDataManager.getRecipeManager().getRecipe(new ResourceLocation(s));
+            Optional<? extends IRecipe<?>> r = FHTeamDataManager.getRecipeManager().byKey(new ResourceLocation(s));
 
             r.ifPresent(iRecipe -> unlocks.add(iRecipe));
         }

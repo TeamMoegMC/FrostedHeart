@@ -18,10 +18,10 @@ public class ChunkSectionPos {
 		this.z = z;
 	}
 	public ChunkSectionPos(long data) {
-		this(BlockPos.unpackX(data),BlockPos.unpackY(data),BlockPos.unpackZ(data));
+		this(BlockPos.getX(data),BlockPos.getY(data),BlockPos.getZ(data));
 	}
 	public long asLong() {
-		return BlockPos.pack(x, y, z);
+		return BlockPos.asLong(x, y, z);
 	}
 	@Override
 	public int hashCode() {

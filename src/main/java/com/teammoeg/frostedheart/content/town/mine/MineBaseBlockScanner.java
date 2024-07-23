@@ -38,7 +38,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
     public boolean isValidFloor(BlockPos pos){
         BlockState state = world.getBlockState(pos);
         if(scanningBlocksNew.contains(pos)) return false;
-        if(state.isIn(BlockTags.RAILS)){
+        if(state.is(BlockTags.RAILS)){
             rails.add(pos);
             return false;
         }
@@ -47,7 +47,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
         }
         AbstractMap.SimpleEntry<Integer, Boolean> floorInformation = countBlocksAbove(pos,(pos1)->{
             if(isFloorBlock(pos1)) return true;
-            if(world.getBlockState(pos1).isIn(Tags.Blocks.CHESTS)){
+            if(world.getBlockState(pos1).is(Tags.Blocks.CHESTS)){
                 chest++;
                 return false;
             }
@@ -55,7 +55,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
                 rack++;
                 return false;
             }
-            if(PlantBlockHelper.isAir(world.getBlockState(pos1))){
+            if(PlantBlockHelper.isValidGrowthState(world.getBlockState(pos1))){
                 temperature += ChunkHeatData.getTemperature(world, pos1);
                 counter_for_temperature++;
                 return false;
@@ -112,8 +112,8 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
 
         @Override
         public boolean isValidFloor(BlockPos pos){
-            if(world.getBlockState(pos).isIn(BlockTags.RAILS)){
-                return PlantBlockHelper.isAir(world.getBlockState(pos.up()));
+            if(world.getBlockState(pos).is(BlockTags.RAILS)){
+                return PlantBlockHelper.isValidGrowthState(world.getBlockState(pos.above()));
             } else if(world.getBlockState(pos).getBlock().equals(FHBlocks.mine.get())){
                 linkedMines.add(pos);
             }

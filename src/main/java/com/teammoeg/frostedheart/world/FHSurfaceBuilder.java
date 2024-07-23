@@ -30,14 +30,14 @@ import net.minecraft.world.gen.surfacebuilders.SurfaceBuilderConfig;
 
 public class FHSurfaceBuilder {
     public static final ConfiguredSurfaceBuilder<SurfaceBuilderConfig> VOLCANIC = register("volcanic",
-            SurfaceBuilder.DEFAULT.func_242929_a(new SurfaceBuilderConfig(RankineBlocks.BASALTIC_TUFF.get().getDefaultState(), Blocks.STONE.getDefaultState(), Blocks.GRAVEL.getDefaultState())));
+            SurfaceBuilder.DEFAULT.configured(new SurfaceBuilderConfig(RankineBlocks.BASALTIC_TUFF.get().defaultBlockState(), Blocks.STONE.defaultBlockState(), Blocks.GRAVEL.defaultBlockState())));
 
     public static final ConfiguredSurfaceBuilder<SurfaceBuilderConfig> FROZEN_FOREST = register("frozen_forest",
-            SurfaceBuilder.DEFAULT.func_242929_a(
+            SurfaceBuilder.DEFAULT.configured(
                     new SurfaceBuilderConfig(
-                            Blocks.GRASS_BLOCK.getDefaultState(),//表层方块
-                            Blocks.STONE.getDefaultState(),//表层下方块
-                            Blocks.SAND.getDefaultState()//水下方块
+                            Blocks.GRASS_BLOCK.defaultBlockState(),//表层方块
+                            Blocks.STONE.defaultBlockState(),//表层下方块
+                            Blocks.SAND.defaultBlockState()//水下方块
                     )
             )
     );

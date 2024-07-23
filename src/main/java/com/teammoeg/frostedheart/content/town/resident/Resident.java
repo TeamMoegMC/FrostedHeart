@@ -182,8 +182,8 @@ public class Resident {
         data.putInt("culture", culture);
         data.putInt("educationLevel", educationLevel);
         data.put("workProficiency", SerializeUtil.toNBTMap(workProficiency.entrySet(), (entry, compoundNBTBuilder) -> compoundNBTBuilder.putInt(entry.getKey().getKey(), entry.getValue())));
-        data.putLong("workPos", workPos.toLong());
-        data.putLong("housePos", housePos.toLong());
+        data.putLong("workPos", workPos.asLong());
+        data.putLong("housePos", housePos.asLong());
         return data;
     }
 
@@ -200,8 +200,8 @@ public class Resident {
         educationLevel = data.getInt("educationLevel");
         CompoundNBT workProficiencyNBT = data.getCompound("workProficiency");
         workProficiency.keySet().forEach(key/*TownWorkerType*/ -> workProficiency.put(key, workProficiencyNBT.getInt(key.getKey())));
-        workPos = BlockPos.fromLong(data.getLong("workPos"));
-        housePos = BlockPos.fromLong(data.getLong("housePos"));
+        workPos = BlockPos.of(data.getLong("workPos"));
+        housePos = BlockPos.of(data.getLong("housePos"));
         return null;
     }
 

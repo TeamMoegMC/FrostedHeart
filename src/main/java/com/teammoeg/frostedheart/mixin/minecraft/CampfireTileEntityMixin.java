@@ -53,8 +53,8 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
     }
 
     public void extinguishCampfire() {
-        this.world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1.0F, 1.0F);
-        this.world.setBlockState(this.pos, this.getBlockState().with(CampfireBlock.LIT, false));
+        this.level.playSound(null, worldPosition, SoundEvents.GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1.0F, 1.0F);
+        this.level.setBlockAndUpdate(this.worldPosition, this.getBlockState().setValue(CampfireBlock.LIT, false));
     }
 
     @Override
@@ -81,8 +81,8 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
 
     @Inject(at = @At("RETURN"), method = "tick()V")
     public void tick(CallbackInfo ci) {
-        if (!this.world.isRemote) {
-            if (CampfireBlock.isLit(world.getBlockState(getPos())))
+        if (!this.level.isClientSide) {
+            if (CampfireBlock.isLitCampfire(level.getBlockState(getBlockPos())))
                 if (lifeTime > 0)
                     lifeTime--;
                 else {

@@ -59,6 +59,8 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.items.ItemHandlerHelper;
+import net.minecraft.block.AbstractBlock.Properties;
+
 /**
  * Add time limit for campfire
  * <p>
@@ -76,7 +78,7 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
 
     @Inject(at = @At("RETURN"), method = "getStateForPlacement", cancellable = true)
     public void getStateForPlacement(BlockItemUseContext context, CallbackInfoReturnable<BlockState> callbackInfo) {
-        callbackInfo.setReturnValue(callbackInfo.getReturnValue().with(CampfireBlock.LIT, false));
+        callbackInfo.setReturnValue(callbackInfo.getReturnValue().setValue(CampfireBlock.LIT, false));
     }
 
     /**
@@ -84,54 +86,54 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
      * @reason ignition
      */
     @Overwrite
-    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (handIn == Hand.MAIN_HAND && !player.isSneaking()) {
-            TileEntity tileentity = worldIn.getTileEntity(pos);
+    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+        if (handIn == Hand.MAIN_HAND && !player.isShiftKeyDown()) {
+            TileEntity tileentity = worldIn.getBlockEntity(pos);
             if (tileentity instanceof CampfireTileEntity) {
                 CampfireTileEntity campfiretileentity = (CampfireTileEntity) tileentity;
-                ItemStack itemstack = player.getHeldItem(handIn);
-                Random rand = worldIn.rand;
-                if (!worldIn.isRemote) {
-                    if (!player.getHeldItemMainhand().isEmpty()) {
-                        if (CampfireBlock.canBeLit(state)) {
-                            if (itemstack.getItem() == Items.FLINT && player.getHeldItemOffhand().getItem() == Items.FLINT) {
-                                player.swingArm(Hand.MAIN_HAND);
+                ItemStack itemstack = player.getItemInHand(handIn);
+                Random rand = worldIn.random;
+                if (!worldIn.isClientSide) {
+                    if (!player.getMainHandItem().isEmpty()) {
+                        if (CampfireBlock.canLight(state)) {
+                            if (itemstack.getItem() == Items.FLINT && player.getOffhandItem().getItem() == Items.FLINT) {
+                                player.swing(Hand.MAIN_HAND);
                                 if (rand.nextFloat() < 0.33) {
-                                    worldIn.setBlockState(pos, state.with(BlockStateProperties.LIT, Boolean.TRUE), 3);
+                                    worldIn.setBlock(pos, state.setValue(BlockStateProperties.LIT, Boolean.TRUE), 3);
                                 }
 
-                                worldIn.playSound(null, pos, SoundEvents.BLOCK_STONE_STEP, SoundCategory.BLOCKS, 1.0F, 2F + rand.nextFloat() * 0.4F);
+                                worldIn.playSound(null, pos, SoundEvents.STONE_STEP, SoundCategory.BLOCKS, 1.0F, 2F + rand.nextFloat() * 0.4F);
 
                                 return ActionResultType.SUCCESS;
                             }
                         }
-                        Optional<CampfireCookingRecipe> optional = campfiretileentity.findMatchingRecipe(itemstack);
+                        Optional<CampfireCookingRecipe> optional = campfiretileentity.getCookableRecipe(itemstack);
                         if (optional.isPresent()) {
-                            if (ResearchListeners.canUseRecipe(player, optional.get()) && campfiretileentity.addItem(player.abilities.isCreativeMode ? itemstack.copy() : itemstack, optional.get().getCookTime())) {
-                                player.addStat(Stats.INTERACT_WITH_CAMPFIRE);
+                            if (ResearchListeners.canUseRecipe(player, optional.get()) && campfiretileentity.placeFood(player.abilities.instabuild ? itemstack.copy() : itemstack, optional.get().getCookingTime())) {
+                                player.awardStat(Stats.INTERACT_WITH_CAMPFIRE);
                                 return ActionResultType.CONSUME;
                             }
                         }
 
                     } else {
                         ICampfireExtra info = (ICampfireExtra) campfiretileentity;
-                        if (state.get(CampfireBlock.LIT)) {
-                            player.sendStatusMessage(TranslateUtils.translateMessage("campfire.remaining", Integer.toString(info.getLifeTime() / 20)), true);
+                        if (state.getValue(CampfireBlock.LIT)) {
+                            player.displayClientMessage(TranslateUtils.translateMessage("campfire.remaining", Integer.toString(info.getLifeTime() / 20)), true);
                         } else if (info.getLifeTime() > 0) {
-                            player.sendStatusMessage(TranslateUtils.translateMessage("campfire.ignition"), true);
+                            player.displayClientMessage(TranslateUtils.translateMessage("campfire.ignition"), true);
                         } else {
-                            player.sendStatusMessage(TranslateUtils.translateMessage("campfire.fuel"), true);
+                            player.displayClientMessage(TranslateUtils.translateMessage("campfire.fuel"), true);
                         }
                         return ActionResultType.SUCCESS;
                     }
                 } else {
-                    if (!player.getHeldItemMainhand().isEmpty()) {
-                        if (CampfireBlock.canBeLit(state)) {
-                            if (itemstack.getItem() == Items.FLINT && player.getHeldItemOffhand().getItem() == Items.FLINT) {
+                    if (!player.getMainHandItem().isEmpty()) {
+                        if (CampfireBlock.canLight(state)) {
+                            if (itemstack.getItem() == Items.FLINT && player.getOffhandItem().getItem() == Items.FLINT) {
                                 for (int i = 0; i < 5; i++) {
-                                    worldIn.addParticle(ParticleTypes.SMOKE, player.getPosX() + player.getLookVec().getX() + rand.nextFloat() * 0.25, player.getPosY() + 0.5f + rand.nextFloat() * 0.25, player.getPosZ() + player.getLookVec().getZ() + rand.nextFloat() * 0.25, 0, 0.01, 0);
+                                    worldIn.addParticle(ParticleTypes.SMOKE, player.getX() + player.getLookAngle().x() + rand.nextFloat() * 0.25, player.getY() + 0.5f + rand.nextFloat() * 0.25, player.getZ() + player.getLookAngle().z() + rand.nextFloat() * 0.25, 0, 0.01, 0);
                                 }
-                                worldIn.addParticle(ParticleTypes.FLAME, player.getPosX() + player.getLookVec().getX() + rand.nextFloat() * 0.25, player.getPosY() + 0.5f + rand.nextFloat() * 0.25, player.getPosZ() + player.getLookVec().getZ() + rand.nextFloat() * 0.25, 0, 0.01, 0);
+                                worldIn.addParticle(ParticleTypes.FLAME, player.getX() + player.getLookAngle().x() + rand.nextFloat() * 0.25, player.getY() + 0.5f + rand.nextFloat() * 0.25, player.getZ() + player.getLookAngle().z() + rand.nextFloat() * 0.25, 0, 0.01, 0);
                                 return ActionResultType.SUCCESS;
                             }
                         }
@@ -147,13 +149,13 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
         if (entityIn instanceof ItemEntity) {
             ItemEntity item = (ItemEntity) entityIn;
             int rawBurnTime = ForgeHooks.getBurnTime(item.getItem());
-            if (worldIn.isRemote && isLit(state) && rawBurnTime > 0)
-                worldIn.addParticle(ParticleTypes.SMOKE, entityIn.getPosX(), entityIn.getPosY() + 0.25D, entityIn.getPosZ(), 0, 0.05D, 0);
-            if (!worldIn.isRemote) {
+            if (worldIn.isClientSide && isLit(state) && rawBurnTime > 0)
+                worldIn.addParticle(ParticleTypes.SMOKE, entityIn.getX(), entityIn.getY() + 0.25D, entityIn.getZ(), 0, 0.05D, 0);
+            if (!worldIn.isClientSide) {
                 if (rawBurnTime > 0) {
-                    if (item.getThrowerId() != null && ((ICampfireExtra) worldIn.getTileEntity(pos)).getLifeTime() != -1337) {
+                    if (item.getThrower() != null && ((ICampfireExtra) worldIn.getBlockEntity(pos)).getLifeTime() != -1337) {
                         ItemStack is = item.getItem();
-                        CampfireTileEntity tileEntity = (CampfireTileEntity) worldIn.getTileEntity(pos);
+                        CampfireTileEntity tileEntity = (CampfireTileEntity) worldIn.getBlockEntity(pos);
                         ICampfireExtra lifeTime = ((ICampfireExtra) tileEntity);
                         int maxcs = (19200 - lifeTime.getLifeTime()) / rawBurnTime / 3;
                         int rcs = Math.min(maxcs, is.getCount());
@@ -163,7 +165,7 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
                         lifeTime.addLifeTime(burnTime);
 
                         if (rcs > 0 && !container.isEmpty())
-                            InventoryHelper.spawnItemStack(worldIn, pos.getX(), pos.getY(), pos.getZ(), ItemHandlerHelper.copyStackWithSize(container, rcs));
+                            InventoryHelper.dropItemStack(worldIn, pos.getX(), pos.getY(), pos.getZ(), ItemHandlerHelper.copyStackWithSize(container, rcs));
                         if (is.getCount() <= 0)
                             entityIn.remove();
                     }

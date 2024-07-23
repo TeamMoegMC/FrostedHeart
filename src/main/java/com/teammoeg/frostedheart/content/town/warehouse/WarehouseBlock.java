@@ -17,6 +17,8 @@ import javax.annotation.Nonnull;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class WarehouseBlock extends AbstractTownWorkerBlock {
     public WarehouseBlock(Properties blockProps) {
         super(blockProps);
@@ -28,17 +30,17 @@ public class WarehouseBlock extends AbstractTownWorkerBlock {
     }
 
     //test
-    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (!worldIn.isRemote && handIn == Hand.MAIN_HAND) {
-            WarehouseTileEntity te = (WarehouseTileEntity) worldIn.getTileEntity(pos);
+    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+        if (!worldIn.isClientSide && handIn == Hand.MAIN_HAND) {
+            WarehouseTileEntity te = (WarehouseTileEntity) worldIn.getBlockEntity(pos);
             if (te == null) {
                 return ActionResultType.FAIL;
             }
-            player.sendStatusMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.sendStatusMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.sendStatusMessage(new StringTextComponent("Volume: " + (te.getVolume())), false);
-            player.sendStatusMessage(new StringTextComponent("Area: " + (te.getArea())), false);
-            player.sendStatusMessage(new StringTextComponent("Capacity: " + BigDecimal.valueOf(te.getCapacity())
+            player.displayClientMessage(new StringTextComponent(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            player.displayClientMessage(new StringTextComponent(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(new StringTextComponent("Volume: " + (te.getVolume())), false);
+            player.displayClientMessage(new StringTextComponent("Area: " + (te.getArea())), false);
+            player.displayClientMessage(new StringTextComponent("Capacity: " + BigDecimal.valueOf(te.getCapacity())
                     .setScale(2, RoundingMode.HALF_UP).doubleValue()), false);
             return ActionResultType.SUCCESS;
         }

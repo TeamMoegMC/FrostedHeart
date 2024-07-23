@@ -124,7 +124,7 @@ public class MixinProcessingScenes {
         scene.rotateCameraY(-30);
         scene.idle(10);
         scene.world.setBlock(util.grid.at(1, 1, 2), AllBlocks.BLAZE_BURNER.getDefaultState()
-                .with(BlazeBurnerBlock.HEAT_LEVEL, HeatLevel.KINDLED), true);
+                .setValue(BlazeBurnerBlock.HEAT_LEVEL, HeatLevel.KINDLED), true);
         scene.idle(10);
 
         scene.overlay.showText(80)

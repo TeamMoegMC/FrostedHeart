@@ -63,9 +63,9 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
         }
 
         while (i > 0) {
-            int j = ExperienceOrbEntity.getXPSplit(i);
+            int j = ExperienceOrbEntity.getExperienceValue(i);
             i -= j;
-            world.addEntity(new ExperienceOrbEntity(world, pos.getX(), pos.getY(), pos.getZ(), j));
+            world.addFreshEntity(new ExperienceOrbEntity(world, pos.getX(), pos.getY(), pos.getZ(), j));
         }
 
     }
@@ -78,27 +78,27 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
     LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
     @Override
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction dir) {
-    	Direction bd = this.getBlockState().get(BlockStateProperties.FACING);
+    	Direction bd = this.getBlockState().getValue(BlockStateProperties.FACING);
 		if(cap==FHCapabilities.HEAT_EP.capability()&&(dir == bd || (bd != Direction.DOWN && dir == Direction.DOWN) || (bd == Direction.UP && dir == Direction.NORTH) || (bd == Direction.DOWN && dir == Direction.SOUTH))) {
 			return heatcap.cast();
 		}
 		return super.getCapability(cap, dir);
 	}
     public void drawEffect() {
-        if (world != null && world.isRemote) {
-            ClientUtils.spawnSteamParticles(world, this.getPos());
+        if (level != null && level.isClientSide) {
+            ClientUtils.spawnSteamParticles(level, this.getBlockPos());
         }
     }
 
     public Direction getDirection() {
-        return this.getBlockState().get(BlockStateProperties.FACING);
+        return this.getBlockState().getValue(BlockStateProperties.FACING);
     }
 
     public float getMaxPower() {
         return 20000F;
     }
     public ChargerRecipe findRecipe(ItemStack is) {
-    	for(ChargerRecipe cr:FHUtils.filterRecipes(this.getWorld().getRecipeManager(),ChargerRecipe.TYPE)) {
+    	for(ChargerRecipe cr:FHUtils.filterRecipes(this.getLevel().getRecipeManager(),ChargerRecipe.TYPE)) {
     		if(cr.input.test(is)) {
     			return cr;
     		}
@@ -116,12 +116,12 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
             ChargerRecipe cr = findRecipe(is);
             if (cr != null) {
                 if (power >= cr.cost && is.getCount() >= cr.input.getCount()) {
-                    if (!world.isRemote) {
+                    if (!level.isClientSide) {
                         power -= cr.cost;
                         is.setCount(is.getCount() - cr.input.getCount());
                         ItemStack gain = cr.output.copy();
                         FHUtils.giveItem(pe, gain);
-                        markDirty();
+                        setChanged();
                         this.markContainingBlockForUpdate(null);
                     }
                     drawEffect();
@@ -130,16 +130,16 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
             }
 
             if (power >= 100) {
-                List<SmokingRecipe> irs = this.world.getRecipeManager().getRecipesForType(IRecipeType.SMOKING);
+                List<SmokingRecipe> irs = this.level.getRecipeManager().getAllRecipesFor(IRecipeType.SMOKING);
                 for (SmokingRecipe sr : irs) {
                     if (sr.getIngredients().iterator().next().test(is)) {
-                        if (!world.isRemote) {
-                            power -= (float) sr.getCookTime() / 20;
-                            splitAndSpawnExperience(pe.getEntityWorld(), pe.getPosition(), sr.getExperience());
+                        if (!level.isClientSide) {
+                            power -= (float) sr.getCookingTime() / 20;
+                            splitAndSpawnExperience(pe.getCommandSenderWorld(), pe.blockPosition(), sr.getExperience());
                             is.setCount(is.getCount() - 1);
-                            ItemStack gain = sr.getCraftingResult(null).copy();
+                            ItemStack gain = sr.assemble(null).copy();
                             FHUtils.giveItem(pe, gain);
-                            markDirty();
+                            setChanged();
                             this.markContainingBlockForUpdate(null);
                         }
                         drawEffect();
@@ -151,13 +151,13 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
                 Collection<CampfireDefrostRecipe> irs = CampfireDefrostRecipe.recipeList.values();
                 for (CampfireDefrostRecipe sr : irs) {
                     if (sr.getIngredient().test(is)) {
-                        if (!world.isRemote) {
-                            power -= (float) sr.getCookTime() / 80;
-                            splitAndSpawnExperience(pe.getEntityWorld(), pe.getPosition(), sr.getExperience());
+                        if (!level.isClientSide) {
+                            power -= (float) sr.getCookingTime() / 80;
+                            splitAndSpawnExperience(pe.getCommandSenderWorld(), pe.blockPosition(), sr.getExperience());
                             is.setCount(is.getCount() - 1);
-                            ItemStack gain = sr.getCraftingResult(null).copy();
+                            ItemStack gain = sr.assemble(null).copy();
                             FHUtils.giveItem(pe, gain);
-                            markDirty();
+                            setChanged();
                             this.markContainingBlockForUpdate(null);
                         }
                         drawEffect();
@@ -177,17 +177,17 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
 
     @Override
     public void tick() {
-        if (!world.isRemote) {
+        if (!level.isClientSide) {
             float actual = network.drainHeat(Math.min(200, (getMaxPower() - power) / 0.8F));
             if (actual > 0) {
                 power += (float) (actual * 0.8);
                 this.setActive(true);
-                markDirty();
+                setChanged();
                 this.markContainingBlockForUpdate(null);
             } else
                 this.setActive(false);
         } else if (getIsActive()) {
-            ClientUtils.spawnSteamParticles(this.getWorld(), pos);
+            ClientUtils.spawnSteamParticles(this.getLevel(), worldPosition);
         }
     }
 

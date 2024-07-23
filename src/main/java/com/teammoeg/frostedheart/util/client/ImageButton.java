@@ -18,7 +18,7 @@ public class ImageButton extends Button {
 	ResourceLocation TEXTURE;
 	public ImageButton(ResourceLocation texture,int xIn, int yIn, int widthIn, int heightIn, int xTexStartIn, int yTexStartIn,
 			Button.IPressable onPressIn) {
-		this(texture,xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn, EMPTY_TOOLTIP, onPressIn);
+		this(texture,xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn, NO_TOOLTIP, onPressIn);
 	}
 
 	public ImageButton(ResourceLocation texture,int xIn, int yIn, int widthIn, int heightIn, int xTexStartIn, int yTexStartIn,
@@ -29,7 +29,7 @@ public class ImageButton extends Button {
 
 	public ImageButton(ResourceLocation texture,int x, int y, int width, int height, int xTexStart, int yTexStart, int textureWidth,
 			int textureHeight, Button.IPressable onPress, ITextComponent title) {
-		this(texture,x, y, width, height, xTexStart, yTexStart, textureWidth, textureHeight, onPress, EMPTY_TOOLTIP, title);
+		this(texture,x, y, width, height, xTexStart, yTexStart, textureWidth, textureHeight, onPress, NO_TOOLTIP, title);
 	}
 
 	public ImageButton(ResourceLocation texture,int p_i244513_1_, int p_i244513_2_, int p_i244513_3_, int p_i244513_4_, int p_i244513_5_,
@@ -48,13 +48,13 @@ public class ImageButton extends Button {
 		this.y = yIn;
 	}
 
-	public void renderWidget(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+	public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 		int i = 0, j = state * this.height;
 
 		if (this.isHovered()) {
 			i += this.width;
 		}
-		Minecraft.getInstance().getTextureManager().bindTexture(TEXTURE);
+		Minecraft.getInstance().getTextureManager().bind(TEXTURE);
 		RenderSystem.enableDepthTest();
 		blit(matrixStack, this.x, this.y, this.xTexStart + i, this.yTexStart + j, this.width, this.height,
 				this.textureWidth, this.textureHeight);

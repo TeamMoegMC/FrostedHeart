@@ -37,10 +37,10 @@ public class ClientScene implements IClientScene {
 		this.setSpeed(1);
 	}
 	public static int fromRelativeXW(float val) {
-		return (int) (val*ClientUtils.mc().getMainWindow().getScaledWidth());
+		return (int) (val*ClientUtils.mc().getWindow().getGuiScaledWidth());
 	}
 	public static int fromRelativeYH(float val) {
-		return (int) (val*ClientUtils.mc().getMainWindow().getScaledHeight());
+		return (int) (val*ClientUtils.mc().getWindow().getGuiScaledHeight());
 	}
 	LinkedList<ITextComponent> origmsgQueue=new LinkedList<>();
 	LinkedList<TextInfo> msgQueue = new LinkedList<>();
@@ -160,11 +160,11 @@ public class ClientScene implements IClientScene {
 	@Override
 	public void cls() {
 		Minecraft mc = ClientUtils.mc();
-		List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.ingameGUI.getChatGUI()).getDrawnChatLines();
-		i.removeIf(l -> l.getChatLineID() == fhchatid);
+		List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.gui.getChat()).getDrawnChatLines();
+		i.removeIf(l -> l.getId() == fhchatid);
 		for(ITextComponent ic:origmsgQueue) {
-			for(IReorderingProcessor j:RenderComponentsUtil.func_238505_a_(ic,w, ClientUtils.mc().fontRenderer))
-				i.add(0, new ChatLine<>(mc.ingameGUI.getTicks(), j, 0));
+			for(IReorderingProcessor j:RenderComponentsUtil.wrapComponents(ic,w, ClientUtils.mc().font))
+				i.add(0, new ChatLine<>(mc.gui.getGuiTicks(), j, 0));
 		}
 		origmsgQueue.clear();
 		msgQueue.clear();
@@ -200,16 +200,16 @@ public class ClientScene implements IClientScene {
 	@Override
 	public void processClient(ITextComponent item, boolean isReline, boolean isNowait) {
 		if (getPreset() != null)
-			item = item.deepCopy().mergeStyle(getPreset());
+			item = item.copy().withStyle(getPreset());
 		List<IReorderingProcessor> lines;
 		if (!msgQueue.isEmpty() && !shouldWrap) {
 			TextInfo ti = msgQueue.remove(msgQueue.size() - 1);
 			int lastline = ti.line;
 			int lastLimit = countCh(ti.text);
-			IFormattableTextComponent ntext = ti.parent.deepCopy().appendSibling(item);
+			IFormattableTextComponent ntext = ti.parent.copy().append(item);
 			origmsgQueue.pollLast();
 			origmsgQueue.add(ntext);
-			lines = RenderComponentsUtil.func_238505_a_(ntext, getDialogWidth(), ClientUtils.mc().fontRenderer);
+			lines = RenderComponentsUtil.wrapComponents(ntext, getDialogWidth(), ClientUtils.mc().font);
 			for (int i = lastline; i < lines.size(); i++) {
 				IReorderingProcessor line = lines.get(i);
 				if (!isNowait) {
@@ -223,7 +223,7 @@ public class ClientScene implements IClientScene {
 			}
 		} else {
 			origmsgQueue.add(item);
-			lines = RenderComponentsUtil.func_238505_a_(item, getDialogWidth(), ClientUtils.mc().fontRenderer);
+			lines = RenderComponentsUtil.wrapComponents(item, getDialogWidth(), ClientUtils.mc().font);
 			int i = 0;
 			for (IReorderingProcessor line : lines) {
 				msgQueue.add(new TextInfo(item, i++, isNowait ? line : new SizedReorderingProcessor(line)));
@@ -275,17 +275,17 @@ public class ClientScene implements IClientScene {
 	int w;
 	double lastScale=0;
 	public void tick(Minecraft mc) {
-		w=MathHelper.floor((double) mc.ingameGUI.getChatGUI().getChatWidth() / mc.ingameGUI.getChatGUI().getScale());
-		if (!mc.isGamePaused()) {
-			if(lastScale!=mc.getMainWindow().getGuiScaleFactor()) {
-				lastScale=mc.getMainWindow().getGuiScaleFactor();
+		w=MathHelper.floor((double) mc.gui.getChat().getWidth() / mc.gui.getChat().getScale());
+		if (!mc.isPaused()) {
+			if(lastScale!=mc.getWindow().getGuiScale()) {
+				lastScale=mc.getWindow().getGuiScale();
 				this.sendClientUpdate();
 			}
 			if(ticksActUpdate>0)
 				ticksActUpdate--;
 			if(ticksActStUpdate>0)
 				ticksActStUpdate--;
-			List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.ingameGUI.getChatGUI()).getDrawnChatLines();
+			List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.gui.getChat()).getDrawnChatLines();
 			if(dialog!=null) {
 				dialog.tickDialog();
 				
@@ -294,14 +294,14 @@ public class ClientScene implements IClientScene {
 				if (isTick())
 					showOneChar();
 
-				if(needUpdate||mc.ingameGUI.getTicks() % 20 == 0) {
+				if(needUpdate||mc.gui.getGuiTicks() % 20 == 0) {
 					needUpdate = false;
 					if (dialog==null||!dialog.hasDialog()) {
-						i.removeIf(l -> l.getChatLineID() == fhchatid);
+						i.removeIf(l -> l.getId() == fhchatid);
 						for (TextInfo t : msgQueue) {
 							if (t.hasText()) {
 								// if(hasText) {
-								i.add(0, new ChatLine<>(mc.ingameGUI.getTicks(), t.asFinished(), fhchatid));
+								i.add(0, new ChatLine<>(mc.gui.getGuiTicks(), t.asFinished(), fhchatid));
 								// }
 							}
 						}
@@ -313,7 +313,7 @@ public class ClientScene implements IClientScene {
 		}
 	}
 	public void sendClientReady() {
-		FHNetwork.sendToServer(new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getCurrentLanguage().getCode()));
+		FHNetwork.sendToServer(new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getSelected().getCode()));
 	}
 	public void sendClientUpdate() {
 		FHNetwork.sendToServer(new FHClientSettingsPacket());

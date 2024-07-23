@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.base.item;
 import net.minecraft.block.Block;
 import net.minecraft.item.Food;
 
+import net.minecraft.item.Item.Properties;
+
 public class FoodBlockItem extends FHBlockItem {
     public FoodBlockItem(Block block, Properties props, Food food) {
         super(block, props.food(food));

@@ -32,7 +32,7 @@ public class FHTags {
         public static final Tags.IOptionalNamedTag<Block> WALL_BLOCKS = tag("wall_blocks");
 
         private static ITag.INamedTag<Block> create(String id) {
-            return BlockTags.makeWrapperTag(new ResourceLocation(FHMain.MODID, id).toString());
+            return BlockTags.bind(new ResourceLocation(FHMain.MODID, id).toString());
         }
 
         private static Tags.IOptionalNamedTag<Block> tag(String name) {

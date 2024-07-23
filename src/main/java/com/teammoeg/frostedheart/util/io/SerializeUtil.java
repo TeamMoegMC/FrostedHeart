@@ -85,7 +85,7 @@ public class SerializeUtil {
 				ret.setCount(jo.get("count").getAsInt());
 			if (jo.has("nbt"))
 				try {
-					ret.setTag(JsonToNBT.getTagFromJson(jo.get("nbt").getAsString()));
+					ret.setTag(JsonToNBT.parseTag(jo.get("nbt").getAsString()));
 				} catch (CommandSyntaxException e) {
 					FHMain.LOGGER.warn(e.getMessage());
 				}
@@ -199,7 +199,7 @@ public class SerializeUtil {
 	}
 
 	public static <V> Map<String, V> readStringMap(PacketBuffer buffer, Map<String, V> map, Function<PacketBuffer, V> valuereader) {
-		return readMap(buffer, map, PacketBuffer::readString, valuereader);
+		return readMap(buffer, map, PacketBuffer::readUtf, valuereader);
 	}
 
 	public static JsonElement toJson(ItemStack stack) {
@@ -332,7 +332,7 @@ public class SerializeUtil {
 	}
 
 	public static <V> void writeStringMap(PacketBuffer buffer, Map<String, V> elms, BiConsumer<V, PacketBuffer> valuewriter) {
-		writeMap(buffer, elms, (p, b) -> b.writeString(p), valuewriter);
+		writeMap(buffer, elms, (p, b) -> b.writeUtf(p), valuewriter);
 	}
 
 	private SerializeUtil() {

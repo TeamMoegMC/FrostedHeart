@@ -25,7 +25,7 @@ public class ItemStackSlotSet extends LinkedHashSet<LogisticSlot> implements Slo
 		if(stack==null) {
 			return strictNBT?(!out.hasTag()):true;
 		}
-		return ItemStack.areItemStackTagsEqual(out, stack);
+		return ItemStack.tagMatches(out, stack);
 	}
 
 }

@@ -46,10 +46,10 @@ public class TipListScreen extends Screen {
 
     @Override
     public void init() {
-        minecraft.keyboardListener.enableRepeatEvents(true);
+        minecraft.keyboardHandler.setSendRepeatsToGui(true);
 
         this.addButton(new IconButton(0, 0, IconButton.ICON_CROSS, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.close"), (button) -> {
-            closeScreen();
+            onClose();
         }));
         this.addButton(new IconButton(0, 0, IconButton.ICON_LOCK, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.pin"), (button) -> {
             TipDisplayUtil.forceAdd(selectEle, true);
@@ -103,13 +103,13 @@ public class TipListScreen extends Screen {
         lockButton.setXY(lx-27, y-14);
 
         if (fadeIn > 0.5F && !tipList.isEmpty()) {
-            double scale = minecraft.getMainWindow().getGuiScaleFactor();
-            ms.push();
+            double scale = minecraft.getWindow().getGuiScale();
+            ms.pushPose();
             ms.translate(0, displayListScroll, 0);
             RenderSystem.enableScissor(0, (int)((int)(height*0.1F)*scale), (int)(width*scale), (int)((GuiHeight +16)*scale));
             renderList(ms, tipList, (int)(width*0.05F), (int)(height*0.1F)-16, mouseX, mouseY);
             RenderSystem.disableScissor();
-            ms.pop();
+            ms.popPose();
             //TODO widget
             if (listHeight > GuiHeight +16) {
                 renderScrollBar(ms, mouseX, mouseY, (int)(width*0.05F)-8, (int)(height*0.1F)-16, 4, GuiHeight +16, listHeight);
@@ -172,7 +172,7 @@ public class TipListScreen extends Screen {
                     }
                 }
 
-                ms.push();
+                ms.pushPose();
                 ms.translate(x*progress + selOffset-BGOutline, y-BGOutline + i*16, 0);
                 if (list.get(i).equals(select)) {
                     float selColorP = AnimationUtil.calcFadeIn(200, "TipListSelColor", false);
@@ -187,19 +187,19 @@ public class TipListScreen extends Screen {
                 if (text.startsWith("*custom*")) {
                     text = text.substring(8);
                 } else {
-                    text = I18n.format("tips." + FHMain.MODID + "." + list.get(i) + ".title");
+                    text = I18n.get("tips." + FHMain.MODID + "." + list.get(i) + ".title");
                 }
 
-                if (font.getStringWidth(text) > BGWidth) {
+                if (font.width(text) > BGWidth) {
                     text = text.substring(0, Math.min(text.length(), BGWidth/6)) + "...";
                 }
 
                 if (list.get(i).equals(select)) {
-                    font.drawStringWithShadow(ms, text, 0, 0, fontColor);
+                    font.drawShadow(ms, text, 0, 0, fontColor);
                 } else {
-                    font.drawString(ms, text, 0, 0, fontColor);
+                    font.draw(ms, text, 0, 0, fontColor);
                 }
-                ms.pop();
+                ms.popPose();
             }
         }
     }
@@ -236,10 +236,10 @@ public class TipListScreen extends Screen {
         float textFading = AnimationUtil.calcFadeIn(200, "TipListTextFading", false);
         int textColor = Math.max((int)(textFading * 255), 0x04) << 24 | selectEle.fontColor & 0x00FFFFFF;
         int boxWidth = (int)(width*0.4F);
-        double scale = minecraft.getMainWindow().getGuiScaleFactor();
+        double scale = minecraft.getWindow().getGuiScale();
 
-        ms.push();
-        if (font.getStringWidth(selectEle.contents.get(0).getString()) > x-32 - boxWidth) {
+        ms.pushPose();
+        if (font.width(selectEle.contents.get(0).getString()) > x-32 - boxWidth) {
             ms.translate(0, displayTextScroll, 0);
             RenderSystem.enableScissor(0, (int)((int)(height*0.1F+4)*scale), (int)(width*scale), (int)((GuiHeight -8)*scale));
             int line = 0;
@@ -250,7 +250,7 @@ public class TipListScreen extends Screen {
             textHeight = line*12;
 
         } else if (selectEle.contents.size() > 1) {
-            font.drawText(ms, selectEle.contents.get(0), boxWidth + 4, y - 12, textColor);
+            font.draw(ms, selectEle.contents.get(0), boxWidth + 4, y - 12, textColor);
             ms.translate(0, displayTextScroll, 0);
             RenderSystem.enableScissor(0, (int)((int)(height*0.1F+4)*scale), (int)(width*scale), (int)((GuiHeight -8)*scale));
             int line = 0;
@@ -261,18 +261,18 @@ public class TipListScreen extends Screen {
             textHeight = line*12;
 
         } else {
-            font.drawText(ms, selectEle.contents.get(0), boxWidth + 4, y - 12, textColor);
+            font.draw(ms, selectEle.contents.get(0), boxWidth + 4, y - 12, textColor);
         }
         RenderSystem.disableScissor();
-        ms.pop();
+        ms.popPose();
 
         //文本高度超出屏幕时渲染箭头
         if (textHeight > GuiHeight && -displayTextScroll < textHeight-GuiHeight-1) {
             float animation = AnimationUtil.calcBounce(1000, "TipListDownArrow", true)*2;
-            ms.push();
+            ms.pushPose();
             ms.translate(width*0.99F-14, height*0.9F-16-animation, 0);
             GuiUtil.renderIcon(ms, IconButton.ICON_DOWN, 0, 0, 0xFFC6FCFF);
-            ms.pop();
+            ms.popPose();
         }
     }
 
@@ -290,10 +290,10 @@ public class TipListScreen extends Screen {
 
         fill(ms, x, y, x+w, y+h, (background ? 128 : 77) << 24);
 
-        ms.push();
+        ms.pushPose();
         ms.translate(0, barY, 0);
         fill(ms, x, y, x+w, y+barHeight, 0xFFC6FCFF);
-        ms.pop();
+        ms.popPose();
     }
 
     private void setSelect(String s) {
@@ -387,7 +387,7 @@ public class TipListScreen extends Screen {
                 }
                 return true;
             case 69:
-                closeScreen();
+                onClose();
                 return true;
             default:
                 return super.keyPressed(keyCode, scanCode, modifiers);
@@ -395,7 +395,7 @@ public class TipListScreen extends Screen {
     }
 
     @Override
-    public void onClose() {
+    public void removed() {
         AnimationUtil.removeAnimation("TipListSelColor");
         AnimationUtil.removeAnimation("TipListDownArrow");
         AnimationUtil.removeAnimation("TipListGuiFading");

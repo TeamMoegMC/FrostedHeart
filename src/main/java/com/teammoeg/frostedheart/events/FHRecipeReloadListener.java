@@ -90,7 +90,7 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
         //System.out.println(TradePolicy.policies.size());
         TradePolicy.items = TradePolicy.policies.values().stream().map(TradePolicy::asWeight).filter(Objects::nonNull).collect(Collectors.toList());
         //System.out.println(TradePolicy.items.size());
-        TradePolicy.totalW = TradePolicy.items.stream().mapToInt(w -> w.itemWeight).sum();
+        TradePolicy.totalW = TradePolicy.items.stream().mapToInt(w -> w.weight).sum();
         //System.out.println(TradePolicy.totalW);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::scheduleSyncJEI);
     }
@@ -117,7 +117,7 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onRecipesUpdated(RecipesUpdatedEvent event) {
         clientRecipeManager = event.getRecipeManager();
-        if (!Minecraft.getInstance().isSingleplayer())
+        if (!Minecraft.getInstance().hasSingleplayerServer())
             buildRecipeLists(clientRecipeManager);
 
     }
@@ -127,7 +127,7 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
         if (dataPackRegistries != null) {
             MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
             if (server != null) {
-                Iterator<ServerWorld> it = server.getWorlds().iterator();
+                Iterator<ServerWorld> it = server.getAllLevels().iterator();
                 // Should only be false when no players are loaded, so the data will be synced on login
                 if (it.hasNext())
                     ApiUtils.addFutureServerTask(it.next(),
@@ -140,6 +140,6 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
     @SubscribeEvent
     public void onTagsUpdated(TagsUpdatedEvent event) {
         if (clientRecipeManager != null)
-            TagUtils.setTagCollectionGetters(ItemTags::getCollection, BlockTags::getCollection);
+            TagUtils.setTagCollectionGetters(ItemTags::getAllTags, BlockTags::getAllTags);
     }
 }

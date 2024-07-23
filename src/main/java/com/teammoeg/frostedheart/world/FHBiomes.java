@@ -46,6 +46,6 @@ public class FHBiomes {
     }
 
     public static RegistryKey<Biome> makeKey(Biome biome) {
-        return RegistryKey.getOrCreateKey(Registry.BIOME_KEY, RegistryUtils.getRegistryName(biome));
+        return RegistryKey.create(Registry.BIOME_REGISTRY, RegistryUtils.getRegistryName(biome));
     }
 }

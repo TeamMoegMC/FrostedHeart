@@ -37,7 +37,7 @@ public class ExpResearchNumber implements IResearchNumber {
     }
 
     public ExpResearchNumber(PacketBuffer buffer) {
-        this(buffer.readString());
+        this(buffer.readUtf());
     }
 
     public ExpResearchNumber(String exp) {
@@ -56,7 +56,7 @@ public class ExpResearchNumber implements IResearchNumber {
     }
 
     public void write(PacketBuffer buffer) {
-        buffer.writeString(exp);
+        buffer.writeUtf(exp);
     }
 
 }

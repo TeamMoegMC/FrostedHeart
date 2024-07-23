@@ -42,17 +42,19 @@ import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 
+import net.minecraft.item.Item.Properties;
+
 public class HeatDebugItem extends Item {
     public HeatDebugItem() {
-        super(new Properties().maxStackSize(1).setNoRepair().group(FHMain.itemGroup));
+        super(new Properties().stacksTo(1).setNoRepair().tab(FHMain.itemGroup));
     }
 
     //Dont add to creative tag
     @Override
-    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
+    public void fillItemCategory(ItemGroup group, NonNullList<ItemStack> items) {
     }
 
-    public UseAction getUseAction(ItemStack stack) {
+    public UseAction getUseAnimation(ItemStack stack) {
         return UseAction.NONE;
     }
 
@@ -60,25 +62,25 @@ public class HeatDebugItem extends Item {
         return 1;
     }
 
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
+    public ActionResult<ItemStack> use(World worldIn, PlayerEntity playerIn, Hand handIn) {
 
-        BlockRayTraceResult raytraceresult = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.SOURCE_ONLY);
-        ItemStack itemstack = playerIn.getHeldItem(handIn);
-        if (worldIn.isRemote) return ActionResult.resultSuccess(itemstack);
+        BlockRayTraceResult raytraceresult = getPlayerPOVHitResult(worldIn, playerIn, RayTraceContext.FluidMode.SOURCE_ONLY);
+        ItemStack itemstack = playerIn.getItemInHand(handIn);
+        if (worldIn.isClientSide) return ActionResult.success(itemstack);
         if (raytraceresult.getType() == RayTraceResult.Type.BLOCK) {
         	if(playerIn instanceof ServerPlayerEntity) {
-	            BlockPos blockpos = raytraceresult.getPos();
+	            BlockPos blockpos = raytraceresult.getBlockPos();
 	            TileEntity te = Utils.getExistingTileEntity(worldIn, blockpos);
 	            if (te instanceof EnergyNetworkProvider) {
 	            	if(((EnergyNetworkProvider) te).getNetwork()!=null)
 	            		HeatHandler.openHeatScreen((ServerPlayerEntity) playerIn, ((EnergyNetworkProvider) te).getNetwork());
-	            	else playerIn.sendMessage(TranslateUtils.str("EnergyNetwork " + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUniqueID());
+	            	else playerIn.sendMessage(TranslateUtils.str("EnergyNetwork " + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUUID());
 	            }else if(te!=null) {
-	            	playerIn.sendMessage(TranslateUtils.str("EnergyEndpoint "+te.getCapability(FHCapabilities.HEAT_EP.capability(), raytraceresult.getFace()).orElse(null)), playerIn.getUniqueID());
+	            	playerIn.sendMessage(TranslateUtils.str("EnergyEndpoint "+te.getCapability(FHCapabilities.HEAT_EP.capability(), raytraceresult.getDirection()).orElse(null)), playerIn.getUUID());
 	            }
             }
-            return ActionResult.resultSuccess(itemstack);
+            return ActionResult.success(itemstack);
         }
-        return ActionResult.resultFail(itemstack);
+        return ActionResult.fail(itemstack);
     }
 }

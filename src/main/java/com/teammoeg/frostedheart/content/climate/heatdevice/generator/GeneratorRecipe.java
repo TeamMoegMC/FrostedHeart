@@ -43,8 +43,8 @@ public class GeneratorRecipe extends IESerializableRecipe {
 
         @Nullable
         @Override
-        public GeneratorRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            ItemStack output = buffer.readItemStack();
+        public GeneratorRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+            ItemStack output = buffer.readItem();
             IngredientWithSize input = IngredientWithSize.read(buffer);
             int time = buffer.readInt();
             return new GeneratorRecipe(recipeId, output, input, time);
@@ -54,13 +54,13 @@ public class GeneratorRecipe extends IESerializableRecipe {
         public GeneratorRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
             ItemStack output = readOutput(json.get("result"));
             IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
-            int time = JSONUtils.getInt(json, "time");
+            int time = JSONUtils.getAsInt(json, "time");
             return new GeneratorRecipe(recipeId, output, input, time);
         }
 
         @Override
-        public void write(PacketBuffer buffer, GeneratorRecipe recipe) {
-            buffer.writeItemStack(recipe.output);
+        public void toNetwork(PacketBuffer buffer, GeneratorRecipe recipe) {
+            buffer.writeItem(recipe.output);
             recipe.input.write(buffer);
             buffer.writeInt(recipe.time);
         }
@@ -105,7 +105,7 @@ public class GeneratorRecipe extends IESerializableRecipe {
     }
 
     @Override
-    public ItemStack getRecipeOutput() {
+    public ItemStack getResultItem() {
         return this.output;
     }
 }

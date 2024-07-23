@@ -32,6 +32,8 @@ import net.minecraft.block.GrassBlock;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 @Mixin(GrassySoilBlock.class)
 public class MixinGrassySoilBlock extends GrassBlock {
 

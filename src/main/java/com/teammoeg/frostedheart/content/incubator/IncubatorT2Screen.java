@@ -43,15 +43,15 @@ public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
 
 
     @Override
-    protected void drawGuiContainerBackgroundLayer(MatrixStack transform, float partial, int x, int y) {
+    protected void renderBg(MatrixStack transform, float partial, int x, int y) {
         ClientUtils.bindTexture(TEXTURE);
-        this.blit(transform, guiLeft, guiTop, 0, 0, xSize, ySize);
-        GuiHelper.handleGuiTank(transform, tile.fluid[0], guiLeft + 88, guiTop + 20, 16, 46, 177, 177, 20, 51, x, y, TEXTURE, null);
-        GuiHelper.handleGuiTank(transform, tile.fluid[1], guiLeft + 124, guiTop + 20, 16, 46, 177, 177, 20, 51, x, y, TEXTURE, null);
+        this.blit(transform, leftPos, topPos, 0, 0, imageWidth, imageHeight);
+        GuiHelper.handleGuiTank(transform, tile.fluid[0], leftPos + 88, topPos + 20, 16, 46, 177, 177, 20, 51, x, y, TEXTURE, null);
+        GuiHelper.handleGuiTank(transform, tile.fluid[1], leftPos + 124, topPos + 20, 16, 46, 177, 177, 20, 51, x, y, TEXTURE, null);
         // recipe progress icon
         if (tile.processMax > 0 && tile.process > 0) {
             int w = (int) (14 * (tile.process / (float) tile.processMax));
-            this.blit(transform, guiLeft + 107, guiTop + 28, 176, 0, 14 - w, 29);
+            this.blit(transform, leftPos + 107, topPos + 28, 176, 0, 14 - w, 29);
         }
         if (tile.network.getPower() > 0) {
             float v = tile.network.getPower() / tile.network.getMaxPower();
@@ -62,30 +62,30 @@ public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
                 b = true;
             } else if (v > 0.25)
                 a = true;
-            this.blit(transform, guiLeft + 10, guiTop + 24, 176 + (a ? 38 : 0), 81 + (b ? 38 : 0), 38, 38);
-        } else this.blit(transform, guiLeft + 10, guiTop + 24, 176, 81, 38, 38);
+            this.blit(transform, leftPos + 10, topPos + 24, 176 + (a ? 38 : 0), 81 + (b ? 38 : 0), 38, 38);
+        } else this.blit(transform, leftPos + 10, topPos + 24, 176, 81, 38, 38);
         if (tile.efficiency > 0) {
             int h = (int) (51 * (tile.efficiency / 2f));
             if (tile.isFoodRecipe)
-                this.blit(transform, guiLeft + 52, guiTop + 16 + (51 - h), 198, 29 + (51 - h), 9, h);
+                this.blit(transform, leftPos + 52, topPos + 16 + (51 - h), 198, 29 + (51 - h), 9, h);
             else
-                this.blit(transform, guiLeft + 52, guiTop + 16 + (51 - h), 207, 29 + (51 - h), 9, h);
+                this.blit(transform, leftPos + 52, topPos + 16 + (51 - h), 207, 29 + (51 - h), 9, h);
         } else
-            this.blit(transform, guiLeft + 52, guiTop + 16, 216, 29, 9, 51);
+            this.blit(transform, leftPos + 52, topPos + 16, 216, 29, 9, 51);
     }
 
     @Override
     public boolean isMouseIn(int mouseX, int mouseY, int x, int y, int w, int h) {
-        return mouseX >= guiLeft + x && mouseY >= guiTop + y
-                && mouseX < guiLeft + x + w && mouseY < guiTop + y + h;
+        return mouseX >= leftPos + x && mouseY >= topPos + y
+                && mouseX < leftPos + x + w && mouseY < topPos + y + h;
     }
 
     @Override
     public void render(MatrixStack transform, int mouseX, int mouseY, float partial) {
         super.render(transform, mouseX, mouseY, partial);
         List<ITextComponent> tooltip = new ArrayList<>();
-        GuiHelper.handleGuiTank(transform, tile.fluid[0], guiLeft + 88, guiTop + 20, 16, 46, 177, 177, 20, 51, mouseX, mouseY, TEXTURE, tooltip);
-        GuiHelper.handleGuiTank(transform, tile.fluid[1], guiLeft + 124, guiTop + 20, 16, 46, 177, 177, 20, 51, mouseX, mouseY, TEXTURE, tooltip);
+        GuiHelper.handleGuiTank(transform, tile.fluid[0], leftPos + 88, topPos + 20, 16, 46, 177, 177, 20, 51, mouseX, mouseY, TEXTURE, tooltip);
+        GuiHelper.handleGuiTank(transform, tile.fluid[1], leftPos + 124, topPos + 20, 16, 46, 177, 177, 20, 51, mouseX, mouseY, TEXTURE, tooltip);
 
         if (!tooltip.isEmpty()) {
             net.minecraftforge.fml.client.gui.GuiUtils.drawHoveringText(transform, tooltip, mouseX, mouseY, width, height, -1, font);

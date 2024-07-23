@@ -40,9 +40,9 @@ public abstract class CraftResultInventoryMixin implements IRecipeHolder, IInven
     }
 
     @Override
-    public boolean canUseRecipe(World worldIn, ServerPlayerEntity player, IRecipe<?> recipe) {
+    public boolean setRecipeUsed(World worldIn, ServerPlayerEntity player, IRecipe<?> recipe) {
         if (ResearchListeners.canUseRecipe(player, recipe))
-            return IRecipeHolder.super.canUseRecipe(worldIn, player, recipe);
+            return IRecipeHolder.super.setRecipeUsed(worldIn, player, recipe);
         return false;
     }
 

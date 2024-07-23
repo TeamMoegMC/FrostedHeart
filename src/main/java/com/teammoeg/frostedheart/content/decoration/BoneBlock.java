@@ -22,48 +22,48 @@ import net.minecraft.world.World;
 
 public class BoneBlock extends FHBaseBlock {
     private static IntegerProperty BNT = IntegerProperty.create("bonetype", 0, 5);
-    static final VoxelShape shape = Block.makeCuboidShape(0, 0, 0, 16, 3, 16);
-    static final VoxelShape shape2 = Block.makeCuboidShape(0, 0, 0, 16, 15, 16);
+    static final VoxelShape shape = Block.box(0, 0, 0, 16, 3, 16);
+    static final VoxelShape shape2 = Block.box(0, 0, 0, 16, 15, 16);
     public BoneBlock(AbstractBlock.Properties blockProps) {
         super(blockProps);
-        this.setDefaultState(this.stateContainer.getBaseState().with(BNT, 0));
+        this.registerDefaultState(this.stateDefinition.any().setValue(BNT, 0));
     }
 
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
         builder.add(BNT);
     }
 
-    public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+    public void setPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         Integer finalType = Math.abs(RANDOM.nextInt()) % 5;
-        BlockState newState = this.stateContainer.getBaseState().with(BNT, finalType);
-        worldIn.setBlockState(pos, newState);
+        BlockState newState = this.stateDefinition.any().setValue(BNT, finalType);
+        worldIn.setBlockAndUpdate(pos, newState);
     }
 
     @Override
-    public void onBlockHarvested(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
-        super.onBlockHarvested(worldIn, pos, state, player);
+    public void playerWillDestroy(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
+        super.playerWillDestroy(worldIn, pos, state, player);
         int count = Math.abs(RANDOM.nextInt()) % 5 + 1;
-        spawnAsEntity(worldIn, pos, new ItemStack(Items.BONE, count));
+        popResource(worldIn, pos, new ItemStack(Items.BONE, count));
     }
 
     @Override
-    public void onExplosionDestroy(World worldIn, BlockPos pos, Explosion explosionIn) {
-        super.onExplosionDestroy(worldIn, pos, explosionIn);
+    public void wasExploded(World worldIn, BlockPos pos, Explosion explosionIn) {
+        super.wasExploded(worldIn, pos, explosionIn);
         int count = Math.abs(RANDOM.nextInt()) % 2 + 1;
-        spawnAsEntity(worldIn, pos, new ItemStack(Items.BONE, count));
+        popResource(worldIn, pos, new ItemStack(Items.BONE, count));
     }
 
     @Override
     public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos,
                                         ISelectionContext context) {
-        if (state.get(BNT) <= 0)
+        if (state.getValue(BNT) <= 0)
             return shape;
         return shape2;
     }
 
     @Override
     public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-        if (state.get(BNT) <= 0)
+        if (state.getValue(BNT) <= 0)
             return shape;
         return shape2;
     }

@@ -57,19 +57,19 @@ public class CrafterPatternInventoryMixin {
      */
     @Overwrite(remap = false)
     public void recalculateOutput() {
-        if (tile.getWorld() != null) {
+        if (tile.getLevel() != null) {
             CraftingInventory invC = Utils.InventoryCraftingFalse.createFilledCraftingInventory(3, 3, inv);
             this.recipe = Utils.findCraftingRecipe(invC, tile.getWorldNonnull()).orElse(null);
             AssemblerTileEntity nte = tile;
             if (!nte.isDummy()) {
                 UUID ow = IOwnerTile.getOwner(nte);
-                if (tile.getWorld().isRemote) {
+                if (tile.getLevel().isClientSide) {
                     if (!ResearchListeners.canUseRecipe(recipe))
                         this.recipe = null;
                 } else if (!ResearchListeners.canUseRecipe(ow, recipe))
                     this.recipe = null;
             }
-            this.inv.set(9, recipe != null ? recipe.getCraftingResult(invC) : ItemStack.EMPTY);
+            this.inv.set(9, recipe != null ? recipe.assemble(invC) : ItemStack.EMPTY);
         }
     }
 

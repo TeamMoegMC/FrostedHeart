@@ -23,7 +23,7 @@ public class FilterSlot {
 	}
 	public boolean isValidFor(ItemStack stack) {
 		if(filter.isEmpty())return true;
-		return ((!strictNBT)||ItemStack.areItemStackTagsEqual(stack, filter))&&filter.isItemEqual(stack);
+		return ((!strictNBT)||ItemStack.tagMatches(stack, filter))&&filter.sameItem(stack);
 	}
 	public boolean isEmpty() {
 		return filter.isEmpty();
