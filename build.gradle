@@ -150,12 +150,6 @@ repositories {
         name = "tterrag maven"
         url = "https://maven.tterrag.com/"
     }
-    maven {
-        //location of the maven for vazkii's mods
-        name "blamejared"
-        url "https://maven.blamejared.com/"
-    }
-
     // Needed for JEI
     maven {
         name = "latvian maven"
@@ -165,45 +159,32 @@ repositories {
     maven {
         name = "theillusivec4 maven"
         url = "https://maven.theillusivec4.top/"
-        content {
-			excludeGroup "curse.maven"
-		}
     }
     maven {
-        url "https://maven.architectury.dev/"
-        content {
-        	includeGroup "me.shedaniel"
-            includeGroup "dev.architectury"
-        	excludeGroup "curse.maven"
-        }
+        name = "architectury maven"
+        url = "https://maven.architectury.dev/"
     }
     maven {
-        url "https://maven.saps.dev/minecraft"
-        content {
-            includeGroup "dev.ftb.mods"
-            includeGroup "dev.latvian.mods"
-            excludeGroup "curse.maven"
-        }
+        name = "saps maven"
+        url = "https://maven.saps.dev/minecraft"
     }
     maven {
         name = "TeamMoeg COS Maven"
         url = "https://maven-1301510336.cos.ap-guangzhou.myqcloud.com"
-        content {
-            includeGroup "gloridifice.watersource"
-            includeGroup "com.alcatrazescapee.primalwinter"
-            includeGroup "java.moze_intel"
-            excludeGroup "curse.maven"
-        }
+//        content {
+//            includeGroup "gloridifice.watersource"
+//            includeGroup "com.alcatrazescapee.primalwinter"
+//            includeGroup "java.moze_intel"
+//            excludeGroup "curse.maven"
+//        }
     }
     maven {
         name = "ftbMavenReleases"
         url = "https://maven.ftb.dev/releases"
     }
     maven {
-        url "https://www.cursemaven.com"
-        content {
-            includeGroup "curse.maven"
-        }
+        name = "Curse Maven"
+        url = "https://www.cursemaven.com"
     }
 }
 
@@ -227,7 +208,7 @@ dependencies {
     compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api")
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}")
 
-    implementation fg.deobf("me.shedaniel:architectury-forge:${architectury_version}")
+    implementation fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
     implementation fg.deobf("dev.ftb.mods:ftb-library-forge:${ftb_library_version}")
     implementation fg.deobf("dev.ftb.mods:ftb-teams-forge:${ftb_teams_version}")
     implementation fg.deobf("dev.ftb.mods:ftb-chunks-forge:${ftb_chunks_version}")
