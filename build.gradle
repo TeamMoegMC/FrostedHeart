@@ -47,7 +47,7 @@ sourceSets {
     }
 }
 minecraft {
-    mappings channel: 'official', version: '1.16.5'
+    mappings channel: 'official', version: "${minecraft_version}"
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     runs {
