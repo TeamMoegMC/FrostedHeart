@@ -44,6 +44,7 @@ import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public class ChargerDefrostCategory implements IRecipeCategory<CampfireDefrostRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "charger_defrost");
@@ -86,7 +87,7 @@ public class ChargerDefrostCategory implements IRecipeCategory<CampfireDefrostRe
     }
 
     public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".charger_defrost").getString());
+        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".charger_defrost").getString());
     }
 
     @Override

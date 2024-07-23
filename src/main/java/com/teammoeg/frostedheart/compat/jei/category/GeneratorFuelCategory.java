@@ -40,6 +40,7 @@ import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "generator_fuel");
@@ -82,7 +83,7 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
     }
 
     public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".generator_fuel").getString());
+        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".generator_fuel").getString());
     }
 
     @Override

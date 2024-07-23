@@ -38,6 +38,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
@@ -71,7 +72,7 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
 
     @Override
     protected ITextComponent getDefaultName() {
-        return new TranslationTextComponent("container.relic_chest");
+        return TranslateUtils.translate("container.relic_chest");
     }
 
     @Nullable

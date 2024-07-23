@@ -48,6 +48,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public class TradeScreen extends BaseScreen {
     TradeContainer cx;
@@ -155,7 +156,7 @@ public class TradeScreen extends BaseScreen {
         super.add(vptf);
 
         RTextField vltf = new RTextField(this).addFlags(Theme.CENTERED | Theme.SHADOW).setMaxWidth(56).setMinWidth(56)
-                .setMaxLine(1).setText(new TranslationTextComponent("merchant.level." + (cx.data.getTradeLevel() + 1)));
+                .setMaxLine(1).setText(TranslateUtils.translate("merchant.level." + (cx.data.getTradeLevel() + 1)));
         vltf.setPos(132, 34);
         super.add(vltf);
 

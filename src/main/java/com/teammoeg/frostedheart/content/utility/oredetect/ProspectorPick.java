@@ -38,6 +38,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 import se.mickelus.tetra.properties.IToolProvider;
@@ -48,7 +49,7 @@ public class ProspectorPick extends FHLeveledTool {
     public static ActionResultType doProspect(PlayerEntity player, World world, BlockPos blockpos, ItemStack is, Hand h) {
         if (player != null && (!(player instanceof FakePlayer))) {//fake players does not deserve XD
             if (world.getBlockState(blockpos).getBlock().getTags().contains(tag)) {//early exit 'cause ore found
-                player.sendStatusMessage(new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey()).mergeStyle(TextFormatting.GOLD), false);
+                player.sendStatusMessage(TranslateUtils.translate(world.getBlockState(blockpos).getBlock().getTranslationKey()).mergeStyle(TextFormatting.GOLD), false);
                 return ActionResultType.SUCCESS;
             }
             int x = blockpos.getX();
@@ -94,11 +95,11 @@ public class ProspectorPick extends FHLeveledTool {
                         }
                         if (ore_name != null) {
                             if (count < 20)
-                                player.sendStatusMessage(TranslateUtils.translateMessage("vein_size.small").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), false);
+                                player.sendStatusMessage(TranslateUtils.translateMessage("vein_size.small").appendSibling(TranslateUtils.translate(ore_name)).mergeStyle(TextFormatting.GOLD), false);
                             else if (count < 40)
-                                player.sendStatusMessage(TranslateUtils.translateMessage("vein_size.medium").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), false);
+                                player.sendStatusMessage(TranslateUtils.translateMessage("vein_size.medium").appendSibling(TranslateUtils.translate(ore_name)).mergeStyle(TextFormatting.GOLD), false);
                             else {
-                                player.sendStatusMessage(TranslateUtils.translateMessage("vein_size.large").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), false);
+                                player.sendStatusMessage(TranslateUtils.translateMessage("vein_size.large").appendSibling(TranslateUtils.translate(ore_name)).mergeStyle(TextFormatting.GOLD), false);
                             }
                             return ActionResultType.SUCCESS;
                         }

@@ -76,6 +76,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.util.text.event.HoverEvent;
 import net.minecraft.world.GameRules;
@@ -151,21 +152,21 @@ public class CommonEvents {
             event.getPlayer().inventory.addItemStackToInventory(
                     new ItemStack(RegistryUtils.getItem(new ResourceLocation("ftbquests", "book"))));
             event.getPlayer().inventory.armorInventory.set(3, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_HELMET)
-                    .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_head"))));
+                    .setDisplayName(TranslateUtils.translate("itemname.frostedheart.start_head"))));
             event.getPlayer().inventory.armorInventory.set(2, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_CHESTPLATE)
-                    .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_chest"))));
+                    .setDisplayName(TranslateUtils.translate("itemname.frostedheart.start_chest"))));
             event.getPlayer().inventory.armorInventory.set(1, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_LEGGINGS)
-                    .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_leg"))));
+                    .setDisplayName(TranslateUtils.translate("itemname.frostedheart.start_leg"))));
             event.getPlayer().inventory.armorInventory.set(0, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_BOOTS)
-                    .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_foot"))));
+                    .setDisplayName(TranslateUtils.translate("itemname.frostedheart.start_foot"))));
             if (event.getPlayer().abilities.isCreativeMode) {
-                event.getPlayer().sendMessage(new TranslationTextComponent("message.frostedheart.creative_help")
+                event.getPlayer().sendMessage(TranslateUtils.translate("message.frostedheart.creative_help")
                         .setStyle(Style.EMPTY.applyFormatting(TextFormatting.YELLOW)
                                 .setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TranslateUtils.str("Click to use command")))
                                 .setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/frostedheart research complete all"))), event.getPlayer().getUniqueID());
             }
 
-            event.getPlayer().sendMessage(new TranslationTextComponent("message.frostedheart.temperature_help"), event.getPlayer().getUniqueID());
+            event.getPlayer().sendMessage(TranslateUtils.translate("message.frostedheart.temperature_help"), event.getPlayer().getUniqueID());
         }
     }
 
@@ -443,7 +444,7 @@ public class CommonEvents {
                 && event.getItem().getItem().getTags().contains(FHMain.rl("raw_food"))) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
             player.addPotionEffect(new EffectInstance(Effects.HUNGER, 400, 1));
-            player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.eaten_poisonous_food"), false);
+            player.sendStatusMessage(TranslateUtils.translate("message.frostedheart.eaten_poisonous_food"), false);
         }
     }
 

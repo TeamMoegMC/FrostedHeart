@@ -45,6 +45,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public class CuttingCategory implements IRecipeCategory<CuttingRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "knife_cutting");
@@ -84,7 +85,7 @@ public class CuttingCategory implements IRecipeCategory<CuttingRecipe> {
     }
 
     public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".knife_cutting").getString());
+        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".knife_cutting").getString());
     }
 
     @Override

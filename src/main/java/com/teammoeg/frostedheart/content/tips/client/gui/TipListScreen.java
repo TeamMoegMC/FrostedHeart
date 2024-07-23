@@ -14,6 +14,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,10 +48,10 @@ public class TipListScreen extends Screen {
     public void init() {
         minecraft.keyboardListener.enableRepeatEvents(true);
 
-        this.addButton(new IconButton(0, 0, IconButton.ICON_CROSS, 0xFFC6FCFF, new TranslationTextComponent(FHMain.MODID + ".tips.gui.close"), (button) -> {
+        this.addButton(new IconButton(0, 0, IconButton.ICON_CROSS, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.close"), (button) -> {
             closeScreen();
         }));
-        this.addButton(new IconButton(0, 0, IconButton.ICON_LOCK, 0xFFC6FCFF, new TranslationTextComponent(FHMain.MODID + ".tips.gui.pin"), (button) -> {
+        this.addButton(new IconButton(0, 0, IconButton.ICON_LOCK, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.pin"), (button) -> {
             TipDisplayUtil.forceAdd(selectEle, true);
         }));
 

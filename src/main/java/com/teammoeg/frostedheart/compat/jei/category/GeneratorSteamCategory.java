@@ -47,6 +47,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "generator_steam");
@@ -98,7 +99,7 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
     }
 
     public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".generator_steam").getString());
+        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".generator_steam").getString());
     }
 
     @Override

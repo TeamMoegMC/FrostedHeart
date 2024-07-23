@@ -24,6 +24,7 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public enum ResearchLevel {
     DRAWING_DESK("drawing_desk"),

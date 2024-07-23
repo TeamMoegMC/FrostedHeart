@@ -45,6 +45,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -96,7 +97,7 @@ public class EffectBuilding extends Effect {
         String namespace = raw.substring(0, raw.indexOf(':'));
         String multiblock = raw.substring(raw.indexOf('/') + 1);
         String key = "block." + namespace + "." + multiblock;
-        ar.add(new TranslationTextComponent(key));
+        ar.add(TranslateUtils.translate(key));
         return ar;
     }
 

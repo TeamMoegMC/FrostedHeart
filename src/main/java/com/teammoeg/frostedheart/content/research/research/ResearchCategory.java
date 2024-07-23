@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public enum ResearchCategory {
 

@@ -127,7 +127,7 @@ public class ClientEvents {
             EquipmentSlotType aes = MobEntity.getSlotForItemStack(stack);
             if (s.length() > 0 && aes != null) {
                 event.getToolTip().add(GuiUtils.translateTooltip("inner").mergeStyle(TextFormatting.GREEN)
-                        .appendSibling(new TranslationTextComponent("item." + s.replaceFirst(":", "."))));
+                        .appendSibling(TranslateUtils.translate("item." + s.replaceFirst(":", "."))));
                 if (!ItemNBTHelper.getBoolean(stack, "inner_bounded")) {
                     if (stack.hasTag() && stack.getTag().contains("inner_cover_tag")) {
                         CompoundNBT cn = stack.getTag().getCompound("inner_cover_tag");

@@ -49,6 +49,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "defrost_smoking");
@@ -122,7 +123,7 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
     }
 
     public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".defrost_smoking").getString());
+        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".defrost_smoking").getString());
     }
 
     @Override

@@ -47,6 +47,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.fluids.FluidStack;
 
 public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
@@ -103,7 +104,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     }
 
     public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".incubator").getString());
+        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".incubator").getString());
     }
 
     @Override

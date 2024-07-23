@@ -52,6 +52,7 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -105,7 +106,7 @@ public class EffectCrafting extends Effect {
     @Override
     public String getBrief() {
         if (item != null)
-            return "Craft " + new TranslationTextComponent(item.getTranslationKey()).getString();
+            return "Craft " + TranslateUtils.translate(item.getTranslationKey()).getString();
         if (itemStack != null)
             return "Craft " + itemStack.getDisplayName().getString();
         if (!unlocks.isEmpty())
@@ -142,7 +143,7 @@ public class EffectCrafting extends Effect {
         List<ITextComponent> tooltip = new ArrayList<>();
 
         if (item != null)
-            tooltip.add(new TranslationTextComponent(item.getTranslationKey()));
+            tooltip.add(TranslateUtils.translate(item.getTranslationKey()));
         else if (itemStack != null)
             tooltip.add(itemStack.getDisplayName());
         else {

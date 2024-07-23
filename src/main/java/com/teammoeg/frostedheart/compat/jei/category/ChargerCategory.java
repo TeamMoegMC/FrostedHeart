@@ -42,6 +42,7 @@ import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "charge");
@@ -84,7 +85,7 @@ public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
     }
 
     public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".charger").getString());
+        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".charger").getString());
     }
 
     @Override

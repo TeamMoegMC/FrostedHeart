@@ -45,6 +45,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public class SaunaCategory implements IRecipeCategory<SaunaRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "sauna");
@@ -86,7 +87,7 @@ public class SaunaCategory implements IRecipeCategory<SaunaRecipe> {
     }
 
     public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".sauna").getString());
+        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".sauna").getString());
     }
 
     @Override

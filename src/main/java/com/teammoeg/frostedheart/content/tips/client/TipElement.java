@@ -5,6 +5,7 @@ import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -41,7 +42,7 @@ public class TipElement implements Cloneable {
         if (!filePath.exists()) {
             LOGGER.error("File does not exists '{}'", filePath);
             replaceToError(filePath, "not_exists");
-            contents.add(new TranslationTextComponent("tip." + FHMain.MODID + ".error.desc"));
+            contents.add(TranslateUtils.translate("tip." + FHMain.MODID + ".error.desc"));
             return;
         }
 
@@ -58,7 +59,7 @@ public class TipElement implements Cloneable {
                 JsonArray JContents = jsonObject.getAsJsonArray("contents");
                 for (int i = 0; i < JContents.size(); i++) {
                     String raw = JContents.get(i).toString();
-                    contents.add(new TranslationTextComponent(raw.substring(1, raw.length() - 1)));
+                    contents.add(TranslateUtils.translate(raw.substring(1, raw.length() - 1)));
                 }
             }
             if (contents.isEmpty()) {
@@ -78,7 +79,7 @@ public class TipElement implements Cloneable {
         } catch (JsonSyntaxException e) {
             LOGGER.error("Invalid JSON file format '{}'", filePath);
             replaceToError(filePath, "invalid");
-            contents.add(new TranslationTextComponent("tips." + FHMain.MODID + ".error.desc"));
+            contents.add(TranslateUtils.translate("tips." + FHMain.MODID + ".error.desc"));
         } catch (Exception e) {
             LOGGER.error("Unable to load file '{}'", filePath);
             replaceToError(filePath, "load");
@@ -87,7 +88,7 @@ public class TipElement implements Cloneable {
 
     public void replaceToError(File filePath, String type) {
         contents = new ArrayList<>();
-        contents.add(new TranslationTextComponent("tips." + FHMain.MODID + ".error." + type));
+        contents.add(TranslateUtils.translate("tips." + FHMain.MODID + ".error." + type));
         contents.add(new StringTextComponent(filePath.getPath()));
         fontColor = 0xFFFF5340;
         BGColor = 0xFF000000;

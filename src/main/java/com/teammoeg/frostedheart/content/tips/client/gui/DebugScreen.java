@@ -9,6 +9,7 @@ import com.teammoeg.frostedheart.content.tips.client.waypoint.WaypointManager;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import java.util.Random;
 import java.util.UUID;
@@ -20,13 +21,13 @@ public class DebugScreen extends Screen {
 
     @Override
     public void init() {
-        this.addButton(new IconButton((int) (this.width*0.5-45), (int) (this.height*0.4), IconButton.ICON_TRASH_CAN, 0xFFC6FCFF, new TranslationTextComponent(FHMain.MODID + ".tips.gui.clear_cache"), (b) -> {
+        this.addButton(new IconButton((int) (this.width*0.5-45), (int) (this.height*0.4), IconButton.ICON_TRASH_CAN, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.clear_cache"), (b) -> {
             TipDisplayUtil.clearCache();
         }));
-        this.addButton(new IconButton((int) (this.width*0.5-25), (int) (this.height*0.4), IconButton.ICON_CROSS, 0xFFC6FCFF, new TranslationTextComponent(FHMain.MODID + ".tips.gui.clear_queue"), (b) -> {
+        this.addButton(new IconButton((int) (this.width*0.5-25), (int) (this.height*0.4), IconButton.ICON_CROSS, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.clear_queue"), (b) -> {
             TipDisplayUtil.clearRenderQueue();
         }));
-        this.addButton(new IconButton((int) (this.width*0.5-5), (int) (this.height*0.4), IconButton.ICON_HISTORY, 0xFFFF5340, new TranslationTextComponent(FHMain.MODID + ".tips.gui.reset_unlock"), (b) -> {
+        this.addButton(new IconButton((int) (this.width*0.5-5), (int) (this.height*0.4), IconButton.ICON_HISTORY, 0xFFFF5340, TranslateUtils.translate(FHMain.MODID + ".tips.gui.reset_unlock"), (b) -> {
             UnlockedTipManager.manager.createFile();
         }));
         this.addButton(new IconButton((int) (this.width*0.5+15), (int) (this.height*0.4), IconButton.ICON_BOX_ON, 0xFFC6FCFF, new StringTextComponent("Add a random waypoint"), (b) -> {

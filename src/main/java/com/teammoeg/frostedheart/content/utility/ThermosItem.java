@@ -64,6 +64,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
@@ -102,7 +103,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
                     PotionFluidHandler.addPotionTooltip(fs, tooltip, 1);
                 else if (ft instanceof PotionFluid)
                     ((PotionFluid) ft).addInformation(fs, tooltip);
-                tooltip.add(new TranslationTextComponent("tooltip.watersource.drink_unit").appendString(" : " + this.getUnit() + "mB").mergeStyle(TextFormatting.GRAY));
+                tooltip.add(TranslateUtils.translate("tooltip.watersource.drink_unit").appendString(" : " + this.getUnit() + "mB").mergeStyle(TextFormatting.GRAY));
             });
         }
     }

@@ -45,6 +45,7 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 /**
  * @author LatvianModder, khjxiaogu
@@ -54,7 +55,7 @@ public class EditListDialog<T> extends EditDialog {
         public ButtonAddValue(Panel panel) {
             super(panel);
             setHeight(12);
-            setTitle(TranslateUtils.str("+ ").appendSibling(new TranslationTextComponent("gui.add")));
+            setTitle(TranslateUtils.str("+ ").appendSibling(TranslateUtils.translate("gui.add")));
         }
 
         @Override
@@ -208,12 +209,12 @@ public class EditListDialog<T> extends EditDialog {
         };
 
         scroll = new PanelScrollBar(this, configPanel);
-        buttonAccept = new SimpleButton(this, new TranslationTextComponent("gui.accept"), Icons.ACCEPT, (widget, button) -> {
+        buttonAccept = new SimpleButton(this, TranslateUtils.translate("gui.accept"), Icons.ACCEPT, (widget, button) -> {
             callback.accept(list);
             modified = false;
             close();
         });
-        buttonCancel = new SimpleButton(this, new TranslationTextComponent("gui.cancel"), Icons.CANCEL, (widget, button) -> close());
+        buttonCancel = new SimpleButton(this, TranslateUtils.translate("gui.cancel"), Icons.CANCEL, (widget, button) -> close());
     }
 
     @Override

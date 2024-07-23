@@ -44,6 +44,7 @@ import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 import se.mickelus.tetra.properties.IToolProvider;
@@ -56,7 +57,7 @@ public class CoreSpade extends FHLeveledTool {
         if (player != null && (!(player instanceof FakePlayer))) {// fake players does not deserve XD
             if (!world.isRemote && world.getBlockState(blockpos).getBlock().getTags().contains(otag)) {// early exit 'cause ore found
                 player.sendStatusMessage(
-                        new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey())
+                        TranslateUtils.translate(world.getBlockState(blockpos).getBlock().getTranslationKey())
                                 .mergeStyle(TextFormatting.GOLD),
                         false);
                 return ActionResultType.SUCCESS;
@@ -102,7 +103,7 @@ public class CoreSpade extends FHLeveledTool {
                     IFormattableTextComponent s = TranslateUtils.translateMessage("corespade.ore");
                     for (Entry<String, Integer> f : founded.entrySet()) {
                         if (rnd.nextInt((int) (f.getValue() * corr)) != 0) {
-                            s = s.appendSibling(new TranslationTextComponent(f.getKey())
+                            s = s.appendSibling(TranslateUtils.translate(f.getKey())
                                     .mergeStyle(TextFormatting.GREEN).appendString(","));
                             count++;
                         }

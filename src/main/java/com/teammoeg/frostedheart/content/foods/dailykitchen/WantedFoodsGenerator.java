@@ -30,6 +30,7 @@ import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
 
 class WantedFoodsGenerator {
@@ -70,7 +71,7 @@ class WantedFoodsGenerator {
         for (Item food : foodsEaten) {
             if (wantedFoodsNumber.contains(i) && (isNotBadFood(food)) && !(food instanceof ItemFluidContainer/*Don't eat thermos!*/)) {
                 wantedFoods.add(food);
-                wantedFoodsText.appendSibling(new TranslationTextComponent(food.getTranslationKey())).appendSibling(TranslateUtils.str("  "));
+                wantedFoodsText.appendSibling(TranslateUtils.translate(food.getTranslationKey())).appendSibling(TranslateUtils.str("  "));
             }
             i++;
         }

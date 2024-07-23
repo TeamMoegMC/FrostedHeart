@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.trade;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.util.text.TranslationTextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public enum RelationModifier {
     KILLED_HISTORY("history_killed"),
