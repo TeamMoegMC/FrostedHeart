@@ -2,11 +2,13 @@ buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net' }
         maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
+        maven { url = 'https://maven.parchmentmc.org' }
         mavenCentral()
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: "${forgegradle_version}", changing: true
         classpath group: 'org.spongepowered', name: 'mixingradle', version: "${mixingradle_version}"
+        classpath group: 'org.parchmentmc', name: 'librarian', version: "${librarian_version}"
     }
 }
 
@@ -16,16 +18,19 @@ plugins {
 
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'org.parchmentmc.librarian.forgegradle'
 apply plugin: 'maven-publish'
 apply plugin: 'idea'
-apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
+//apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
+//apply from: 'https://raw.githubusercontent.com/SizableShrimp/ForgeUpdatesRemapper/main/remapper.gradle'
 
 group = 'com.teammoeg'
 version = "${minecraft_version}-${mod_version}"
 archivesBaseName = 'frostedheart'
 compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
-java.toolchain.languageVersion = JavaLanguageVersion.of(16)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
 sourceSets {
     main {
         resources {
@@ -47,7 +52,7 @@ sourceSets {
 //    }
 }
 minecraft {
-    mappings channel: 'official', version: "${minecraft_version}"
+    mappings channel: 'parchment', version: "${parchment_version}-${minecraft_version}"
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     runs {
@@ -126,43 +131,35 @@ sourceSets.main.resources {
 repositories {
     mavenLocal()
     maven {
-        url "https://cursemaven.com"
-        content {
-            includeGroup "curse.maven"
-        }
+        // location of the maven that hosts JEI files before January 2023
+        name = "Progwml6's maven"
+        url = "https://dvs1.progwml6.com/files/maven/"
     }
-    // IE & CT Files
     maven {
-        name = "BlameJared"
+        // location of the maven that hosts JEI files since January 2023
+        name = "Jared's maven"
         url = "https://maven.blamejared.com/"
-        content {
-			excludeGroup "curse.maven"
-		}
     }
-    // JEI and TC Files
     maven {
-        name = "DVS1 Maven FS"
-        url = "https://dvs1.progwml6.com/files/maven"
-        content {
-			excludeGroup "curse.maven"
-		}
+        // location of a maven mirror for JEI files, as a fallback
+        name = "ModMaven"
+        url = "https://modmaven.dev"
     }
+    maven {
+        //location of the maven for mixed mappings, create, registrate, and flywheel
+        name = "tterrag maven"
+        url = "https://maven.tterrag.com/"
+    }
+    maven {
+        //location of the maven for vazkii's mods
+        name "blamejared"
+        url "https://maven.blamejared.com/"
+    }
+
     // Needed for JEI
     maven {
         name = "latvian maven"
         url = "https://maven.latmod.com/"
-        content {
-            includeGroup "mezz.jei"
-            excludeGroup "curse.maven"
-        }
-    }
-	// Location of the maven for Flywheel
-    maven {
-        name = "tterrag maven"
-        url = "https://maven.tterrag.com/"
-        content {
-			excludeGroup "curse.maven"
-		}
     }
     // Needed for Curios API
     maven {
@@ -176,6 +173,7 @@ repositories {
         url "https://maven.architectury.dev/"
         content {
         	includeGroup "me.shedaniel"
+            includeGroup "dev.architectury"
         	excludeGroup "curse.maven"
         }
     }
@@ -187,25 +185,6 @@ repositories {
             excludeGroup "curse.maven"
         }
     }
-    maven {
-        // location of a maven mirror for JEI files, as a fallback
-        name = "ModMaven"
-        url = "https://modmaven.dev"
-    }
-    maven {
-        //location of the maven for mixed mappings, create, registrate, and flywheel
-        name = "tterrag maven"
-        url = "https://maven.tterrag.com/"
-    }
-//    maven {
-//        name = "teammoeg maven"
-//        url = "http://server.teammoeg.com:8888/releases"
-//        content {
-//            includeGroup "gloridifice.watersource"
-//            includeGroup "com.alcatrazescapee.primalwinter"
-//            includeGroup "java.moze_intel"
-//        }
-//    }
     maven {
         name = "TeamMoeg COS Maven"
         url = "https://maven-1301510336.cos.ap-guangzhou.myqcloud.com"
@@ -219,6 +198,12 @@ repositories {
     maven {
         name = "ftbMavenReleases"
         url = "https://maven.ftb.dev/releases"
+    }
+    maven {
+        url "https://www.cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
     }
 }
 
@@ -239,37 +224,41 @@ dependencies {
     // at runtime, use the full JEI jar for Forge
     runtimeOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}"))
 
+    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api")
+    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}")
+
     implementation fg.deobf("me.shedaniel:architectury-forge:${architectury_version}")
     implementation fg.deobf("dev.ftb.mods:ftb-library-forge:${ftb_library_version}")
     implementation fg.deobf("dev.ftb.mods:ftb-teams-forge:${ftb_teams_version}")
     implementation fg.deobf("dev.ftb.mods:ftb-chunks-forge:${ftb_chunks_version}")
 
+    implementation fg.deobf("curse.maven:tetra-289712:5544287")
+    implementation fg.deobf("curse.maven:mutil-351914:4824501")
+    implementation fg.deobf("curse.maven:diet-443570:4813904")
+    implementation fg.deobf("curse.maven:primal-winter-393321:4575861")
+
+    // dead mods:
 //    implementation fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
-//    implementation fg.deobf("curse.maven:diet-443570:3756693")
 //    implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5-TWR')
 //    implementation fg.deobf('curse.maven:Project-Rankine-400704:4086553')
 //    implementation fg.deobf("curse.maven:thermopolium-594107:4005647")
 
+    // no longer used
 //    compileOnly fg.deobf("curse.maven:chisel-235279:3376782")
 //    compileOnly fg.deobf("curse.maven:ctm-267602:3137659")
 //    implementation fg.deobf("curse.maven:kiwi-303657:3377053")
 //    compileOnly fg.deobf("curse.maven:snowrealmagic-308663:3295579")
-//    implementation fg.deobf("curse.maven:tetra-289712:3585032")
-//    implementation fg.deobf("curse.maven:mgui-351914:3456505")
 //    compileOnly fg.deobf("curse.maven:selene-499980:3517008")
 //    compileOnly fg.deobf("curse.maven:age-api-353992:3176394")
 //    compileOnly fg.deobf("curse.maven:neolithic-world-534605:3937806")
 //    compileOnly fg.deobf("curse.maven:supplementaries-412082:3650035")
 //    compileOnly fg.deobf("curse.maven:engineers-decor-313866:3566177")
 //    compileOnly fg.deobf("curse.maven:projecte-226410:3223221")
-//    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2:api")
-//    compileOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:1605.3.6-build.98")
 
-//    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2")
 
     // FG5 requires 0.8.3
-    annotationProcessor "org.spongepowered:mixin:0.8.2:processor"
-    testAnnotationProcessor "org.spongepowered:mixin:0.8.2:processor"
+    annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
+    testAnnotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
 }
 
 jar {
