@@ -41,14 +41,14 @@ import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import net.minecraft.block.Block;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.resources.ResourcePackType;
+import net.minecraft.server.packs.PackType;
 import net.minecraft.state.EnumProperty;
 import net.minecraft.state.Property;
 import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.Direction;
+import net.minecraft.core.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.util.math.vector.Vec3i;
 import net.minecraftforge.client.model.generators.BlockModelBuilder;
 import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.client.model.generators.ModelBuilder;
@@ -58,10 +58,10 @@ import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.common.data.ExistingFileHelper.ResourceType;
 
 public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
-	protected static final ResourceType MODEL = new ResourceType(ResourcePackType.CLIENT_RESOURCES, ".json", "models");
-	private static final List<Vector3i> CUBE_THREE = BlockPos.getAllInBox(-1, -1, -1, 1, 1, 1)
+	protected static final ResourceType MODEL = new ResourceType(PackType.CLIENT_RESOURCES, ".json", "models");
+	private static final List<Vec3i> CUBE_THREE = BlockPos.getAllInBox(-1, -1, -1, 1, 1, 1)
 			.map(BlockPos::toImmutable).collect(Collectors.toList());
-	private static final List<Vector3i> CUBE_TWO = BlockPos.getAllInBox(0, 0, -1, 1, 1, 0).map(BlockPos::toImmutable)
+	private static final List<Vec3i> CUBE_TWO = BlockPos.getAllInBox(0, 0, -1, 1, 1, 0).map(BlockPos::toImmutable)
 			.collect(Collectors.toList());
 
 	public FHMultiblockStatesProvider(DataGenerator gen, ExistingFileHelper exFileHelper) {
@@ -203,7 +203,7 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 	private ModelFile split(ModelFile loc, TemplateMultiblock mb, boolean mirror, boolean dynamic) {
 		UnaryOperator<BlockPos> transform = UnaryOperator.identity();
 		if (mirror) {
-			Vector3i size = mb.getSize(null);
+			Vec3i size = mb.getSize(null);
 			transform = p -> new BlockPos(size.getX() - p.getX() - 1, p.getY(), p.getZ());
 		}
 		return split(loc, mb, transform, dynamic);
@@ -211,8 +211,8 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 
 	private ModelFile split(ModelFile name, TemplateMultiblock multiblock, UnaryOperator<BlockPos> transform,
 			boolean dynamic) {
-		final Vector3i offset = multiblock.getMasterFromOriginOffset();
-		Stream<Vector3i> partsStream = multiblock.getStructure(null).stream().filter(info -> !info.state.isAir())
+		final Vec3i offset = multiblock.getMasterFromOriginOffset();
+		Stream<Vec3i> partsStream = multiblock.getStructure(null).stream().filter(info -> !info.state.isAir())
 				.map(info -> info.pos).map(transform).map(p -> p.subtract(offset));
 		return split(name, partsStream.collect(Collectors.toList()), dynamic);
 	}

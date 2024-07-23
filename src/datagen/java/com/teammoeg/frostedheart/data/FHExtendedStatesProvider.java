@@ -33,16 +33,16 @@ import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import blusunrize.immersiveengineering.data.DataGenUtils;
 import blusunrize.immersiveengineering.data.models.IEOBJBuilder;
 import blusunrize.immersiveengineering.data.models.SplitModelBuilder;
-import net.minecraft.block.Block;
-import net.minecraft.block.SlabBlock;
-import net.minecraft.block.StairsBlock;
-import net.minecraft.client.renderer.RenderState;
+import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.resources.ResourcePackType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.client.model.generators.BlockModelBuilder;
 import net.minecraftforge.client.model.generators.BlockStateProvider;
 import net.minecraftforge.client.model.generators.ConfiguredModel;
@@ -51,7 +51,7 @@ import net.minecraftforge.client.model.generators.loaders.OBJLoaderBuilder;
 import net.minecraftforge.common.data.ExistingFileHelper;
 
 public abstract class FHExtendedStatesProvider extends BlockStateProvider {
-    protected static final List<Vector3i> COLUMN_THREE = ImmutableList.of(BlockPos.ZERO, BlockPos.ZERO.up(), BlockPos.ZERO.up(2));
+    protected static final List<Vec3i> COLUMN_THREE = ImmutableList.of(BlockPos.ZERO, BlockPos.ZERO.up(), BlockPos.ZERO.up(2));
 
     protected static final Map<ResourceLocation, String> generatedParticleTextures = new HashMap<>();
     protected final ExistingFileHelper existingFileHelper;
@@ -121,18 +121,18 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
         itemModel(b, mainModel);
     }
 
-    protected void stairs(StairsBlock b, ResourceLocation texture)
+    protected void stairs(StairBlock b, ResourceLocation texture)
     {
         stairs(b, texture, texture, texture);
     }
 
-    protected void stairs(StairsBlock b, ResourceLocation side, ResourceLocation top, ResourceLocation bottom)
+    protected void stairs(StairBlock b, ResourceLocation side, ResourceLocation top, ResourceLocation bottom)
     {
         String baseName = name(b);
         ModelFile stairs = models().stairs(baseName, side, bottom, top);
         ModelFile stairsInner = models().stairsInner(baseName+"_inner", side, bottom, top);
         ModelFile stairsOuter = models().stairsOuter(baseName+"_outer", side, bottom, top);
-        stairsBlock(b, stairs, stairsInner, stairsOuter);
+        StairBlock(b, stairs, stairsInner, stairsOuter);
         itemModel(b, stairs);
     }
 
@@ -181,7 +181,7 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
         return ret;
     }
 
-    protected BlockModelBuilder splitModel(String name, ModelFile model, List<Vector3i> parts, boolean dynamic)
+    protected BlockModelBuilder splitModel(String name, ModelFile model, List<Vec3i> parts, boolean dynamic)
     {
         BlockModelBuilder result = models().withExistingParent(name, mcLoc("block"))
                 .customLoader(SplitModelBuilder::begin)
@@ -193,17 +193,17 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
         return result;
     }
 
-    protected ModelFile split(ModelFile baseModel, List<Vector3i> parts, boolean dynamic)
+    protected ModelFile split(ModelFile baseModel, List<Vec3i> parts, boolean dynamic)
     {
         return splitModel(baseModel.getLocation().getPath()+"_split", baseModel, parts, dynamic);
     }
 
-    protected ModelFile split(ModelFile baseModel, List<Vector3i> parts)
+    protected ModelFile split(ModelFile baseModel, List<Vec3i> parts)
     {
         return split(baseModel, parts, false);
     }
 
-    protected ModelFile splitDynamic(ModelFile baseModel, List<Vector3i> parts)
+    protected ModelFile splitDynamic(ModelFile baseModel, List<Vec3i> parts)
     {
         return split(baseModel, parts, true);
     }
@@ -230,7 +230,7 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
     {
         String suffix = name.getPath().contains(".")?"": ".json";
         Preconditions.checkState(
-                existingFileHelper.exists(name, ResourcePackType.CLIENT_RESOURCES, suffix, "models"),
+                existingFileHelper.exists(name, PackType.CLIENT_RESOURCES, suffix, "models"),
                 "Model \""+name+"\" does not exist");
     }
 
@@ -257,19 +257,19 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
         return (int)((dir.getHorizontalAngle()+offset)%360);
     }
 
-    protected static String getName(RenderState state)
+    protected static String getName(RenderStateShard state)
     {
         //TODO clean up/speed up
         try
         {
             // Datagen should only ever run in a deobf environment, so no need to use unreadable SRG names here
             // This is a workaround for the fact that client-side Mixins are not applied in datagen
-            Field f = RenderState.class.getDeclaredField("name");
+            Field f = RenderStateShard.class.getDeclaredField("name");
             f.setAccessible(true);
             return (String)f.get(state);
         } catch(Exception e)
         {
-            throw new RuntimeException("Failed to get name of RenderState instance", e);
+            throw new RuntimeException("Failed to get name of RenderStateShard instance", e);
         }
     }
 }

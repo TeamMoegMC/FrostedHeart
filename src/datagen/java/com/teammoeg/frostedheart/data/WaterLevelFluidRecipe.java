@@ -4,13 +4,13 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import gloridifice.watersource.registry.RecipeSerializersRegistry;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.resources.ResourceLocation;
 
-public class WaterLevelFluidRecipe implements IFinishedRecipe {
+public class WaterLevelFluidRecipe implements FinishedRecipe {
 	ResourceLocation rid;
 	Ingredient igd;
 	int wl,ws;
@@ -28,30 +28,30 @@ public class WaterLevelFluidRecipe implements IFinishedRecipe {
 	}
 
 	@Override
-	public void serialize(JsonObject json) {
-		json.add("ingredient",igd.serialize());
+	public void serializeRecipeData(JsonObject json) {
+		json.add("ingredient",igd.toJson());
 		json.addProperty("waterLevel", wl);
 		json.addProperty("waterSaturationLevel",ws);
 		json.addProperty("fluid", RegistryUtils.getRegistryName(f).toString());
 	}
 
 	@Override
-	public ResourceLocation getID() {
+	public ResourceLocation getId() {
 		return rid;
 	}
 
 	@Override
-	public IRecipeSerializer<?> getSerializer() {
+	public RecipeSerializer<?> getType() {
 		return RecipeSerializersRegistry.WATER_LEVEL_FLUID_RECIPE_SERIALIZER.get();
 	}
 
 	@Override
-	public JsonObject getAdvancementJson() {
+	public JsonObject serializeAdvancement() {
 		return null;
 	}
 
 	@Override
-	public ResourceLocation getAdvancementID() {
+	public ResourceLocation getAdvancementId() {
 		return null;
 	}
 
