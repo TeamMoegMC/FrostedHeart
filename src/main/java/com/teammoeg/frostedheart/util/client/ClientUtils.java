@@ -28,6 +28,7 @@ import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.IScreenWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.particles.IParticleData;
 import net.minecraft.particles.ParticleTypes;
@@ -55,6 +56,9 @@ public class ClientUtils {
     }
     public static void bindTexture(ResourceLocation texture) {
     	mc().getTextureManager().bindTexture(texture);
+    }
+    public static FontRenderer font() {
+        return mc().fontRenderer;
     }
     public static void refreshResearchGui() {
         Screen cur = mc().currentScreen;
@@ -132,5 +136,17 @@ public class ClientUtils {
         worldIn.addParticle(ParticleTypes.FLAME, pos.getX() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), -0.01D, 0D, 0.0D);
         worldIn.addParticle(ParticleTypes.FLAME, pos.getX() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0D, 0.01D);
         worldIn.addParticle(ParticleTypes.FLAME, pos.getX() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0D, -0.01D);
+    }
+
+    public static int screenWidth() {
+        return mc().getMainWindow().getScaledWidth();
+    }
+
+    public static int screenHeight() {
+        return mc().getMainWindow().getScaledHeight();
+    }
+
+    public static ResourceLocation getDimLocation() {
+        return mc().world.getDimensionKey().getLocation();
     }
 }

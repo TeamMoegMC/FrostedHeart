@@ -52,14 +52,16 @@ import com.teammoeg.frostedheart.content.scenario.network.ServerScenarioCommandP
 import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioActPacket;
 import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioScenePacket;
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
-import com.teammoeg.frostedheart.content.tips.network.CustomTipPacket;
-import com.teammoeg.frostedheart.content.tips.network.SingleTipPacket;
+import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipPacket;
+import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
+import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.content.town.TeamTownDataS2CPacket;
 import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.content.trade.network.BargainResponse;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeUpdatePacket;
 
+import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.ModList;
@@ -165,8 +167,13 @@ public class FHNetwork {
         // Generator Messages
         registerMessage("generator_upgrade", GeneratorModifyPacket.class);
 
-        registerMessage("single_tip", SingleTipPacket.class);
-        registerMessage("custom_tip", CustomTipPacket.class);
+        // Tip Messages
+        registerMessage("single_tip", DisplayTipPacket.class);
+        registerMessage("custom_tip", DisplayCustomTipPacket.class);
+
+        // Waypoint Messages
+        registerMessage("waypoint_sync", WaypointSyncPacket.class);
+        registerMessage("waypoint_sync_all", WaypointSyncAllPacket.class);
     }
 
     public static void send(PacketDistributor.PacketTarget target, FHMessage message) {

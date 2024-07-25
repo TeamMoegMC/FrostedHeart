@@ -1,17 +1,13 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.tips.client.UnlockedTipManager;
+import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
+import com.teammoeg.frostedheart.content.tips.TipLockManager;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
-import com.teammoeg.frostedheart.content.tips.client.util.TipDisplayUtil;
-import com.teammoeg.frostedheart.content.tips.client.waypoint.WaypointManager;
+import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.client.FHColorHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-
-import java.util.Random;
-import java.util.UUID;
 
 public class DebugScreen extends Screen {
     public DebugScreen() {
@@ -20,24 +16,40 @@ public class DebugScreen extends Screen {
 
     @Override
     public void init() {
-        this.addButton(new IconButton((int) (this.width*0.5-45), (int) (this.height*0.4), IconButton.ICON_TRASH_CAN, 0xFFC6FCFF, new TranslationTextComponent(FHMain.MODID + ".tips.gui.clear_cache"), (b) -> {
-            TipDisplayUtil.clearCache();
+//        Entity entity = Minecraft.getInstance().pointedEntity;
+//        if (entity != null) {
+//            EntityWaypoint w = new EntityWaypoint(entity, FHColorHelper.CYAN, FHColorHelper.RED);
+//            WaypointManager.putWaypoint(w);
+//        }
+
+        this.addButton(new IconButton((int) (this.width*0.5-65), (int) (this.height*0.4), IconButton.ICON_TRASH_CAN, FHColorHelper.CYAN, TranslateUtils.translateGui("debug.clear_cache"), (b) -> {
+            TipDisplayManager.clearCache();
         }));
-        this.addButton(new IconButton((int) (this.width*0.5-25), (int) (this.height*0.4), IconButton.ICON_CROSS, 0xFFC6FCFF, new TranslationTextComponent(FHMain.MODID + ".tips.gui.clear_queue"), (b) -> {
-            TipDisplayUtil.clearRenderQueue();
+        this.addButton(new IconButton((int) (this.width*0.5-45), (int) (this.height*0.4), IconButton.ICON_CROSS, FHColorHelper.CYAN, TranslateUtils.translateGui("debug.clear_queue"), (b) -> {
+            TipDisplayManager.clearRenderQueue();
         }));
-        this.addButton(new IconButton((int) (this.width*0.5-5), (int) (this.height*0.4), IconButton.ICON_HISTORY, 0xFFFF5340, new TranslationTextComponent(FHMain.MODID + ".tips.gui.reset_unlock"), (b) -> {
-            UnlockedTipManager.manager.createFile();
+        this.addButton(new IconButton((int) (this.width*0.5-25), (int) (this.height*0.4), IconButton.ICON_HISTORY, FHColorHelper.RED, TranslateUtils.translateGui("debug.reset_unlock"), (b) -> {
+            TipLockManager.manager.createFile();
         }));
-        this.addButton(new IconButton((int) (this.width*0.5+15), (int) (this.height*0.4), IconButton.ICON_BOX_ON, 0xFFC6FCFF, new StringTextComponent("Add a random waypoint"), (b) -> {
-            Random random = new Random();
-            String uuid = UUID.randomUUID().toString();
-            WaypointManager.create((random.nextFloat()-0.5F)*256, (random.nextFloat()-0.5F)*128+128, (random.nextFloat()-0.5F)*256, uuid, false);
-            WaypointManager.setFocus(random.nextFloat() > 0.5F, uuid);
-        }));
-        this.addButton(new IconButton((int) (this.width*0.5+35), (int) (this.height*0.4), IconButton.ICON_BOX, 0xFFFF5340, new StringTextComponent("Remove all waypoint"), (b) -> {
-            WaypointManager.removeAll();
-        }));
+//        this.addButton(new IconButton((int) (this.width*0.5-5), (int) (this.height*0.4), IconButton.ICON_BOX_ON, FHColorHelper.CYAN, TranslateUtils.translateGui("debug.random_waypoint"), (b) -> {
+//            Random random = new Random();
+//            String uuid = UUID.randomUUID().toString();
+//            waypoint waypoint = new waypoint(new Vector3f((random.nextFloat()-0.5F)*256, (random.nextFloat()-0.5F)*128+128, (random.nextFloat()-0.5F)*256), random.nextInt(), uuid);
+//            WaypointManager.getManager()
+//        }));
+//        this.addButton(new IconButton((int) (this.width*0.5+15), (int) (this.height*0.4), IconButton.ICON_BOX, FHColorHelper.RED, TranslateUtils.translateGui("debug.remove_all_waypoint"), (b) -> {
+//            WaypointManager.removeAll();
+//        }));
+//        this.addButton(new IconButton((int) (this.width*0.5+35), (int) (this.height*0.4), IconButton.ICON_BOX_ON, 0xFFFFDA64, TranslateUtils.translateWaypoint("sun_station"), (b) -> {
+//            WaypointManager.putWaypoint(new SunStationWaypoint());
+//        }));
+//        this.addButton(new IconButton((int) (this.width*0.5+55), (int) (this.height*0.4), IconButton.ICON_SIGHT, FHColorHelper.CYAN, TranslateUtils.translateGui("debug.entity_target"), (b) -> {
+//            Entity entity2 = Minecraft.getInstance().pointedEntity;
+//            if (entity2 != null) {
+//                EntityWaypoint w = new EntityWaypoint(entity2, FHColorHelper.CYAN, FHColorHelper.RED);
+//                WaypointManager.putWaypoint(w);
+//            }
+//        }));
     }
 
     @Override

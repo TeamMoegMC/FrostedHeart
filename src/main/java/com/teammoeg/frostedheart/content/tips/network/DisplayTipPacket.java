@@ -1,20 +1,20 @@
 package com.teammoeg.frostedheart.content.tips.network;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.content.tips.client.util.TipDisplayUtil;
+import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class SingleTipPacket implements FHMessage {
+public class DisplayTipPacket implements FHMessage {
     private final String ID;
 
-    public SingleTipPacket(PacketBuffer buffer) {
+    public DisplayTipPacket(PacketBuffer buffer) {
         ID = buffer.readString(Short.MAX_VALUE);
     }
 
-    public SingleTipPacket(String ID) {
+    public DisplayTipPacket(String ID) {
         this.ID = ID;
     }
 
@@ -24,7 +24,7 @@ public class SingleTipPacket implements FHMessage {
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> TipDisplayUtil.displayTip(ID, false));
+        context.get().enqueueWork(() -> TipDisplayManager.displayTip(ID, false));
         context.get().setPacketHandled(true);
     }
 }

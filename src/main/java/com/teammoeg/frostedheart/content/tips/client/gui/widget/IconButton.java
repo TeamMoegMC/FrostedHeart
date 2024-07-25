@@ -14,20 +14,37 @@ public class IconButton extends Button {
     public static final Point ICON_MOUSE_LEFT    = new Point(0 ,0 );
     public static final Point ICON_MOUSE_RIGHT   = new Point(10,0 );
     public static final Point ICON_MOUSE_MIDDLE  = new Point(20,0 );
+    public static final Point ICON_SIGHT         = new Point(30,0 );
+    public static final Point ICON_QUESTION_MARK = new Point(0 ,10);
     public static final Point ICON_LOCK          = new Point(10,10);
+    public static final Point ICON_CONTINUE      = new Point(20,10);
+    public static final Point ICON_FORBID        = new Point(30,10);
     public static final Point ICON_RIGHT         = new Point(40,10);
     public static final Point ICON_DOWN          = new Point(50,10);
     public static final Point ICON_LEFT          = new Point(60,10);
     public static final Point ICON_TOP           = new Point(70,10);
+    public static final Point ICON_TRADE         = new Point(0 ,20);
+    public static final Point ICON_GIVE          = new Point(10,20);
+    public static final Point ICON_GAIN          = new Point(20,20);
+    public static final Point ICON_LEAVE         = new Point(30,20);
     public static final Point ICON_BOX           = new Point(0 ,30);
     public static final Point ICON_BOX_ON        = new Point(10,30);
     public static final Point ICON_CROSS         = new Point(20,30);
     public static final Point ICON_HISTORY       = new Point(30,30);
+    public static final Point ICON_LIST          = new Point(40,30);
     public static final Point ICON_TRASH_CAN     = new Point(50,30);
+    public static final Point ICON_CHECK         = new Point(60,30);
+    public static final Point ICON_FOLDER        = new Point(70,30);
+    public static final Point ICON_LEFT_SLIDE    = new Point(0 ,40);
+    public static final Point ICON_RIGHT_SLIDE   = new Point(0 ,50);
+    public static final Point ICON_WRENCH        = new Point(0 ,70);
 
     public final Point currentIcon;
     public final int color;
 
+    /**
+     * @param icon 按钮的图标，例如 {@link #ICON_LOCK}
+     */
     public IconButton(int x, int y, Point icon, int color, ITextComponent title, IPressable pressedAction) {
         super(x, y, 10, 10, title, pressedAction);
         this.color = color;

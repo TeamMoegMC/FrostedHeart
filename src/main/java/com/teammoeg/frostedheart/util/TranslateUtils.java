@@ -110,4 +110,12 @@ public class TranslateUtils {
     public static TranslationTextComponent translateTooltip(String name, Object... args) {
         return new TranslationTextComponent("tooltip." + FHMain.MODID + "." + name, args);
     }
+
+    public static TranslationTextComponent translateTips(String name, Object... args) {
+        return new TranslationTextComponent("tips." + FHMain.MODID + "." + name, args);
+    }
+
+    public static TranslationTextComponent translateWaypoint(String name, Object... args) {
+        return new TranslationTextComponent("waypoint." + FHMain.MODID + "." + name, args);
+    }
 }

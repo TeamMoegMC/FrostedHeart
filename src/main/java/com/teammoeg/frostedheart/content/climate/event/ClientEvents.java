@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.climate.event;
 
+import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.FHSounds;
@@ -25,7 +26,7 @@ public class ClientEvents {
      */
     @SubscribeEvent
     public static void addBreathParticles(TickEvent.PlayerTickEvent event) {
-        if (event.side == LogicalSide.CLIENT && event.phase == TickEvent.Phase.START
+        if (event.side == LogicalSide.CLIENT && FHConfig.CLIENT.enableBreathParticle.get() && event.phase == TickEvent.Phase.START
                 && event.player instanceof ClientPlayerEntity) {
             ClientPlayerEntity player = (ClientPlayerEntity) event.player;
             if(ClientUtils.mc().currentScreen instanceof MasterGeneratorScreen&&player.ticksExisted%20==0) {

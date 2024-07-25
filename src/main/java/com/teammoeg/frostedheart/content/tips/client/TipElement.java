@@ -1,7 +1,9 @@
 package com.teammoeg.frostedheart.content.tips.client;
 
 import com.google.gson.*;
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.tips.TipLockManager;
+import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.client.FHColorHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -18,12 +20,13 @@ public class TipElement implements Cloneable {
     private static final Logger LOGGER = LogManager.getLogger();
     public List<ITextComponent> contents = new ArrayList<>();
     public String ID = "";
+    public String next = "";
     public boolean alwaysVisible = false;
     public boolean onceOnly = false;
     public boolean hide = false;
     public boolean history = false;
     public int visibleTime = 30000;
-    public int fontColor = 0xFFC6FCFF;
+    public int fontColor = FHColorHelper.CYAN;
     public int BGColor = 0xFF000000;
 
     public TipElement() {
@@ -37,11 +40,10 @@ public class TipElement implements Cloneable {
         LOGGER.debug("Loading tip '{}'", ID);
         this.ID = ID;
 
-        File filePath = new File(UnlockedTipManager.TIPS, ID + ".json");
+        File filePath = new File(TipLockManager.TIPS, ID + ".json");
         if (!filePath.exists()) {
             LOGGER.error("File does not exists '{}'", filePath);
             replaceToError(filePath, "not_exists");
-            contents.add(new TranslationTextComponent("tip." + FHMain.MODID + ".error.desc"));
             return;
         }
 
@@ -67,18 +69,18 @@ public class TipElement implements Cloneable {
                 return;
             }
 
-            if (jsonObject.has("fontColor"      )) {fontColor = Integer.parseUnsignedInt(jsonObject.get("fontColor").getAsString(), 16);}
-            if (jsonObject.has("backgroundColor")) {BGColor = Integer.parseUnsignedInt(jsonObject.get("backgroundColor").getAsString(), 16);}
+            if (jsonObject.has("fontColor"      )) {fontColor     = Integer.parseUnsignedInt(jsonObject.get("fontColor").getAsString(), 16);}
+            if (jsonObject.has("backgroundColor")) {BGColor       = Integer.parseUnsignedInt(jsonObject.get("backgroundColor").getAsString(), 16);}
             if (jsonObject.has("alwaysVisible"  )) {alwaysVisible = jsonObject.get("alwaysVisible").getAsBoolean();}
-            if (jsonObject.has("onceOnly"       )) {onceOnly = jsonObject.get("onceOnly").getAsBoolean();}
-            if (jsonObject.has("hide"           )) {hide = jsonObject.get("hide").getAsBoolean();}
-            if (jsonObject.has("visibleTime"    )) {visibleTime = Math.max(jsonObject.get("visibleTime").getAsInt(), 0);}
+            if (jsonObject.has("onceOnly"       )) {onceOnly      = jsonObject.get("onceOnly").getAsBoolean();}
+            if (jsonObject.has("hide"           )) {hide          = jsonObject.get("hide").getAsBoolean();}
+            if (jsonObject.has("visibleTime"    )) {visibleTime   = Math.max(jsonObject.get("visibleTime").getAsInt(), 0);}
+            if (jsonObject.has("next"           )) {next          = jsonObject.get("next").getAsString();}
             history = true;
 
         } catch (JsonSyntaxException e) {
             LOGGER.error("Invalid JSON file format '{}'", filePath);
             replaceToError(filePath, "invalid");
-            contents.add(new TranslationTextComponent("tips." + FHMain.MODID + ".error.desc"));
         } catch (Exception e) {
             LOGGER.error("Unable to load file '{}'", filePath);
             replaceToError(filePath, "load");
@@ -87,9 +89,10 @@ public class TipElement implements Cloneable {
 
     public void replaceToError(File filePath, String type) {
         contents = new ArrayList<>();
-        contents.add(new TranslationTextComponent("tips." + FHMain.MODID + ".error." + type));
+        contents.add(TranslateUtils.translateTips("error." + type));
         contents.add(new StringTextComponent(filePath.getPath()));
-        fontColor = 0xFFFF5340;
+        contents.add(TranslateUtils.translateTips("error.desc"));
+        fontColor = FHColorHelper.RED;
         BGColor = 0xFF000000;
         alwaysVisible = true;
         onceOnly = false;

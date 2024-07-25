@@ -24,10 +24,11 @@ import static net.minecraft.util.text.TextFormatting.*;
 import java.util.List;
 import java.util.Map;
 
+import com.teammoeg.frostedheart.content.tips.TipLockManager;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
-import com.teammoeg.frostedheart.content.tips.client.UnlockedTipManager;
-import com.teammoeg.frostedheart.content.tips.client.util.TipDisplayUtil;
-import net.minecraft.client.gui.screen.OptionsSoundsScreen;
+import com.teammoeg.frostedheart.content.waypoint.WaypointRenderer;
+import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
+import com.teammoeg.frostedheart.util.client.RenderHelper;
 import net.minecraftforge.client.event.*;
 import org.lwjgl.glfw.GLFW;
 
@@ -76,7 +77,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.IReorderingProcessor;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
@@ -343,6 +343,8 @@ public class ClientEvents {
                     FrostedHud.renderFrozenVignette(stack, anchorX, anchorY, mc, renderViewPlayer);
                 if (FrostedHud.renderHeatVignette)
                     FrostedHud.renderHeatVignette(stack, anchorX, anchorY, mc, renderViewPlayer);
+                if (FrostedHud.renderWaypoint)
+                    WaypointRenderer.render(stack);
 
 
             }
@@ -508,7 +510,7 @@ public class ClientEvents {
         }
     }    @SuppressWarnings({"resource", "unchecked", "rawtypes"})
 
-    
+
     @SubscribeEvent
     public void onWorldUnLoad(Unload event) {
     	
@@ -579,42 +581,45 @@ public class ClientEvents {
      */
 
     @SubscribeEvent
+    public static void onWorldRender(RenderWorldLastEvent event) {
+        //渲染信息中获取的投影矩阵没有包含行走时的视角晃动
+        RenderHelper.projectionMatrix = event.getProjectionMatrix();
+    }
+
+    @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-        TipDisplayUtil.clearRenderQueue();
-        TipDisplayUtil.displayTip("_default", false);
-        TipDisplayUtil.displayTip("_default2", false);
-        if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) == 0) {
-            TipDisplayUtil.displayTip("_music_warning", false);
-        }
+        TipDisplayManager.clearRenderQueue();
+        TipDisplayManager.displayTip("default", false);
+        TipDisplayManager.displayTip("default2", false);
+//        if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) == 0) {
+//            TipDisplayManager.displayTip("music_warning", false);
+//        }
     }
 
     @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        TipDisplayUtil.clearRenderQueue();
+        TipDisplayManager.clearRenderQueue();
+        WaypointRenderer.clear();
     }
 
     @SubscribeEvent
     public static void onGUIOpen(GuiOpenEvent event) {
         if (event.getGui() instanceof MainMenuScreen) {
-            if (!UnlockedTipManager.error.isEmpty()) {
+            if (!TipLockManager.errorType.isEmpty()) {
                 TipElement ele = new TipElement();
-                ele.replaceToError(UnlockedTipManager.UNLOCKED_FILE, UnlockedTipManager.error);
-                TipDisplayUtil.displayTip(ele, true);
-                UnlockedTipManager.error = "";
+                ele.replaceToError(TipLockManager.UNLOCKED_FILE, TipLockManager.errorType);
+                TipDisplayManager.displayTip(ele, true);
+                TipLockManager.errorType = "";
             }
+        }
+    }
 
-//            if (...如果有新版本) {
-//              TipHandler.displayTip("update", false);
+//    @SubscribeEvent
+//    public static void onGUIRender(GuiScreenEvent event) {
+//        if (event.getGui() instanceof OptionsSoundsScreen) {
+//            if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) <= 0) {
+//                TipDisplayManager.displayTip("music_warning", false);
 //            }
-        }
-    }
-
-    @SubscribeEvent
-    public static void onGUIRender(GuiScreenEvent event) {
-        if (event.getGui() instanceof OptionsSoundsScreen) {
-            if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) <= 0) {
-                TipDisplayUtil.displayTip("_music_warning", false);
-            }
-        }
-    }
+//        }
+//    }
 }

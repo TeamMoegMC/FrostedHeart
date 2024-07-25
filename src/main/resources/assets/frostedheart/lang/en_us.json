@@ -459,6 +459,12 @@
   "tooltip.frostedheart.research_unlockable": "Required Research: %s",
   "manual.frostedheart.main": "Generators",
 
+  "waypoint.frostedheart.sun_station": "Sun Station",
+  "waypoint.frostedheart.distance": "Distance: %d blocks",
+  "waypoint.frostedheart.position": "[X: %s, Y: %s, Z: %s]",
+  "waypoint.frostedheart.entity_health": "❤ %s / %s",
+  "waypoint.frostedheart.lost_target": "⚠ Target lost",
+
   "tips.frostedheart.error.load": "[Error] Unable to load file",
   "tips.frostedheart.error.save": "[Error] Unable to save file",
   "tips.frostedheart.error.save_desc": "An unknown error occurred while saving the file",
@@ -468,11 +474,14 @@
   "tips.frostedheart.error.desc": "Please verify whether the Modpack has been installed successfully or report this issue",
   "tips.frostedheart.too_long": "This tip appears excessively long, please review the list of unlocked tips",
 
-  "frostedheart.tips.gui.close": "Close",
-  "frostedheart.tips.gui.pin": "Pinned to the right HUD",
-  "frostedheart.tips.gui.clear_cache": "Clear tip cache (Read from the file again)",
-  "frostedheart.tips.gui.clear_queue": "Clear tip render queue",
-  "frostedheart.tips.gui.reset_unlock": "Reset unlocked tip",
+  "gui.frostedheart.tip_list.close": "Close",
+  "gui.frostedheart.tip_list.pin": "Pinned to the right HUD",
+  "gui.frostedheart.debug.clear_cache": "Clear tip cache (Read from the file again)",
+  "gui.frostedheart.debug.clear_queue": "Clear tip render queue",
+  "gui.frostedheart.debug.reset_unlock": "Reset unlocked tip",
+  "gui.frostedheart.debug.entity_target": "Create a entity target waypoint",
+  "gui.frostedheart.debug.random_waypoint": "Create a random waypoint",
+  "gui.frostedheart.debug.remove_all_waypoint": "Remove all waypoints",
 
   "tips.frostedheart.empty.title": "Oops, there's nothing here",
 

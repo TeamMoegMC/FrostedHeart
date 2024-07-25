@@ -44,6 +44,7 @@ import com.teammoeg.frostedheart.content.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.foods.dailykitchen.DailyKitchen;
+import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
@@ -435,6 +436,8 @@ public class CommonEvents {
             	FHNetwork.send(currentPlayer,new FHDatapackSyncPacket(type));
             FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayerEntity) event.getEntity())));
             FHCapabilities.CLIMATE_DATA.getCapability(serverWorld).ifPresent((cap) -> FHNetwork.send(currentPlayer,new FHClimatePacket(cap)));
+
+            FHNetwork.send(currentPlayer, new WaypointSyncAllPacket((ServerPlayerEntity) event.getPlayer()));
             //System.out.println("=x-x=");
             //System.out.println(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS.getValue(new ResourceLocation(FHMain.MODID,"add_loot")));
         }

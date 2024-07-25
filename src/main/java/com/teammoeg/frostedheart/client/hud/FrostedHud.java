@@ -221,6 +221,7 @@ public class FrostedHud {
     public static boolean renderForecast = true;
     public static boolean renderFrozenVignette = true;
     public static boolean renderHeatVignette = true;
+    public static boolean renderWaypoint = true;
 	public static float smoothedBody;
     static final ResourceLocation HUD_ELEMENTS = new ResourceLocation(FHMain.MODID, "textures/gui/hud/hudelements.png");
     // static final ResourceLocation FROZEN_OVERLAY_PATH = new
@@ -867,6 +868,9 @@ public class FrostedHud {
         renderFrozenOverlay = FHConfig.CLIENT.enableFrozenOverlay.get() && renderHealth && bt <= -0.5;
         renderFrozenVignette = FHConfig.CLIENT.enableFrozenVignette.get() && renderHealth && bt <= -0.5;
         renderHeatVignette = FHConfig.CLIENT.enableHeatVignette.get() && renderHealth && bt >= 0.5;
+
+        // Waypoint
+        renderWaypoint = FHConfig.CLIENT.enableWaypoint.get();
 
         // Forecast
         boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();

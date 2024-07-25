@@ -10,7 +10,7 @@
   "block.frostedheart.fluorite_ore": "萤石矿",
   "block.frostedheart.generator": "初级能量塔",
   "tetra/schematic/single/head/core_spade/basic_core_spade.name": "探铲头",
-  
+
   "tetra/schematic/single/head/core_spade/basic_core_spade.description": "使用给定材料制作一个探铲，它可以很有用的探测地下岩层和矿物信息。",
   "tetra/schematic/single/head/core_spade/basic_core_spade.slot1": "头部材料",
   "tetra/schematic/single/shared_head/hone_core_spade_tier_1.description": "打磨探测工具，使得它的范围增加。",
@@ -23,14 +23,14 @@
   "tetra/schematic/single/shared_head/hone_core_spade_corr_3.name": "打磨：探测准确率 III",
   "tetra.improvement.head_hone/core_spade_tier.name" : "打磨：探测范围",
   "tetra.improvement.head_hone/core_spade_corr.name" : "打磨：探测准确率",
-  
+
   "tetra.module.single/basic_core_spade.item_name": "探铲",
   "tetra.module.single/basic_core_spade.name": "探铲头",
   "tetra.module.single/basic_core_spade.description": "一个基础的探铲头，它可以很有用的探测地下岩层和矿物信息。",
   "tetra.module.single/basic_core_spade.material_name": "%s 探铲",
   "tetra.variant.basic_core_spade.item_name":"探铲",
   "tetra.module.single/basic_core_spade.prefix": "%s",
-  
+
   "tetra/schematic/single/head/pro_pick/basic_pro_pick.name": "探矿镐头",
 
   "tetra/schematic/single/head/pro_pick/basic_pro_pick.description": "使用给定材料制作一个探镐，它可以很有用的探测周围矿物信息。",
@@ -49,16 +49,16 @@
   "tetra/schematic/single/shared_head/hone_pro_pick_corr_3.name": "打磨：探测准确率 III",
   "tetra.improvement.head_hone/pro_pick_tier.name" : "打磨：探测范围",
   "tetra.improvement.head_hone/pro_pick_corr.name" : "打磨：探测准确率",
-  
+
   "tetra.module.double/basic_pro_pick.item_name": "探矿镐",
   "tetra.module.double/basic_pro_pick.name": "探矿镐头",
   "tetra.module.double/basic_pro_pick.description": "一个基础的探矿镐头，它可以很有用的探测周围矿物信息。",
   "tetra.module.double/basic_pro_pick.material_name": "%s 探矿镐",
   "tetra.variant.basic_pro_pick.item_name":"探矿镐",
   "tetra.module.double/basic_pro_pick.prefix": "%s",
-  
+
   "tetra/schematic/single/head/geo_hammer/basic_geo_hammer.name": "地质锤头",
-  
+
   "tetra/schematic/single/head/geo_hammer/basic_geo_hammer.description": "使用给定材料制作一个地质锤，它可以很有用的探测周围矿物信息。",
   "tetra/schematic/single/head/geo_hammer/basic_geo_hammer.slot1": "头部材料",
   "tetra/schematic/single/shared_head/hone_geo_hammer_tier_1.description": "打磨探测工具，使得它的范围增加。",
@@ -75,7 +75,7 @@
   "tetra/schematic/single/shared_head/hone_geo_hammer_corr_3.name": "打磨：探测准确率 III",
   "tetra.improvement.head_hone/geo_hammer_tier.name" : "打磨：探测范围",
   "tetra.improvement.head_hone/geo_hammer_corr.name" : "打磨：探测准确率",
-  
+
   "tetra.module.single/basic_geo_hammer.item_name": "地质锤",
   "tetra.module.single/basic_geo_hammer.name": "地质锤头",
   "tetra.module.single/basic_geo_hammer.description": "一个基础的地质锤头，它可以很有用的探测周围矿物信息。",
@@ -87,7 +87,7 @@
   "tetra.stats.core_spade.tooltip": "这个部件可以用于进行地质探测，探测范围%s级，同时探测准确率提升%s倍",
   "tetra.stats.geo_hammer.tooltip": "这个部件可以用于进行地质探测，探测范围%s级，同时探测准确率提升%s倍",
   "tetra.stats.prospector_pick.tooltip": "这个部件可以用于进行地质探测，探测范围%s级，同时探测准确率提升%s倍",
-  
+
   "tetra.module.single/basic_shovel.prefix": "%s",
   "block.frostedheart.generator_amplifier_r1": "能量塔增幅器",
   "block.frostedheart.generator_brick": "能量塔砖",
@@ -418,6 +418,12 @@
   "tooltip.frostedheart.research_unlockable": "所需研究：%s",
   "manual.frostedheart.main": "能量塔",
 
+  "waypoint.frostedheart.sun_station": "太阳站",
+  "waypoint.frostedheart.distance": "距离: %s 格",
+  "waypoint.frostedheart.position": "[X: %s, Y: %s, Z: %s]",
+  "waypoint.frostedheart.entity_health": "❤ %s / %s",
+  "waypoint.frostedheart.lost_target": "⚠ 目标丢失",
+
   "tips.frostedheart.error.load": "错误： 文件读取失败",
   "tips.frostedheart.error.save": "错误： 文件保存失败",
   "tips.frostedheart.error.save_desc": "保存文件时出现了未知错误",
@@ -427,11 +433,14 @@
   "tips.frostedheart.error.desc": "请检查整合包是否安装成功或反馈这个bug",
   "tips.frostedheart.too_long": "这条提示好像有些太长了，请查看已解锁的提示列表",
 
-  "frostedheart.tips.gui.close": "关闭",
-  "frostedheart.tips.gui.pin": "固定到右侧HUD",
-  "frostedheart.tips.gui.clear_cache": "清空提示缓存 (重新从文件读取)",
-  "frostedheart.tips.gui.clear_queue": "清空提示显示队列",
-  "frostedheart.tips.gui.reset_unlock": "重置已解锁的提示",
+  "gui.frostedheart.tip_list.close": "关闭",
+  "gui.frostedheart.tip_list.pin": "固定到右侧HUD",
+  "gui.frostedheart.debug.clear_cache": "清空提示缓存 (重新从文件读取)",
+  "gui.frostedheart.debug.clear_queue": "清空提示显示队列",
+  "gui.frostedheart.debug.reset_unlock": "重置已解锁的提示",
+  "gui.frostedheart.debug.entity_target": "创建一个实体目标路径点",
+  "gui.frostedheart.debug.random_waypoint": "创建一个随机路径点",
+  "gui.frostedheart.debug.remove_all_waypoint": "移除全部路径点",
 
   "tips.frostedheart.empty.title": "哇，这里什么都没有",
 
@@ -447,5 +456,39 @@
 
   "tips.frostedheart.music_warning.title": "等一下!",
   "tips.frostedheart.music_warning.desc1": "将音乐关闭可能无法体验我们为冬季救援提供的音乐",
-  "tips.frostedheart.music_warning.desc2": "原版的音乐已经被禁用，如果您希望重新打开请修改配置文件: '&7$configPath$\\frostedheart-client.toml&r'"
+  "tips.frostedheart.music_warning.desc2": "原版的音乐已经被禁用，如果您希望重新打开请修改配置文件: '&7$configPath$\\frostedheart-client.toml&r'",
+
+  "attribute.frostedheart.insulation": "Insulation",
+  "attribute.frostedheart.windproof": "Water Proof",
+  "attribute.frostedheart.heatproof": "Heat Proof",
+  "gui.frostedheart.trade.title": "Trading",
+  "gui.frostedheart.trade.me": "Me",
+  "gui.frostedheart.trade.profession.frostedheart:test": "Jobless",
+  "gui.frostedheart.trade.relation": "Relation:",
+  "gui.frostedheart.trade.relation.history_killed": "Murder in colonies",
+  "gui.frostedheart.trade.relation.unknown_language": "Can't speak their language",
+  "gui.frostedheart.trade.relation.charm": "Charming",
+  "gui.frostedheart.trade.relation.saw_murder": "Seen murder",
+  "gui.frostedheart.trade.relation.hurt": "Hit them",
+  "gui.frostedheart.trade.relation.beneficial_trade": "Dealt a trade benefits them",
+  "gui.frostedheart.trade.relation.total_trade": "Familiar",
+  "gui.frostedheart.trade.relation.hero_village": "Saved the world",
+  "gui.frostedheart.trade.relation.recent_bargain": "Bargained with him",
+  "gui.frostedheart.trade.relation.foreigner": "Came from outside",
+  "gui.frostedheart.trade.discounted_offering": "This deal is in my favor.",
+  "gui.frostedheart.trade.too_much_offering": "This deal improves our relations.",
+  "gui.frostedheart.trade.not_enough_offering": "You did not provide enough offer",
+  "gui.frostedheart.trade.unwilling": "The villager are not willing to provide things because of low relationship.",
+  "gui.frostedheart.trade.discount": "Discount",
+  "gui.frostedheart.trade.bad_relation": "Low relation",
+  "gui.frostedheart.trade.maxed_bargain": "I've got max discount.",
+  "gui.frostedheart.trade.no_bargain": "I need a better relationship with him to bargain",
+  "gui.frostedheart.trade.trade_to_bargain": "Add orders before bargain.",
+  "gui.frostedheart.trade.bargain": "Bargain",
+  "gui.frostedheart.trade.deal": "Deal!",
+  "gui.frostedheart.trade.not_needed_now": "This item is not needed now",
+  "gui.frostedheart.trade.no_stock": "Out of stock!",
+  "gui.frostedheart.trade.not_restocking": "Conditions for restock aren't meet.",
+  "gui.frostedheart.trade.full_stock": "Stock is full!",
+  "gui.frostedheart.trade.restocking": "Restocking..."
 }
