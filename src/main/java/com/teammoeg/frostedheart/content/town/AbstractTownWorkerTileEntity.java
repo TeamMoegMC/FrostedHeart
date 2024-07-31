@@ -139,4 +139,5 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
     public void readCustomNBT(CompoundNBT compoundNBT, boolean b) {}
     @Override
     public void writeCustomNBT(CompoundNBT compoundNBT, boolean b) {}
+
 }

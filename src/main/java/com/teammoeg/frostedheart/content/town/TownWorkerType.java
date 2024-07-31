@@ -81,15 +81,18 @@ public enum TownWorkerType {
         }
         return true;
     }, 0, true,
-            (currentResidentNum, workerData) -> {
-        if(currentResidentNum < workerData.getInt("maxResident")) return -currentResidentNum + 1.0 * currentResidentNum / workerData.getInt("maxResident") + 0.4/*the base priority of workerRype*/ + workerData.getDouble("rating");
+            (currentResidentNum, nbt) -> {
+        int maxResident = nbt.getCompound("tileEntity").getInt("maxResident");
+        double rating = TownWorkerData.getRating(nbt);
+        if(currentResidentNum < maxResident) return -currentResidentNum + 1.0 * currentResidentNum / maxResident + 0.4/*the base priority of workerRype*/ + rating;
         return NEGATIVE_INFINITY;
             },
             (resident) -> resident.getTrust() * 0.01),
     MINE_BASE(FHBlocks.mine_base, null, 0),
     HUNTING_CAMP(FHBlocks.hunting_camp, null, 0),
-    HUNTING_BASE(FHBlocks.hunting_base, new HuntingBaseTileEntity.HuntingBaseWorker(), -1, true, (currentResidentNum, workerData) -> {
-        if(currentResidentNum < workerData.getInt("maxResident")) return -currentResidentNum + 1.0 * currentResidentNum / workerData.getInt("maxResidnet" + 0.5 + workerData.getDouble("rating"));
+    HUNTING_BASE(FHBlocks.hunting_base, new HuntingBaseTileEntity.HuntingBaseWorker(), -1, true, (currentResidentNum, nbt) -> {
+        int maxResident = nbt.getCompound("tileEntity").getInt("maxResident");
+        if(currentResidentNum < maxResident) return -currentResidentNum + 1.0 * currentResidentNum / maxResident + 0.5 + TownWorkerData.getRating(nbt);
         return Double.NEGATIVE_INFINITY;
     }, (resident) -> resident.getTrust() * 0.01 * Resident.CalculatingFunction1(resident.getSocial()))
     ;
@@ -116,11 +119,11 @@ public enum TownWorkerType {
 
     /**
      * The function used when assigning work for resident.
-     * input number : current resident number
-     * CompoundNBT: worker data
-     * output number: priority
      * 每有一个居民在此工作，优先级应减少1左右，这样可以使居民尽可能均匀地分配在所有工作方块中
      * 当居民数量大于最大居民数时，应该返回Double.NEGATIVE_INFINITY
+     * input1 当前居民数量。
+     * input2 完整的workerData，包括town部分和tileEntity部分。详见TownWorkerData。
+     * output 分配居民时的优先级
      */
     private BiFunction<Integer, CompoundNBT, Double> residentPriorityFunction;
 
@@ -189,15 +192,12 @@ public enum TownWorkerType {
      *
      * @param data TownWorkerData中的workData
      */
-    public double getResidentPriority(Integer currentResident, CompoundNBT data) {
-        return this.residentPriorityFunction.apply(currentResident, data);
+    public double getResidentPriority(TownWorkerData data) {
+        return this.getResidentPriorityFunction().apply(data.getResidents().size(), data.getWorkData());
     }
 
-    public double getResidentPriority(Integer currentResident, TownWorkerData data) {
-        return this.getResidentPriority(currentResident, data.getWorkData());
-    }
-    public double getResidentPriority(Collection<?> currentResidents, TownWorkerData data) {
-        return this.getResidentPriority(currentResidents.size(), data.getWorkData());
+    public double getResidentPriority(Integer integer, CompoundNBT nbt){
+        return this.getResidentPriorityFunction().apply(integer, nbt);
     }
 
 
@@ -219,7 +219,7 @@ public enum TownWorkerType {
             return residentPriorityFunction;
         } else{
             FHMain.LOGGER.error("This TownWorkerType don't need resident, but tried get residentPriorityFunction");
-            return ((a, b) -> NEGATIVE_INFINITY);
+            return ((useless1, useless2) -> NEGATIVE_INFINITY);
         }
     }
 

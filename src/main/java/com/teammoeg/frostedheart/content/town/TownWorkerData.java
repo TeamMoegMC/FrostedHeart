@@ -24,14 +24,14 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.nbt.ByteNBT;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.*;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.util.Constants;
 
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Data for a worker (town block) in the town.
@@ -112,6 +112,10 @@ public class TownWorkerData {
                 workData.put("tileEntity", te.getWorkData());
             }
         }
+    }
+
+    public void updateFromTileEntity(TownTileEntity te){
+        workData.put("tileEntity", te.getWorkData());
     }
 
     public void toTileEntity(ServerWorld world){
@@ -195,5 +199,53 @@ public class TownWorkerData {
         return Objects.hash(type, pos, priority);
     }
 
+
+    /**
+     * Get the residents of this worker.
+     * Should ONLY be used if the worker holds residents, like house, mine, etc.
+     */
+    public ListNBT getResidents(){
+        return workData.getCompound("town").getList("residents", Constants.NBT.TAG_COMPOUND);
+    }
+
+    /**
+     * Get the max resident of this worker.
+     * Should ONLY be used if the worker holds residents, like house, mine, etc.
+     */
+    public int getMaxResident(){
+        return workData.getCompound("tileEntity").getInt("maxResident");
+    }
+
+    /**
+     * Add a resident to this worker.
+     * Should ONLY be used if the worker holds residents, like house, mine, etc.
+     */
+    public void addResident(UUID uuid){
+        CompoundNBT dataFromTown = workData.getCompound("town");
+        ListNBT list = dataFromTown.getList("residents", Constants.NBT.TAG_STRING);
+        list.add(StringNBT.valueOf(uuid.toString()));
+        dataFromTown.put("residents", list);
+        workData.put("town", dataFromTown);
+    }
+
+    /**
+     * Get priority when assigning work
+     * Should ONLY be used if the worker holds residents, like house, mine, etc.
+     */
+    public double getResidentPriority(){
+        return type.getResidentPriority(this);
+    }
+
+    public double getResidentPriority(int residentNum){
+        return type.getResidentPriority(residentNum, this.getWorkData());
+    }
+
+    /**
+     * @param nbt 完整的nbt，包含town和tileEntity部分
+     * @return rating
+     */
+    public static Double getRating(CompoundNBT nbt){
+        return nbt.getCompound("tileEntity").getDouble("rating");
+    }
 
 }
