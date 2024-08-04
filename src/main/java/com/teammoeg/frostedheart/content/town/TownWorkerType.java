@@ -24,6 +24,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHBlocks;
 
 import com.teammoeg.frostedheart.FHMain;
@@ -97,6 +98,8 @@ public enum TownWorkerType {
     }, (resident) -> resident.getTrust() * 0.01 * Resident.CalculatingFunction1(resident.getSocial()))
     ;
 
+    public static final Codec<TownWorkerType> CODEC= Codec.STRING.xmap(TownWorkerType::from,TownWorkerType::getKey);
+
     /**
      * Town block.
      */
@@ -140,16 +143,10 @@ public enum TownWorkerType {
      * @param internalPriority the internal priority
      */
     TownWorkerType(Supplier<Block> workerBlock, TownWorker worker, int internalPriority) {
-        this(workerBlock, worker, internalPriority, false);
-    }
-
-    //若needsResident==false，可使用上方的方法，若needsResident==true，则应使用下方的方法
-    @Deprecated
-    TownWorkerType(Supplier<Block> workerBlock, TownWorker worker, int internalPriority, boolean needsResident) {
         this.block = workerBlock;
         this.worker = worker;
         this.priority = internalPriority;
-        this.needsResident = needsResident;
+        this.needsResident = false;
     }
 
     //if needsResident is true, residentPriorityFunction must be set
