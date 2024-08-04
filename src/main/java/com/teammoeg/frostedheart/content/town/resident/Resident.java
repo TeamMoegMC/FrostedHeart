@@ -23,8 +23,10 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
+import com.teammoeg.frostedheart.util.MathUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import mezz.jei.util.MathUtil;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.util.UUIDCodec;
@@ -68,7 +70,7 @@ public class Resident {
     private int educationLevel = 0;
     //work proficiency.
     // If the number is negative, this type is considered as unworkable type.
-    private EnumMap<TownWorkerType, Integer> workProficiency = new EnumMap<>(TownWorkerType.class);
+    private final EnumMap<TownWorkerType, Integer> workProficiency = new EnumMap<>(TownWorkerType.class);
     //the pos of the HouseBlock that the resident is living in
     private BlockPos housePos;
     //the pos of the worker block that the resident is working in
@@ -78,8 +80,9 @@ public class Resident {
         this.firstName = firstName;
         this.lastName = lastName;
         this.uuid = UUID.randomUUID();
-        Random random = new Random();
-        workProficiency.forEach((k, v) -> workProficiency.put(k, random.nextInt(20)-2));//have 20% chance to be unworkable type
+        workProficiency.forEach((k, v) -> {
+            if(k.needsResident()) workProficiency.put(k, MathUtils.RANDOM.nextInt(20)-2);
+        });//have 20% chance to be unworkable type
     }
 
     //public Resident() {
