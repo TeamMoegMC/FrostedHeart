@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
 public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity implements
-        TownTileEntity, ScheduledTaskTileEntity, TickableBlockEntity, FHBlockInterfaces.IActiveState {
+        TownTileEntity, ScheduledTaskTileEntity, FHBlockInterfaces.IActiveState {
     public TownWorkerState workerState = TownWorkerState.NOT_INITIALIZED;
     public OccupiedArea occupiedArea;
     protected boolean addedToSchedulerQueue = false;

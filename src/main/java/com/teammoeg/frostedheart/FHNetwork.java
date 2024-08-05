@@ -63,9 +63,9 @@ import com.teammoeg.frostedheart.content.trade.network.TradeUpdatePacket;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.network.NetworkRegistry;
-import net.minecraftforge.fml.network.PacketDistributor;
-import net.minecraftforge.fml.network.simple.SimpleChannel;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.network.simple.SimpleChannel;
 
 public class FHNetwork {
 
@@ -100,7 +100,8 @@ public class FHNetwork {
      * */
     public static synchronized <T extends FHMessage> void registerMessage(String name,Class<T> msg,Function<FriendlyByteBuf,T> func) {
     	classesId.put(msg,FHMain.rl(name));
-	    CHANNEL.registerMessage(++iid,msg,FHMessage::encode,func,FHMessage::handle);
+    	CHANNEL.registerMessage(++iid, msg, FHMessage::encode,func,FHMessage::handle);
+	    //CHANNEL.registerMessage(++iid,msg,FHMessage::encode,func,FHMessage::handle);
     }
     public static ResourceLocation getId(Class<? extends FHMessage> cls) {
     	return classesId.get(cls);

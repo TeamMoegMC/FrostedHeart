@@ -19,24 +19,20 @@
 
 package com.teammoeg.frostedheart;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.Tag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.common.Tags;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.block.Block;
 
 public class FHTags {
     public static final class Blocks {
 //        public static final ITag.INamedTag<Block> ALWAYS_BREAKABLE = create("always_breakable");
-        public static final Tags.IOptionalNamedTag<Block> DECORATIONS = tag("decorations");
-        public static final Tags.IOptionalNamedTag<Block> WALL_BLOCKS = tag("wall_blocks");
+        public static final TagKey<Block> DECORATIONS = tag("decorations");
+        public static final TagKey<Block> WALL_BLOCKS = tag("wall_blocks");
 
-        private static Tag.Named<Block> create(String id) {
-            return BlockTags.bind(new ResourceLocation(FHMain.MODID, id).toString());
-        }
 
-        private static Tags.IOptionalNamedTag<Block> tag(String name) {
-            return BlockTags.createOptional(new ResourceLocation(FHMain.MODID, name));
+        private static TagKey<Block> tag(String name) {
+            return BlockTags.create(new ResourceLocation(FHMain.MODID, name));
         }
     }
 }

@@ -64,7 +64,9 @@ public class OptionalLazy<T> {
     public static <T> OptionalLazy<T> of(final @Nullable Supplier<T> instanceSupplier) {
         return instanceSupplier == null ? empty() : new OptionalLazy<>(instanceSupplier);
     }
-
+    public static <T> OptionalLazy<T> ofOptional(final @Nullable Supplier<Optional<T>> instanceSupplier) {
+        return instanceSupplier == null ? empty() : new OptionalLazy<>(()->instanceSupplier.get().orElse(null));
+    }
     private OptionalLazy(@Nullable Supplier<T> instanceSupplier) {
         this.supplier = instanceSupplier;
     }

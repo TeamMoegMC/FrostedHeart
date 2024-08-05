@@ -1,21 +1,19 @@
 package com.teammoeg.frostedheart.base.block;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 
-public abstract class PipeTileEntity extends IEBaseTileEntity implements TickableBlockEntity{
+public abstract class PipeTileEntity extends IEBaseBlockEntity{
 
-	public PipeTileEntity(BlockEntityType<? extends BlockEntity> type) {
-		super(type);
+	public PipeTileEntity(BlockEntityType<? extends BlockEntity> type,BlockPos l,BlockState state) {
+		super(type,l,state);
 
 	}
-    @Override
-    public void tick() {
-
-    }
     public abstract void onFaceChange(Direction dir,boolean isConnect);
 
 }

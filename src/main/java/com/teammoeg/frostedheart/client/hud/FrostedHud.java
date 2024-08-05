@@ -46,11 +46,8 @@ import com.teammoeg.frostedheart.util.client.UV.Transition;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
-import gloridifice.watersource.common.capability.WaterLevelCapability;
-import gloridifice.watersource.registry.EffectRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.Gui;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.Tesselator;

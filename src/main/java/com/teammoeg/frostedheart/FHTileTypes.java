@@ -51,17 +51,19 @@ import com.teammoeg.frostedheart.content.town.mine.MineTileEntity;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseTileEntity;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentTileEntity;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerTileEntity;
+import com.tterrag.registrate.util.entry.BlockEntityEntry;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.BlockEntityType.BlockEntitySupplier;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHTileTypes {
     public static final DeferredRegister<BlockEntityType<?>> REGISTER = DeferredRegister.create(
-            ForgeRegistries.BLOCK_ENTITIES, FHMain.MODID);
+            ForgeRegistries.BLOCK_ENTITY_TYPES, FHMain.MODID);
     private static final CreateRegistrate REGISTRATE = FHMain.registrate.get()
         .itemGroup(() -> FHMain.itemGroup);
     public static final RegistryObject<BlockEntityType<T1GeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(
@@ -105,8 +107,8 @@ public class FHTileTypes {
     /*public static final RegistryObject<TileEntityType<SteamCoreTileEntity>> STEAM_CORE = REGISTER.register(
             "steam_core", makeType(SteamCoreTileEntity::new, FHBlocks.steam_core)
     );*/
-    public static final TileEntityEntry<SteamCoreTileEntity> STEAM_CORE = REGISTRATE
-        .tileEntity("steam_core", SteamCoreTileEntity::new)
+    public static final BlockEntityEntry<SteamCoreTileEntity> STEAM_CORE = REGISTRATE
+        .entity("steam_core", SteamCoreTileEntity::new)
         .instance(() -> HalfShaftInstance::new)
         .validBlocks(FHBlocks.steam_core)
         .renderer(() -> HalfShaftRenderer::new)
@@ -143,14 +145,14 @@ public class FHTileTypes {
     public static final RegistryObject<BlockEntityType<HuntingBaseTileEntity>> HUNTING_BASE = REGISTER.register(
             "hunting_base", makeType(HuntingBaseTileEntity::new, FHBlocks.hunting_base)
     );
-    private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
+    private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(BlockEntitySupplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }
     @SafeVarargs
-    private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(Supplier<T> create, Supplier<Block>... valid) {
+    private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(BlockEntitySupplier<T> create, Supplier<Block>... valid) {
         return makeTypeMultipleBlocks(create, () -> Arrays.stream(valid).map(Supplier::get).collect(Collectors.toList()));
     }
-    private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeTypeMultipleBlocks(Supplier<T> create, Supplier<Collection<Block>> valid) {
+    private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeTypeMultipleBlocks(BlockEntitySupplier<T> create, Supplier<Collection<Block>> valid) {
         return () -> new BlockEntityType<>(create, ImmutableSet.copyOf(valid.get()), null);
     }
 

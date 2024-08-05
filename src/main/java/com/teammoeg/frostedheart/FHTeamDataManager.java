@@ -45,9 +45,8 @@ import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.data.Team;
-import dev.ftb.mods.ftbteams.data.TeamManager;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.crafting.RecipeManager;
@@ -126,7 +125,7 @@ public class FHTeamDataManager {
      * @return the data
      */
 	public static TeamDataHolder get(Player player) {
-		return INSTANCE.get(FTBTeamsAPI.getPlayerTeam((ServerPlayer)player));
+		return FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer)player).map(INSTANCE::get).orElse(null);
 		
 	}
 
@@ -140,7 +139,7 @@ public class FHTeamDataManager {
         if (cn == null) {
             cn=UUID.randomUUID();
             dataByFTBId.put(team.getId(), cn);
-            GameProfile owner = getServer().getProfileCache().get(team.getOwner());
+            GameProfile owner = getServer().getProfileCache().get(team.getOwner()).orElse(null);
             
             if (owner != null&&(!getServer().usesAuthentication()||getServer().isSingleplayer()))
                 for (Entry<UUID, TeamDataHolder> dat : dataByFhId.entrySet()) {
@@ -155,7 +154,7 @@ public class FHTeamDataManager {
         if (data.getOwnerName() == null) {
             GameProfileCache cache = getServer().getProfileCache();
             if (cache != null) {
-                GameProfile gp = cache.get(team.getOwner());
+                GameProfile gp = cache.get(team.getOwner()).orElse(null);
                 if (gp != null) {
                 	data.setOwnerName(gp.getName());
                 }
@@ -214,7 +213,7 @@ public class FHTeamDataManager {
 	                if(nbt.contains("teamId"))
 	                	tud=nbt.getUUID("teamId");
 	                final UUID ftbid=tud;
-	                TeamDataHolder trd = new TeamDataHolder(nbt.getUUID("uuid"),OptionalLazy.of(() -> TeamManager.INSTANCE.getTeamByID(ftbid)));
+	                TeamDataHolder trd = new TeamDataHolder(nbt.getUUID("uuid"),OptionalLazy.ofOptional(() -> FTBTeamsAPI.api().getManager().getTeamByID(ftbid)));
 	
 	                trd.deserialize(nbt, false);
 	                dataByFTBId.put(ftbid, trd.getId());
@@ -273,7 +272,7 @@ public class FHTeamDataManager {
         TeamDataHolder odata = dataByFhId.get(rid);
         if (odata != null) {
             odata.setTeam(OptionalLazy.of(()->team));
-            odata.setOwnerName(getServer().getProfileCache().get(team.getOwner()).getName());
+            odata.setOwnerName(getServer().getProfileCache().get(team.getOwner()).map(GameProfile::getName).orElse(null));
             dataByFTBId.put(team.getId(), rid);
         }else {
         	this.get(team);
@@ -285,7 +284,7 @@ public class FHTeamDataManager {
         TeamDataHolder odata = dataByFhId.get(rid);
         if (odata != null) {
             odata.setTeam(OptionalLazy.of(()->team));
-            odata.setOwnerName(getServer().getProfileCache().get(team.getOwner()).getName());
+            odata.setOwnerName(getServer().getProfileCache().get(team.getOwner()).map(GameProfile::getName).orElse(null));
             dataByFTBId.put(team.getId(), rid);
         }
     }

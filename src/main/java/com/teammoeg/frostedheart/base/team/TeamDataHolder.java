@@ -22,6 +22,7 @@
  */
 package com.teammoeg.frostedheart.base.team;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,11 +32,11 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
-import dev.ftb.mods.ftbteams.data.Team;
+import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.PacketDistributor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraftforge.fml.network.PacketDistributor;
 
 /**
  * Data holder for team
@@ -131,7 +132,7 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 	 *
 	 * @return the online members
 	 */
-	public List<ServerPlayer> getOnlineMembers() {
+	public Collection<ServerPlayer> getOnlineMembers() {
 		return team.get().getOnlineMembers();
 	}
 }

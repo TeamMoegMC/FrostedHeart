@@ -19,18 +19,18 @@
 
 package com.teammoeg.frostedheart.base.block;
 
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IDirectionalTile;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IDirectionalTile.PlacementLimitation;
+import blusunrize.immersiveengineering.api.utils.DirectionUtils;
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IDirectionalBE;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IPlayerInteraction;
-import blusunrize.immersiveengineering.common.util.DirectionUtils;
+import blusunrize.immersiveengineering.common.blocks.PlacementLimitation;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.world.InteractionHand;
@@ -38,20 +38,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fml.network.NetworkHooks;
 
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
-
-public class FHGuiBlock extends FHBaseBlock {
+public abstract class FHGuiBlock extends FHBaseBlock implements FHEntityBlock{
 
     public FHGuiBlock(Properties blockProps) {
         super(blockProps);
     }
 
-    @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
-    }
 
     @Override
     public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
@@ -64,13 +57,13 @@ public class FHGuiBlock extends FHBaseBlock {
         final float hitZ = (float) hit.getLocation().z - pos.getZ();
         ItemStack heldItem = player.getItemInHand(hand);
         BlockEntity tile = world.getBlockEntity(pos);
-        if (tile instanceof IDirectionalTile && Utils.isHammer(heldItem) && ((IDirectionalTile) tile).canHammerRotate(
+        if (tile instanceof IDirectionalBE && Utils.isHammer(heldItem) && ((IDirectionalBE) tile).canHammerRotate(
                 side,
                 hit.getLocation().subtract(Vec3.atLowerCornerOf(pos)),
                 player) && !world.isClientSide) {
-            Direction f = ((IDirectionalTile) tile).getFacing();
+            Direction f = ((IDirectionalBE) tile).getFacing();
             Direction oldF = f;
-            PlacementLimitation limit = ((IDirectionalTile) tile).getFacingLimitation();
+            PlacementLimitation limit = ((IDirectionalBE) tile).getFacingLimitation();
             switch (limit) {
                 case SIDE_CLICKED:
                     f = DirectionUtils.VALUES[Math.floorMod(f.ordinal() + (player.isShiftKeyDown() ? -1 : 1), DirectionUtils.VALUES.length)];
@@ -85,8 +78,8 @@ public class FHGuiBlock extends FHBaseBlock {
                     f = player.isShiftKeyDown() != side.equals(Direction.DOWN) ? f.getCounterClockWise() : f.getClockWise();
                     break;
             }
-            ((IDirectionalTile) tile).setFacing(f);
-            ((IDirectionalTile) tile).afterRotation(oldF, f);
+            ((IDirectionalBE) tile).setFacing(f);
+            ((IDirectionalBE) tile).afterRotation(oldF, f);
             tile.setChanged();
             world.sendBlockUpdated(pos, state, state, 3);
             world.blockEvent(tile.getBlockPos(), tile.getBlockState().getBlock(), 255, 0);
@@ -97,11 +90,10 @@ public class FHGuiBlock extends FHBaseBlock {
             if (b)
                 return InteractionResult.SUCCESS;
         }
-        if (tile instanceof IInteractionObjectIE && hand == InteractionHand.MAIN_HAND && !player.isShiftKeyDown()) {
-            IInteractionObjectIE interaction = (IInteractionObjectIE) tile;
-            interaction = interaction.getGuiMaster();
-            if (interaction != null && interaction.canUseGui(player) && !world.isClientSide)
-                NetworkHooks.openGui((ServerPlayer) player, interaction, ((BlockEntity) interaction).getBlockPos());
+        if (tile instanceof IInteractionObjectIE interaction && hand == InteractionHand.MAIN_HAND && !player.isShiftKeyDown()) {
+            BlockEntity master = interaction.getGuiMaster();
+            if (master instanceof MenuProvider menu)
+            	player.openMenu(menu);
             return InteractionResult.SUCCESS;
         }
         return superResult;

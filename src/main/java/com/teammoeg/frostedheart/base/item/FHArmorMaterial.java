@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ArmorItem.Type;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -96,4 +97,16 @@ public enum FHArmorMaterial implements ArmorMaterial {
     public float getToughness() {
         return this.toughness;
     }
+
+	@Override
+	public int getDurabilityForType(Type pType) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getDefenseForType(Type pType) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

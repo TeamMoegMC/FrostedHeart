@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.base.block;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
@@ -29,6 +30,7 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.PipeBlock;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.material.FluidState;
@@ -36,6 +38,7 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.pathfinder.PathComputationType;
+import net.minecraft.world.ticks.TickPriority;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.core.Direction;
@@ -46,12 +49,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.TickPriority;
 import net.minecraft.world.level.Level;
 
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
-public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends PipeBlock implements SimpleWaterloggedBlock {
+public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends PipeBlock implements SimpleWaterloggedBlock,FHEntityBlock {
 	Class<T> type;
 	protected int lightOpacity;
 	public static final BooleanProperty CASING = BooleanProperty.create("casing");
@@ -84,7 +86,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends PipeBlock imple
 
 		this.registerDefaultState(defaultState);
 	}
-
+	
 	@Override
 	public boolean isPathfindable(BlockState state, BlockGetter worldIn, BlockPos pos, PathComputationType type) {
 		return false;
@@ -143,11 +145,6 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends PipeBlock imple
 		return updateBlockState(defaultBlockState(), context.getNearestLookingDirection(), null, context.getLevel(),
 			context.getClickedPos()).setValue(BlockStateProperties.WATERLOGGED,
                 FluidState.getType() == Fluids.WATER);
-	}
-
-	@Override
-	public boolean hasTileEntity(BlockState state) {
-		return true;
 	}
 
 	public boolean isCornerOrEndPipe(BlockAndTintGetter world, BlockPos pos, BlockState state) {
@@ -228,10 +225,9 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends PipeBlock imple
 	public BlockState updateShape(BlockState state, Direction direction, BlockState neighbourState,
 		LevelAccessor world, BlockPos pos, BlockPos neighbourPos) {
 		if (state.getValue(BlockStateProperties.WATERLOGGED))
-			world.getLiquidTicks()
-				.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
+			world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
 		if (isOpenAt(state, direction) && neighbourState.hasProperty(BlockStateProperties.WATERLOGGED))
-			world.getBlockTicks().scheduleTick(pos, this, 1, TickPriority.HIGH);
+			world.scheduleTick(pos, this, 1, TickPriority.HIGH);
 		BlockState newstate= updateBlockState(state, direction,null , world, pos);
 		//System.out.println("Update post placement");
 		checkNewConnection(world,pos,state,newstate);
@@ -254,6 +250,12 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends PipeBlock imple
 		BlockState updated=updateBlockState(state, null, null, worldIn, pos);
 		checkNewConnection(worldIn,pos,state,updated);
 		worldIn.setBlockAndUpdate(pos,updated);
+	}
+
+	@Override
+	public Supplier<BlockEntityType<?>> getBlock() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 

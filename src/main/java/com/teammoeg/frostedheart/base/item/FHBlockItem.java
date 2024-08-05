@@ -19,15 +19,13 @@
 
 package com.teammoeg.frostedheart.base.item;
 
-import com.teammoeg.frostedheart.FHMain;
-
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 
 public class FHBlockItem extends BlockItem {
     public FHBlockItem(Block block) {
-        this(block, new Item.Properties().tab(FHMain.itemGroup));
+        this(block, new Item.Properties());
     }
 
     public FHBlockItem(Block block, Item.Properties props) {
@@ -35,7 +33,6 @@ public class FHBlockItem extends BlockItem {
     }
 
     public FHBlockItem(Block block, Item.Properties props, String name) {
-        this(block, new Item.Properties().tab(FHMain.itemGroup));
-        this.setRegistryName(FHMain.MODID, name);
+        this(block, new Item.Properties());
     }
 }

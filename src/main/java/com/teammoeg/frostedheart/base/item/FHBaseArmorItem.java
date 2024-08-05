@@ -19,14 +19,11 @@
 
 package com.teammoeg.frostedheart.base.item;
 
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 
-import net.minecraft.world.item.Item.Properties;
-
 public class FHBaseArmorItem extends ArmorItem {
-    public FHBaseArmorItem(ArmorMaterial materialIn, EquipmentSlot slot, Properties builderIn) {
+    public FHBaseArmorItem(ArmorMaterial materialIn, Type slot, Properties builderIn) {
         super(materialIn, slot, builderIn);
     }
 

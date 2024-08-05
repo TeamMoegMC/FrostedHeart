@@ -24,7 +24,7 @@ import java.util.Random;
 import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.block.FHStoneMultiblockBlock;
 
-import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.registry.MultiblockPartBlock;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
@@ -44,7 +44,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
-public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? super T>> extends FHStoneMultiblockBlock<T> {
+public class NormalGeneratorMultiBlock<T extends MultiblockPartBlockEntity<? super T>> extends FHStoneMultiblockBlock<T> {
     public NormalGeneratorMultiBlock(String name, Properties props, RegistryObject<BlockEntityType<T>> type) {
         super(name, props, type);
     }

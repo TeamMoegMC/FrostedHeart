@@ -3,13 +3,6 @@ package com.teammoeg.frostedheart.base.capability.codec;
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.base.capability.IFHCapability;
 import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
-
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.Tag;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
@@ -30,15 +23,6 @@ public class FHCodecCapability<C> implements IFHCapability{
 	}
 	@SuppressWarnings("unchecked")
 	public void register() {
-        CapabilityManager.INSTANCE.register(capClass, new Capability.IStorage<C>() {
-            public void readNBT(Capability<C> capability, C instance, Direction side, Tag nbt) {
-                throw new UnsupportedOperationException("Not supported for IStorage read");
-            }
-
-            public Tag writeNBT(Capability<C> capability, C instance, Direction side) {
-                return CodecUtil.encodeOrThrow(codec.encodeStart(NbtOps.INSTANCE, instance));
-            }
-        }, ()->factory.get());
         capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(capClass.getName().intern());
 	}
 	public ICapabilityProvider provider() {
@@ -58,4 +42,7 @@ public class FHCodecCapability<C> implements IFHCapability{
     public Codec<C> codec(){
     	return codec;
     }
+	public Class<C> getCapClass() {
+		return capClass;
+	}
 }

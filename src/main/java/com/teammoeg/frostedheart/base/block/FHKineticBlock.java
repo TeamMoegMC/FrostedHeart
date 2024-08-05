@@ -19,13 +19,11 @@
 
 package com.teammoeg.frostedheart.base.block;
 
-import com.simibubi.create.content.contraptions.base.HorizontalKineticBlock;
+import com.simibubi.create.content.kinetics.base.HorizontalKineticBlock;
 
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
-
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+import net.minecraft.world.level.block.state.BlockState;
 
 public abstract class FHKineticBlock extends HorizontalKineticBlock {
     protected int lightOpacity;

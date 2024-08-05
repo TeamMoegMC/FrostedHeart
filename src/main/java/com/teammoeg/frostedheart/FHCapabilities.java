@@ -22,8 +22,11 @@ import com.teammoeg.frostedheart.content.town.ChunkTownResourceCapability;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.common.util.NonNullSupplier;
-
+import net.minecraftforge.fml.common.Mod;
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class FHCapabilities {
 	private static List<IFHCapability> capabilities=new ArrayList<>();
 	public static final FHNBTCapability<WorldClimate> CLIMATE_DATA=register(WorldClimate.class);
@@ -38,8 +41,7 @@ public class FHCapabilities {
 	public static final FHNPCapability<RobotChunk> ROBOTIC_LOGISTIC_CHUNK=registerNotPresist(RobotChunk.class);
 	
 	public static void setup() {
-		for(IFHCapability cap:capabilities)
-			cap.register();
+	
 	}
 	/**
 	 * register capability with class, using no-arg constructor as default factory
@@ -143,5 +145,12 @@ public class FHCapabilities {
 		FHCodecCapability<T> cap=new FHCodecCapability<>(capClass,sup,codec);
 		capabilities.add(cap);
 		return cap;
+	}
+	public static void onRegister(RegisterCapabilitiesEvent ev) {
+		
+		for(IFHCapability cap:capabilities) {
+			ev.register(cap.getCapClass());
+			cap.register();
+		}
 	}
 }

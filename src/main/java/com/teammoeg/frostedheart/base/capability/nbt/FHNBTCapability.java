@@ -24,15 +24,6 @@ public class FHNBTCapability<C extends NBTSerializable> implements IFHCapability
 	}
 	@SuppressWarnings("unchecked")
 	public void register() {
-        CapabilityManager.INSTANCE.register(capClass, new Capability.IStorage<C>() {
-            public void readNBT(Capability<C> capability, C instance, Direction side, Tag nbt) {
-                instance.deserializeNBT((CompoundTag) nbt);
-            }
-
-            public Tag writeNBT(Capability<C> capability, C instance, Direction side) {
-                return instance.serializeNBT();
-            }
-        }, ()->factory.get());
         capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(capClass.getName().intern());
 	}
 	public ICapabilityProvider provider() {
@@ -48,5 +39,8 @@ public class FHNBTCapability<C extends NBTSerializable> implements IFHCapability
 	}
     public Capability<C> capability() {
 		return capability;
+	}
+	public Class<C> getCapClass() {
+		return capClass;
 	}
 }
