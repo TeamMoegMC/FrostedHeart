@@ -2,28 +2,29 @@ package com.teammoeg.frostedheart.content.steamenergy.steamcore;
 
 import java.util.Objects;
 
-import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity;
-import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
-        TickableBlockEntity, IHaveGoggleInformation,
+public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
+        FHTickableBlockEntity, IHaveGoggleInformation,
         FHBlockInterfaces.IActiveState{
-    public SteamCoreTileEntity(BlockEntityType<?> type) {
-        super(type);
+    public SteamCoreTileEntity(BlockEntityType<?> type,BlockPos pos,BlockState state) {
+        super(type, pos, state);
         this.setLazyTickRate(20);
     }
 
@@ -76,11 +77,7 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
         return this.getBlockState().getValue(BlockStateProperties.FACING);
     }
 
-    @Override
-    protected void fromTag(BlockState state, CompoundTag tag, boolean client) {
-        super.fromTag(state, tag, client);
-        network.load(tag, client);
-    }
+ 
 
     @Override
     protected void write(CompoundTag tag, boolean client) {
@@ -103,4 +100,10 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
     public Level getWorldNonnull() {
         return Objects.requireNonNull(super.getLevel());
     }
+
+	@Override
+	protected void read(CompoundTag compound, boolean clientPacket) {
+		super.read(compound, clientPacket);
+		network.load(compound, clientPacket);
+	}
 }

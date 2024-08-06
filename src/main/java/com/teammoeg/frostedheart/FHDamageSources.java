@@ -19,36 +19,20 @@
 
 package com.teammoeg.frostedheart;
 
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.damagesource.DamageSource;
-
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.damagesource.DamageType;
+//TODO datagen damage sources
 public class FHDamageSources {
-    public static final DamageSource HYPOTHERMIA = (new DamageSource("hypothermia")).bypassArmor().bypassMagic();
-    public static final DamageSource HYPERTHERMIA = (new DamageSource("hyperthermia")).bypassArmor().bypassMagic();
-    public static final DamageSource BLIZZARD = (new DamageSource("blizzard")).bypassArmor().bypassMagic();
-    public static final DamageSource RAD = (new DamageSource("radiation")).bypassArmor().bypassMagic();
-    public static final DamageSource HYPOTHERMIA_INSTANT = (new DamageSource("hypothermia_instant")).bypassArmor();
-    public static final DamageSource HYPERTHERMIA_INSTANT = (new DamageSource("hyperthermia_instant")).bypassArmor();
-
-    public static DamageSource hyperthermiaFrom(Entity e) {
-        return (new DamageSource("hyperthermia") {
-
-            @Override
-            public Entity getEntity() {
-                return e;
-            }
-
-        }).bypassArmor();
+    public static final ResourceKey<DamageType> HYPOTHERMIA = create("hypothermia");
+    public static final ResourceKey<DamageType> HYPERTHERMIA = create("hyperthermia");
+    public static final ResourceKey<DamageType> BLIZZARD = create("blizzard");
+    public static final ResourceKey<DamageType> RAD = create("radiation");
+    public static final ResourceKey<DamageType> HYPOTHERMIA_INSTANT = create("hypothermia_instant");
+    public static final ResourceKey<DamageType> HYPERTHERMIA_INSTANT = create("hyperthermia_instant");
+    public static ResourceKey<DamageType> create(String name) {
+    	return ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation(FHMain.MODID,name));
     }
 
-    public static DamageSource hypothermiaFrom(Entity e) {
-        return (new DamageSource("hypothermia") {
-
-            @Override
-            public Entity getEntity() {
-                return e;
-            }
-
-        }).bypassArmor();
-    }
 }

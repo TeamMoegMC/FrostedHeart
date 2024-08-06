@@ -108,7 +108,7 @@ public class FHTileTypes {
             "steam_core", makeType(SteamCoreTileEntity::new, FHBlocks.steam_core)
     );*/
     public static final BlockEntityEntry<SteamCoreTileEntity> STEAM_CORE = REGISTRATE
-        .entity("steam_core", SteamCoreTileEntity::new)
+        .blockEntity("steam_core", SteamCoreTileEntity::new)
         .instance(() -> HalfShaftInstance::new)
         .validBlocks(FHBlocks.steam_core)
         .renderer(() -> HalfShaftRenderer::new)

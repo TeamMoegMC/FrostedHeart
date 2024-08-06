@@ -129,7 +129,6 @@ public class FHMain {
         FHBlocks.registry.register(mod);
         FHBlocks.init();
         FHMultiblocks.init();
-        FHContainer.registerContainers();
         FHTileTypes.REGISTER.register(mod);
         FHFluids.FLUIDS.register(mod);
         FHSounds.SOUNDS.register(mod);

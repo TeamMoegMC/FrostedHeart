@@ -7,10 +7,11 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLLayerC
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class RenderParams {
 	IScenarioDialog screen;
-	PoseStack matrixStack;
+	GuiGraphics matrixStack;
 	int mouseX;
 	int mouseY;
 	float partialTicks;
@@ -19,7 +20,7 @@ public class RenderParams {
 	int x,y,width,height,offsetX,offsetY;
 	boolean forceFirst;
 	int contentWidth,contentHeight;
-	public RenderParams(IScenarioDialog screen, PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+	public RenderParams(IScenarioDialog screen, GuiGraphics matrixStack, int mouseX, int mouseY, float partialTicks) {
 		super();
 		this.screen = screen;
 		this.matrixStack = matrixStack;
@@ -34,7 +35,7 @@ public class RenderParams {
 	}
 
 
-	public RenderParams(IScenarioDialog screen, PoseStack matrixStack, int mouseX, int mouseY, float partialTicks,
+	public RenderParams(IScenarioDialog screen, GuiGraphics matrixStack, int mouseX, int mouseY, float partialTicks,
 			float opacity, int x, int y, int width, int height, float xzoom, float yzoom, int offsetX,
 			int offsetY,int contentWidth,int contentHeight) {
 		super();
@@ -55,7 +56,7 @@ public class RenderParams {
 		this.contentWidth=contentWidth;
 		this.contentHeight=contentHeight;
 	}
-	public RenderParams(IScenarioDialog screen, PoseStack matrixStack, int mouseX, int mouseY, float partialTicks,
+	public RenderParams(IScenarioDialog screen, GuiGraphics matrixStack, int mouseX, int mouseY, float partialTicks,
 			float opacity, int x, int y, int width, int height, float xzoom, float yzoom) {
 		super();
 		this.screen = screen;
@@ -92,10 +93,10 @@ public class RenderParams {
 	public IScenarioDialog getScreen() {
 		return screen;
 	}
-	public PoseStack getMatrixStack() {
+	public GuiGraphics getMatrixStack() {
 		return matrixStack;
 	}
-	public void setMatrixStack(PoseStack matrixStack) {
+	public void setMatrixStack(GuiGraphics matrixStack) {
 		this.matrixStack = matrixStack;
 	}
 	public int getMouseX() {

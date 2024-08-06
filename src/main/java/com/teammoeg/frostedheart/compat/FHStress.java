@@ -19,7 +19,8 @@
 
 package com.teammoeg.frostedheart.compat;
 
-import com.simibubi.create.foundation.block.BlockStressValues.IStressValueProvider;
+import com.simibubi.create.content.kinetics.BlockStressValues.IStressValueProvider;
+import com.simibubi.create.foundation.utility.Couple;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHConfig;
 
@@ -52,5 +53,14 @@ public class FHStress implements IStressValueProvider {
     public boolean hasImpact(Block arg0) {
         return arg0 == FHBlocks.mech_calc.get();
     }
+
+	@Override
+	public Couple<Integer> getGeneratedRPM(Block block) {
+		if(block==FHBlocks.steam_core.get()) {
+			int rpm=(int)(double)FHConfig.COMMON.steamCoreGeneratedSpeed.get();
+			return Couple.create(rpm,rpm);
+		}
+		return null;
+	}
 
 }

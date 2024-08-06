@@ -27,6 +27,9 @@ import com.teammoeg.frostedheart.content.tips.client.UnlockedTipManager;
 import com.teammoeg.frostedheart.content.tips.client.util.TipDisplayUtil;
 import net.minecraft.client.gui.screens.SoundOptionsScreen;
 import net.minecraftforge.client.event.*;
+import net.minecraftforge.client.gui.overlay.GuiOverlayManager;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -60,10 +63,12 @@ import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.client.GuiClickedEvent;
 import com.teammoeg.frostedheart.util.version.FHVersion;
 
+import dev.architectury.event.events.common.PlayerEvent.OpenMenu;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -89,10 +94,14 @@ import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.event.level.LevelEvent.Unload;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEvents {
@@ -223,8 +232,8 @@ public class ClientEvents {
 
     @SuppressWarnings({"unchecked"})
     @SubscribeEvent
-    public static void drawUpdateReminder(GuiScreenEvent.DrawScreenEvent.Post event) {
-        Screen gui = event.getGui();
+    public static void drawUpdateReminder(ScreenEvent.Render event) {
+        Screen gui = event.getScreen();
         if (gui instanceof TitleScreen) {
             FHMain.remote.fetchVersion().ifPresent(stableVersion -> {
                 boolean isStable = true;
@@ -237,7 +246,7 @@ public class ClientEvents {
                 }
                 if (stableVersion.isEmpty())
                     return;
-                PoseStack matrixStack = event.getMatrixStack();
+                GuiGraphics matrixStack = event.getGuiGraphics();
                 FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
                 Font font = gui.getMinecraft().font;
                 if (!stableVersion.isEmpty() && (clientVersion.isEmpty() || !clientVersion.laterThan(stableVersion))) {
@@ -245,10 +254,9 @@ public class ClientEvents {
                             .append(stableVersion.getOriginal()).withStyle(ChatFormatting.BOLD), 70);
                     int l = 0;
                     for (FormattedCharSequence line : list) {
-                        FHGuiHelper.drawLine(matrixStack, Color4I.rgba(0, 0, 0, 255), 0, gui.height / 2 - 1 + l, 72,
+                        FHGuiHelper.drawLine(matrixStack.pose(), Color4I.rgba(0, 0, 0, 255), 0, gui.height / 2 - 1 + l, 72,
                                 gui.height / 2 + 9 + l);
-                        font.drawShadow(matrixStack, line, 1, gui.height / 2.0F + l, 0xFFFFFF);
-
+                        matrixStack.drawString(ClientUtils.mc().font, line, 1, gui.height / 2.0F + l, 0xFFFFFF, true);
                         l += 9;
                     }
                     if (isStable) {
@@ -261,7 +269,7 @@ public class ClientEvents {
                                 needEvents = false;
                                 break;
                             }
-                        font.drawShadow(matrixStack, itxc, 1, gui.height / 2.0F + l, 0xFFFFFF);
+                        matrixStack.drawString(ClientUtils.mc().font, itxc, 1, (int)(gui.height / 2.0F + l), 0xFFFFFF);
                         Style opencf = Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
                                 "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue"));
                         // Though the capture is ? extends IGuiEventListener, I can't add new to it
@@ -306,7 +314,7 @@ public class ClientEvents {
     }
 
     @SubscribeEvent
-    public static void fireLogin(LoggedInEvent event) {
+    public static void fireLogin(PlayerLoggedInEvent event) {
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClientTeamDataManager.INSTANCE::reset);
         ClientScene.INSTANCE=new ClientScene();
     	ClientScene.INSTANCE.sendClientReady();
@@ -322,14 +330,14 @@ public class ClientEvents {
             return;
         }
 
-        PoseStack stack = event.getMatrixStack();
+        GuiGraphics stack = event.getGuiGraphics();
         int anchorX = event.getWindow().getGuiScaledWidth() / 2;
         int anchorY = event.getWindow().getGuiScaledHeight();
-        float partialTicks = event.getPartialTicks();
+        float partialTicks = event.getPartialTick();
 
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
         if (FHConfig.CLIENT.enableUI.get()) {
-            if (event.getType() == RenderGuiOverlayEvent.ElementType.ALL) {
+            if (event.getOverlay() == VanillaGuiOverlay.VIGNETTE.type()) {
                 if (FrostedHud.renderFrozenOverlay)
                     FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, renderViewPlayer);
                 if (FrostedHud.renderFrozenVignette)
@@ -339,9 +347,9 @@ public class ClientEvents {
 
 
             }
-            if (event.getType() == RenderGuiOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {
+            if (event.getOverlay() == VanillaGuiOverlay.HOTBAR.type() && FrostedHud.renderHotbar) {
                 if (mc.gameMode.getPlayerMode() == GameType.SPECTATOR) {
-                    mc.gui.getSpectatorGui().renderHotbar(stack, partialTicks);
+                    mc.gui.getSpectatorGui().renderHotbar(stack);
                 } else {
                     if (FrostedHud.renderForecast)
                         FrostedHud.renderForecast(stack, anchorX, anchorY, mc, renderViewPlayer);
@@ -353,7 +361,7 @@ public class ClientEvents {
                 }
                 event.setCanceled(true);
             }
-            if (event.getType() == RenderGameOverlayEvent.ElementType.EXPERIENCE && FrostedHud.renderExperience) {
+            if (event.getOverlay() == VanillaGuiOverlay.EXPERIENCE_BAR.type() && FrostedHud.renderExperience) {
                 if (FrostedHud.renderHypothermia) {
                     FrostedHud.renderHypothermia(stack, anchorX, anchorY, mc, clientPlayer);
                 } else {
@@ -361,11 +369,11 @@ public class ClientEvents {
                 }
                 event.setCanceled(true);
             }
-            if (event.getType() == RenderGameOverlayEvent.ElementType.HEALTH && FrostedHud.renderHealth) {
+            if (event.getOverlay() == VanillaGuiOverlay.PLAYER_HEALTH.type() && FrostedHud.renderHealth) {
                 FrostedHud.renderHealth(stack, anchorX, anchorY, mc, renderViewPlayer);
                 event.setCanceled(true);
             }
-            if (event.getType() == RenderGameOverlayEvent.ElementType.FOOD) {
+            if (event.getOverlay() == VanillaGuiOverlay.FOOD_LEVEL.type()) {
                 if (FrostedHud.renderFood)
                     FrostedHud.renderFood(stack, anchorX, anchorY, mc, renderViewPlayer);
                 if (FrostedHud.renderThirst)
@@ -374,24 +382,24 @@ public class ClientEvents {
                     FrostedHud.renderTemperature(stack, anchorX, anchorY, mc, renderViewPlayer);
                 event.setCanceled(true);
             }
-            if (event.getType() == RenderGameOverlayEvent.ElementType.ARMOR && FrostedHud.renderArmor) {
+            if (event.getOverlay() == VanillaGuiOverlay.ARMOR_LEVEL.type() && FrostedHud.renderArmor) {
                 FrostedHud.renderArmor(stack, anchorX, anchorY, mc, clientPlayer);
                 event.setCanceled(true);
             }
-            if (event.getType() == RenderGameOverlayEvent.ElementType.HEALTHMOUNT && FrostedHud.renderHealthMount) {
+            if (event.getOverlay() == VanillaGuiOverlay.MOUNT_HEALTH.type() && FrostedHud.renderHealthMount) {
                 FrostedHud.renderMountHealth(stack, anchorX, anchorY, mc, clientPlayer);
                 event.setCanceled(true);
             }
-            if (event.getType() == RenderGameOverlayEvent.ElementType.JUMPBAR && FrostedHud.renderJumpBar) {
+            if (event.getOverlay() == VanillaGuiOverlay.JUMP_BAR.type() && FrostedHud.renderJumpBar) {
                 FrostedHud.renderJumpbar(stack, anchorX, anchorY, mc, clientPlayer);
                 event.setCanceled(true);
             }
         }
         // add compatibility to other MOD UIs, may cause problem?
         if (event.isCanceled()) {
-            if (event.getType() != RenderGameOverlayEvent.ElementType.FOOD)
+            if (event.getOverlay() != VanillaGuiOverlay.FOOD_LEVEL.type())
                 MinecraftForge.EVENT_BUS
-                        .post(new RenderGameOverlayEvent.Post(event.getMatrixStack(), event, event.getType()));// compatibility
+                        .post(new RenderGuiOverlayEvent.Post(event.getWindow(),event.getGuiGraphics(), event.getPartialTick(), event.getOverlay()));// compatibility
         }
     }
 
@@ -411,10 +419,10 @@ public class ClientEvents {
                 return;
             FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
             if (!stableVersion.isEmpty() && (clientVersion.isEmpty() || !clientVersion.laterThan(stableVersion))) {
-                event.getPlayer().displayClientMessage(TranslateUtils.translateGui("update_recommended")
+                event.getEntity().displayClientMessage(TranslateUtils.translateGui("update_recommended")
                         .append(stableVersion.getOriginal()).withStyle(ChatFormatting.BOLD), false);
                 if (isStable) {
-                    event.getPlayer()
+                    event.getEntity()
                             .displayClientMessage(TranslateUtils.str("CurseForge")
                                     .setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
                                             "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
@@ -435,12 +443,12 @@ public class ClientEvents {
         });
         if (ServerLifecycleHooks.getCurrentServer() != null)
             if (FHMain.saveNeedUpdate) {
-                event.getPlayer().displayClientMessage(
+                event.getEntity().displayClientMessage(
                         TranslateUtils.translateGui("save_update_needed", FHMain.lastServerConfig.getAbsolutePath())
                                 .withStyle(ChatFormatting.RED),
                         false);
             } else if (FHMain.lastbkf != null) {
-                event.getPlayer().displayClientMessage(TranslateUtils.translateGui("save_updated")
+                event.getEntity().displayClientMessage(TranslateUtils.translateGui("save_updated")
                                 .append(TranslateUtils.str(FHMain.lastbkf.getName()).setStyle(Style.EMPTY
                                         .withClickEvent(
                                                 new ClickEvent(ClickEvent.Action.OPEN_FILE, FHMain.lastbkf.getAbsolutePath()))
@@ -474,23 +482,23 @@ public class ClientEvents {
             
             if (pe != null && pe.getEffect(FHEffects.NYCTALOPIA.get()) != null) {
                 ClientUtils.applyspg = true;
-                ClientUtils.spgamma = Mth.clamp((float) (ClientUtils.mc().options.gamma), 0f, 1f) * 0.1f
+                ClientUtils.spgamma = Mth.clamp((float)(double) (ClientUtils.mc().options.gamma().get()), 0f, 1f) * 0.1f
                         - 1f;
             } else {
                 ClientUtils.applyspg = false;
-                ClientUtils.spgamma = Mth.clamp((float) ClientUtils.mc().options.gamma, 0f, 1f);
+                ClientUtils.spgamma = Mth.clamp((float)(double) ClientUtils.mc().options.gamma().get(), 0f, 1f);
             }
         }
     }
 
     @SubscribeEvent
-    public static void unloadWorld(Unload event) {
+    public static void unloadWorld(LevelEvent.Unload event) {
         ClientUtils.applyspg = false;
     }
 
     @SuppressWarnings({"resource", "unchecked", "rawtypes"})
     @SubscribeEvent
-    public void onWorldLoad(WorldEvent.Load event) {
+    public void onWorldLoad(LevelEvent.Load event) {
         if (!HeaterVestRenderer.rendersAssigned) {
             for (Object render : ClientUtils.mc().getEntityRenderDispatcher().renderers.values())
                 if (HumanoidMobRenderer.class.isAssignableFrom(render.getClass()))
@@ -503,7 +511,7 @@ public class ClientEvents {
 
     
     @SubscribeEvent
-    public void onWorldUnLoad(Unload event) {
+    public void onWorldUnLoad(LevelEvent.Unload event) {
     	
     }
     @SubscribeEvent
@@ -515,7 +523,7 @@ public class ClientEvents {
     	}
     }
     @SubscribeEvent
-    public static void onClientKey(KeyInputEvent event) {
+    public static void onClientKey(InputEvent.Key event) {
     	if(event.getAction()==GLFW.GLFW_PRESS&&ClientRegistryEvents.key_skipDialog.consumeClick()) {
     		if(ClientScene.INSTANCE!=null)
     			ClientScene.INSTANCE.sendContinuePacket(true);
@@ -587,8 +595,8 @@ public class ClientEvents {
     }
 
     @SubscribeEvent
-    public static void onGUIOpen(GuiOpenEvent event) {
-        if (event.getGui() instanceof TitleScreen) {
+    public static void onGUIOpen(ScreenEvent.Opening event) {
+        if (event.getScreen() instanceof TitleScreen) {
             if (!UnlockedTipManager.error.isEmpty()) {
                 TipElement ele = new TipElement();
                 ele.replaceToError(UnlockedTipManager.UNLOCKED_FILE, UnlockedTipManager.error);
@@ -603,8 +611,8 @@ public class ClientEvents {
     }
 
     @SubscribeEvent
-    public static void onGUIRender(GuiScreenEvent event) {
-        if (event.getGui() instanceof SoundOptionsScreen) {
+    public static void onGUIRender(ScreenEvent.Render event) {
+        if (event.getScreen() instanceof SoundOptionsScreen) {
             if (Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC) <= 0) {
                 TipDisplayUtil.displayTip("_music_warning", false);
             }

@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.compat;
 
 import com.simibubi.create.AllBlocks;
-import com.simibubi.create.foundation.block.BlockStressDefaults;
-import com.simibubi.create.foundation.block.BlockStressValues;
+import com.simibubi.create.content.kinetics.BlockStressDefaults;
+import com.simibubi.create.content.kinetics.BlockStressValues;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 

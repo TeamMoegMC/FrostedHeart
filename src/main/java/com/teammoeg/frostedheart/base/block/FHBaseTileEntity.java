@@ -38,4 +38,5 @@ public abstract class FHBaseTileEntity extends IEBaseBlockEntity {
             newState = state;
         level.sendBlockUpdated(pos, state, newState, 3);
     }
+
 }
