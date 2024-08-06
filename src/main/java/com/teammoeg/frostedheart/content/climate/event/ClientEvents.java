@@ -12,7 +12,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
@@ -31,7 +31,7 @@ public class ClientEvents {
             if(ClientUtils.mc().screen instanceof MasterGeneratorScreen&&player.tickCount%20==0) {
             	((MasterGeneratorScreen)ClientUtils.mc().screen).fullInit();
             }
-            if (!player.isSpectator() && !player.isCreative() && player.level != null) {
+            if (!player.isSpectator() && !player.isCreative() && player.level() != null) {
                 if (player.tickCount % 60 <= 3) {
                 	 PlayerTemperatureData ptd=PlayerTemperatureData.getCapability(player).orElse(null);
                     float envTemp = ptd.getEnvTemp();
@@ -48,7 +48,7 @@ public class ClientEvents {
                         xSpeed += player.getDeltaMovement().x;
                         ySpeed += player.getDeltaMovement().y;
                         zSpeed += player.getDeltaMovement().z;
-                        player.level.addParticle(FHParticleTypes.BREATH.get(), x, y, z, xSpeed, ySpeed, zSpeed);
+                        player.level().addParticle(FHParticleTypes.BREATH.get(), x, y, z, xSpeed, ySpeed, zSpeed);
                     }
                 }
             }
@@ -65,21 +65,21 @@ public class ClientEvents {
             LocalPlayer player = (LocalPlayer) event.player;
             if(forstedSoundCd>0)
             	forstedSoundCd--;
-            if (!player.isSpectator() && !player.isCreative() && player.level != null&&forstedSoundCd>0) {
+            if (!player.isSpectator() && !player.isCreative() && player.level() != null&&forstedSoundCd>0) {
             	
             	PlayerTemperatureData ptd=PlayerTemperatureData.getCapability(player).orElse(null);
                 float prevTemp = ptd.smoothedBodyPrev;
                 float currTemp = ptd.smoothedBody;
                 // play sound if currTemp transitions across integer threshold
                 if (currTemp <= 0.5F && Mth.floor(prevTemp - 0.5F) != Mth.floor(currTemp - 0.5F)) {
-                    player.level.playSound(player, player.blockPosition(), FHSounds.ICE_CRACKING.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+                    player.level().playSound(player, player.blockPosition(), FHSounds.ICE_CRACKING.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
                     forstedSoundCd=20;
                 }
             }
         }
     }
     @SubscribeEvent
-    public void onWorldLoad(WorldEvent.Load event) {
+    public void onWorldLoad(LevelEvent.Load event) {
     	forstedSoundCd=0;
     }
     

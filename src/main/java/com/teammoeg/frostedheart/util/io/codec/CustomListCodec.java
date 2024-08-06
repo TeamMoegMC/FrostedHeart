@@ -40,7 +40,7 @@ public class CustomListCodec<A,L extends Collection<A>> implements Codec<L> {
         	});
         	if(sb.length()!=0)
         		return DataResult.success(Pair.of(obj, input));
-        	return DataResult.error(sb.toString(),Pair.of(obj, input));
+        	return DataResult.error(sb::toString,Pair.of(obj, input));
         });
     }
 

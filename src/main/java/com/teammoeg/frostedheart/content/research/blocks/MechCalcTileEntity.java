@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.research.blocks;
 
 import java.util.List;
 
-import com.simibubi.create.content.contraptions.base.KineticTileEntity;
-import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
@@ -42,7 +42,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggleInformation {
+public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggleInformation {
     int processMax = 6400;
     public int process = 0;
     int currentPoints = 0;

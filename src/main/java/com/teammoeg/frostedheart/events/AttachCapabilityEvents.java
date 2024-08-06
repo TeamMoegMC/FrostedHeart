@@ -70,7 +70,7 @@ public class AttachCapabilityEvents {
     public static void attachToItem(AttachCapabilitiesEvent<ItemStack> event) {
     	ArmorTempData amd=FHDataManager.getArmor(event.getObject());
         if (amd!=null) {
-            event.addCapability(new ResourceLocation(FHMain.MODID, "armor_warmth"),new CurioCapabilityProvider(()->new ArmorTempCurios(amd)));
+            event.addCapability(new ResourceLocation(FHMain.MODID, "armor_warmth"),new CurioCapabilityProvider(()->new ArmorTempCurios(amd,event.getObject())));
         }
     }
     @SubscribeEvent

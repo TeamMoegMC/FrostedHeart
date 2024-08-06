@@ -33,17 +33,19 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 
 public class AddTempCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("set")
                 .then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ct) -> {
-                    ChunkHeatData.removeTempAdjust(ct.getSource().getLevel(), BlockPosArgument.getOrLoadBlockPos(ct, "position"));
+                    ChunkHeatData.removeTempAdjust(ct.getSource().getLevel(), BlockPosArgument.getBlockPos(ct, "position"));
                     return Command.SINGLE_SUCCESS;
                 }).then(Commands.argument("range", IntegerArgumentType.integer())
                         .then(Commands.argument("temperature", IntegerArgumentType.integer()).executes((ct) -> {
                             ChunkHeatData.addCubicTempAdjust(ct.getSource().getLevel(),
-                                    BlockPosArgument.getOrLoadBlockPos(ct, "position"),
+                                    BlockPosArgument.getBlockPos(ct, "position"),
                                     IntegerArgumentType.getInteger(ct, "range"),
                                     IntegerArgumentType.getInteger(ct, "temperature"));
                             return Command.SINGLE_SUCCESS;
@@ -52,24 +54,25 @@ public class AddTempCommand {
                 .executes((ct) -> {
                     Collection<IHeatArea> adjs = ChunkHeatData.getAdjust(ct.getSource().getLevel(), ct.getSource().getPlayerOrException().blockPosition());
                     if (adjs.isEmpty()) {
-                        ct.getSource().sendSuccess(TranslateUtils.str("No Active Adjust!"), true);
+                        ct.getSource().sendSuccess(()->TranslateUtils.str("No Active Adjust!"), true);
                     } else {
-                        ct.getSource().sendSuccess(TranslateUtils.str("Active Adjusts:"), true);
+                        ct.getSource().sendSuccess(()->TranslateUtils.str("Active Adjusts:"), true);
+                        BlockPos pos=new BlockPos((int)ct.getSource().getPosition().x,(int)ct.getSource().getPosition().y,(int)ct.getSource().getPosition().z);
                         for (IHeatArea adj : adjs) {
-                            ct.getSource().sendSuccess(TranslateUtils.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(ct.getSource().getPlayerOrException().blockPosition())), true);
+                            ct.getSource().sendSuccess(()->TranslateUtils.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(pos)), true);
                         }
                     }
                     return Command.SINGLE_SUCCESS;
                 })
                 .then(Commands.argument("position", BlockPosArgument.blockPos())
                         .executes((ct) -> {
-                            Collection<IHeatArea> adjs = ChunkHeatData.getAdjust(ct.getSource().getLevel(), BlockPosArgument.getOrLoadBlockPos(ct, "position"));
+                            Collection<IHeatArea> adjs = ChunkHeatData.getAdjust(ct.getSource().getLevel(), BlockPosArgument.getBlockPos(ct, "position"));
                             if (adjs.isEmpty()) {
-                                ct.getSource().sendSuccess(TranslateUtils.str("No Active Adjust!"), true);
+                                ct.getSource().sendSuccess(()->TranslateUtils.str("No Active Adjust!"), true);
                             } else {
-                                ct.getSource().sendSuccess(TranslateUtils.str("Active Adjusts:"), true);
+                                ct.getSource().sendSuccess(()->TranslateUtils.str("Active Adjusts:"), true);
                                 for (IHeatArea adj : adjs) {
-                                    ct.getSource().sendSuccess(TranslateUtils.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(BlockPosArgument.getOrLoadBlockPos(ct, "position"))), true);
+                                    ct.getSource().sendSuccess(()->TranslateUtils.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(BlockPosArgument.getBlockPos(ct, "position"))), true);
                                 }
                             }
                             return Command.SINGLE_SUCCESS;

@@ -129,7 +129,7 @@ public class WorldTemperature {
      * @return world temperature<br>
      */
     public static float getBaseTemperature(LevelReader w, BlockPos pos) {
-        Biome b = w.getBiome(pos);
+        Biome b = w.getBiome(pos).get();
         Float temp = null;
         if (b != null)
             temp = biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
@@ -165,7 +165,7 @@ public class WorldTemperature {
      * @return world temperature<br>
      */
     public static float getTemperature(LevelReader w, BlockPos pos) {
-        Biome b = w.getBiome(pos);
+        Biome b = w.getBiome(pos).get();
         Float temp = null;
         if (b != null)
             temp = biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);

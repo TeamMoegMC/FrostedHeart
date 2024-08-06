@@ -54,6 +54,7 @@ import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.ListTag;
@@ -144,10 +145,15 @@ public class CodecUtil {
 		
 	};
 	public static final Codec<ItemStack>  ITEMSTACK_CODEC = RecordCodecBuilder.create(t -> t.group(
-			CodecUtil.registryCodec(()->Registry.ITEM).fieldOf("id").forGetter(ItemStack::getItem),
+			CodecUtil.registryCodec(()->ForgeRegistries.ITEMS.getCodec()).fieldOf("id").forGetter(ItemStack::getItem),
 			Codec.INT.fieldOf("Count").forGetter(ItemStack::getCount),
-			CodecUtil.defaultSupply(CompoundTag.CODEC,CompoundTag::new).fieldOf("tag").forGetter(ItemStack::getTag))
-		.apply(t, ItemStack::new));
+			CompoundTag.CODEC.optionalfieldOf("tag").forGetter(ItemStack::getTag)),
+			CompoundTag.CODEC.optionalFieldOf("ForgeCaps").forGetter(ItemStack::serializeCaps)
+		.apply(t, (id,cnt,tag,caps)->{
+			ItemStack out=new ItemStack(id,cnt,caps.orElse(null));
+			tag.ifPresent(n->out.setTag(n));
+			return out;
+		}));
 	public static final Codec<Integer> POSITIVE_INT = Codec.intRange(0, Integer.MAX_VALUE);
 	public static final Codec<BlockPos> BLOCKPOS = alternative(BlockPos.class).add(BlockPos.CODEC).add(Codec.LONG.xmap(BlockPos::of, BlockPos::asLong)).build();
 	

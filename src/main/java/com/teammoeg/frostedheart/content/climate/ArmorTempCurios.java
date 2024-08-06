@@ -11,13 +11,16 @@ import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.world.item.ItemStack;
 import top.theillusivec4.curios.api.SlotContext;
 import top.theillusivec4.curios.api.type.capability.ICurio;
 
 public class ArmorTempCurios implements ICurio {
 	ArmorTempData data;
-	public ArmorTempCurios(ArmorTempData data) {
+	ItemStack stack;
+	public ArmorTempCurios(ArmorTempData data,ItemStack stack) {
 		this.data=data;
+		this.stack=stack;
 	}
 
 	@Override
@@ -33,6 +36,12 @@ public class ArmorTempCurios implements ICurio {
         		mm.put(FHAttributes.HEAT_PROOF.get(), new AttributeModifier(uuid,slot.getKey(slotContext.getIndex()), data.getHeatProof() , Operation.ADDITION));
         }
 		return ICurio.super.getAttributeModifiers(slotContext, uuid);
+	}
+
+	@Override
+	public ItemStack getStack() {
+		// TODO Auto-generated method stub
+		return stack;
 	}
 
 }

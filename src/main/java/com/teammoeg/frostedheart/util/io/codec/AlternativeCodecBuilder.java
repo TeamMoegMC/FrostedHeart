@@ -36,7 +36,7 @@ public class AlternativeCodecBuilder<A>{
 							return result;
 					}
 				}
-				return DataResult.error("No matching encodec present for "+input);
+				return DataResult.error(()->"No matching encodec present for "+input);
 			}
 		
 			@Override
@@ -48,7 +48,7 @@ public class AlternativeCodecBuilder<A>{
 						return result;
 					//System.out.println("getClass "+codec.getFirst()+" Result "+result);
 				}
-				return DataResult.error("No matching decodec present for "+input);
+				return DataResult.error(()->"No matching decodec present for "+input);
 			}
 			@Override
 			public String toString() {

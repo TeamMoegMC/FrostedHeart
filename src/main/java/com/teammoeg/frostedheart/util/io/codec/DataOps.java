@@ -188,19 +188,19 @@ public class DataOps implements DynamicOps<Object> {
 	private static <T> DataResult<T> cast(Class<T> type, Object input) {
 		if (type.isInstance(input))
 			return DataResult.success((T) input);
-		return DataResult.error("Not a " + type.getSimpleName());
+		return DataResult.error(()->"Not a " + type.getSimpleName());
 	}
 
 	private static DataResult<Map<Object, Object>> castToMap(Object input) {
 		if (input instanceof Map)
 			return DataResult.success((Map<Object, Object>) input);
-		return DataResult.error("Not a Map");
+		return DataResult.error(()->"Not a Map");
 	}
 
 	private static DataResult<List<Object>> castToList(Object input) {
 		if (input instanceof List)
 			return DataResult.success((List<Object>) input);
-		return DataResult.error("Not a List");
+		return DataResult.error(()->"Not a List");
 	}
 
 	@Override
@@ -296,7 +296,7 @@ public class DataOps implements DynamicOps<Object> {
 				return DataResult.success(bs);
 			}
 		}
-		return DataResult.error("Not a byte array");
+		return DataResult.error(()->"Not a byte array");
 	}
 
 	@Override
@@ -319,7 +319,7 @@ public class DataOps implements DynamicOps<Object> {
 			}
 
 		}
-		return DataResult.error("Not a int array");
+		return DataResult.error(()->"Not a int array");
 	}
 
 	@Override
@@ -347,7 +347,7 @@ public class DataOps implements DynamicOps<Object> {
 			}
 
 		}
-		return DataResult.error("Not a long array");
+		return DataResult.error(()->"Not a long array");
 	}
 
 	@Override
@@ -408,7 +408,7 @@ public class DataOps implements DynamicOps<Object> {
 		} else if (list == NULLTAG || list == null) {
 			return DataResult.success(values);
 		}
-		return DataResult.error("Not a Map or Empty");
+		return DataResult.error(()->"Not a Map or Empty");
 	}
 
 	@Override
@@ -431,7 +431,7 @@ public class DataOps implements DynamicOps<Object> {
 		} else if (map == NULLTAG || map == null) {
 			return DataResult.success(values);
 		}
-		return DataResult.error("Not a Map or Empty");
+		return DataResult.error(()->"Not a Map or Empty");
 	}
 
 	@Override
@@ -455,7 +455,7 @@ public class DataOps implements DynamicOps<Object> {
 	@Override
 	public DataResult<Object> mergeToPrimitive(Object prefix, Object value) {
 		if (prefix != NULLTAG && prefix != null) {
-			return DataResult.error("Do not know how to append a primitive value " + value + " to " + prefix, value);
+			return DataResult.error(()->"Do not know how to append a primitive value " + value + " to " + prefix, value);
 		}
 		return DataResult.success(value);
 	}
@@ -479,7 +479,7 @@ public class DataOps implements DynamicOps<Object> {
 	public DataResult<Object> getGeneric(Object input, Object key) {
 		return castToMap(input).flatMap(t -> {
 			Object value = t.get(key);
-			return value == null ? DataResult.error("No value for " + key + " present") : DataResult.success(value);
+			return value == null ? DataResult.error(()->"No value for " + key + " present") : DataResult.success(value);
 		});
 	}
 

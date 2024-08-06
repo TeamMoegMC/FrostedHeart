@@ -24,9 +24,6 @@ import java.util.Random;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
-
-import net.minecraft.nbt.CompoundNBT;
 
 /**
  * A climate event defined by a set of timestamps and temperature

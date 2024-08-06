@@ -21,13 +21,14 @@ package com.teammoeg.frostedheart.content.research.blocks;
 
 import java.util.List;
 
+import org.joml.Quaternionf;
+
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHBlocks;
 
 import blusunrize.immersiveengineering.api.IEProperties.IEObjState;
 import blusunrize.immersiveengineering.api.IEProperties.Model;
 import blusunrize.immersiveengineering.api.IEProperties.VisibilityList;
-import blusunrize.immersiveengineering.api.utils.client.SinglePropertyModelData;
 import blusunrize.immersiveengineering.client.render.tile.DynamicModel;
 import blusunrize.immersiveengineering.client.utils.RenderUtils;
 import net.minecraft.world.level.block.state.BlockState;
@@ -35,18 +36,17 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
-import com.mojang.math.Quaternion;
 
-public class MechCalcRenderer extends BlockEntityRenderer<MechCalcTileEntity> {
-    public static DynamicModel<Direction> MODEL;
+public class MechCalcRenderer implements BlockEntityRenderer<MechCalcTileEntity> {
+    //public static DynamicModel<Direction> MODEL;
     public static IEObjState drum = new IEObjState(VisibilityList.show("c7"));
     public static IEObjState register = new IEObjState(VisibilityList.show("c6"));
 
-    public MechCalcRenderer(BlockEntityRenderDispatcher rendererDispatcherIn) {
-        super(rendererDispatcherIn);
+    public MechCalcRenderer(BlockEntityRendererProvider.Context rendererDispatcherIn) {
     }
 
     @Override
@@ -81,12 +81,12 @@ public class MechCalcRenderer extends BlockEntityRenderer<MechCalcTileEntity> {
                 dx = -1;
                 break;
         }
-        matrixStack.mulPose(new Quaternion(0, deg, 0, true));
+        matrixStack.mulPose(new Quaternionf(new AxisAngle4d((deg*Math.PI/180f),0f, 1f, 0f)));
         matrixStack.translate(dx, 0, dz);
 
         matrixStack.translate(0, 13.75 / 16, 7d / 16);
         float rotn = ((te.process) % 160) * 2.25f;
-        Quaternion rot = new Quaternion(rotn, 0f, 0f, true);
+        Quaternionf rot = new Quaternionf(new AxisAngle4d((rotn*Math.PI/180f),1f, 0f, 0f));
         matrixStack.mulPose(rot);
 
         matrixStack.translate(0, -1.5 / 16, -1.5 / 16);

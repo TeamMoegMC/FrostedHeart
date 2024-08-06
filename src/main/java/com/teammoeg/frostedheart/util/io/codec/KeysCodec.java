@@ -34,7 +34,7 @@ public class KeysCodec<A> extends MapCodec<A> {
 		}
 		if(def!=null)
 			return codec.parse(ops, (T)def.apply(ops));
-		return DataResult.error("No any of "+Arrays.toString(keys)+" present.");
+		return DataResult.error(()->"No any of "+Arrays.toString(keys)+" present.");
 	}
 
 	@Override

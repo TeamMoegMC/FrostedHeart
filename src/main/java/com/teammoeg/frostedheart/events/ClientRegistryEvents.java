@@ -51,11 +51,13 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
 
 import blusunrize.immersiveengineering.api.ManualHelper;
 import blusunrize.immersiveengineering.client.manual.ManualElementMultiblock;
-import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import blusunrize.lib.manual.ManualEntry;
+import blusunrize.lib.manual.ManualEntry.SpecialElementData;
 import blusunrize.lib.manual.ManualInstance;
 import blusunrize.lib.manual.Tree;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
@@ -65,43 +67,60 @@ import net.minecraft.client.gui.screens.inventory.MenuAccess;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.client.renderer.texture.SpriteLoader;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ModelBakeEvent;
-import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
+import net.minecraftforge.client.event.ModelEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.registries.ForgeRegistries;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientRegistryEvents {
     private static Tree.InnerNode<ResourceLocation, ManualEntry> CATEGORY;
+	@SubscribeEvent
+	public static void onCreativeTabContents(BuildCreativeModeTabContentsEvent event) {
+		CreativeTabItemHelper helper = new CreativeTabItemHelper(event.getTabKey(), event.getTab());
+		ForgeRegistries.ITEMS.forEach(e -> {
+			if (e instanceof ICreativeModeTabItem item) {
+				item.fillItemCategory(helper);
+			}
+		});
+		helper.register(event);
 
+	}
     public static void addManual() {
         ManualInstance man = ManualHelper.getManual();
         CATEGORY = man.getRoot().getOrCreateSubnode(new ResourceLocation(FHMain.MODID, "main"), 110);
         {
             ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
-            builder.addSpecialElement("generator", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR));
+
+            builder.addSpecialElement(new SpecialElementData("generator", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR)));
             builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator"));
             man.addEntry(CATEGORY, builder.create(), 0);
         }
         {
             ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
-            builder.addSpecialElement("generator_2", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR_T2));
+            builder.addSpecialElement(new SpecialElementData("generator_2", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR_T2)));
             builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator_t2"));
             man.addEntry(CATEGORY, builder.create(), 1);
         }
@@ -113,7 +132,11 @@ public class ClientRegistryEvents {
     }
 	public static KeyMapping key_skipDialog = new KeyMapping("key.frostedheart.skip_dialog", 
 		GLFW.GLFW_KEY_Z, "key.categories.frostedheart");
-
+	@SubscribeEvent
+	public void registerKeys(RegisterKeyMappingsEvent ev) {
+		key_skipDialog.setKeyConflictContext(KeyConflictContext.IN_GAME);
+		ev.register(key_skipDialog);
+	}
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
         // Register screens
@@ -128,7 +151,7 @@ public class ClientRegistryEvents {
         registerIEScreen(new ResourceLocation(FHMain.MODID, "heat_incubator"), IncubatorT2Screen::new);
 
         // Register translucent render type
-
+        //TODO: specify in model files
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.rye_block.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.white_turnip_block.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.wolfberry_bush_block.get(), RenderType.cutout());
@@ -152,30 +175,29 @@ public class ClientRegistryEvents {
         RenderTypeLookup.setRenderLayer(FHBlocks.pebble_block, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.odd_mark, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.wooden_box, RenderType.getCutout());*/
-        ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T1.get(), T1GeneratorRenderer::new);
-        ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T2.get(), T2GeneratorRenderer::new);
-        ClientRegistry.bindTileEntityRenderer(FHTileTypes.MECH_CALC.get(), MechCalcRenderer::new);
-        key_skipDialog.setKeyConflictContext(KeyConflictContext.IN_GAME);
-		ClientRegistry.registerKeyBinding(key_skipDialog);
+        BlockEntityRenderers.register(FHTileTypes.GENERATOR_T1.get(), T1GeneratorRenderer::new);
+        BlockEntityRenderers.register(FHTileTypes.GENERATOR_T2.get(), T2GeneratorRenderer::new);
+        BlockEntityRenderers.register(FHTileTypes.MECH_CALC.get(), MechCalcRenderer::new);
+        
         // Register layers
-        Map<String, PlayerRenderer> skinMap = Minecraft.getInstance().getEntityRenderDispatcher().getSkinMap();
-        PlayerRenderer render = skinMap.get("default");
-        render.addLayer(new HeaterVestRenderer<>(render));
-        render = skinMap.get("slim");
-        render.addLayer(new HeaterVestRenderer<>(render));
+        Map<String, EntityRenderer<? extends Player>> skinMap = Minecraft.getInstance().getEntityRenderDispatcher().getSkinMap();
+        if(skinMap.get("default") instanceof PlayerRenderer render)
+        	render.addLayer(new HeaterVestRenderer<>(render));
+        if(skinMap.get("slim") instanceof PlayerRenderer render)
+        	render.addLayer(new HeaterVestRenderer<>(render));
         addManual();
         if (ModList.get().isLoaded("tetra"))
             TetraClient.init();
     }
 
     @SubscribeEvent
-    public static void onModelBake(ModelBakeEvent event) {
-        for (ResourceLocation location : event.getModelRegistry().keySet()) {
+    public static void onModelBake(ModelEvent.ModifyBakingResult event) {
+        for (ResourceLocation location : event.getModels().keySet()) {
             // Now find all armors
             ResourceLocation item = new ResourceLocation(location.getNamespace(), location.getPath());
             if (RegistryUtils.getItem(item) instanceof ArmorItem) {
                 ModelResourceLocation itemModelResourceLocation = new ModelResourceLocation(item, "inventory");
-                BakedModel model = event.getModelRegistry().get(itemModelResourceLocation);
+                BakedModel model = event.getModels().get(itemModelResourceLocation);
                 if (model == null) {
                     FHMain.LOGGER.warn("Did not find the expected vanilla baked model for " + item + " in registry");
                 } else if (model instanceof LiningModel) {
@@ -183,16 +205,18 @@ public class ClientRegistryEvents {
                 } else {
                     // Replace the model with our IBakedModel
                     LiningModel customModel = new LiningModel(model);
-                    event.getModelRegistry().put(itemModelResourceLocation, customModel);
+                    event.getModels().put(itemModelResourceLocation, customModel);
                 }
             }
         }
     }
 
     @SubscribeEvent
-    public static void onTextureStitchEvent(TextureStitchEvent.Pre event) {
-        if (event.getMap().location() == InventoryMenu.BLOCK_ATLAS) {
-            event.addSprite(LiningFinalizedModel.buffCoatFeetTexture);
+    public static void onTextureStitchEvent(TextureStitchEvent event) {
+       /* if (event.getAtlas().location().equals(InventoryMenu.BLOCK_ATLAS)) {
+        	
+        	SpriteLoader.create(event.getAtlas()).loadAndStitch(null, null, 0, null)
+            event.getAtlas().(LiningFinalizedModel.buffCoatFeetTexture);
             event.addSprite(LiningFinalizedModel.buffCoatLegsTexture);
             event.addSprite(LiningFinalizedModel.buffCoatHelmetTexture);
             event.addSprite(LiningFinalizedModel.buffCoatTorsoTexture);
@@ -208,9 +232,9 @@ public class ClientRegistryEvents {
             event.addSprite(LiningFinalizedModel.strawLiningFeetTexture);
             event.addSprite(LiningFinalizedModel.strawLiningHelmetTexture);
             event.addSprite(LiningFinalizedModel.strawLiningTorsoTexture);
-        }
+        }*/
     }
-
+/*
     @SubscribeEvent
     public static void provideTextures(final TextureStitchEvent.Pre event) {
         if (InventoryMenu.BLOCK_ATLAS.equals(event.getMap().location())) {
@@ -223,24 +247,24 @@ public class ClientRegistryEvents {
                     .forEach(event::addSprite);
         }
     }
-
+*/
     public static <C extends AbstractContainerMenu, S extends BaseScreen> void
     registerFTBScreen(MenuType<C> type, Function<C, S> factory) {
         MenuScreens.register(type, FTBScreenFactory(factory));
     }
 
-    public static <C extends AbstractContainerMenu, S extends Screen & MenuAccess<C>> void
+    /*public static <C extends AbstractContainerMenu, S extends Screen & MenuAccess<C>> void
     registerIEScreen(ResourceLocation containerName, MenuScreens.ScreenConstructor<C, S> factory) {
         @SuppressWarnings("unchecked")
         MenuType<C> type = (MenuType<C>) GuiHandler.getContainerType(containerName);
         MenuScreens.register(type, factory);
-    }
+    }*/
 
     @SubscribeEvent
-    public static void registerParticleFactories(ParticleFactoryRegisterEvent event) {
-        Minecraft.getInstance().particleEngine.register(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);
-        Minecraft.getInstance().particleEngine.register(FHParticleTypes.BREATH.get(), BreathParticle.Factory::new);
-        Minecraft.getInstance().particleEngine.register(FHParticleTypes.WET_STEAM.get(), WetSteamParticle.Factory::new);
+    public static void registerParticleFactories(RegisterParticleProvidersEvent event) {
+    	event.registerSpriteSet(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);
+    	event.registerSpriteSet(FHParticleTypes.BREATH.get(), BreathParticle.Factory::new);
+    	event.registerSpriteSet(FHParticleTypes.WET_STEAM.get(), WetSteamParticle.Factory::new);
     }
 
 }

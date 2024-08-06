@@ -1,7 +1,5 @@
 package com.teammoeg.frostedheart.util.utility;
 
-import moze_intel.projecte.shaded.org.apache.commons.math3.exception.OutOfRangeException;
-
 public abstract class RandomBase{
     /** Next gaussian. */
     private double nextGaussian;

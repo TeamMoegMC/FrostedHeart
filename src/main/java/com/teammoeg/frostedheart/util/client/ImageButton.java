@@ -1,13 +1,13 @@
 package com.teammoeg.frostedheart.util.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 
 public class ImageButton extends Button {
 	int xTexStart;
@@ -18,24 +18,25 @@ public class ImageButton extends Button {
 	ResourceLocation TEXTURE;
 	public ImageButton(ResourceLocation texture,int xIn, int yIn, int widthIn, int heightIn, int xTexStartIn, int yTexStartIn,
 			Button.OnPress onPressIn) {
-		this(texture,xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn, NO_TOOLTIP, onPressIn);
+		this(texture,xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn, null, onPressIn);
 	}
 
 	public ImageButton(ResourceLocation texture,int xIn, int yIn, int widthIn, int heightIn, int xTexStartIn, int yTexStartIn,
-			Button.OnTooltip tt, Button.OnPress onPressIn) {
+		Tooltip tt, Button.OnPress onPressIn) {
+	
 		this(texture,xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn, 256, 256, onPressIn, tt,
-				TextComponent.EMPTY);
+			TranslateUtils.empty());
 	}
 
 	public ImageButton(ResourceLocation texture,int x, int y, int width, int height, int xTexStart, int yTexStart, int textureWidth,
 			int textureHeight, Button.OnPress onPress, Component title) {
-		this(texture,x, y, width, height, xTexStart, yTexStart, textureWidth, textureHeight, onPress, NO_TOOLTIP, title);
+		this(texture,x, y, width, height, xTexStart, yTexStart, textureWidth, textureHeight, onPress, null, title);
 	}
 
 	public ImageButton(ResourceLocation texture,int p_i244513_1_, int p_i244513_2_, int p_i244513_3_, int p_i244513_4_, int p_i244513_5_,
 			int p_i244513_6_, int p_i244513_9_, int p_i244513_10_, Button.OnPress p_i244513_11_,
-			Button.OnTooltip p_i244513_12_, Component p_i244513_13_) {
-		super(p_i244513_1_, p_i244513_2_, p_i244513_3_, p_i244513_4_, p_i244513_13_, p_i244513_11_, p_i244513_12_);
+			Tooltip p_i244513_12_, Component p_i244513_13_) {
+		super(Button.builder(p_i244513_13_, p_i244513_11_).bounds(p_i244513_2_, p_i244513_3_, p_i244513_4_, p_i244513_5_).tooltip(p_i244513_12_));
 		this.TEXTURE=texture;
 		this.textureWidth = p_i244513_9_;
 		this.textureHeight = p_i244513_10_;
@@ -44,23 +45,19 @@ public class ImageButton extends Button {
 	}
 
 	public void setPosition(int xIn, int yIn) {
-		this.x = xIn;
-		this.y = yIn;
+		this.setX(xIn);
+		this.setY(yIn);
 	}
 
-	public void renderButton(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+	public void renderButton(GuiGraphics matrixStack, int mouseX, int mouseY, float partialTicks) {
 		int i = 0, j = state * this.height;
 
 		if (this.isHovered()) {
 			i += this.width;
 		}
-		Minecraft.getInstance().getTextureManager().bind(TEXTURE);
 		RenderSystem.enableDepthTest();
-		blit(matrixStack, this.x, this.y, this.xTexStart + i, this.yTexStart + j, this.width, this.height,
+		matrixStack.blit(TEXTURE, this.getX(), this.getY(), this.xTexStart + i, this.yTexStart + j, this.width, this.height,
 				this.textureWidth, this.textureHeight);
-		if (this.isHovered()) {
-			this.renderToolTip(matrixStack, mouseX, mouseY);
-		}
 
 	}
 }

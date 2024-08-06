@@ -31,11 +31,12 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
-
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public class FHBerryBushBlock extends SweetBerryBushBlock {
@@ -57,7 +58,7 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
     }
 
     @Override
-    public boolean isBonemealSuccess(Level worldIn, Random rand, BlockPos pos, BlockState state) {
+    public boolean isBonemealSuccess(Level worldIn, RandomSource rand, BlockPos pos, BlockState state) {
         float temp = ChunkHeatData.getTemperature(worldIn, pos);
         return temp >= growTemperature;
     }
@@ -75,7 +76,8 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
                 double d0 = Math.abs(entityIn.getX() - entityIn.xOld);
                 double d1 = Math.abs(entityIn.getZ() - entityIn.zOld);
                 if (d0 >= (double) 0.003F || d1 >= (double) 0.003F) {
-                    entityIn.hurt(DamageSource.SWEET_BERRY_BUSH, 0.0F);//remove damage
+                
+                    entityIn.hurt(worldIn.damageSources().sweetBerryBush(), 0.0F);//remove damage
                 }
             }
 
@@ -83,7 +85,7 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
     }
 
     @Override
-    public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, Random random) {
+    public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
         int i = state.getValue(AGE);
         float temp = ChunkHeatData.getTemperature(worldIn, pos);
         boolean bz = WorldClimate.isBlizzard(worldIn);

@@ -35,8 +35,8 @@ import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.data.Team;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.NbtTagArgument;
@@ -65,7 +65,7 @@ public class ResearchCommand {
                     rd.setFinished(true);
                     rd.announceCompletion();
 
-                    ct.getSource().sendSuccess(TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(()->TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("all").executes(ct -> {
                     TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
@@ -75,19 +75,19 @@ public class ResearchCommand {
                         rd.setFinished(true);
                         rd.announceCompletion();
                     }
-                    ct.getSource().sendSuccess(TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(()->TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
                 .then(Commands.literal("transfer").then(Commands.argument("from", UuidArgument.uuid())
                         .then(Commands.argument("to", UuidArgument.uuid())).executes(ct -> {
-                            Team team = FTBTeamsAPI.getManager().getTeamByID(UuidArgument.getUuid(ct, "to"));
+                            Team team = FTBTeamsAPI.api().getManager().getTeamByID(UuidArgument.getUuid(ct, "to")).orElse(null);
                             FHTeamDataManager.INSTANCE.transfer(UuidArgument.getUuid(ct, "from"), team);
-                            ct.getSource().sendSuccess(TranslateUtils.str("Transfered to " + team.getDisplayName()).withStyle(ChatFormatting.GREEN), false);
+                            ct.getSource().sendSuccess(()->TranslateUtils.str("Transfered to " + team.getName()).withStyle(ChatFormatting.GREEN), false);
                             return Command.SINGLE_SUCCESS;
                         })))
                 .then(Commands.literal("edit").then(Commands.argument("enable", BoolArgumentType.bool()).executes(ct -> {
                     FHResearch.editor = ct.getArgument("enable", Boolean.class);
-                    ct.getSource().sendSuccess(TranslateUtils.str("Editing mode set " + FHResearch.editor).withStyle(ChatFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(()->TranslateUtils.str("Editing mode set " + FHResearch.editor).withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
                 .then(Commands.literal("default").executes(ct -> Command.SINGLE_SUCCESS))
@@ -108,12 +108,12 @@ public class ResearchCommand {
                         }).executes(ct -> {
                             CompoundTag cnbt = ResearchDataAPI.getVariants(ct.getSource().getPlayerOrException());
                             String rsn = ct.getArgument("name", String.class);
-                            ct.getSource().sendSuccess(TranslateUtils.str(String.valueOf(cnbt.get(rsn))), false);
+                            ct.getSource().sendSuccess(()->TranslateUtils.str(String.valueOf(cnbt.get(rsn))), false);
                             return Command.SINGLE_SUCCESS;
                         })).then(Commands.literal("all").executes(ct -> {
 
                             CompoundTag cnbt = ResearchDataAPI.getVariants(ct.getSource().getPlayerOrException());
-                            ct.getSource().sendSuccess(TranslateUtils.str(cnbt.toString()), false);
+                            ct.getSource().sendSuccess(()->TranslateUtils.str(cnbt.toString()), false);
                             return Command.SINGLE_SUCCESS;
 
                         }))

@@ -159,7 +159,7 @@ public class SurroundingTemperatureSimulator {
         origin = new BlockPos((chunkOffsetW + 1) << 4, (chunkOffsetD + 1) << 4, (chunkOffsetN + 1) << 4);
         // fetch all sections to lower calculation cost
         int i = 0;
-        world = player.getLevel();
+        world = player.serverLevel();
         for (int x = chunkOffsetW; x <= chunkOffsetW + 1; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetN + 1; z++) {
             	LevelChunk cnk=world.getChunk(x, z);
@@ -237,9 +237,10 @@ public class SurroundingTemperatureSimulator {
             	Vec3 curspeed=speedVectors[vid[i]];
             	Vec3 svec=Qpos[i];
             	Vec3 dvec=svec.add(curspeed);
-            	BlockPos bpos=new BlockPos(dvec);
+            	BlockPos bpos=new BlockPos((int)dvec.x,(int)dvec.y,(int)dvec.z);
                 CachedBlockInfo info = getInfoCached(bpos);
-                if (info.shape != EMPTY &&(info.shape == FULL||info.shape.isFullWide(Mth.frac(dvec.x),Mth.frac(dvec.y),Mth.frac(dvec.z)))) {
+                
+                if (info.shape != EMPTY &&(info.shape == FULL||info.shape.clip(svec, dvec, bpos).isInside())) {
                 	BlockHitResult brtr=AABB.clip(info.shape.toAabbs(), svec, dvec, bpos);
                     if(brtr!=null) {
                     	if(rnd.nextDouble()<0.33f) {
@@ -323,7 +324,7 @@ public class SurroundingTemperatureSimulator {
      * Check if this location collides with block.
      */
     private Direction getHitingFace(double sx, double sy, double sz,double vx,double vy,double vz) {
-    	BlockPos bpos=new BlockPos(sx+vx, sy+vy, sz+vz);
+    	BlockPos bpos=new BlockPos((int)(sx+vx), (int)(sy+vy), (int)(sz+vz));
         CachedBlockInfo info = getInfoCached(bpos);
         if (info.shape == EMPTY)
             return null;
@@ -334,13 +335,13 @@ public class SurroundingTemperatureSimulator {
         	return brtr.getDirection();
         return null;
     }
-    private boolean isBlockade(double x, double y, double z) {
-        CachedBlockInfo info = getInfoCached(new BlockPos(x, y, z));
+    /*private boolean isBlockade(double x, double y, double z) {
+        CachedBlockInfo info = getInfoCached(new BlockPos((int)x,(int) y, (int)z));
         if (info.shape == FULL)
             return true;
         if (info.shape == EMPTY)
             return false;
         double nx=Mth.frac(x),ny=Mth.frac(y),nz=Mth.frac(z);
         return info.shape.isFullWide(nx,ny,nz);
-    }
+    }*/
 }

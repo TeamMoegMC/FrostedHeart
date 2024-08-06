@@ -51,7 +51,6 @@ import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.network.PacketDistributor;
 
 @Mod.EventBusSubscriber
 public class TemperatureUpdate {
@@ -161,7 +160,7 @@ public class TemperatureUpdate {
                 }
                 //world and chunk temperature
                 Level world = player.getCommandSenderWorld();
-                BlockPos pos = new BlockPos(player.getX(), player.getEyeY(), player.getZ());
+                BlockPos pos = new BlockPos((int)player.getX(),(int) player.getEyeY(),(int) player.getZ());
 
                 //Temperature from generators
                 float envtemp = ChunkHeatData.getAdditionTemperature(world, pos);
@@ -249,7 +248,7 @@ public class TemperatureUpdate {
                 //FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
             }
 
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
+            FHNetwork.sendPlayer( player, new FHBodyDataSyncPacket(player));
         }
     }
 }

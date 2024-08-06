@@ -7,11 +7,12 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.tips.network.CustomTipPacket;
 import com.teammoeg.frostedheart.content.tips.network.SingleTipPacket;
+
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor;
 
 public class TipCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -25,7 +26,7 @@ public class TipCommand {
                     int i = 0;
 
                     for(ServerPlayer sp : EntityArgument.getPlayers(a, "targets")) {
-                        FHNetwork.send(PacketDistributor.PLAYER.with(() -> sp), new SingleTipPacket(ID));
+                        FHNetwork.sendPlayer(sp, new SingleTipPacket(ID));
                         i++;
                     }
 
@@ -46,7 +47,7 @@ public class TipCommand {
 
                         int i = 0;
                         for(ServerPlayer sp : EntityArgument.getPlayers(c, "targets")) {
-                            FHNetwork.send(PacketDistributor.PLAYER.with(() -> sp), new CustomTipPacket(title, content, visibleTime, history));
+                            FHNetwork.sendPlayer( sp, new CustomTipPacket(title, content, visibleTime, history));
                             i++;
                         }
 

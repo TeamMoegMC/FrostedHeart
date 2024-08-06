@@ -25,7 +25,7 @@ public class ClassInfo implements Marshaller{
 		ret.init();
 		return ret;
 	}
-	public static final UnsafeAllocator unsafe=UnsafeAllocator.create();
+	public static final UnsafeAllocator unsafe=UnsafeAllocator.INSTANCE;
 	public static <T> T createInstance(Class<T> clazz){
 		try {
 			return unsafe.newInstance(clazz);

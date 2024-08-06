@@ -26,7 +26,6 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
 
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.fml.network.PacketDistributor;
 
 /**
  * A Helper for showing temperature in ui and message as well as convert them accordingly to client unit setting
@@ -36,41 +35,41 @@ public class TemperatureDisplayHelper {
     public static void sendTemperature(Collection<ServerPlayer> pe, String format, float... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, temps);
         for (ServerPlayer p : pe)
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> p), k);
+            FHNetwork.sendPlayer(p, k);
     }
 
     public static void sendTemperature(Collection<ServerPlayer> pe, String format, int... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, temps);
         for (ServerPlayer p : pe)
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> p), k);
+            FHNetwork.sendPlayer( p, k);
     }
 
     public static void sendTemperature(ServerPlayer pe, String format, float... temps) {
-        FHNetwork.send(PacketDistributor.PLAYER.with(() -> pe), new FHTemperatureDisplayPacket(format, temps));
+        FHNetwork.sendPlayer( pe, new FHTemperatureDisplayPacket(format, temps));
     }
 
     public static void sendTemperature(ServerPlayer pe, String format, int... temps) {
-        FHNetwork.send(PacketDistributor.PLAYER.with(() -> pe), new FHTemperatureDisplayPacket(format, temps));
+        FHNetwork.sendPlayer( pe, new FHTemperatureDisplayPacket(format, temps));
     }
 
     public static void sendTemperatureStatus(Collection<ServerPlayer> pe, String format, boolean act, float... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, act, temps);
         for (ServerPlayer p : pe)
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> p), k);
+            FHNetwork.sendPlayer( p, k);
     }
 
     public static void sendTemperatureStatus(Collection<ServerPlayer> pe, String format, boolean act, int... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, act, temps);
         for (ServerPlayer p : pe)
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> p), k);
+            FHNetwork.sendPlayer(p, k);
     }
 
     public static void sendTemperatureStatus(ServerPlayer pe, String format, boolean act, float... temps) {
-        FHNetwork.send(PacketDistributor.PLAYER.with(() -> pe), new FHTemperatureDisplayPacket(format, act, temps));
+        FHNetwork.sendPlayer(pe, new FHTemperatureDisplayPacket(format, act, temps));
     }
 
     public static void sendTemperatureStatus(ServerPlayer pe, String format, boolean act, int... temps) {
-        FHNetwork.send(PacketDistributor.PLAYER.with(() -> pe), new FHTemperatureDisplayPacket(format, act, temps));
+        FHNetwork.sendPlayer(pe, new FHTemperatureDisplayPacket(format, act, temps));
     }
 
     public static String toTemperatureDeltaFloatString(float celsus) {

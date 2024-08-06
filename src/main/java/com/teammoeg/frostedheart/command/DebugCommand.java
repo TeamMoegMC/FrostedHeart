@@ -51,21 +51,16 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.FileUtil;
 import com.teammoeg.frostedheart.util.utility.ReferenceValue;
 import com.teammoeg.frostedheart.world.FHFeatures;
-import com.teammoeg.thermopolium.items.StewItem;
 
-import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
+import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket.SingleChunk;
 import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
-import dev.ftb.mods.ftbquests.FTBQuests;
-import dev.ftb.mods.ftbquests.quest.Quest;
-import dev.ftb.mods.ftbquests.quest.QuestObject;
-import dev.ftb.mods.ftbquests.quest.reward.Reward;
-import dev.ftb.mods.ftbquests.quest.task.CheckmarkTask;
-import dev.ftb.mods.ftbquests.quest.task.Task;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.data.Team;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.api.Team;
+import dev.ftb.mods.ftbteams.data.PlayerTeam;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.world.food.FoodProperties;
@@ -82,7 +77,7 @@ public class DebugCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("debug")
                 .then(Commands.literal("generate_airship").executes(ct -> {
-                    FHFeatures.spacecraft_feature.place(((ServerLevel) ct.getSource().getPlayerOrException().level), ((ServerLevel) ct.getSource().getPlayerOrException().level).getChunkSource().getGenerator(), ct.getSource().getPlayerOrException().level.random,
+                    FHFeatures.spacecraft_feature.place(((ServerLevel) ct.getSource().getPlayerOrException().level()), ((ServerLevel) ct.getSource().getPlayerOrException().level()).getChunkSource().getGenerator(), ct.getSource().getPlayerOrException().level().random,
                             ct.getSource().getPlayerOrException().blockPosition());
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("export_food").executes(ct -> {
@@ -117,7 +112,7 @@ public class DebugCommand {
                             if (ix == null || ix == Items.AIR) continue;
                             if (items.contains(ix)) continue;
                             if (!ix.isEdible()) continue;
-                            if (ix instanceof StewItem) continue;
+                           // if (ix instanceof StewItem) continue;
                             items.add(ix);
                             FoodProperties f = ix.getFoodProperties();
                             if (f != null)
@@ -127,10 +122,10 @@ public class DebugCommand {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
-                    ct.getSource().sendSuccess(TranslateUtils.str("Exported " + items.size() + " Foods"), true);
+                    ct.getSource().sendSuccess(()->TranslateUtils.str("Exported " + items.size() + " Foods"), true);
                     return Command.SINGLE_SUCCESS;
                 }))
-
+/*
                 .then(Commands.literal("export_quests").executes(ct -> {
                     List<Quest> quests = FTBQuests.PROXY.getQuestFile(false).chapterGroups.stream().flatMap(e -> e.chapters.stream()).flatMap(e -> e.quests.stream())
                             .collect(Collectors.toList());
@@ -182,7 +177,7 @@ public class DebugCommand {
                         e1.printStackTrace();
                     }
                     return Command.SINGLE_SUCCESS;
-                })).then(Commands.literal("export_researches").executes(ct -> {
+                }))*/.then(Commands.literal("export_researches").executes(ct -> {
                     List<Research> quests = FHResearch.getAllResearch();
                     JsonObject out = new JsonObject();
                     JsonObject categories = new JsonObject();
@@ -262,17 +257,18 @@ public class DebugCommand {
                         e1.printStackTrace();
                     }
                     return Command.SINGLE_SUCCESS;
-                })).then(Commands.literal("sort_chunks").executes(ct -> {
+                }))/*.then(Commands.literal("sort_chunks").executes(ct -> {
                     long now = System.currentTimeMillis();
                     ReferenceValue<Integer> tchunks = new ReferenceValue<>(0);
                     Map<ResourceKey<Level>, Map<Team, List<SendChunkPacket.SingleChunk>>> chunksToSend = new HashMap<>();
-                    FTBTeamsAPI.getManager().getKnownPlayers().values().stream().filter(t -> t.actualTeam != t).map(t -> Pair.of(t, FTBChunksAPI.manager.getData(t))).filter(p -> p.getSecond() != null)
+                    
+                    FTBTeamsAPI.api().getManager().getKnownPlayerTeams().values().stream().map(t->(PlayerTeam)t).filter(t -> t.getEffectiveTeam() != t).map(t -> Pair.of(t, FTBChunksAPI.api().getManager().getOrCreateData(t))).filter(p -> p.getSecond() != null)
                             .forEach(d -> {
 
-                                FTBChunksTeamData newData = FTBChunksAPI.getManager().getData(d.getFirst().actualTeam);
+                                ChunkTeamData newData = FTBChunksAPI.api().getManager().getOrCreateData(d.getFirst().getEffectiveTeam());
                                 d.getSecond().getClaimedChunks().forEach(c -> {
-                                    d.getSecond().manager.claimedChunks.remove(c.pos);
-                                    d.getSecond().save();
+                                    ((ClaimedChunkManagerImpl)(d.getSecond().getManager())).unregisterClaim(c.getPos());
+                                    ((ClaimedChunkManagerImpl)(d.getSecond().getManager())).registerClaim( c.getPos(),);
                                     c.teamData = newData;
                                     newData.manager.claimedChunks.put(c.pos, c);
                                     newData.save();
@@ -284,16 +280,13 @@ public class DebugCommand {
                     if (tchunks.val > 0)
                         for (Entry<ResourceKey<Level>, Map<Team, List<SingleChunk>>> entry : chunksToSend.entrySet()) {
                             for (Entry<Team, List<SingleChunk>> entry2 : entry.getValue().entrySet()) {
-                                SendManyChunksPacket packet = new SendManyChunksPacket();
-                                packet.dimension = entry.getKey();
-                                packet.teamId = entry2.getKey().getId();
-                                packet.chunks = entry2.getValue();
+                                SendManyChunksPacket packet = new SendManyChunksPacket(entry.getKey(), entry2.getKey().getId(), entry2.getValue());
                                 packet.sendToAll(ct.getSource().getServer());
                             }
                         }
-                    ct.getSource().sendSuccess(TranslateUtils.str("Fixed " + tchunks.val + " Chunks"), true);
+                    ct.getSource().sendSuccess(()->TranslateUtils.str("Fixed " + tchunks.val + " Chunks"), true);
                     return Command.SINGLE_SUCCESS;
-                }));
+                }))*/;
 
         dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermission(2)).then(add));
     }

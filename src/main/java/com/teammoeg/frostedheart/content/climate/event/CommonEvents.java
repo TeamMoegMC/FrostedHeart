@@ -52,7 +52,7 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
 
-import blusunrize.immersiveengineering.common.blocks.IEBlocks;
+import blusunrize.immersiveengineering.common.register.IEBlocks;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
@@ -66,6 +66,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Item;
@@ -85,14 +86,14 @@ import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.network.PacketDistributor;
-import net.minecraftforge.fml.network.PacketDistributor.PacketTarget;
+import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor.PacketTarget;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class CommonEvents {
@@ -126,9 +127,9 @@ public class CommonEvents {
     public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
         Block growBlock = event.getState().getBlock();
         BlockPos belowPos=event.getPos().below();
-        Block belowGrowBlock=event.getWorld().getBlockState(belowPos).getBlock();
-        float temp = ChunkHeatData.getTemperature(event.getWorld(), event.getPos());
-        boolean bz = WorldClimate.isBlizzard(event.getWorld());
+        Block belowGrowBlock=event.getLevel().getBlockState(belowPos).getBlock();
+        float temp = ChunkHeatData.getTemperature(event.getLevel(), event.getPos());
+        boolean bz = WorldClimate.isBlizzard(event.getLevel());
         if (bz) {
         	BlockPos cur=event.getPos();
 
@@ -141,47 +142,47 @@ public class CommonEvents {
 	        	}
 
         	}*/
-            if (FHUtils.isBlizzardHarming(event.getWorld(), event.getPos())) {
-            	FluidState curstate=event.getWorld().getFluidState(cur);
+            if (FHUtils.isBlizzardHarming(event.getLevel(), event.getPos())) {
+            	FluidState curstate=event.getLevel().getFluidState(cur);
             	if(curstate.isEmpty())
-            		event.getWorld().setBlock(cur, Blocks.AIR.defaultBlockState(), 2);
+            		event.getLevel().setBlock(cur, Blocks.AIR.defaultBlockState(), 2);
             	else
-            		event.getWorld().setBlock(cur, curstate.createLegacyBlock(), 2);
-            } else if (event.getWorld().getRandom().nextInt(3) == 0) {
-            	//FluidState curstate=event.getWorld().getFluidState(cur);
+            		event.getLevel().setBlock(cur, curstate.createLegacyBlock(), 2);
+            } else if (event.getLevel().getRandom().nextInt(3) == 0) {
+            	//FluidState curstate=event.getLevel().getFluidState(cur);
 
-                event.getWorld().setBlock(cur,growBlock.defaultBlockState(), 2);
+                event.getLevel().setBlock(cur,growBlock.defaultBlockState(), 2);
             }
             event.setResult(Event.Result.DENY);
         } else if (growBlock instanceof FHCropBlock) {
-        } else if (growBlock.is(IEBlocks.Misc.hempPlant)) {
+        } else if (growBlock==(IEBlocks.Misc.HEMP_PLANT.get())) {
             if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE) {
-                if (event.getWorld().getRandom().nextInt(3) == 0) {
-                    event.getWorld().setBlock(event.getPos(), growBlock.defaultBlockState(), 2);
+                if (event.getLevel().getRandom().nextInt(3) == 0) {
+                    event.getLevel().setBlock(event.getPos(), growBlock.defaultBlockState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
             } else if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
-                if (event.getWorld().getRandom().nextInt(3) == 0) {
-                    BlockState cbs = event.getWorld().getBlockState(event.getPos());
+                if (event.getLevel().getRandom().nextInt(3) == 0) {
+                    BlockState cbs = event.getLevel().getBlockState(event.getPos());
                     if (cbs.is(growBlock))
-                        event.getWorld().setBlock(event.getPos(), Blocks.AIR.defaultBlockState(), 2);
+                        event.getLevel().setBlock(event.getPos(), Blocks.AIR.defaultBlockState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
             }
         } else if(growBlock instanceof BonemealableBlock){
             if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE) {
                 // Set back to default state, might not be necessary
-                if (event.getWorld().getRandom().nextInt(3) == 0) {
-                    BlockState cbs = event.getWorld().getBlockState(event.getPos());
+                if (event.getLevel().getRandom().nextInt(3) == 0) {
+                    BlockState cbs = event.getLevel().getBlockState(event.getPos());
                     if (cbs.is(growBlock) && cbs != growBlock.defaultBlockState())
-                        event.getWorld().setBlock(event.getPos(), growBlock.defaultBlockState(), 2);
+                        event.getLevel().setBlock(event.getPos(), growBlock.defaultBlockState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
             } else if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
-                if (event.getWorld().getRandom().nextInt(3) == 0) {
-                    BlockState cbs = event.getWorld().getBlockState(event.getPos());
+                if (event.getLevel().getRandom().nextInt(3) == 0) {
+                    BlockState cbs = event.getLevel().getBlockState(event.getPos());
                     if (cbs.is(growBlock))
-                        event.getWorld().setBlock(event.getPos(), Blocks.AIR.defaultBlockState(), 2);
+                        event.getLevel().setBlock(event.getPos(), Blocks.AIR.defaultBlockState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
             }
@@ -193,8 +194,8 @@ public class CommonEvents {
     }
     @SubscribeEvent
     public static void finishedEatingFood(LivingEntityUseItemEvent.Finish event) {
-        if (event.getEntityLiving() != null && !event.getEntityLiving().level.isClientSide
-                && event.getEntityLiving() instanceof ServerPlayer) {
+        if (event.getEntity() != null && !event.getEntity().level().isClientSide
+                && event.getEntity() instanceof ServerPlayer) {
             ItemStack is = event.getItem();
             Item it = event.getItem().getItem();
             ITempAdjustFood adj = null;
@@ -206,14 +207,14 @@ public class CommonEvents {
                 adj = FHDataManager.getFood(is);
             }
             if (adj != null) {
-                float current = PlayerTemperatureData.getCapability((ServerPlayer) event.getEntityLiving()).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
+                float current = PlayerTemperatureData.getCapability((ServerPlayer) event.getEntity()).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
-                float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayer) event.getEntityLiving()).map(PlayerTemperatureData::getEnvTemp).orElse(0f));
+                float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayer) event.getEntity()).map(PlayerTemperatureData::getEnvTemp).orElse(0f));
                 if (heat > 1) {
-                    event.getEntityLiving().hurt(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
+                    event.getEntity().hurt(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
                 } else if (heat < -1)
-                    event.getEntityLiving().hurt(FHDamageSources.HYPOTHERMIA_INSTANT, (heat) * 2);
+                    event.getEntity().hurt(FHDamageSources.HYPOTHERMIA_INSTANT, (heat) * 2);
                 if (heat > 0) {
                     if (current >= max)
                         return;
@@ -228,24 +229,24 @@ public class CommonEvents {
                         return;
                 }
                 final float toset=current;
-                PlayerTemperatureData.getCapability((ServerPlayer) event.getEntityLiving()).ifPresent(t->t.setBodyTemp(toset));
+                PlayerTemperatureData.getCapability((ServerPlayer) event.getEntity()).ifPresent(t->t.setBodyTemp(toset));
             }
 
-            DailyKitchen.tryGiveBenefits((ServerPlayer) event.getEntityLiving(), is);
+            DailyKitchen.tryGiveBenefits((ServerPlayer) event.getEntity(), is);
         }
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onArmorDamage(LivingHurtEvent event) {
-        if (event.getEntityLiving() instanceof Player && (event.getSource().isFire() || !event.getSource().isBypassArmor())) {
-            Player player = (Player) event.getEntityLiving();
+        if (event.getEntity() instanceof Player && (event.getSource().is(DamageTypeTags.IS_FIRE) || !event.getSource().is(DamageTypeTags.BYPASSES_ARMOR))) {
+            Player player = (Player) event.getEntity();
             float damage = event.getAmount();
             DamageSource p_234563_1_ = event.getSource();
             if (damage > 0) {
                 damage = damage / 8.0F;
-                if (p_234563_1_.isFire())// fire damage more
+                if (p_234563_1_.is(DamageTypeTags.IS_FIRE))// fire damage more
                     damage *= 2;
-                else if (p_234563_1_.isExplosion())// explode add a lot
+                else if (p_234563_1_.is(DamageTypeTags.IS_EXPLOSION))// explode add a lot
                     damage *= 4;
                 int amount = (int) damage;
                 if (amount != damage)
@@ -313,7 +314,7 @@ public class CommonEvents {
         if (event.getEntity() instanceof ServerPlayer) {
             ServerPlayer player = (ServerPlayer) event.getEntity();
             Block growBlock = event.getPlacedBlock().getBlock();
-            float temp = ChunkHeatData.getTemperature(event.getWorld(), event.getPos());
+            float temp = ChunkHeatData.getTemperature(event.getLevel(), event.getPos());
             if (growBlock instanceof BonemealableBlock) {
                 if (growBlock instanceof SaplingBlock) {
                     if (temp < -5) {
@@ -331,7 +332,7 @@ public class CommonEvents {
                         event.setCanceled(true);
                         player.displayClientMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(growTemp)), true);
                     }
-                } else if (growBlock.is(IEBlocks.Misc.hempPlant)) {
+                } else if (growBlock==(IEBlocks.Misc.HEMP_PLANT.get())) {
                     if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE) {
                         event.setCanceled(true);
                         player.displayClientMessage(TranslateUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(WorldTemperature.HEMP_GROW_TEMPERATURE)), true);
@@ -355,9 +356,9 @@ public class CommonEvents {
     }
 
     @SubscribeEvent
-    public static void onServerTick(TickEvent.WorldTickEvent event) {
+    public static void onServerTick(TickEvent.LevelTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.START) {
-            Level world = event.world;
+            Level world = event.level;
             if (!world.isClientSide && world instanceof ServerLevel) {
                 ServerLevel serverWorld = (ServerLevel) world;
 
@@ -398,10 +399,10 @@ public class CommonEvents {
     }
     @SubscribeEvent
     public static void onUseBoneMeal(BonemealEvent event) {
-        if (event.getPlayer() instanceof ServerPlayer) {
-            ServerPlayer player = (ServerPlayer) event.getPlayer();
+        if (event.getEntity() instanceof ServerPlayer) {
+            ServerPlayer player = (ServerPlayer) event.getEntity();
             Block growBlock = event.getBlock().getBlock();
-            float temp = ChunkHeatData.getTemperature(event.getWorld(), event.getPos());
+            float temp = ChunkHeatData.getTemperature(event.getLevel(), event.getPos());
             if (growBlock instanceof FHCropBlock) {
                 int growTemp = ((FHCropBlock) growBlock).getGrowTemperature() + WorldTemperature.BONEMEAL_TEMPERATURE;
                 if (temp < growTemp) {
@@ -414,7 +415,7 @@ public class CommonEvents {
                     event.setCanceled(true);
                     player.displayClientMessage(TranslateUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(growTemp)), true);
                 }
-            } else if (growBlock.is(IEBlocks.Misc.hempPlant)) {
+            } else if (growBlock==(IEBlocks.Misc.HEMP_PLANT.get())) {
                 if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE) {
                     event.setCanceled(true);
                     player.displayClientMessage(TranslateUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(WorldTemperature.HEMP_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE)), true);
@@ -428,8 +429,8 @@ public class CommonEvents {
     @SubscribeEvent
     public static void syncDataToClient(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer) {
-            ServerLevel serverWorld = ((ServerPlayer) event.getPlayer()).getLevel();
-            PacketTarget currentPlayer=PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getPlayer());
+            ServerLevel serverWorld = ((ServerPlayer) event.getEntity()).serverLevel();
+            PacketTarget currentPlayer=PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity());
             FHResearch.sendSyncPacket(currentPlayer);
             for(DataType type:DataType.types)
             	FHNetwork.send(currentPlayer,new FHDatapackSyncPacket(type));
@@ -443,9 +444,9 @@ public class CommonEvents {
     @SubscribeEvent
     public static void syncDataWhenDimensionChanged(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getEntity() instanceof ServerPlayer) {
-            ServerLevel serverWorld = ((ServerPlayer) event.getPlayer()).getLevel();
+            ServerLevel serverWorld = ((ServerPlayer) event.getEntity()).serverLevel();
 
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getPlayer()),
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity()),
                     new FHClimatePacket(WorldClimate.get(serverWorld)));
         }
     }

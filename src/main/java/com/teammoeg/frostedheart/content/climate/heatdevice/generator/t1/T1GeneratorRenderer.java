@@ -35,17 +35,17 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 
-public class T1GeneratorRenderer extends BlockEntityRenderer<T1GeneratorTileEntity> {
+public class T1GeneratorRenderer implements BlockEntityRenderer<T1GeneratorTileEntity> {
     public static DynamicModel<Direction> FUEL;
-
-    public T1GeneratorRenderer(BlockEntityRenderDispatcher rendererDispatcherIn) {
-        super(rendererDispatcherIn);
+    public T1GeneratorRenderer(BlockEntityRendererProvider.Context pContext){
+    	
     }
-
+  
     @Override
     public void render(T1GeneratorTileEntity te, float partialTicks, PoseStack matrixStack,
                        MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {

@@ -104,7 +104,7 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 	 */
 	public void sendToOnline(FHMessage packet) {
         for (ServerPlayer spe : team.get().getOnlineMembers())
-        	FHNetwork.send(PacketDistributor.PLAYER.with(()->spe), packet);
+        	FHNetwork.sendPlayer(spe, packet);
 	}
     public UUID getId() {
         return id;

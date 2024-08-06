@@ -49,15 +49,12 @@ import com.teammoeg.frostedheart.content.research.number.IResearchNumber;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.io.codec.BooleansCodec;
-
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.BaseComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -428,8 +425,8 @@ public class Research implements FHRegisteredItem {
      *
      * @return name<br>
      */
-    public BaseComponent getName() {
-        return (BaseComponent) FHTextUtil.get(name, "research", () -> id + ".name");
+    public Component getName() {
+        return (Component) FHTextUtil.get(name, "research", () -> id + ".name");
     }
 
     /**

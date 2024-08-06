@@ -37,7 +37,7 @@ public class NBTCodec<A extends NBTSerializable> implements Codec<A> {
 			inst.deserializeNBT((CompoundTag) nbt);
 			return DataResult.success(Pair.of(inst, input));
 		}
-		return DataResult.error("Not A Compound");
+		return DataResult.error(()->"Not A Compound");
 
 	}
 

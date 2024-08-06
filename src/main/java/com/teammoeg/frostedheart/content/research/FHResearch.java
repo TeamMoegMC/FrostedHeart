@@ -64,7 +64,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraft.nbt.Tag;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.network.PacketDistributor.PacketTarget;
+import net.minecraftforge.network.PacketDistributor.PacketTarget;
 
 /**
  * Main Research System.

@@ -62,6 +62,7 @@ import com.teammoeg.frostedheart.content.trade.network.TradeUpdatePacket;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
@@ -170,10 +171,12 @@ public class FHNetwork {
         registerMessage("custom_tip", CustomTipPacket.class);
     }
 
+    public static void sendPlayer(ServerPlayer p, FHMessage message) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(()->p), message);
+    }
     public static void send(PacketDistributor.PacketTarget target, FHMessage message) {
         CHANNEL.send(target, message);
     }
-
     public static void sendToServer(FHMessage message) {
         CHANNEL.sendToServer(message);
     }

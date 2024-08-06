@@ -21,7 +21,7 @@ public class RegistryCodec<A> implements Codec<A> {
 		if(ops.compressMaps()) {
 			return Codec.INT.encode(reg.get().getId(input), ops, prefix);
 		}
-		return reg.get().encode(input, ops, prefix);
+		return reg.get().byNameCodec().encode(input, ops, prefix);
 	}
 
 	@Override
@@ -29,7 +29,7 @@ public class RegistryCodec<A> implements Codec<A> {
 		if(ops.compressMaps()) {
 			return Codec.INT.decode(ops, input).map(o->o.mapFirst(reg.get()::byId));
 		}
-		return reg.get().decode(ops, input);
+		return reg.get().byNameCodec().decode(ops, input);
 	}
 
 	@Override

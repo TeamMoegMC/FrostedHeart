@@ -25,6 +25,7 @@ import java.util.Map;
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.LiteralContents;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -111,4 +112,9 @@ public class TranslateUtils {
     public static MutableComponent translateTooltip(String name, Object... args) {
         return translate("tooltip." + FHMain.MODID + "." + name, args);
     }
+
+	public static Component empty() {
+		// TODO Auto-generated method stub
+		return MutableComponent.create(LiteralContents.EMPTY);
+	}
 }

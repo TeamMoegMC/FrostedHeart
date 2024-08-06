@@ -1,13 +1,15 @@
 package com.teammoeg.frostedheart.content.steamenergy.steamcore;
 
 import java.util.Random;
+import java.util.function.Supplier;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.simibubi.create.content.contraptions.base.DirectionalKineticBlock;
+import com.simibubi.create.content.kinetics.base.DirectionalKineticBlock;
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.world.level.block.Block;
@@ -18,8 +20,10 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
@@ -32,7 +36,7 @@ import net.minecraft.world.level.Level;
 
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
-public class SteamCoreBlock extends DirectionalKineticBlock {
+public class SteamCoreBlock extends DirectionalKineticBlock implements FHEntityBlock{
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
     static final VoxelShaper shape = VoxelShaper.forDirectional(Shapes.or(Block.box(0, 0, 0, 16, 16, 16)), Direction.SOUTH);
 
@@ -43,16 +47,6 @@ public class SteamCoreBlock extends DirectionalKineticBlock {
     }
 
 
-    @Nullable
-    @Override
-    public BlockEntity createTileEntity(@Nonnull BlockState state, @Nonnull BlockGetter world) {
-        return FHTileTypes.STEAM_CORE.get().create();
-    }
-
-    @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
-    }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
@@ -90,9 +84,17 @@ public class SteamCoreBlock extends DirectionalKineticBlock {
 
 
 	@Override
-	public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, Random rand) {
+	public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, RandomSource rand) {
 		super.animateTick(stateIn, worldIn, pos, rand);
 		if(stateIn.getValue(LIT)&&rand.nextBoolean())
 			ClientUtils.spawnSteamParticles(worldIn, pos);
+	}
+
+
+
+	@Override
+	public Supplier<BlockEntityType<?>> getBlock() {
+		// TODO Auto-generated method stub
+		return FHTileTypes.STEAM_CORE::get;
 	}
 }
