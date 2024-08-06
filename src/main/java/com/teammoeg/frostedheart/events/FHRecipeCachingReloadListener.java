@@ -23,14 +23,14 @@ import javax.annotation.Nonnull;
 
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 
-import net.minecraft.server.ServerResources;
+import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 
 public class FHRecipeCachingReloadListener implements ResourceManagerReloadListener {
-    private final ServerResources dataPackRegistries;
+    private final ReloadableServerResources dataPackRegistries;
 
-    public FHRecipeCachingReloadListener(ServerResources dataPackRegistries) {
+    public FHRecipeCachingReloadListener(ReloadableServerResources dataPackRegistries) {
         this.dataPackRegistries = dataPackRegistries;
     }
 
