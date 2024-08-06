@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
 
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor;
 
 /**
  * A Helper for showing temperature in ui and message as well as convert them accordingly to client unit setting
