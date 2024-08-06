@@ -23,32 +23,23 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
+import net.minecraftforge.common.loot.IGlobalLootModifier;
 import net.minecraftforge.common.loot.LootModifier;
 
 public class AddLootModifier extends LootModifier {
 
-
-    public static class Serializer extends GlobalLootModifierSerializer<AddLootModifier> {
-        @Override
-        public AddLootModifier read(ResourceLocation location, JsonObject object, LootItemCondition[] conditions) {
-            return new AddLootModifier(conditions, new ResourceLocation(object.get("loot_table").getAsString()));
-        }
-
-        @Override
-        public JsonObject write(AddLootModifier instance) {
-            JsonObject object = new JsonObject();
-            object.addProperty("loot_table", instance.lt.toString());
-            return object;
-        }
-    }
+	public static final Codec<AddLootModifier> CODEC = 
+		RecordCodecBuilder.create(inst -> codecStart(inst)
+	.and(ResourceLocation.CODEC.fieldOf("loot_table").forGetter(lm->lm.lt)).apply(inst, AddLootModifier::new));
     ResourceLocation lt;
 
     boolean isAdding;
@@ -61,14 +52,13 @@ public class AddLootModifier extends LootModifier {
 
     @Nonnull
     @Override
-    protected List<ItemStack> doApply(List<ItemStack> generatedLoot, LootContext context) {
-        LootTable loot = context.getLootTable(lt);
+    protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generatedLoot, LootContext context) {
+        LootTable loot = context.getResolver().getLootTable(lt);
         //if(context.addLootTable(loot)) {
         if (!isAdding) {
             try {
                 isAdding = true;
-                List<ItemStack> nl = loot.getRandomItems(context);
-                generatedLoot.addAll(nl);
+               loot.getRandomItemsRaw(new LootContext.Builder(context).withQueriedLootTableId(lt).create(null),generatedLoot::add);
             } finally {
                 isAdding = false;
             }
@@ -76,4 +66,11 @@ public class AddLootModifier extends LootModifier {
         //}
         return generatedLoot;
     }
+
+
+	@Override
+	public Codec<? extends IGlobalLootModifier> codec() {
+		// TODO Auto-generated method stub
+		return CODEC;
+	}
 }

@@ -25,81 +25,54 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
+import net.minecraftforge.common.loot.IGlobalLootModifier;
 import net.minecraftforge.common.loot.LootModifier;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class ReplaceLootModifier extends LootModifier {
-    static class ReplacePair {
-        Ingredient from;
-        Item to;
+	public static final Codec<ReplaceLootModifier> CODEC=RecordCodecBuilder.create(t->codecStart(t).and(
+		Codec.list(CodecUtil.pairCodec("from",CodecUtil.INGREDIENT_CODEC,"to", ForgeRegistries.ITEMS.getCodec())).fieldOf("changes").forGetter(o->o.remap)
+		).apply(t,ReplaceLootModifier::new));
+	
 
-        public ReplacePair(Ingredient from, Item to) {
-            this.from = from;
-            this.to = to;
-        }
 
-        JsonObject toJson() {
-            JsonObject jo = new JsonObject();
-            jo.add("from", from.toJson());
-            jo.addProperty("to", RegistryUtils.getRegistryName(to).toString());
-            return jo;
-        }
-    }
+    List<Pair<Ingredient,Item>> remap = new ArrayList<>();
 
-    public static class Serializer extends GlobalLootModifierSerializer<ReplaceLootModifier> {
-        @Override
-        public ReplaceLootModifier read(ResourceLocation location, JsonObject object, LootItemCondition[] conditions) {
-            JsonArray ja = object.get("changes").getAsJsonArray();
-            List<ReplacePair> changes = new ArrayList<>();
-            for (JsonElement je : ja) {
-                if (je.isJsonObject()) {
-                    changes.add(new ReplacePair(Ingredient.fromJson(je.getAsJsonObject().get("from")), RegistryUtils.getItem(new ResourceLocation(je.getAsJsonObject().get("to").getAsString()))));
-                }
-            }
-            return new ReplaceLootModifier(conditions, changes);
-        }
-
-        @Override
-        public JsonObject write(ReplaceLootModifier instance) {
-            JsonObject object = new JsonObject();
-            JsonArray changes = new JsonArray();
-            instance.remap.stream().map(ReplacePair::toJson).forEach(changes::add);
-            object.add("changes", changes);
-            return object;
-        }
-    }
-
-    List<ReplacePair> remap = new ArrayList<>();
-
-    private ReplaceLootModifier(LootItemCondition[] conditionsIn, Collection<ReplacePair> pairsin) {
+    private ReplaceLootModifier(LootItemCondition[] conditionsIn, Collection<Pair<Ingredient,Item>> pairsin) {
         super(conditionsIn);
         this.remap.addAll(pairsin);
     }
 
     @Nonnull
     @Override
-    protected List<ItemStack> doApply(List<ItemStack> generatedLoot, LootContext context) {
+    protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generatedLoot, LootContext context) {
         generatedLoot.replaceAll(this::doReplace);
         return generatedLoot;
     }
 
     private ItemStack doReplace(ItemStack orig) {
-        for (ReplacePair rp : remap) {
-            if (rp.from.test(orig)) {
-                return new ItemStack(rp.to, orig.getCount());
+        for (Pair<Ingredient,Item> rp : remap) {
+            if (rp.getFirst().test(orig)) {
+                return new ItemStack(rp.getSecond(), orig.getCount());
             }
         }
         return orig;
     }
+
+	@Override
+	public Codec<? extends IGlobalLootModifier> codec() {
+		// TODO Auto-generated method stub
+		return CODEC;
+	}
 }

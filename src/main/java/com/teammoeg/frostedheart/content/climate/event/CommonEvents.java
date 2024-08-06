@@ -211,10 +211,11 @@ public class CommonEvents {
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
                 float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayer) event.getEntity()).map(PlayerTemperatureData::getEnvTemp).orElse(0f));
+                
                 if (heat > 1) {
-                    event.getEntity().hurt(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
+                    event.getEntity().hurt(FHDamageSources.createSource(event.getEntity().level(), FHDamageSources.HYPERTHERMIA_INSTANT, event.getEntity()), (heat) * 2);
                 } else if (heat < -1)
-                    event.getEntity().hurt(FHDamageSources.HYPOTHERMIA_INSTANT, (heat) * 2);
+                    event.getEntity().hurt(FHDamageSources.createSource(event.getEntity().level(), FHDamageSources.HYPOTHERMIA_INSTANT, event.getEntity()), (heat) * 2);
                 if (heat > 0) {
                     if (current >= max)
                         return;

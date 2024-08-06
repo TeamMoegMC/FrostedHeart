@@ -25,40 +25,22 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
+import net.minecraftforge.common.loot.IGlobalLootModifier;
 import net.minecraftforge.common.loot.LootModifier;
 
 public class RemoveLootModifier extends LootModifier {
-    public static class Serializer extends GlobalLootModifierSerializer<RemoveLootModifier> {
-        @Override
-        public RemoveLootModifier read(ResourceLocation location, JsonObject object, LootItemCondition[] conditions) {
-            JsonArray ja = object.get("removed").getAsJsonArray();
-            List<Ingredient> changes = new ArrayList<>();
-            for (JsonElement je : ja) {
-                changes.add(Ingredient.fromJson(je));
-            }
-            return new RemoveLootModifier(conditions, changes);
-        }
-
-        @Override
-        public JsonObject write(RemoveLootModifier instance) {
-            JsonObject object = new JsonObject();
-            JsonArray removed = new JsonArray();
-            instance.removed.stream().map(Ingredient::toJson).forEach(removed::add);
-            object.add("removed", removed);
-            return object;
-        }
-    }
-
+	public static final Codec<RemoveLootModifier> CODEC= RecordCodecBuilder.create(t->codecStart(t).and(
+		Codec.list(CodecUtil.INGREDIENT_CODEC).fieldOf("removed").forGetter(o->o.removed)
+		).apply(t, RemoveLootModifier::new));
     List<Ingredient> removed = new ArrayList<>();
 
     private RemoveLootModifier(LootItemCondition[] conditionsIn, Collection<Ingredient> pairsin) {
@@ -68,7 +50,7 @@ public class RemoveLootModifier extends LootModifier {
 
     @Nonnull
     @Override
-    protected List<ItemStack> doApply(List<ItemStack> generatedLoot, LootContext context) {
+    protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generatedLoot, LootContext context) {
         generatedLoot.removeIf(this::shouldRemove);
         return generatedLoot;
     }
@@ -82,4 +64,11 @@ public class RemoveLootModifier extends LootModifier {
         }
         return false;
     }
+
+	@Override
+	public Codec<? extends IGlobalLootModifier> codec() {
+		// TODO Auto-generated method stub
+		return CODEC;
+	}
+
 }

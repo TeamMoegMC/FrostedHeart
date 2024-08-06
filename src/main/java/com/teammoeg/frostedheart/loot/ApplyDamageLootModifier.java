@@ -23,47 +23,53 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import com.google.gson.JsonObject;
+import org.jetbrains.annotations.NotNull;
 
+import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
+
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootContext;
-import net.minecraft.world.level.storage.loot.RandomValueBounds;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
+import net.minecraft.util.Mth;
+import net.minecraftforge.common.loot.IGlobalLootModifier;
 import net.minecraftforge.common.loot.LootModifier;
+import net.minecraftforge.registries.ForgeRegistries;
+
 
 public class ApplyDamageLootModifier extends LootModifier {
-    public static class Serializer extends GlobalLootModifierSerializer<ApplyDamageLootModifier> {
-        @Override
-        public ApplyDamageLootModifier read(ResourceLocation location, JsonObject object, LootItemCondition[] conditions) {
-            return new ApplyDamageLootModifier(conditions, RandomValueBounds.between(object.get("min").getAsFloat(), object.get("max").getAsFloat()));
-        }
+	public static final Codec<ApplyDamageLootModifier> CODEC=RecordCodecBuilder.<ApplyDamageLootModifier>create(t->codecStart(t).and(
+		t.group(Codec.INT.fieldOf("max").forGetter(o->o.max),
+		Codec.INT.fieldOf("min").forGetter(o->o.min))
+		).apply(t,ApplyDamageLootModifier::new));
 
-        @Override
-        public JsonObject write(ApplyDamageLootModifier instance) {
-            JsonObject object = new JsonObject();
-            object.addProperty("min", instance.dmg.getMin());
-            object.addProperty("max", instance.dmg.getMax());
-            return object;
-        }
-    }
+    int min;
+    int max;
 
-    RandomValueBounds dmg;
-
-    private ApplyDamageLootModifier(LootItemCondition[] conditionsIn, RandomValueBounds rv) {
+    private ApplyDamageLootModifier(LootItemCondition[] conditionsIn, int max, int min) {
         super(conditionsIn);
-        dmg = rv;
+        this.min=min;
+        this.max=max;
     }
 
-    @Nonnull
-    @Override
-    protected List<ItemStack> doApply(List<ItemStack> generatedLoot, LootContext context) {
-        generatedLoot.forEach(e -> {
+ 
+
+	@Override
+	public Codec<? extends IGlobalLootModifier> codec() {
+		return CODEC;
+	}
+
+	@Override
+	protected @NotNull ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generatedLoot, LootContext context) {
+		generatedLoot.forEach(e -> {
             if (e.getDamageValue() == 0 && e.isDamageableItem()) {
-                e.setDamageValue((int) (e.getMaxDamage() * dmg.getFloat(context.getRandom())));
+                e.setDamageValue((int) (e.getMaxDamage() * context.getRandom().nextIntBetweenInclusive(min, max)));
             }
         });
         return generatedLoot;
-    }
+	}
 }

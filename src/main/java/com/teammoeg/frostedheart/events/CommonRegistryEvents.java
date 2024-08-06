@@ -42,9 +42,6 @@ import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.Registry;
 import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.StructureFeature;
-import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -53,13 +50,13 @@ import net.minecraftforge.registries.IForgeRegistry;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class CommonRegistryEvents {
 
-    @SuppressWarnings("rawtypes")
+   /* @SuppressWarnings("rawtypes")
     @SubscribeEvent
     public static void onDimensionRegistry(RegistryEvent.Register event) {
         //FHDimensions.register();
 
-    }
-
+    }*/
+/*
     @SubscribeEvent
     public static void onFeatureRegistry(RegistryEvent.Register<Feature<?>> event) {
         event.getRegistry().registerAll(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"));
@@ -73,7 +70,7 @@ public class CommonRegistryEvents {
 
         FHStructureFeatures.registerStructureFeatures();
     }
-
+*/
     @SubscribeEvent
     public static void onEntityAttributeModificationEvent(EntityAttributeModificationEvent event) {
 		event.add(EntityType.PLAYER, FHAttributes.ENV_TEMPERATURE.get());
@@ -81,7 +78,7 @@ public class CommonRegistryEvents {
 		event.add(EntityType.PLAYER, FHAttributes.INSULATION.get());
 		event.add(EntityType.PLAYER, FHAttributes.WIND_PROOF.get());
 		event.add(EntityType.PLAYER, FHAttributes.HEAT_PROOF.get());
-	}
+	}/*
     @SubscribeEvent
     public static void registerModifierSerializers(@Nonnull final RegistryEvent.Register<GlobalLootModifierSerializer<?>> event) {
         IForgeRegistry<GlobalLootModifierSerializer<?>> registry = event.getRegistry();
@@ -95,5 +92,5 @@ public class CommonRegistryEvents {
         TreasureLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "treasure"), new LootItemConditionType(new TreasureLootCondition.Serializer()));
         ModLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "modids"), new LootItemConditionType(new ModLootCondition.Serializer()));
         BlizzardDamageCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "blizzard_damage"), new LootItemConditionType(new BlizzardDamageCondition.Serializer()));
-    }
+    }*/
 }

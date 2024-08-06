@@ -26,53 +26,35 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
+import net.minecraftforge.common.loot.IGlobalLootModifier;
 import net.minecraftforge.common.loot.LootModifier;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class DechantLootModifier extends LootModifier {
-    public static class Serializer extends GlobalLootModifierSerializer<DechantLootModifier> {
-        @Override
-        public DechantLootModifier read(ResourceLocation location, JsonObject object, LootItemCondition[] conditions) {
-            JsonArray ja = object.get("removed").getAsJsonArray();
-            List<ResourceLocation> changes = new ArrayList<>();
-            for (JsonElement je : ja) {
-                changes.add(new ResourceLocation(je.getAsString()));
-            }
-            return new DechantLootModifier(conditions, changes);
-        }
+	public static final Codec<DechantLootModifier> CODEC= RecordCodecBuilder.create(t->codecStart(t).and(
+		Codec.list(ForgeRegistries.ENCHANTMENTS.getCodec()).fieldOf("removed").forGetter(o->o.removed)
+		).apply(t, DechantLootModifier::new));
 
-        @Override
-        public JsonObject write(DechantLootModifier instance) {
-            JsonObject object = new JsonObject();
-            JsonArray removed = new JsonArray();
-            instance.removed.stream().map(RegistryUtils::getRegistryName).map(ResourceLocation::toString).forEach(removed::add);
-            object.add("removed", removed);
-            return object;
-        }
-    }
 
     List<Enchantment> removed = new ArrayList<>();
 
-    private DechantLootModifier(LootItemCondition[] conditionsIn, Collection<ResourceLocation> pairsin) {
+    private DechantLootModifier(LootItemCondition[] conditionsIn, Collection<Enchantment> pairsin) {
         super(conditionsIn);
-        pairsin.stream().map(RegistryUtils::getEnchantment).forEach(removed::add);
+        removed.addAll(pairsin);
     }
 
     @Nonnull
     @Override
-    protected List<ItemStack> doApply(List<ItemStack> generatedLoot, LootContext context) {
+    protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generatedLoot, LootContext context) {
         generatedLoot.replaceAll(e -> doRemove(e, context));
         return generatedLoot;
     }
@@ -93,4 +75,10 @@ public class DechantLootModifier extends LootModifier {
         EnchantmentHelper.setEnchantments(enchs, orig);
         return orig;
     }
+
+	@Override
+	public Codec<? extends IGlobalLootModifier> codec() {
+		// TODO Auto-generated method stub
+		return CODEC;
+	}
 }
