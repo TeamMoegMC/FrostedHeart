@@ -49,6 +49,7 @@ import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.food.Foods;
+import net.minecraft.world.item.ArmorItem.Type;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.item.Items;
@@ -104,18 +105,18 @@ public class FHItems {
     public static RegistryObject<Item> gambeson = register("gambeson", n->new FHBaseItem( createProps().defaultDurability(384)).setRepairItem(Items.WHITE_WOOL));
     public static RegistryObject<Item> kelp_lining = register("kelp_lining",n->new FHBaseItem( createProps().defaultDurability(256)).setRepairItem(Items.KELP));
     public static RegistryObject<Item> straw_lining = register("straw_lining",n->new FHBaseItem( createProps().defaultDurability(256)));
-    public static RegistryObject<Item> hay_boots = register("hay_boots",n->new FHBaseArmorItem( FHArmorMaterial.HAY, EquipmentSlot.FEET, createProps()));
-    public static RegistryObject<Item> hay_hat = register("hay_hat",n->new FHBaseArmorItem( FHArmorMaterial.HAY, EquipmentSlot.HEAD, createProps()));
-    public static RegistryObject<Item> hay_jacket = register("hay_jacket",n->new FHBaseArmorItem( FHArmorMaterial.HAY, EquipmentSlot.CHEST, createProps()));
-    public static RegistryObject<Item> hay_pants = register("hay_pants",n->new FHBaseArmorItem( FHArmorMaterial.HAY, EquipmentSlot.LEGS, createProps()));
-    public static RegistryObject<Item> wool_boots = register("wool_boots",n->new FHBaseArmorItem( FHArmorMaterial.WOOL, EquipmentSlot.FEET, createProps()));
-    public static RegistryObject<Item> wool_hat = register("wool_hat",n->new FHBaseArmorItem( FHArmorMaterial.WOOL, EquipmentSlot.HEAD, createProps()));
-    public static RegistryObject<Item> wool_jacket = register("wool_jacket",n->new FHBaseArmorItem( FHArmorMaterial.WOOL, EquipmentSlot.CHEST, createProps()));
-    public static RegistryObject<Item> wool_pants = register("wool_pants",n->new FHBaseArmorItem( FHArmorMaterial.WOOL, EquipmentSlot.LEGS, createProps()));
-    public static RegistryObject<Item> hide_boots = register("hide_boots",n->new FHBaseArmorItem( FHArmorMaterial.HIDE, EquipmentSlot.FEET, createProps()));
-    public static RegistryObject<Item> hide_hat = register("hide_hat",n->new FHBaseArmorItem( FHArmorMaterial.HIDE, EquipmentSlot.HEAD, createProps()));
-    public static RegistryObject<Item> hide_jacket = register("hide_jacket",n->new FHBaseArmorItem( FHArmorMaterial.HIDE, EquipmentSlot.CHEST, createProps()));
-    public static RegistryObject<Item> hide_pants = register("hide_pants",n->new FHBaseArmorItem( FHArmorMaterial.HIDE, EquipmentSlot.LEGS, createProps()));
+    public static RegistryObject<Item> hay_boots = register("hay_boots",n->new FHBaseArmorItem( FHArmorMaterial.HAY, Type.BOOTS, createProps()));
+    public static RegistryObject<Item> hay_hat = register("hay_hat",n->new FHBaseArmorItem( FHArmorMaterial.HAY, Type.HELMET, createProps()));
+    public static RegistryObject<Item> hay_jacket = register("hay_jacket",n->new FHBaseArmorItem( FHArmorMaterial.HAY, Type.CHESTPLATE, createProps()));
+    public static RegistryObject<Item> hay_pants = register("hay_pants",n->new FHBaseArmorItem( FHArmorMaterial.HAY, Type.LEGGINGS, createProps()));
+    public static RegistryObject<Item> wool_boots = register("wool_boots",n->new FHBaseArmorItem( FHArmorMaterial.WOOL, Type.BOOTS, createProps()));
+    public static RegistryObject<Item> wool_hat = register("wool_hat",n->new FHBaseArmorItem( FHArmorMaterial.WOOL, Type.HELMET, createProps()));
+    public static RegistryObject<Item> wool_jacket = register("wool_jacket",n->new FHBaseArmorItem( FHArmorMaterial.WOOL, Type.CHESTPLATE, createProps()));
+    public static RegistryObject<Item> wool_pants = register("wool_pants",n->new FHBaseArmorItem( FHArmorMaterial.WOOL, Type.BOOTS, createProps()));
+    public static RegistryObject<Item> hide_boots = register("hide_boots",n->new FHBaseArmorItem( FHArmorMaterial.HIDE, Type.BOOTS, createProps()));
+    public static RegistryObject<Item> hide_hat = register("hide_hat",n->new FHBaseArmorItem( FHArmorMaterial.HIDE, Type.HELMET, createProps()));
+    public static RegistryObject<Item> hide_jacket = register("hide_jacket",n->new FHBaseArmorItem( FHArmorMaterial.HIDE, Type.CHESTPLATE, createProps()));
+    public static RegistryObject<Item> hide_pants = register("hide_pants",n->new FHBaseArmorItem( FHArmorMaterial.HIDE, Type.BOOTS, createProps()));
     public static RegistryObject<Item> heater_vest = register("heater_vest",n->new HeaterVestItem( createProps().stacksTo(1).setNoRepair()));
     public static List<RegistryObject<Item>> allthermos = new ArrayList<>();
     public static List<RegistryObject<Item>> alladvthermos = new ArrayList<>();
@@ -149,11 +150,11 @@ public class FHItems {
     public static RegistryObject<Item> ceramic_bucket = register("ceramic_bucket",n->new CeramicBucket( createProps().stacksTo(1)));
     public static RegistryObject<Item> charcoal = register("charcoal",n->new FHBasePen(createProps().durability(50).setNoRepair()));
     public static RegistryObject<Item> quill_and_ink = register("quill_and_ink",n->new FHReusablePen(createProps().durability(101).setNoRepair(), 1));
-    public static RegistryObject<Item> weatherHelmet = register("weather_helmet",n->new FHBaseArmorItem( FHArmorMaterial.WEATHER, EquipmentSlot.HEAD, createProps()));
+    public static RegistryObject<Item> weatherHelmet = register("weather_helmet",n->new FHBaseArmorItem( FHArmorMaterial.WEATHER, Type.HELMET, createProps()));
     public static RegistryObject<Item> weatherRadar = register("weather_radar",n->new FHBaseItem( createProps().stacksTo(1)));
     public static RegistryObject<Item> temperatureProbe = register("temperature_probe",n->new FHBaseItem( createProps().stacksTo(1)));
     static Properties createProps() {
-        return new Item.Properties().tab(FHMain.itemGroup);
+        return new Item.Properties();
     }
     public static void init() {
     }

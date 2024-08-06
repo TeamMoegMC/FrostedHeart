@@ -40,7 +40,11 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.WeighedRandom;
+import net.minecraft.util.random.Weight;
+import net.minecraft.util.random.WeightedEntry;
+import net.minecraft.util.random.WeightedRandom;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -83,17 +87,22 @@ public class TradePolicy extends IESerializableRecipe {
             SerializeUtil.writeOptional2(buffer, recipe.name, FriendlyByteBuf::writeResourceLocation);
             SerializeUtil.writeList(buffer, recipe.groups, PolicyGroup::write);
             buffer.writeVarInt(recipe.weight);
-            buffer.writeRegistryIdUnsafe(ForgeRegistries.PROFESSIONS, recipe.vp);
+            buffer.writeRegistryIdUnsafe(ForgeRegistries.VILLAGER_PROFESSIONS, recipe.vp);
             buffer.writeVarIntArray(recipe.expBar);
         }
     }
-    public static class Weighted extends WeighedRandom.WeighedRandomItem {
+    public static class Weighted implements WeightedEntry {
         TradePolicy policy;
-
+        Weight weight;
         public Weighted(int itemWeightIn, TradePolicy policy) {
-            super(itemWeightIn);
+        	this.weight=Weight.of(itemWeightIn);
             this.policy = policy;
         }
+		@Override
+		public Weight getWeight() {
+
+			return weight;
+		}
     }
     public static RecipeType<TradePolicy> TYPE;
 
@@ -109,8 +118,8 @@ public class TradePolicy extends IESerializableRecipe {
 
     int weight = 0;
 
-    public static TradePolicy random(Random rnd) {
-        return WeighedRandom.getRandomItem(rnd, items, totalW).policy;
+    public static TradePolicy random(RandomSource rnd) {
+        return WeightedRandom.getRandomItem(rnd, items, totalW).policy;
     }
 
     public TradePolicy(ResourceLocation id, ResourceLocation name, List<PolicyGroup> groups, int weight, VillagerProfession vp, int[] expBar) {

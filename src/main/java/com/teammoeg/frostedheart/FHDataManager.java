@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -247,7 +248,6 @@ public class FHDataManager implements ResourceManagerReloadListener {
 	private FHDataManager() {}
 
 	public static final FHDataManager INSTANCE = new FHDataManager();
-	private static final JsonParser parser = new JsonParser();
 
 	@Override
 	public void onResourceManagerReload(ResourceManager manager) {
@@ -255,12 +255,13 @@ public class FHDataManager implements ResourceManagerReloadListener {
 		StructureUtils.addBanedBlocks();
 		WorldTemperature.clear();
 		for (DataType<?> dat : DataType.types) {
-			for (ResourceLocation rl : manager.listResources(dat.getLocation(), (s) -> s.endsWith(".json"))) {
+			for (Entry<ResourceLocation, Resource> rl : manager.listResources(dat.getLocation(), (s) -> s.getPath().endsWith(".json")).entrySet()) {
+				Resource rc = rl.getValue();
 				try (
-					Resource rc = manager.getResource(rl);
-					InputStream stream = rc.getInputStream();
-					InputStreamReader reader = new InputStreamReader(stream)){
-					JsonObject object = parser.parse(reader).getAsJsonObject();
+					
+					BufferedReader reader = rc.openAsReader();){
+					
+					JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
 					FHDataManager.register(dat, object);
 				} catch (IOException e) {
 					e.printStackTrace();

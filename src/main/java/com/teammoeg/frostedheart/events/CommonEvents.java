@@ -70,6 +70,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.server.ServerResources;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.resources.ResourceLocation;
@@ -200,7 +201,7 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void addReloadListeners(AddReloadListenerEvent event) {
-        ServerResources dataPackRegistries = event.getDataPackRegistries();
+        ReloadableServerResources dataPackRegistries = event.getServerResources();
         // IReloadableResourceManager resourceManager = (IReloadableResourceManager)
         // dataPackRegistries.getResourceManager();
         event.addListener(new FHRecipeReloadListener(dataPackRegistries));

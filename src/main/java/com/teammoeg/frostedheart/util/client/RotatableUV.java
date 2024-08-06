@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.util.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
 public class RotatableUV extends TexturedUV {
@@ -18,11 +18,11 @@ public class RotatableUV extends TexturedUV {
 		this.cY=cY;
 	}
 
-	public void blitRotated(PoseStack matrixStack, int targetX, int targetY, float degrees) {
+	public void blitRotated(GuiGraphics matrixStack, int targetX, int targetY, float degrees) {
 		super.blitRotated(matrixStack, targetX, targetY, cX, cY, degrees);
 	}
 
-	public void blitRotated(PoseStack matrixStack, int targetX, int targetY, Point loc, float degrees) {
+	public void blitRotated(GuiGraphics matrixStack, int targetX, int targetY, Point loc, float degrees) {
 		super.blitRotated(matrixStack, targetX, targetY, loc, cX, cY, degrees);
 	}
 

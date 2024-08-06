@@ -26,14 +26,15 @@ import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
 
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.api.Team;
+import dev.ftb.mods.ftbteams.api.event.PlayerChangedTeamEvent;
+import dev.ftb.mods.ftbteams.api.event.PlayerTransferredTeamOwnershipEvent;
+import dev.ftb.mods.ftbteams.api.event.TeamCreatedEvent;
+import dev.ftb.mods.ftbteams.api.event.TeamEvent;
 import dev.ftb.mods.ftbteams.data.PlayerTeam;
-import dev.ftb.mods.ftbteams.event.PlayerChangedTeamEvent;
-import dev.ftb.mods.ftbteams.event.PlayerTransferredTeamOwnershipEvent;
-import dev.ftb.mods.ftbteams.event.TeamCreatedEvent;
-import dev.ftb.mods.ftbteams.event.TeamEvent;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor;
 
 public class FTBTeamsEvents {
 
@@ -44,8 +45,8 @@ public class FTBTeamsEvents {
     }
 
     public static void syncDataWhenTeamCreated(TeamCreatedEvent event) {
-        if (FTBTeamsAPI.isManagerLoaded()) {
-            PlayerTeam orig = FTBTeamsAPI.getManager().getInternalPlayerTeam(event.getCreator().getUUID());
+        if (FTBTeamsAPI.api().isManagerLoaded()) {
+            Team orig = FTBTeamsAPI.api().getManager().getPlayerTeamForPlayerID(event.getCreator().getUUID()).orElse(null);
 
             FHTeamDataManager.INSTANCE.transfer(orig.getId(), event.getTeam());
             for(ServerPlayer p:event.getTeam().getOnlineMembers()) {
@@ -57,9 +58,9 @@ public class FTBTeamsEvents {
     }
 
     public static void syncDataWhenTeamDeleted(TeamEvent event) {
-        if (FTBTeamsAPI.isManagerLoaded()) {
+        if (FTBTeamsAPI.api().isManagerLoaded()) {
             UUID owner = event.getTeam().getOwner();
-            PlayerTeam orig = FTBTeamsAPI.getManager().getInternalPlayerTeam(owner);
+            Team orig = FTBTeamsAPI.api().getManager().getPlayerTeamForPlayerID(owner).orElse(null);
 
             FHTeamDataManager.INSTANCE.transfer(event.getTeam().getId(), orig);
             for(ServerPlayer p:event.getTeam().getOnlineMembers()) {
@@ -72,7 +73,7 @@ public class FTBTeamsEvents {
     }
 
     public static void syncDataWhenTeamTransfer(PlayerTransferredTeamOwnershipEvent event) {
-        if (FTBTeamsAPI.isManagerLoaded()) {
+        if (FTBTeamsAPI.api().isManagerLoaded()) {
 
             FHTeamDataManager.INSTANCE.get(event.getTeam()).setOwnerName(event.getFrom().getGameProfile().getName());
         }

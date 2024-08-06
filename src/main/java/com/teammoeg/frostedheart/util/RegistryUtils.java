@@ -9,10 +9,11 @@ import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.effect.MobEffect;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
-import net.minecraft.world.level.levelgen.feature.StructureFeature;
+import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class RegistryUtils {
@@ -26,7 +27,7 @@ public class RegistryUtils {
 		return ForgeRegistries.FLUIDS.getKey(v);
 	}
 	public static ResourceLocation getRegistryName(Biome b) {
-		return b.getRegistryName();
+		return ForgeRegistries.BIOMES.getKey(b);
 	}
 	public static Item getItem(ResourceLocation rl) {
 		return ForgeRegistries.ITEMS.getValue(rl);
@@ -37,16 +38,16 @@ public class RegistryUtils {
 		return ForgeRegistries.ITEMS.getValue(rl);
 	}
 	public static MobEffect getEffect(ResourceLocation rl) {
-		return ForgeRegistries.POTIONS.getValue(rl);
+		return ForgeRegistries.MOB_EFFECTS.getValue(rl);
 	}
-	public static ResourceLocation getRegistryName(StructureFeature<NoneFeatureConfiguration> observatory) {
-		return observatory.getRegistryName();
+	public static ResourceLocation getRegistryName(Structure observatory) {
+		return BuiltInRegistries.STRUCTURE_TYPE.getKey(observatory.type());
 	}
 	public static ResourceLocation getRegistryName(VillagerProfession prof) {
-		return prof.getRegistryName();
+		return ForgeRegistries.VILLAGER_PROFESSIONS.getKey(prof);
 	}
 	public static ResourceLocation getRegistryName(EntityType<?> e) {
-		return e.getRegistryName();
+		return ForgeRegistries.ENTITY_TYPES.getKey(e);
 	}
 	public static ResourceLocation getRegistryName(Enchantment enchID) {
 		return ForgeRegistries.ENCHANTMENTS.getKey(enchID);
@@ -55,7 +56,7 @@ public class RegistryUtils {
 		return ForgeRegistries.BLOCKS.getValue(resourceLocation);
 	}
 	public static VillagerProfession getProfess(ResourceLocation resourceLocation) {
-		return ForgeRegistries.PROFESSIONS.getValue(resourceLocation);
+		return ForgeRegistries.VILLAGER_PROFESSIONS.getValue(resourceLocation);
 	}
 	public static Fluid getFluid(ResourceLocation resourceLocation) {
 		return ForgeRegistries.FLUIDS.getValue(resourceLocation);
@@ -70,9 +71,9 @@ public class RegistryUtils {
 		return ForgeRegistries.ENCHANTMENTS.getValue(enchID);
 	}
 	public static EntityType<?> getEntity(ResourceLocation resourceLocation) {
-		return ForgeRegistries.ENTITIES.getValue(resourceLocation);
+		return ForgeRegistries.ENTITY_TYPES.getValue(resourceLocation);
 	}
 	public static Collection<EntityType<?>> getEntities() {
-		return ForgeRegistries.ENTITIES.getValues();
+		return ForgeRegistries.ENTITY_TYPES.getValues();
 	}
 }

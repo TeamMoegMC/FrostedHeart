@@ -19,38 +19,36 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
+import com.teammoeg.frostedheart.FHBaseContainer;
 import com.teammoeg.frostedheart.util.client.Point;
 
-import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
+import blusunrize.immersiveengineering.common.gui.BlockEntityInventory;
+import blusunrize.immersiveengineering.common.gui.IEBaseContainerOld;
 import blusunrize.immersiveengineering.common.gui.IESlot;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public abstract class MasterGeneratorContainer<T extends MasterGeneratorTileEntity<T>> extends IEBaseContainer<T> {
+public abstract class MasterGeneratorContainer<T extends MasterGeneratorTileEntity<T>> extends FHBaseContainer<T> {
     public ContainerData data;
 
-    public MasterGeneratorContainer(int id, Inventory inventoryPlayer, T tile) {
-        super(tile, id);
+    public MasterGeneratorContainer(MenuType<?> mt,int id, Inventory inventoryPlayer, T tile) {
+        super(mt,tile, id,2);
         Point in=getSlotIn();
-        this.addSlot(new IESlot(this, this.inv, 0, in.getX(), in.getY()) {
+        BlockEntityInventory inv=new BlockEntityInventory(tile,this);
+        this.addSlot(new IESlot(this, inv, 0, in.getX(), in.getY()) {
             @Override
             public boolean mayPlace(ItemStack itemStack) {
                 return tile.isStackValid(0, itemStack);
             }
         });
         Point out=getSlotOut();
-        this.addSlot(new IESlot.Output(this, this.inv, 1, out.getX(), out.getY()));
-
-        slotCount = 2;
-
-        for (int i = 0; i < 3; i++)
-            for (int j = 0; j < 9; j++)
-                addSlot(new Slot(inventoryPlayer, j + i * 9 + 9, 8 + j * 18, 140 + i * 18));
-        for (int i = 0; i < 9; i++)
-            addSlot(new Slot(inventoryPlayer, i, 8 + i * 18, 198));
+        this.addSlot(new IESlot.Output(this, inv, 1, out.getX(), out.getY()));
+        this.addPlayerInventory(inventoryPlayer, 8, 140, 198);
         data = tile.guiData;
         addDataSlots(data);
     }

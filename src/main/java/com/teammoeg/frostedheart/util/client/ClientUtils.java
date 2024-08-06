@@ -32,6 +32,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.Level;
@@ -53,9 +54,6 @@ public class ClientUtils {
     public static Minecraft mc() {
         return Minecraft.getInstance();
     }
-    public static void bindTexture(ResourceLocation texture) {
-    	mc().getTextureManager().bind(texture);
-    }
     public static void refreshResearchGui() {
         Screen cur = mc().screen;
         if (cur instanceof IScreenWrapper) {
@@ -68,7 +66,7 @@ public class ClientUtils {
     }
 
     public static void spawnFireParticles(Level worldIn, BlockPos pos) {
-        Random random = worldIn.getRandom();
+        RandomSource random = worldIn.getRandom();
         // Upward flame
         worldIn.addParticle(ParticleTypes.FLAME, pos.getX() + 0.25D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.25D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.01D, 0.0D);
         // Side flame (4 directions)
@@ -79,13 +77,13 @@ public class ClientUtils {
     }
 
     public static void spawnSmokeParticles(Level worldIn, BlockPos pos) {
-        Random random = worldIn.getRandom();
+        RandomSource random = worldIn.getRandom();
         worldIn.addAlwaysVisibleParticle(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, pos.getX() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + random.nextDouble() + random.nextDouble(), pos.getZ() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.05D, 0.0D);
         worldIn.addParticle(ParticleTypes.SMOKE, pos.getX() + 0.25D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.25D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.002D, 0.01D, 0.0D);
     }
 
     public static void spawnT2SmokeParticles(Level worldIn, BlockPos pos) {
-        Random random = worldIn.getRandom();
+        RandomSource random = worldIn.getRandom();
         worldIn.addAlwaysVisibleParticle(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, pos.getX() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.5D + random.nextDouble() + random.nextDouble(), pos.getZ() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.12D, 0.0D);
         worldIn.addParticle(ParticleTypes.SMOKE, pos.getX() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.05D, 0.0D);
     }
@@ -97,7 +95,7 @@ public class ClientUtils {
     }
 
     public static void spawnInvertedConeSteam(Level worldIn, BlockPos generatorTopPos, Vec3 windVelocity) {
-        Random random = worldIn.getRandom();
+        RandomSource random = worldIn.getRandom();
         double vYMean = 0.02; // Mean speed of the particles upwards
         double speedVar = 0.01; // Variance in speed of the particles
 
@@ -118,13 +116,13 @@ public class ClientUtils {
 
 
     public static void spawnSteamParticles(Level worldIn, BlockPos pos) {
-        Random random = worldIn.getRandom();
+        RandomSource random = worldIn.getRandom();
         worldIn.addAlwaysVisibleParticle(FHParticleTypes.STEAM.get(), true, pos.getX() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.5D + random.nextDouble() + random.nextDouble(), pos.getZ() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.12D, 0.0D);
         worldIn.addParticle(FHParticleTypes.STEAM.get(), pos.getX() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.05D, 0.0D);
     }
 
     public static void spawnT2FireParticles(Level worldIn, BlockPos pos) {
-        Random random = worldIn.getRandom();
+        RandomSource random = worldIn.getRandom();
         // Upward flame
         worldIn.addParticle(ParticleTypes.FLAME, pos.getX() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.01D, 0.0D);
         // Side flame (4 directions)

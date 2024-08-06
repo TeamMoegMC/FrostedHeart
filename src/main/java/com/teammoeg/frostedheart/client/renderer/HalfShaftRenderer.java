@@ -1,22 +1,25 @@
 package com.teammoeg.frostedheart.client.renderer;
 
-import com.simibubi.create.AllBlockPartials;
-import com.simibubi.create.content.contraptions.base.KineticTileEntity;
-import com.simibubi.create.content.contraptions.base.KineticTileEntityRenderer;
-import com.simibubi.create.foundation.render.PartialBufferer;
+import com.simibubi.create.AllPartialModels;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
+import com.simibubi.create.foundation.render.CachedBufferer;
 import com.simibubi.create.foundation.render.SuperByteBuffer;
 
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
+import net.minecraft.world.level.block.state.BlockState;
 
-public class HalfShaftRenderer extends KineticTileEntityRenderer {
+public class HalfShaftRenderer extends KineticBlockEntityRenderer<KineticBlockEntity> {
 
-	public HalfShaftRenderer(BlockEntityRenderDispatcher dispatcher) {
-		super(dispatcher);
+
+	public HalfShaftRenderer(Context context) {
+		super(context);
+		// TODO Auto-generated constructor stub
 	}
 
 	@Override
-	protected SuperByteBuffer getRotatedModel(KineticTileEntity te) {
-		return PartialBufferer.getFacing(AllBlockPartials.SHAFT_HALF, te.getBlockState());
+	protected SuperByteBuffer getRotatedModel(KineticBlockEntity te,BlockState bs) {
+		return CachedBufferer.partialFacing(AllPartialModels.SHAFT_HALF, bs);
 	}
 
 }

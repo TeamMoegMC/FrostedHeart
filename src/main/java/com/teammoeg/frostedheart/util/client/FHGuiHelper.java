@@ -21,21 +21,24 @@ package com.teammoeg.frostedheart.util.client;
 
 import java.util.OptionalDouble;
 
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.math.Matrix4f;
 
 public class FHGuiHelper {
     // hack to access render state protected members
@@ -58,12 +61,12 @@ public class FHGuiHelper {
     }
 
     public static final RenderType BOLD_LINE_TYPE = RenderType.create("fh_line_bold",
-            DefaultVertexFormat.POSITION_COLOR, GL11.GL_LINES, 128, RenderStateAccess.getLineState(4));
+            DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.LINES, 128, false,false,RenderStateAccess.getLineState(4));
 
     private static void drawVertexLine(Matrix4f mat, VertexConsumer renderBuffer, Color4I color, int startX, int startY,
                                  int endX, int endY,float z) {
     	//RenderSystem.disableTexture();
-        RenderSystem.enableColorMaterial();
+        //RenderSystem.enableColorLogicOp();
         //RenderSystem.colorMask(false, false, false, false);
         renderBuffer.vertex(mat, startX, startY, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
                 .endVertex();
@@ -73,21 +76,21 @@ public class FHGuiHelper {
     }
     private static void drawVertexLine2(Matrix4f mat, VertexConsumer renderBuffer, Color4I color, int startX, int startY,
             int endX, int endY,float z) {
-		RenderSystem.disableTexture();
-		RenderSystem.enableColorMaterial();
+		//RenderSystem.disableTexture();
+		//RenderSystem.enableColorMaterial();
 		//RenderSystem.colorMask(false, false, false, false);
 	
 		renderBuffer.vertex(mat, startX, 0, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
 		renderBuffer.vertex(mat, endX,   0, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
 		renderBuffer.vertex(mat, 0, startY, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
 		renderBuffer.vertex(mat, 0, endY  , z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
-		RenderSystem.enableTexture();
+		//RenderSystem.enableTexture();
 	}
     // draw a line from start to end by color, ABSOLUTE POSITION
     public static void drawLine(PoseStack matrixStack, Color4I color, int startX, int startY, int endX, int endY,float z) {
     	Tesselator t=Tesselator.getInstance();
         BufferBuilder vertexBuilderLines = t.getBuilder();
-        vertexBuilderLines.begin(GL11C.GL_LINES, DefaultVertexFormat.POSITION_COLOR);
+        vertexBuilderLines.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
         drawVertexLine(matrixStack.last().pose(), vertexBuilderLines, color, startX, startY, endX, endY,z);
         t.end();
     }
@@ -127,19 +130,15 @@ public class FHGuiHelper {
 
     // draw a rectangle
     public static void fillGradient(PoseStack matrixStack, int x1, int y1, int x2, int y2, int colorFrom, int colorTo) {
-        RenderSystem.disableTexture();
+        RenderSystem.enableDepthTest();
         RenderSystem.enableBlend();
-        RenderSystem.disableAlphaTest();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.shadeModel(7425);
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBuilder();
-        bufferbuilder.begin(7, DefaultVertexFormat.POSITION_COLOR);
+        bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         fillGradient(matrixStack.last().pose(), bufferbuilder, x1, y1, x2, y2, colorFrom, colorTo);
         tessellator.end();
-        RenderSystem.shadeModel(7424);
         RenderSystem.disableBlend();
-        RenderSystem.enableAlphaTest();
-        RenderSystem.enableTexture();
     }
 }

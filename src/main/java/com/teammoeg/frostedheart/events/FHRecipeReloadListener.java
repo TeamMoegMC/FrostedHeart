@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.events;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -34,33 +33,26 @@ import com.teammoeg.frostedheart.recipes.DietValueRecipe;
 import com.teammoeg.frostedheart.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
 
-import blusunrize.immersiveengineering.api.ApiUtils;
-import blusunrize.immersiveengineering.api.utils.TagUtils;
-import blusunrize.immersiveengineering.common.blocks.multiblocks.StaticTemplateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.RecipeManager;
-import net.minecraft.server.ServerResources;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ItemTags;
+import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RecipesUpdatedEvent;
 import net.minecraftforge.event.TagsUpdatedEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.network.PacketDistributor;
-import net.minecraftforge.fml.server.ServerLifecycleHooks;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 public class FHRecipeReloadListener implements ResourceManagerReloadListener {
-    private final ServerResources dataPackRegistries;
+    private final ReloadableServerResources dataPackRegistries;
 
     RecipeManager clientRecipeManager;
 
@@ -90,7 +82,7 @@ public class FHRecipeReloadListener implements ResourceManagerReloadListener {
         //System.out.println(TradePolicy.policies.size());
         TradePolicy.items = TradePolicy.policies.values().stream().map(TradePolicy::asWeight).filter(Objects::nonNull).collect(Collectors.toList());
         //System.out.println(TradePolicy.items.size());
-        TradePolicy.totalW = TradePolicy.items.stream().mapToInt(w -> w.weight).sum();
+        TradePolicy.totalW = TradePolicy.items.stream().mapToInt(w -> w.getWeight().asInt()).sum();
         //System.out.println(TradePolicy.totalW);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::scheduleSyncJEI);
     }
@@ -110,7 +102,7 @@ public class FHRecipeReloadListener implements ResourceManagerReloadListener {
                 .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
     }
 
-    public FHRecipeReloadListener(ServerResources dataPackRegistries) {
+    public FHRecipeReloadListener(ReloadableServerResources dataPackRegistries) {
         this.dataPackRegistries = dataPackRegistries;
     }
 
@@ -127,19 +119,19 @@ public class FHRecipeReloadListener implements ResourceManagerReloadListener {
         if (dataPackRegistries != null) {
             MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
             if (server != null) {
-                Iterator<ServerLevel> it = server.getAllLevels().iterator();
+                /*Iterator<ServerLevel> it = server.getAllLevels().iterator();
                 // Should only be false when no players are loaded, so the data will be synced on login
                 if (it.hasNext())
                     ApiUtils.addFutureServerTask(it.next(),
                             () -> StaticTemplateManager.syncMultiblockTemplates(PacketDistributor.ALL.noArg(), true)
-                    );
+                    );*/
             }
         }
     }
 
     @SubscribeEvent
     public void onTagsUpdated(TagsUpdatedEvent event) {
-        if (clientRecipeManager != null)
-            TagUtils.setTagCollectionGetters(ItemTags::getAllTags, BlockTags::getAllTags);
+        //if (clientRecipeManager != null)
+        //    TagUtils.setTagCollectionGetters(ItemTags::getAllTags, BlockTags::getAllTags);
     }
 }

@@ -27,7 +27,7 @@ public class GuiClickedEvent implements GuiEventListener {
     int x2;
     int y2;
     Runnable call;
-
+    boolean focused;
     public GuiClickedEvent(int x1, int y1, int x2, int y2, Runnable call) {
         this.x1 = x1;
         this.y1 = y1;
@@ -44,5 +44,16 @@ public class GuiClickedEvent implements GuiEventListener {
         }
         return false;
     }
+
+	@Override
+	public void setFocused(boolean pFocused) {
+		focused=pFocused;
+	}
+
+	@Override
+	public boolean isFocused() {
+		// TODO Auto-generated method stub
+		return focused;
+	}
 
 }

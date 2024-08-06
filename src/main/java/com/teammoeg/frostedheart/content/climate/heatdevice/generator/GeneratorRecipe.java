@@ -29,9 +29,11 @@ import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
 import net.minecraftforge.registries.RegistryObject;
 
 public class GeneratorRecipe extends IESerializableRecipe {
@@ -51,19 +53,25 @@ public class GeneratorRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public GeneratorRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            ItemStack output = readOutput(json.get("result"));
-            IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
-            int time = GsonHelper.getAsInt(json, "time");
-            return new GeneratorRecipe(recipeId, output, input, time);
-        }
-
-        @Override
         public void toNetwork(FriendlyByteBuf buffer, GeneratorRecipe recipe) {
             buffer.writeItem(recipe.output);
             recipe.input.write(buffer);
             buffer.writeInt(recipe.time);
         }
+
+		@Override
+		public GeneratorRecipe readFromJson(ResourceLocation recipeId, JsonObject json, IContext context) {
+            ItemStack output = readOutput(json.get("result")).get();
+            IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
+            int time = GsonHelper.getAsInt(json, "time");
+            return new GeneratorRecipe(recipeId, output, input, time);
+		}
+
+		@Override
+		public GeneratorRecipe fromJson(ResourceLocation recipeId, JsonObject serializedRecipe) {
+			// TODO Auto-generated method stub
+			return super.fromJson(recipeId, serializedRecipe);
+		}
     }
     public static RecipeType<GeneratorRecipe> TYPE;
 
@@ -105,7 +113,8 @@ public class GeneratorRecipe extends IESerializableRecipe {
     }
 
     @Override
-    public ItemStack getResultItem() {
+    public ItemStack getResultItem(RegistryAccess pRegistryAccess) {
         return this.output;
     }
+
 }

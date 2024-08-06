@@ -23,68 +23,71 @@ import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.common.ToolType;
 
 public class FHProps {
     public static final BlockBehaviour.Properties stoneDecoProps = BlockBehaviour.Properties
-            .of(Material.STONE)
+            .of()
             .sound(SoundType.STONE)
+            .mapColor(MapColor.STONE)
             .requiresCorrectToolForDrops()
-            .harvestTool(ToolType.PICKAXE)
             .strength(2, 10);
 
     public static final BlockBehaviour.Properties metalDecoProps = BlockBehaviour.Properties
-            .of(Material.METAL)
+            .of()
             .sound(SoundType.METAL)
+            .mapColor(MapColor.METAL)
             .requiresCorrectToolForDrops()
-            .harvestTool(ToolType.PICKAXE)
             .strength(2, 10);
     public static final BlockBehaviour.Properties cropProps = BlockBehaviour.Properties
-            .of(Material.PLANT)
+            .of()
+            .mapColor(MapColor.PLANT)
             .noCollission()
             .randomTicks()
             .instabreak()
             .sound(SoundType.CROP);
     public static final BlockBehaviour.Properties ore_gravel = BlockBehaviour.Properties
-            .of(Material.SAND)
+            .of()
             .sound(SoundType.GRAVEL)
+            .mapColor(MapColor.SAND)
             .requiresCorrectToolForDrops()
-            .harvestTool(ToolType.SHOVEL)
             .strength(0.6F);
     public static final BlockBehaviour.Properties redStoneProps = BlockBehaviour.Properties
-            .of(Material.BUILDABLE_GLASS)
+            .of()
+            .mapColor(MapColor.NONE)
             .noCollission()
             .instabreak()
             .sound(SoundType.STONE);
 
     public static final BlockBehaviour.Properties stoneProps = BlockBehaviour.Properties
-            .of(Material.STONE)
+            .of()
             .sound(SoundType.STONE)
+            .mapColor(MapColor.STONE)
             .noCollission()
             .requiresCorrectToolForDrops()
-            .harvestTool(ToolType.PICKAXE)
             .strength(2, 10);
 
     public static final BlockBehaviour.Properties woodenProps = BlockBehaviour.Properties
-            .of(Material.WOOD)
+    		.of()
             .noCollission()
+            .mapColor(MapColor.WOOD)
             .requiresCorrectToolForDrops()
-            .harvestTool(ToolType.AXE)
             .sound(SoundType.WOOD)
             .strength(0.6F);
 
     public static final BlockBehaviour.Properties grassProps = BlockBehaviour.Properties
-            .of(Material.PLANT)
+            .of()
+            .mapColor(MapColor.PLANT)
             .noCollission()
             .requiresCorrectToolForDrops()
-            .harvestTool(ToolType.AXE)
             .sound(SoundType.GRASS)
             .strength(0.3F);
 
-    public static final Item.Properties itemProps = new Item.Properties().tab(FHMain.itemGroup);
-    public static final BlockBehaviour.Properties berryBushBlocks = BlockBehaviour.Properties.of(Material.PLANT).randomTicks().noCollission().sound(SoundType.SWEET_BERRY_BUSH);
+    public static final Item.Properties itemProps = new Item.Properties();
+    public static final BlockBehaviour.Properties berryBushBlocks = BlockBehaviour.Properties.of()
+    	.mapColor(MapColor.PLANT)
+    	.randomTicks().noCollission().sound(SoundType.SWEET_BERRY_BUSH);
     public static void init() {
     }
 }

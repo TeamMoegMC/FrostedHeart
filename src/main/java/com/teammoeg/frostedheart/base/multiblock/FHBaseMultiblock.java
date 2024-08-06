@@ -19,16 +19,13 @@
 
 package com.teammoeg.frostedheart.base.multiblock;
 
-import java.util.function.Supplier;
-
+import blusunrize.immersiveengineering.api.multiblocks.blocks.MultiblockRegistration;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 
 public abstract class FHBaseMultiblock extends IETemplateMultiblock {
-    public FHBaseMultiblock(ResourceLocation loc, BlockPos masterFromOrigin, BlockPos triggerFromOrigin, BlockPos size, Supplier<BlockState> baseState) {
+    public FHBaseMultiblock(ResourceLocation loc, BlockPos masterFromOrigin, BlockPos triggerFromOrigin, BlockPos size, MultiblockRegistration<?> baseState) {
         super(loc, masterFromOrigin, triggerFromOrigin, size, baseState);
     }
 
@@ -37,22 +34,4 @@ public abstract class FHBaseMultiblock extends IETemplateMultiblock {
         return false;
     }
 
-    @Override
-    public BlockPos multiblockToModelPos(BlockPos posInMultiblock) {
-        return super.multiblockToModelPos(new BlockPos(
-                getSize(null).getX() - posInMultiblock.getX() - 1,
-                posInMultiblock.getY(),
-                getSize(null).getZ() - posInMultiblock.getZ() - 1
-        ));
-    }
-
-    @Override
-    public Direction transformDirection(Direction original) {
-        return original.getOpposite();
-    }
-
-    @Override
-    public Direction untransformDirection(Direction transformed) {
-        return transformed.getOpposite();
-    }
 }

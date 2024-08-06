@@ -19,12 +19,16 @@
 
 package com.teammoeg.frostedheart.base.item;
 
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
+
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import net.minecraft.world.item.Item.Properties;
 
-public class FHBaseItem extends Item {
+public class FHBaseItem extends Item implements ICreativeModeTabItem{
     Item repair;
 
     public FHBaseItem(Properties properties) {
@@ -41,4 +45,11 @@ public class FHBaseItem extends Item {
         repair = it;
         return this;
     }
+
+	@Override
+	public void fillItemCategory(CreativeTabItemHelper helper) {
+		if(helper.isType(FHMain.itemGroup))
+			helper.accept(this);
+		
+	}
 }

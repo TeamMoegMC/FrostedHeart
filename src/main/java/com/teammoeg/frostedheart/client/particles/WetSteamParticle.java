@@ -19,12 +19,9 @@
 
 package com.teammoeg.frostedheart.client.particles;
 
-import com.mojang.blaze3d.vertex.IVertexBuilder;
 import net.minecraft.client.particle.*;
-import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.particles.SimpleParticleType;
-import net.minecraft.util.math.MathHelper;
 
 public class WetSteamParticle extends TextureSheetParticle {
 

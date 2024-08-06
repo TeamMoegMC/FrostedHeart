@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.util.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHMain;
 
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
 public class TexturedUV extends UV {
@@ -48,60 +48,58 @@ public class TexturedUV extends UV {
     public TexturedUV(String texture, UV uv) {
     	this(new ResourceLocation(FHMain.MODID,"textures/gui/"+texture), uv);
     }
-    protected void bindTexture() {
-    	ClientUtils.mc().getTextureManager().bind(texture);
-    }
-
-	@Override
-	public void blit(PoseStack s, int targetX, int targetY, int sourceWidth, int sourceHeight) {
-		bindTexture();
-		super.blit(s, targetX, targetY, sourceWidth, sourceHeight);
+	public void blit(GuiGraphics s, int targetX, int targetY, int sourceWidth, int sourceHeight) {
+		super.blit(s,texture, targetX, targetY, sourceWidth, sourceHeight);
 	}
 
-	@Override
-	public void blit(PoseStack s, int targetX, int targetY, int sourceWidth) {
-		bindTexture();
-		super.blit(s, targetX, targetY, sourceWidth);
+	public void blit(GuiGraphics s, int targetX, int targetY, int sourceWidth) {
+		super.blit(s,texture, targetX, targetY, sourceWidth);
 	}
 
-	@Override
-	public void blit(PoseStack s, int targetX, int targetY) {
-		bindTexture();
-		super.blit(s, targetX, targetY);
+	public void blit(GuiGraphics s, int targetX, int targetY) {
+		super.blit(s,texture, targetX, targetY);
 	}
 
-	@Override
-	public void blitAtlas(PoseStack s, int targetX, int targetY, int gridX, int gridY) {
-		bindTexture();
-		super.blitAtlas(s, targetX, targetY, gridX, gridY);
+	public void blitAtlas(GuiGraphics s, int targetX, int targetY, int gridX, int gridY) {
+		super.blitAtlas(s,texture, targetX, targetY, gridX, gridY);
 	}
 
-	@Override
-	public void blit(PoseStack s, int targetX, int targetY, Point loc, int sourceWidth) {
-		bindTexture();
-		super.blit(s, targetX, targetY, loc, sourceWidth);
+	public void blit(GuiGraphics s, int targetX, int targetY, Point loc, int sourceWidth) {
+		super.blit(s,texture, targetX, targetY, loc, sourceWidth);
 	}
 
-	@Override
-	public void blitAt(PoseStack s, int targetX, int targetY, Point loc) {
-		bindTexture();
-		super.blitAt(s, targetX, targetY, loc);
+	public void blitAt(GuiGraphics s, int targetX, int targetY, Point loc) {
+		super.blitAt(s,texture, targetX, targetY, loc);
 	}
 
-	@Override
-	public void blitAtlas(PoseStack s, int targetX, int targetY, Point loc, int gridX, int gridY) {
-		bindTexture();
-		super.blitAtlas(s, targetX, targetY, loc, gridX, gridY);
+	public void blitAtlas(GuiGraphics s, int targetX, int targetY, Point loc, int gridX, int gridY) {
+		super.blitAtlas(s,texture, targetX, targetY, loc, gridX, gridY);
 	}
-	@Override
-	public void blit(PoseStack s, int targetX, int targetY, Point loc, Transition direction, double progress) {
-		bindTexture();
-		super.blit(s, targetX, targetY, loc, direction, progress);
+	public void blit(GuiGraphics s, int targetX, int targetY, Point loc, Transition direction, double progress) {
+		super.blit(s,texture, targetX, targetY, loc, direction, progress);
 	}
-	@Override
-	public void blit(PoseStack s, int targetX, int targetY, Transition direction, double progress) {
-		bindTexture();
-		super.blit(s, targetX, targetY, direction, progress);
+	public void blit(GuiGraphics s, int targetX, int targetY, Transition direction, double progress) {
+		super.blit(s,texture, targetX, targetY, direction, progress);
+	}
+	public void blitRotated(GuiGraphics graphics,int targetX, int targetY, int centerX, int centerY, float degrees) {
+		// TODO Auto-generated method stub
+		super.blitRotated(graphics, texture, targetX, targetY, centerX, centerY, degrees);
+	}
+	public void blitRotated(GuiGraphics matrixStack, int targetX, int targetY, Point loc, int centerX, int centerY, float degrees) {
+		// TODO Auto-generated method stub
+		super.blitRotated(matrixStack, texture, targetX, targetY, loc, centerX, centerY, degrees);
+	}
+	public void blitCenter(GuiGraphics s,  int centerX, int centerY) {
+		// TODO Auto-generated method stub
+		super.blitCenter(s, texture, centerX, centerY);
+	}
+	public void blitCenter(GuiGraphics s,  int centerX, int centerY, Point loc) {
+		// TODO Auto-generated method stub
+		super.blitCenter(s, texture, centerX, centerY, loc);
+	}
+	public void blit(GuiGraphics s, int targetX, int targetY, Point loc) {
+		// TODO Auto-generated method stub
+		super.blit(s, texture, targetX, targetY, loc);
 	}
 
 }

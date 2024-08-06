@@ -19,14 +19,24 @@
 
 package com.teammoeg.frostedheart.world.civilization.orbit.observatory;
 
+import java.util.Optional;
+import java.util.function.Predicate;
+
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.NoiseColumn;
+import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.levelgen.structure.Structure;
+import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.biome.Biome;
@@ -34,52 +44,25 @@ import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
-import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
+import net.minecraft.world.level.levelgen.structure.StructureType;
+import net.minecraft.world.level.levelgen.structure.pools.JigsawPlacement;
+import net.minecraft.world.level.levelgen.structure.pools.StructureTemplatePool;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 
-public class ObservatoryStructure extends StructureFeature<NoneFeatureConfiguration> {
-    public static class Start extends StructureStart<NoneFeatureConfiguration> {
-        public Start(StructureFeature<NoneFeatureConfiguration> structureIn, int chunkX, int chunkZ, BoundingBox boundingBox, int referenceIn, long seedIn) {
-            super(structureIn, chunkX, chunkZ, boundingBox, referenceIn, seedIn);
-        }
-
-        @Override
-        public void generatePieces(RegistryAccess dynamic, ChunkGenerator generator, StructureManager template, int chunkX, int chunkZ, Biome biome, NoneFeatureConfiguration config) {
-
-            int x = chunkX << 4;
-            int z = chunkZ << 4;
-            int surfaceY = generator.getFirstOccupiedHeight(x, z, Heightmap.Types.WORLD_SURFACE_WG);
-
-            BlockPos blockpos = new BlockPos(x, surfaceY, z);
-
-            Rotation rotation = Rotation.getRandom(this.random);
-            this.pieces.add(new ObservatoryPiece(template, blockpos, rotation));
-
-            this.calculateBoundingBox();
-//            FHMain.LOGGER.log(Level.DEBUG, "Observatory at " + (blockpos.getX()) + " " + blockpos.getY() + " " + (blockpos.getZ()));
-        }
-    }
-
-
-    public ObservatoryStructure(Codec<NoneFeatureConfiguration> codec) {
-        super(codec);
-    }
-
-    @Override
-    protected boolean isFeatureChunk(ChunkGenerator generator, BiomeSource biomeprovider, long seed, WorldgenRandom random, int chunkX, int chunkZ, Biome biome, ChunkPos chunkPos, NoneFeatureConfiguration p_230363_10_) {
-        BlockPos centerOfChunk = new BlockPos(chunkX * 16, 0, chunkZ * 16);
-
-        int landHeight = generator.getFirstFreeHeight(centerOfChunk.getX(), centerOfChunk.getZ(), Heightmap.Types.WORLD_SURFACE_WG);
-        if (landHeight < 100 || landHeight > 200) return false;
-        BlockGetter columnOfBlocks = generator.getBaseColumn(centerOfChunk.getX(), centerOfChunk.getZ());
-
-        BlockState topBlock = columnOfBlocks.getBlockState(centerOfChunk.above(landHeight));
-
-        return topBlock.getFluidState().isEmpty();
-
-    }
+public class ObservatoryStructure extends Structure {
+	 public static final Codec<ObservatoryStructure> CODEC = RecordCodecBuilder.<ObservatoryStructure>mapCodec((p_227640_) -> {
+	      return p_227640_.group(settingsCodec(p_227640_), StructureTemplatePool.CODEC.fieldOf("start_pool").forGetter((p_227656_) -> {
+	         return p_227656_.startPool;
+	      })).apply(p_227640_, ObservatoryStructure::new);
+	   }).codec();
+	public final Holder<StructureTemplatePool> startPool;
+    public ObservatoryStructure(StructureSettings p_226558_,Holder<StructureTemplatePool> pool) {
+		super(p_226558_);
+		startPool=pool;
+	}
 
 
     @Override
@@ -87,7 +70,33 @@ public class ObservatoryStructure extends StructureFeature<NoneFeatureConfigurat
         return GenerationStep.Decoration.SURFACE_STRUCTURES;
     }
 
-    public StructureFeature.StructureStartFactory<NoneFeatureConfiguration> getStartFactory() {
-        return ObservatoryStructure.Start::new;
-    }
+	@Override
+	protected Optional<GenerationStub> findGenerationPoint(GenerationContext pContext) {
+		 BlockPos centerOfChunk = new BlockPos(pContext.chunkPos().getMiddleBlockX(), 0, pContext.chunkPos().getMiddleBlockZ());
+		 
+	        int landHeight = pContext.chunkGenerator().getFirstFreeHeight(centerOfChunk.getX(), centerOfChunk.getZ(), Heightmap.Types.WORLD_SURFACE_WG, pContext.heightAccessor(), pContext.randomState());
+	        if (landHeight < 100 || landHeight > 200) return Optional.empty();
+	        NoiseColumn columnOfBlocks = pContext.chunkGenerator().getBaseColumn(centerOfChunk.getX(), centerOfChunk.getZ(), pContext.heightAccessor(), pContext.randomState());
+	        BlockPos pos=centerOfChunk.above(landHeight);
+	        BlockState topBlock = columnOfBlocks.getBlock(pos.getY());
+	        if(topBlock.getFluidState().isEmpty())
+	        	return JigsawPlacement.addPieces(pContext, this.startPool,Optional.empty(), 32, pos,false, Optional.empty(), 0);
+		return Optional.empty();
+	}
+
+	@Override
+	public StructureType<?> type() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public StructureStart generate(RegistryAccess pRegistryAccess, ChunkGenerator pChunkGenerator, BiomeSource pBiomeSource, RandomState pRandomState,
+		StructureTemplateManager pStructureTemplateManager, long pSeed, ChunkPos pChunkPos, int p_226604_, LevelHeightAccessor pHeightAccessor, Predicate<Holder<Biome>> pValidBiome) {
+		// TODO Auto-generated method stub
+		return super.generate(pRegistryAccess, pChunkGenerator, pBiomeSource, pRandomState, pStructureTemplateManager, pSeed, pChunkPos, p_226604_, pHeightAccessor, pValidBiome);
+	}
+
+
+
 }

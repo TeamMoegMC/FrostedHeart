@@ -71,16 +71,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap.Types;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.crafting.NBTIngredient;
 import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class FHUtils {
-    private static class NBTIngredientAccess extends NBTIngredient {
-        public NBTIngredientAccess(ItemStack stack) {
-            super(stack);
-        }
-    }
 
     private static final ResourceLocation emptyLoot = new ResourceLocation("frostedheart:empty");
 	public static final String NBT_HEATER_VEST = FHMain.MODID + "heater_vest";
@@ -127,7 +121,7 @@ public class FHUtils {
     }
     public static Direction dirBetween(BlockPos from,BlockPos to) {
     	BlockPos delt=from.subtract(to);
-    	return Direction.fromNormal(Mth.clamp(delt.getX(), -1, 1), Mth.clamp(delt.getY(), -1, 1), Mth.clamp(delt.getZ(), -1, 1));
+    	return Direction.fromDelta(Mth.clamp(delt.getX(), -1, 1), Mth.clamp(delt.getY(), -1, 1), Mth.clamp(delt.getZ(), -1, 1));
     }
     public static BlockEntity getExistingTileEntity(LevelAccessor w,BlockPos pos) {
 		if(w==null)
@@ -168,7 +162,7 @@ public class FHUtils {
     	int i=0;
         for (IngredientWithSize iws : costList) {
             int count = iws.getCount();
-            for (ItemStack it : player.inventory.items) {
+            for (ItemStack it : player.getInventory().items) {
                 if (iws.testIgnoringSize(it)) {
                     count -= it.getCount();
                     if (count <= 0)
@@ -186,7 +180,7 @@ public class FHUtils {
     	int i=0;
         for (IngredientWithSize iws : costList) {
             int count = iws.getCount();
-            for (ItemStack it : player.inventory.items) {
+            for (ItemStack it : player.getInventory().items) {
                 if (iws.testIgnoringSize(it)) {
                     count -= it.getCount();
                     if (count <= 0)
@@ -205,7 +199,7 @@ public class FHUtils {
         // first do simple verify
         for (IngredientWithSize iws : costList) {
             int count = iws.getCount();
-            for (ItemStack it : player.inventory.items) {
+            for (ItemStack it : player.getInventory().items) {
                 if (iws.testIgnoringSize(it)) {
                     count -= it.getCount();
                     if (count <= 0)
@@ -215,12 +209,12 @@ public class FHUtils {
             if (count > 0)
                 return false;
         }
-        System.out.println("test");
+        //System.out.println("test");
         // then really consume item
         List<ItemStack> ret = new ArrayList<>();
         for (IngredientWithSize iws : costList) {
             int count = iws.getCount();
-            for (ItemStack it : player.inventory.items) {
+            for (ItemStack it : player.getInventory().items) {
                 if (iws.testIgnoringSize(it)) {
                     int redcount = Math.min(count, it.getCount());
                     ret.add(it.split(redcount));
@@ -238,21 +232,20 @@ public class FHUtils {
         return true;
     }
     public static Ingredient createIngredient(ItemStack is) {
-        if (is.hasTag()) return new NBTIngredientAccess(is);
+
         return Ingredient.of(is);
     }
 
     public static Ingredient createIngredient(ResourceLocation tag) {
-        return Ingredient.of(ItemTags.getAllTags().getTag(tag));
+        return Ingredient.of(ItemTags.create(tag));
     }
 
     public static IngredientWithSize createIngredientWithSize(ItemStack is) {
-        if (is.hasTag()) return new IngredientWithSize(new NBTIngredientAccess(is), is.getCount());
-        return new IngredientWithSize(Ingredient.of(is), is.getCount());
+        return new IngredientWithSize(createIngredient(is), is.getCount());
     }
 
     public static IngredientWithSize createIngredientWithSize(ResourceLocation tag, int count) {
-        return new IngredientWithSize(Ingredient.of(ItemTags.getAllTags().getTag(tag)), count);
+        return new IngredientWithSize(createIngredient(tag), count);
     }
 
     public static ResourceLocation getEmptyLoot() {
@@ -280,7 +273,7 @@ public class FHUtils {
 
     public static void giveItem(Player pe, ItemStack is) {
         if (!pe.addItem(is))
-            pe.level.addFreshEntity(new ItemEntity(pe.level, pe.blockPosition().getX(), pe.blockPosition().getY(), pe.blockPosition().getZ(), is));
+            pe.level().addFreshEntity(new ItemEntity(pe.level(), pe.blockPosition().getX(), pe.blockPosition().getY(), pe.blockPosition().getZ(), is));
     }
 
     public static boolean isBlizzardHarming(LevelAccessor iWorld, BlockPos p) {
@@ -314,7 +307,7 @@ public class FHUtils {
             CompoundTag compoundnbt = nbt.copy();
             compoundnbt.putString("id", type.toString());
             Entity entity = EntityType.loadEntityRecursive(compoundnbt, world, (p_218914_1_) -> {
-                p_218914_1_.moveTo(blockpos.getX(), blockpos.getY(), blockpos.getZ(), p_218914_1_.yRot, p_218914_1_.xRot);
+                p_218914_1_.moveTo(blockpos.getX(), blockpos.getY(), blockpos.getZ(), p_218914_1_.getYRot(), p_218914_1_.getXRot());
                 return p_218914_1_;
             });
             if (entity != null) {

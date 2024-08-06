@@ -313,7 +313,7 @@ public class ClientEvents {
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void renderCustomHUD(RenderGameOverlayEvent.Pre event) {
+    public static void renderCustomHUD(RenderGuiOverlayEvent.Pre event) {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer clientPlayer = mc.player;
         Player renderViewPlayer = FrostedHud.getRenderViewPlayer();
@@ -329,7 +329,7 @@ public class ClientEvents {
 
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
         if (FHConfig.CLIENT.enableUI.get()) {
-            if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
+            if (event.getType() == RenderGuiOverlayEvent.ElementType.ALL) {
                 if (FrostedHud.renderFrozenOverlay)
                     FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, renderViewPlayer);
                 if (FrostedHud.renderFrozenVignette)
@@ -339,7 +339,7 @@ public class ClientEvents {
 
 
             }
-            if (event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {
+            if (event.getType() == RenderGuiOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {
                 if (mc.gameMode.getPlayerMode() == GameType.SPECTATOR) {
                     mc.gui.getSpectatorGui().renderHotbar(stack, partialTicks);
                 } else {

@@ -14,21 +14,24 @@ import com.teammoeg.frostedheart.content.scenario.network.FHClientReadyPacket;
 import com.teammoeg.frostedheart.content.scenario.network.FHClientSettingsPacket;
 import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.utility.ReferenceValue;
 
-import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
+import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.GuiMessage;
+import net.minecraft.client.GuiMessageTag;
 import net.minecraft.client.gui.components.ComponentRenderUtils;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
+import net.minecraftforge.network.PacketDistributor;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ClientScene implements IClientScene {
+	private static GuiMessageTag SCENARIO=new GuiMessageTag(13684944, (GuiMessageTag.Icon)null, TranslateUtils.translate("chat.tag.frostedheart.scenario"), "Scenario");
 	public static ClientScene INSTANCE;
 	public IScenarioDialog dialog;
 	public LinkedList<LayerManager> layers=new LinkedList<>();
@@ -160,11 +163,11 @@ public class ClientScene implements IClientScene {
 	@Override
 	public void cls() {
 		Minecraft mc = ClientUtils.mc();
-		List<GuiMessage<FormattedCharSequence>> i = ((NewChatGuiAccessor) mc.gui.getChat()).getDrawnChatLines();
-		i.removeIf(l -> l.getId() == fhchatid);
+		List<GuiMessage.Line> i = ((NewChatGuiAccessor) mc.gui.getChat()).getTrimmedMessages();
+		i.removeIf(l -> l.addedTime() == fhchatid);
 		for(Component ic:origmsgQueue) {
 			for(FormattedCharSequence j:ComponentRenderUtils.wrapComponents(ic,w, ClientUtils.mc().font))
-				i.add(0, new GuiMessage<>(mc.gui.getGuiTicks(), j, 0));
+				i.add(0, new GuiMessage.Line(mc.gui.getGuiTicks(), j, GuiMessageTag.system(),true));
 		}
 		origmsgQueue.clear();
 		msgQueue.clear();
@@ -285,7 +288,7 @@ public class ClientScene implements IClientScene {
 				ticksActUpdate--;
 			if(ticksActStUpdate>0)
 				ticksActStUpdate--;
-			List<GuiMessage<FormattedCharSequence>> i = ((NewChatGuiAccessor) mc.gui.getChat()).getDrawnChatLines();
+			List<GuiMessage.Line> i = ((NewChatGuiAccessor) mc.gui.getChat()).getTrimmedMessages();
 			if(dialog!=null) {
 				dialog.tickDialog();
 				
@@ -297,11 +300,11 @@ public class ClientScene implements IClientScene {
 				if(needUpdate||mc.gui.getGuiTicks() % 20 == 0) {
 					needUpdate = false;
 					if (dialog==null||!dialog.hasDialog()) {
-						i.removeIf(l -> l.getId() == fhchatid);
+						i.removeIf(l -> l.tag() == SCENARIO);
 						for (TextInfo t : msgQueue) {
 							if (t.hasText()) {
 								// if(hasText) {
-								i.add(0, new GuiMessage<>(mc.gui.getGuiTicks(), t.asFinished(), fhchatid));
+								i.add(0, new GuiMessage.Line(mc.gui.getGuiTicks(), t.asFinished(), SCENARIO,false));
 								// }
 							}
 						}
@@ -313,7 +316,7 @@ public class ClientScene implements IClientScene {
 		}
 	}
 	public void sendClientReady() {
-		FHNetwork.sendToServer(new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getSelected().getCode()));
+		FHNetwork.sendToServer(new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getSelected()));
 	}
 	public void sendClientUpdate() {
 		FHNetwork.sendToServer(new FHClientSettingsPacket());

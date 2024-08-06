@@ -12,5 +12,5 @@ import net.minecraft.util.FormattedCharSequence;
 @Mixin(ChatComponent.class)
 public interface NewChatGuiAccessor {
     @Accessor
-    List<GuiMessage<FormattedCharSequence>> getDrawnChatLines();
+    List<GuiMessage.Line> getTrimmedMessages();
 }

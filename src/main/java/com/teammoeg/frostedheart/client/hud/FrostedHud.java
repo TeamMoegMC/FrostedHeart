@@ -25,12 +25,16 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.ClientClimateData;
+import com.teammoeg.frostedheart.client.hud.FrostedHud.Atlases;
+import com.teammoeg.frostedheart.client.hud.FrostedHud.BarPos;
 import com.teammoeg.frostedheart.content.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.content.climate.TemperatureFrame.FrameType;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -46,25 +50,23 @@ import com.teammoeg.frostedheart.util.client.UV.Transition;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.gui.Gui;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.AttackIndicatorStatus;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.tags.FluidTags;
-import net.minecraft.world.food.FoodData;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
-import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodData;
+import net.minecraft.world.item.ItemStack;
 
 public class FrostedHud {
     static final class Atlases {
@@ -325,14 +327,14 @@ public class FrostedHud {
                 : (Player) Minecraft.getInstance().getCameraEntity();
     }
 
-    public static void renderAirBar(PoseStack stack, int x, int y, Minecraft mc, Player player) {
+    public static void renderAirBar(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_air");
         RenderSystem.enableBlend();
         int air = player.getAirSupply();
         int maxAir = 300;
         if (player.isEyeInFluid(FluidTags.WATER) || air < maxAir) {
             mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
-
+            
             HUDElements.right_half_frame.blitAt(stack, x, y, BasePos.right_half_3);
             if (air <= 30) {
                 HUDElements.icon_oxygen_abnormal_white.blitAt(stack, x, y, IconPos.right_half_3);
@@ -345,7 +347,7 @@ public class FrostedHud {
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
-    public static void renderScenarioAct(PoseStack stack, int x, int y, Minecraft mc, Player player) {
+    public static void renderScenarioAct(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_scenario_act");
        /* double guiScale = mc.getMainWindow().getGuiScaleFactor();
         int ww = mc.getMainWindow().getScaledWidth();
@@ -395,7 +397,7 @@ public class FrostedHud {
         mc.getProfiler().pop();
     }
 
-    public static void renderArmor(PoseStack stack, int x, int y, Minecraft mc, LocalPlayer player) {
+    public static void renderArmor(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
         mc.getProfiler().push("frostedheart_armor");
         mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
@@ -410,7 +412,7 @@ public class FrostedHud {
         mc.getProfiler().pop();
     }
 
-    public static void renderExperience(PoseStack stack, int x, int y, Minecraft mc, LocalPlayer player) {
+    public static void renderExperience(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
         mc.getProfiler().push("frostedheart_experience");
         mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
@@ -435,7 +437,7 @@ public class FrostedHud {
         mc.getProfiler().pop();
     }
 
-    public static void renderFood(PoseStack stack, int x, int y, Minecraft mc, Player player) {
+    public static void renderFood(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_food");
         mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
@@ -458,7 +460,7 @@ public class FrostedHud {
         mc.getProfiler().pop();
     }
 
-    public static void renderForecast(PoseStack stack, int x, int y, Minecraft mc, Player player) {
+    public static void renderForecast(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_forecast");
         mc.getTextureManager().bind(FrostedHud.FORECAST_ELEMENTS);
         RenderSystem.enableBlend();
@@ -568,7 +570,7 @@ public class FrostedHud {
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
-    public static void renderFrozenOverlay(PoseStack stack, int x, int y, Minecraft mc, Player player) {
+    public static void renderFrozenOverlay(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_frozen");
         // render frozen overlay with alpha based on linear interpolation
         float tempDelta = Mth.clamp(Math.abs(PlayerTemperatureData.getCapability(player).map(t->t.smoothedBody).orElse(0F)), 0.5f, 5.0f);
@@ -595,7 +597,7 @@ public class FrostedHud {
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
-    public static void renderFrozenVignette(PoseStack stack, int x, int y, Minecraft mc, Player player) {
+    public static void renderFrozenVignette(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_vignette");
         float tempDelta = Mth.clamp(Math.abs(PlayerTemperatureData.getCapability(player).map(t->t.smoothedBody).orElse(0F)), 0.5f, 5.0f);
         float opacityDelta = 0.5F * (tempDelta - 0.5F) / 4.5F;
@@ -619,7 +621,7 @@ public class FrostedHud {
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
-    public static void renderHealth(PoseStack stack, int x, int y, Minecraft mc, Player player) {
+    public static void renderHealth(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_health");
         mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
@@ -678,7 +680,7 @@ public class FrostedHud {
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
-    public static void renderHeatVignette(PoseStack stack, int x, int y, Minecraft mc, Player player) {
+    public static void renderHeatVignette(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_vignette");
         float tempDelta = Mth.clamp(Math.abs(PlayerTemperatureData.getCapability(player).map(t->t.smoothedBody).orElse(0F)), 0.5f, 5.0f);
         float opacityDelta = 0.5F * (tempDelta - 0.5F) / 4.5F;
@@ -702,7 +704,7 @@ public class FrostedHud {
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
-    public static void renderHotbar(PoseStack stack, int x, int y, Minecraft mc, Player player,
+    public static void renderHotbar(GuiGraphics stack, int x, int y, Minecraft mc, Player player,
                                     float partialTicks) {
         mc.getProfiler().push("frostedheart_hotbar");
         mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
@@ -789,7 +791,7 @@ public class FrostedHud {
             mc.getItemRenderer().renderGuiItemDecorations(mc.font, stack, x, y);
         }
     }
-    public static void renderHypothermia(PoseStack stack, int x, int y, Minecraft mc, LocalPlayer player) {
+    public static void renderHypothermia(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
         mc.getProfiler().push("frostedheart_hypothermia");
         mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
@@ -816,7 +818,7 @@ public class FrostedHud {
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
-    public static void renderJumpbar(PoseStack stack, int x, int y, Minecraft mc, LocalPlayer player) {
+    public static void renderJumpbar(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
         mc.getProfiler().push("frostedheart_jumpbar");
         mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
@@ -828,7 +830,7 @@ public class FrostedHud {
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
-    public static void renderMountHealth(PoseStack stack, int x, int y, Minecraft mc, LocalPlayer player) {
+    public static void renderMountHealth(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
         mc.getProfiler().push("frostedheart_mounthealth");
         mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
@@ -870,7 +872,7 @@ public class FrostedHud {
         renderForecast = configAllows && ClientResearchDataAPI.getData().getVariantDouble(ResearchVariant.HAS_FORECAST)>0;
     }
 
-    private static void renderTemp(PoseStack stack, Minecraft mc, float temp, int tlevel, int offsetX, int offsetY,
+    private static void renderTemp(GuiGraphics stack, Minecraft mc, float temp, int tlevel, int offsetX, int offsetY,
                                    boolean celsius) {
         UV unitUV = celsius ? HUDElements.hud_celsius : HUDElements.hud_farenhit;
         UV signUV = temp >= 0 ? HUDElements.hud_positive : HUDElements.hud_negative;
@@ -917,7 +919,7 @@ public class FrostedHud {
         // mc.getTextureManager().bindTexture(HUD_ELEMENTS);
     }
 
-    public static void renderTemperature(PoseStack stack, int x, int y, Minecraft mc, Player player) {
+    public static void renderTemperature(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_temperature");
         mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
@@ -938,7 +940,7 @@ public class FrostedHud {
         mc.getProfiler().pop();
     }
 
-    public static void renderThirst(PoseStack stack, int x, int y, Minecraft mc, Player player) {
+    public static void renderThirst(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_thirst");
         mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();

@@ -19,12 +19,22 @@
 
 package com.teammoeg.frostedheart.base.item;
 
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
+
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 
-public class FHBaseArmorItem extends ArmorItem {
+public class FHBaseArmorItem extends ArmorItem implements ICreativeModeTabItem{
     public FHBaseArmorItem(ArmorMaterial materialIn, Type slot, Properties builderIn) {
         super(materialIn, slot, builderIn);
     }
+
+	@Override
+	public void fillItemCategory(CreativeTabItemHelper helper) {
+		if(helper.isType(FHMain.itemGroup))
+			helper.accept(this);
+	}
 
 }
