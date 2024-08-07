@@ -26,8 +26,10 @@ import java.util.Random;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CampfireCookingRecipe;
+import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.registries.RegistryObject;
@@ -59,12 +61,12 @@ public class CampfireDefrostRecipe extends CampfireCookingRecipe implements Defr
 
     public CampfireDefrostRecipe(ResourceLocation p_i50030_1_, String p_i50030_2_, Ingredient p_i50030_3_,
                                  ItemStack[] results, float p_i50030_5_, int p_i50030_6_) {
-        super(p_i50030_1_, p_i50030_2_, p_i50030_3_, ItemStack.EMPTY, p_i50030_5_, p_i50030_6_);
+        super(p_i50030_1_, p_i50030_2_, CookingBookCategory.MISC, p_i50030_3_, ItemStack.EMPTY, p_i50030_5_, p_i50030_6_);
         iss = results;
     }
 
     @Override
-    public ItemStack assemble(Container inv) {
+    public ItemStack assemble(Container inv,RegistryAccess registry) {
         if (iss.length == 0)
             return ItemStack.EMPTY;
         return iss[recipeRNG.nextInt(getIss().length)].copy();
@@ -78,8 +80,8 @@ public class CampfireDefrostRecipe extends CampfireCookingRecipe implements Defr
         return iss;
     }
     @Override
-    public ItemStack getResultItem() {
-        return assemble(null);
+    public ItemStack getResultItem(RegistryAccess registry) {
+        return assemble(null,registry);
     }
 
     @Override

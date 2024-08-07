@@ -33,6 +33,7 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.registries.RegistryObject;
 import net.minecraft.world.level.Level;
 
 public class TemperatureLootCondition implements LootItemCondition {
@@ -53,7 +54,7 @@ public class TemperatureLootCondition implements LootItemCondition {
             return comp.test(f1, f2);
         }
     }
-    public static class Serializer implements Serializer<TemperatureLootCondition> {
+    public static class Serializer implements net.minecraft.world.level.storage.loot.Serializer<TemperatureLootCondition> {
 
         @Override
         public TemperatureLootCondition deserialize(JsonObject jo, JsonDeserializationContext jdc) {
@@ -68,7 +69,7 @@ public class TemperatureLootCondition implements LootItemCondition {
             jo.addProperty("compare", ot.comparator.name());
         }
     }
-    public static LootItemConditionType TYPE;
+    public static RegistryObject<LootItemConditionType> TYPE;
 
     private float temp;
 
@@ -81,14 +82,14 @@ public class TemperatureLootCondition implements LootItemCondition {
 
     @Override
     public LootItemConditionType getType() {
-        return TYPE;
+        return TYPE.get();
     }
 
     @Override
     public boolean test(LootContext t) {
         if (t.hasParam(LootContextParams.ORIGIN)) {
             Vec3 v = t.getParamOrNull(LootContextParams.ORIGIN);
-            BlockPos bp = new BlockPos(v.x, v.y, v.z);
+            BlockPos bp = new BlockPos((int)v.x,(int)v.y,(int)v.z);
             Level w = t.getLevel();
             return comparator.test(ChunkHeatData.getTemperature(w, bp), temp);
         }

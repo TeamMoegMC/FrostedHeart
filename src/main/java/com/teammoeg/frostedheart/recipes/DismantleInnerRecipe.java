@@ -32,12 +32,15 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
 import net.minecraftforge.registries.RegistryObject;
 
 public class DismantleInnerRecipe extends CustomRecipe {
@@ -54,7 +57,7 @@ public class DismantleInnerRecipe extends CustomRecipe {
         }
 
         @Override
-        public DismantleInnerRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+        public DismantleInnerRecipe readFromJson(ResourceLocation recipeId, JsonObject json,IContext context) {
             return new DismantleInnerRecipe(recipeId);
         }
 
@@ -93,7 +96,7 @@ public class DismantleInnerRecipe extends CustomRecipe {
     }
 
     protected DismantleInnerRecipe(ResourceLocation id) {
-        super(id);
+        super(id,CraftingBookCategory.EQUIPMENT);
     }
 
     /**
@@ -106,7 +109,7 @@ public class DismantleInnerRecipe extends CustomRecipe {
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack assemble(CraftingContainer inv) {
+    public ItemStack assemble(CraftingContainer inv, RegistryAccess pRegistryAccess) {
         ItemStack armoritem = ItemStack.EMPTY;
         for (int i = 0; i < inv.getContainerSize(); ++i) {
             ItemStack itemstack = inv.getItem(i);

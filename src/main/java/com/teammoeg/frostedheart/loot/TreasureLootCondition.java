@@ -27,12 +27,13 @@ import com.google.gson.JsonSerializationContext;
 
 import net.minecraft.world.level.storage.loot.Serializer;
 import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
+import net.minecraftforge.registries.RegistryObject;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 
 public class TreasureLootCondition implements LootItemCondition {
-    public static class Serializer implements Serializer<TreasureLootCondition> {
+    public static class Serializer implements net.minecraft.world.level.storage.loot.Serializer<TreasureLootCondition> {
 
         @Nonnull
         @Override
@@ -45,18 +46,18 @@ public class TreasureLootCondition implements LootItemCondition {
         }
     }
 
-    public static LootItemConditionType TYPE;
+    public static RegistryObject<LootItemConditionType> TYPE;
 
     public TreasureLootCondition() {
     }
 
     @Override
     public LootItemConditionType getType() {
-        return TYPE;
+        return TYPE.get();
     }
 
     @Override
     public boolean test(LootContext t) {
-        return t.getLootTable(t.getQueriedLootTableId()).getParamSet() == LootContextParamSets.CHEST;
+        return t.getResolver().getLootTable(t.getQueriedLootTableId()).getParamSet() == LootContextParamSets.CHEST;
     }
 }

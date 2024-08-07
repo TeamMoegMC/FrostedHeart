@@ -37,6 +37,7 @@ import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -104,7 +105,7 @@ public class TradePolicy extends IESerializableRecipe {
 			return weight;
 		}
     }
-    public static RecipeType<TradePolicy> TYPE;
+    public static RegistryObject<RecipeType<Recipe<?>>> TYPE;
 
     public static RegistryObject<IERecipeSerializer<TradePolicy>> SERIALIZER;
 

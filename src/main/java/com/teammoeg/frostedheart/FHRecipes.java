@@ -36,15 +36,21 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
 import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
 
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 public class FHRecipes {
     public static final DeferredRegister<RecipeSerializer<?>> RECIPE_SERIALIZERS = DeferredRegister.create(
             ForgeRegistries.RECIPE_SERIALIZERS, FHMain.MODID
     );
+    public static final DeferredRegister<RecipeType<?>> RECIPE_TYPES = DeferredRegister.create(
+        ForgeRegistries.RECIPE_TYPES, FHMain.MODID
+);
     public static final DeferredRegister<RecipeType<?>> TYPE_REGISTER = DeferredRegister.create(ForgeRegistries.RECIPE_TYPES, FHMain.MODID);
     
 
@@ -65,17 +71,17 @@ public class FHRecipes {
         InspireRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("inspire", InspireRecipe.Serializer::new);
         ShapelessCopyDataRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("shapless_copy_data", ShapelessCopyDataRecipe.Serializer::new);
         TradePolicy.SERIALIZER = RECIPE_SERIALIZERS.register("trade", TradePolicy.Serializer::new);
+        GeneratorRecipe.TYPE = createRecipeType("generator");
+        GeneratorSteamRecipe.TYPE = createRecipeType("steam_generator");
+        ChargerRecipe.TYPE = createRecipeType("charger");
+        DietValueRecipe.TYPE = createRecipeType("diet_override");
+        IncubateRecipe.TYPE = createRecipeType("incubate");
+        ResearchPaperRecipe.TYPE = createRecipeType("paper");
+        SaunaRecipe.TYPE = createRecipeType("sauna");
+        InspireRecipe.TYPE = createRecipeType("inspire");
+        TradePolicy.TYPE = createRecipeType("trade");
     }
-
-    public static void registerRecipeTypes() {
-        GeneratorRecipe.TYPE = RecipeType.register(FHMain.MODID + ":generator");
-        GeneratorSteamRecipe.TYPE = RecipeType.register(FHMain.MODID + ":steam_generator");
-        ChargerRecipe.TYPE = RecipeType.register(FHMain.MODID + ":charger");
-        DietValueRecipe.TYPE = RecipeType.register(FHMain.MODID + ":diet_override");
-        IncubateRecipe.TYPE = RecipeType.register(FHMain.MODID + ":incubate");
-        ResearchPaperRecipe.TYPE = RecipeType.register(FHMain.MODID + ":paper");
-        SaunaRecipe.TYPE = RecipeType.register(FHMain.MODID + ":sauna");
-        InspireRecipe.TYPE = RecipeType.register(FHMain.MODID + ":inspire");
-        TradePolicy.TYPE = RecipeType.register(FHMain.MODID + ":trade");
+    public static <T extends Recipe<?>> RegistryObject<RecipeType<T>> createRecipeType(String name){
+    	return RECIPE_TYPES.register(name,()->RecipeType.simple(new ResourceLocation(FHMain.MODID,name)));
     }
 }

@@ -28,6 +28,7 @@ import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
@@ -65,7 +66,7 @@ public class ChargerRecipe extends IESerializableRecipe {
             buffer.writeFloat(recipe.cost);
         }
     }
-    public static RecipeType<ChargerRecipe> TYPE;
+    public static RegistryObject<RecipeType<Recipe<?>>> TYPE;
 
     public static RegistryObject<IERecipeSerializer<ChargerRecipe>> SERIALIZER;
     public final IngredientWithSize input;

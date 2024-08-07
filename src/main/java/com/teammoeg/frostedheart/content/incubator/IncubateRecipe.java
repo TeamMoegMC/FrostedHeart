@@ -38,6 +38,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.util.GsonHelper;
@@ -95,7 +96,7 @@ public class IncubateRecipe extends IESerializableRecipe {
             buffer.writeVarInt(recipe.time);
         }
     }
-    public static RecipeType<IncubateRecipe> TYPE;
+    public static RegistryObject<RecipeType<Recipe<?>>> TYPE;
 
     public static RegistryObject<Serializer> SERIALIZER;
     public IngredientWithSize input;

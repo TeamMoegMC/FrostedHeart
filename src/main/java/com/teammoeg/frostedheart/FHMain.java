@@ -40,6 +40,7 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyph
 import com.teammoeg.frostedheart.events.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
+import com.teammoeg.frostedheart.loot.FHLoot;
 import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
@@ -139,6 +140,8 @@ public class FHMain {
         FHAttributes.REGISTER.register(mod);
         FHEffects.EFFECTS.register(mod);
         FHStructures.register(mod);
+        FHLoot.LC_REGISTRY.register(mod);
+        FHLoot.LM_REGISTRY.register(mod);
         TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
         TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
         TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);
@@ -214,14 +217,14 @@ public class FHMain {
        // MinecraftForge.EVENT_BUS.addGenericListener(Fluid.class, this::missingMapping);
        // MinecraftForge.EVENT_BUS.addGenericListener(Item.class, this::missingMappingR);
       //  MinecraftForge.EVENT_BUS.addGenericListener(Block.class, this::missingMappingB);
-        if (ModList.get().isLoaded("projecte")) {
+        /*if (ModList.get().isLoaded("projecte")) {
             MinecraftForge.EVENT_BUS.addListener(PlayerEvents::onRC);
         } else
             try {
                 Class.forName("moze_intel.projecte.PECore");
                 MinecraftForge.EVENT_BUS.addListener(PlayerEvents::onRC);
             } catch (Throwable ignored) {
-            }
+            }*/
         //CrashReportExtender.registerCrashCallable(new ClimateCrash());
         FHNetwork.register();
         FHCapabilities.setup();

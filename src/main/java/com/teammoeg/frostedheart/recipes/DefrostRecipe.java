@@ -33,6 +33,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.ShapedRecipe;
+import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.resources.ResourceLocation;
@@ -70,7 +71,7 @@ public interface DefrostRecipe extends Recipe<Container> {
         }
 
         @Override
-        public T readFromJson(ResourceLocation recipeId, JsonObject json) {
+        public T readFromJson(ResourceLocation recipeId, JsonObject json, IContext context) {
             String s = GsonHelper.getAsString(json, "group", "");
             JsonElement jsonelement = GsonHelper.isArrayNode(json, "ingredient") ? GsonHelper.getAsJsonArray(json, "ingredient")
                     : GsonHelper.getAsJsonObject(json, "ingredient");
@@ -82,10 +83,10 @@ public interface DefrostRecipe extends Recipe<Container> {
                 itemstacks = new ItemStack[ja.size()];
                 int i = -1;
                 for (JsonElement je : ja)
-                    itemstacks[++i] = readOutput(je);
+                    itemstacks[++i] = readOutput(je).get();
             } else if (json.get("result") != null) {
                 itemstacks = new ItemStack[1];
-                itemstacks[0] = readOutput(json.get("result"));
+                itemstacks[0] = readOutput(json.get("result")).get();
             } else
                 throw new com.google.gson.JsonSyntaxException("Missing result, expected to find a string or object");
             float f = GsonHelper.getAsFloat(json, "experience", 0.0F);
@@ -93,13 +94,6 @@ public interface DefrostRecipe extends Recipe<Container> {
             return factory.create(recipeId, s, ingredient, itemstacks != null ? itemstacks : new ItemStack[0], f, i);
         }
 
-        public ItemStack readOutput(JsonElement json) {
-            if (json.isJsonObject())
-                return ShapedRecipe.itemFromJson(json.getAsJsonObject());
-            String s1 = json.getAsString();
-            ResourceLocation resourcelocation = new ResourceLocation(s1);
-            return new ItemStack(RegistryUtils.getItemThrow(resourcelocation));
-        }
 
         @Override
         public void toNetwork(FriendlyByteBuf buffer, DefrostRecipe recipe) {

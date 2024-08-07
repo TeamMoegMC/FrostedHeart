@@ -31,6 +31,7 @@ import blusunrize.immersiveengineering.api.crafting.FluidTagInput;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
@@ -69,7 +70,7 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
             buffer.writeFloat(recipe.level);
         }
     }
-    public static RecipeType<GeneratorSteamRecipe> TYPE;
+    public static RegistryObject<RecipeType<Recipe<?>>> TYPE;
 
     public static RegistryObject<IERecipeSerializer<GeneratorSteamRecipe>> SERIALIZER;
 

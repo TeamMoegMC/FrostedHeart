@@ -29,12 +29,14 @@ import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.ShapelessRecipe;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
 import net.minecraftforge.registries.RegistryObject;
 
 public class ModifyDamageRecipe extends ShapelessRecipe {
@@ -54,7 +56,7 @@ public class ModifyDamageRecipe extends ShapelessRecipe {
         }
 
         @Override
-        public ModifyDamageRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+        public ModifyDamageRecipe readFromJson(ResourceLocation recipeId, JsonObject json,IContext ctx) {
             Ingredient input = Ingredient.fromJson(json.get("tool"));
             Ingredient input2 = Ingredient.fromJson(json.get("item"));
             int dura = JsonHelper.getIntOrDefault(json, "modify", 1);
@@ -76,7 +78,7 @@ public class ModifyDamageRecipe extends ShapelessRecipe {
     public final int modify;
 
     public ModifyDamageRecipe(ResourceLocation idIn, Ingredient torepair, Ingredient material, int mod) {
-        super(idIn, "", torepair.getItems()[0], NonNullList.of(Ingredient.EMPTY, torepair, material));
+        super(idIn, "", CraftingBookCategory.MISC, torepair.getItems()[0], NonNullList.of(Ingredient.EMPTY, torepair, material));
         repair = material;
         tool = torepair;
         modify = mod;

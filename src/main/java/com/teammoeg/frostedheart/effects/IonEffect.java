@@ -47,7 +47,7 @@ public class IonEffect extends MobEffect {
 
     @Override
     public void applyEffectTick(LivingEntity entityLivingBaseIn, int amplifier) {
-        entityLivingBaseIn.hurt(FHDamageSources.RAD, (float) (1 + (amplifier) * 0.5));
+        entityLivingBaseIn.hurt(FHDamageSources.createSource(entityLivingBaseIn.level(),FHDamageSources.RAD, entityLivingBaseIn), (float) (1 + (amplifier) * 0.5));
     }
 
 }

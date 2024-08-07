@@ -26,15 +26,15 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.teammoeg.frostedheart.FHDamageSources;
 
-import net.minecraft.world.level.storage.loot.Serializer;
 import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
+import net.minecraftforge.registries.RegistryObject;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 
 public class BlizzardDamageCondition implements LootItemCondition {
-    public static class Serializer implements Serializer<BlizzardDamageCondition> {
+    public static class Serializer implements net.minecraft.world.level.storage.loot.Serializer<BlizzardDamageCondition> {
 
         @Nonnull
         @Override
@@ -47,20 +47,20 @@ public class BlizzardDamageCondition implements LootItemCondition {
         }
     }
 
-    public static LootItemConditionType TYPE;
+    public static RegistryObject<LootItemConditionType> TYPE;
 
     public BlizzardDamageCondition() {
     }
 
     @Override
     public LootItemConditionType getType() {
-        return TYPE;
+        return TYPE.get();
     }
 
     @Override
     public boolean test(LootContext t) {
-        if (t.getLootTable(t.getQueriedLootTableId()).getParamSet() == LootContextParamSets.ENTITY) {
-            return t.getParamOrNull(LootContextParams.DAMAGE_SOURCE) == FHDamageSources.BLIZZARD;
+        if (t.getResolver().getLootTable(t.getQueriedLootTableId()).getParamSet() == LootContextParamSets.ENTITY) {
+            return t.getParamOrNull(LootContextParams.DAMAGE_SOURCE).is(FHDamageSources.BLIZZARD);
         }
         return false;
     }
