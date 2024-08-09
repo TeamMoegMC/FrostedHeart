@@ -5,14 +5,16 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
+import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.util.MathUtils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.LongNBT;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.common.util.Constants;
 
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class MineTileEntity extends AbstractTownWorkerTileEntity{
@@ -122,6 +124,8 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
         mineData.setDataFromTown("linkedBasePos", LongNBT.valueOf(pos.toLong()));
     }
 
+
+
     @Override
     public void readCustomNBT(CompoundNBT compoundNBT, boolean b) {
 
@@ -131,4 +135,45 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
     public void writeCustomNBT(CompoundNBT compoundNBT, boolean b) {
 
     }
+
+    public static class MineWorker implements TownWorker{
+        @Override
+        public boolean work(Town town, CompoundNBT workData) {
+            if(town instanceof TownWithResident){
+                TeamTown teamTown = (TeamTown) town;
+                CompoundNBT dataTE = workData.getCompound("tileEntity");
+                double rating = dataTE.getDouble("rating");
+                ListNBT list = dataTE.getList("resources", Constants.NBT.TAG_COMPOUND);
+                EnumMap<TownResourceType, Double> resources = new EnumMap<>(TownResourceType.class);
+                list.forEach(nbt -> {
+                    CompoundNBT nbt_1 = (CompoundNBT) nbt;
+                    String key = nbt_1.getString("type");
+                    double amount = nbt_1.getDouble("amount");
+                    resources.put(TownResourceType.from(key), amount);
+                });
+                List<Resident> residents = workData.getCompound("town").getList("residents", Constants.NBT.TAG_STRING)
+                        .stream()
+                        .map(nbt -> UUID.fromString(nbt.getString()))
+                        .map(teamTown::getResident)
+                        .map(optional -> optional.orElse(null))
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+                for(Resident resident : residents){
+                    double add = rating * resident.getWorkScore(TownWorkerType.MINE);
+                    double randomDouble = MathUtils.RANDOM.nextDouble();
+                    double counter = 0;
+                    for(Map.Entry<TownResourceType, Double> entry : resources.entrySet()){
+                        counter += entry.getValue();
+                        if(counter >= randomDouble){
+                            double actualAdd = town.add(entry.getKey(), add, false);
+                            if(add != actualAdd) return false;
+                        }
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+    }
+
 }

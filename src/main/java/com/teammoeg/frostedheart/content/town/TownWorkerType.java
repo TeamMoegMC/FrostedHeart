@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.FHBlocks;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseTileEntity;
+import com.teammoeg.frostedheart.content.town.mine.MineTileEntity;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.CompoundNBT;
@@ -54,34 +55,12 @@ public enum TownWorkerType {
      */
     DUMMY(null, null, -1),
     HOUSE(FHBlocks.house, (town, workData) -> {
-        double residentNum = workData.getList("residents", 10).size();
+        double residentNum = workData.getCompound("tileEntity").getList("residents", 10).size();
         double actualCost = town.cost(TownResourceType.PREP_FOOD, residentNum, false);
         return Math.abs(residentNum - actualCost) < 0.001;
     }, 0),
     WAREHOUSE(FHBlocks.warehouse, null, 0),
-    MINE(FHBlocks.mine, (town, workData) -> {
-        double rating = workData.getDouble("rating");
-        ListNBT list = workData.getList("resources", Constants.NBT.TAG_COMPOUND);
-        EnumMap<TownResourceType, Double> resources = new EnumMap<>(TownResourceType.class);
-        list.forEach(nbt -> {
-            CompoundNBT nbt_1 = (CompoundNBT) nbt;
-            String key = nbt_1.getString("type");
-            double amount = nbt_1.getDouble("amount");
-            resources.put(TownResourceType.from(key), amount);
-        });
-        Random random = new Random();
-        int add = rating > random.nextFloat() * 10 ? 1 : 0;
-        double randomDouble = random.nextDouble();
-        double counter = 0;
-        for(Map.Entry<TownResourceType, Double> entry : resources.entrySet()){
-            counter += entry.getValue();
-            if(counter >= randomDouble){
-                double actualAdd = town.add(entry.getKey(), add, false);
-                return Math.abs(add - actualAdd) < 0.001;
-            }
-        }
-        return true;
-    }, 0, true,
+    MINE(FHBlocks.mine, new MineTileEntity.MineWorker(), 0, true,
             (currentResidentNum, nbt) -> {
         int maxResident = nbt.getCompound("tileEntity").getInt("maxResident");
         double rating = TownWorkerData.getRating(nbt);
