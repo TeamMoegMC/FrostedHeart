@@ -56,7 +56,7 @@ public class TechScrollBar extends PanelScrollBar {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         TradeIcons.SCROLLFRAME.draw(matrixStack, x - 1, y - 7, 15, 160);
     }
 

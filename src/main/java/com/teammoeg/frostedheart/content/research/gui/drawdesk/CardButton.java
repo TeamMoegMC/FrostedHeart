@@ -44,7 +44,7 @@ public class CardButton extends Button {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         Card c = game.get(card);
         if (c.isShow()) {
             if (game.isTouchable(card)) {

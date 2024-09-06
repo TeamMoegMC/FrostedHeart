@@ -31,7 +31,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 // send when data update
 public class FHDrawingDeskOperationPacket implements FHMessage {
@@ -94,7 +94,7 @@ public class FHDrawingDeskOperationPacket implements FHMessage {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            ServerLevel world = Objects.requireNonNull(context.get().getSender()).getLevel();
+            ServerLevel world = Objects.requireNonNull(context.get().getSender()).serverLevel();
             BlockEntity tile = Utils.getExistingTileEntity(world, pos);
             if (tile instanceof DrawingDeskTileEntity) {
                // ResearchGame rg = ((DrawingDeskTileEntity) tile).getGame();

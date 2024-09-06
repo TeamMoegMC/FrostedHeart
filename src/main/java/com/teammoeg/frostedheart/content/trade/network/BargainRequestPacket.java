@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 public class BargainRequestPacket implements FHMessage {
     private Map<String, Integer> offer;

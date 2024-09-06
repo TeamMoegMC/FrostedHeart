@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.core.SerializableUUID;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.BlockPos;
 
 import java.util.EnumMap;
@@ -45,7 +45,7 @@ public class Resident {
 	public static final Codec<Resident> CODEC=RecordCodecBuilder.create(t->t.group(
             Codec.STRING.fieldOf("firstName").forGetter(o->o.firstName),
             Codec.STRING.fieldOf("lastName").forGetter(o->o.lastName),
-            SerializableUUID.CODEC.fieldOf("uuid").forGetter(o->o.uuid)
+            UUIDUtil.CODEC.fieldOf("uuid").forGetter(o->o.uuid)
 		).apply(t, Resident::new));
 
     private UUID uuid;

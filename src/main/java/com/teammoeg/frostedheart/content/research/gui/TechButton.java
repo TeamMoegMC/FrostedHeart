@@ -44,7 +44,7 @@ public abstract class TechButton extends Button {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         GuiHelper.setupDrawing();
 
         TechIcons.drawTexturedRect(matrixStack, x, y, w, h, isMouseOver());

@@ -57,7 +57,7 @@ public class EffectWidget extends Widget {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         GuiHelper.setupDrawing();
         TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
         icon.draw(matrixStack, x, y, w, h);

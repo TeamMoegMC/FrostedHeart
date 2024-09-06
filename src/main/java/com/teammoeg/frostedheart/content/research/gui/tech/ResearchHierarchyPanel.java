@@ -57,7 +57,7 @@ public class ResearchHierarchyPanel extends Panel {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, int x, int y) {
+        public void draw(GuiGraphics matrixStack, int x, int y) {
             if (doShow())
                 color = TechIcons.text;
             else
@@ -104,7 +104,7 @@ public class ResearchHierarchyPanel extends Panel {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             // this.drawBackground(matrixStack, theme, x, y, w, h);
             GuiHelper.setupDrawing();
             TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
@@ -141,7 +141,7 @@ public class ResearchHierarchyPanel extends Panel {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, int x, int y) {
+        public void draw(GuiGraphics matrixStack, int x, int y) {
             if (doShow())
                 color = TechIcons.text;
             else
@@ -177,7 +177,7 @@ public class ResearchHierarchyPanel extends Panel {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             GuiHelper.setupDrawing();
             TechIcons.SLOT.draw(matrixStack, x, y, w, h);
             if (FHResearch.editor || research.isShowable()) {
@@ -220,7 +220,7 @@ public class ResearchHierarchyPanel extends Panel {
         if (FHResearch.editor) {
             int offset = 5;
             if (researchPanel.selectedResearch != null) {
-                Button par = new TechTextButton(this, TranslateUtils.str("parents"), Icon.EMPTY) {
+                Button par = new TechTextButton(this, TranslateUtils.str("parents"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add parent
@@ -235,7 +235,7 @@ public class ResearchHierarchyPanel extends Panel {
                 par.setPos(offset, 130);
                 add(par);
                 offset += par.width + 3;
-                Button chd = new TechTextButton(this, TranslateUtils.str("children"), Icon.EMPTY) {
+                Button chd = new TechTextButton(this, TranslateUtils.str("children"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add children
@@ -256,7 +256,7 @@ public class ResearchHierarchyPanel extends Panel {
                 offset += chd.width + 3;
             }
             {
-                Button create = new TechTextButton(this, TranslateUtils.str("new"), Icon.EMPTY) {
+                Button create = new TechTextButton(this, TranslateUtils.str("new"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add research
@@ -268,7 +268,7 @@ public class ResearchHierarchyPanel extends Panel {
                 offset += create.width + 3;
             }
             if (researchPanel.selectedResearch != null) {
-                Button create = new TechTextButton(this, TranslateUtils.str("edit"), Icon.EMPTY) {
+                Button create = new TechTextButton(this, TranslateUtils.str("edit"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         EditUtils.editResearch(this, researchPanel.selectedResearch);
@@ -277,7 +277,7 @@ public class ResearchHierarchyPanel extends Panel {
                 create.setPos(offset, 130);
                 add(create);
                 offset += create.width + 3;
-                Button rem = new TechTextButton(this, TranslateUtils.str("delete"), Icon.EMPTY) {
+                Button rem = new TechTextButton(this, TranslateUtils.str("delete"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         researchPanel.selectedResearch.delete();
@@ -408,7 +408,7 @@ public class ResearchHierarchyPanel extends Panel {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         super.draw(matrixStack, theme, x, y, w, h);
         theme.drawString(matrixStack, TranslateUtils.translateGui("research_hierarchy"), x + 3, y + 3, TechIcons.text, 0);
         TechIcons.HLINE_L.draw(matrixStack, x + 1, y + 13, 80, 3);

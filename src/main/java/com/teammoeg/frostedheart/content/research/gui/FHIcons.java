@@ -197,7 +197,7 @@ public class FHIcons {
         }
         
         @Override
-        public void draw(PoseStack matrixStack, int x, int y, int w, int h) {
+        public void draw(GuiGraphics matrixStack, int x, int y, int w, int h) {
         	//ItemRenderer itemRenderer=ClientUtils.mc().getItemRenderer();
         	/*
             itemRenderer.zLevel = 200.0F;
@@ -393,7 +393,7 @@ public class FHIcons {
                 add(h);
                 add(tw);
                 add(th);
-                add(new SimpleTextButton(this, TranslateUtils.str("Commit"), Icon.EMPTY) {
+                add(new SimpleTextButton(this, TranslateUtils.str("Commit"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton arg0) {
                         v.rl = new ResourceLocation(rl.getText());

@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Widget;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -40,7 +41,6 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Ingredient.Value;
 import net.minecraft.world.item.crafting.Ingredient.ItemValue;
 import net.minecraft.world.item.crafting.Ingredient.TagValue;
-import net.minecraft.tags.Tag;
 import net.minecraft.tags.SerializationTags;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.crafting.CompoundIngredient;
@@ -57,7 +57,7 @@ public class IngredientEditor extends BaseEditDialog {
 
         String vx = "";
         if (v != null) {
-            Tag<Item> tag = v.tag;
+            TagKey<Item> tag = v.tag;
             try {
                 vx = SerializationTags.getInstance().getItems().getIdOrThrow(tag).toString();
             } catch (Exception ex) {
@@ -199,7 +199,7 @@ public class IngredientEditor extends BaseEditDialog {
 
     @Override
     public void addWidgets() {
-        add(new OpenEditorButton<>(this, "Edit Ingredient", EDITOR_INGREDIENT, orig, orig == null ? Icon.EMPTY : FHIcons.getIcon(orig), e -> orig = e));
+        add(new OpenEditorButton<>(this, "Edit Ingredient", EDITOR_INGREDIENT, orig, orig == null ? Icon.empty() : FHIcons.getIcon(orig), e -> orig = e));
         if (orig != null) {
             if (orig.values.length == 1)
                 add(new OpenEditorButton<>(this, "Change to Multiple", EDITOR_MULTIPLE, orig, e -> orig = e));

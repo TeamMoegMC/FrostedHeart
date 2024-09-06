@@ -54,7 +54,7 @@ public class CardStatPanel extends Panel {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         CardStat cs = rg.getStats().get(cardstate);
         tf.setColor(cs.isGood() ? TechIcons.text : TechIcons.text_red);
         tf.setText("" + cs.num);

@@ -57,7 +57,7 @@ public class LineIcon extends IconWithParent {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, int x, int y, int w, int h) {
         int msize = w - side2 - side1;
         if (msize <= 0) {
             s0.draw(matrixStack, x, y, side1, h);

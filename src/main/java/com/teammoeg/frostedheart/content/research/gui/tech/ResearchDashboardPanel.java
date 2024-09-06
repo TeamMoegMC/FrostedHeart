@@ -79,7 +79,7 @@ public class ResearchDashboardPanel extends Panel {
     @Override
     public void addWidgets() {
         // close panel button
-       /* Button closePanel = new SimpleTextButton(this, new StringTextComponent("Close"), Icon.EMPTY) {
+       /* Button closePanel = new SimpleTextButton(this, new StringTextComponent("Close"), Icon.empty()) {
             @Override
             public void onClicked(MouseButton mouseButton) {
                 detailPanel.close();
@@ -95,7 +95,7 @@ public class ResearchDashboardPanel extends Panel {
         tf.setText(detailPanel.research.getName());
         if (FHResearch.editor) {
             Button create = new TechTextButton(this, TranslateUtils.str("edit"),
-                    Icon.EMPTY) {
+                    Icon.empty()) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
                     EditUtils.editResearch(this, detailPanel.research);
@@ -114,7 +114,7 @@ public class ResearchDashboardPanel extends Panel {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         ResearchData rd = detailPanel.research.getData();
 
         techpoint.setColor(TechIcons.text);

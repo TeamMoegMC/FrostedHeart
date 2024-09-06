@@ -52,7 +52,7 @@ public class RelationSlot extends Widget {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         if (toshow == null)
             return;
         int val = toshow.get();

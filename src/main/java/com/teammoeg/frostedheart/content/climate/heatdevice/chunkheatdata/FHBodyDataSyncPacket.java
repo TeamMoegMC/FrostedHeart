@@ -32,7 +32,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 public class FHBodyDataSyncPacket extends NBTMessage {
     public FHBodyDataSyncPacket(Player pe) {

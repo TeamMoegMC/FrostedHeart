@@ -270,10 +270,11 @@ task deobfJar(type: Jar) {
     archiveClassifier.set('deobf')
 }
 
-artifacts {
-    archives sourcesJar
-    archives deobfJar
-}
+//Disable the artifacts to build
+//artifacts {
+//    archives sourcesJar
+//    archives deobfJar
+//}
 jar {
    with copySpec {
       from 'src/main/resources/frostedheart.mixins.json' 
@@ -389,5 +390,12 @@ publishing {
             name = "COS"
             url = "http://127.0.0.1:9999"
         }
+    }
+}
+
+// Add a max error count to the Java compiler
+allprojects {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xmaxerrs" << "1000000"
     }
 }

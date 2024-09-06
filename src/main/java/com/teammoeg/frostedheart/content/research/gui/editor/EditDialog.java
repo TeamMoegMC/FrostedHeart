@@ -57,7 +57,7 @@ public abstract class EditDialog extends Panel {
                 sc.closeDialog(refresh);
         } catch (Exception ex) {
             ex.printStackTrace();
-            ClientUtils.getPlayer().sendMessage(TranslateUtils.str("Fatal error on switching dialog! see log for details").withStyle(ChatFormatting.RED), null);
+            ClientUtils.getPlayer().sendSystemMessage(TranslateUtils.str("Fatal error on switching dialog! see log for details").withStyle(ChatFormatting.RED));
             sc.closeGui();
         }
         try {

@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 // send when data update
 public class FHResearchDataUpdatePacket extends NullableNBTMessage{

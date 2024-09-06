@@ -32,7 +32,7 @@ public class ThickLine {
     public ThickLine() {
     }
 
-    public void draw(PoseStack matrixStack, int x, int y) {
+    public void draw(GuiGraphics matrixStack, int x, int y) {
         FHGuiHelper.drawLine(matrixStack, color, x + this.x, y + this.y, x + this.x2, y + this.y2);
 
         // super.draw(matrixStack, theme, x, y, w, h);

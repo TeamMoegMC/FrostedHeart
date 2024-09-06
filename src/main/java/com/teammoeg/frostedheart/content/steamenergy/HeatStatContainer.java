@@ -30,7 +30,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor;
 
 public class HeatStatContainer extends AbstractContainerMenu {
     public static final int RELATION_TO_TRADE = -30;

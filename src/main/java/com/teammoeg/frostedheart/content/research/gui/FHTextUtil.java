@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHMain;
 
-import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
+import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 

@@ -62,7 +62,7 @@ class HelpPanel extends Panel {
         add(t5);
         Button closePanel = new Button(this) {
             @Override
-            public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+            public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             }
 
             @Override
@@ -89,7 +89,7 @@ class HelpPanel extends Panel {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         DrawDeskIcons.HELP.draw(matrixStack, x, y, w, h);
     }
 

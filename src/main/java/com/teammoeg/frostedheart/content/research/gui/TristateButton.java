@@ -50,7 +50,7 @@ public abstract class TristateButton extends Button {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         if (getEnabled()) {
             if (super.isMouseOver())
                 over.draw(matrixStack, x, y, w, h);

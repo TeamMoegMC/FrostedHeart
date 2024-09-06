@@ -40,7 +40,7 @@ public class SwitchButton extends Button {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         if (state)
             state1.draw(matrixStack, x, y, w, h);
         else

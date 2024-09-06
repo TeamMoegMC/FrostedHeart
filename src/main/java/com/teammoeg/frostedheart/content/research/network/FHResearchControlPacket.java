@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 public class FHResearchControlPacket implements FHMessage {
     public enum Operator {

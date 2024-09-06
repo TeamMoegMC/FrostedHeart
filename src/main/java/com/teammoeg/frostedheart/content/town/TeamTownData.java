@@ -34,7 +34,7 @@ import com.teammoeg.frostedheart.util.io.CodecUtil;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.core.SerializableUUID;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ColumnPos;
 import net.minecraft.server.level.ServerLevel;
@@ -53,9 +53,9 @@ public class TeamTownData implements SpecialData{
 			CodecUtil.defaultValue(CodecUtil.mapCodec(TownResourceType.CODEC, Codec.INT), ImmutableMap.of()).fieldOf("resource").forGetter(o->o.resources),
 			CodecUtil.defaultValue(CodecUtil.mapCodec(TownResourceType.CODEC, Codec.INT), ImmutableMap.of()).fieldOf("backupResource").forGetter(o->o.backupResources),
 			CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "data", TownWorkerData.CODEC), ImmutableMap.of()).fieldOf("blocks").forGetter(o->o.blocks),
-			CodecUtil.defaultValue(CodecUtil.mapCodec("uuid",SerializableUUID.CODEC,"data",Resident.CODEC), ImmutableMap.of()).fieldOf("residents").forGetter(o->o.residents),
-            CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "residents", Codec.list(SerializableUUID.CODEC)), ImmutableMap.of()).fieldOf("workAssignStatus").forGetter(o->o.workAssigningStatus),
-            CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "residents", Codec.list(SerializableUUID.CODEC)), ImmutableMap.of()).fieldOf("houseAllocatingStatus").forGetter(o->o.houseAllocatingStatus)
+			CodecUtil.defaultValue(CodecUtil.mapCodec("uuid",UUIDUtil.CODEC,"data",Resident.CODEC), ImmutableMap.of()).fieldOf("residents").forGetter(o->o.residents),
+            CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "residents", Codec.list(UUIDUtil.CODEC)), ImmutableMap.of()).fieldOf("workAssignStatus").forGetter(o->o.workAssigningStatus),
+            CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "residents", Codec.list(UUIDUtil.CODEC)), ImmutableMap.of()).fieldOf("houseAllocatingStatus").forGetter(o->o.houseAllocatingStatus)
 
     ).apply(t, TeamTownData::new));
     /**
@@ -102,7 +102,7 @@ public class TeamTownData implements SpecialData{
         if(teamData instanceof TeamDataHolder) {
         	TeamDataHolder data=(TeamDataHolder) teamData;
 	        if (data.getTeam().isPresent()) {
-	            this.name = data.getTeam().get().getDisplayName() + "'s Town";
+	            this.name = data.getTeam().get().getName() + "'s Town";
 	        } else {
 	            this.name = data.getOwnerName() + "'s Town";
             }

@@ -32,9 +32,8 @@ import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -48,8 +47,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -58,9 +55,10 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fml.network.NetworkHooks;
+//import net.minecraftforge.fml.network.NetworkHooks;
 
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+import net.minecraftforge.network.NetworkHooks;
 
 public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvider {
 
@@ -85,13 +83,14 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
         super.setLightOpacity(0);
     }
 
-    @Nullable
-    @Override
-    public BlockEntity createTileEntity(BlockState state, BlockGetter world) {
-        if (!state.getValue(IS_NOT_MAIN))
-            return new DrawingDeskTileEntity();
-        else return null;
-    }
+    //TODO
+//    @Nullable
+//    @Override
+//    public BlockEntity createTileEntity(BlockState state, BlockGetter world) {
+//        if (!state.getValue(IS_NOT_MAIN))
+//            return new DrawingDeskTileEntity();
+//        else return null;
+//    }
 
     @Override
     public boolean triggerEvent(BlockState state, Level worldIn, BlockPos pos, int id, int param) {
@@ -143,10 +142,11 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
         return context.getLevel().getBlockState(blockpos1).canBeReplaced(context) ? this.defaultBlockState().setValue(FACING, direction) : null;
     }
 
-    @Override
-    public boolean hasTileEntity(BlockState state) {
-        return !state.getValue(IS_NOT_MAIN);
-    }
+    //TODO
+//    @Override
+//    public boolean hasTileEntity(BlockState state) {
+//        return !state.getValue(IS_NOT_MAIN);
+//    }
 
     @Override
     public BlockState mirror(BlockState state, Mirror mirrorIn) {
@@ -168,7 +168,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
                 UUID crid = FHTeamDataManager.get(player).getId();
                 IOwnerTile.trySetOwner(ii, crid);
                 if (crid != null && crid.equals(IOwnerTile.getOwner(ii)))
-                    NetworkHooks.openGui((ServerPlayer) player, (IInteractionObjectIE) ii, ii.getBlockPos());
+                    NetworkHooks.openScreen((ServerPlayer) player, (IInteractionObjectIE) ii, ii.getBlockPos());
                 else
                     player.displayClientMessage(TranslateUtils.translateMessage("research.not_owned"), true);
             }

@@ -190,7 +190,7 @@ public class TradeScreen extends BaseScreen {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         TradeIcons.MAIN.draw(matrixStack, x, y, w, h);
         TradeIcons.REL.draw(matrixStack, x + 133, y + 18, 54, 5);
         int repos = cx.relations.sum();

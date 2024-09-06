@@ -138,7 +138,7 @@ public abstract class ResearchPanel extends Panel {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         TechIcons.Background.draw(matrixStack, x, y, w, h);
     }
 

@@ -22,8 +22,9 @@ package com.teammoeg.frostedheart.compat.jei;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.compat.jei.category.animations.AnimatedKinetics;
 
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.level.block.state.BlockState;
-import com.mojang.math.Vector3f;
+
 
 //borrowed from create
 public class StaticBlock extends AnimatedKinetics {
@@ -34,21 +35,25 @@ public class StaticBlock extends AnimatedKinetics {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, int xOffset, int yOffset) {
-        matrixStack.pushPose();
-        matrixStack.translate(xOffset, yOffset, 0);
-        matrixStack.translate(0, 0, 200);
-        matrixStack.translate(2, 22, 0);
-        matrixStack.mulPose(Vector3f.XP.rotationDegrees(-15.5f));
-        matrixStack.mulPose(Vector3f.YP.rotationDegrees(22.5f + 90));
+    public void draw(GuiGraphics guiGraphics, int xOffset, int yOffset) {
+
+        PoseStack pose=guiGraphics.pose();
+
+        pose.pushPose();
+        pose.translate(xOffset, yOffset, 0);
+        pose.translate(0, 0, 200);
+        pose.translate(2, 22, 0);
+        //TODO: fix this
+//        pose.mulPose(Vector3f.XP.rotationDegrees(-15.5f));
+//        pose.mulPose(Vector3f.YP.rotationDegrees(22.5f + 90));
         int scale = 30;
 
         blockElement(bs)
                 .rotateBlock(0, 0, 0)
                 .scale(scale)
-                .render(matrixStack);
+                .render(guiGraphics);
 
-        matrixStack.popPose();
+        pose.popPose();
     }
 
 }

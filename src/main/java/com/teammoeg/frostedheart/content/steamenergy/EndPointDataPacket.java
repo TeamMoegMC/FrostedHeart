@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.content.trade.ClientHeatHandler;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 // send when player join
 public class EndPointDataPacket implements FHMessage {

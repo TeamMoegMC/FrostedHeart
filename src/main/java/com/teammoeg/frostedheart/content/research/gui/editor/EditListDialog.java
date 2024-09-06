@@ -42,9 +42,9 @@ import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 /**
@@ -63,7 +63,7 @@ public class EditListDialog<T> extends EditDialog {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             boolean mouseOver = getMouseY() >= 20 && isMouseOver();
 
             if (mouseOver) {
@@ -71,7 +71,7 @@ public class EditListDialog<T> extends EditDialog {
             }
 
             theme.drawString(matrixStack, getTitle(), x + 4, y + 2, Color4I.BLACK, 0);
-            RenderSystem.color4f(1F, 1F, 1F, 1F);
+            RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
         }
 
         @Override
@@ -107,7 +107,7 @@ public class EditListDialog<T> extends EditDialog {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             boolean mouseOver = getMouseY() >= 20 && isMouseOver();
             int ioffset = 0;
             if (toicon != null) {
@@ -129,7 +129,7 @@ public class EditListDialog<T> extends EditDialog {
                 theme.drawString(matrixStack, "[-]", x + w - 16, y + 2, Color4I.BLACK, 0);
             }
 
-            RenderSystem.color4f(1F, 1F, 1F, 1F);
+            RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
         }
 
         @Override
@@ -236,7 +236,7 @@ public class EditListDialog<T> extends EditDialog {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         theme.drawGui(matrixStack, x, y, w, h, WidgetType.NORMAL);
 
         theme.drawString(matrixStack, getTitle(), x, y - 10);

@@ -21,7 +21,8 @@ package com.teammoeg.frostedheart.content.research.events;
 
 import com.teammoeg.frostedheart.content.research.research.Research;
 
-import dev.ftb.mods.ftbteams.data.Team;
+
+import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraftforge.eventbus.api.Event;
 
 public class ResearchStatusEvent extends Event {

@@ -39,7 +39,7 @@ public class EditBtnDialog extends BaseEditDialog {
     public EditBtnDialog(Widget panel, String label, String val, String sel, Consumer<String> onFinished, Editor<String> onbtn) {
         super(panel);
         box = new LabeledTextBoxAndBtn(this, label, val, sel, e -> onbtn.open(panel, sel, box.getText(), e));
-        ok = new SimpleTextButton(this, TranslateUtils.str("OK"), Icon.EMPTY) {
+        ok = new SimpleTextButton(this, TranslateUtils.str("OK"), Icon.empty()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -52,7 +52,7 @@ public class EditBtnDialog extends BaseEditDialog {
             }
 
         };
-        cancel = new SimpleTextButton(this, TranslateUtils.str("Cancel"), Icon.EMPTY) {
+        cancel = new SimpleTextButton(this, TranslateUtils.str("Cancel"), Icon.empty()) {
 
             @Override
             public void onClicked(MouseButton arg0) {

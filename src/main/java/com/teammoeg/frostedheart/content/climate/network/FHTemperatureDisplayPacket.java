@@ -29,11 +29,11 @@ import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 public class FHTemperatureDisplayPacket implements FHMessage {
     private final int[] temp;
@@ -99,11 +99,11 @@ public class FHTemperatureDisplayPacket implements FHMessage {
                 ss[i] = TemperatureDisplayHelper.toTemperatureIntString(temp[i] / 10f);
             }
             
-            TranslatableComponent tosend = TranslateUtils.translateMessage(langKey, ss);
+            Component tosend = TranslateUtils.translateMessage(langKey, ss);
             if (isStatus)
                 player.displayClientMessage(tosend, false);
             else
-                player.sendMessage(tosend, player.getUUID());
+                player.sendSystemMessage(tosend);
 
         });
         context.get().setPacketHandled(true);

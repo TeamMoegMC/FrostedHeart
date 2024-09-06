@@ -135,8 +135,8 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         public void addWidgets() {
             super.addWidgets();
             add(EditUtils.getTitle(this, "Only the first in the following takes effects"));
-            add(new OpenEditorButton<>(this, "Select Item", SelectItemStackDialog.EDITOR, e.item == null ? ItemStack.EMPTY : new ItemStack(e.item), e.item == null ? Icon.EMPTY : ItemIcon.getItemIcon(e.item), s -> e.item = s.getItem()));
-            add(new OpenEditorButton<>(this, "Edit ItemStack", SelectItemStackDialog.EDITOR, e.itemStack == null ? ItemStack.EMPTY : e.itemStack, e.itemStack == null ? Icon.EMPTY : ItemIcon.getItemIcon(e.itemStack), s -> {
+            add(new OpenEditorButton<>(this, "Select Item", SelectItemStackDialog.EDITOR, e.item == null ? ItemStack.EMPTY : new ItemStack(e.item), e.item == null ? Icon.empty() : ItemIcon.getItemIcon(e.item), s -> e.item = s.getItem()));
+            add(new OpenEditorButton<>(this, "Edit ItemStack", SelectItemStackDialog.EDITOR, e.itemStack == null ? ItemStack.EMPTY : e.itemStack, e.itemStack == null ? Icon.empty() : ItemIcon.getItemIcon(e.itemStack), s -> {
                 e.item = null;
                 e.itemStack = s;
             }));
@@ -249,7 +249,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         @Override
         public void addWidgets() {
             super.addWidgets();
-            add(new LabeledOpenEditorButton<>(this, e.blocks.isEmpty() ? "" : e.blocks.get(0).getName().getString(), "Edit blocks", SelectItemStackDialog.BLOCK_LIST, e.blocks, e.blocks.isEmpty() ? Icon.EMPTY : ItemIcon.getItemIcon(e.blocks.get(0).asItem()), s -> e.blocks = new ArrayList<>(s)));
+            add(new LabeledOpenEditorButton<>(this, e.blocks.isEmpty() ? "" : e.blocks.get(0).getName().getString(), "Edit blocks", SelectItemStackDialog.BLOCK_LIST, e.blocks, e.blocks.isEmpty() ? Icon.empty() : ItemIcon.getItemIcon(e.blocks.get(0).asItem()), s -> e.blocks = new ArrayList<>(s)));
 
         }
 

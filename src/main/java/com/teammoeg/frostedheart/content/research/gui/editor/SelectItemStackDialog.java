@@ -37,7 +37,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import dev.ftb.mods.ftblibrary.config.ui.ItemSearchMode;
+import dev.ftb.mods.ftblibrary.config.ui.ResourceSearchMode;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
@@ -55,6 +55,7 @@ import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
@@ -67,9 +68,7 @@ import net.minecraft.nbt.TagParser;
 import net.minecraft.util.Mth;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.ChatFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 /**
@@ -117,15 +116,13 @@ public class SelectItemStackDialog extends EditDialog {
 
     private class ButtonEditData extends Button {
         public ButtonEditData(Panel panel) {
-            super(panel, TextComponent.EMPTY, Icons.BUG);
+            super(panel, Component.empty(), Icons.BUG);
         }
 
         @Override
-        public void drawIcon(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
-            matrixStack.pushPose();
-            matrixStack.translate(0, 0, 100);
-            GuiHelper.drawItem(matrixStack, current, x, y, w / 16F, h / 16F, true, null);
-            matrixStack.popPose();
+        public void drawIcon(GuiGraphics guiGraphics, Theme theme, int x, int y, int w, int h) {
+            guiGraphics.renderItem(current,x, y, w, h);
+            //GuiHelper.drawItem(matrixStack, current, x, y, w / 16F, h / 16F, true, null);
         }
 
         @Override
@@ -178,7 +175,7 @@ public class SelectItemStackDialog extends EditDialog {
     }
 
     private class ButtonSwitchMode extends Button {
-        private final Iterator<ItemSearchMode> modeIterator = Iterators.cycle(modes);
+        private final Iterator<ResourceSearchMode> modeIterator = Iterators.cycle(modes);
 
         public ButtonSwitchMode(Panel panel) {
             super(panel);
@@ -188,11 +185,11 @@ public class SelectItemStackDialog extends EditDialog {
         @Override
         public void addMouseOverText(TooltipList list) {
             super.addMouseOverText(list);
-            list.add(activeMode.getDisplayName().withStyle(ChatFormatting.GRAY).append(TranslateUtils.str(" [" + panelStacks.widgets.size() + "]").withStyle(ChatFormatting.DARK_GRAY)));
+            list.add(activeMode.getDisplayName().withStyle(ChatFormatting.GRAY).append(TranslateUtils.str(" [" + panelStacks.getWidgets().size() + "]").withStyle(ChatFormatting.DARK_GRAY)));
         }
 
         @Override
-        public void drawIcon(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void drawIcon(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             activeMode.getIcon().draw(matrixStack, x, y, w, h);
         }
 
@@ -213,7 +210,7 @@ public class SelectItemStackDialog extends EditDialog {
         private final ItemStack stack;
 
         private ItemStackButton(Panel panel, ItemStack is) {
-            super(panel, TextComponent.EMPTY, Icons.BARRIER);
+            super(panel, Component.empty(), Icons.BARRIER);
             setSize(18, 18);
             stack = is;
             title = null;
@@ -225,7 +222,7 @@ public class SelectItemStackDialog extends EditDialog {
         }
 
         @Override
-        public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             (getWidgetType() == WidgetType.MOUSE_OVER ? Color4I.LIGHT_GREEN.withAlpha(70) : Color4I.BLACK.withAlpha(50)).draw(matrixStack, x, y, w, h);
         }
 
@@ -276,15 +273,15 @@ public class SelectItemStackDialog extends EditDialog {
         return thread;
     });
 
-    public static final List<ItemSearchMode> modes = new ArrayList<>();
+    public static final List<ResourceSearchMode> modes = new ArrayList<>();
 
     static {
-        modes.add(ItemSearchMode.ALL_ITEMS);
-        modes.add(ItemSearchMode.INVENTORY);
-        modes.add(new ItemSearchMode() {
+        modes.add(ResourceSearchMode.ALL_ITEMS);
+        modes.add(ResourceSearchMode.INVENTORY);
+        modes.add(new ResourceSearchMode() {
 
             @Override
-            public Collection<ItemStack> getAllItems() {
+            public Collection<ItemStack> getAllResources() {
                 return RegistryUtils.getBlocks().stream().map(Block::asItem).filter(Objects::nonNull).map(ItemStack::new).collect(Collectors.toList());
             }
 
@@ -300,7 +297,7 @@ public class SelectItemStackDialog extends EditDialog {
         });
     }
 
-    private static ItemSearchMode activeMode = null;
+    private static ResourceSearchMode activeMode = null;
 
     public static final Editor<Collection<ItemStack>> STACK_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, new ItemStack(Items.AIR), EDITOR, SelectItemStackDialog::fromItemStack, ItemIcon::getItemIcon, c).open();
 
@@ -332,7 +329,7 @@ public class SelectItemStackDialog extends EditDialog {
 
         int bsize = width / 2 - 10;
 
-        buttonCancel = new SimpleTextButton(this, TranslateUtils.translate("gui.cancel"), Icon.EMPTY) {
+        buttonCancel = new SimpleTextButton(this, TranslateUtils.translate("gui.cancel"), Icon.empty()) {
             @Override
             public void onClicked(MouseButton button) {
                 playClickSound();
@@ -347,7 +344,7 @@ public class SelectItemStackDialog extends EditDialog {
 
         buttonCancel.setPosAndSize(27, height - 24, bsize, 16);
 
-        buttonAccept = new SimpleTextButton(this, TranslateUtils.translate("gui.accept"), Icon.EMPTY) {
+        buttonAccept = new SimpleTextButton(this, TranslateUtils.translate("gui.accept"), Icon.empty()) {
             @Override
             public void onClicked(MouseButton button) {
                 playClickSound();
@@ -370,7 +367,7 @@ public class SelectItemStackDialog extends EditDialog {
             }
 
             @Override
-            public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+            public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
                 theme.drawPanelBackground(matrixStack, x, y, w, h);
             }
         };
@@ -435,7 +432,7 @@ public class SelectItemStackDialog extends EditDialog {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         theme.drawGui(matrixStack, x, y, w, h, WidgetType.NORMAL);
 
         long now = System.currentTimeMillis();
@@ -453,7 +450,7 @@ public class SelectItemStackDialog extends EditDialog {
             return Collections.emptyList();
         }
 
-        Collection<ItemStack> items = activeMode.getAllItems();
+        Collection<ItemStack> items = activeMode.getAllResources();
         List<Widget> widgets = new ArrayList<>(search.isEmpty() ? items.size() + 1 : 64);
 
         String mod = "";
@@ -489,10 +486,10 @@ public class SelectItemStackDialog extends EditDialog {
     }
 
     private void updateItemWidgets(List<Widget> items) {
-        panelStacks.widgets.clear();
+        panelStacks.getWidgets().clear();
         panelStacks.addAll(items);
         scrollBar.setPosAndSize(panelStacks.posX + panelStacks.width + 25, panelStacks.posY - 1, 16, panelStacks.height + 2);
         scrollBar.setValue(0);
-        scrollBar.setMaxValue(1 + Mth.ceil(panelStacks.widgets.size() / 9F) * 19);
+        scrollBar.setMaxValue(1 + Mth.ceil(panelStacks.getWidgets().size() / 9F) * 19);
     }
 }

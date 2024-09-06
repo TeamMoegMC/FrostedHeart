@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 // send when player join
 public class FHClueProgressSyncPacket implements FHMessage {

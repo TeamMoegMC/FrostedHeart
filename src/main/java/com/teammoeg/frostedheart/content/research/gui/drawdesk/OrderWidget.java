@@ -39,7 +39,7 @@ public class OrderWidget extends Widget {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
 
         DrawDeskIcons.ORDER_FRAME.draw(matrixStack, x, y, 16, 16);
         if (cardstate != 0) {

@@ -77,7 +77,7 @@ public class FakeSlot extends Widget {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         if (i == null) return;
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         GuiHelper.setupDrawing();

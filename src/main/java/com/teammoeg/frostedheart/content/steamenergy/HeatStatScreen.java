@@ -41,7 +41,7 @@ public class HeatStatScreen extends BaseScreen {
 			this.setSize(33, 39);
 		}
 		@Override
-		public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+		public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
 			theme.drawContainerSlot(matrixStack, x, y, w, h);
 		}
 		@Override
@@ -70,7 +70,7 @@ public class HeatStatScreen extends BaseScreen {
 			this.setSize(33, 39);
 		}
 		@Override
-		public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+		public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
 			theme.drawContainerSlot(matrixStack, x, y, w, h);
 			ic.draw(matrixStack, x+4, y+2, 24, 24);
 			if(isIntake)
@@ -129,7 +129,7 @@ public class HeatStatScreen extends BaseScreen {
         }
 
 		@Override
-		public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+		public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
 			super.drawBackground(matrixStack, theme, x, y, w, h);
 			theme.drawPanelBackground(matrixStack, x, y, w, h);
 		}
@@ -150,7 +150,7 @@ public class HeatStatScreen extends BaseScreen {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         super.drawBackground(matrixStack, theme, x, y, w, h);
     }
 

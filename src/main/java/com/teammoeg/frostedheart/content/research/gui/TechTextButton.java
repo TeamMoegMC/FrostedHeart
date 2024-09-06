@@ -44,7 +44,7 @@ public abstract class TechTextButton extends TechButton {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         drawBackground(matrixStack, theme, x, y, w, h);
         int s = h >= 16 ? 16 : 8;
         int off = (h - s) / 2;

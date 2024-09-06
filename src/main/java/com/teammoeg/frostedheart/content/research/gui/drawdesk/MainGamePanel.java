@@ -36,7 +36,8 @@ import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 
 class MainGamePanel extends Panel {
     ClientResearchGame rg;
@@ -169,7 +170,7 @@ class MainGamePanel extends Panel {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
 
         super.draw(matrixStack, theme, x, y, w, h);
         if (lstatus != 0) {
@@ -219,7 +220,7 @@ class MainGamePanel extends Panel {
             return;
         }
         if (lstatus != 0) {
-            status.setText(TextComponent.EMPTY);
+            status.setText(Component.empty());
             lstatus = 0;
         }
 

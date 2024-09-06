@@ -43,9 +43,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fml.network.PacketDistributor;
-import top.theillusivec4.diet.api.DietCapability;
-import top.theillusivec4.diet.api.IDietTracker;
+import net.minecraftforge.network.PacketDistributor;
+//import top.theillusivec4.diet.api.DietCapability;
+//import top.theillusivec4.diet.api.IDietTracker;
 
 public class EnergyCore implements NBTSerializable {
     /*long energy;
@@ -105,7 +105,7 @@ public class EnergyCore implements NBTSerializable {
     public static void applySleep(ServerPlayer player) {
         EnergyCore data=getCapability(player).orElse(null);
         long lsd = data.lastsleepdate;
-        long csd = (player.level.getDayTime() + 12000L) / 24000L;
+        long csd = (player.level().getDayTime() + 12000L) / 24000L;
         //System.out.println("slept");
         if (csd == lsd) return;
         //System.out.println("sleptx");
@@ -159,7 +159,7 @@ public class EnergyCore implements NBTSerializable {
     }
 
     public static void reportEnergy(Player player) {
-    	getCapability(player).ifPresent(data->player.sendMessage(TranslateUtils.str("Energy:" + data.level + ",Persist Energy: " + data.persistLevel), player.getUUID()));
+    	getCapability(player).ifPresent(data->player.sendSystemMessage(TranslateUtils.str("Energy:" + data.level + ",Persist Energy: " + data.persistLevel)));
     }
  
 

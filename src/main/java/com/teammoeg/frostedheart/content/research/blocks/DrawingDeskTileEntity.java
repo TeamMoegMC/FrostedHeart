@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.content.research.blocks;
 import java.util.Optional;
 import java.util.Random;
 
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
+import blusunrize.immersiveengineering.common.register.IEMenuTypes;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.recipes.ResearchPaperRecipe;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
@@ -32,19 +34,21 @@ import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.NonNullList;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteractionObjectIE, IIEInventory {
+public class DrawingDeskTileEntity extends IEBaseBlockEntity implements IInteractionObjectIE, IIEInventory {
     public static final int INK_SLOT = 2;
     public static final int PAPER_SLOT = 1;
     public static final int EXAMINE_SLOT = 0;
@@ -53,8 +57,8 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
     protected NonNullList<ItemStack> inventory = NonNullList.withSize(3, ItemStack.EMPTY);
     ResearchGame game = new ResearchGame();
 
-    public DrawingDeskTileEntity() {
-        super(FHTileTypes.DRAWING_DESK.get());
+    public DrawingDeskTileEntity(BlockPos pos, BlockState state) {
+        super(FHTileTypes.DRAWING_DESK.get(), pos, state);
     }
 
     @Override
@@ -79,8 +83,14 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
     }
 
     @Override
-    public IInteractionObjectIE getGuiMaster() {
+    public BlockEntity getGuiMaster() {
         return this;
+    }
+
+    @Override
+    public IEMenuTypes.ArgContainer getContainerType() {
+        //TODO
+        return null;
     }
 
     @Override
@@ -97,7 +107,7 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
         if (inventory.get(PAPER_SLOT).isEmpty()) return;
         int lvl = ResearchListeners.fetchGameLevel(player);
         if (lvl < 0) return;
-        Optional<ResearchPaperRecipe> pr = FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.get(PAPER_SLOT))).findAny();
+        Optional<ResearchPaperRecipe> pr = FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE.get()).stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.get(PAPER_SLOT))).findAny();
         if (!pr.isPresent()) return;
         if (EnergyCore.getEnergy(player)<=0) return;
         if (!damageInk(player, 5, lvl)) return;
@@ -120,7 +130,7 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
         ItemStack is = inventory.get(PAPER_SLOT);
         if (is.isEmpty()) return false;
         int lvl = ResearchListeners.fetchGameLevel();
-        return FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.maxlevel >= lvl && r.paper.test(is));
+        return FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE.get()).stream().anyMatch(r -> r.maxlevel >= lvl && r.paper.test(is));
     }
 
     @Override
@@ -130,7 +140,7 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
         else if (slot == INK_SLOT)
             return item.getItem() instanceof IPen && ((IPen) item.getItem()).canUse(null, item, 1);
         else if (slot == PAPER_SLOT)
-            return FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.paper.test(item));
+            return FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE.get()).stream().anyMatch(r -> r.paper.test(item));
         else
             return false;
     }

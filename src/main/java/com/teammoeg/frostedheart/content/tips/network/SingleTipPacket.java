@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.tips.network;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.tips.client.util.TipDisplayUtil;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 

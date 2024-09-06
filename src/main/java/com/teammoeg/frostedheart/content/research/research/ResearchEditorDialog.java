@@ -87,7 +87,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
     public void addWidgets() {
         add(EditUtils.getTitle(this, "Edit/New Research"));
         add(id);
-        add(new SimpleTextButton(this, TranslateUtils.str("Reset id"), Icon.EMPTY) {
+        add(new SimpleTextButton(this, TranslateUtils.str("Reset id"), Icon.empty()) {
             @Override
             public void onClicked(MouseButton arg0) {
                 id.setText(r.getId());
@@ -124,7 +124,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
             r.getClues().addAll(s);
             r.doIndex();
         }));
-        add(new SimpleTextButton(this, TranslateUtils.str("Remove"), Icon.EMPTY) {
+        add(new SimpleTextButton(this, TranslateUtils.str("Remove"), Icon.empty()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -142,7 +142,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         super.draw(matrixStack, theme, x, y, w, h);
         Research r = FHResearch.researches.getByName(id.getText());
         if (r != null && r != this.r)

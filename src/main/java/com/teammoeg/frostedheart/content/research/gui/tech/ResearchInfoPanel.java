@@ -101,7 +101,7 @@ public class ResearchInfoPanel extends Panel {
             if (researchData.isUnlocked()) {
                 // commit items button
                 Button commitItems = new TechTextButton(this, TranslateUtils.translateGui("research.commit_material_and_start"),
-                        Icon.EMPTY) {
+                        Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         FHNetwork.sendToServer(new FHResearchControlPacket(Operator.COMMIT_ITEM, detailPanel.research));
@@ -113,7 +113,7 @@ public class ResearchInfoPanel extends Panel {
             }
         } else if (researchData.isInProgress()) {
             // commit items button
-            Button commitItems = new TechTextButton(this, TranslateUtils.translateGui("research.stop"), Icon.EMPTY) {
+            Button commitItems = new TechTextButton(this, TranslateUtils.translateGui("research.stop"), Icon.empty()) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
                     FHNetwork.sendToServer(new FHResearchControlPacket(Operator.PAUSE, detailPanel.research));
@@ -123,7 +123,7 @@ public class ResearchInfoPanel extends Panel {
             add(commitItems);
         } else if (!researchData.isCompleted() && !detailPanel.research.isInCompletable()) {
             // commit items button
-            Button commitItems = new TechTextButton(this, TranslateUtils.translateGui("research.start"), Icon.EMPTY) {
+            Button commitItems = new TechTextButton(this, TranslateUtils.translateGui("research.start"), Icon.empty()) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
                     FHNetwork.sendToServer(new FHResearchControlPacket(Operator.START, detailPanel.research));
@@ -183,7 +183,7 @@ public class ResearchInfoPanel extends Panel {
                     TeamResearchData data = ClientResearchDataAPI.getData();
                     if (data.getData(detailPanel.research).isCompleted() && hasUnclaimed) {
                         Button claimRewards = new TechTextButton(fp, TranslateUtils.translateGui("research.claim_rewards"),
-                                Icon.EMPTY) {
+                                Icon.empty()) {
                             @Override
                             public void onClicked(MouseButton mouseButton) {
                                 FHNetwork.sendToServer(new FHEffectTriggerPacket(detailPanel.research));
@@ -252,6 +252,6 @@ public class ResearchInfoPanel extends Panel {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
     }
 }

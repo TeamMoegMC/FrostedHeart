@@ -56,7 +56,7 @@ public class ResearchProgressPanel extends Panel {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         super.draw(matrixStack, theme, x, y, w, h);
         // title
 
@@ -92,7 +92,7 @@ public class ResearchProgressPanel extends Panel {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         //theme.drawPanelBackground(matrixStack, x, y, w, h);
     }
 	/*@Override

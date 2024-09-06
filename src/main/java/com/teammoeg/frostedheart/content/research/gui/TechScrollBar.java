@@ -56,7 +56,7 @@ public class TechScrollBar extends PanelScrollBar {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         if (!isHidden) {
             GuiHelper.setupDrawing();
             TechIcons.SLIDER_FRAME.draw(matrixStack, x, y, w, h);

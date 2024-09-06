@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NBTDynamicOps;
+
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
