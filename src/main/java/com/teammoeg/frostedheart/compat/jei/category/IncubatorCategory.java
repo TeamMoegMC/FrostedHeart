@@ -19,36 +19,32 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import com.cannolicatfish.rankine.init.RankineItems;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.compat.jei.FluidIngredientType;
+import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-
 import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.gui.IRecipeLayout;
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableAnimated;
 import mezz.jei.api.gui.drawable.IDrawableStatic;
-import mezz.jei.api.gui.ingredient.IGuiFluidStackGroup;
-import mezz.jei.api.gui.ingredient.IGuiItemStackGroup;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
-import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.recipe.IFocusGroup;
+import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.text.TranslationTextComponent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.fluids.FluidStack;
+
+import java.util.List;
 
 public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "incubator");
@@ -62,7 +58,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 
     public IncubatorCategory(IGuiHelper guiHelper) {
         ResourceLocation guiMain = new ResourceLocation(FHMain.MODID, "textures/gui/incubator.png");
-        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.incubator1.get()));
+        this.ICON = guiHelper.createDrawableIngredient(VanillaTypes.ITEM_STACK,new ItemStack(FHBlocks.incubator1.get()));
         this.BACKGROUND = guiHelper.createDrawable(guiMain, 4, 4, 164, 72);
         IDrawableStatic tfire = guiHelper.createDrawable(guiMain, 198, 64, 14, 14);
         this.FIRE = guiHelper.createAnimatedDrawable(tfire, 80, IDrawableAnimated.StartDirection.TOP, true);
@@ -73,7 +69,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     }
 
     @Override
-    public void draw(IncubateRecipe recipe, PoseStack transform, double mouseX, double mouseY) {
+    public void draw(IncubateRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics transform, double mouseX, double mouseY) {
         FIRE.draw(transform, 31, 31);
         PROC.draw(transform, 76, 24);
         EFF.draw(transform, 15, 31);
@@ -84,7 +80,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
         else
             burnTime = recipe.time / 60 + " m";
         int width = ClientUtils.mc().font.width(burnTime);
-        ClientUtils.mc().font.draw(transform, burnTime, 162 - width, 62, 0xFFFFFF);
+        transform.drawString(ClientUtils.mc().font, burnTime, 162 - width, 62, 0xFFFFFF);
     }
 
     @Override
@@ -99,69 +95,44 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     }
 
     @Override
-    public Class<? extends IncubateRecipe> getRecipeClass() {
-        return IncubateRecipe.class;
-    }
+    public void setRecipe(IRecipeLayoutBuilder iRecipeLayoutBuilder, IncubateRecipe incubateRecipe, IFocusGroup iFocusGroup) {
+        iRecipeLayoutBuilder.addSlot(RecipeIngredientRole.INPUT, 57, 16).addIngredients(FluidIngredientType.INSTANCE, List.of(new FluidStack(Fluids.WATER, incubateRecipe.water)))
+                .addTooltipCallback((s, o) -> o.add(TranslateUtils.translateGui("mb_per_sec", incubateRecipe.water)));
+        iRecipeLayoutBuilder.addSlot(RecipeIngredientRole.OUTPUT, 113, 16).addIngredients(FluidIngredientType.INSTANCE,List.of(incubateRecipe.output_fluid))
+                .addTooltipCallback((s, o) -> o.add(TranslateUtils.translateGui("per_food_value", incubateRecipe.output_fluid.getAmount())));
+        iRecipeLayoutBuilder.addSlot(RecipeIngredientRole.INPUT, 29, 47).addIngredients(incubateRecipe.getIngredients().get(0));
+        iRecipeLayoutBuilder.addSlot(RecipeIngredientRole.INPUT, 11, 12).addIngredients(incubateRecipe.getIngredients().get(1))
+                .addTooltipCallback((s, o) -> {
+                    if (!incubateRecipe.consume_catalyst)
+                        o.add(TranslateUtils.translateGui("not_consume"));
+                });
+        iRecipeLayoutBuilder.addSlot(RecipeIngredientRole.INPUT, 29, 12).addIngredients(incubateRecipe.getIngredients().get(2))
+                .addTooltipCallback((s, o) -> {
+                    if (incubateRecipe.isFood)
+                        o.add(TranslateUtils.translateGui("any_food"));
+                });
+        iRecipeLayoutBuilder.addSlot(RecipeIngredientRole.OUTPUT, 138, 31).addItemStack(incubateRecipe.getResultItem());
 
-    public String getTitle() {
-        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".incubator").getString());
     }
 
     @Override
-    public List<Component> getTooltipStrings(IncubateRecipe recipe, double mouseX, double mouseY) {
-        return new ArrayList<>();
+    public RecipeType<IncubateRecipe> getRecipeType() {
+        return JEICompat.Incubator;
     }
 
-    @Override
-    public ResourceLocation getUid() {
-        return UID;
+    public Component getTitle() {
+        return TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".incubator");
     }
+//
+//    @Override
+//    public List<Component> getTooltipStrings(IncubateRecipe recipe, IRecipeSlotsView recipeSlotsView,  double mouseX, double mouseY) {
+//        return new ArrayList<>();
+//    }
+
 
     public boolean isMouseIn(double mouseX, double mouseY, int x, int y, int w, int h) {
         return mouseX >= x && mouseY >= y
                 && mouseX < x + w && mouseY < y + h;
     }
 
-    @Override
-    public void setIngredients(IncubateRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.FLUID, Collections.singletonList(Collections.singletonList(new FluidStack(Fluids.WATER, recipe.water))));
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Collections.singletonList(new ItemStack(RankineItems.QUICKLIME.get())), Arrays.asList(recipe.catalyst.getMatchingStacks()), Arrays.asList(recipe.input.getMatchingStacks())));
-        if (!recipe.output.isEmpty())
-            ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(Collections.singletonList(recipe.output)));
-        if (!recipe.output_fluid.isEmpty())
-            ingredients.setOutputLists(VanillaTypes.FLUID, Collections.singletonList(Collections.singletonList(recipe.output_fluid)));
-    }
-
-
-    @Override
-    public void setRecipe(IRecipeLayout recipeLayout, IncubateRecipe recipe, IIngredients ingredients) {
-        IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
-        IGuiFluidStackGroup guiFluidStacks = recipeLayout.getFluidStacks();
-        guiFluidStacks.init(0, true, 57, 16, 16, 46, recipe.water * 5, false, null);
-        guiFluidStacks.addTooltipCallback((s, o, i, t) -> {
-            if (s == 0)
-                t.add(TranslateUtils.translateGui("mb_per_sec", recipe.water));
-            if (recipe.isFood && s == 1)
-                t.add(TranslateUtils.translateGui("per_food_value", recipe.output_fluid.getAmount()));
-        });
-        guiFluidStacks.init(1, true, 113, 16, 16, 46, recipe.water * 5, false, null);
-        guiFluidStacks.set(ingredients);
-        if (!recipe.output_fluid.isEmpty())
-            guiFluidStacks.set(1, ingredients.getOutputs(VanillaTypes.FLUID).get(0));
-        guiItemStacks.init(0, true, 29, 47);
-
-        guiItemStacks.init(1, true, 11, 12);
-        guiItemStacks.addTooltipCallback((s, o, i, t) -> {
-            if (s == 1 && !recipe.consume_catalyst)
-                t.add(TranslateUtils.translateGui("not_consume"));
-            else if (s == 2 && recipe.isFood)
-                t.add(TranslateUtils.translateGui("any_food"));
-        });
-        guiItemStacks.init(2, true, 29, 12);
-        guiItemStacks.init(3, false, 138, 31);
-        guiItemStacks.set(ingredients);
-        if (!recipe.output.isEmpty())
-            guiItemStacks.set(3, ingredients.getOutputs(VanillaTypes.ITEM).get(0));
-
-    }
 }

@@ -19,18 +19,18 @@
 
 package com.teammoeg.frostedheart.compat.jei.extension;
 
-import java.util.Arrays;
-import java.util.Collections;
-
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.content.utility.handstoves.CoalHandStove;
 import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
-
-import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
+import mezz.jei.api.gui.ingredient.ICraftingGridHelper;
+import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.category.extensions.vanilla.crafting.ICraftingCategoryExtension;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 public class FuelingExtension implements ICraftingCategoryExtension {
     FuelingRecipe fuel;
@@ -40,16 +40,24 @@ public class FuelingExtension implements ICraftingCategoryExtension {
     }
 
     @Override
+    public void setRecipe(IRecipeLayoutBuilder iRecipeLayoutBuilder, ICraftingGridHelper iCraftingGridHelper, IFocusGroup iFocusGroup) {
+        iCraftingGridHelper.createAndSetInputs(iRecipeLayoutBuilder, Arrays.asList(Collections.singletonList(new ItemStack(FHItems.hand_stove.get())), Arrays.asList(fuel.getIngredient().getItems())), 1, 2);
+        ItemStack out = new ItemStack(FHItems.hand_stove.get());
+        CoalHandStove.setFuelAmount(out, fuel.getFuel());
+        iCraftingGridHelper.createAndSetOutputs(iRecipeLayoutBuilder, Arrays.asList(out));
+    }
+
+    @Override
     public ResourceLocation getRegistryName() {
         return fuel.getId();
     }
 
-    @Override
-    public void setIngredients(IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Collections.singletonList(new ItemStack(FHItems.hand_stove.get())), Arrays.asList(fuel.getIngredient().getItems())));
-        ItemStack out = new ItemStack(FHItems.hand_stove.get());
-        CoalHandStove.setFuelAmount(out, fuel.getFuel());
-        ingredients.setOutput(VanillaTypes.ITEM, out);
-    }
+//    @Override
+//    public void setIngredients(IIngredients ingredients) {
+//        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Collections.singletonList(new ItemStack(FHItems.hand_stove.get())), Arrays.asList(fuel.getIngredient().getItems())));
+//        ItemStack out = new ItemStack(FHItems.hand_stove.get());
+//        CoalHandStove.setFuelAmount(out, fuel.getFuel());
+//        ingredients.setOutput(VanillaTypes.ITEM, out);
+//    }
 
 }

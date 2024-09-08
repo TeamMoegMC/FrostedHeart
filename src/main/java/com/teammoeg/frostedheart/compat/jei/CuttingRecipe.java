@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.compat.jei;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
@@ -45,18 +46,13 @@ public class CuttingRecipe implements Recipe<Container> {
     }
 
     @Override
-    public ItemStack assemble(Container inv) {
-        return ItemStack.EMPTY;
+    public ItemStack getResultItem(RegistryAccess registryAccess) {
+        return out;
     }
 
     @Override
     public ResourceLocation getId() {
         return new ResourceLocation(FHMain.MODID, "cutting/" + RegistryUtils.getRegistryName(out.getItem()).getPath());
-    }
-
-    @Override
-    public ItemStack getResultItem() {
-        return out;
     }
 
     @Override
@@ -72,6 +68,11 @@ public class CuttingRecipe implements Recipe<Container> {
     @Override
     public boolean matches(Container inv, Level worldIn) {
         return false;
+    }
+
+    @Override
+    public ItemStack assemble(Container container, RegistryAccess registryAccess) {
+        return ItemStack.EMPTY;
     }
 
 }

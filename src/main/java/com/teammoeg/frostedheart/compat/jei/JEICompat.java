@@ -78,12 +78,11 @@ import com.teammoeg.frostedheart.util.client.Point;
 
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
-import mezz.jei.api.constants.VanillaRecipeCategoryUid;
+import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.handlers.IGuiClickableArea;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import mezz.jei.api.helpers.IGuiHelper;
-import mezz.jei.api.recipe.IFocus.Mode;
 import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
@@ -92,17 +91,13 @@ import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
-import mezz.jei.plugins.jei.info.IngredientInfoRecipe;
+import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.CraftingRecipe;
-import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 
@@ -112,10 +107,12 @@ public class JEICompat implements IModPlugin {
 
     public static IJeiRuntime jei;
 
+    public static ResourceLocation BACK_GROUNG = new ResourceLocation("jei", "single_recipe_background");
+
     static Map<RecipeType<?>, Set<ResourceLocation>> types = new HashMap<>();
 
     static {
-        types.computeIfAbsent(RecipeType.CRAFTING, i -> new HashSet<>()).add(VanillaRecipeCategoryUid.CRAFTING);
+        types.computeIfAbsent(RecipeType.CRAFTING, i -> new HashSet<>()).add(RecipeTypes.CRAFTING.getUid());
 
 
     }
@@ -123,6 +120,25 @@ public class JEICompat implements IModPlugin {
     private static boolean cachedInfoAdd = false;
 
     public static Map<ResourceLocation, Recipe<?>> overrides = new HashMap<>();
+
+    public static mezz.jei.api.recipe.RecipeType<CampfireDefrostRecipe> CampfireDefrost = new mezz.jei.api.recipe.RecipeType<>(CampfireDefrostCategory.UID, CampfireDefrostRecipe.class);
+    public static mezz.jei.api.recipe.RecipeType<ChargerRecipe> Charger = new mezz.jei.api.recipe.RecipeType<>(ChargerCategory.UID, ChargerRecipe.class);
+    public static mezz.jei.api.recipe.RecipeType<SmokingRecipe> ChargerCooking = new mezz.jei.api.recipe.RecipeType<>(ChargerCookingCategory.UID, SmokingRecipe.class);
+    public static mezz.jei.api.recipe.RecipeType<CampfireDefrostRecipe> ChargerDefrost = new mezz.jei.api.recipe.RecipeType<>(ChargerDefrostCategory.UID, CampfireDefrostRecipe.class);
+    public static mezz.jei.api.recipe.RecipeType<CuttingRecipe> Cutting = new mezz.jei.api.recipe.RecipeType<>(CuttingCategory.UID, CuttingRecipe.class);
+    public static mezz.jei.api.recipe.RecipeType<GeneratorRecipe> GeneratorFuel = new mezz.jei.api.recipe.RecipeType<>(GeneratorFuelCategory.UID, GeneratorRecipe.class);
+    public static mezz.jei.api.recipe.RecipeType<GeneratorSteamRecipe> GeneratorSteam = new mezz.jei.api.recipe.RecipeType<>(GeneratorSteamCategory.UID, GeneratorSteamRecipe.class);
+    public static mezz.jei.api.recipe.RecipeType<IncubateRecipe> Incubator = new mezz.jei.api.recipe.RecipeType<>(IncubatorCategory.UID, IncubateRecipe.class);
+    public static mezz.jei.api.recipe.RecipeType<SaunaRecipe> Sauna = new mezz.jei.api.recipe.RecipeType<>(SaunaCategory.UID, SaunaRecipe.class);
+    public static mezz.jei.api.recipe.RecipeType<SmokingDefrostRecipe> SmokingDefrost = new mezz.jei.api.recipe.RecipeType<>(SmokingDefrostCategory.UID, SmokingDefrostRecipe.class);
+
+
+
+
+
+
+
+
 
     private static Map<Item, List<IngredientInfoRecipe<ItemStack>>> infos = new HashMap<>();
     public static Map<Item, Map<String,Component>> research=new HashMap<>();
@@ -135,7 +151,7 @@ public class JEICompat implements IModPlugin {
         cachedInfoAdd = false;
         Set<Item> items = new HashSet<>();
         for (Recipe<?> i : ResearchListeners.recipe) {
-            ItemStack out = i.getResultItem();
+            ItemStack out = i.getResultItem(null);
             if (out != null && !out.isEmpty()) {
                 items.add(out.getItem());
             }
@@ -155,7 +171,7 @@ public class JEICompat implements IModPlugin {
 
         for (Item i : items) {
             List<IngredientInfoRecipe<ItemStack>> il = IngredientInfoRecipe.create(ImmutableList.of(new ItemStack(i)),
-                    VanillaTypes.ITEM, it);
+                    VanillaTypes.ITEM_STACK, it);
             il.forEach(r -> man.addRecipe(r, VanillaRecipeCategoryUid.INFORMATION));
 
             infos.put(i, il);
@@ -210,7 +226,7 @@ public class JEICompat implements IModPlugin {
                 all.addAll(hs);
             }
             //System.out.println(i.getType().toString()+":"+String.join(",",all.stream().map(Object::toString).collect(Collectors.toList())));
-            ItemStack irs = i.getResultItem();
+            ItemStack irs = i.getResultItem(null);
             Recipe<?> ovrd = overrides.get(i.getId());
             if (!ClientResearchDataAPI.getData().crafting.has(i)) {
                 for (ResourceLocation rl : all) {
@@ -249,9 +265,9 @@ public class JEICompat implements IModPlugin {
         }
         for (Entry<Item, List<IngredientInfoRecipe<ItemStack>>> entry : infos.entrySet()) {
             if (locked.contains(entry.getKey()) || !unlocked.contains(entry.getKey())) {
-                entry.getValue().forEach(r -> man.unhideRecipe(r, VanillaRecipeCategoryUid.INFORMATION));
+                entry.getValue().forEach(r -> man.unhideRecipe(r, RecipeTypes.INFORMATION));
             } else {
-                entry.getValue().forEach(r -> man.hideRecipe(r, VanillaRecipeCategoryUid.INFORMATION));
+                entry.getValue().forEach(r -> man.hideRecipe(r, RecipeTypes.INFORMATION));
             }
         }
         for (ResourceLocation rl : ResearchListeners.categories) {
@@ -287,9 +303,9 @@ public class JEICompat implements IModPlugin {
         man = jeiRuntime.getRecipeManager();
         jei = jeiRuntime;
         syncJEI();
-        man.hideRecipeCategory(VanillaRecipeCategoryUid.BLASTING);
-        man.hideRecipeCategory(VanillaRecipeCategoryUid.SMOKING);
-        man.hideRecipeCategory(VanillaRecipeCategoryUid.FURNACE);
+        man.hideRecipeCategory(RecipeTypes.BLASTING);
+        man.hideRecipeCategory(RecipeTypes.SMOKING);
+        man.hideRecipeCategory(RecipeTypes.SMELTING);
 
     }
     @Override
@@ -309,7 +325,7 @@ public class JEICompat implements IModPlugin {
 				List<IGuiClickableArea> col=new ArrayList<>(2);
 				MasterGeneratorContainer<?> container=containerScreen.getMenu();
 				if(container.getTank()!=null)
-					col.add(IGuiClickableArea.createBasic(98, 84, 34, 4, GeneratorSteamCategory.UID));
+					col.add(IGuiClickableArea.createBasic(98, 84, 34, 4, GeneratorSteam));
 				Point in=container.getSlotIn();
 				Point out=container.getSlotOut();
 				int ininvarry=in.getY()+6;
@@ -318,27 +334,27 @@ public class JEICompat implements IModPlugin {
 				int outinvarrx=98;
 				int inarryl=76-ininvarrx;
 				int outarryl=out.getX()-2-outinvarrx;
-				col.add(IGuiClickableArea.createBasic(ininvarrx,ininvarry, inarryl, 4, GeneratorSteamCategory.UID));
-				col.add(IGuiClickableArea.createBasic(outinvarrx,outinvarry, outarryl, 4, GeneratorSteamCategory.UID));
+				col.add(IGuiClickableArea.createBasic(ininvarrx,ininvarry, inarryl, 4, GeneratorSteam));
+				col.add(IGuiClickableArea.createBasic(outinvarrx,outinvarry, outarryl, 4, GeneratorSteam));
 				return col;
 			}
 		});
-        registry.addRecipeClickArea(IncubatorT1Screen.class, 80, 28, 32, 29, IncubatorCategory.UID);
-        registry.addRecipeClickArea(IncubatorT2Screen.class, 107, 28, 14, 29, IncubatorCategory.UID);
+        registry.addRecipeClickArea(IncubatorT1Screen.class, 80, 28, 32, 29, Incubator);
+        registry.addRecipeClickArea(IncubatorT2Screen.class, 107, 28, 14, 29, Incubator);
     }
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.generator), GeneratorFuelCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.generator_t2), GeneratorFuelCategory.UID,
-                GeneratorSteamCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHBlocks.charger.get()), ChargerCategory.UID, ChargerCookingCategory.UID,
-                ChargerDefrostCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(Blocks.CAMPFIRE), CampfireDefrostCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(Blocks.SMOKER), SmokingDefrostCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHBlocks.sauna.get()), SaunaCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHBlocks.incubator1.get()), IncubatorCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHBlocks.incubator2.get()), IncubatorCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.generator), CampfireDefrost);
+        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.generator_t2), GeneratorFuel,
+                GeneratorSteam);
+        registration.addRecipeCatalyst(new ItemStack(FHBlocks.charger.get()), Charger, ChargerCooking,
+                ChargerDefrost);
+        registration.addRecipeCatalyst(new ItemStack(Blocks.CAMPFIRE), CampfireDefrost);
+        registration.addRecipeCatalyst(new ItemStack(Blocks.SMOKER), SmokingDefrost);
+        registration.addRecipeCatalyst(new ItemStack(FHBlocks.sauna.get()), Sauna);
+        registration.addRecipeCatalyst(new ItemStack(FHBlocks.incubator1.get()), Incubator);
+        registration.addRecipeCatalyst(new ItemStack(FHBlocks.incubator2.get()), Incubator);
     }
 
     @Override
@@ -346,29 +362,28 @@ public class JEICompat implements IModPlugin {
         ClientLevel world = Minecraft.getInstance().level;
         checkNotNull(world, "minecraft world");
         RecipeManager recipeManager = world.getRecipeManager();
-        CuttingCategory.matching = RegistryUtils.getItems().stream()
-                .filter(e -> e.getTags().contains(CuttingCategory.ktag)).collect(Collectors.toList());
+//        CuttingCategory.matching = RegistryUtils.getItems().stream()
+//                .filter(e -> e.getTag().contains(CuttingCategory.ktag)).collect(Collectors.toList());
 
-        registration.addRecipes(FHUtils.filterRecipes(recipeManager,GeneratorRecipe.TYPE), GeneratorFuelCategory.UID);
-        registration.addRecipes(GeneratorSteamRecipe.recipeList.values(), GeneratorSteamCategory.UID);
-        registration.addRecipes(FHUtils.filterRecipes(recipeManager,ChargerRecipe.TYPE), ChargerCategory.UID);
-        registration.addRecipes(recipeManager.getAllRecipesFor(RecipeType.SMOKING), ChargerCookingCategory.UID);
-        registration.addRecipes(CampfireDefrostRecipe.recipeList.values(),
-                CampfireDefrostCategory.UID);
+        registration.addRecipes(GeneratorFuel,FHUtils.filterRecipes(recipeManager,GeneratorRecipe.TYPE.get()));
+        registration.addRecipes(GeneratorSteam,GeneratorSteamRecipe.recipeList.values().stream().toList());
+        registration.addRecipes(Charger,FHUtils.filterRecipes(recipeManager,ChargerRecipe.TYPE.get()));
+        registration.addRecipes(ChargerCooking,recipeManager.getAllRecipesFor(RecipeType.SMOKING));
+        registration.addRecipes(CampfireDefrost,CampfireDefrostRecipe.recipeList.values().stream().toList());
  
-        registration.addRecipes(FHUtils.filterRecipes(recipeManager,RecipeType.SMOKING).stream()
-            .filter(iRecipe -> iRecipe.getClass() == SmokingDefrostRecipe.class).collect(Collectors.toList()), SmokingDefrostCategory.UID);
-        registration.addRecipes(CampfireDefrostRecipe.recipeList.values(), ChargerDefrostCategory.UID);
-        registration.addRecipes(Arrays.asList(
+        registration.addRecipes(SmokingDefrost,FHUtils.filterRecipes(recipeManager,SmokingDefrostRecipe.TYPE.get()).stream()
+            .filter(iRecipe -> iRecipe.getClass() == SmokingDefrostRecipe.class).collect(Collectors.toList()));
+        registration.addRecipes(ChargerDefrost,CampfireDefrostRecipe.recipeList.values().stream().toList());
+        registration.addRecipes(Cutting,Arrays.asList(
                         new CuttingRecipe(FHUtils.Damage(new ItemStack(FHItems.red_mushroombed.get()), 0),
                                 new ItemStack(Items.RED_MUSHROOM, 10)),
                         new CuttingRecipe(FHUtils.Damage(new ItemStack(FHItems.brown_mushroombed.get()), 0),
-                                new ItemStack(Items.BROWN_MUSHROOM, 10))),
-                CuttingCategory.UID);
-        registration.addRecipes(FHUtils.filterRecipes(recipeManager,SaunaRecipe.TYPE), SaunaCategory.UID);
-        List<IncubateRecipe> rcps = new ArrayList<>(FHUtils.filterRecipes(recipeManager,IncubateRecipe.TYPE));
+                                new ItemStack(Items.BROWN_MUSHROOM, 10)))
+                );
+        registration.addRecipes(Sauna,FHUtils.filterRecipes(recipeManager,SaunaRecipe.TYPE.get()));
+        List<IncubateRecipe> rcps = new ArrayList<>(FHUtils.filterRecipes(recipeManager,IncubateRecipe.TYPE.get()));
         rcps.add(new IncubateRecipe());
-        registration.addRecipes(rcps, IncubatorCategory.UID);
+        registration.addRecipes(Incubator,rcps);
     }
 
 

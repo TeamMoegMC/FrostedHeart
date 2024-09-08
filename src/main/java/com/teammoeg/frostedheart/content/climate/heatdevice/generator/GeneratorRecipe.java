@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.FHMultiblocks;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -74,7 +75,7 @@ public class GeneratorRecipe extends IESerializableRecipe {
 			return super.fromJson(recipeId, serializedRecipe);
 		}
     }
-    public static RegistryObject<RecipeType<Recipe<?>>> TYPE;
+    public static RegistryObject<RecipeType<GeneratorRecipe>> TYPE;
 
     public static RegistryObject<IERecipeSerializer<GeneratorRecipe>> SERIALIZER;
     public final IngredientWithSize input;

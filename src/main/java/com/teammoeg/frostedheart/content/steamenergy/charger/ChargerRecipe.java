@@ -66,7 +66,7 @@ public class ChargerRecipe extends IESerializableRecipe {
             buffer.writeFloat(recipe.cost);
         }
     }
-    public static RegistryObject<RecipeType<Recipe<?>>> TYPE;
+    public static RegistryObject<RecipeType<ChargerRecipe>> TYPE;
 
     public static RegistryObject<IERecipeSerializer<ChargerRecipe>> SERIALIZER;
     public final IngredientWithSize input;

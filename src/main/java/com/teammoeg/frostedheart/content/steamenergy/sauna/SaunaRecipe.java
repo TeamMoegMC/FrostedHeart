@@ -98,7 +98,7 @@ public class SaunaRecipe extends IESerializableRecipe {
         }
 
     }
-    public static RegistryObject<RecipeType<Recipe<?>>> TYPE;
+    public static RegistryObject<RecipeType<SaunaRecipe>> TYPE;
     public static RegistryObject<IERecipeSerializer<SaunaRecipe>> SERIALIZER;
     public final Ingredient input;
     public final int time;

@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.base.block;
 
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.FHUtils;
 
@@ -26,7 +28,7 @@ import blusunrize.immersiveengineering.common.blocks.IEMultiblockBlock;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
+
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -46,7 +48,7 @@ public class FHStoneMultiblockBlock<T extends MultiblockPartTileEntity<? super T
     }
 
     public FHStoneMultiblockBlock(String name, RegistryObject<BlockEntityType<T>> type) {
-        super(name, Properties.of(Material.STONE).strength(2.0F, 20.0F).noOcclusion().lightLevel(FHUtils.getLightValueLit(15)), type);
+        super(name, Properties.of().strength(2.0F, 20.0F).noOcclusion().lightLevel(FHUtils.getLightValueLit(15)), type);
         this.lightOpacity = 0;
         this.registerDefaultState(this.stateDefinition.any().setValue(LIT, Boolean.FALSE));
     }

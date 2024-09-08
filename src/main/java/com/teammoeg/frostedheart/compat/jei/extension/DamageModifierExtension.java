@@ -19,16 +19,15 @@
 
 package com.teammoeg.frostedheart.compat.jei.extension;
 
-import java.util.Arrays;
-import java.util.Collections;
-
 import com.teammoeg.frostedheart.recipes.ModifyDamageRecipe;
-
-import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
+import mezz.jei.api.gui.ingredient.ICraftingGridHelper;
+import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.category.extensions.vanilla.crafting.ICraftingCategoryExtension;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.Arrays;
 
 public class DamageModifierExtension implements ICraftingCategoryExtension {
     ModifyDamageRecipe fuel;
@@ -38,12 +37,7 @@ public class DamageModifierExtension implements ICraftingCategoryExtension {
     }
 
     @Override
-    public ResourceLocation getRegistryName() {
-        return fuel.getId();
-    }
-
-    @Override
-    public void setIngredients(IIngredients ingredients) {
+    public void setRecipe(IRecipeLayoutBuilder iRecipeLayoutBuilder, ICraftingGridHelper iCraftingGridHelper, IFocusGroup iFocusGroup) {
         ItemStack[] orig = fuel.tool.getItems();
         ItemStack[] copy = new ItemStack[orig.length];
         ItemStack[] out = new ItemStack[orig.length];
@@ -58,8 +52,33 @@ public class DamageModifierExtension implements ICraftingCategoryExtension {
                 out[i].setDamageValue(fuel.modify);
             }
         }
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(copy), Arrays.asList(fuel.repair.getItems())));
-        ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(out)));
+        iCraftingGridHelper.createAndSetInputs(iRecipeLayoutBuilder, Arrays.asList(Arrays.asList(copy), Arrays.asList(fuel.repair.getItems())), 3, 3);
+        iCraftingGridHelper.createAndSetOutputs(iRecipeLayoutBuilder, Arrays.asList(out));
     }
+
+    @Override
+    public ResourceLocation getRegistryName() {
+        return fuel.getId();
+    }
+
+//    @Override
+//    public void setIngredients(IIngredients ingredients) {
+//        ItemStack[] orig = fuel.tool.getItems();
+//        ItemStack[] copy = new ItemStack[orig.length];
+//        ItemStack[] out = new ItemStack[orig.length];
+//        for (int i = 0; i < orig.length; i++) {
+//            copy[i] = orig[i].copy();
+//            out[i] = orig[i].copy();
+//            if (fuel.modify > 0) {
+//                copy[i].setDamageValue(fuel.modify);
+//                out[i].setDamageValue(0);
+//            } else {
+//                copy[i].setDamageValue(0);
+//                out[i].setDamageValue(fuel.modify);
+//            }
+//        }
+//        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(copy), Arrays.asList(fuel.repair.getItems())));
+//        ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(out)));
+//    }
 
 }

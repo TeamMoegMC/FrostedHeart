@@ -96,7 +96,7 @@ public class IncubateRecipe extends IESerializableRecipe {
             buffer.writeVarInt(recipe.time);
         }
     }
-    public static RegistryObject<RecipeType<Recipe<?>>> TYPE;
+    public static RegistryObject<RecipeType<IncubateRecipe>> TYPE;
 
     public static RegistryObject<Serializer> SERIALIZER;
     public IngredientWithSize input;

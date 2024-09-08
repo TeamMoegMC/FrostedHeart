@@ -23,11 +23,7 @@ import java.util.Random;
 
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.item.crafting.CookingBookCategory;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.SmokingRecipe;
+import net.minecraft.world.item.crafting.*;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -49,6 +45,7 @@ public class SmokingDefrostRecipe extends SmokingRecipe implements DefrostRecipe
         }
 
     }
+    public static RegistryObject<RecipeType<SmokingDefrostRecipe>> TYPE;
     public static RegistryObject<RecipeSerializer<SmokingDefrostRecipe>> SERIALIZER;
 
     ItemStack[] iss;
