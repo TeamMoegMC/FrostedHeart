@@ -32,11 +32,15 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+
 import com.mojang.blaze3d.vertex.BufferBuilder;
 
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.network.chat.Component;
+
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 
@@ -62,7 +66,12 @@ public class FHGuiHelper {
 
     public static final RenderType BOLD_LINE_TYPE = RenderType.create("fh_line_bold",
             DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.LINES, 128, false,false,RenderStateAccess.getLineState(4));
-
+    public static void drawTextShadow(GuiGraphics guiGraphics,Component text,Point point,int color) {
+    	guiGraphics.drawString(Minecraft.getInstance().font,text, point.getX(), point.getY() , color);
+    }
+    public static void drawTextShadow(GuiGraphics guiGraphics,String text,Point point,int color) {
+    	guiGraphics.drawString(Minecraft.getInstance().font,text, point.getX(), point.getY() , color);
+    }
     private static void drawVertexLine(Matrix4f mat, VertexConsumer renderBuffer, Color4I color, int startX, int startY,
                                  int endX, int endY,float z) {
     	//RenderSystem.disableTexture();

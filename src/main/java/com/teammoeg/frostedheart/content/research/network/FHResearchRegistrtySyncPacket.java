@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.content.research.FHResearch;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 // send when player join
 public class FHResearchRegistrtySyncPacket extends NBTMessage {

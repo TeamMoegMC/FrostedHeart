@@ -33,7 +33,7 @@ import net.minecraft.network.chat.TranslatableComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 public class FHTemperatureDisplayPacket implements FHMessage {
     private final int[] temp;

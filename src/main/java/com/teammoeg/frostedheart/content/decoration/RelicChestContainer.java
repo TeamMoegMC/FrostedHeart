@@ -19,25 +19,26 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
-import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
+import com.teammoeg.frostedheart.FHBaseContainer;
+import com.teammoeg.frostedheart.FHContainer;
+
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 
-public class RelicChestContainer extends IEBaseContainer<RelicChestTileEntity> {
+public class RelicChestContainer extends FHBaseContainer<RelicChestTileEntity> {
     public RelicChestContainer(int id, Inventory inventoryPlayer, RelicChestTileEntity tile) {
-        super(tile, id);
+        super(FHContainer.RELIC_CHEST.get(), tile, id, 15);
 
         for (int j = 0; j < 3; ++j) {
             for (int k = 0; k < 5; ++k) {
-                this.addSlot(new Slot(this.inv, k + j * 5, 44 + k * 18, 19 + j * 18));
+                this.addSlot(new Slot(tile, k + j * 5, 44 + k * 18, 19 + j * 18));
             }
         }
-        for (int i = 0; i < 3; i++)
-            for (int j = 0; j < 9; j++)
-                addSlot(new Slot(inventoryPlayer, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
-        for (int i = 0; i < 9; i++)
-            addSlot(new Slot(inventoryPlayer, i, 8 + i * 18, 142));
-        this.slotCount = 15;
-        this.tile = tile;
     }
+
+	@Override
+	public boolean quickMoveIn(ItemStack slotStack) {
+		return true;
+	}
 }

@@ -32,19 +32,23 @@ import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
+import blusunrize.immersiveengineering.common.register.IEMenuTypes.ArgContainer;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteractionObjectIE, IIEInventory {
+public class DrawingDeskTileEntity extends IEBaseBlockEntity implements IInteractionObjectIE<DrawingDeskTileEntity>, IIEInventory {
     public static final int INK_SLOT = 2;
     public static final int PAPER_SLOT = 1;
     public static final int EXAMINE_SLOT = 0;
@@ -53,8 +57,8 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
     protected NonNullList<ItemStack> inventory = NonNullList.withSize(3, ItemStack.EMPTY);
     ResearchGame game = new ResearchGame();
 
-    public DrawingDeskTileEntity() {
-        super(FHTileTypes.DRAWING_DESK.get());
+    public DrawingDeskTileEntity(BlockPos pos,BlockState state) {
+        super(FHTileTypes.DRAWING_DESK.get(), pos, state);
     }
 
     @Override
@@ -79,7 +83,7 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
     }
 
     @Override
-    public IInteractionObjectIE getGuiMaster() {
+    public DrawingDeskTileEntity getGuiMaster() {
         return this;
     }
 
@@ -181,5 +185,10 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
             ContainerHelper.saveAllItems(nbt, inventory);
         }
     }
+
+	@Override
+	public ArgContainer<? super DrawingDeskTileEntity, ?> getContainerType() {
+		return null;
+	}
 
 }

@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 public class FHClimatePacket implements FHMessage {
     private final short[] data;

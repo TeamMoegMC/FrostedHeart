@@ -36,7 +36,7 @@ import net.minecraft.network.protocol.login.ClientboundLoginDisconnectPacket;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.fml.network.FMLHandshakeHandler;
 import net.minecraftforge.fml.network.FMLHandshakeMessages;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 @Mixin(FMLHandshakeHandler.class)
 public class FMLHandshakeAntiCheatMixin {
