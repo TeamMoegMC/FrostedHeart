@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.util.TranslateUtils;
@@ -62,7 +62,7 @@ class HelpPanel extends Panel {
         add(t5);
         Button closePanel = new Button(this) {
             @Override
-            public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+            public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             }
 
             @Override
@@ -79,7 +79,7 @@ class HelpPanel extends Panel {
     }
 
     @Override
-    public void draw(PoseStack arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
+    public void draw(GuiGraphics arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
         if (ot.showHelp) {
 
             super.draw(arg0, arg1, arg2, arg3, arg4, arg5);
@@ -89,7 +89,7 @@ class HelpPanel extends Panel {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         DrawDeskIcons.HELP.draw(matrixStack, x, y, w, h);
     }
 

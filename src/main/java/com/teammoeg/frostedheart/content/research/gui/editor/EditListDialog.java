@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
@@ -63,7 +63,7 @@ public class EditListDialog<T> extends EditDialog {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             boolean mouseOver = getMouseY() >= 20 && isMouseOver();
 
             if (mouseOver) {
@@ -107,7 +107,7 @@ public class EditListDialog<T> extends EditDialog {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             boolean mouseOver = getMouseY() >= 20 && isMouseOver();
             int ioffset = 0;
             if (toicon != null) {
@@ -236,7 +236,7 @@ public class EditListDialog<T> extends EditDialog {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         theme.drawGui(matrixStack, x, y, w, h, WidgetType.NORMAL);
 
         theme.drawString(matrixStack, getTitle(), x, y - 10);

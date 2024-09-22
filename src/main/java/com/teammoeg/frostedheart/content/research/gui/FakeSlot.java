@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui;
 
 import java.util.function.Consumer;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -77,16 +77,18 @@ public class FakeSlot extends Widget {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         if (i == null) return;
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         GuiHelper.setupDrawing();
-        matrixStack.pushPose();
-        matrixStack.translate(0, 0, 100);
-        GuiHelper.drawItem(matrixStack, cur, x, y, w / 16F, h / 16F, true, null);
+        matrixStack.pose().pushPose();
+        matrixStack.pose().translate(0, 0, 100);
+
+        //GuiHelper.drawItem(matrixStack, cur, x, y, w / 16F, h / 16F, true, null);
+        
         if (cnt != 1) {
-            matrixStack.pushPose();
-            matrixStack.translate(0, 0, 100);
+            matrixStack.pose().pushPose();
+            matrixStack.pose().translate(0, 0, 100);
             int dx = 5;
             if (cnt >= 10)
                 dx = 0;

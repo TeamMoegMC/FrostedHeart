@@ -29,9 +29,11 @@ import com.teammoeg.frostedheart.FHBlocks;
 import blusunrize.immersiveengineering.api.IEProperties.IEObjState;
 import blusunrize.immersiveengineering.api.IEProperties.Model;
 import blusunrize.immersiveengineering.api.IEProperties.VisibilityList;
+import blusunrize.immersiveengineering.client.models.obj.callback.DynamicSubmodelCallbacks;
 import blusunrize.immersiveengineering.client.render.tile.DynamicModel;
 import blusunrize.immersiveengineering.client.utils.RenderUtils;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.client.model.data.ModelData;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -39,12 +41,13 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 import net.minecraft.core.BlockPos;
 
 public class MechCalcRenderer implements BlockEntityRenderer<MechCalcTileEntity> {
-    //public static DynamicModel<Direction> MODEL;
-    public static IEObjState drum = new IEObjState(VisibilityList.show("c7"));
-    public static IEObjState register = new IEObjState(VisibilityList.show("c6"));
+    public static DynamicModel MODEL;
+    public static VisibilityList drum = VisibilityList.show("c7");
+    public static VisibilityList register = VisibilityList.show("c6");
 
     public MechCalcRenderer(BlockEntityRendererProvider.Context rendererDispatcherIn) {
     }
@@ -56,11 +59,14 @@ public class MechCalcRenderer implements BlockEntityRenderer<MechCalcTileEntity>
         BlockState state = te.getLevel().getBlockState(blockPos);
         if (state.getBlock() != FHBlocks.mech_calc.get())
             return;
-        matrixStack.pushPose();
         Direction rd = te.getDirection().getClockWise();
+       
+        matrixStack.pushPose();
+        matrixStack.rotateAround(new Quaternionf().rotateY(te.getDirection().toYRot()/180F*Mth.PI), 0.5f, 0.5f, 0.5f);
         double forward = ((double) te.process / 1067) / 16d;
         matrixStack.translate(rd.getStepX() * forward, 0, rd.getStepZ() * forward);
-        List<BakedQuad> quads = MODEL.getNullQuads(te.getDirection(), state, new SinglePropertyModelData<>(register, Model.IE_OBJ_STATE));
+        
+        List<BakedQuad> quads = MODEL.getNullQuads(ModelData.builder().with(DynamicSubmodelCallbacks.getProperty(), register).build());
         RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
         matrixStack.popPose();
         Direction fw = te.getDirection();
@@ -81,16 +87,16 @@ public class MechCalcRenderer implements BlockEntityRenderer<MechCalcTileEntity>
                 dx = -1;
                 break;
         }
-        matrixStack.mulPose(new Quaternionf(new AxisAngle4d((deg*Math.PI/180f),0f, 1f, 0f)));
+        matrixStack.mulPose(new Quaternionf().rotateY(deg*Mth.PI/180f));
         matrixStack.translate(dx, 0, dz);
 
         matrixStack.translate(0, 13.75 / 16, 7d / 16);
         float rotn = ((te.process) % 160) * 2.25f;
-        Quaternionf rot = new Quaternionf(new AxisAngle4d((rotn*Math.PI/180f),1f, 0f, 0f));
+        Quaternionf rot = new Quaternionf().rotateX((rotn*Mth.PI/180f));
         matrixStack.mulPose(rot);
 
         matrixStack.translate(0, -1.5 / 16, -1.5 / 16);
-        quads = MODEL.getNullQuads(Direction.NORTH, state, new SinglePropertyModelData<>(drum, Model.IE_OBJ_STATE));
+        quads = MODEL.getNullQuads(ModelData.builder().with(DynamicSubmodelCallbacks.getProperty(), drum).build());
         RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
         matrixStack.popPose();
     }

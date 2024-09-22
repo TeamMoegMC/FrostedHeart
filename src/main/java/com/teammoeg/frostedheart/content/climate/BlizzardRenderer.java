@@ -27,6 +27,8 @@ import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import net.minecraft.client.renderer.LightTexture;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat.Mode;
+
 import net.minecraft.client.renderer.LevelRenderer;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -68,12 +70,13 @@ public class BlizzardRenderer {
 
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuilder();
-        RenderSystem.enableAlphaTest();
+       
+        //RenderSystem.enableAlphaTest();
         RenderSystem.disableCull();
-        RenderSystem.normal3f(0.0F, 1.0F, 0.0F);
+        //RenderSystem.normal3f(0.0F, 1.0F, 0.0F);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.defaultAlphaFunc();
+        //RenderSystem.defaultAlphaFunc();
         RenderSystem.enableDepthTest();
 
         // The blizzard will be rendered in the block range
@@ -85,7 +88,7 @@ public class BlizzardRenderer {
 
         int i1 = -1;
         float ticksAndPartialTicks = ticks + partialTicks;
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        //RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
         Random random = new Random(
                 (long) cameraBlockPosX * cameraBlockPosX * 3121
@@ -121,8 +124,8 @@ public class BlizzardRenderer {
 
                         i1 = 1;
                         mc.getTextureManager()
-                                .bind(new ResourceLocation("minecraft:textures/environment/snow.png"));
-                        bufferBuilder.begin(7, DefaultVertexFormat.PARTICLE);
+                                .bindForSetup(new ResourceLocation("minecraft:textures/environment/snow.png"));
+                        bufferBuilder.begin(Mode.QUADS, DefaultVertexFormat.PARTICLE);
                     }
 
                     float f7 = (float) (random.nextDouble()
@@ -182,8 +185,8 @@ public class BlizzardRenderer {
 
         RenderSystem.enableCull();
         RenderSystem.disableBlend();
-        RenderSystem.defaultAlphaFunc();
-        RenderSystem.disableAlphaTest();
+       //RenderSystem.defaultAlphaFunc();
+        //RenderSystem.disableAlphaTest();
         lightTexture.turnOffLightLayer();
     }
 

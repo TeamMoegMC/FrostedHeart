@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
@@ -44,7 +44,7 @@ public abstract class TechButton extends Button {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         GuiHelper.setupDrawing();
 
         TechIcons.drawTexturedRect(matrixStack, x, y, w, h, isMouseOver());

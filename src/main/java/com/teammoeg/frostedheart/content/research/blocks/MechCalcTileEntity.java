@@ -33,6 +33,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.sounds.SoundSource;
@@ -55,8 +56,8 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
 
     int ticsSlp;//ticks since last sound play
 
-    public MechCalcTileEntity() {
-        super(FHTileTypes.MECH_CALC.get());
+    public MechCalcTileEntity(BlockPos pos,BlockState state) {
+        super(FHTileTypes.MECH_CALC.get(), pos, state);
     }
 
     @Override
@@ -96,8 +97,8 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
     }
 
     @Override
-    protected void fromTag(BlockState state, CompoundTag tag, boolean client) {
-        super.fromTag(state, tag, client);
+    protected void read(CompoundTag tag, boolean client) {
+    	super.read(tag, client);
         process = tag.getInt("process");
         currentPoints = tag.getInt("pts");
         lastact = tag.getInt("last_calc");
@@ -114,11 +115,11 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
     }
 
     public InteractionResult onClick(Player pe) {
-        if (!pe.level.isClientSide) {
+        if (!pe.level().isClientSide) {
             currentPoints = (int) ResearchDataAPI.getData(pe).doResearch(currentPoints);
             updatePoints();
         }
-        return InteractionResult.sidedSuccess(pe.level.isClientSide);
+        return InteractionResult.sidedSuccess(pe.level().isClientSide);
     }
 
     @Override
@@ -131,10 +132,7 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
         requireUpdate = true;
     }
 
-    @Override
-    public boolean shouldRenderNormally() {
-        return true;
-    }
+
 
     @Override
     public void tick() {

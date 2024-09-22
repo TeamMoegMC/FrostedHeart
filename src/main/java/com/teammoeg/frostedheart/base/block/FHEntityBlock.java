@@ -31,14 +31,18 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-public interface FHEntityBlock extends EntityBlock {
+public interface FHEntityBlock<B extends BlockEntity> extends EntityBlock {
 	@Override
 	public default BlockEntity newBlockEntity(BlockPos p, BlockState s) {
-		return getBlock().get().create(p, s);
+		if(hasTileEntity(s))
+			return getBlock().get().create(p, s);
+		return null;
 	}
 
-	Supplier<BlockEntityType<?>> getBlock();
-
+	Supplier<BlockEntityType<B>> getBlock();
+	public default boolean hasTileEntity(BlockPos p,BlockState state) {
+		return true;
+	}
 	@Override
 	public default <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level pLevel, BlockState pState,
 			BlockEntityType<T> pBlockEntityType) {

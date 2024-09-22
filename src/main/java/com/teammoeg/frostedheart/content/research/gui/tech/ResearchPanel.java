@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.FHRegistrate;
 import com.teammoeg.frostedheart.content.research.FHRegistry;
 import com.teammoeg.frostedheart.content.research.FHResearch;
@@ -132,18 +132,18 @@ public abstract class ResearchPanel extends Panel {
     }
 
     @Override
-    public void draw(PoseStack arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
+    public void draw(GuiGraphics arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
         if (enabled)
             super.draw(arg0, arg1, arg2, arg3, arg4, arg5);
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         TechIcons.Background.draw(matrixStack, x, y, w, h);
     }
 
     @Override
-    public void drawWidget(PoseStack arg0, Theme arg1, Widget arg2, int arg3, int arg4, int arg5, int arg6,
+    public void drawWidget(GuiGraphics arg0, Theme arg1, Widget arg2, int arg3, int arg4, int arg5, int arg6,
                            int arg7) {
         GuiHelper.setupDrawing();
         super.drawWidget(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);

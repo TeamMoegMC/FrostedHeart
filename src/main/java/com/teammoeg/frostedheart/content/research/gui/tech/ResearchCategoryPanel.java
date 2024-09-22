@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
 
@@ -50,7 +50,7 @@ public class ResearchCategoryPanel extends Panel {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
 
             //theme.drawHorizontalTab(matrixStack, x, y, w, h,categoryPanel.researchScreen.selectedCategory==category);
 
@@ -97,7 +97,7 @@ public class ResearchCategoryPanel extends Panel {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         super.draw(matrixStack, theme, x, y, w, h);
         //drawBackground(matrixStack, theme, x, y, w, h);
     }

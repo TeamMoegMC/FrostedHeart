@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import java.util.List;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
@@ -57,7 +57,7 @@ public class EffectWidget extends Widget {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         GuiHelper.setupDrawing();
         TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
         icon.draw(matrixStack, x, y, w, h);

@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui;
 
 import java.util.List;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -65,7 +65,7 @@ public class RTextField extends Widget {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         //drawBackground(matrixStack, theme, x, y, w, h);
 
         if (formattedText.length != 0) {

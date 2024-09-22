@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui;
 
 import java.util.List;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.TranslateUtils;
@@ -39,7 +39,7 @@ public class ResearchToast implements Toast {
         this.r = r;
     }
 
-    public Toast.Visibility render(PoseStack matrixStack, ToastComponent gui, long time) {
+    public Toast.Visibility render(GuiGraphics matrixStack, ToastComponent gui, long time) {
         gui.getMinecraft().getTextureManager().bind(TEXTURE);
         RenderSystem.color3f(1.0F, 1.0F, 1.0F);
         gui.blit(matrixStack, 0, 0, 0, 0, this.width(), this.height());

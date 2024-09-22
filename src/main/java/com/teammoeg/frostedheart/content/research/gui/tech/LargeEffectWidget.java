@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 
@@ -47,7 +47,7 @@ public class LargeEffectWidget extends EffectWidget {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         GuiHelper.setupDrawing();
         TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
         icon.draw(matrixStack, x + 2, y + 2, w - 4, h - 4);

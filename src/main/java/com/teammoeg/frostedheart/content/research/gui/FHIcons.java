@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.gson.JsonElement;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.research.gui.editor.BaseEditDialog;
@@ -92,7 +92,7 @@ public class FHIcons {
         }
 
         @Override
-        public void draw(PoseStack ms, int x, int y, int w, int h) {
+        public void draw(GuiGraphics ms, int x, int y, int w, int h) {
             if (!icons.isEmpty()) {
                 GuiHelper.setupDrawing();
                 icons.get((int) ((System.currentTimeMillis() / 1000) % icons.size())).draw(ms, x, y, w, h);
@@ -115,7 +115,7 @@ public class FHIcons {
         }
 
         @Override
-        public void draw(PoseStack ms, int x, int y, int w, int h) {
+        public void draw(GuiGraphics ms, int x, int y, int w, int h) {
             GuiHelper.setupDrawing();
             if (large != null)
                 large.draw(ms, x, y, w, h);
@@ -140,7 +140,7 @@ public class FHIcons {
         }
 
         @Override
-        public void draw(PoseStack ms, int x, int y, int w, int h) {
+        public void draw(GuiGraphics ms, int x, int y, int w, int h) {
             GuiHelper.setupDrawing();
             TechIcons.internals.get(name).draw(ms, x, y, w, h);
         }
@@ -197,7 +197,7 @@ public class FHIcons {
         }
         
         @Override
-        public void draw(PoseStack matrixStack, int x, int y, int w, int h) {
+        public void draw(GuiGraphics matrixStack, int x, int y, int w, int h) {
         	//ItemRenderer itemRenderer=ClientUtils.mc().getItemRenderer();
         	/*
             itemRenderer.zLevel = 200.0F;
@@ -234,7 +234,7 @@ public class FHIcons {
         }
 
         @Override
-        public void draw(PoseStack ms, int x, int y, int w, int h) {
+        public void draw(GuiGraphics ms, int x, int y, int w, int h) {
         }
 
 
@@ -252,7 +252,7 @@ public class FHIcons {
         }
 
         @Override
-        public void draw(PoseStack ms, int x, int y, int w, int h) {
+        public void draw(GuiGraphics ms, int x, int y, int w, int h) {
 
             ms.pushPose();
             ms.translate(x, y, 0);
@@ -282,7 +282,7 @@ public class FHIcons {
         }
 
         @Override
-        public void draw(PoseStack ms, int x, int y, int w, int h) {
+        public void draw(GuiGraphics ms, int x, int y, int w, int h) {
             GuiHelper.setupDrawing();
             nested.draw(ms, x, y, w, h);
         }
@@ -319,7 +319,7 @@ public class FHIcons {
         }
 
         @Override
-        public void draw(PoseStack ms, int x, int y, int w, int h) {
+        public void draw(GuiGraphics ms, int x, int y, int w, int h) {
             GuiHelper.setupDrawing();
             if (nested != null)
                 nested.draw(ms, x, y, w, h);
@@ -489,7 +489,7 @@ public class FHIcons {
         }
 
         @Override
-        public void draw(PoseStack arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
+        public void draw(GuiGraphics arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
             super.draw(arg0, arg1, arg2, arg3, arg4, arg5);
             v.draw(arg0, arg2 + 300, arg3 + 20, 32, 32);
         }

@@ -19,20 +19,35 @@
 
 package com.teammoeg.frostedheart.base.item;
 
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.frostedheart.util.creativeTab.TabType;
+
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
-public class FHBlockItem extends BlockItem {
+public class FHBlockItem extends BlockItem implements ICreativeModeTabItem{
+	TabType tab;
     public FHBlockItem(Block block) {
-        this(block, new Item.Properties());
+        this(block, new Item.Properties(),FHMain.itemGroup);
+        
     }
-
     public FHBlockItem(Block block, Item.Properties props) {
+    	this(block, props,FHMain.itemGroup);
+    }
+    public FHBlockItem(Block block, Item.Properties props,TabType tab) {
         super(block, props);
+        this.tab=tab;
     }
 
-    public FHBlockItem(Block block, Item.Properties props, String name) {
-        this(block, new Item.Properties());
-    }
+
+	@Override
+	public void fillItemCategory(CreativeTabItemHelper helper) {
+		if(getBlock() instanceof ICreativeModeTabItem item)
+			item.fillItemCategory(helper);
+		else if(helper.isType(tab))
+			helper.accept(this);
+	}
 }

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechTextButton;
@@ -57,7 +57,7 @@ public class ResearchHierarchyPanel extends Panel {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, int x, int y) {
+        public void draw(GuiGraphics matrixStack, int x, int y) {
             if (doShow())
                 color = TechIcons.text;
             else
@@ -104,7 +104,7 @@ public class ResearchHierarchyPanel extends Panel {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             // this.drawBackground(matrixStack, theme, x, y, w, h);
             GuiHelper.setupDrawing();
             TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
@@ -141,7 +141,7 @@ public class ResearchHierarchyPanel extends Panel {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, int x, int y) {
+        public void draw(GuiGraphics matrixStack, int x, int y) {
             if (doShow())
                 color = TechIcons.text;
             else
@@ -177,7 +177,7 @@ public class ResearchHierarchyPanel extends Panel {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             GuiHelper.setupDrawing();
             TechIcons.SLOT.draw(matrixStack, x, y, w, h);
             if (FHResearch.editor || research.isShowable()) {
@@ -408,14 +408,14 @@ public class ResearchHierarchyPanel extends Panel {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         super.draw(matrixStack, theme, x, y, w, h);
         theme.drawString(matrixStack, TranslateUtils.translateGui("research_hierarchy"), x + 3, y + 3, TechIcons.text, 0);
         TechIcons.HLINE_L.draw(matrixStack, x + 1, y + 13, 80, 3);
     }
 
     @Override
-    public void drawOffsetBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawOffsetBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         // theme.drawPanelBackground(matrixStack, x, y, w, h);
         GuiHelper.setupDrawing();
         for (ThickLine l : lines)

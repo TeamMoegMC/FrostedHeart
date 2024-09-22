@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardStat;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.ClientResearchGame;
@@ -39,7 +39,7 @@ public class OrderWidget extends Widget {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
 
         DrawDeskIcons.ORDER_FRAME.draw(matrixStack, x, y, 16, 16);
         if (cardstate != 0) {

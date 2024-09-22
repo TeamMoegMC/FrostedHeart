@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.research.gui;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.FHMain;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -75,7 +75,7 @@ public class TechIcons {
         internals.put("inf", INF);
     }
 
-    public static void drawTexturedRect(PoseStack matrixStack, int x, int y, int w, int h, boolean hl) {
+    public static void drawTexturedRect(GuiGraphics matrixStack, int x, int y, int w, int h, boolean hl) {
         int vw = w / 4;
         int vwr = w % 4;
         int vh = h / 4;

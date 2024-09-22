@@ -32,7 +32,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterators;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
@@ -121,7 +121,7 @@ public class SelectItemStackDialog extends EditDialog {
         }
 
         @Override
-        public void drawIcon(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void drawIcon(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             matrixStack.pushPose();
             matrixStack.translate(0, 0, 100);
             GuiHelper.drawItem(matrixStack, current, x, y, w / 16F, h / 16F, true, null);
@@ -192,7 +192,7 @@ public class SelectItemStackDialog extends EditDialog {
         }
 
         @Override
-        public void drawIcon(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void drawIcon(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             activeMode.getIcon().draw(matrixStack, x, y, w, h);
         }
 
@@ -225,7 +225,7 @@ public class SelectItemStackDialog extends EditDialog {
         }
 
         @Override
-        public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             (getWidgetType() == WidgetType.MOUSE_OVER ? Color4I.LIGHT_GREEN.withAlpha(70) : Color4I.BLACK.withAlpha(50)).draw(matrixStack, x, y, w, h);
         }
 
@@ -370,7 +370,7 @@ public class SelectItemStackDialog extends EditDialog {
             }
 
             @Override
-            public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+            public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
                 theme.drawPanelBackground(matrixStack, x, y, w, h);
             }
         };
@@ -435,7 +435,7 @@ public class SelectItemStackDialog extends EditDialog {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         theme.drawGui(matrixStack, x, y, w, h, WidgetType.NORMAL);
 
         long now = System.currentTimeMillis();

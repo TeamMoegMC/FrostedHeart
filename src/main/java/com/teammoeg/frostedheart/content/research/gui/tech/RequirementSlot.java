@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -55,7 +55,7 @@ public class RequirementSlot extends Widget {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         GuiHelper.setupDrawing();
         TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);

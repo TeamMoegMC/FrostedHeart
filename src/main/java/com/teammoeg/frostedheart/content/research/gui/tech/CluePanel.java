@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import com.ibm.icu.text.NumberFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
@@ -74,7 +74,7 @@ public class CluePanel extends Panel {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         // super.drawBackground(matrixStack, theme, x, y, w, h);
         if (c.isCompleted())
             TechIcons.CHECKBOX_CHECKED.draw(matrixStack, x, y, 9, 9);

@@ -232,9 +232,9 @@ public class TemperatureUpdate {
                 float dheat = HEAT_EXCHANGE_CONSTANT * ((efftemp-37F) - current);
                 //Attack player if temperature changes too much
                 if (dheat > 0.1)
-                    player.hurt(FHDamageSources.HYPERTHERMIA_INSTANT, (dheat) * 10);
+                    player.hurt(FHDamageSources.createSource(world, FHDamageSources.HYPERTHERMIA_INSTANT, player), (dheat) * 10);
                 else if (dheat < -0.1)
-                    player.hurt(FHDamageSources.HYPOTHERMIA_INSTANT, (-dheat) * 10);
+                    player.hurt(FHDamageSources.createSource(world, FHDamageSources.HYPOTHERMIA_INSTANT, player), (-dheat) * 10);
                 if (!player.isCreative()&&!player.isSpectator())//no modify body temp when creative or spectator
                 	current += (float) (dheat * tspeed);
                 if (current < -10)

@@ -25,7 +25,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
@@ -74,7 +74,7 @@ public class SelectDialog<T> extends EditDialog {
         }
 
         @Override
-        public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             //GuiHelper.setupDrawing();
             if (val == this.obj)
                 theme.drawButton(matrixStack, x, y, w, h, WidgetType.DISABLED);
@@ -221,13 +221,13 @@ public class SelectDialog<T> extends EditDialog {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         super.draw(matrixStack, theme, x, y, w, h);
         theme.drawString(matrixStack, lbl, x, y - 10);
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         theme.drawGui(matrixStack, x, y, w, h, WidgetType.NORMAL);
     }
 
