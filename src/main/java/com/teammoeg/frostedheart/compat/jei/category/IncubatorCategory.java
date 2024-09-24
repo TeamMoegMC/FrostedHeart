@@ -19,26 +19,23 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.forge.ForgeTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
+import mezz.jei.api.gui.builder.IRecipeSlotBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableAnimated;
 import mezz.jei.api.gui.drawable.IDrawableStatic;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
+import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.client.gui.GuiGraphics;
@@ -46,7 +43,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraftforge.fluids.FluidStack;
 
 public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     public static RecipeType<IncubateRecipe> UID = RecipeType.create(FHMain.MODID, "incubator",IncubateRecipe.class);
@@ -106,48 +102,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
                 && mouseX < x + w && mouseY < y + h;
     }
 
-    @Override
-    public void setIngredients(IncubateRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.FLUID, Collections.singletonList(Collections.singletonList(new FluidStack(Fluids.WATER, recipe.water))));
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Collections.singletonList(new ItemStack(RankineItems.QUICKLIME.get())), Arrays.asList(recipe.catalyst.getMatchingStacks()), Arrays.asList(recipe.input.getMatchingStacks())));
-        if (!recipe.output.isEmpty())
-            ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(Collections.singletonList(recipe.output)));
-        if (!recipe.output_fluid.isEmpty())
-            ingredients.setOutputLists(VanillaTypes.FLUID, Collections.singletonList(Collections.singletonList(recipe.output_fluid)));
-    }
 
-
-    @Override
-    public void setRecipe(IRecipeLayout recipeLayout, IncubateRecipe recipe, IIngredients ingredients) {
-        IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
-        IGuiFluidStackGroup guiFluidStacks = recipeLayout.getFluidStacks();
-        guiFluidStacks.init(0, true, 57, 16, 16, 46, recipe.water * 5, false, null);
-        guiFluidStacks.addTooltipCallback((s, o, i, t) -> {
-            if (s == 0)
-                t.add(TranslateUtils.translateGui("mb_per_sec", recipe.water));
-            if (recipe.isFood && s == 1)
-                t.add(TranslateUtils.translateGui("per_food_value", recipe.output_fluid.getAmount()));
-        });
-        guiFluidStacks.init(1, true, 113, 16, 16, 46, recipe.water * 5, false, null);
-        guiFluidStacks.set(ingredients);
-        if (!recipe.output_fluid.isEmpty())
-            guiFluidStacks.set(1, ingredients.getOutputs(VanillaTypes.FLUID).get(0));
-        guiItemStacks.init(0, true, 29, 47);
-
-        guiItemStacks.init(1, true, 11, 12);
-        guiItemStacks.addTooltipCallback((s, o, i, t) -> {
-            if (s == 1 && !recipe.consume_catalyst)
-                t.add(TranslateUtils.translateGui("not_consume"));
-            else if (s == 2 && recipe.isFood)
-                t.add(TranslateUtils.translateGui("any_food"));
-        });
-        guiItemStacks.init(2, true, 29, 12);
-        guiItemStacks.init(3, false, 138, 31);
-        guiItemStacks.set(ingredients);
-        if (!recipe.output.isEmpty())
-            guiItemStacks.set(3, ingredients.getOutputs(VanillaTypes.ITEM).get(0));
-
-    }
 
 	@Override
 	public RecipeType<IncubateRecipe> getRecipeType() {
@@ -156,6 +111,23 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 
 	@Override
 	public void setRecipe(IRecipeLayoutBuilder builder, IncubateRecipe recipe, IFocusGroup focuses) {
+		builder.addSlot(RecipeIngredientRole.INPUT, 57, 16).addFluidStack(Fluids.WATER, recipe.water)
+		.setFluidRenderer(recipe.water*5, false, 16, 46).addTooltipCallback((v,t)->t.add(TranslateUtils.translateGui("mb_per_sec", recipe.water)));
+		
+		IRecipeSlotBuilder fluidout=builder.addSlot(RecipeIngredientRole.OUTPUT, 113, 16).setFluidRenderer(1000, false, 16,46);
+		if (!recipe.output_fluid.isEmpty())
+			fluidout.setFluidRenderer(recipe.output_fluid.getAmount()*5, false, 16,46).addIngredient(ForgeTypes.FLUID_STACK, recipe.output_fluid)
+			.addTooltipCallback((v,t)->{if(recipe.isFood)t.add(TranslateUtils.translateGui("per_food_value", recipe.output_fluid.getAmount()));});
+		builder.addSlot(RecipeIngredientRole.INPUT, 29, 47);//TODO add quicklime
+		builder.addSlot(recipe.consume_catalyst?RecipeIngredientRole.INPUT:RecipeIngredientRole.CATALYST, 11, 12)
+		.addItemStacks(Arrays.asList(recipe.catalyst.getMatchingStacks()))
+		.addTooltipCallback((v,t)->{if(recipe.consume_catalyst)t.add(TranslateUtils.translateGui("not_consume"));});
+		builder.addSlot(RecipeIngredientRole.INPUT, 29, 12).addItemStacks(Arrays.asList(recipe.input.getMatchingStacks()))
+		.addTooltipCallback((v,t)->{if(recipe.isFood)t.add(TranslateUtils.translateGui("any_food"));});
+		
+		IRecipeSlotBuilder itemout=builder.addSlot(RecipeIngredientRole.OUTPUT, 138, 31);
+        if (!recipe.output.isEmpty())
+        	itemout.addItemStack(recipe.output);
 		
 	}
 }
