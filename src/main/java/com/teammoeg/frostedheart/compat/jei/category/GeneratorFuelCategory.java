@@ -26,31 +26,34 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.gui.IRecipeLayout;
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableAnimated;
 import mezz.jei.api.gui.drawable.IDrawableStatic;
-import mezz.jei.api.gui.ingredient.IGuiItemStackGroup;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
-import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.recipe.IFocusGroup;
+import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.text.TranslationTextComponent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import net.minecraft.world.item.ItemStack;
 
 public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
-    public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "generator_fuel");
+    public static RecipeType<GeneratorRecipe> UID =  RecipeType.create(FHMain.MODID, "generator_fuel",GeneratorRecipe.class);
     private IDrawable BACKGROUND;
     private IDrawable SWITCH;
     private IDrawable ICON;
     private IDrawableAnimated FIRE;
 
     public GeneratorFuelCategory(IGuiHelper guiHelper) {
-        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHMultiblocks.generator));
+        this.ICON = guiHelper.createDrawableIngredient(VanillaTypes.ITEM_STACK,new ItemStack(FHMultiblocks.generator));
         ResourceLocation guiMain = new ResourceLocation(FHMain.MODID, "textures/gui/generator_t1.png");
         this.BACKGROUND = guiHelper.createDrawable(guiMain, 24, 3, 134, 72);
         IDrawableStatic tfire = guiHelper.createDrawable(guiMain, 179, 0, 9, 13);
@@ -59,11 +62,11 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
     }
 
     @Override
-    public void draw(GeneratorRecipe recipe, PoseStack transform, double mouseX, double mouseY) {
+    public void draw(GeneratorRecipe recipe,IRecipeSlotsView view , GuiGraphics transform,  double mouseX, double mouseY) {
         FIRE.draw(transform, 60, 30);
         SWITCH.draw(transform, 32, 32);
         String burnTime = recipe.time + " ticks";
-        ClientUtils.mc().font.draw(transform, burnTime, 80, 60, 0xFFFFFF);
+        transform.drawString(ClientUtils.mc().font, burnTime,80, 60, 0xFFFFFFFF);
     }
 
     @Override
@@ -77,33 +80,23 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
         return ICON;
     }
 
-    @Override
-    public Class<? extends GeneratorRecipe> getRecipeClass() {
-        return GeneratorRecipe.class;
-    }
-
-    public String getTitle() {
-        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".generator_fuel").getString());
-    }
-
-    @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
-
-    @Override
-    public void setIngredients(GeneratorRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.input.getMatchingStacks())));
-        ingredients.setOutput(VanillaTypes.ITEM, recipe.output);
+    public Component getTitle() {
+        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".generator_fuel"));
     }
 
 
-    @Override
-    public void setRecipe(IRecipeLayout recipeLayout, GeneratorRecipe recipe, IIngredients ingredients) {
-        IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
 
-        guiItemStacks.init(0, true, 55, 8);
-        guiItemStacks.init(1, false, 55, 47);
-        guiItemStacks.set(ingredients);
-    }
+
+
+	@Override
+	public RecipeType<GeneratorRecipe> getRecipeType() {
+		return UID;
+	}
+
+	@Override
+	public void setRecipe(IRecipeLayoutBuilder builder, GeneratorRecipe recipe, IFocusGroup focuses) {
+		builder.addSlot(RecipeIngredientRole.INPUT, 55, 8).addItemStacks(Arrays.asList(recipe.input.getMatchingStacks()));
+		builder.addSlot(RecipeIngredientRole.OUTPUT, 55, 47).addItemStack(recipe.output);
+		
+	}
 }

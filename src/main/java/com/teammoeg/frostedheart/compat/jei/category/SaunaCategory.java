@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
@@ -38,17 +39,16 @@ import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.ingredient.IGuiItemStackGroup;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.Component;
-import net.minecraft.util.text.TranslationTextComponent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public class SaunaCategory implements IRecipeCategory<SaunaRecipe> {
-    public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "sauna");
+    public static RecipeType<SaunaRecipe> UID = RecipeType.create(FHMain.MODID, "sauna",SaunaRecipe.class);
     private IDrawable BACKGROUND;
     private IDrawable ICON;
     private StaticBlock sauna = new StaticBlock(FHBlocks.sauna.get().defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));

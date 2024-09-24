@@ -20,51 +20,51 @@
 package com.teammoeg.frostedheart.compat.jei.category;
 
 import java.util.Arrays;
-import java.util.Collections;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
-
-import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.gui.IRecipeLayout;
-import mezz.jei.api.gui.drawable.IDrawable;
-import mezz.jei.api.gui.ingredient.IGuiItemStackGroup;
-import mezz.jei.api.helpers.IGuiHelper;
-import mezz.jei.api.ingredients.IIngredients;
-import mezz.jei.api.recipe.category.IRecipeCategory;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
+import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
+import mezz.jei.api.gui.drawable.IDrawable;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
+import mezz.jei.api.helpers.IGuiHelper;
+import mezz.jei.api.recipe.IFocusGroup;
+import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.api.recipe.RecipeType;
+import mezz.jei.api.recipe.category.IRecipeCategory;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+
 public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
-    public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "charge");
+    public static RecipeType<ChargerRecipe> UID = RecipeType.create(FHMain.MODID, "charge", ChargerRecipe.class);
     private IDrawable BACKGROUND;
     private IDrawable ICON;
     private StaticBlock charger = new StaticBlock(FHBlocks.charger.get().defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
 
     public ChargerCategory(IGuiHelper guiHelper) {
-        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.charger.get()));
+        this.ICON = guiHelper.createDrawableItemStack(new ItemStack(FHBlocks.charger.get()));
         this.BACKGROUND = new EmptyBackground(177, 70);
     }
 
     @Override
-    public void draw(ChargerRecipe recipe, PoseStack transform, double mouseX, double mouseY) {
-        AllGuiTextures.JEI_SLOT.draw(transform, 43, 4);
-        AllGuiTextures.JEI_DOWN_ARROW.draw(transform, 67, 7);
+    public void draw(ChargerRecipe recipe,IRecipeSlotsView view, GuiGraphics transform, double mouseX, double mouseY) {
+        AllGuiTextures.JEI_SLOT.render(transform, 43, 4);
+        AllGuiTextures.JEI_DOWN_ARROW.render(transform, 67, 7);
 
 
-        AllGuiTextures.JEI_SHADOW.draw(transform, 72 - 17, 42 + 13);
+        AllGuiTextures.JEI_SHADOW.render(transform, 72 - 17, 42 + 13);
 
-        AllGuiTextures.JEI_DOWN_ARROW.draw(transform, 112, 30);
-        AllGuiTextures.JEI_SLOT.draw(transform, 117, 47);
+        AllGuiTextures.JEI_DOWN_ARROW.render(transform, 112, 30);
+        AllGuiTextures.JEI_SLOT.render(transform, 117, 47);
         charger.draw(transform, 72, 42);
     }
 
@@ -79,33 +79,19 @@ public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
         return ICON;
     }
 
-    @Override
-    public Class<? extends ChargerRecipe> getRecipeClass() {
-        return ChargerRecipe.class;
-    }
-
-    public String getTitle() {
-        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".charger").getString());
-    }
-
-    @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
-
-    @Override
-    public void setIngredients(ChargerRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.input.getMatchingStacks())));
-        ingredients.setOutput(VanillaTypes.ITEM, recipe.output);
+    public Component getTitle() {
+        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".charger"));
     }
 
 
-    @Override
-    public void setRecipe(IRecipeLayout recipeLayout, ChargerRecipe recipe, IIngredients ingredients) {
-        IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
-        itemStacks.init(0, true, 43, 4);
+	@Override
+	public RecipeType<ChargerRecipe> getRecipeType() {
+		return UID;
+	}
 
-        itemStacks.init(1, false, 117, 47);
-        itemStacks.set(ingredients);
-    }
+	@Override
+	public void setRecipe(IRecipeLayoutBuilder builder, ChargerRecipe recipe, IFocusGroup focuses) {
+		builder.addSlot(RecipeIngredientRole.INPUT, 43, 4).addItemStacks(Arrays.asList(recipe.input.getMatchingStacks()));
+		builder.addSlot(RecipeIngredientRole.OUTPUT, 117, 47).addItemStack(recipe.output);
+	}
 }

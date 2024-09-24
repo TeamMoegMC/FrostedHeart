@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.compat.jei.category;
 
 import java.util.Arrays;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -41,12 +42,12 @@ import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.common.Constants;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
 
 public class CampfireDefrostCategory implements IRecipeCategory<CampfireDefrostRecipe> {
     public static RecipeType<CampfireDefrostRecipe> UID = RecipeType.create(FHMain.MODID, "defrost_campfire", CampfireDefrostRecipe.class);
@@ -122,8 +123,8 @@ public class CampfireDefrostCategory implements IRecipeCategory<CampfireDefrostR
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder recipeLayout, CampfireDefrostRecipe recipe, IFocusGroup ingredients) {
-        recipeLayout.addSlot(RecipeIngredientRole.INPUT, 0, 0).addIngredients(VanillaTypes.ITEM_STACK, Arrays.asList(recipe.getIngredient().getItems()));
-        recipeLayout.addSlot(RecipeIngredientRole.OUTPUT, 60, 8).addIngredients(VanillaTypes.ITEM_STACK, Arrays.asList(recipe.getIss()));
+        recipeLayout.addSlot(RecipeIngredientRole.INPUT, 0, 0).addIngredients(recipe.getIngredient());
+        recipeLayout.addSlot(RecipeIngredientRole.OUTPUT, 60, 8).addItemStacks(Arrays.asList(recipe.getIss()));
     }
 
 	@Override

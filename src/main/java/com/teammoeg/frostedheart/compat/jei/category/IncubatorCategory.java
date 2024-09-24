@@ -24,7 +24,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import com.cannolicatfish.rankine.init.RankineItems;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
@@ -33,25 +32,24 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.gui.IRecipeLayout;
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableAnimated;
 import mezz.jei.api.gui.drawable.IDrawableStatic;
-import mezz.jei.api.gui.ingredient.IGuiFluidStackGroup;
-import mezz.jei.api.gui.ingredient.IGuiItemStackGroup;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
-import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.recipe.IFocusGroup;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.text.TranslationTextComponent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.fluids.FluidStack;
 
 public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
-    public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "incubator");
+    public static RecipeType<IncubateRecipe> UID = RecipeType.create(FHMain.MODID, "incubator",IncubateRecipe.class);
     private IDrawable BACKGROUND;
     private IDrawable ICON;
 
@@ -62,7 +60,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 
     public IncubatorCategory(IGuiHelper guiHelper) {
         ResourceLocation guiMain = new ResourceLocation(FHMain.MODID, "textures/gui/incubator.png");
-        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.incubator1.get()));
+        this.ICON = guiHelper.createDrawableItemStack(new ItemStack(FHBlocks.incubator1.get()));
         this.BACKGROUND = guiHelper.createDrawable(guiMain, 4, 4, 164, 72);
         IDrawableStatic tfire = guiHelper.createDrawable(guiMain, 198, 64, 14, 14);
         this.FIRE = guiHelper.createAnimatedDrawable(tfire, 80, IDrawableAnimated.StartDirection.TOP, true);
@@ -73,7 +71,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     }
 
     @Override
-    public void draw(IncubateRecipe recipe, PoseStack transform, double mouseX, double mouseY) {
+    public void draw(IncubateRecipe recipe, IRecipeSlotsView view, GuiGraphics transform, double mouseX, double mouseY) {
         FIRE.draw(transform, 31, 31);
         PROC.draw(transform, 76, 24);
         EFF.draw(transform, 15, 31);
@@ -84,7 +82,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
         else
             burnTime = recipe.time / 60 + " m";
         int width = ClientUtils.mc().font.width(burnTime);
-        ClientUtils.mc().font.draw(transform, burnTime, 162 - width, 62, 0xFFFFFF);
+        transform.drawString(ClientUtils.mc().font, burnTime, 162 - width, 62, 0xFFFFFF);
     }
 
     @Override
@@ -98,24 +96,10 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
         return ICON;
     }
 
-    @Override
-    public Class<? extends IncubateRecipe> getRecipeClass() {
-        return IncubateRecipe.class;
+    public Component getTitle() {
+        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".incubator"));
     }
 
-    public String getTitle() {
-        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".incubator").getString());
-    }
-
-    @Override
-    public List<Component> getTooltipStrings(IncubateRecipe recipe, double mouseX, double mouseY) {
-        return new ArrayList<>();
-    }
-
-    @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
 
     public boolean isMouseIn(double mouseX, double mouseY, int x, int y, int w, int h) {
         return mouseX >= x && mouseY >= y
@@ -164,4 +148,14 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
             guiItemStacks.set(3, ingredients.getOutputs(VanillaTypes.ITEM).get(0));
 
     }
+
+	@Override
+	public RecipeType<IncubateRecipe> getRecipeType() {
+		return UID;
+	}
+
+	@Override
+	public void setRecipe(IRecipeLayoutBuilder builder, IncubateRecipe recipe, IFocusGroup focuses) {
+		
+	}
 }

@@ -25,11 +25,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -84,24 +86,24 @@ import mezz.jei.api.gui.handlers.IGuiClickableArea;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IRecipeManager;
-import mezz.jei.api.recipe.category.IRecipeCategory;
+import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.api.recipe.RecipeType;
+import mezz.jei.api.recipe.vanilla.IJeiIngredientInfoRecipe;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
-import mezz.jei.library.plugins.vanilla.VanillaPlugin;
-import mezz.jei.library.plugins.vanilla.crafting.VanillaRecipes;
+import mezz.jei.library.ingredients.IngredientInfoRecipe;
+import mezz.jei.library.util.RecipeUtil;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
@@ -112,19 +114,14 @@ public class JEICompat implements IModPlugin {
 
     public static IJeiRuntime jei;
 
-    static Map<RecipeType<?>, Set<ResourceLocation>> types = new HashMap<>();
+    static Map<Object,Set<RecipeType<?>>> types = new IdentityHashMap<>(3000);
 
-    static {
-        types.computeIfAbsent(RecipeType.CRAFTING, i -> new HashSet<>()).add(VanillaC);
-
-
-    }
 
     private static boolean cachedInfoAdd = false;
 
     public static Map<ResourceLocation, Recipe<?>> overrides = new HashMap<>();
 
-    private static Map<Item, List<IngredientInfoRecipe<ItemStack>>> infos = new HashMap<>();
+    private static Map<Item, List<IJeiIngredientInfoRecipe>> infos = new HashMap<>();
     public static Map<Item, Map<String,Component>> research=new HashMap<>();
     public static void addInfo() {
         if (man == null) {
@@ -135,7 +132,7 @@ public class JEICompat implements IModPlugin {
         cachedInfoAdd = false;
         Set<Item> items = new HashSet<>();
         for (Recipe<?> i : ResearchListeners.recipe) {
-            ItemStack out = i.getResultItem();
+            ItemStack out = RecipeUtil.getResultItem(i);
             if (out != null && !out.isEmpty()) {
                 items.add(out.getItem());
             }
@@ -154,9 +151,9 @@ public class JEICompat implements IModPlugin {
 
 
         for (Item i : items) {
-            List<IngredientInfoRecipe<ItemStack>> il = IngredientInfoRecipe.create(ImmutableList.of(new ItemStack(i)),
-                    VanillaTypes.ITEM, it);
-            il.forEach(r -> man.addRecipe(r, VanillaRecipeCategoryUid.INFORMATION));
+            List<IJeiIngredientInfoRecipe> il = IngredientInfoRecipe.create(jei.getIngredientManager(),ImmutableList.of(new ItemStack(i)),
+                    VanillaTypes.ITEM_STACK, it);
+            man.addRecipes(RecipeTypes.INFORMATION,il);
 
             infos.put(i, il);
 
@@ -179,11 +176,11 @@ public class JEICompat implements IModPlugin {
     }
 
     public static void showJEICategory(ResourceLocation rl) {
-        jei.getRecipesGui().showCategories(Collections.singletonList(rl));
+    	man.getRecipeType(rl).ifPresent(o->jei.getRecipesGui().showTypes(Arrays.asList(o)));
     }
 
     public static void showJEIFor(ItemStack stack) {
-        jei.getRecipesGui().show(man.createFocus(Mode.OUTPUT, stack));
+        jei.getRecipesGui().show(jei.getJeiHelpers().getFocusFactory().createFocus(RecipeIngredientRole.OUTPUT,VanillaTypes.ITEM_STACK,stack));
     }
 
     public static void syncJEI() {
@@ -191,74 +188,54 @@ public class JEICompat implements IModPlugin {
             return;
         if (cachedInfoAdd)
             addInfo();
-        Map<Class<?>, Set<ResourceLocation>> cates = new HashMap<>();
-        for (IRecipeCategory<?> rg : man.getRecipeCategories()) {
-            //System.out.println(rg.getUid()+" : "+rg.getRecipeClass().getSimpleName());
-            if (rg.getRecipeClass() == CraftingRecipe.class)
-                types.computeIfAbsent(RecipeType.CRAFTING, i -> new HashSet<>()).add(rg.getUid());
-            else
-                cates.computeIfAbsent(rg.getRecipeClass(), i -> new HashSet<>()).add(rg.getUid());
-        }
         Set<Item> locked = new HashSet<>();
         Set<Item> unlocked = new HashSet<>();
         for (Recipe<?> i : ResearchListeners.recipe) {
-            Set<ResourceLocation> hs = cates.remove(i.getClass());
-            Set<ResourceLocation> all = types.computeIfAbsent(i.getType(), d -> new HashSet<>());
-            if (i instanceof CraftingRecipe && i.getType() != RecipeType.CRAFTING)
-                all.addAll(types.computeIfAbsent(RecipeType.CRAFTING, d -> new HashSet<>()));
-            if (hs != null) {
-                all.addAll(hs);
-            }
             //System.out.println(i.getType().toString()+":"+String.join(",",all.stream().map(Object::toString).collect(Collectors.toList())));
-            ItemStack irs = i.getResultItem();
-            Recipe<?> ovrd = overrides.get(i.getId());
+            ItemStack irs = RecipeUtil.getResultItem(i);
+           
+            //Recipe<?> ovrd = overrides.get(i.getId());
             if (!ClientResearchDataAPI.getData().crafting.has(i)) {
-                for (ResourceLocation rl : all) {
-                	try {
-                    man.hideRecipe(i, rl);
-                	}catch(Exception ex) {
-                        FHMain.LOGGER.error("Error hiding recipe",ex);
-                    }//IDK How JEI And IE conflict, so just catch all.
-                    if (ovrd != null)
-                    	try {
-                    		man.hideRecipe(ovrd, rl);
-                    	}catch(Exception ex) {
-                            FHMain.LOGGER.error("Error hiding recipe",ex);
-                        }//IDK How JEI And IE conflict, so just catch all.
-                    //System.out.println("hiding "+i.getId()+" for "+rl);
-                }
+            	Set<RecipeType<?>> type=types.get(i);
+            	if(type!=null)
+	                for (RecipeType<?> rl : type) {
+	                	try {
+	                    man.hideRecipes((RecipeType)rl, Collections.singletonList(i));
+	                	}catch(Exception ex) {
+	                        FHMain.LOGGER.error("Error hiding recipe",ex);
+	                    }//IDK How JEI And IE conflict, so just catch all.
+	                }
                 if (!irs.isEmpty())
                     locked.add(irs.getItem());
             } else {
-                for (ResourceLocation rl : all) {
-                	try {
-                		man.unhideRecipe(i, rl);
-                	}catch(Exception ex) {
-                        FHMain.LOGGER.error("Error un-hiding recipe",ex);
-                    }//IDK How JEI And IE conflict, so just catch all.
-                    if (ovrd != null)
-                    	try {
-                    		man.unhideRecipe(ovrd, rl);
-                    	}catch(Exception ex) {
-                            FHMain.LOGGER.error("Error un-hiding recipe",ex);
-                        }//IDK How JEI And IE conflict, so just catch all.
-                }
+            	Set<RecipeType<?>> type=types.get(i);
+            	if(type!=null)
+	                for (RecipeType<?> rl : type) {
+	                	try {
+	                    man.unhideRecipes((RecipeType)rl, Collections.singletonList(i));
+	                	}catch(Exception ex) {
+	                        FHMain.LOGGER.error("Error hiding recipe",ex);
+	                    }//IDK How JEI And IE conflict, so just catch all.
+	                }
                 if (!irs.isEmpty())
                     unlocked.add(irs.getItem());
             }
         }
-        for (Entry<Item, List<IngredientInfoRecipe<ItemStack>>> entry : infos.entrySet()) {
+        for (Entry<Item, List<IJeiIngredientInfoRecipe>> entry : infos.entrySet()) {
             if (locked.contains(entry.getKey()) || !unlocked.contains(entry.getKey())) {
-                entry.getValue().forEach(r -> man.unhideRecipe(r, VanillaRecipeCategoryUid.INFORMATION));
+                man.unhideRecipes(RecipeTypes.INFORMATION,entry.getValue());
             } else {
-                entry.getValue().forEach(r -> man.hideRecipe(r, VanillaRecipeCategoryUid.INFORMATION));
+                man.hideRecipes(RecipeTypes.INFORMATION,entry.getValue());
             }
         }
         for (ResourceLocation rl : ResearchListeners.categories) {
-            if (!ClientResearchDataAPI.getData().categories.has(rl))
-                man.hideRecipeCategory(rl);
-            else
-                man.unhideRecipeCategory(rl);
+        	RecipeType<?> type=man.getRecipeType(rl).orElse(null);
+        	if(type!=null) {
+	            if (!ClientResearchDataAPI.getData().categories.has(rl)) {
+	                man.hideRecipeCategory(type);
+	            } else
+	                man.unhideRecipeCategory(type);
+        	}
         }
         research.clear();
         for(Effect effect:FHResearch.effects) {
@@ -270,7 +247,7 @@ public class JEICompat implements IModPlugin {
         		else if(crafting.getItemStack()!=null)
         			item.add(crafting.getItemStack().getItem());
         		else if(crafting.getUnlocks()!=null)
-        			crafting.getUnlocks().stream().map(Recipe::getResultItem).filter(t->t!=null&&!t.isEmpty()).map(ItemStack::getItem).forEach(item::add);
+        			crafting.getUnlocks().stream().map(RecipeUtil::getResultItem).filter(t->t!=null&&!t.isEmpty()).map(ItemStack::getItem).forEach(item::add);
         		for(Item ix:item) {
         			research.computeIfAbsent(ix, i->new LinkedHashMap<>()).put(effect.parent.get().getId(), TranslateUtils.translateTooltip("research_unlockable", effect.parent.get().getName()));
         		}
@@ -290,6 +267,12 @@ public class JEICompat implements IModPlugin {
         man.hideRecipeCategory(RecipeTypes.BLASTING);
         man.hideRecipeCategory(RecipeTypes.SMOKING);
         man.hideRecipeCategory(RecipeTypes.SMELTING);
+        Function<? super Object, ? extends Set<RecipeType<?>>> creator=o->new HashSet<>();
+        Function<? super Object,Set<RecipeType<?>>> getter=o->types.computeIfAbsent((Object)o, creator);
+        man.createRecipeCategoryLookup().includeHidden().get().forEach(t->{
+        	man.createRecipeLookup(t.getRecipeType()).includeHidden().get().map(getter).forEach(o->o.add(t.getRecipeType()));
+        	
+        });;
 
     }
     @Override
@@ -346,29 +329,27 @@ public class JEICompat implements IModPlugin {
         ClientLevel world = Minecraft.getInstance().level;
         checkNotNull(world, "minecraft world");
         RecipeManager recipeManager = world.getRecipeManager();
-        CuttingCategory.matching = RegistryUtils.getItems().stream()
-                .filter(e -> e.getTags().contains(CuttingCategory.ktag)).collect(Collectors.toList());
 
-        registration.addRecipes(FHUtils.filterRecipes(recipeManager,GeneratorRecipe.TYPE), GeneratorFuelCategory.UID);
-        registration.addRecipes(GeneratorSteamRecipe.recipeList.values(), GeneratorSteamCategory.UID);
-        registration.addRecipes(FHUtils.filterRecipes(recipeManager,ChargerRecipe.TYPE), ChargerCategory.UID);
-        registration.addRecipes(recipeManager.getAllRecipesFor(RecipeType.SMOKING), ChargerCookingCategory.UID);
-        registration.addRecipes(CampfireDefrostRecipe.recipeList.values(),
-                CampfireDefrostCategory.UID);
+        CuttingCategory.matching = RegistryUtils.getItemHolders().filter(t->t.containsTag(CuttingCategory.ktag)).map(t->t.get()).collect(Collectors.toList());
+
+        registration.addRecipes(GeneratorFuelCategory.UID,FHUtils.filterRecipes(recipeManager,GeneratorRecipe.TYPE));
+        registration.addRecipes(GeneratorSteamCategory.UID,new ArrayList<>(GeneratorSteamRecipe.recipeList.values()));
+        registration.addRecipes(ChargerCategory.UID,FHUtils.filterRecipes(recipeManager,ChargerRecipe.TYPE));
+        registration.addRecipes(ChargerCookingCategory.UID, recipeManager.getAllRecipesFor(net.minecraft.world.item.crafting.RecipeType.SMOKING));
+        registration.addRecipes(CampfireDefrostCategory.UID,new ArrayList<>(CampfireDefrostRecipe.recipeList.values()));
  
-        registration.addRecipes(FHUtils.filterRecipes(recipeManager,RecipeType.SMOKING).stream()
-            .filter(iRecipe -> iRecipe.getClass() == SmokingDefrostRecipe.class).collect(Collectors.toList()), SmokingDefrostCategory.UID);
-        registration.addRecipes(CampfireDefrostRecipe.recipeList.values(), ChargerDefrostCategory.UID);
-        registration.addRecipes(Arrays.asList(
+        registration.addRecipes(SmokingDefrostCategory.UID,recipeManager.getAllRecipesFor(net.minecraft.world.item.crafting.RecipeType.SMOKING).stream()
+            .filter(iRecipe -> iRecipe.getClass() == SmokingDefrostRecipe.class).map(t->(SmokingDefrostRecipe)t).collect(Collectors.toList()));
+        registration.addRecipes(ChargerDefrostCategory.UID ,new ArrayList<>(CampfireDefrostRecipe.recipeList.values()));
+        registration.addRecipes(CuttingCategory.UID,Arrays.asList(
                         new CuttingRecipe(FHUtils.Damage(new ItemStack(FHItems.red_mushroombed.get()), 0),
                                 new ItemStack(Items.RED_MUSHROOM, 10)),
                         new CuttingRecipe(FHUtils.Damage(new ItemStack(FHItems.brown_mushroombed.get()), 0),
-                                new ItemStack(Items.BROWN_MUSHROOM, 10))),
-                CuttingCategory.UID);
-        registration.addRecipes(FHUtils.filterRecipes(recipeManager,SaunaRecipe.TYPE), SaunaCategory.UID);
+                                new ItemStack(Items.BROWN_MUSHROOM, 10))));
+        registration.addRecipes(SaunaCategory.UID ,FHUtils.filterRecipes(recipeManager,SaunaRecipe.TYPE));
         List<IncubateRecipe> rcps = new ArrayList<>(FHUtils.filterRecipes(recipeManager,IncubateRecipe.TYPE));
         rcps.add(new IncubateRecipe());
-        registration.addRecipes(rcps, IncubatorCategory.UID);
+        registration.addRecipes(IncubatorCategory.UID,rcps);
     }
 
 

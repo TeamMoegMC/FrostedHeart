@@ -21,15 +21,15 @@ package com.teammoeg.frostedheart.compat.jei.extension;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import com.teammoeg.frostedheart.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
-import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
+import mezz.jei.api.gui.ingredient.ICraftingGridHelper;
+import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.category.extensions.vanilla.crafting.ICraftingCategoryExtension;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.ResourceLocation;
@@ -47,19 +47,19 @@ public class InnerExtension implements ICraftingCategoryExtension {
     }
 
     @Override
-    public void setIngredients(IIngredients ingredients) {
+    public void setRecipe(IRecipeLayoutBuilder builder, ICraftingGridHelper craftingGridHelper, IFocusGroup focuses) {
         List<ItemStack> armors = new ArrayList<>();
         ArrayList<ItemStack> armorsout = new ArrayList<>();
         RegistryUtils.getItems().stream().map(ItemStack::new).filter(i -> inner.matches(i)).forEach(armors::add);
         armorsout.ensureCapacity(armors.size());
+        builder.setShapeless();
         armors.forEach(e -> {
             ItemStack n = e.copy();
             ItemNBTHelper.putString(n, "inner_cover", inner.getBuffType().toString());
             armorsout.add(n);
         });
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(armors, Arrays.asList(inner.getIngredient().getItems())));
-
-        ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(armorsout));
+        craftingGridHelper.createAndSetInputs(builder, Arrays.asList(armors, Arrays.asList(inner.getIngredient().getItems())), 0, 0);
+        craftingGridHelper.createAndSetOutputs(builder, armorsout);
     }
 
 }

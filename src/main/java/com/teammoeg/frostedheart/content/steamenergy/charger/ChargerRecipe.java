@@ -23,16 +23,18 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHBlocks;
-
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
+import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.registries.RegistryObject;
 
 public class ChargerRecipe extends IESerializableRecipe {
@@ -52,8 +54,8 @@ public class ChargerRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public ChargerRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            ItemStack output = readOutput(json.get("result"));
+        public ChargerRecipe readFromJson(ResourceLocation recipeId, JsonObject json, IContext ctx) {
+            ItemStack output = readOutput(json.get("result")).get();
             IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
             float cost = GsonHelper.getAsInt(json, "cost");
             return new ChargerRecipe(recipeId, output, input, cost);
@@ -66,8 +68,8 @@ public class ChargerRecipe extends IESerializableRecipe {
             buffer.writeFloat(recipe.cost);
         }
     }
-    public static RegistryObject<RecipeType<Recipe<?>>> TYPE;
-
+    public static RegistryObject<RecipeType<ChargerRecipe>> TYPE;
+    public static Lazy<TypeWithClass<ChargerRecipe>> IEType=Lazy.of(()->new TypeWithClass<>(TYPE, ChargerRecipe.class));
     public static RegistryObject<IERecipeSerializer<ChargerRecipe>> SERIALIZER;
     public final IngredientWithSize input;
 
@@ -77,7 +79,7 @@ public class ChargerRecipe extends IESerializableRecipe {
 
 
     public ChargerRecipe(ResourceLocation id, ItemStack output, IngredientWithSize input, float cost2) {
-        super(output, TYPE, id);
+        super(Lazy.of(()->output), IEType.get(), id);
         this.output = output;
         this.input = input;
         this.cost = cost2;
@@ -89,7 +91,7 @@ public class ChargerRecipe extends IESerializableRecipe {
     }
 
     @Override
-    public ItemStack getResultItem() {
+    public ItemStack getResultItem(RegistryAccess access) {
         return this.output;
     }
 

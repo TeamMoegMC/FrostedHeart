@@ -40,19 +40,17 @@ import mezz.jei.api.gui.drawable.IDrawableStatic;
 import mezz.jei.api.gui.ingredient.IGuiItemStackGroup;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import mezz.jei.config.Constants;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.text.TranslationTextComponent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
 
 public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRecipe> {
-    public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "defrost_smoking");
+    public static RecipeType<SmokingDefrostRecipe> UID = RecipeType.create(FHMain.MODID, "defrost_smoking",SmokingDefrostRecipe.class);
     private IDrawable BACKGROUND;
     private IDrawable ICON;
     private LoadingCache<Integer, IDrawableAnimated> cachedArrows;
