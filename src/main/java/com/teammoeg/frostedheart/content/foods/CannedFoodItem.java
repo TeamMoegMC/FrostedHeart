@@ -24,7 +24,6 @@ import java.util.List;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import gloridifice.watersource.common.capability.WaterLevelCapability;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -55,7 +54,7 @@ public class CannedFoodItem extends FHBaseItem {
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
         ItemStack itemstack = super.finishUsingItem(stack, worldIn, entityLiving);
-        entityLiving.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(e -> e.reduceLevel(this.getFoodProperties().getNutrition()));
+        //entityLiving.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(e -> e.reduceLevel(this.getFoodProperties().getNutrition()));
         return itemstack;
     }
 

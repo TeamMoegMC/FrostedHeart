@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
+import java.util.function.Supplier;
+
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.block.FHGuiBlock;
@@ -52,12 +54,6 @@ public class IncubatorBlock extends FHGuiBlock {
         this.type = type;
     }
 
-    @Nullable
-    @Override
-    public BlockEntity createTileEntity(BlockState state, BlockGetter world) {
-        return type.get().create();
-    }
-
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(HORIZONTAL_FACING, LIT);
@@ -76,6 +72,12 @@ public class IncubatorBlock extends FHGuiBlock {
             return InteractionResult.SUCCESS;
         return super.use(state, world, pos, player, hand, hit);
     }
+
+	@Override
+	public Supplier getBlock() {
+		// TODO Auto-generated method stub
+		return type;
+	}
 
 
 }

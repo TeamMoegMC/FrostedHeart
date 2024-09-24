@@ -34,7 +34,7 @@ public class BoneBlock extends FHBaseBlock {
     }
 
     public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-        Integer finalType = Math.abs(RANDOM.nextInt()) % 5;
+        Integer finalType = Math.abs(worldIn.random.nextInt()) % 5;
         BlockState newState = this.stateDefinition.any().setValue(BNT, finalType);
         worldIn.setBlockAndUpdate(pos, newState);
     }
@@ -42,14 +42,14 @@ public class BoneBlock extends FHBaseBlock {
     @Override
     public void playerWillDestroy(Level worldIn, BlockPos pos, BlockState state, Player player) {
         super.playerWillDestroy(worldIn, pos, state, player);
-        int count = Math.abs(RANDOM.nextInt()) % 5 + 1;
+        int count = Math.abs(worldIn.random.nextInt()) % 5 + 1;
         popResource(worldIn, pos, new ItemStack(Items.BONE, count));
     }
 
     @Override
     public void wasExploded(Level worldIn, BlockPos pos, Explosion explosionIn) {
         super.wasExploded(worldIn, pos, explosionIn);
-        int count = Math.abs(RANDOM.nextInt()) % 2 + 1;
+        int count = Math.abs(worldIn.random.nextInt()) % 2 + 1;
         popResource(worldIn, pos, new ItemStack(Items.BONE, count));
     }
 

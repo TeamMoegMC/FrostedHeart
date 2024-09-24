@@ -19,18 +19,20 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
+import com.teammoeg.frostedheart.FHBaseContainer;
+import com.teammoeg.frostedheart.FHContainer;
+
 import blusunrize.immersiveengineering.common.gui.IESlot;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-public class IncubatorT1Container extends IEBaseContainer<IncubatorTileEntity> {
+public class IncubatorT1Container extends FHBaseContainer<IncubatorTileEntity> {
 
     public IncubatorT1Container(int id, Inventory inventoryPlayer, IncubatorTileEntity tile) {
-        super(tile, id);
+        super(FHContainer.INCUBATOR_T1.get(), tile, id, 4);
 
-        this.addSlot(new IESlot(this, this.inv, 0, 34, 52) {
+        this.addSlot(new IESlot(this, tile., 0, 34, 52) {
             @Override
             public boolean mayPlace(ItemStack itemStack) {
                 return tile.isStackValid(0, itemStack);

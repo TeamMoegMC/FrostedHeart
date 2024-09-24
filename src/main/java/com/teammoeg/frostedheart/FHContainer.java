@@ -72,9 +72,9 @@ public class FHContainer {
     public static final RegistryObject<MenuType<RelicChestContainer>> RELIC_CHEST = register(RelicChestTileEntity.class, ("relic_chest"), RelicChestContainer::new);
     public static final RegistryObject<MenuType<DrawDeskContainer>> DRAW_DESK = register(DrawingDeskTileEntity.class, ("draw_desk"), DrawDeskContainer::new);
     public static final RegistryObject<MenuType<SaunaContainer>> SAUNA = register(SaunaTileEntity.class, ("sauna_vent"), SaunaContainer::new);
-    public static final RegistryObject<MenuType<IncubatorContainer>> INCUBATOR_T1 = register(IncubatorTileEntity.class, ("incubator"), IncubatorT1Container::new);
-    public static final RegistryObject<MenuType<HeatIncubatorContainer>> INCUBATOR_T2 = register(HeatIncubatorTileEntity.class, ("heat_incubator"), IncubatorT2Container::new);
-    public <T extends AbstractContainerMenu,BE extends BlockEntity> RegistryObject<MenuType<T>> register(Class<BE> BEClass,String name,BEMenuFactory<T,BE> factory) {
+    public static final RegistryObject<MenuType<IncubatorT1Container>> INCUBATOR_T1 = register(IncubatorTileEntity.class, ("incubator"), IncubatorT1Container::new);
+    public static final RegistryObject<MenuType<IncubatorT2Container>> INCUBATOR_T2 = register(HeatIncubatorTileEntity.class, ("heat_incubator"), IncubatorT2Container::new);
+    public static <T extends AbstractContainerMenu,BE extends BlockEntity> RegistryObject<MenuType<T>> register(Class<BE> BEClass,String name,BEMenuFactory<T,BE> factory) {
     	return CONTAINERS.register(name, () -> IForgeMenuType.create((id,inv,pb)->{
     		BlockEntity be=inv.player.level().getBlockEntity(pb.readBlockPos());
     		if(BEClass.isInstance(be))

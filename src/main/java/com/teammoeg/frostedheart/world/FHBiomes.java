@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.world.geology.volcanic.VolcanicBiome;
 
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraftforge.common.BiomeManager;
 import net.minecraftforge.registries.RegistryObject;
@@ -46,6 +47,6 @@ public class FHBiomes {
     }
 
     public static ResourceKey<Biome> makeKey(Biome biome) {
-        return ResourceKey.create(Registry.BIOME_REGISTRY, RegistryUtils.getRegistryName(biome));
+        return ResourceKey.create(Registries.BIOME, RegistryUtils.getRegistryName(biome));
     }
 }

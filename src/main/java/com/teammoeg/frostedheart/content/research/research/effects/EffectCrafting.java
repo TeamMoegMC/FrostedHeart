@@ -51,8 +51,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.text.TranslationTextComponent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -60,7 +58,7 @@ public class EffectCrafting extends Effect {
 	public static final Codec<EffectCrafting> CODEC=RecordCodecBuilder.create(t->t.group(
 		Effect.BASE_CODEC.forGetter(Effect::getBaseData),
 		CodecUtil.<EffectCrafting,Item,ItemStack,List<ResourceLocation>>either(
-			CodecUtil.registryCodec(()->Registry.ITEM).fieldOf("item"),
+			CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).fieldOf("item"),
 			CodecUtil.ITEMSTACK_CODEC.fieldOf("item"),
 			Codec.list(ResourceLocation.CODEC).fieldOf("recipes"),
 			o->o.item,

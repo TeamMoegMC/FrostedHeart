@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
-import com.cannolicatfish.rankine.blocks.RankineOreBlock;
-import com.cannolicatfish.rankine.util.WorldgenUtils;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 
 import net.minecraft.world.level.block.Block;
@@ -35,11 +33,12 @@ public class FHOreBlock extends FHBaseBlock {
     public FHOreBlock(Properties blockProps) {
         super(blockProps);
     }
-
+    //TODO 增加矿物
+/*
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(RankineOreBlock.TYPE);
-    }
-
+    }*/
+/*
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         Level world = context.getLevel();
         BlockState target = world.getBlockState(context.getClickedPos().relative(context.getClickedFace().getOpposite()));
@@ -48,5 +47,5 @@ public class FHOreBlock extends FHBaseBlock {
         } else {
             return WorldgenUtils.ORE_STONES.contains(target.getBlock()) ? this.defaultBlockState().setValue(RankineOreBlock.TYPE, WorldgenUtils.ORE_STONES.indexOf(target.getBlock())) : this.defaultBlockState().setValue(RankineOreBlock.TYPE, 0);
         }
-    }
+    }*/
 }

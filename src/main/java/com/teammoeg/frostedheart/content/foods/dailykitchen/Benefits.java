@@ -26,8 +26,6 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.thermopolium.data.recipes.BowlContainingRecipe;
-
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.item.Item;
@@ -157,10 +155,11 @@ class Benefits {
         if (foodOrSoupContainer instanceof ItemFluidContainer) {
             assert foodItemStack.getTag() != null;
             Fluid fluid = RegistryUtils.getFluid(new ResourceLocation(foodItemStack.getTag().getCompound("Fluid").getString("FluidName")));
-            BowlContainingRecipe recipe = BowlContainingRecipe.recipes.get(fluid);
-            if (recipe != null) {
-                tryGive(recipe.handle(fluid).getItem());
-            }
+            //TODO add caupona dependency
+            //BowlContainingRecipe recipe = BowlContainingRecipe.recipes.get(fluid);
+            //if (recipe != null) {
+            //    tryGive(recipe.handle(fluid).getItem());
+            //}
         } else tryGive(foodOrSoupContainer);
     }
 }

@@ -22,46 +22,53 @@ package com.teammoeg.frostedheart.content.incubator;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.cannolicatfish.rankine.init.RankineItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.thermopolium.api.ThermopoliumApi;
-import com.teammoeg.thermopolium.items.StewItem;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IProcessBE;
+import blusunrize.immersiveengineering.common.register.IEMenuTypes.ArgContainer;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
-import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
-import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 
-public class IncubatorTileEntity extends FHBaseTileEntity implements TickableBlockEntity,
-        FHBlockInterfaces.IActiveState, IIEInventory, IInteractionObjectIE, IEBlockInterfaces.IProcessTile {
+public class IncubatorTileEntity extends FHBaseTileEntity implements FHTickableBlockEntity,
+        FHBlockInterfaces.IActiveState, , MenuProvider, IProcessBE {
     public static final ResourceLocation food = new ResourceLocation(FHMain.MODID, "food");
     public static final ResourceLocation pr = new ResourceLocation("kubejs", "protein");
     protected NonNullList<ItemStack> inventory;
@@ -132,32 +139,26 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements TickableBlo
 
     LazyOptional<IFluidHandler> fluidHandler = LazyOptional.of(() -> handler);
 
-    LazyOptional<IItemHandler> invHandlerUp = registerConstantCap(new IEInventoryHandler(2, this, 1, true, false));
+    LazyOptional<IItemHandler> invHandlerUp = LazyOptional.of(() -> new IEInventoryHandler(2, this, 1, true, false));
+    
+    LazyOptional<IItemHandler> invHandlerSide = LazyOptional.of(() -> new IEInventoryHandler(1, this, 0, true, false));
 
-    LazyOptional<IItemHandler> invHandlerSide = registerConstantCap(new IEInventoryHandler(1, this, 0, true, false));
-
-    LazyOptional<IItemHandler> invHandlerDown = registerConstantCap(new IEInventoryHandler(1, this, 3, false, true));
+    LazyOptional<IItemHandler> invHandlerDown = LazyOptional.of(() -> new IEInventoryHandler(1, this, 3, false, true));
 
     public static Fluid getProtein() {
         Fluid f = RegistryUtils.getFluid(pr);
         return f == Fluids.EMPTY ? Fluids.WATER : f;
     }
 
-    public IncubatorTileEntity() {
-        super(FHTileTypes.INCUBATOR.get());
+    public IncubatorTileEntity(BlockPos bp,BlockState bs) {
+        super(FHTileTypes.INCUBATOR.get(),bp,bs);
         this.inventory = NonNullList.withSize(4, ItemStack.EMPTY);
     }
 
-    public IncubatorTileEntity(BlockEntityType<?> type) {
-        super(type);
+    public IncubatorTileEntity(BlockEntityType<? extends BlockEntity> type,BlockPos bp,BlockState bs) {
+        super(type,bp,bs);
         this.inventory = NonNullList.withSize(4, ItemStack.EMPTY);
     }
-
-    @Override
-    public boolean canUseGui(Player arg0) {
-        return true;
-    }
-
     @Override
     public void doGraphicalUpdates() {
 
@@ -165,11 +166,12 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements TickableBlo
 
     protected boolean fetchFuel() {
         ItemStack is = inventory.get(0);
-        if (!is.isEmpty() && is.getItem() == RankineItems.QUICKLIME.get()) {
+        //TODO quicklime item
+        /*if (!is.isEmpty() && is.getItem() == RankineItems.QUICKLIME.get()) {
             is.shrink(1);
             fuel = fuelMax = 16000;
             return true;
-        }
+        }*/
         return false;
     }
 
@@ -208,10 +210,6 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements TickableBlo
         return new int[]{processMax - process, Mth.ceil(efficiency * 100), fuel};
     }
 
-    @Override
-    public IInteractionObjectIE getGuiMaster() {
-        return this;
-    }
 
     @Nullable
     @Override
@@ -240,9 +238,10 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements TickableBlo
     }
     @Override
     public boolean isStackValid(int i, ItemStack itemStack) {
-
+    	//TODO add quicklime
+/*
         if (i == 0)
-            return itemStack.getItem() == RankineItems.QUICKLIME.get();
+            return itemStack.getItem() == RankineItems.QUICKLIME.get();*/
         if (i == 1)
             return canBeCatalyst(itemStack) || itemStack.getItem() == Items.ROTTEN_FLESH;
         if (i == 2)
@@ -388,13 +387,14 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements TickableBlo
                         }
                         if (efficiency > 0.01) {
                             int value = in.getItem().getFoodProperties().getNutrition();
-                            if (in.getItem() instanceof StewItem) {
+                            //add caupona
+                            /*if (in.getItem() instanceof StewItem) {
                                 value = ThermopoliumApi.getInfo(in).healing;
 
                             } else {
                                 out = in.getContainerItem();
                                 in.shrink(1);
-                            }
+                            }*/
                             int nvalue = value * 25;
                             outfluid = new FluidStack(getProtein(), nvalue);
                             lprocess = 0;
@@ -446,5 +446,16 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements TickableBlo
             compound.put("outfluid", outfluid.writeToNBT(new CompoundTag()));
         }
     }
+
+
+	@Override
+	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
+		return new IncubatorT1Container(pContainerId,pPlayerInventory,this);
+	}
+
+	@Override
+	public Component getDisplayName() {
+		return TranslateUtils.translateGui("incubator.t1.title");
+	}
 
 }

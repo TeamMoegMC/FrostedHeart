@@ -19,12 +19,12 @@
 
 package com.teammoeg.frostedheart.compat.tetra;
 
-import net.minecraftforge.common.ToolType;
+import net.minecraftforge.common.ToolAction;
 
 public class TetraCompat {
-    public static ToolType coreSpade = ToolType.get("core_spade");
-    public static ToolType proPick = ToolType.get("prospector_pick");
-    public static ToolType geoHammer = ToolType.get("geo_hammer");
+    public static ToolAction coreSpade = ToolAction.get("core_spade");
+    public static ToolAction proPick = ToolAction.get("prospector_pick");
+    public static ToolAction geoHammer = ToolAction.get("geo_hammer");
 
     public static void init() {
     }

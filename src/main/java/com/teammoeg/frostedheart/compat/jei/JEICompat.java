@@ -78,12 +78,11 @@ import com.teammoeg.frostedheart.util.client.Point;
 
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
-import mezz.jei.api.constants.VanillaRecipeCategoryUid;
+import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.handlers.IGuiClickableArea;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import mezz.jei.api.helpers.IGuiHelper;
-import mezz.jei.api.recipe.IFocus.Mode;
 import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
@@ -92,7 +91,8 @@ import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
-import mezz.jei.plugins.jei.info.IngredientInfoRecipe;
+import mezz.jei.library.plugins.vanilla.VanillaPlugin;
+import mezz.jei.library.plugins.vanilla.crafting.VanillaRecipes;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -115,7 +115,7 @@ public class JEICompat implements IModPlugin {
     static Map<RecipeType<?>, Set<ResourceLocation>> types = new HashMap<>();
 
     static {
-        types.computeIfAbsent(RecipeType.CRAFTING, i -> new HashSet<>()).add(VanillaRecipeCategoryUid.CRAFTING);
+        types.computeIfAbsent(RecipeType.CRAFTING, i -> new HashSet<>()).add(VanillaC);
 
 
     }
@@ -287,9 +287,9 @@ public class JEICompat implements IModPlugin {
         man = jeiRuntime.getRecipeManager();
         jei = jeiRuntime;
         syncJEI();
-        man.hideRecipeCategory(VanillaRecipeCategoryUid.BLASTING);
-        man.hideRecipeCategory(VanillaRecipeCategoryUid.SMOKING);
-        man.hideRecipeCategory(VanillaRecipeCategoryUid.FURNACE);
+        man.hideRecipeCategory(RecipeTypes.BLASTING);
+        man.hideRecipeCategory(RecipeTypes.SMOKING);
+        man.hideRecipeCategory(RecipeTypes.SMELTING);
 
     }
     @Override

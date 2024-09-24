@@ -23,11 +23,11 @@ import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.material.MapColor;
 
 public class AccessControlBlock extends FHBaseBlock {
     public AccessControlBlock() {
-        super(Block.Properties.of(Material.METAL).sound(SoundType.STONE).requiresCorrectToolForDrops()
+        super(Block.Properties.of().mapColor(MapColor.METAL).sound(SoundType.STONE).requiresCorrectToolForDrops()
                 .strength(0, 2000).noOcclusion());
 
     }

@@ -34,7 +34,7 @@ public class WoodenBox extends FHBaseBlock {
     }
 
     public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-        Integer finalColor = Math.abs(RANDOM.nextInt()) % colorCount;
+        Integer finalColor = Math.abs(worldIn.random.nextInt()) % colorCount;
         BlockState newState = this.stateDefinition.any().setValue(TYPE, finalColor);
         worldIn.setBlockAndUpdate(pos, newState);
     }
@@ -42,14 +42,14 @@ public class WoodenBox extends FHBaseBlock {
     @Override
     public void playerWillDestroy(Level worldIn, BlockPos pos, BlockState state, Player player) {
         super.playerWillDestroy(worldIn, pos, state, player);
-        int count = Math.abs(RANDOM.nextInt()) % 5 + 1;
+        int count = Math.abs(worldIn.random.nextInt()) % 5 + 1;
         popResource(worldIn, pos, new ItemStack(Items.POTATO, count));
     }
 
     @Override
     public void wasExploded(Level worldIn, BlockPos pos, Explosion explosionIn) {
         super.wasExploded(worldIn, pos, explosionIn);
-        int count = Math.abs(RANDOM.nextInt()) % 2 + 1;
+        int count = Math.abs(worldIn.random.nextInt()) % 2 + 1;
         popResource(worldIn, pos, new ItemStack(Items.POTATO, count));
     }
 
