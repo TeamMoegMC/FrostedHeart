@@ -30,7 +30,6 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableAnimated;
