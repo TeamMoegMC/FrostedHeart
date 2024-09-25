@@ -145,11 +145,17 @@ public class TemperatureUpdate {
                             break;
                         }
                     }
+
                     EffectInstance current = player.getActivePotionEffect(FHEffects.WET.get());
-                    if (hasArmor)
-                        player.addPotionEffect(new EffectInstance(FHEffects.WET.get(), 400, 0));// punish for wet clothes
-                    else if (current == null || current.getDuration() < 100)
-                        player.addPotionEffect(new EffectInstance(FHEffects.WET.get(), 100, 0));
+                    int duration;
+                    if (current == null) {
+                        duration = 100;
+                    } else if (hasArmor) {
+                        duration = Math.min(current.getDuration() + 80, 2400); // punish for wet clothes
+                    } else {
+                        duration = Math.min(current.getDuration() + 40, 600);
+                    }
+                    player.addPotionEffect(new EffectInstance(FHEffects.WET.get(), duration, 0, false, false));
                 }
                 //load current data
                 float current = PlayerTemperatureData.getCapability(event.player).map(PlayerTemperatureData::getBodyTemp).orElse(0f);

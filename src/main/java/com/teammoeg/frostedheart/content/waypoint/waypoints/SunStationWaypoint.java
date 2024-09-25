@@ -7,7 +7,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.vector.Vector3f;
 
-public class SunStationWaypoint extends waypoint {
+public class SunStationWaypoint extends Waypoint {
     public SunStationWaypoint() {
         super(new Vector3f(0, 0, 0), "Sun Station", 0xFFFFDA64);
         this.displayName = TranslateUtils.translateWaypoint("sun_station");

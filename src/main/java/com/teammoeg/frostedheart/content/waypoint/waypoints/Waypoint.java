@@ -27,7 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-public class waypoint extends AbstractWaypoint {
+public class Waypoint extends AbstractWaypoint {
     /**
      * 路径点显示的图标
      */
@@ -41,19 +41,19 @@ public class waypoint extends AbstractWaypoint {
      */
     protected int maxTextWidth;
 
-    public waypoint(Vector3f target, String ID, int color) {
+    public Waypoint(Vector3f target, String ID, int color) {
         super(target, ID, color);
     }
 
-    public waypoint(BlockPos target, String ID, int color) {
+    public Waypoint(BlockPos target, String ID, int color) {
         super(target, ID, color);
     }
 
-    public waypoint(CompoundNBT nbt) {
+    public Waypoint(CompoundNBT nbt) {
         super(nbt);
     }
 
-    public waypoint(PacketBuffer buffer) {
+    public Waypoint(PacketBuffer buffer) {
         super(buffer);
     }
 

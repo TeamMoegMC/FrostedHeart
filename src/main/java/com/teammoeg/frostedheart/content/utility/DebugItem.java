@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.utility;
 
 import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
 import com.teammoeg.frostedheart.content.waypoint.WaypointManager;
-import com.teammoeg.frostedheart.content.waypoint.waypoints.waypoint;
+import com.teammoeg.frostedheart.content.waypoint.waypoints.Waypoint;
 import com.teammoeg.frostedheart.util.client.FHColorHelper;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -28,7 +28,7 @@ public class DebugItem extends Item {
         } else {
             Random random = new Random();
             String uuid = UUID.randomUUID().toString();
-            waypoint waypoint = new waypoint(new Vector3f((random.nextFloat()-0.5F)*256, (random.nextFloat()-0.5F)*128+128, (random.nextFloat()-0.5F)*256), uuid, FHColorHelper.CYAN);
+            Waypoint waypoint = new Waypoint(new Vector3f((random.nextFloat()-0.5F)*256, (random.nextFloat()-0.5F)*128+128, (random.nextFloat()-0.5F)*256), uuid, FHColorHelper.CYAN);
             WaypointManager.getManager((ServerPlayerEntity) playerIn).putWaypoint(waypoint);
         }
         return super.onItemRightClick(worldIn, playerIn, handIn);

@@ -21,7 +21,7 @@ import java.util.UUID;
 /**
  * 没写完，不要用
  */
-public class EntityWaypoint extends waypoint {
+public class EntityWaypoint extends Waypoint {
     private static final UUID EMPTY_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
     /**
      * 所有实体目标的 UUID，用于获取实体

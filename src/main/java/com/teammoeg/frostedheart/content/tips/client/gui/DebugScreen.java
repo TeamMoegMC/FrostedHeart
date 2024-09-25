@@ -34,7 +34,7 @@ public class DebugScreen extends Screen {
 //        this.addButton(new IconButton((int) (this.width*0.5-5), (int) (this.height*0.4), IconButton.ICON_BOX_ON, FHColorHelper.CYAN, TranslateUtils.translateGui("debug.random_waypoint"), (b) -> {
 //            Random random = new Random();
 //            String uuid = UUID.randomUUID().toString();
-//            waypoint waypoint = new waypoint(new Vector3f((random.nextFloat()-0.5F)*256, (random.nextFloat()-0.5F)*128+128, (random.nextFloat()-0.5F)*256), random.nextInt(), uuid);
+//            Waypoint Waypoint = new Waypoint(new Vector3f((random.nextFloat()-0.5F)*256, (random.nextFloat()-0.5F)*128+128, (random.nextFloat()-0.5F)*256), random.nextInt(), uuid);
 //            WaypointManager.getManager()
 //        }));
 //        this.addButton(new IconButton((int) (this.width*0.5+15), (int) (this.height*0.4), IconButton.ICON_BOX, FHColorHelper.RED, TranslateUtils.translateGui("debug.remove_all_waypoint"), (b) -> {
