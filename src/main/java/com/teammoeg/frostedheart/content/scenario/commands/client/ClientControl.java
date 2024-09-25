@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.scenario.commands.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.FHScenarioClient;
@@ -40,10 +41,11 @@ import com.teammoeg.frostedheart.util.client.Point;
 import com.teammoeg.frostedheart.util.client.Rect;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
+import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
 import dev.ftb.mods.ftbquests.FTBQuests;
+import dev.ftb.mods.ftbquests.api.FTBQuestsAPI;
+import dev.ftb.mods.ftbquests.quest.BaseQuestFile;
 import dev.ftb.mods.ftbquests.quest.Quest;
-import dev.ftb.mods.ftbquests.quest.QuestFile;
 import dev.ftb.mods.ftbquests.quest.task.ItemTask;
 import dev.ftb.mods.ftbquests.quest.task.KillTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
@@ -53,6 +55,7 @@ import net.minecraft.client.resources.sounds.SoundInstance.Attenuation;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -60,16 +63,16 @@ import net.minecraft.network.chat.ClickEvent;
 
 public class ClientControl implements IClientControlCommand {
 	public void link(IClientScene runner,@Param("lid")String linkId) {
-		runner.setPreset(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"fh$scenario$link:"+linkId)).setUnderlined(true));
+		runner.setPreset(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"fh$scenario$link:"+linkId)).withUnderlined(true));
 	}
 	public void endlink(IClientScene runner) {
 		runner.setPreset(null);
 	}
 	@Override
 	public void showTask(IClientScene runner,@Param("q")String q,@Param("t")int t) {
-		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
-		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
-		Task tsk=quest.tasks.get(t);
+		BaseQuestFile qf=FTBQuestsAPI.api().getQuestFile(false);
+		Quest quest=qf.getQuest(BaseQuestFile.parseCodeString(q));
+		Task tsk=quest.getTasksAsList().get(t);
 		Component itt;
 		if(tsk instanceof ItemTask) {
 			itt=TranslateUtils.translateMessage("item_task",tsk.getTitle());
@@ -93,11 +96,11 @@ public class ClientControl implements IClientControlCommand {
 		Component t1=null,t2=null;
 		if(t!=null) {
 			t1=ClientTextComponentUtils.parse(t);
-			ClientUtils.mc().gui.setTitles(t1,null,i1==null?-1:i1,i2==null?-1:i2, i3==null?-1:i3);
+			ClientUtils.mc().gui.setTitle(t1);
 		}
 		if(st!=null) {
 			t2=ClientTextComponentUtils.parse(st);
-			ClientUtils.mc().gui.setTitles(null,t2,i1==null?-1:i1,i2==null?-1:i2, i3==null?-1:i3);
+			ClientUtils.mc().gui.setSubtitle(t2);
 		}
 		
 	}
@@ -251,7 +254,11 @@ public class ClientControl implements IClientControlCommand {
 	public void bgm(IClientScene runner,@Param("n")@Param("name")String name) {
 		//ISound sound=SimpleSound.music();
 		ClientUtils.mc().getMusicManager().stopPlaying();
-		ClientUtils.mc().getMusicManager().startPlaying(new Music(new SoundEvent(FHScenarioClient.getPathOf(new ResourceLocation(name),"")), 0, 0, true));
+		ForgeRegistries.SOUND_EVENTS.getHolder(FHScenarioClient.getPathOf(new ResourceLocation(name),""))
+		.ifPresentOrElse(t->ClientUtils.mc().getMusicManager().startPlaying(new Music(t, 0, 0, true)), ()->{
+			FHMain.LOGGER.error("[FHScenario] Music "+name+" Not found");
+		});
+		
 	
 	}
 	@Override
@@ -263,7 +270,7 @@ public class ClientControl implements IClientControlCommand {
 	@Override
 	public void sound(IClientScene runner,@Param("n")@Param("name")String name,@Param("repeat")int rep) {
 		//ISound sound=SimpleSound.music();
-		SoundInstance sound=new SimpleSoundInstance(FHScenarioClient.getPathOf(new ResourceLocation(name),""), SoundSource.MASTER,1, 1, rep>0, 0, Attenuation.LINEAR, 0, 0, 0, true);
+		SoundInstance sound=new SimpleSoundInstance(FHScenarioClient.getPathOf(new ResourceLocation(name),""), SoundSource.MASTER,1, 1, ClientUtils.getWorld().getRandom(), rep>0, 0, Attenuation.LINEAR, 0, 0, 0, true);
 		ClientUtils.mc().getSoundManager().play(sound);
 		current.add(sound);
 	}

@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.scenario.parser.providers;
 
 import java.util.Map;
 
+import dev.ftb.mods.ftbquests.quest.BaseQuestFile;
 import dev.ftb.mods.ftbquests.quest.Quest;
-import dev.ftb.mods.ftbquests.quest.QuestFile;
 import dev.ftb.mods.ftbquests.quest.ServerQuestFile;
 import dev.ftb.mods.ftbquests.quest.task.CheckmarkTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
@@ -39,7 +39,7 @@ public class FTBQProvider extends StringScenarioProvider {
 			return null;
 		String qid=t.substring("quest:".length());
 		//System.out.println("loading quest "+qid);
-		Quest quest=ServerQuestFile.INSTANCE.getQuest(QuestFile.parseCodeString(qid));
+		Quest quest=ServerQuestFile.INSTANCE.getQuest(BaseQuestFile.parseCodeString(qid));
 		if(quest==null)return null;
 		StringBuilder b=new StringBuilder();
 		b.append("[WaitQuestStart q=").append(qid).append(" l=qstart][wt][label name=qstart]\n");
@@ -49,14 +49,14 @@ public class FTBQProvider extends StringScenarioProvider {
 			b.append(" st=\"").append(quest.subtitle.replaceAll("\\\\", "\\\\\\\\").replaceAll("\"", "\\\"")).append("\"");
 		}*/
 		//b.append("\n[p]\n");
-		for(String s:quest.description) {
+		for(String s:quest.getRawDescription()) {
 			b.append(s.replaceAll("\\[", "[").replaceAll("@", "@")).append("[p]\n");
 		}
 		int it=0;
-		for(Task tsk:quest.tasks) {
+		for(Task tsk:quest.getTasks()) {
 			if(tsk instanceof CheckmarkTask) {
-				b.append("@actTitle st=\"").append(tsk.title==null||tsk.title.isEmpty()?"{message.frostedheart.complete_title}":tsk.title).append("\"\n");
-				b.append("[link l=tsk").append(it).append("]").append(tsk.title==null||tsk.title.isEmpty()?"{message.frostedheart.click_complete}":tsk.title).append("[endlink]")
+				b.append("@actTitle st=\"").append(tsk.getRawTitle()==null||tsk.getRawTitle().isEmpty()?"{message.frostedheart.complete_title}":tsk.getRawTitle()).append("\"\n");
+				b.append("[link l=tsk").append(it).append("]").append(tsk.getRawTitle()==null||tsk.getRawTitle().isEmpty()?"{message.frostedheart.click_complete}":tsk.getRawTitle()).append("[endlink]")
 				.append("[wa]\n");
 			}else {
 				b.append("@WaitTaskCompleteShow l=tsk").append(it).append(" q=").append(quest.getCodeString())

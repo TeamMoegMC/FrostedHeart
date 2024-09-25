@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11C;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -11,11 +12,13 @@ import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.BufferUploader;
+
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.resources.ResourceLocation;
-import com.mojang.math.Matrix4f;
 
 public class GLImageContent extends GLLayerContent {
 	public ResourceLocation showingImage;
@@ -65,16 +68,19 @@ public class GLImageContent extends GLLayerContent {
 
 	public static void innerBlit(Matrix4f matrix, int x1, int x2, int y1, int y2, int blitOffset, float minU, float maxU, float minV, float maxV, float opacity) {
 		//RenderSystem.enableAlphaTest();
+	      
+	      RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
+	      RenderSystem.enableBlend();
+	      
 		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
-		bufferbuilder.begin(GL11C.GL_QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
 		bufferbuilder.vertex(matrix, x1, y2, blitOffset).color(1, 1, 1, opacity).uv(minU, maxV).endVertex();
 		bufferbuilder.vertex(matrix, x2, y2, blitOffset).color(1, 1, 1, opacity).uv(maxU, maxV).endVertex();
 		bufferbuilder.vertex(matrix, x2, y1, blitOffset).color(1, 1, 1, opacity).uv(maxU, minV).endVertex();
 		bufferbuilder.vertex(matrix, x1, y1, blitOffset).color(1, 1, 1, opacity).uv(minU, minV).endVertex();
 		bufferbuilder.end();
-		RenderSystem.enableBlend();
-		RenderSystem.enableAlphaTest();
-		BufferUploader.end(bufferbuilder);
+		
+		BufferUploader.drawWithShader(bufferbuilder.end());
 		RenderSystem.disableBlend();
 	}
 

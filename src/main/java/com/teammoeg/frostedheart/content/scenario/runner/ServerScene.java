@@ -5,7 +5,7 @@ import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioActPacket
 import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioScenePacket;
 
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor;
 
 /**
  * A scene is a place to present content to client You should NOT store this

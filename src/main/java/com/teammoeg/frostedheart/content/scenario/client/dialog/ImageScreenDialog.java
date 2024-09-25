@@ -11,7 +11,7 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParam
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -33,11 +33,6 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	}
 	public ImageScreenDialog(Component titleIn) {
 		super(titleIn);
-	}
-	@Override
-	public void init(Minecraft minecraft, int width, int height) {
-		// TODO Auto-generated method stub
-		super.init(minecraft, width, height);
 		dialogW=0.8f;
 		dialogY=0.85f;
 	}
@@ -74,30 +69,31 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	}
 	float lpartialTicks;
 	float cpartialTicks;
-	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+	public void render(GuiGraphics matrixStack, int mouseX, int mouseY, float partialTicks) {
 		//AbstractGui.fill(matrixStack, 0, 0, width, height, 0xffffffff);
 		partialTicks=handlePt(partialTicks);
 		this.width=ClientScene.fromRelativeXW(1);
 		this.height=ClientScene.fromRelativeYH(1);
-		matrixStack.pushPose();
+		matrixStack.pose().pushPose();
 		getPrimary().render(new RenderParams(this,matrixStack,mouseX,mouseY,partialTicks));
 		int y=ClientScene.fromRelativeYH(dialogY);
 		int h=9*chatlist.size()+4;
 		
-		RenderSystem.enableAlphaTest();
+		//RenderSystem.enableAlphaTest();
+		
 		RenderSystem.enableBlend();
 		if(!chatlist.isEmpty())
-			GuiComponent.fill(matrixStack, ClientScene.fromRelativeXW(dialogX)-2,ClientScene.fromRelativeYH(dialogY)-2, ClientScene.fromRelativeXW(dialogW)+2+ClientScene.fromRelativeXW(dialogX), h+ClientScene.fromRelativeYH(dialogY)-2, 0xC0000000);
+			matrixStack.fill(ClientScene.fromRelativeXW(dialogX)-2,ClientScene.fromRelativeYH(dialogY)-2, ClientScene.fromRelativeXW(dialogW)+2+ClientScene.fromRelativeXW(dialogX), h+ClientScene.fromRelativeYH(dialogY)-2, 0xC0000000);
 		//this.fillGradient(matrixStack, ClientScene.fromRelativeXW(dialogX)-2, ClientScene.fromRelativeYH(dialogY)-2, ClientScene.fromRelativeXW(dialogW)+4, h, 0xC0101010, 0xD0101010);
 		for(TextInfo i:chatlist) {
 			int x=(ClientScene.fromRelativeXW(dialogW)-i.getCurLen())/2+ClientScene.fromRelativeXW(dialogX)+12;
-			this.minecraft.font.drawShadow(matrixStack, i.asFinished(), x, y, 0xffffffff);
+			matrixStack.drawString(this.minecraft.font, i.asFinished(), x, y, 0xffffffff);
 			y+=9;
 		}
 		RenderSystem.disableBlend();
-		matrixStack.popPose();
+		matrixStack.pose().popPose();
 		if(escapes!=MAX_ESCAPE) {
-			this.minecraft.font.drawShadow(matrixStack, TranslateUtils.translateMessage("escape_count",escapes), 10, 10, 0xFFAAAAAA);
+			matrixStack.drawString(this.minecraft.font, TranslateUtils.translateMessage("escape_count",escapes), 10, 10, 0xFFAAAAAA);
 		}
 	}
 

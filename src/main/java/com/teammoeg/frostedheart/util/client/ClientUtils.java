@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.util.client;
 
 import java.util.Random;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.content.research.gui.ResearchGui;
 
@@ -131,4 +132,9 @@ public class ClientUtils {
         worldIn.addParticle(ParticleTypes.FLAME, pos.getX() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0D, 0.01D);
         worldIn.addParticle(ParticleTypes.FLAME, pos.getX() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0D, -0.01D);
     }
+
+	public static void bindTexture(ResourceLocation showingImage) {
+		RenderSystem.setShaderTexture(0, showingImage);
+		
+	}
 }

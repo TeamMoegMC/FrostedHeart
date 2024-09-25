@@ -7,6 +7,7 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLLayerC
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class RenderParams {
@@ -83,6 +84,9 @@ public class RenderParams {
 	public RenderParams copy() {
 		return new RenderParams(screen, matrixStack, mouseX, mouseY, partialTicks, opacity, x, y, width, height,xzoom,yzoom,offsetX,offsetY,contentWidth,contentHeight);
 	}
+	public Font getFont() {
+		return ClientUtils.mc().font;
+	}
 	public RenderParams copyWithCurrent(GLLayerContent layer) {
 		return new RenderParams(screen, matrixStack, mouseX-ClientScene.fromRelativeXW(layer.getX()), mouseY-ClientScene.fromRelativeYH(layer.getY()), partialTicks,
 				opacity*layer.getOpacity(), x+ClientScene.fromRelativeXW(layer.getX()), y+ClientScene.fromRelativeYH(layer.getY()),
@@ -93,11 +97,14 @@ public class RenderParams {
 	public IScenarioDialog getScreen() {
 		return screen;
 	}
-	public GuiGraphics getMatrixStack() {
-		return matrixStack;
+	public PoseStack getMatrixStack() {
+		return matrixStack.pose();
 	}
-	public void setMatrixStack(GuiGraphics matrixStack) {
+	public void setGuiGraphics(GuiGraphics matrixStack) {
 		this.matrixStack = matrixStack;
+	}
+	public GuiGraphics getGuiGraphics() {
+		return this.matrixStack;
 	}
 	public int getMouseX() {
 		return mouseX;

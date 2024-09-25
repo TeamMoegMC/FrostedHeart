@@ -66,7 +66,7 @@ public class MCCommands {
 				s = s.replace("@" + entry.getKey(), entry.getValue().toString());
 			}
 		}
-		cmds.performCommand(source, s);
+		cmds.performPrefixedCommand(source, s);
 		if(op>0)
 			if(opent==null){
 				FHTeamDataManager.getServer().getPlayerList().deop(triggerPlayer.getGameProfile());

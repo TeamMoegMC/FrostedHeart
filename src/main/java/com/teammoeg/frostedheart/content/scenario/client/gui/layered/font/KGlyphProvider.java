@@ -1,8 +1,13 @@
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.font;
 
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 
 import javax.imageio.ImageIO;
 
@@ -20,6 +25,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
+import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.resources.ResourceLocation;
 
@@ -32,7 +38,7 @@ public class KGlyphProvider extends SimplePreparableReloadListener<Object>{
 	
 	}
 	public GlyphData getGlyph(int code) {
-		if(ClientUtils.mc().options.forceUnicodeFont) {
+		if(ClientUtils.mc().options.forceUnicodeFont().get()) {
 			return unicodeData.get(code);
 		}
 		return data.get(code);
@@ -56,9 +62,11 @@ public class KGlyphProvider extends SimplePreparableReloadListener<Object>{
 		int ascent=unicode.get("ascent").getAsInt();
 		ResourceLocation file=new ResourceLocation(unicode.get("file").getAsString());
 
-		
+		Optional<Resource> r=rm.getResource(new ResourceLocation(file.getNamespace(),"textures/"+file.getPath()));
+		if(r.isPresent())
 		try {
-			BufferedImage image=ImageIO.read(rm.getResource(new ResourceLocation(file.getNamespace(),"textures/"+file.getPath())).getInputStream());
+			InputStream stream=r.get().open();
+			BufferedImage image=ImageIO.read(stream);
 			
 			JsonArray ja=unicode.get("chars").getAsJsonArray();
 			if(image!=null) {
@@ -109,25 +117,32 @@ public class KGlyphProvider extends SimplePreparableReloadListener<Object>{
 		
 		byte[] sizesb=new byte[65536];
 		try {
-			rm.getResource(new ResourceLocation(sizes)).getInputStream().read(sizesb);
-			for(int i=0;i<=0xFF;i++) {
-				String hex=String.format("%02x",i);
-				ResourceLocation rrl=new ResourceLocation(String.format(template,hex));
-				ResourceLocation imgloc=new ResourceLocation(rrl.getNamespace(),"textures/"+rrl.getPath());
-				if(!rm.hasResource(imgloc))continue;
-				BufferedImage image=ImageIO.read(rm.getResource(imgloc).getInputStream());
-				if(image!=null) {
-					for(int j=0;j<=0Xff;j++) {
-						GlyphData gd=new GlyphData((j&0xF)*16,(j&0xF0));
-						int n=(i*0x100)+j;
-						gd.image=image;
-						gd.parseSize(sizesb[n]);
-						unicodeData.put(n, gd);
-						gd.isUnicode=true;
-						data.putIfAbsent(n, gd);
+			Optional<Resource> r=rm.getResource(new ResourceLocation(sizes));
+			if(r.isPresent())
+			try(InputStream stream=r.get().open()){
+				stream.read(sizesb);
+				for(int i=0;i<=0xFF;i++) {
+					String hex=String.format("%02x",i);
+					ResourceLocation rrl=new ResourceLocation(String.format(template,hex));
+					ResourceLocation imgloc=new ResourceLocation(rrl.getNamespace(),"textures/"+rrl.getPath());
+					Optional<Resource> resource=rm.getResource(imgloc);
+					if(resource.isPresent())
+					try(InputStream streamImg=resource.get().open()){
+						BufferedImage image=ImageIO.read(streamImg);
+						if(image!=null) {
+							for(int j=0;j<=0Xff;j++) {
+								GlyphData gd=new GlyphData((j&0xF)*16,(j&0xF0));
+								int n=(i*0x100)+j;
+								gd.image=image;
+								gd.parseSize(sizesb[n]);
+								unicodeData.put(n, gd);
+								gd.isUnicode=true;
+								data.putIfAbsent(n, gd);
+							}
+						}else {
+							FHMain.LOGGER.info("Error loading "+rrl);
+						}
 					}
-				}else {
-					FHMain.LOGGER.info("Error loading "+rrl);
 				}
 			}
 
@@ -140,14 +155,14 @@ public class KGlyphProvider extends SimplePreparableReloadListener<Object>{
 	}
 	public void onResourceManagerReload(ResourceManager resourceManager) {
 		rm=resourceManager;
-		JsonParser jp=new JsonParser();
 		try {
-			Collection<ResourceLocation> cls=rm.listResources("font", (p_215274_0_) -> p_215274_0_.endsWith(".json"));
-			for(ResourceLocation rl:cls) {
-				FHMain.LOGGER.info("Reloaded " + rl);
-				if(rl.getPath().contains("default"))
-				readFont(jp.parse(FileUtil.readString(
-					rm.getResource(rl).getInputStream())).getAsJsonObject());
+			Map<ResourceLocation, Resource> cls=rm.listResources("font", (p_215274_0_) -> p_215274_0_.getPath().endsWith(".json"));
+			for(Entry<ResourceLocation, Resource> rl:cls.entrySet()) {
+				FHMain.LOGGER.info("Reloaded " + rl.getKey());
+				if(rl.getKey().getPath().contains("default"))
+					try(BufferedReader stream=rl.getValue().openAsReader()){
+					readFont(JsonParser.parseReader(stream).getAsJsonObject());
+					}
 			}
 		} catch (JsonSyntaxException | IOException e) {
 			FHMain.LOGGER.error("Error loading font",e);
