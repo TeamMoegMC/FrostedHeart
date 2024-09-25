@@ -43,12 +43,11 @@ import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.util.Mth;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.ChatFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public class TradeScreen extends BaseScreen {
     TradeContainer cx;
@@ -190,7 +189,7 @@ public class TradeScreen extends BaseScreen {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         TradeIcons.MAIN.draw(matrixStack, x, y, w, h);
         TradeIcons.REL.draw(matrixStack, x + 133, y + 18, 54, 5);
         int repos = cx.relations.sum();
@@ -215,14 +214,14 @@ public class TradeScreen extends BaseScreen {
         } else {
             TradeIcons.EXP.draw(matrixStack, 133 + x, 25 + y, 54, 5);
         }
-        InventoryScreen.renderEntityInInventory(x + 28, y + 115, 30, (float) (x + 8) - this.getMouseX(),
+        InventoryScreen.renderEntityInInventoryFollowsMouse(matrixStack, x + 28, y + 115, 30, (float) (x + 8) - this.getMouseX(),
                 (float) (y + 75 - 50) - this.getMouseY(), ClientUtils.getPlayer());
-        InventoryScreen.renderEntityInInventory(x + 160, y + 115, 30, (float) (x + 140) - this.getMouseX(),
+        InventoryScreen.renderEntityInInventoryFollowsMouse(matrixStack, x + 160, y + 115, 30, (float) (x + 140) - this.getMouseX(),
                 (float) (y + 75 - 50) - this.getMouseY(), cx.data.parent);
     }
 
     @Override
-    public void drawForeground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawForeground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         super.drawForeground(matrixStack, theme, x, y, w, h);
         for (DetectionSlot ds : cx.slots) {
             if (ds.isSaleable) {

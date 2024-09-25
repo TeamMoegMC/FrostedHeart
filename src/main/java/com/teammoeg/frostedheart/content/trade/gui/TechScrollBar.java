@@ -26,14 +26,14 @@ import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
-
+import net.minecraft.client.gui.GuiGraphics;
 import dev.ftb.mods.ftblibrary.ui.ScrollBar.Plane;
 
 public class TechScrollBar extends PanelScrollBar {
     // Have to do this hack since FTBL fields are private.
     private static final Theme dtheme = new Theme() {
         @Override
-        public void drawScrollBar(PoseStack matrixStack, int x, int y, int w, int h, WidgetType type,
+        public void drawScrollBar(GuiGraphics matrixStack, int x, int y, int w, int h, WidgetType type,
                                   boolean vertical) {
             GuiHelper.setupDrawing();
             TradeIcons.SCROLLBTN.draw(matrixStack, x, y, w, h);
@@ -52,16 +52,16 @@ public class TechScrollBar extends PanelScrollBar {
 
     @Override
     public boolean canMouseScroll() {
-        return super.canMouseScroll() && panel.isEnabled() && !isHidden;
+        return super.canMouseScroll() && getPanel().isEnabled() && !isHidden;
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         TradeIcons.SCROLLFRAME.draw(matrixStack, x - 1, y - 7, 15, 160);
     }
 
     @Override
-    public void drawScrollBar(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawScrollBar(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         if (!isHidden)
             super.drawScrollBar(matrixStack, dtheme, x + 1, y + 1, w - 2, h - 2);
     }
