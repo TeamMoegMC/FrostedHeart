@@ -19,10 +19,13 @@
 
 package com.teammoeg.frostedheart.content.utility.incinerator;
 
-import java.util.Random;
+import java.util.function.Supplier;
+
+import org.jetbrains.annotations.NotNull;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.world.level.block.Block;
@@ -31,18 +34,16 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.fluids.FluidUtil;
 
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
-
-public class GasVentBlock extends FHBaseBlock {
+public class GasVentBlock extends FHBaseBlock implements FHEntityBlock<GasVentTileEntity>{
 
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
@@ -52,7 +53,7 @@ public class GasVentBlock extends FHBaseBlock {
     }
 
     @Override
-    public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, Random rand) {
+    public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, RandomSource rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
         if (stateIn.getValue(LIT)) {
             for (int i = 0; i < rand.nextInt(2) + 2; ++i)
@@ -62,19 +63,9 @@ public class GasVentBlock extends FHBaseBlock {
     }
 
     @Override
-    public BlockEntity createTileEntity(BlockState state, BlockGetter world) {
-        return FHTileTypes.GAS_VENT.get().create();
-    }
-
-    @Override
     protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         builder.add(LIT);
-    }
-
-    @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
     }
 
     @Override
@@ -84,5 +75,10 @@ public class GasVentBlock extends FHBaseBlock {
             return InteractionResult.SUCCESS;
         return super.use(state, worldIn, pos, player, handIn, hit);
     }
+
+	@Override
+	public @NotNull Supplier<BlockEntityType<GasVentTileEntity>> getBlock() {
+		return FHTileTypes.GAS_VENT;
+	}
 
 }

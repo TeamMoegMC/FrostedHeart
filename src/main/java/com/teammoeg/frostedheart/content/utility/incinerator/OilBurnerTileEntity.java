@@ -23,29 +23,34 @@ import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
+import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.tags.TagKey;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
-import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveState, TickableBlockEntity {
-    ResourceLocation burnable = new ResourceLocation("frostedheart", "flammable_fluid");
-    FluidTank input = new FluidTank(10000, s -> s.getFluid().getTags().contains(burnable));
+public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveState, FHTickableBlockEntity {
+    TagKey<Fluid> burnable = FluidTags.create(new ResourceLocation("frostedheart", "flammable_fluid"));
+    FluidTank input = new FluidTank(10000, s -> s.getFluid().is(burnable));
     int vals;
     private LazyOptional<IFluidHandler> holder = LazyOptional.empty();
 
-    public OilBurnerTileEntity() {
-        super(FHTileTypes.OIL_BURNER.get());
+    public OilBurnerTileEntity(BlockPos bp,BlockState bs) {
+        super(FHTileTypes.OIL_BURNER.get(),bp,bs);
     }
 
     @Override

@@ -48,7 +48,7 @@ import net.minecraft.world.level.Level;
 
 import net.minecraft.world.item.Item.Properties;
 
-public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, ITempAdjustFood, EnergyHelper.IIEEnergyItem {
+public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, ITempAdjustFood {
 
 
     public SteamBottleItem(Properties properties) {

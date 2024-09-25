@@ -29,29 +29,31 @@ import com.teammoeg.frostedheart.content.utility.FHLeveledTool;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.ChatFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.FakePlayer;
 import se.mickelus.tetra.properties.IToolProvider;
-
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
 
 public class GeologistsHammer extends FHLeveledTool {
     public static ResourceLocation tag = new ResourceLocation("forge:ores");
-
+    public static TagKey<Block> itemTag=BlockTags.create(tag);
     public static InteractionResult doProspect(Player player, Level world, BlockPos blockpos, ItemStack is, InteractionHand h) {
         if (player != null && (!(player instanceof FakePlayer))) {//fake players does not deserve XD
-            if (world.getBlockState(blockpos).getBlock().getTags().contains(tag)) {//early exit 'cause ore found
+            if (world.getBlockState(blockpos).is(itemTag)) {//early exit 'cause ore found
                 player.displayClientMessage(TranslateUtils.translate(world.getBlockState(blockpos).getBlock().getDescriptionId()).withStyle(ChatFormatting.GOLD), false);
                 return InteractionResult.SUCCESS;
             }
@@ -65,7 +67,7 @@ public class GeologistsHammer extends FHLeveledTool {
                 //This is predictable, but not any big problem. Cheaters can use x-ray or other things rather then hacking in this.
                 if (rnd.nextInt((int) (20 * corr)) != 0) {//mistaken rate 5%
                     BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos(x, y, z);
-                    Block ore;
+                    BlockState ore;
                     HashMap<String, Integer> founded = new HashMap<>();
 
                     int hrange = getHorizonalRange(is);
@@ -76,9 +78,9 @@ public class GeologistsHammer extends FHLeveledTool {
                                 int BlockX = x + x2;
                                 int BlockY = y + y2;
                                 int BlockZ = z + z2;
-                                ore = world.getBlockState(mutable.set(BlockX, BlockY, BlockZ)).getBlock();
-                                if (ore.getTags().contains(tag)) {
-                                    founded.merge(ore.getDescriptionId(), 1, Integer::sum);
+                                ore = world.getBlockState(mutable.set(BlockX, BlockY, BlockZ));
+                                if (ore.is(itemTag)) {
+                                    founded.merge(ore.getBlock().getDescriptionId(), 1, Integer::sum);
                                 }
                             }
                     if (!founded.isEmpty()) {

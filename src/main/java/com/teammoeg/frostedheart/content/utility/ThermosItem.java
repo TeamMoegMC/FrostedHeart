@@ -24,14 +24,16 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.simibubi.create.content.contraptions.fluids.potion.PotionFluidHandler;
+import com.simibubi.create.content.fluids.potion.PotionFluidHandler;
 import com.teammoeg.frostedheart.FHDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
 
-import blusunrize.immersiveengineering.common.util.fluids.PotionFluid;
+import blusunrize.immersiveengineering.common.fluids.PotionFluid;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -48,7 +50,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.tags.Tag;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.core.NonNullList;
@@ -61,31 +63,31 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.BaseComponent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.ChatFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
-import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
-
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.tags.ITag;
 import net.minecraft.world.item.Item.Properties;
 
-public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
+public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood,ICreativeModeTabItem {
     final int unit;
     final boolean doAddItems;
     final String lang;
-
+    static final TagKey<Fluid> availableFluid=FluidTags.create(new ResourceLocation(FHMain.MODID, "drink"));
+    static final TagKey<Fluid> hidden = FluidTags.create(new ResourceLocation(FHMain.MODID, "hidden_drink"));
     public ThermosItem( String lang, int capacity, int unit, boolean add) {
-        super(new Properties().stacksTo(1).setNoRepair().durability(capacity).tab(FHMain.itemGroup).food(new FoodProperties.Builder().nutrition(1).saturationMod(1).build()), capacity);
+        super(new Properties().stacksTo(1).setNoRepair().durability(capacity).food(new FoodProperties.Builder().nutrition(1).saturationMod(1).build()), capacity);
         this.unit = unit;
         doAddItems = add;
         this.lang = lang;
@@ -95,16 +97,15 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         tooltip.add(TranslateUtils.translateTooltip("meme.thermos").withStyle(ChatFormatting.GRAY));
-
         if (stack.getTagElement(FluidHandlerItemStack.FLUID_NBT_KEY) != null) {
             FluidUtil.getFluidHandler(stack).ifPresent(f -> {
-                tooltip.add(((BaseComponent) f.getFluidInTank(0).getDisplayName()).append(String.format(": %d / %dmB", f.getFluidInTank(0).getAmount(), capacity)).withStyle(ChatFormatting.GRAY));
+                tooltip.add(((MutableComponent)f.getFluidInTank(0).getDisplayName()).append(String.format(": %d / %dmB", f.getFluidInTank(0).getAmount(), capacity)).withStyle(ChatFormatting.GRAY));
                 FluidStack fs = f.getFluidInTank(0);
                 Fluid ft = fs.getFluid();
-                if (ft instanceof com.simibubi.create.content.contraptions.fluids.potion.PotionFluid)
+                if (ft instanceof com.simibubi.create.content.fluids.potion.PotionFluid)
                     PotionFluidHandler.addPotionTooltip(fs, tooltip, 1);
                 else if (ft instanceof PotionFluid)
-                    ((PotionFluid) ft).addInformation(fs, tooltip);
+                    ((PotionFluid) ft).addInformation(fs, tooltip::add);
                 tooltip.add(TranslateUtils.translate("tooltip.watersource.drink_unit").append(" : " + this.getUnit() + "mB").withStyle(ChatFormatting.GRAY));
             });
         }
@@ -127,27 +128,24 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     }
 
     @Override
-    public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> items) {
-        if (this.allowdedIn(group)) {
-            if (!doAddItems) {
-                super.fillItemCategory(group, items);
-                return;
-            }
-            Tag<Fluid> tag = FluidTags.getAllTags().getTag(new ResourceLocation(FHMain.MODID, "drink"));
-            ResourceLocation hidden = new ResourceLocation(FHMain.MODID, "hidden_drink");
-            items.add(new ItemStack(this));
+    public void fillItemCategory(CreativeTabItemHelper helper) {
+        if (helper.isType(FHMain.itemGroup)) {
+       
+            ITag<Fluid> tag = ForgeRegistries.FLUIDS.tags().getTag(availableFluid);
+            
+            helper.accept(new ItemStack(this));
             if (tag == null) return;
-            for (Fluid fluid : tag.getValues()) {
-                if (fluid.getTags().contains(hidden)) continue;
+            for (Fluid fluid : tag) {
+                if (fluid.is(hidden)) continue;
                 ItemStack itemStack = new ItemStack(this);
                 itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(data -> data.fill(new FluidStack(fluid, data.getTankCapacity(0)), FluidAction.EXECUTE));
-                items.add(itemStack);
+                helper.accept(itemStack);
             }
         }
     }
 
     @Override
-    public ItemStack getContainerItem(ItemStack itemStack) {
+    public ItemStack getCraftingRemainingItem(ItemStack itemStack) {
         ItemStack itemStack1 = itemStack.copy();
         itemStack1.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(data -> {
             FluidStack fs = data.drain(unit, IFluidHandler.FluidAction.EXECUTE);
@@ -222,15 +220,11 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
 
             @Override
             public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
-                if (stack.getFluid() instanceof PotionFluid || stack.getFluid() instanceof com.simibubi.create.content.contraptions.fluids.potion.PotionFluid) {
+                if (stack.getFluid() instanceof PotionFluid || stack.getFluid() instanceof com.simibubi.create.content.fluids.potion.PotionFluid) {
                     return true;
                 }
-                for (Fluid fluid : FluidTags.getAllTags().getTag(new ResourceLocation(FHMain.MODID, "drink")).getValues()) {
-                    if (fluid == stack.getFluid()) {
-                        return true;
-                    }
-                }
-                return false;
+               
+                return stack.getFluid().is(availableFluid);
             }
         };
     }
@@ -277,7 +271,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
             if (entityplayer != null) {
                 entityplayer.awardStat(Stats.ITEM_USED.get(this));
                 Fluid f = fs.getFluid();
-                if (f instanceof com.simibubi.create.content.contraptions.fluids.potion.PotionFluid) {
+                if (f instanceof com.simibubi.create.content.fluids.potion.PotionFluid) {
                     for (MobEffectInstance ei : PotionUtils.getAllEffects(fs.getOrCreateTag()))
                         FHUtils.applyEffectTo(ei, entityplayer);
                 } else if (f instanceof PotionFluid) {

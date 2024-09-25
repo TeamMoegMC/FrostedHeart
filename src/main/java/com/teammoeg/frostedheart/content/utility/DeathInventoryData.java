@@ -58,14 +58,14 @@ public class DeathInventoryData implements NBTSerializable {
             for (int i = 0; i < 9; i++) {
                 ItemStack itemstack = othis.items.get(i);
                 if (!itemstack.isEmpty()) {
-                    if (itemstack.isDamageableItem() || !itemstack.getToolTypes().isEmpty()) {
+                    if (itemstack.isDamageableItem() || itemstack.getMaxStackSize()==1) {
                         inv.set(i, itemstack);
                         othis.setItem(i, ItemStack.EMPTY);
                     }
                 }
             }
             ItemStack offhand = othis.offhand.get(0);
-            if (offhand.isDamageableItem() || !offhand.getToolTypes().isEmpty()) {
+            if (offhand.isDamageableItem() || offhand.getMaxStackSize()==1) {
                 this.offhand = offhand;
                 othis.offhand.set(0, ItemStack.EMPTY);
             }
