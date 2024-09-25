@@ -3,13 +3,16 @@ package com.teammoeg.frostedheart.content.tips.client.gui.widget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.client.Point;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 
 import net.minecraft.client.gui.components.Button.OnPress;
+import net.minecraft.client.gui.components.Tooltip;
 
 public class IconButton extends Button {
     public static final ResourceLocation ICON_LOCATION = new ResourceLocation(FHMain.MODID, "textures/gui/hud_icon.png");
@@ -31,50 +34,26 @@ public class IconButton extends Button {
     public final int color;
 
     public IconButton(int x, int y, Point icon, int color, Component title, OnPress pressedAction) {
-        super(x, y, 10, 10, title, pressedAction);
+        super(builder(title, pressedAction).bounds(x, y, 10, 10).tooltip(Tooltip.create(title)));
         this.color = color;
         this.currentIcon = icon;
     }
 
     public void setXY(int x, int y) {
-        this.x = x;
-        this.y = y;
+        this.setX(x);
+        this.setY(y);
     }
 
     @Override
-    public void renderButton(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(GuiGraphics matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (isHovered()) {
-            fill(matrixStack, x, y, x+width, y+height, 50 << 24 | color & 0x00FFFFFF);
-            renderToolTip(matrixStack, mouseX, mouseY);
+        	matrixStack.fill( getX(), getY(), getX()+width, getY()+height, 50 << 24 | color & 0x00FFFFFF);
         }
-
-        float r = (color >> 16 & 0xFF) / 255F;
-        float g = (color >> 8 & 0xFF) / 255F;
-        float b = (color & 0xFF) / 255F;
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.color4f(r, g, b, alpha);
-        Minecraft.getInstance().getTextureManager().bind(ICON_LOCATION);
-        blit(matrixStack, x, y, currentIcon.getX(), currentIcon.getY(), 10, 10, 80, 80);
-        RenderSystem.disableBlend();
+        
+        FHGuiHelper.bindTexture(ICON_LOCATION);
+        FHGuiHelper.blitColored(matrixStack.pose(), getX(), getY(), 10, 10, currentIcon.getX(), currentIcon.getY(), 10, 10, 80, 80, color,alpha);
     }
 
-    @Override
-    public void renderToolTip(PoseStack matrixStack, int mouseX, int mouseY) {
-        Minecraft mc = Minecraft.getInstance();
-        String text = getMessage().getString();
-        if (!text.isEmpty()) {
-            int textWidth = mc.font.width(text);
-            int renderX = x-textWidth+8;
-            if (renderX < 0) {
-                fill(matrixStack, x, y - 12, x+2 + textWidth, y, 50 << 24 | color & 0x00FFFFFF);
-                mc.font.draw(matrixStack, text, x+2, y-10, color);
-            } else {
-                fill(matrixStack, x+8 - textWidth, y - 12, x + 10, y, 50 << 24 | color & 0x00FFFFFF);
-                mc.font.draw(matrixStack, text, x-textWidth+width, y-10, color);
-            }
-        }
-    }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {

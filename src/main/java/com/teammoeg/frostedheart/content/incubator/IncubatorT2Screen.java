@@ -24,7 +24,7 @@ import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.utils.GuiHelper;
@@ -44,7 +44,7 @@ public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
 
     @Override
     protected void renderBg(PoseStack transform, float partial, int x, int y) {
-        ClientUtils.bindTexture(TEXTURE);
+        FHGuiHelper.bindTexture(TEXTURE);
         this.blit(transform, leftPos, topPos, 0, 0, imageWidth, imageHeight);
         GuiHelper.handleGuiTank(transform, tile.fluid[0], leftPos + 88, topPos + 20, 16, 46, 177, 177, 20, 51, x, y, TEXTURE, null);
         GuiHelper.handleGuiTank(transform, tile.fluid[1], leftPos + 124, topPos + 20, 16, 46, 177, 177, 20, 51, x, y, TEXTURE, null);

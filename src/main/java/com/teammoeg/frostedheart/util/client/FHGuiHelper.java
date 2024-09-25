@@ -35,11 +35,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
 
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FastColor;
 
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -150,4 +153,67 @@ public class FHGuiHelper {
         tessellator.end();
         RenderSystem.disableBlend();
     }
+	public static void blit(PoseStack matrixStack, int x, int y, int width, int height, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight,float opacity) {
+		innerBlit(matrixStack, x, x + width, y, y + height, 0, uWidth, vHeight, uOffset, vOffset, textureWidth, textureHeight,opacity);
+	}
+
+	public static void innerBlit(PoseStack matrixStack, int x1, int x2, int y1, int y2, int blitOffset, int uWidth, int vHeight, float uOffset, float vOffset, int textureWidth, int textureHeight,
+		float opacity) {
+		innerBlit(matrixStack.last().pose(), x1, x2, y1, y2, blitOffset, (uOffset + 0.0F) / textureWidth, (uOffset + uWidth) / textureWidth,
+			(vOffset + 0.0F) / textureHeight, (vOffset + vHeight) / textureHeight, opacity);
+	}
+
+	public static void innerBlit(Matrix4f matrix, int x1, int x2, int y1, int y2, int blitOffset, float minU, float maxU, float minV, float maxV, float opacity) {
+		//RenderSystem.enableAlphaTest();
+	      
+	      RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
+	      RenderSystem.enableBlend();
+	      
+		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
+		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+		bufferbuilder.vertex(matrix, x1, y2, blitOffset).color(1, 1, 1, opacity).uv(minU, maxV).endVertex();
+		bufferbuilder.vertex(matrix, x2, y2, blitOffset).color(1, 1, 1, opacity).uv(maxU, maxV).endVertex();
+		bufferbuilder.vertex(matrix, x2, y1, blitOffset).color(1, 1, 1, opacity).uv(maxU, minV).endVertex();
+		bufferbuilder.vertex(matrix, x1, y1, blitOffset).color(1, 1, 1, opacity).uv(minU, minV).endVertex();
+		bufferbuilder.end();
+		
+		BufferUploader.drawWithShader(bufferbuilder.end());
+		RenderSystem.disableBlend();
+	}
+	public static void blitColored(PoseStack matrixStack, int x, int y, int width, int height, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight,int color) {
+		
+		innerBlitColored(matrixStack, x, x + width, y, y + height, 0, uWidth, vHeight, uOffset, vOffset, textureWidth, textureHeight,FastColor.ARGB32.red(color)/255f,FastColor.ARGB32.green(color)/255f,FastColor.ARGB32.blue(color)/255f,FastColor.ARGB32.alpha(color)/255f);
+	}
+	public static void blitColored(PoseStack matrixStack, int x, int y, int width, int height, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight,int color,float opacity) {
+		
+		innerBlitColored(matrixStack, x, x + width, y, y + height, 0, uWidth, vHeight, uOffset, vOffset, textureWidth, textureHeight,FastColor.ARGB32.red(color)/255f,FastColor.ARGB32.green(color)/255f,FastColor.ARGB32.blue(color)/255f,opacity);
+	}
+	public static void innerBlitColored(PoseStack matrixStack, int x1, int x2, int y1, int y2, int blitOffset, int uWidth, int vHeight, float uOffset, float vOffset, int textureWidth, int textureHeight,
+		float r,float g,float b,float opacity) {
+		innerBlitColored(matrixStack.last().pose(), x1, x2, y1, y2, blitOffset, (uOffset + 0.0F) / textureWidth, (uOffset + uWidth) / textureWidth,
+			(vOffset + 0.0F) / textureHeight, (vOffset + vHeight) / textureHeight,r,g,b, opacity);
+	}
+	public static void innerBlitColored(Matrix4f matrix, int x1, int x2, int y1, int y2, int blitOffset, float minU, float maxU, float minV, float maxV,float r,float g,float b, float opacity) {
+		//RenderSystem.enableAlphaTest();
+	      
+	      RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
+	      RenderSystem.enableBlend();
+	      
+		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
+		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+		bufferbuilder.vertex(matrix, x1, y2, blitOffset).color(r, g, b, opacity).uv(minU, maxV).endVertex();
+		bufferbuilder.vertex(matrix, x2, y2, blitOffset).color(r, g, b, opacity).uv(maxU, maxV).endVertex();
+		bufferbuilder.vertex(matrix, x2, y1, blitOffset).color(r, g, b, opacity).uv(maxU, minV).endVertex();
+		bufferbuilder.vertex(matrix, x1, y1, blitOffset).color(r, g, b, opacity).uv(minU, minV).endVertex();
+		bufferbuilder.end();
+		
+		BufferUploader.drawWithShader(bufferbuilder.end());
+		RenderSystem.disableBlend();
+	}
+	public static void bindTexture(ResourceLocation showingImage) {
+		RenderSystem.setShaderTexture(0, showingImage);
+		
+	}
+
+
 }

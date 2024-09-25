@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.client.Point;
 import com.teammoeg.frostedheart.util.client.UV;
 
@@ -57,7 +57,7 @@ public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
     @Override
     protected void renderBg(PoseStack matrixStack, float partialTicks, int x, int y) {
         Minecraft mc = Minecraft.getInstance();
-        ClientUtils.bindTexture(TEXTURE);
+        FHGuiHelper.bindTexture(TEXTURE);
         this.blit(matrixStack, leftPos, topPos, 0, 0, imageWidth, imageHeight);
 
         SaunaTileEntity tile = this.menu.tile;

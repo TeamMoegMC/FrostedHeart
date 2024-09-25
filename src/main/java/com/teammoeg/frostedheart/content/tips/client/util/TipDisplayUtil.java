@@ -4,9 +4,9 @@ import com.teammoeg.frostedheart.content.tips.client.RenderHUD;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.UnlockedTipManager;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.TextComponent;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 
+import net.minecraft.client.Minecraft;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,10 +58,10 @@ public class TipDisplayUtil {
         TipElement ele = new TipElement();
         ele.ID = "*custom*" + title;
         ele.history = history;
-        ele.contents.add(new TextComponent(title));
+        ele.contents.add(TranslateUtils.str(title));
         String[] contents = content.split("\\$");
         for (String s : contents) {
-            ele.contents.add(new TextComponent(s));
+            ele.contents.add(TranslateUtils.str(s));
         }
 
         if (visibleTime == -1) {

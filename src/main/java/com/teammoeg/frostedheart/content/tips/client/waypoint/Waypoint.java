@@ -1,14 +1,15 @@
 package com.teammoeg.frostedheart.content.tips.client.waypoint;
 
+import org.joml.Vector3f;
+
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.client.util.GuiUtil;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
-import com.mojang.math.Vector3f;
 
 public class Waypoint {
     protected static final Minecraft MC = Minecraft.getInstance();
@@ -26,7 +27,7 @@ public class Waypoint {
         this.visible = true;
     }
 
-    public void render(PoseStack ms) {
+    public void render(GuiGraphics ms) {
         if (!this.visible) return;
 
         Vec2 screenPos = GuiUtil.worldPosToScreenPos(this.target);
@@ -35,16 +36,16 @@ public class Waypoint {
         double xP = x / MC.getWindow().getGuiScaledWidth();
         double yP = y / MC.getWindow().getGuiScaledHeight();
 
-        ms.pushPose();
-        ms.translate(x, y, 0);
+        ms.pose().pushPose();
+        ms.pose().translate(x, y, 0);
         if (xP >= 0.45 && xP <= 0.55 && yP >= 0.45 && yP <= 0.55) {
             renderText(ms);
         }
         renderMain(ms);
-        ms.popPose();
+        ms.pose().popPose();
     }
 
-    public void renderMain(PoseStack ms) {
+    public void renderMain(GuiGraphics ms) {
         if (this.focus) {
             GuiUtil.renderIcon(ms, IconButton.ICON_BOX_ON, -5, -5, this.color);
         } else {
@@ -52,23 +53,23 @@ public class Waypoint {
         }
     }
 
-    public void renderText(PoseStack ms) {
+    public void renderText(GuiGraphics ms) {
         float textWidth = MC.font.width(this.id)*0.5F;
-        GuiComponent.fill(ms, (int)(-textWidth)-2, -19, (int)(textWidth)+2, -7, 0x80000000);
-        MC.font.draw(ms, this.id, -textWidth, -17, this.color);
+        ms.fill((int)(-textWidth)-2, -19, (int)(textWidth)+2, -7, 0x80000000);
+        ms.drawString(MC.font, this.id, (int) -textWidth, -17, this.color);
 
         if (MC.player.isShiftKeyDown()) {
             Vec3 v = new Vec3(this.target);
             String distance = "Distance: " + (int)v.distanceTo(MC.player.position()) + " blocks";
             float textWidth1 = MC.font.width(distance)*0.5F;
-            GuiComponent.fill(ms, (int)(-textWidth1)-2, 8, (int)(textWidth1)+2, 20, 0x80000000);
-            MC.font.draw(ms, distance, -textWidth1, 10, this.color);
+            ms.fill((int)(-textWidth1)-2, 8, (int)(textWidth1)+2, 20, 0x80000000);
+            ms.drawString(MC.font, distance, (int) -textWidth1, 10, this.color);
 
             String pos = "[X: %.2f, Y: %.2f, Z: %.2f]";
             pos = String.format(pos, this.target.x(), this.target.y(), this.target.z());
             float textWidth2 = MC.font.width(pos)*0.5F;
-            GuiComponent.fill(ms, (int)(-textWidth2)-2, 20, (int)(textWidth2)+2, 32, 0x80000000);
-            MC.font.draw(ms, pos, -textWidth2, 22, this.color);
+            ms.fill((int)(-textWidth2)-2, 20, (int)(textWidth2)+2, 32, 0x80000000);
+            ms.drawString(MC.font, pos, (int) -textWidth2, 22, this.color);
         }
     }
 

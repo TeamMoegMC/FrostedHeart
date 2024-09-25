@@ -1,18 +1,19 @@
 package com.teammoeg.frostedheart.content.tips.client.waypoint;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
-import com.mojang.math.Vector3f;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.joml.Vector3f;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.BlockPos;
 
 public class WaypointManager {
     private static final Minecraft MC = Minecraft.getInstance();
     private static final Map<String, Waypoint> WAYPOINTS = new HashMap<>();
 
-    public static void renderWaypoints(PoseStack ms) {
+    public static void renderWaypoints(GuiGraphics ms) {
         if (MC.player == null || isEmpty()) return;
         WAYPOINTS.forEach((id, waypoint) -> waypoint.render(ms));
     }

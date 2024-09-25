@@ -1,6 +1,8 @@
 package com.teammoeg.frostedheart.content.tips.client.hud;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import java.util.List;
+
+import com.mojang.blaze3d.platform.InputConstants;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.gui.EmptyScreen;
@@ -8,18 +10,16 @@ import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.client.util.AnimationUtil;
 import com.teammoeg.frostedheart.content.tips.client.util.GuiUtil;
 import com.teammoeg.frostedheart.util.client.Point;
+
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
-import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.util.Mth;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
-import java.util.List;
-
-public class TipHUD extends GuiComponent {
+public class TipHUD {
     private final Minecraft mc = Minecraft.getInstance();
-    private final PoseStack ms;
+    private final GuiGraphics ms;
     private final TipElement element;
     private final int lineSpace = 12;
     private final boolean alwaysVisible;
@@ -34,7 +34,7 @@ public class TipHUD extends GuiComponent {
 
     public boolean visible = true;
 
-    public TipHUD(PoseStack matrixStack, TipElement element) {
+    public TipHUD(GuiGraphics matrixStack, TipElement element) {
         this.ms = matrixStack;
         this.element = element;
         this.alwaysVisible = element.alwaysVisible;
@@ -114,8 +114,8 @@ public class TipHUD extends GuiComponent {
             }
         }
 
-        ms.pushPose();
-        ms.translate(-yaw*0.1F + fadeProgress*16 - 16, -pitch*0.1F, 1000);
+        ms.pose().pushPose();
+        ms.pose().translate(-yaw*0.1F + fadeProgress*16 - 16, -pitch*0.1F, 1000);
 
         renderContent(element.contents, x, y, fontColor, renderPos2, BGColor);
 
@@ -131,24 +131,24 @@ public class TipHUD extends GuiComponent {
             if (lineProgress == 0) {
                 fadeOut = true;
             } else {
-                ms.pushPose();
-                ms.translate(lx, ly, 0);
-                ms.scale(lineProgress, 1, 1);
-                fill(ms, 0, 0, x2, 1, fontColor);
-                ms.popPose();
+                ms.pose().pushPose();
+                ms.pose().translate(lx, ly, 0);
+                ms.pose().scale(lineProgress, 1, 1);
+                ms.fill(0, 0, x2, 1, fontColor);
+                ms.pose().popPose();
             }
         } else if (isAlwaysVisible() || fadeIn) {
-            fill(ms, x - 4, y + (titleLines+1)*lineSpace,
+            ms.fill( x - 4, y + (titleLines+1)*lineSpace,
                     renderPos2.getX(), y + (titleLines+1)*lineSpace + 1, fontColor);
         }
-        ms.popPose();
+        ms.pose().popPose();
     }
 
     private void renderContent(List<Component> texts, int x, int y, int fontColor, Point renderPos2, int BGColor) {
         int BGPosX = x - 4;
         int width = renderPos2.getX()- BGPosX;
         if (texts.size() > 1) {
-            fill(ms, BGPosX, y - 4, renderPos2.getX(),
+            ms.fill(BGPosX, y - 4, renderPos2.getX(),
                     renderPos2.getY()*2 + y + 4 + (descLines -1)*lineSpace, BGColor);
             descLines = 0;
             //标题
@@ -162,7 +162,7 @@ public class TipHUD extends GuiComponent {
                         x, descLines*lineSpace + y+17, width-8, fontColor, lineSpace, false);
             }
         } else {//只有标题
-            fill(ms, BGPosX, y - 4,
+            ms.fill( BGPosX, y - 4,
                 renderPos2.getX(), renderPos2.getY() + y + (descLines)*lineSpace, BGColor);
             descLines = 0;
 

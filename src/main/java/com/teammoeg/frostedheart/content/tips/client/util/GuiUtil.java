@@ -3,21 +3,30 @@ package com.teammoeg.frostedheart.content.tips.client.util;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.client.Point;
+
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.Camera;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat.Mode;
+
 import net.minecraft.client.renderer.culling.Frustum;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.util.Mth;
-import net.minecraft.util.math.vector.*;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.fml.loading.FMLPaths;
+
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
@@ -28,16 +37,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.mojang.math.Matrix4f;
-import com.mojang.math.Quaternion;
-import com.mojang.math.Vector3f;
-import com.mojang.math.Vector4f;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
 public class GuiUtil {
     private static final Minecraft mc = Minecraft.getInstance();
-    private static final Font font = mc.font;
     private static final Camera info = mc.gameRenderer.getMainCamera();
     private static final Map<String, List<String>> textWrapCache = new HashMap<>();
     private static int leftClicked = 0;
@@ -49,32 +53,19 @@ public class GuiUtil {
      * @param BGColor 未被选中时的背景颜色，为 0 时不显示
      * @return 是否被按下
      */
-    public static boolean renderIconButton(PoseStack matrixStack, Point icon, int mouseX, int mouseY, int x, int y, int color, int BGColor) {
+    public static boolean renderIconButton(GuiGraphics matrixStack, Point icon, int mouseX, int mouseY, int x, int y, int color, int BGColor) {
         if (color != 0 && isMouseIn(mouseX, mouseY, x, y, 10, 10)) {
-            GuiComponent.fill(matrixStack, x, y, x+10, y+10, 50 << 24 | color & 0x00FFFFFF);
+        	matrixStack.fill( x, y, x+10, y+10, 50 << 24 | color & 0x00FFFFFF);
         } else if (BGColor != 0) {
-            GuiComponent.fill(matrixStack, x, y, x+10, y+10, BGColor);
+        	matrixStack.fill(x, y, x+10, y+10, BGColor);
         }
-        return renderButton(matrixStack, mouseX, mouseY, x, y, 10, 10, icon.getX(), icon.getY(), 10, 10, 80, 80, color, IconButton.ICON_LOCATION);
+        return renderButton(matrixStack.pose(), mouseX, mouseY, x, y, 10, 10, icon.getX(), icon.getY(), 10, 10, 80, 80, color, IconButton.ICON_LOCATION);
     }
 
     public static boolean renderButton(PoseStack matrixStack, int mouseX, int mouseY, int x, int y, int w, int h,
                                        float uOffset, float vOffset, int uWidth, int vHeight, int textureW, int textureH, int color, ResourceLocation resourceLocation) {
-        if (color != 0) {
-            float alpha = (color >> 24 & 0xFF) / 255F;
-            float r = (color >> 16 & 0xFF) / 255F;
-            float g = (color >> 8 & 0xFF) / 255F;
-            float b = (color & 0xFF) / 255F;
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            RenderSystem.color4f(r, g, b, alpha);
-            mc.getTextureManager().bind(resourceLocation);
-            GuiComponent.blit(matrixStack, x, y, w, h, uOffset, vOffset, uWidth, vHeight, textureW, textureH);
-            RenderSystem.disableBlend();
-        } else {
-            mc.getTextureManager().bind(resourceLocation);
-            GuiComponent.blit(matrixStack, x, y, w, h, uOffset, vOffset, uWidth, vHeight, textureW, textureH);
-        }
+        FHGuiHelper.bindTexture(resourceLocation);
+        FHGuiHelper.blitColored(matrixStack, x, y, w, h, uOffset, vOffset, uWidth, vHeight, textureW, textureH, color);
 
         return isMouseIn(mouseX, mouseY, x, y, w, h) && isLeftClicked();
     }
@@ -84,22 +75,9 @@ public class GuiUtil {
      * @param icon {@link IconButton}
      * @param color 图标的颜色
      */
-    public static void renderIcon(PoseStack matrixStack, Point icon, int x, int y, int color) {
-        if (color != 0) {
-            float alpha = (color >> 24 & 0xFF) / 255F;
-            float r = (color >> 16 & 0xFF) / 255F;
-            float g = (color >> 8 & 0xFF) / 255F;
-            float b = (color & 0xFF) / 255F;
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            RenderSystem.color4f(r, g, b, alpha);
-            mc.getTextureManager().bind(IconButton.ICON_LOCATION);
-            GuiComponent.blit(matrixStack, x, y, 10, 10, icon.getX(), icon.getY(), 10, 10, 80, 80);
-            RenderSystem.disableBlend();
-        } else {
-            mc.getTextureManager().bind(IconButton.ICON_LOCATION);
-            GuiComponent.blit(matrixStack, x, y, 10, 10, icon.getX(), icon.getY(), 10, 10, 80, 80);
-        }
+    public static void renderIcon(GuiGraphics matrixStack, Point icon, int x, int y, int color) {
+    	FHGuiHelper.bindTexture(IconButton.ICON_LOCATION);
+        FHGuiHelper.blitColored(matrixStack.pose(), x, y, 10, 10, icon.getX(), icon.getY(),10,10, 80, 80,color);
     }
 
     public static boolean isMouseIn(int mouseX, int mouseY, int x, int y, int w, int h) {
@@ -128,32 +106,32 @@ public class GuiUtil {
         return (int)(mc.mouseHandler.ypos() * (double)mc.getWindow().getGuiScaledHeight() / (double)mc.getWindow().getScreenHeight());
     }
 
-    public static int formatAndDraw(Component component, PoseStack ms, float x, float y, int maxWidth, int color, int lineSpace, boolean shadow) {
+    public static int formatAndDraw(Component component, GuiGraphics ms, float x, float y, int maxWidth, int color, int lineSpace, boolean shadow) {
         String text = component.getString().replaceAll("&(?!&)", "\u00a7")
                 .replaceAll("\\$configPath\\$", FMLPaths.CONFIGDIR.get().toString().replaceAll("\\\\", "\\\\\\\\"));
 
-        return drawWrapString(text, ms, x, y, maxWidth, color, lineSpace, shadow);
+        return drawWrapString(text, ms, (int)x, (int)y, maxWidth, color, lineSpace, shadow);
     }
 
-    public static int drawWrapText(Component component, PoseStack ms, float x, float y, int maxWidth, int color, int lineSpace, boolean shadow) {
-        return drawWrapString(component.getString(), ms, x, y, maxWidth, color, lineSpace, shadow);
+    public static int drawWrapText(Component component, GuiGraphics ms, float x, float y, int maxWidth, int color, int lineSpace, boolean shadow) {
+        return drawWrapString(component.getString(), ms, (int)x, (int)y, maxWidth, color, lineSpace, shadow);
     }
 
-    public static int drawWrapString(String text, PoseStack ms, float x, float y, int maxWidth, int color, int lineSpace, boolean shadow) {
+    public static int drawWrapString(String text, GuiGraphics ms, int x, int y, int maxWidth, int color, int lineSpace, boolean shadow) {
         List<String> lines = wrapString(text, maxWidth);
 
         for (int i = 0; i < lines.size(); i++) {
             if (i == 0) {
                 if (shadow) {
-                    font.drawShadow(ms, lines.get(i), x, y, color);
+                	ms.drawString(mc.font, lines.get(i), x, y, color);
                 } else {
-                    font.draw(ms, lines.get(i), x, y, color);
+                	ms.drawString(mc.font, lines.get(i), x, y, color,false);
                 }
             } else {
                 if (shadow) {
-                    font.drawShadow(ms, lines.get(i), x, y + (i * lineSpace), color);
+                	ms.drawString(mc.font, lines.get(i), x, y + (i * lineSpace), color);
                 } else {
-                    font.draw(ms, lines.get(i), x, y + (i * lineSpace), color);
+                	ms.drawString(mc.font, lines.get(i), x, y + (i * lineSpace), color,false);
                 }
             }
         }
@@ -174,10 +152,10 @@ public class GuiUtil {
             StringBuilder line = new StringBuilder();
             String[] words = text.split(" ");
             for (String word : words) {
-                if (font.width(word) > maxWidth) {
+                if (mc.font.width(word) > maxWidth) {
                     for (char c : word.toCharArray()) {
                         String potentialLine = line.toString() + c;
-                        int width = font.width(potentialLine);
+                        int width = mc.font.width(potentialLine);
 
                         if (width > maxWidth) {
                             if (line.toString().endsWith("\u00A7")) {
@@ -195,7 +173,7 @@ public class GuiUtil {
                     line.append(" ");
                 } else {
                     String potentialLine = line + word + " ";
-                    int width = font.width(potentialLine);
+                    int width = mc.font.width(potentialLine);
 
                     if (width > maxWidth) {
                         if (line.toString().endsWith("\u00A7")) {
@@ -248,12 +226,7 @@ public class GuiUtil {
      * @param partial 圆的完整度 {@code 0.0 ~ 1.0}
      */
     public static void drawPartialCircle(int x, int y, double radius, float partial, int color) {
-        float alpha = (color >> 24 & 0xFF) / 255F;
-        float r = (color >> 16 & 0xFF) / 255F;
-        float g = (color >> 8 & 0xFF) / 255F;
-        float b = (color & 0xFF) / 255F;
 
-        RenderSystem.color4f(r, g, b, alpha);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
@@ -261,13 +234,13 @@ public class GuiUtil {
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
 
-        bufferBuilder.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormat.POSITION);
+        bufferBuilder.begin(Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
         bufferBuilder.vertex(x, y, 0).endVertex();
         for (int i = -180; i <= 360*partial-180; i++) { //为了让圆顺时针绘制
             double angle = i * Math.PI / 180;
             double x2 = x + Math.sin(-angle) * radius;
             double y2 = y + Math.cos(angle) * radius;
-            bufferBuilder.vertex(x2, y2, 0).endVertex();
+            bufferBuilder.vertex(x2, y2, 0).color(color).endVertex();
         }
 
         tessellator.end();
@@ -284,25 +257,19 @@ public class GuiUtil {
     public static void drawPolygon(int x, int y, double radius, int sides, int color) {
         sides = Mth.clamp(sides, 3, 360);
 
-        float alpha = (color >> 24 & 0xFF) / 255F;
-        float r = (color >> 16 & 0xFF) / 255F;
-        float g = (color >> 8 & 0xFF) / 255F;
-        float b = (color & 0xFF) / 255F;
-
-        RenderSystem.color4f(r, g, b, alpha);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
 
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
 
-        bufferBuilder.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormat.POSITION);
+        bufferBuilder.begin(Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
         bufferBuilder.vertex(x, y, 0).endVertex();
         for (int i = 0; i <= sides; i++) {
             double angle = i * (360F/sides) * Math.PI / 180;
             double x2 = x + Math.sin(angle) * radius;
             double y2 = y + Math.cos(angle) * radius;
-            bufferBuilder.vertex(x2, y2, 0).endVertex();
+            bufferBuilder.vertex(x2, y2, 0).color(color).endVertex();
         }
 
         tessellator.end();
@@ -320,26 +287,26 @@ public class GuiUtil {
         int screenWidth = mc.getWindow().getGuiScaledWidth();
         int screenHeight = mc.getWindow().getGuiScaledHeight();
         //透视矩阵
-        Matrix4f projectionMatrix = mc.gameRenderer.getProjectionMatrix(info, mc.getFrameTime(), true);
+        Matrix4f projectionMatrix = mc.gameRenderer.getProjectionMatrix(mc.gameRenderer.getFov(info, mc.getFrameTime(), true));
 
         //摄像机坐标
         Vec3 cameraPos = info.getPosition();
         Matrix4f cameraPosM = new Matrix4f();
-        cameraPosM.setIdentity();
+        cameraPosM.identity();
         //转换为摄像机坐标系
         cameraPosM.setTranslation((float)-cameraPos.x, (float)-cameraPos.y, (float)-cameraPos.z);
 
         //摄像机旋转
-        Quaternion cameraRotation = info.rotation().copy();
+        Quaternionf cameraRotation = new Quaternionf(info.rotation());
         //调整摄像机旋转
-        cameraRotation.mul(new Quaternion(Vector3f.YN, 180, true));
-        cameraRotation.conj();
+        cameraRotation.rotateLocalY(Mth.PI);
+        cameraRotation.conjugate();
 
-        Vector4f finalVector = new Vector4f(pos);
+        Vector4f finalVector = new Vector4f(pos.x,pos.y,pos.z,0);
         //应用摄像机坐标
-        finalVector.transform(cameraPosM);
+        finalVector.mul(cameraPosM);
         //应用摄像机旋转
-        finalVector.transform(cameraRotation);
+        finalVector.rotate(cameraRotation);
         //当坐标超出摄像机范围时
         if (!isPosInView(pos, cameraRotation, projectionMatrix)) {
             finalVector.normalize();
@@ -364,8 +331,8 @@ public class GuiUtil {
             return new Vec2(screenX, screenY);
         }
         //应用透视矩阵
-        finalVector.transform(projectionMatrix);
-        finalVector.perspectiveDivide();
+        finalVector.mul(projectionMatrix);
+        finalVector.div(finalVector.w);//perspectiveDivide
 
         float screenX = (finalVector.x() * 0.5F + 0.5F) * screenWidth;
         float screenY = screenHeight - ((finalVector.y() * 0.5F + 0.5F) * screenHeight);
@@ -377,15 +344,15 @@ public class GuiUtil {
      * @param pos 世界坐标
      */
     public static boolean isPosInView(Vector3f pos) {
-        Quaternion cameraRotation = info.rotation().copy();
-        cameraRotation.mul(new Quaternion(Vector3f.YN, 180, true));
-        cameraRotation.conj();
+        Quaternionf cameraRotation = new Quaternionf(info.rotation());
+        cameraRotation.rotateLocalY(Mth.PI);
+        cameraRotation=cameraRotation.conjugate();
 
-        return isPosInView(pos, cameraRotation, mc.gameRenderer.getProjectionMatrix(info, mc.getFrameTime(), true));
+        return isPosInView(pos, cameraRotation, mc.gameRenderer.getProjectionMatrix(mc.gameRenderer.getFov(info, mc.getFrameTime(), true)));
     }
 
-    public static boolean isPosInView(Vector3f pos, Quaternion cameraRotation, Matrix4f projection) {
-        Frustum clippingHelper = new Frustum(new Matrix4f(cameraRotation), projection);
+    public static boolean isPosInView(Vector3f pos, Quaternionf cameraRotation, Matrix4f projection) {
+        Frustum clippingHelper = new Frustum(cameraRotation.get(new Matrix4f()), projection);
         Vec3 cameraPos = info.getPosition();
         AABB pointAABB;
 

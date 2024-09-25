@@ -14,8 +14,12 @@ import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.GuiScreenEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.ContainerScreenEvent;
+import net.minecraftforge.client.event.RenderBlockScreenEffectEvent.OverlayType;
+import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -29,12 +33,12 @@ public class RenderHUD {
     public static TipHUD currentTip = null;
 
     @SubscribeEvent
-    public static void renderOnHUD(RenderGameOverlayEvent.Post event) {
-        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL || mc.player == null) {
+    public static void renderOnHUD(RenderGuiEvent.Post event) {
+        if ( mc.player == null) {
             return;
         }
 
-        WaypointManager.renderWaypoints(event.getMatrixStack());
+        WaypointManager.renderWaypoints(event.getGuiGraphics());
 
         if (renderQueue.isEmpty()) return;
         Screen current = mc.screen;
@@ -46,7 +50,7 @@ public class RenderHUD {
         }
 
         if (currentTip == null) {
-            currentTip = new TipHUD(event.getMatrixStack(), renderQueue.get(0));
+            currentTip = new TipHUD(event.getGuiGraphics(), renderQueue.get(0));
         }
 
         if (!currentTip.visible) {
@@ -64,12 +68,12 @@ public class RenderHUD {
     }
 
     @SubscribeEvent
-    public static void renderOnGUI(GuiScreenEvent.DrawScreenEvent.Post event) {
-        Screen gui = event.getGui();
+    public static void renderOnGUI(ScreenEvent.Render.Post event) {
+        Screen gui = event.getScreen();
         if (gui instanceof PauseScreen || gui instanceof ChatScreen || gui instanceof EmptyScreen) {
             int x = mc.getWindow().getGuiScaledWidth()-12;
             int y = mc.getWindow().getGuiScaledHeight()-26;
-            if (GuiUtil.renderIconButton(event.getMatrixStack(), IconButton.ICON_HISTORY, GuiUtil.getMouseX(), GuiUtil.getMouseY(), x, y, 0xFFFFFFFF, 0x80000000)) {
+            if (GuiUtil.renderIconButton(event.getGuiGraphics(), IconButton.ICON_HISTORY, GuiUtil.getMouseX(), GuiUtil.getMouseY(), x, y, 0xFFFFFFFF, 0x80000000)) {
                 mc.setScreen(new TipListScreen(gui instanceof PauseScreen));
             }
         }
@@ -84,7 +88,7 @@ public class RenderHUD {
         }
 
         if (currentTip == null) {
-            currentTip = new TipHUD(event.getMatrixStack(), renderQueue.get(0));
+            currentTip = new TipHUD(event.getGuiGraphics(), renderQueue.get(0));
         }
 
         if (!currentTip.visible) {
