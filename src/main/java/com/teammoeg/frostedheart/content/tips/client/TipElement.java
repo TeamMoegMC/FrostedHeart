@@ -3,8 +3,6 @@ package com.teammoeg.frostedheart.content.tips.client;
 import com.google.gson.*;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
