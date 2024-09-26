@@ -25,13 +25,14 @@ import java.util.List;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -39,8 +40,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SmokingRecipe;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
@@ -49,7 +50,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class ChargerTileEntity extends IEBaseTileEntity implements TickableBlockEntity, FHBlockInterfaces.IActiveState {
+public class ChargerTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity, FHBlockInterfaces.IActiveState {
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
@@ -71,8 +72,8 @@ public class ChargerTileEntity extends IEBaseTileEntity implements TickableBlock
     }
 
 
-    public ChargerTileEntity() {
-        super(FHTileTypes.CHARGER.get());
+    public ChargerTileEntity(BlockPos pos,BlockState state) {
+        super(FHTileTypes.CHARGER.get(), pos, state);
     }
 
     LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
@@ -137,7 +138,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements TickableBlock
                             power -= (float) sr.getCookingTime() / 20;
                             splitAndSpawnExperience(pe.getCommandSenderWorld(), pe.blockPosition(), sr.getExperience());
                             is.setCount(is.getCount() - 1);
-                            ItemStack gain = sr.assemble(null).copy();
+                            ItemStack gain = sr.assemble(null,this.level.registryAccess()).copy();
                             FHUtils.giveItem(pe, gain);
                             setChanged();
                             this.markContainingBlockForUpdate(null);
@@ -155,7 +156,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements TickableBlock
                             power -= (float) sr.getCookingTime() / 80;
                             splitAndSpawnExperience(pe.getCommandSenderWorld(), pe.blockPosition(), sr.getExperience());
                             is.setCount(is.getCount() - 1);
-                            ItemStack gain = sr.assemble(null).copy();
+                            ItemStack gain = sr.assemble(null,this.level.registryAccess()).copy();
                             FHUtils.giveItem(pe, gain);
                             setChanged();
                             this.markContainingBlockForUpdate(null);

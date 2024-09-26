@@ -71,19 +71,19 @@ public class DrawDeskContainer extends FHBaseContainer<DrawingDeskTileEntity> {
     public DrawDeskContainer(int id, Inventory inventoryPlayer, DrawingDeskTileEntity tile) {
         super(FHContainer.DRAW_DESK.get(), tile, id, 4);
 
-        this.addSlot(new EnableIESlot(this, tile, DrawingDeskTileEntity.PAPER_SLOT, 114, 161) {// paper
+        this.addSlot(new EnableIESlot(this, inv, DrawingDeskTileEntity.PAPER_SLOT, 114, 161) {// paper
             @Override
             public boolean mayPlace(ItemStack itemStack) {
                 return tile.isStackValid(DrawingDeskTileEntity.PAPER_SLOT, itemStack);
             }
         });
-        this.addSlot(new EnableIESlot(this, tile, DrawingDeskTileEntity.INK_SLOT, 114, 178) {// pen
+        this.addSlot(new EnableIESlot(this, inv, DrawingDeskTileEntity.INK_SLOT, 114, 178) {// pen
             @Override
             public boolean mayPlace(ItemStack itemStack) {
                 return tile.isStackValid(DrawingDeskTileEntity.INK_SLOT, itemStack);
             }
         });
-        this.addSlot(new EnableIESlot(this, tile, DrawingDeskTileEntity.EXAMINE_SLOT, 114, 93) {// research
+        this.addSlot(new EnableIESlot(this, inv, DrawingDeskTileEntity.EXAMINE_SLOT, 114, 93) {// research
             @Override
             public boolean mayPlace(ItemStack itemStack) {
                 return tile.isStackValid(DrawingDeskTileEntity.EXAMINE_SLOT, itemStack);
@@ -104,6 +104,6 @@ public class DrawDeskContainer extends FHBaseContainer<DrawingDeskTileEntity> {
 
 	@Override
 	public boolean quickMoveIn(ItemStack slotStack) {
-		return true;
+		return this.moveItemStackTo(slotStack, 0,1, false)||this.moveItemStackTo(slotStack, 1, 2, false)||this.moveItemStackTo(slotStack, 2, 3, false);
 	}
 }

@@ -54,7 +54,6 @@ import com.teammoeg.frostedheart.content.research.research.effects.EffectShowCat
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacket;
-import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.TranslateUtils;
@@ -495,7 +494,7 @@ public class ClientEvents {
     public static void unloadWorld(LevelEvent.Unload event) {
         ClientUtils.applyspg = false;
     }
-
+/*
     @SuppressWarnings({"resource", "unchecked", "rawtypes"})
     @SubscribeEvent
     public void onWorldLoad(LevelEvent.Load event) {
@@ -507,7 +506,8 @@ public class ClientEvents {
                     ((ArmorStandRenderer) render).addLayer(new HeaterVestRenderer<>((ArmorStandRenderer) render));
             HeaterVestRenderer.rendersAssigned = true;
         }
-    }    @SuppressWarnings({"resource", "unchecked", "rawtypes"})
+    }*/
+    @SuppressWarnings({"resource", "unchecked", "rawtypes"})
 
     
     @SubscribeEvent

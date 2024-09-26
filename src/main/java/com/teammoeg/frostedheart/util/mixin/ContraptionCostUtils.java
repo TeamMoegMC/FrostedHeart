@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.util.mixin;
 
 import org.apache.commons.lang3.tuple.MutablePair;
 
-import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
-import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
-import com.simibubi.create.foundation.block.BlockStressValues;
+import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
+import com.simibubi.create.content.contraptions.Contraption;
+import com.simibubi.create.content.contraptions.behaviour.MovementContext;
+import com.simibubi.create.content.kinetics.BlockStressValues;
 
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
@@ -33,19 +33,19 @@ public class ContraptionCostUtils {
     public static float calculateActorStressApply(Contraption cont) {
         float movecost = 0;
         for (MutablePair<StructureBlockInfo, MovementContext> i : cont.getActors())
-            movecost += (float) BlockStressValues.getImpact(i.left.state.getBlock());
+            movecost += (float) BlockStressValues.getImpact(i.left.state().getBlock());
         return movecost;
     }
 
     public static float calculateRotationStressApply(Contraption cont) {
         float movecost = 0;
         for (StructureBlockInfo bi : cont.getBlocks().values()) {
-            double dX = bi.pos.getX();
-            double dZ = bi.pos.getZ();
-            double dY = bi.pos.getY();
+            double dX = bi.pos().getX();
+            double dZ = bi.pos().getZ();
+            double dY = bi.pos().getY();
             double distance = Math.sqrt((dX * dX) + (dZ * dZ) + (dY * dY));
             try {
-                if (bi.state.getBlockSupportShape(cont.getContraptionWorld(), bi.pos) != Shapes.empty()) {
+                if (bi.state().getBlockSupportShape(cont.getContraptionWorld(), bi.pos()) != Shapes.empty()) {
                     movecost += (float) (0.125F * 2.56F * distance);
                 } else
                     movecost += (float) (0.075F * 2.56F * distance);
@@ -61,7 +61,7 @@ public class ContraptionCostUtils {
         float movecost = 0;
         for (StructureBlockInfo bi : cont.getBlocks().values()) {
             try {
-                if (!bi.state.getBlockSupportShape(cont.getContraptionWorld(), bi.pos).isEmpty()) {
+                if (!bi.state().getBlockSupportShape(cont.getContraptionWorld(), bi.pos()).isEmpty()) {
                     movecost += 0.125F;
                 } else
                     movecost += 0.075F;

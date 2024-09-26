@@ -23,7 +23,6 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorR
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.recipes.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.recipes.DietValueRecipe;
 import com.teammoeg.frostedheart.recipes.DismantleInnerRecipe;
 import com.teammoeg.frostedheart.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.recipes.InstallInnerRecipe;
@@ -63,7 +62,7 @@ public class FHRecipes {
         CampfireDefrostRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("defrost_campfire", CampfireDefrostRecipe.Serializer::new);
         SmokingDefrostRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("defrost_smoking", SmokingDefrostRecipe.Serializer::new);
         FuelingRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("fuel_stove", FuelingRecipe.Serializer::new);
-        DietValueRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("diet_override", DietValueRecipe.Serializer::new);
+        //DietValueRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("diet_override", DietValueRecipe.Serializer::new);
         IncubateRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("incubate", IncubateRecipe.Serializer::new);
         ResearchPaperRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("paper", ResearchPaperRecipe.Serializer::new);
         SaunaRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("sauna", SaunaRecipe.Serializer::new);
@@ -74,7 +73,7 @@ public class FHRecipes {
         GeneratorRecipe.TYPE = createRecipeType("generator");
         GeneratorSteamRecipe.TYPE = createRecipeType("steam_generator");
         ChargerRecipe.TYPE = createRecipeType("charger");
-        DietValueRecipe.TYPE = createRecipeType("diet_override");
+       // DietValueRecipe.TYPE = createRecipeType("diet_override");
         IncubateRecipe.TYPE = createRecipeType("incubate");
         ResearchPaperRecipe.TYPE = createRecipeType("paper");
         SaunaRecipe.TYPE = createRecipeType("sauna");

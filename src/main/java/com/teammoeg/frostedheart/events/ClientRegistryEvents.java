@@ -52,7 +52,6 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestExtension;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestModel;
-import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;

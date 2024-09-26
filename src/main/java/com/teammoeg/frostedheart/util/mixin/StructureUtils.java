@@ -56,11 +56,11 @@ public class StructureUtils {
     public static void handlePalette(List<StructureTemplate.Palette> p) {
 
         p.forEach(q -> q.blocks().replaceAll(r -> {
-
-            if (baned.contains(r.state.getBlock())) {
-                return new StructureBlockInfo(r.pos, Blocks.AIR.defaultBlockState(), null);
-            } else if (remap.containsKey(r.state.getBlock())) {
-                return new StructureBlockInfo(r.pos, remap.get(r.state.getBlock()).defaultBlockState(), r.nbt);
+        	
+            if (baned.contains(r.state().getBlock())) {
+                return new StructureBlockInfo(r.pos(), Blocks.AIR.defaultBlockState(), null);
+            } else if (remap.containsKey(r.state().getBlock())) {
+                return new StructureBlockInfo(r.pos(), remap.get(r.state().getBlock()).defaultBlockState(), r.nbt());
             }
             return r;
         }));

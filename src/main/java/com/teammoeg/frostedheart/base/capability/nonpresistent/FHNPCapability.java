@@ -28,6 +28,9 @@ public class FHNPCapability<C> implements IFHCapability{
 	public ICapabilityProvider provider() {
 		return new FHNPCapabilityProvider<>(this);
 	}
+	public ICapabilityProvider provider(NonNullSupplier<C> factory) {
+		return new FHNPCapabilityProvider<>(this,factory);
+	}
 	LazyOptional<C> createCapability(){
 		return LazyOptional.of(factory);
 	}

@@ -18,6 +18,7 @@ import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.robotics.logistics.RobotChunk;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.content.town.ChunkTownResourceCapability;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
@@ -29,6 +30,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class FHCapabilities {
 	private static List<IFHCapability> capabilities=new ArrayList<>();
+	private static final NonNullSupplier errorFactory=()->{throw new RuntimeException("Capability must be created");};
 	public static final FHNBTCapability<WorldClimate> CLIMATE_DATA=register(WorldClimate.class);
 	public static final FHNBTCapability<DeathInventoryData> DEATH_INV=register(DeathInventoryData.class);
 	public static final FHNBTCapability<PlayerTemperatureData> PLAYER_TEMP=register(PlayerTemperatureData.class);
@@ -36,6 +38,8 @@ public class FHCapabilities {
 	public static final FHNBTCapability<ScenarioConductor> SCENARIO=register(ScenarioConductor.class);
 	public static final FHCodecCapability<ChunkHeatData> CHUNK_HEAT=register(ChunkHeatData.class,ChunkHeatData.CODEC);
 	public static final FHNBTCapability<HeatEndpoint> HEAT_EP=register(HeatEndpoint.class);
+	public static final FHNPCapability<HeatStorageCapability> ITEM_HEAT=registerNotPresist(HeatStorageCapability.class,errorFactory);
+	
 	public static final FHNBTCapability<WantedFoodCapability> WANTED_FOOD=register(WantedFoodCapability.class);
 	public static final FHNBTCapability<ChunkTownResourceCapability> CHUNK_TOWN_RESOURCE=register(ChunkTownResourceCapability.class);
 	public static final FHNPCapability<RobotChunk> ROBOTIC_LOGISTIC_CHUNK=registerNotPresist(RobotChunk.class);

@@ -56,7 +56,7 @@ import net.minecraft.core.NonNullList;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProvider, IIEInventory,Container {
+public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProvider, IIEInventory {
     public static final int INK_SLOT = 2;
     public static final int PAPER_SLOT = 1;
     public static final int EXAMINE_SLOT = 0;
@@ -185,51 +185,6 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
             ContainerHelper.saveAllItems(nbt, inventory);
         }
     }
-
-
-	@Override
-	public void clearContent() {
-		inventory.clear();
-	}
-
-	@Override
-	public int getContainerSize() {
-		return inventory.size();
-	}
-
-	@Override
-	public boolean isEmpty() {
-		for(ItemStack i:inventory)
-			if(!i.isEmpty())
-				return false;
-		return true;
-	}
-
-	@Override
-	public ItemStack getItem(int pSlot) {
-		return inventory.get(pSlot);
-	}
-
-	@Override
-	public ItemStack removeItem(int pSlot, int pAmount) {
-		return inventory.get(pSlot).split(pAmount);
-	}
-
-	@Override
-	public ItemStack removeItemNoUpdate(int pSlot) {
-		return inventory.remove(pSlot);
-	}
-
-	@Override
-	public void setItem(int pSlot, ItemStack pStack) {
-		inventory.set(pSlot, pStack);
-	}
-
-	@Override
-	public boolean stillValid(Player pPlayer) {
-		return true;
-	}
-
 
 	@Override
 	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {

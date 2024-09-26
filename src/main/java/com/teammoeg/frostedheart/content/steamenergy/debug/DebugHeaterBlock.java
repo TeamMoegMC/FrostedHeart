@@ -19,11 +19,11 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.debug;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.world.level.block.Block;
@@ -33,56 +33,42 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+public class DebugHeaterBlock extends FHBaseBlock implements FHEntityBlock<DebugHeaterTileEntity> {
+	public DebugHeaterBlock(Properties blockProps) {
+		super(blockProps);
+	}
 
-public class DebugHeaterBlock extends FHBaseBlock {
-    public DebugHeaterBlock(Properties blockProps) {
-        super(blockProps);
-    }
+	@Override
+	protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
+		super.createBlockStateDefinition(builder);
+		builder.add(BlockStateProperties.LEVEL_FLOWING);
+	}
 
+	@Override
+	public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player,
+		InteractionHand hand, BlockHitResult hit) {
+		InteractionResult superResult = super.use(state, world, pos, player, hand, hit);
+		if (superResult.consumesAction() || player.isShiftKeyDown())
+			return superResult;
+		ItemStack item = player.getItemInHand(hand);
+		if (item.getItem().equals(Item.byBlock(this))) {
+			state = state.cycle(BlockStateProperties.LEVEL_FLOWING);
+			world.setBlockAndUpdate(pos, state);
+			player.displayClientMessage(TranslateUtils.str(String.valueOf(state.getValue(BlockStateProperties.LEVEL_FLOWING))), true);
+			return InteractionResult.SUCCESS;
+		}
+		return superResult;
+	}
 
-
-
-    @Nullable
-    @Override
-    public BlockEntity createTileEntity(@Nonnull BlockState state, @Nonnull BlockGetter world) {
-        return FHTileTypes.DEBUGHEATER.get().create();
-    }
-
-    @Override
-    protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
-        super.createBlockStateDefinition(builder);
-        builder.add(BlockStateProperties.LEVEL_FLOWING);
-    }
-
-
-    @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
-    }
-
-
-    @Override
-    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player,
-                                             InteractionHand hand, BlockHitResult hit) {
-        InteractionResult superResult = super.use(state, world, pos, player, hand, hit);
-        if (superResult.consumesAction() || player.isShiftKeyDown())
-            return superResult;
-        ItemStack item = player.getItemInHand(hand);
-        if (item.getItem().equals(Item.byBlock(this))) {
-            state = state.cycle(BlockStateProperties.LEVEL_FLOWING);
-            world.setBlockAndUpdate(pos, state);
-            player.displayClientMessage(TranslateUtils.str(String.valueOf(state.getValue(BlockStateProperties.LEVEL_FLOWING))), true);
-            return InteractionResult.SUCCESS;
-        }
-        return superResult;
-    }
+	@Override
+	public Supplier<BlockEntityType<DebugHeaterTileEntity>> getBlock() {
+		return FHTileTypes.DEBUGHEATER;
+	}
 }
