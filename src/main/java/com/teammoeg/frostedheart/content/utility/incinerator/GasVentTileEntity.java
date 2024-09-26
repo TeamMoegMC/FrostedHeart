@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.content.utility.incinerator;
 
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
+import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 
 import net.minecraft.nbt.CompoundTag;

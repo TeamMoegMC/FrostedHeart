@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.base.block;
+package com.teammoeg.frostedheart.base.blockentity;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -25,18 +25,17 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.core.BlockPos;
 
-public abstract class FHBaseTileEntity extends IEBaseBlockEntity {
+public abstract class FHBaseTileEntity extends IEBaseBlockEntity implements SyncableTileEntity{
 
     public FHBaseTileEntity(BlockEntityType<? extends BlockEntity> type,BlockPos pos,BlockState state) {
         super(type, pos, state);
     }
 
-    @Override
-    public void markBlockForUpdate(BlockPos pos, BlockState newState) {
-        BlockState state = level.getBlockState(pos);
-        if (newState == null)
-            newState = state;
-        level.sendBlockUpdated(pos, state, newState, 3);
+    public void syncData() {
+        this.setChanged();
+        
+        level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+        
     }
 
 }

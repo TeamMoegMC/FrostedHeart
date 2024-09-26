@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
+import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemChangeListener;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemHandlerListener;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticInternalPushTask;
