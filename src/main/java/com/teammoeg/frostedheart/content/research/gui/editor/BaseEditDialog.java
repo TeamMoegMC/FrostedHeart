@@ -19,12 +19,11 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
+import net.minecraft.client.gui.GuiGraphics;
 
 public abstract class BaseEditDialog extends EditDialog {
 

@@ -19,23 +19,23 @@
 
 package com.teammoeg.frostedheart.util.client;
 
-import java.util.Random;
-
 import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.content.research.gui.ResearchGui;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.IScreenWrapper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.RandomSource;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.Level;
-
+import net.minecraft.world.phys.Vec3;
+/**
+ * Rendering not related client functions, used for get/set client data, spawning particles
+ * */
 public class ClientUtils {
     public static float spgamma;
     public static boolean applyspg;

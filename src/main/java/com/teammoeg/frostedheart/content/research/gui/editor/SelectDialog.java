@@ -51,6 +51,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.world.entity.EntityType;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 
@@ -144,10 +145,11 @@ public class SelectDialog<T> extends EditDialog {
                 Advancement::getChatComponent, advx -> new String[]{advx.getChatComponent().getString(), advx.getId().toString()},
                 advx -> FHIcons.getIcon(advx.getDisplay().getIcon())
         ).open();
+        
     };
     public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, RegistryUtils::getEntities, EntityType::getDescription, e -> new String[]{e.getDescription().getString(), RegistryUtils.getRegistryName(e).toString()}
     ).open();
-    public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, () -> Minecraft.getInstance().level.getTagManager().getItems().getAvailableTags().stream().map(ResourceLocation::toString).collect(Collectors.toSet())).open();
+    public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, () -> ForgeRegistries.ITEMS.tags().getTagNames().map(t->t.location()).map(ResourceLocation::toString).collect(Collectors.toSet())).open();
     String lbl;
     T val;
     Consumer<T> cb;

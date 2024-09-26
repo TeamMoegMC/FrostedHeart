@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.util.client;
 
 import java.util.OptionalDouble;
 
+import javax.annotation.Nullable;
+
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
@@ -43,10 +45,13 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import net.minecraft.world.item.ItemStack;
 
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-
+/**
+ * Convenience functions for rendering 
+ * */
 public class FHGuiHelper {
     // hack to access render state protected members
     public static class RenderStateAccess extends RenderStateShard {
@@ -69,6 +74,15 @@ public class FHGuiHelper {
 
     public static final RenderType BOLD_LINE_TYPE = RenderType.create("fh_line_bold",
             DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.LINES, 128, false,false,RenderStateAccess.getLineState(4));
+    public static void drawItem(GuiGraphics guiGraphics,ItemStack stack,int x,int y,int zindex,float scaleX,float scaleY,boolean drawDecorations,@Nullable String countReplacement) {
+    	guiGraphics.pose().pushPose();
+    	if(zindex!=0)
+    	guiGraphics.pose().translate(0.0F, 0.0F, zindex);
+    	guiGraphics.pose().scale(scaleX, scaleY, 0);
+    	guiGraphics.renderItem(stack, x, y, x+y);
+    	guiGraphics.renderItemDecorations(ClientUtils.mc().font, stack, x, y, countReplacement);
+        guiGraphics.pose().popPose();
+    }
     public static void drawTextShadow(GuiGraphics guiGraphics,Component text,Point point,int color) {
     	guiGraphics.drawString(Minecraft.getInstance().font,text, point.getX(), point.getY() , color);
     }

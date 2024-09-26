@@ -43,6 +43,7 @@ import com.teammoeg.frostedheart.content.research.gui.editor.SelectDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectItemStackDialog;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.codec.AlternativeCodecBuilder;
 import com.teammoeg.frostedheart.util.io.codec.NopCodec;
@@ -206,11 +207,7 @@ public class FHIcons {
             itemRenderer.renderItemAndEffectIntoGUI(stack, x, y);
             itemRenderer.renderItemOverlayIntoGUI(font, stack, x, y, null);
             itemRenderer.zLevel = 0.0F;*/
-        	matrixStack.pose().pushPose();
-        	matrixStack.pose().translate(0,0, 199);
-        	//TODO repair draw item
-        	//GuiHelper.drawItem(matrixStack, stack, x, y, w/16f, h/16f, true, null);
-            matrixStack.pose().popPose();
+        	FHGuiHelper.drawItem(matrixStack, stack, x, y,199, w/16f, h/16f, true, null);
             /*ClientUtils.mc().getItemRenderer().renderItem(stack, TransformType.GUI,LightTexture., y, matrixStack, null);
             if (stack != null && stack.getCount() > 1) {
                 matrixStack.push();

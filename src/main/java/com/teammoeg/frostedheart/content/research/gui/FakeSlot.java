@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -81,21 +82,11 @@ public class FakeSlot extends Widget {
         if (i == null) return;
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         GuiHelper.setupDrawing();
-        matrixStack.pose().pushPose();
-        matrixStack.pose().translate(0, 0, 100);
-      //TODO repair draw item
-        //GuiHelper.drawItem(matrixStack, cur, x, y, w / 16F, h / 16F, true, null);
         
-        if (cnt != 1) {
-            matrixStack.pose().pushPose();
-            matrixStack.pose().translate(0, 0, 100);
-            int dx = 5;
-            if (cnt >= 10)
-                dx = 0;
-            theme.drawString(matrixStack, String.valueOf(cnt), dx + x + 8, y + 9, Color4I.WHITE, Theme.SHADOW);
-            matrixStack.pose().popPose();
-        }
-        matrixStack.pose().translate(0, 0, 100);
+        FHGuiHelper.drawItem(matrixStack, cur, x, y,100, w / 16F, h / 16F, true, cnt==0?null:String.valueOf(cnt));
+        
+        matrixStack.pose().pushPose();
+        matrixStack.pose().translate(0, 0, 200);
         if (overlay != null)
             overlay.draw(matrixStack, x, y, ovlw, ovlh);
 

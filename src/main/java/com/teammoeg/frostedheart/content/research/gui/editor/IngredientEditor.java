@@ -33,18 +33,18 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Widget;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.Ingredient.Value;
 import net.minecraft.world.item.crafting.Ingredient.ItemValue;
 import net.minecraft.world.item.crafting.Ingredient.TagValue;
-import net.minecraft.tags.SerializationTags;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.Ingredient.Value;
 import net.minecraftforge.common.crafting.CompoundIngredient;
-import net.minecraftforge.common.crafting.NBTIngredient;
+import net.minecraftforge.common.crafting.PartialNBTIngredient;
 
 public class IngredientEditor extends BaseEditDialog {
     public static final Editor<ItemValue> EDITOR_ITEMLIST = (p, l, v, c) -> SelectItemStackDialog.EDITOR.open(p, l, (v == null || v.item == null) ? new ItemStack(Items.AIR) : v.item, s -> {
@@ -59,12 +59,12 @@ public class IngredientEditor extends BaseEditDialog {
         if (v != null) {
             TagKey<Item> tag = v.tag;
             try {
-                vx = SerializationTags.getInstance().getItems().getIdOrThrow(tag).toString();
+                vx = tag.location().toString();
             } catch (Exception ex) {
                 FHMain.LOGGER.error("Error creating editor tag list",ex);
             }
         }
-        EditBtnDialog.EDITOR_ITEM_TAGS.open(p, l, vx, s -> c.accept(new TagValue(SerializationTags.getInstance().getItems().getTagOrEmpty(new ResourceLocation(s)))));
+        EditBtnDialog.EDITOR_ITEM_TAGS.open(p, l, vx, s -> c.accept(new TagValue(ItemTags.create(new ResourceLocation(s)))));
     };
     public static final Editor<Value> EDITOR_LIST = (p, l, v, c) -> {
         if (v == null)
@@ -116,7 +116,7 @@ public class IngredientEditor extends BaseEditDialog {
     public static final Editor<Ingredient> EDITOR_INGREDIENT = (p, l, v, c) -> {
         if (v == null) {
             new EditorSelector<>(p, l, c).addEditor("ItemStack", NBT_EDITOR).addEditor("TAG", TAG_EDITOR).addEditor("Advanced", VANILLA_EDITOR).open();
-        } else if (v instanceof NBTIngredient) {
+        } else if (v instanceof PartialNBTIngredient) {
             NBT_EDITOR.open(p, l, v, c);
         } else if (v.isVanilla()) {
             VANILLA_EDITOR.open(p, l, v, c);
@@ -131,7 +131,7 @@ public class IngredientEditor extends BaseEditDialog {
                 igd.addEditor("Change to Multiple", EDITOR_MULTIPLE);
             else
                 igd.addEditor("Change to Single", EDITOR_SIMPLE);
-            if (!(v instanceof NBTIngredient))
+            if (!(v instanceof PartialNBTIngredient))
                 igd.addEditor("Add NBT", NBT_EDITOR);
         }
         igd.addEditor("Edit as JSON", EDITOR_JSON);
@@ -152,7 +152,7 @@ public class IngredientEditor extends BaseEditDialog {
 
 
     public static String getODesc(Ingredient i) {
-        if (i instanceof NBTIngredient) {
+        if (i instanceof PartialNBTIngredient) {
             if (!i.isEmpty())
                 return "Stack " + i.getItems()[0].getHoverName().getString();
             return "NBT empty";
@@ -173,7 +173,7 @@ public class IngredientEditor extends BaseEditDialog {
     private static String getText(Value li) {
         if (li instanceof TagValue) {
             try {
-                return "Tag:" + SerializationTags.getInstance().getItems().getIdOrThrow(((TagValue) li).tag);
+                return "Tag:" + ((TagValue) li).tag.location();
             } catch (Exception ex) {
                 return "Unknown tag list";
             }
@@ -205,7 +205,7 @@ public class IngredientEditor extends BaseEditDialog {
                 add(new OpenEditorButton<>(this, "Change to Multiple", EDITOR_MULTIPLE, orig, e -> orig = e));
             else
                 add(new OpenEditorButton<>(this, "Change to Single", EDITOR_SIMPLE, orig, e -> orig = e));
-            if (!(orig instanceof NBTIngredient))
+            if (!(orig instanceof PartialNBTIngredient))
                 add(new OpenEditorButton<>(this, "Add NBT", NBT_EDITOR, orig, e -> orig = e));
         }
 
