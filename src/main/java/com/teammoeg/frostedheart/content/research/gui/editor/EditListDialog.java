@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
@@ -42,9 +42,9 @@ import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 /**
@@ -71,7 +71,7 @@ public class EditListDialog<T> extends EditDialog {
             }
 
             theme.drawString(matrixStack, getTitle(), x + 4, y + 2, Color4I.BLACK, 0);
-            RenderSystem.color4f(1F, 1F, 1F, 1F);
+            RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
         }
 
         @Override
@@ -129,7 +129,7 @@ public class EditListDialog<T> extends EditDialog {
                 theme.drawString(matrixStack, "[-]", x + w - 16, y + 2, Color4I.BLACK, 0);
             }
 
-            RenderSystem.color4f(1F, 1F, 1F, 1F);
+            RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
         }
 
         @Override

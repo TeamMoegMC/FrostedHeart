@@ -60,7 +60,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.FakePlayer;
-import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor;
 
 public class ResearchListeners {
     public static class BlockUnlockList extends UnlockList<Block> {
@@ -408,7 +408,7 @@ public class ResearchListeners {
                 }
                 trd.getCurrentResearch().ifPresent(r -> RubbingTool.setResearch(i, r.getId()));
             }
-            for (InspireRecipe ir : FHUtils.filterRecipes(s.getLevel().getRecipeManager(), InspireRecipe.TYPE)) {
+            for (InspireRecipe ir : FHUtils.filterRecipes(s.level().getRecipeManager(), InspireRecipe.TYPE)) {
                 if (ir.item.test(i)) {
                     i.shrink(1);
                     EnergyCore.addPersistentEnergy(s, ir.inspire);

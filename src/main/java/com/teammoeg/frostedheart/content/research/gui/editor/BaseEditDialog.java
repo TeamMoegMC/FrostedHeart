@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;

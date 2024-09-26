@@ -34,7 +34,7 @@ public class LabeledTextBoxAndBtn extends LabeledTextBox {
 
     public LabeledTextBoxAndBtn(Panel panel, String lab, String txt, String btn, Consumer<Consumer<String>> onbtn) {
         super(panel, lab, txt);
-        this.btn = new SimpleTextButton(this, TranslateUtils.str(btn), Icon.EMPTY) {
+        this.btn = new SimpleTextButton(this, TranslateUtils.str(btn), Icon.empty()) {
 
             @Override
             public void onClicked(MouseButton arg0) {

@@ -83,7 +83,7 @@ public class FakeSlot extends Widget {
         GuiHelper.setupDrawing();
         matrixStack.pose().pushPose();
         matrixStack.pose().translate(0, 0, 100);
-
+      //TODO repair draw item
         //GuiHelper.drawItem(matrixStack, cur, x, y, w / 16F, h / 16F, true, null);
         
         if (cnt != 1) {
@@ -93,13 +93,13 @@ public class FakeSlot extends Widget {
             if (cnt >= 10)
                 dx = 0;
             theme.drawString(matrixStack, String.valueOf(cnt), dx + x + 8, y + 9, Color4I.WHITE, Theme.SHADOW);
-            matrixStack.popPose();
+            matrixStack.pose().popPose();
         }
-        matrixStack.translate(0, 0, 100);
+        matrixStack.pose().translate(0, 0, 100);
         if (overlay != null)
             overlay.draw(matrixStack, x, y, ovlw, ovlh);
 
-        matrixStack.popPose();
+        matrixStack.pose().popPose();
     }
 
     public Icon getOverlay() {

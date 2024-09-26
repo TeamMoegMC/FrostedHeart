@@ -49,6 +49,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.block.Mirror;
@@ -57,7 +58,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.network.NetworkHooks;
 import net.minecraft.core.Vec3i;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
@@ -163,7 +166,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
                 UUID crid = FHTeamDataManager.get(player).getId();
                 IOwnerTile.trySetOwner(ii, crid);
                 if (crid != null && crid.equals(IOwnerTile.getOwner(ii)))
-                	player.openMenu((IInteractionObjectIE) ii);
+                	NetworkHooks.openScreen((ServerPlayer) player, (MenuProvider)ii,ii.getBlockPos());
                 else
                     player.displayClientMessage(TranslateUtils.translateMessage("research.not_owned"), true);
             }

@@ -35,7 +35,7 @@ public class OpenEditorButton<T> extends SimpleTextButton {
     private final Consumer<T> cb;
 
     public OpenEditorButton(Panel panel, String label, Editor<T> e, T val, Consumer<T> cb) {
-        this(panel, label, e, val, Icon.EMPTY, cb);
+        this(panel, label, e, val, Icon.empty(), cb);
     }
 
     public OpenEditorButton(Panel panel, String label, Editor<T> e, T val, Icon ic, Consumer<T> cb) {

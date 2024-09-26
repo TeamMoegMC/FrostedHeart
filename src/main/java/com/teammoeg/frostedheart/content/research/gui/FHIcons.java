@@ -119,12 +119,12 @@ public class FHIcons {
             GuiHelper.setupDrawing();
             if (large != null)
                 large.draw(ms, x, y, w, h);
-            ms.pushPose();
-            ms.translate(0, 0, 110);// let's get top most
+            ms.pose().pushPose();
+            ms.pose().translate(0, 0, 110);// let's get top most
             GuiHelper.setupDrawing();
             if (small != null)
                 small.draw(ms, x + w / 2, y + h / 2, w / 2, h / 2);
-            ms.popPose();
+            ms.pose().popPose();
         }
     }
 
@@ -206,10 +206,11 @@ public class FHIcons {
             itemRenderer.renderItemAndEffectIntoGUI(stack, x, y);
             itemRenderer.renderItemOverlayIntoGUI(font, stack, x, y, null);
             itemRenderer.zLevel = 0.0F;*/
-        	matrixStack.pushPose();
-        	matrixStack.translate(0,0, 199);
-        	GuiHelper.drawItem(matrixStack, stack, x, y, w/16f, h/16f, true, null);
-            matrixStack.popPose();
+        	matrixStack.pose().pushPose();
+        	matrixStack.pose().translate(0,0, 199);
+        	//TODO repair draw item
+        	//GuiHelper.drawItem(matrixStack, stack, x, y, w/16f, h/16f, true, null);
+            matrixStack.pose().popPose();
             /*ClientUtils.mc().getItemRenderer().renderItem(stack, TransformType.GUI,LightTexture., y, matrixStack, null);
             if (stack != null && stack.getCount() > 1) {
                 matrixStack.push();
@@ -254,16 +255,16 @@ public class FHIcons {
         @Override
         public void draw(GuiGraphics ms, int x, int y, int w, int h) {
 
-            ms.pushPose();
-            ms.translate(x, y, 0);
-            ms.scale(w / 16f, h / 16f, 0);
+            ms.pose().pushPose();
+            ms.pose().translate(x, y, 0);
+            ms.pose().scale(w / 16f, h / 16f, 0);
 
-            ms.pushPose();
+            ms.pose().pushPose();
 
-            ms.scale(2.286f, 2.286f, 0);// scale font height 7 to height 16
-            ClientUtils.mc().font.drawShadow(ms, text, 0, 0, 0xFFFFFFFF);
-            ms.popPose();
-            ms.popPose();
+            ms.pose().scale(2.286f, 2.286f, 0);// scale font height 7 to height 16
+            ms.drawString(ClientUtils.mc().font,text, 0, 0, 0xFFFFFFFF);
+            ms.pose().popPose();
+            ms.pose().popPose();
             GuiHelper.setupDrawing();
         }
 
@@ -393,7 +394,7 @@ public class FHIcons {
                 add(h);
                 add(tw);
                 add(th);
-                add(new SimpleTextButton(this, TranslateUtils.str("Commit"), Icon.EMPTY) {
+                add(new SimpleTextButton(this, TranslateUtils.str("Commit"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton arg0) {
                         v.rl = new ResourceLocation(rl.getText());

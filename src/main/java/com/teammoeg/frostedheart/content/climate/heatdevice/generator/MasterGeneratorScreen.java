@@ -60,7 +60,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		public MasterGeneratorGuiButtonUpgrade(int x, int y, int w, int h,
 				int initialState,  int u, int v,
 				IIEPressable<GuiButtonState<Integer>> handler) {
-			super(x, y, w, h, TextComponent.EMPTY, new Integer[] {0,1,2,3}, initialState, TEXTURE, u, v, 1, handler);
+			super(x, y, w, h, Component.empty(), new Integer[] {0,1,2,3}, initialState, TEXTURE, u, v, 1, handler);
 		}
 
 		public void blit(PoseStack matrixStack, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight) {

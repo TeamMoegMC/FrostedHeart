@@ -25,6 +25,7 @@ import java.util.Random;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
@@ -34,7 +35,9 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraftforge.client.model.data.IModelData;
+import net.minecraftforge.client.model.data.ModelData;
+import org.jetbrains.annotations.NotNull;
+//import net.minecraftforge.client.model.data.IModelData;
 
 public class LiningModel implements BakedModel {
 
@@ -54,7 +57,7 @@ public class LiningModel implements BakedModel {
     // This is a forge extension that is expected for blocks only.
     @Override
     @Nonnull
-    public IModelData getModelData(@Nonnull BlockAndTintGetter world, @Nonnull BlockPos pos, @Nonnull BlockState state, @Nonnull IModelData tileData) {
+    public @NotNull ModelData getModelData(@NotNull BlockAndTintGetter level, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull ModelData modelData) {
         throw new AssertionError("LiningModel::getModelData should never be called");
     }
 
@@ -69,16 +72,17 @@ public class LiningModel implements BakedModel {
     }
 
     @Override
-    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand) {
+    public List<BakedQuad> getQuads(@org.jetbrains.annotations.Nullable BlockState state, @org.jetbrains.annotations.Nullable Direction side, RandomSource rand) {
         return baseArmorModel.getQuads(state, side, rand);
     }
 
     // This is a forge extension that is expected for blocks only.
-    @Override
-    @Nonnull
-    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @Nonnull Random rand, @Nonnull IModelData extraData) {
-        throw new AssertionError("LiningModel::getQuads(IModelData) should never be called");
-    }
+//    @Override
+//    @Nonnull
+//    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @Nonnull Random rand, @Nonnull IModelData extraData) {
+//        throw new AssertionError("LiningModel::getQuads(IModelData) should never be called");
+//    }
+
 
     @Override
     public boolean useAmbientOcclusion() {

@@ -52,6 +52,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.network.NetworkHooks;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 
@@ -86,7 +87,7 @@ public class RelicChestBlock extends FHBaseBlock implements FHEntityBlock<RelicC
         if (!worldIn.isClientSide) {
             RelicChestTileEntity tile = (RelicChestTileEntity) worldIn.getBlockEntity(pos);
             if (tile != null) {
-               player.openMenu(tile);
+            	NetworkHooks.openScreen((ServerPlayer) player, tile, pos);
                 worldIn.playSound(null, pos, SoundEvents.LAVA_EXTINGUISH, SoundSource.BLOCKS, 0.3F, 1.5F);
             }
         }

@@ -33,10 +33,12 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.AxisDirection;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.network.NetworkHooks;
 import net.minecraft.world.level.Level;
 
 public abstract class FHGuiBlock extends FHBaseBlock implements FHEntityBlock{
@@ -93,7 +95,7 @@ public abstract class FHGuiBlock extends FHBaseBlock implements FHEntityBlock{
         if (tile instanceof IInteractionObjectIE interaction && hand == InteractionHand.MAIN_HAND && !player.isShiftKeyDown()) {
             BlockEntity master = interaction.getGuiMaster();
             if (master instanceof MenuProvider menu)
-            	player.openMenu(menu);
+            	NetworkHooks.openScreen((ServerPlayer)player, menu,master.getBlockPos());
             return InteractionResult.SUCCESS;
         }
         return superResult;

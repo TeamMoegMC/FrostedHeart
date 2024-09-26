@@ -25,7 +25,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
@@ -48,11 +48,11 @@ import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 
 public class SelectDialog<T> extends EditDialog {
     public class SelectorButton extends Button {
@@ -61,7 +61,7 @@ public class SelectDialog<T> extends EditDialog {
         Component t;
 
         public SelectorButton(SelectorList panel, T obj) {
-            super(panel, TextComponent.EMPTY, toicon.apply(obj));
+            super(panel, Component.empty(), toicon.apply(obj));
             this.obj = obj;
             this.listPanel = panel;
             t = tostr.apply(obj);
@@ -167,16 +167,16 @@ public class SelectDialog<T> extends EditDialog {
         return e -> TranslateUtils.str(String.valueOf(str.apply(e)));
     }
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
-        this(panel, lbl, val, cb, fetcher, e -> TranslateUtils.str(e.toString()), e -> new String[]{e.toString()}, e -> Icon.EMPTY);
+        this(panel, lbl, val, cb, fetcher, e -> TranslateUtils.str(e.toString()), e -> new String[]{e.toString()}, e -> Icon.empty());
     }
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
                         Function<T, Component> tostr) {
-        this(panel, lbl, val, cb, fetcher, tostr, e -> new String[]{tostr.apply(val).getString()}, e -> Icon.EMPTY);
+        this(panel, lbl, val, cb, fetcher, tostr, e -> new String[]{tostr.apply(val).getString()}, e -> Icon.empty());
     }
 
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
                         Function<T, Component> tostr, Function<T, String[]> tosearch) {
-        this(panel, lbl, val, cb, fetcher, tostr, tosearch, e -> Icon.EMPTY);
+        this(panel, lbl, val, cb, fetcher, tostr, tosearch, e -> Icon.empty());
     }
 
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,

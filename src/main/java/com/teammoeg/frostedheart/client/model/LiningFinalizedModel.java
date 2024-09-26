@@ -29,7 +29,9 @@ import javax.annotation.Nullable;
 import com.google.common.primitives.Ints;
 import com.teammoeg.frostedheart.FHMain;
 
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
@@ -39,7 +41,7 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.client.model.ModelLoader;
+//import net.minecraftforge.client.model.ModelLoader;
 
 public class LiningFinalizedModel implements BakedModel {
 
@@ -236,7 +238,7 @@ public class LiningFinalizedModel implements BakedModel {
         return parentModel.getTransforms();
     }
     private TextureAtlasSprite getItemSprite(ResourceLocation modelLocation) {
-        TextureAtlas blocksStitchedTextures = ModelLoader.instance().getSpriteMap().getAtlas(TextureAtlas.LOCATION_BLOCKS);
+        TextureAtlas blocksStitchedTextures = Minecraft.getInstance().getModelManager().getAtlas(TextureAtlas.LOCATION_BLOCKS);
         return blocksStitchedTextures.getSprite(modelLocation);
     }
     private List<BakedQuad> getLiningQuads() {
@@ -266,10 +268,8 @@ public class LiningFinalizedModel implements BakedModel {
      * @param rand random
      * @return the list of quads to be rendered
      */
-
     @Override
-    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand) {
-        // our texture are only drawn when side is NULL.
+    public List<BakedQuad> getQuads(@org.jetbrains.annotations.Nullable BlockState state, @org.jetbrains.annotations.Nullable Direction side, RandomSource rand) {
         if (side != null) {
             return parentModel.getQuads(state, side, rand);
         }
@@ -277,6 +277,7 @@ public class LiningFinalizedModel implements BakedModel {
         combinedQuadsList.addAll(getLiningQuads());
         return combinedQuadsList;
     }
+
     @Override
     public boolean useAmbientOcclusion() {
         return parentModel.useAmbientOcclusion();
