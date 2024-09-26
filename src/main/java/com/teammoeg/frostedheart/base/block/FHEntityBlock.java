@@ -34,7 +34,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public interface FHEntityBlock<B extends BlockEntity> extends EntityBlock {
 	@Override
 	public default BlockEntity newBlockEntity(BlockPos p, BlockState s) {
-		if(hasTileEntity(s))
+		if(hasTileEntity(p,s))
 			return getBlock().get().create(p, s);
 		return null;
 	}

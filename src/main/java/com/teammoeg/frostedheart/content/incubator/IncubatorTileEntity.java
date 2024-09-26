@@ -68,7 +68,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 public class IncubatorTileEntity extends FHBaseTileEntity implements FHTickableBlockEntity,
-        FHBlockInterfaces.IActiveState, , MenuProvider, IProcessBE {
+        FHBlockInterfaces.IActiveState,  MenuProvider, IProcessBE,IIEInventory {
     public static final ResourceLocation food = new ResourceLocation(FHMain.MODID, "food");
     public static final ResourceLocation pr = new ResourceLocation("kubejs", "protein");
     protected NonNullList<ItemStack> inventory;
