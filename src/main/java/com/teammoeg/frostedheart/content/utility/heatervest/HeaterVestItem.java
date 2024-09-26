@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.utility.heatervest;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
@@ -44,7 +45,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-
+import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraft.world.item.Item.Properties;
 
 /**
@@ -81,14 +82,14 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
 
     }
 
-    @Override
     @OnlyIn(Dist.CLIENT)
-    public HumanoidModel getArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlot armorSlot,
-                                    HumanoidModel _default) {
-        return HeaterVestModel.getModel();
-    }
-
     @Override
+	public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+		super.initializeClient(consumer);
+		consumer.accept(new HeaterVestExtension());
+	}
+
+	@Override
     public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, String type) {
         return FHMain.rl("textures/models/heater_vest.png").toString();
     }

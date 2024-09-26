@@ -19,11 +19,16 @@
 
 package com.teammoeg.frostedheart.client.model;
 
+import java.util.function.Function;
+
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Skeleton;
@@ -33,11 +38,17 @@ import net.minecraft.util.Mth;
 public class FHArmorBaseModel<T extends LivingEntity> extends HumanoidModel<T> {
     T entityTemp;
 
-    public FHArmorBaseModel(float modelSize, float yOffsetIn, int textureWidthIn, int textureHeightIn) {
-        super(modelSize, yOffsetIn, textureWidthIn, textureHeightIn);
-    }
 
-    @Override
+
+    public FHArmorBaseModel(ModelPart pRoot, Function<ResourceLocation, RenderType> pRenderType) {
+		super(pRoot, pRenderType);
+	}
+
+	public FHArmorBaseModel(ModelPart pRoot) {
+		super(pRoot);
+	}
+
+	@Override
     public void renderToBuffer(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
         if (entityTemp != null) {
             young = entityTemp.isBaby();

@@ -40,23 +40,23 @@ public class LiningItemOverrideList extends ItemOverrides {
     }
 
     @Override
-    public BakedModel resolve(BakedModel originalModel, ItemStack stack, @Nullable ClientLevel world, @Nullable LivingEntity entity) {
+    public BakedModel resolve(BakedModel originalModel, ItemStack stack, @Nullable ClientLevel world, @Nullable LivingEntity entity,int pSeed) {
         String s = ItemNBTHelper.getString(stack, "inner_cover");
-        EquipmentSlot slotType = ((ArmorItem) stack.getItem()).getSlot();
+        EquipmentSlot slotType = ((ArmorItem) stack.getItem()).getEquipmentSlot();
         if (!s.isEmpty() && slotType != null) {
             String liningType = new ResourceLocation(s).getPath();
             String slotName = "feet";
-            switch (slotType.getName()) {
-                case "feet":
+            switch (slotType) {
+                case FEET:
                     slotName = "feet";
                     break;
-                case "legs":
+                case LEGS:
                     slotName = "legs";
                     break;
-                case "chest":
+                case CHEST:
                     slotName = "torso";
                     break;
-                case "head":
+                case HEAD:
                     slotName = "helmet";
                     break;
             }

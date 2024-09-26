@@ -49,6 +49,8 @@ import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskScreen;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatScreen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
+import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestExtension;
+import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestModel;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
@@ -64,6 +66,15 @@ import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
@@ -82,6 +93,9 @@ import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.ForgeHooksClient;
+import net.minecraftforge.client.event.EntityRenderersEvent.AddLayers;
+import net.minecraftforge.client.event.EntityRenderersEvent.RegisterLayerDefinitions;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
@@ -137,6 +151,14 @@ public class ClientRegistryEvents {
 		key_skipDialog.setKeyConflictContext(KeyConflictContext.IN_GAME);
 		ev.register(key_skipDialog);
 	}
+	@SubscribeEvent
+	public static void onLayerRegister(final RegisterLayerDefinitions event) {
+		event.registerLayerDefinition(HeaterVestModel.HEATER_VEST_LAYER, () -> HeaterVestModel.createLayer());
+	}
+	@SubscribeEvent
+	public static void onLayerAdd(final AddLayers event) {
+		HeaterVestExtension.MODEL=new HeaterVestModel(Minecraft.getInstance().getEntityModels().bakeLayer(HeaterVestModel.HEATER_VEST_LAYER));
+	}
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
         // Register screens
@@ -180,11 +202,7 @@ public class ClientRegistryEvents {
         BlockEntityRenderers.register(FHTileTypes.MECH_CALC.get(), MechCalcRenderer::new);
         
         // Register layers
-        Map<String, EntityRenderer<? extends Player>> skinMap = Minecraft.getInstance().getEntityRenderDispatcher().getSkinMap();
-        if(skinMap.get("default") instanceof PlayerRenderer render)
-        	render.addLayer(new HeaterVestRenderer<>(render));
-        if(skinMap.get("slim") instanceof PlayerRenderer render)
-        	render.addLayer(new HeaterVestRenderer<>(render));
+
         addManual();
         if (ModList.get().isLoaded("tetra"))
             TetraClient.init();
