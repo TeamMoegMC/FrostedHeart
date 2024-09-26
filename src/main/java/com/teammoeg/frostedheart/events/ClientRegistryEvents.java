@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.client.model.DynamicBlockModelReference;
 import com.teammoeg.frostedheart.client.model.LiningFinalizedModel;
 import com.teammoeg.frostedheart.client.model.LiningModel;
 import com.teammoeg.frostedheart.client.particles.BreathParticle;
@@ -158,6 +159,13 @@ public class ClientRegistryEvents {
 	@SubscribeEvent
 	public static void onLayerAdd(final AddLayers event) {
 		HeaterVestExtension.MODEL=new HeaterVestModel(Minecraft.getInstance().getEntityModels().bakeLayer(HeaterVestModel.HEATER_VEST_LAYER));
+	}
+	@SubscribeEvent
+	public static void registerModels(ModelEvent.RegisterAdditional ev)
+	{
+		DynamicBlockModelReference.registeredModels.forEach(rl->{
+			ev.register(new ResourceLocation(rl.getNamespace(),rl.getPath().substring(0,rl.getPath().lastIndexOf(".")).substring(7)));
+		});
 	}
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {

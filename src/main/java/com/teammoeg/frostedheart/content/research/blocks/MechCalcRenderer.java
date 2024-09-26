@@ -25,6 +25,7 @@ import org.joml.Quaternionf;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.client.model.DynamicBlockModelReference;
 
 import blusunrize.immersiveengineering.api.IEProperties.IEObjState;
 import blusunrize.immersiveengineering.api.IEProperties.Model;
@@ -45,7 +46,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.core.BlockPos;
 
 public class MechCalcRenderer implements BlockEntityRenderer<MechCalcTileEntity> {
-    public static DynamicModel MODEL;
+    public static DynamicBlockModelReference MODEL;
     public static VisibilityList drum = VisibilityList.show("c7");
     public static VisibilityList register = VisibilityList.show("c6");
 
@@ -66,7 +67,7 @@ public class MechCalcRenderer implements BlockEntityRenderer<MechCalcTileEntity>
         double forward = ((double) te.process / 1067) / 16d;
         matrixStack.translate(rd.getStepX() * forward, 0, rd.getStepZ() * forward);
         
-        List<BakedQuad> quads = MODEL.getNullQuads(ModelData.builder().with(DynamicSubmodelCallbacks.getProperty(), register).build());
+        List<BakedQuad> quads = MODEL.apply(ModelData.builder().with(DynamicSubmodelCallbacks.getProperty(), register).build());
         RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
         matrixStack.popPose();
         Direction fw = te.getDirection();

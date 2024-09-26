@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart;
 
+import com.teammoeg.frostedheart.client.model.DynamicBlockModelReference;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorRenderer;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
@@ -28,17 +29,8 @@ import net.minecraft.resources.ResourceLocation;
 
 public class DynamicModelSetup {
     public static void setup() {
-        T1GeneratorRenderer.FUEL = DynamicModel.createSided(
-                new ResourceLocation(FHMain.MODID, "block/multiblocks/generator_fuel.obj"),
-                "generator_t1_fuel", ModelType.IE_OBJ
-        );
-        T2GeneratorRenderer.FUEL = DynamicModel.createSided(
-                new ResourceLocation(FHMain.MODID, "block/multiblocks/generator_t2_fuel.obj"),
-                "generator_t2_fuel", ModelType.IE_OBJ
-        );
-        MechCalcRenderer.MODEL = DynamicModel.createSided(
-                new ResourceLocation(FHMain.MODID, "block/mechanical_calculator_movable.obj"),
-                "mechanical_calculator_movable", ModelType.IE_OBJ
-        );
+        T1GeneratorRenderer.FUEL = DynamicBlockModelReference.getModelCached(FHMain.MODID, "block/multiblocks/generator_fuel.obj");
+        T2GeneratorRenderer.FUEL = DynamicBlockModelReference.getModelCached(FHMain.MODID, "block/multiblocks/generator_t2_fuel.obj" );
+        MechCalcRenderer.MODEL   = DynamicBlockModelReference.getModelCached(FHMain.MODID, "block/mechanical_calculator_movable.obj");
     }
 }
