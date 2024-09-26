@@ -89,7 +89,7 @@ public class TipElement implements Cloneable {
     public void replaceToError(File filePath, String type) {
         contents = new ArrayList<>();
         contents.add(TranslateUtils.translate("tips." + FHMain.MODID + ".error." + type));
-        contents.add(new TextComponent(filePath.getPath()));
+        contents.add(TranslateUtils.str(filePath.getPath()));
         fontColor = 0xFFFF5340;
         BGColor = 0xFF000000;
         alwaysVisible = true;
