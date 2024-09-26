@@ -7,6 +7,7 @@ import java.util.stream.IntStream;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
 import com.teammoeg.frostedheart.content.robotics.logistics.FilterSlot;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemChangeListener;
@@ -15,13 +16,14 @@ import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.items.ItemStackHandler;
 
-public class RequesterTileEntity extends FHBaseTileEntity implements TaskableLogisticStorage,ItemChangeListener,TickableBlockEntity{
+public class RequesterTileEntity extends FHBaseTileEntity implements TaskableLogisticStorage,ItemChangeListener,FHTickableBlockEntity{
 	private static class NumCount{
 		public static final Codec<NumCount> CODEC=RecordCodecBuilder.create(t->t.group(
 			CodecUtil.INT_ARRAY_CODEC.fieldOf("slot").forGetter(o->o.slot.stream().mapToInt(n->n).toArray()),
@@ -43,8 +45,8 @@ public class RequesterTileEntity extends FHBaseTileEntity implements TaskableLog
 	LogisticTask[] tasks=new LogisticTask[MAX_FILTER_SLOT];
 	int[] msize=new int[MAX_FILTER_SLOT];
 	NumCount[] counts=new NumCount[27];
-	public RequesterTileEntity(BlockEntityType<? extends BlockEntity> type) {
-		super(type);
+	public RequesterTileEntity(BlockEntityType<? extends BlockEntity> type,BlockPos pos,BlockState bs) {
+		super(type,pos,bs);
 		for(int i=0;i<filters.length;i++)
 			filters[i]=new FilterSlot();
 		for(int i=0;i<counts.length;i++)

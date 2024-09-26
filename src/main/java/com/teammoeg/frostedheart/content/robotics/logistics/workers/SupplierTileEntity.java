@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 
 import com.teammoeg.frostedheart.FHCapabilities;
+import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemChangeListener;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemHandlerListener;
@@ -8,22 +9,22 @@ import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticIntern
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
 import com.teammoeg.frostedheart.util.FHUtils;
 
-import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.items.ItemStackHandler;
 
 @SuppressWarnings("unused")
-public class SupplierTileEntity extends FHBaseTileEntity implements TaskableLogisticStorage,ItemChangeListener,TickableBlockEntity {
+public class SupplierTileEntity extends FHBaseTileEntity implements TaskableLogisticStorage,ItemChangeListener,FHTickableBlockEntity {
 	ItemStackHandler container=new ItemStackHandler(27);
 	ItemHandlerListener handler=new ItemHandlerListener(container,this);
 	LogisticTask[] tasks=new LogisticTask[27];
 
-	public SupplierTileEntity(BlockEntityType<? extends BlockEntity> type) {
-		super(type);
+	public SupplierTileEntity(BlockEntityType<? extends BlockEntity> type,BlockPos pos,BlockState bs) {
+		super(type,pos,bs);
 	}
 
 	@Override

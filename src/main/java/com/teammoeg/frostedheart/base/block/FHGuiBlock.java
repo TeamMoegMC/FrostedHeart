@@ -41,7 +41,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 import net.minecraft.world.level.Level;
 
-public abstract class FHGuiBlock extends FHBaseBlock implements FHEntityBlock{
+public abstract class FHGuiBlock<T extends BlockEntity> extends FHBaseBlock implements FHEntityBlock<T>{
 
     public FHGuiBlock(Properties blockProps) {
         super(blockProps);

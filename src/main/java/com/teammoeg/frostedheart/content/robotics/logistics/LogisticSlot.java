@@ -10,8 +10,6 @@ import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
 public class LogisticSlot {
 	public int slot;

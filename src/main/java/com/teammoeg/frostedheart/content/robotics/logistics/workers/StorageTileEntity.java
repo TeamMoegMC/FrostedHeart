@@ -5,17 +5,19 @@ import com.teammoeg.frostedheart.content.robotics.logistics.FilterSlot;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemChangeListener;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemHandlerListener;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.items.ItemStackHandler;
 
 public class StorageTileEntity extends FHBaseTileEntity implements ILogisticsStorage,ItemChangeListener{
 	ItemStackHandler container=new ItemStackHandler(27);
 	ItemHandlerListener handler=new ItemHandlerListener(container,this);
 	FilterSlot filter;
-	public StorageTileEntity(BlockEntityType<? extends BlockEntity> type) {
-		super(type);
+	public StorageTileEntity(BlockEntityType<? extends BlockEntity> type,BlockPos pos,BlockState bs) {
+		super(type,pos,bs);
 		filter=new FilterSlot();
 	}
 
