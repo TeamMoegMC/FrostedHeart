@@ -37,6 +37,9 @@ public class TranslateUtils {
     }
 
     public static MutableComponent str(String s) {
+    	if(s==null||s.isEmpty()) {
+    		return Component.empty();
+    	}
         return MutableComponent.create(new LiteralContents(s));
     }
 

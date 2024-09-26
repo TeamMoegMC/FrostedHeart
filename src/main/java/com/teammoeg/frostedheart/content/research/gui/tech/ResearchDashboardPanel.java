@@ -95,7 +95,7 @@ public class ResearchDashboardPanel extends Panel {
         tf.setText(detailPanel.research.getName());
         if (FHResearch.editor) {
             Button create = new TechTextButton(this, TranslateUtils.str("edit"),
-                    Icon.EMPTY) {
+                    Icon.empty()) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
                     EditUtils.editResearch(this, detailPanel.research);

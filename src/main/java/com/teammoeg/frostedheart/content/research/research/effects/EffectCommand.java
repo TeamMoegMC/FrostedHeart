@@ -99,7 +99,7 @@ public class EffectCommand extends Effect {
         overrides.put("y", pos.getY());
         overrides.put("z", pos.getZ());
 
-        overrides.put("t", team.getHolder().getTeam().get().getStringID());
+        overrides.put("t", team.getHolder().getTeam().get().getId().toString());
         Commands cmds = FHTeamDataManager.getServer().getCommands();
         CommandSourceStack source = FHTeamDataManager.getServer().createCommandSourceStack();
         for (String s : rewards) {
@@ -110,7 +110,7 @@ public class EffectCommand extends Effect {
                 }
             }
 
-            cmds.performCommand(source, s);
+            cmds.performPrefixedCommand(source, s);
         }
 
         return true;

@@ -52,7 +52,7 @@ public class TechScrollBar extends PanelScrollBar {
 
     @Override
     public boolean canMouseScroll() {
-        return super.canMouseScroll() && panel.isEnabled() && !isHidden;
+        return super.canMouseScroll() && getPanel().isEnabled() && !isHidden;
     }
 
     @Override

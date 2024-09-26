@@ -28,7 +28,6 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.recipes.DietGroupCodec;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
@@ -126,6 +125,7 @@ public class EnergyCore implements NBTSerializable {
         	initValue *= 0.5;
         }
         double dietValue = 0;
+        //TODO implement diet
         //IDietTracker idt = DietCapability.get(player).orElse(null);
         /*if (idt != null) {
             int tdv = 0;

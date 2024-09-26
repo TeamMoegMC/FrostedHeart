@@ -168,10 +168,10 @@ public class ResearchDetailPanel extends Panel {
         if (research == null) {
             return;
         }
-        matrixStack.pushPose();
-        matrixStack.translate(0, 0, 500);
+        matrixStack.pose().pushPose();
+        matrixStack.pose().translate(0, 0, 500);
         super.draw(matrixStack, theme, x, y, w, h);
-        matrixStack.popPose();
+        matrixStack.pose().popPose();
     }
 
     @Override

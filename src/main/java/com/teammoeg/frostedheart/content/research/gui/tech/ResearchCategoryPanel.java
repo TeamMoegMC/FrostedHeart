@@ -46,7 +46,7 @@ public class ResearchCategoryPanel extends Panel {
         @Override
         public void addMouseOverText(TooltipList list) {
             list.add(category.getName());
-            list.add(category.getDesc().withStyle(ChatFormatting.GRAY));
+            list.add(category.getDesc().copy().withStyle(ChatFormatting.GRAY));
         }
 
         @Override

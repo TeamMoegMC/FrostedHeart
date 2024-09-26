@@ -41,6 +41,7 @@ import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
+import mezz.jei.library.util.RecipeUtil;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -49,6 +50,7 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
@@ -121,8 +123,8 @@ public class EffectCrafting extends Effect {
         else {
             Set<ItemStack> stacks = new HashSet<>();
             for (Recipe<?> r : unlocks) {
-                if (!r.getResultItem().isEmpty()) {
-                    stacks.add(r.getResultItem());
+                if (!RecipeUtil.getResultItem(r).isEmpty()) {
+                    stacks.add(RecipeUtil.getResultItem(r));
                 }
             }
             if (!stacks.isEmpty())
@@ -147,8 +149,8 @@ public class EffectCrafting extends Effect {
         else {
             Set<ItemStack> stacks = new HashSet<>();
             for (Recipe<?> r : unlocks) {
-                if (!r.getResultItem().isEmpty()) {
-                    stacks.add(r.getResultItem());
+                if (!RecipeUtil.getResultItem(r).isEmpty()) {
+                    stacks.add(RecipeUtil.getResultItem(r));
                 }
             }
             if (stacks.isEmpty())
@@ -176,7 +178,7 @@ public class EffectCrafting extends Effect {
     private void initItem() {
         unlocks.clear();
         for (Recipe<?> r : FHTeamDataManager.getRecipeManager().getRecipes()) {
-            if (r.getResultItem().getItem().equals(this.item)) {
+            if (RecipeUtil.getResultItem(r).getItem().equals(this.item)) {
                 unlocks.add(r);
             }
         }
@@ -186,7 +188,7 @@ public class EffectCrafting extends Effect {
     private void initStack() {
         unlocks.clear();
         for (Recipe<?> r : FHTeamDataManager.getRecipeManager().getRecipes()) {
-            if (r.getResultItem().equals(item)) {
+            if (RecipeUtil.getResultItem(r).equals(item)) {
                 unlocks.add(r);
             }
         }

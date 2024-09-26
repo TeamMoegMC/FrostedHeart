@@ -36,7 +36,7 @@ import blusunrize.immersiveengineering.api.ManualHelper;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
-import blusunrize.immersiveengineering.common.items.IEItems;
+import blusunrize.immersiveengineering.common.register.IEItems;
 import blusunrize.lib.manual.ManualEntry;
 import blusunrize.lib.manual.gui.ManualScreen;
 import net.minecraft.world.level.block.Block;
@@ -44,8 +44,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.text.TranslationTextComponent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -82,7 +80,7 @@ public class EffectBuilding extends Effect {
 
     @Override
     public FHIcon getDefaultIcon() {
-        return FHIcons.getIcon(IEItems.Tools.hammer);
+        return FHIcons.getIcon(IEItems.Tools.HAMMER);
     }
 
     @Override
@@ -121,7 +119,7 @@ public class EffectBuilding extends Effect {
     @OnlyIn(Dist.CLIENT)
     @Override
     public void onClick() {
-        if (this.isGranted() && ClientUtils.getPlayer().inventory.hasAnyOf(ImmutableSet.of(IEItems.Tools.manual))) {
+        if (this.isGranted() && ClientUtils.getPlayer().getInventory().hasAnyOf(ImmutableSet.of(IEItems.Tools.MANUAL.asItem()))) {
             ResourceLocation loc = multiblock.getUniqueName();
             ResourceLocation manual = new ResourceLocation(loc.getNamespace(), loc.getPath().substring(loc.getPath().lastIndexOf("/") + 1));
             ManualScreen screen = ManualHelper.getManual().getGui();

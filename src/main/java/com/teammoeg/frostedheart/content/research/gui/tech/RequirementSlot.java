@@ -19,13 +19,12 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
@@ -33,8 +32,9 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 
 public class RequirementSlot extends Widget {
     ItemStack[] i;
@@ -59,19 +59,7 @@ public class RequirementSlot extends Widget {
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         GuiHelper.setupDrawing();
         TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
-        matrixStack.pushPose();
-        matrixStack.translate(0, 0, 100);
-        GuiHelper.drawItem(matrixStack, cur, x, y, w / 16F, h / 16F, true, null);
-        if (cnt > 1) {
-            matrixStack.pushPose();
-            matrixStack.translate(0, 0, 100);
-            int dx = 5;
-            if (cnt >= 10)
-                dx = 0;
-            theme.drawString(matrixStack, String.valueOf(cnt), dx + x + 8, y + 9, Color4I.WHITE, Theme.SHADOW);
-            matrixStack.popPose();
-        }
-        matrixStack.popPose();
+        FHGuiHelper.drawItem(matrixStack,cur, x, y,200, w / 16F, h / 16F, true, cnt!=0?String.valueOf(cnt):null);
     }
 
     @Override

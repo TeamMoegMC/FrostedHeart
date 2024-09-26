@@ -33,35 +33,33 @@ import net.minecraft.util.Mth;
 
 public class InspireToast implements Toast {
 	int level;
-	
-    public InspireToast(int level) {
-        this.level = level;
-    }
 
-    public Toast.Visibility render(GuiGraphics matrixStack, ToastComponent gui, long time) {
-        gui.getMinecraft().getTextureManager().bind(TEXTURE);
-        RenderSystem.color3f(1.0F, 1.0F, 1.0F);
-        gui.blit(matrixStack, 0, 0, 0, 0, this.width(), this.height());
+	public InspireToast(int level) {
+		this.level = level;
+	}
 
-        List<FormattedCharSequence> list = gui.getMinecraft().font.split(TranslateUtils.translateMessage("inspire.toast.gain_point"), 125);
-        int i = 16776960;
-        if (list.size() == 1) {
-            gui.getMinecraft().font.draw(matrixStack, TranslateUtils.translateMessage("inspire.toast.level",level), 30.0F, 7.0F, i | -16777216);
-            gui.getMinecraft().font.draw(matrixStack, list.get(0), 30.0F, 18.0F, -1);
-        } else {
-            if (time < 1500L) {
-                int k = Mth.floor(Mth.clamp((1500L - time) / 300.0F, 0.0F, 1.0F) * 255.0F) << 24 | 67108864;
-                gui.getMinecraft().font.draw(matrixStack, TranslateUtils.translateMessage("inspire.toast.level",level), 30.0F, 11.0F, i | k);
-            } else {
-                int i1 = Mth.floor(Mth.clamp((time - 1500L) / 300.0F, 0.0F, 1.0F) * 252.0F) << 24 | 67108864;
-                int l = this.height() / 2 - list.size() * 9 / 2;
+	public Toast.Visibility render(GuiGraphics matrixStack, ToastComponent gui, long time) {
+		matrixStack.blit(TEXTURE, 0, 0, 0, 0, this.width(), this.height());
 
-                for (FormattedCharSequence ireorderingprocessor : list) {
-                    gui.getMinecraft().font.draw(matrixStack, ireorderingprocessor, 30.0F, l, 16777215 | i1);
-                    l += 9;
-                }
-            }
-        }
-        return time >= 5000L ? Toast.Visibility.HIDE : Toast.Visibility.SHOW;
-    }
+		List<FormattedCharSequence> list = gui.getMinecraft().font.split(TranslateUtils.translateMessage("inspire.toast.gain_point"), 125);
+		int i = 16776960;
+		if (list.size() == 1) {
+			matrixStack.drawString(gui.getMinecraft().font, TranslateUtils.translateMessage("inspire.toast.level", level), 30, 7, i | -16777216);
+			matrixStack.drawString(gui.getMinecraft().font, list.get(0), 30, 18, -1);
+		} else {
+			if (time < 1500L) {
+				int k = Mth.floor(Mth.clamp((1500L - time) / 300.0F, 0.0F, 1.0F) * 255.0F) << 24 | 67108864;
+				matrixStack.drawString(gui.getMinecraft().font, TranslateUtils.translateMessage("inspire.toast.level", level), 30, 11, i | k);
+			} else {
+				int i1 = Mth.floor(Mth.clamp((time - 1500L) / 300.0F, 0.0F, 1.0F) * 252.0F) << 24 | 67108864;
+				int l = this.height() / 2 - list.size() * 9 / 2;
+
+				for (FormattedCharSequence ireorderingprocessor : list) {
+					matrixStack.drawString(gui.getMinecraft().font, ireorderingprocessor, 30, l, 16777215 | i1);
+					l += 9;
+				}
+			}
+		}
+		return time >= 5000L ? Toast.Visibility.HIDE : Toast.Visibility.SHOW;
+	}
 }

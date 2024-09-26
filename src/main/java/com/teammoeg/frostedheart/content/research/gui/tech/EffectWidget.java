@@ -62,11 +62,11 @@ public class EffectWidget extends Widget {
         TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
         icon.draw(matrixStack, x, y, w, h);
         if (e.isGranted()) {
-            matrixStack.pushPose();
-            matrixStack.translate(0, 0, 300);
+            matrixStack.pose().pushPose();
+            matrixStack.pose().translate(0, 0, 300);
             GuiHelper.setupDrawing();
             TechIcons.FIN.draw(matrixStack, x, y, w, h);
-            matrixStack.popPose();
+            matrixStack.pose().popPose();
         }
     }
 
