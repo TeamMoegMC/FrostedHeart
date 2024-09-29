@@ -42,6 +42,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemHandlerHelper;
@@ -120,7 +123,7 @@ public class GeneratorData implements SpecialData{
         	}
         if (recipe == null)
             return null;
-        if (inventory.get(OUTPUT_SLOT).isEmpty() || (ItemStack.isSame(inventory.get(OUTPUT_SLOT), recipe.output)
+        if (inventory.get(OUTPUT_SLOT).isEmpty() || (ItemStack.isSameItemSameTags(inventory.get(OUTPUT_SLOT), recipe.output)
                 && inventory.get(OUTPUT_SLOT).getCount() + recipe.output.getCount() <= getSlotLimit(OUTPUT_SLOT))) {
             return recipe;
         }
@@ -245,7 +248,7 @@ public class GeneratorData implements SpecialData{
     	Codec.FLOAT.fieldOf("powerLevel").forGetter(o->o.power),
     	CodecUtil.defaultValue(Codec.INT,0).fieldOf("heated").forGetter(o->o.heated),
     	CodecUtil.defaultValue(Codec.INT,0).fieldOf("ranged").forGetter(o->o.ranged),
-    	CodecUtil.registryCodec(()->Registry.FLUID).optionalFieldOf("steamFluid").forGetter(o->Optional.ofNullable(o.fluid)),
+    	CodecUtil.registryCodec(()->BuiltInRegistries.FLUID).optionalFieldOf("steamFluid").forGetter(o->Optional.ofNullable(o.fluid)),
     	Codec.FLOAT.fieldOf("tempLevel").forGetter(o->o.TLevel),
     	Codec.FLOAT.fieldOf("rangeLevel").forGetter(o->o.RLevel),
     	CodecUtil.path(new DiscreteListCodec<>(CodecUtil.ITEMSTACK_CODEC,ItemStack::isEmpty,()->ItemStack.EMPTY,"Slot"),"inv","Items").forGetter(o->o.inventory),
@@ -271,11 +274,12 @@ public class GeneratorData implements SpecialData{
 		this.isBroken = flags[3];
 		this.TLevel = tLevel;
 		this.RLevel = rLevel;
+		
 		for(int i=0;i<inventory.size();i++)
 			this.inventory.set(i, inventory.get(i));
 		this.currentItem = currentItem;
 		this.actualPos = actualPos;
-		this.dimension = dimension.map(t->ResourceKey.create(Registry.DIMENSION_REGISTRY, t)).orElse(null);
+		this.dimension = dimension.map(t->ResourceKey.create(Registries.DIMENSION, t)).orElse(null);
 	}
 	@Override
 	public void setHolder(SpecialDataHolder holder) {

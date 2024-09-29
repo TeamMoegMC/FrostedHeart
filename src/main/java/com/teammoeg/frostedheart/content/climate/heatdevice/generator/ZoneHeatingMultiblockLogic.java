@@ -29,10 +29,13 @@ import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
-import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IServerTickableComponent;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockLogic;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.CokeOvenLogic.State;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.core.BlockPos;
@@ -42,8 +45,7 @@ import net.minecraft.core.Vec3i;
 /**
  * Common base class for any generator like block that maintains a heat area
  */
-public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMultiblockTileEntity<T>> extends MultiblockPartTileEntity<T>
-        implements FHBlockInterfaces.IActiveState {
+public abstract class ZoneHeatingMultiblockLogic<T extends ZoneHeatingMultiblockLogic<T>> implements  IServerTickableComponent<State> {
     private float temperatureLevel;
     private float rangeLevel;
     private float lastTLevel;
@@ -53,17 +55,9 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     boolean isOverdrive;
 
 
-    public ZoneHeatingMultiblockTileEntity(IETemplateMultiblock multiblockInstance, BlockEntityType<T> type, boolean hasRSControl) {
-        super(multiblockInstance, type, hasRSControl);
-    }
 
     protected abstract void callBlockConsumerWithTypeCheck(Consumer<T> consumer, BlockEntity te);
-    @Override
-    public void disassemble() {
-        if (this == master())
-            ChunkHeatData.removeTempAdjust(level, getBlockPos());
-        super.disassemble();
-    }
+    
 
     public final void forEachBlock(Consumer<T> consumer) {
         Vec3i vec = this.multiblockInstance.getSize(level);
