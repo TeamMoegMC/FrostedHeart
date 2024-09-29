@@ -48,7 +48,13 @@ public enum TownResourceType {
     STONE(t -> 250D + 100 * t.get(STORAGE)),
     TOOL(t -> 250D + 100 * t.get(STORAGE)),
     RAW_FOOD(t -> 250D + 100 * t.get(STORAGE)),
-    PREP_FOOD(t -> 250D + 100 * t.get(STORAGE));
+    PREP_FOOD(t -> 250D + 100 * t.get(STORAGE)),
+    // TODO: Add more food resources, like diet types: vegetables, protein, etc.
+    PROTEIN(t -> 250D + 100 * t.get(STORAGE)),
+    FRUIT_AND_VEGS(t -> 250D + 100 * t.get(STORAGE)),
+    PLANT_OIL(t -> 250D + 100 * t.get(STORAGE)),
+    GRAINS(t -> 250D + 100 * t.get(STORAGE));
+
 	public static final Codec<TownResourceType> CODEC=CodecUtil.enumCodec(TownResourceType.class);
 	
     final Function<Town, Double> maxStorage;

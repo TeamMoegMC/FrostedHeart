@@ -21,8 +21,12 @@ package com.teammoeg.frostedheart.util;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Random;
 
 public class MathUtils {
+
+    public static final Random RANDOM = new Random();
+
     public static double round(double value, int places) {
         if (places < 0) throw new IllegalArgumentException();
 

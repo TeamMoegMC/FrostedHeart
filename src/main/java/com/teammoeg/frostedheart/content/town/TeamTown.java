@@ -30,7 +30,6 @@ import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.common.util.LazyOptional;
 
 /**
  * The town for a player team.
@@ -38,7 +37,7 @@ import net.minecraftforge.common.util.LazyOptional;
  * The TeamTown is only an interface of the underlying TeamTownData.
  * You may use this to access or modify town data.
  */
-public class TeamTown implements Town {
+public class TeamTown implements Town, TownWithResident {
     /** Linked to town data resources. */
     Map<TownResourceType, Integer> storage;
     /** Linked to town data backup resources. */
@@ -295,6 +294,14 @@ public class TeamTown implements Town {
 
     public Map<UUID, Resident> getResidents() {
         return data.residents;
+    }
+
+    public Collection<Resident> getAllResidents(){
+        return data.residents.values();
+    }
+
+    public Optional<Resident> getResident(UUID id){
+        return Optional.of(data.residents.get(id));
     }
 
     public void addResident(Resident resident) {

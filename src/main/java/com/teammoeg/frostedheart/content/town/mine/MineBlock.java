@@ -67,18 +67,6 @@ public class MineBlock extends AbstractTownWorkerBlock {
             if (entity instanceof ServerPlayerEntity) {
                 //if (ChunkHeatData.hasAdjust(world, pos)) { 矿坑的工作不强制要求能量塔在附近
                 TeamTown.from((PlayerEntity) entity).addTownBlock(pos, te);
-
-                //让所在Town的所有MineBase都检查一下连接的矿坑，并且更新矿坑的linkedBaseRating
-                TeamTown.from((PlayerEntity)entity).getTownBlocks().values()
-                        .stream()
-                        .filter(data -> data.getType() == TownWorkerType.MINE_BASE
-                                && data.getWorkData().getByte("isValid") == 1)
-                        .map(data -> (MineBaseTileEntity) Utils.getExistingTileEntity(world, data.getPos()))
-                        .filter(mineBaseTileEntity -> {
-                            mineBaseTileEntity.refresh();
-                            return mineBaseTileEntity.getLinkedMines().contains(pos);
-                        })
-                        .forEach(mineBaseTileEntity -> te.setLinkedBase(mineBaseTileEntity.getPos(), mineBaseTileEntity.getRating()));
             }
         }
     }

@@ -41,12 +41,22 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
         return OccupiedArea.EMPTY;
     }
 
+    /**
+     * @param nbt the work data of town tile entity
+     * @return occupied area of worker
+     */
     public static OccupiedArea getOccupiedArea(CompoundNBT nbt){
-        return OccupiedArea.fromNBT(nbt.getCompound("occupiedArea"));
+        if(nbt.contains("occupiedArea")){
+            return OccupiedArea.fromNBT(nbt.getCompound("occupiedArea"));
+        }
+        if(nbt.contains("tileEntity")){
+            return getOccupiedArea(nbt.getCompound("tileEntity"));
+        }
+        return null;
     }
 
     public static OccupiedArea getOccupiedArea(TownWorkerData data){
-        return getOccupiedArea(data.getWorkData());
+        return getOccupiedArea(data.getWorkData().getCompound("tileEntity"));
     }
 
     @Override
@@ -63,7 +73,13 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
     }
 
     public static boolean isValid(CompoundNBT nbt){
-        return TownWorkerState.fromByte(nbt.getByte("workerState")).isValid();
+        if(nbt.contains("workerState")){
+            return TownWorkerState.fromByte(nbt.getByte("workerState")).isValid();
+        }
+        if(nbt.contains("tileEntity")){
+            return isValid(nbt.getCompound("tileEntity"));
+        }
+        return false;
     }
 
     public static boolean isValid(TownWorkerData data){
@@ -75,14 +91,21 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
 
     protected CompoundNBT getBasicWorkData(){
         CompoundNBT nbt = new CompoundNBT();
-        nbt.putLong("pos", this.pos.toLong());
+        //nbt.putLong("pos", this.pos.toLong());
         nbt.putByte("workerState", workerState.getStateNum());
         if(this.occupiedArea != null) nbt.put("occupiedArea", occupiedArea.toNBT());
         return nbt;
     }
     protected void setBasicWorkData(CompoundNBT data){
-        workerState = TownWorkerState.fromByte(data.getByte("workerState"));
-        occupiedArea = OccupiedArea.fromNBT(data.getCompound("occupiedArea"));
+        if(data.contains("isOverlapped")){
+            if(data.getBoolean(TownWorkerData.KEY_IS_OVERLAPPED)){
+                this.workerState = TownWorkerState.OCCUPIED_AREA_OVERLAPPED;
+            } else{
+                if(this.workerState == TownWorkerState.OCCUPIED_AREA_OVERLAPPED){
+                    this.workerState = NOT_INITIALIZED;
+                }
+            }
+        }
     }
 
     public void setWorkerState(TownWorkerState workerState) {
@@ -116,4 +139,5 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
     public void readCustomNBT(CompoundNBT compoundNBT, boolean b) {}
     @Override
     public void writeCustomNBT(CompoundNBT compoundNBT, boolean b) {}
+
 }

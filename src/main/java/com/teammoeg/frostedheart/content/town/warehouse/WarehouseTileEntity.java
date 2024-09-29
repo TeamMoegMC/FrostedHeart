@@ -76,8 +76,6 @@ public class WarehouseTileEntity extends AbstractTownWorkerTileEntity{
     public CompoundNBT getWorkData() {
         CompoundNBT nbt = getBasicWorkData();
         if(this.isValid()){
-            nbt.putInt("area", this.area);
-            nbt.putInt("volume", this.volume);
             nbt.putDouble("capacity", this.capacity);
         }
         return nbt;
@@ -86,11 +84,6 @@ public class WarehouseTileEntity extends AbstractTownWorkerTileEntity{
     @Override
     public void setWorkData(CompoundNBT data) {
         this.setBasicWorkData(data);
-        if(this.isValid()){
-            this.area = data.getInt("area");
-            this.volume = data.getInt("volume");
-            this.capacity = data.getDouble("capacity");
-        }
     }
 
     public int getVolume(){
