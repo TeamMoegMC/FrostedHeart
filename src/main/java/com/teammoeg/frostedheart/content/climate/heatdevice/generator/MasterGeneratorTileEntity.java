@@ -76,8 +76,7 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.items.IItemHandler;
 
-public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEntity<T>> extends ZoneHeatingMultiblockTileEntity<T> implements IIEInventory,
-        FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IProcessBE, IEBlockInterfaces.IBlockBounds,IOwnerChangeListener {
+public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEntity<T,?>,R extends MasterGeneratorState> extends ZoneHeatingMultiblockLogic<T,R> implements IIEInventory {
 	public static final int PROCESS=0;
 	public static final int PROCESS_MAX=1;
 	public static final int OVERDRIVE=2;
@@ -125,42 +124,12 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
     private boolean hasFuel;//for rendering
-    boolean isBroken;
+    
     //local inventory, prevent lost
-    NonNullList<ItemStack> linventory = NonNullList.withSize(2, ItemStack.EMPTY);
-
-    LazyOptional<IItemHandler> invHandler = registerConstantCap(
-            new IEInventoryHandler(2, this, 0, new boolean[]{true, false},
-                    new boolean[]{false, true})
-    );
     List<IngredientWithSize> upgrade;
     
-    public MasterGeneratorTileEntity(IETemplateMultiblock multiblockInstance, BlockEntityType<T> type, boolean hasRSControl) {
-        super(multiblockInstance, type, hasRSControl);
-        
-
-    }
-
-    @Override
-    protected boolean canDrainTankFrom(int iTank, Direction side) {
-        return false;
-    }
-
-    @Override
-    protected boolean canFillTankFrom(int iTank, Direction side, FluidStack resource) {
-        return false;
-    }
-
-    @Override
-    public boolean canUseGui(Player player) {
-        return formed;
-    }
-
-    @Override
-    public void disassemble() {
-        if (master() != null)
-            master().unregist();
-        super.disassemble();
+    public MasterGeneratorTileEntity(IETemplateMultiblock multiblockInstance) {
+        super(multiblockInstance);
     }
 
     @Override
@@ -206,12 +175,6 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
             return master.getCurrentProcessesStep();
         return new int[]{getData().map(t -> t.processMax - t.process).orElse(0)};
     }
-    public final Optional<GeneratorData> getDataNoCheck() {
-        return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA));
-    }
-    public final Optional<GeneratorData> getData() {
-        return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA)).filter(t -> master().worldPosition.equals(t.actualPos));
-    }
 
     @Nullable
     @Override
@@ -230,10 +193,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         return 64;
     }
 
-    public boolean isDataPresent() {
-        T master = master();
-        return Optional.ofNullable(master).flatMap(MasterGeneratorTileEntity::getData).isPresent();
-    }
+
 
     @Override
     public boolean isStackValid(int slot, ItemStack stack) {
@@ -261,20 +221,6 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         }
 
     }
-    @Override
-    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
-        super.readCustomNBT(nbt, descPacket);
-        ContainerHelper.loadAllItems(nbt, linventory);
-        hasFuel = nbt.getBoolean("hasFuel");
-        isBroken = nbt.getBoolean("isBroken");
-        if(!descPacket&&this.getLevel() instanceof ServerLevel) {
-            Optional<GeneratorData> data = this.getData();
-            data.ifPresent(t -> {
-                this.isOverdrive=t.isOverdrive;
-                this.isWorking=t.isWorking;
-            });
-        }
-    }
 
     @Override
     public boolean triggerEvent(int id, int arg) {
@@ -291,7 +237,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     		upgradeStructure(player);
     	}
     };
-    private final List<IngredientWithSize> repair=Arrays.asList(new IngredientWithSize(Ingredient.of(ItemTags.createOptional(new ResourceLocation("forge","ingots/copper"))),32),new IngredientWithSize(Ingredient.of(ItemTags.createOptional(new ResourceLocation("forge","stone"))),8));
+    private final List<IngredientWithSize> repair=Arrays.asList(new IngredientWithSize(Ingredient.of(ItemTags.create(new ResourceLocation("forge","ingots/copper"))),32),new IngredientWithSize(Ingredient.of(ItemTags.create(new ResourceLocation("forge","stone"))),8));
     public final List<IngredientWithSize> getRepairCost(){
     	return repair;
     };
@@ -368,35 +314,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
             setRangeLevel(message.getInt("rangeLevel"));*/
     }
 
-    public void regist() {
-    	getDataNoCheck().ifPresent(t -> {
-        	if(!master().worldPosition.equals(t.actualPos))
-        		t.onPosChange();
-        	this.setWorking(t.isWorking);
-        	this.setOverdrive(t.isOverdrive);
-            t.actualPos = master().worldPosition;
-            t.dimension = this.level.dimension();
-        });
-    }
-    
-    public void tryRegist() {
-    	getDataNoCheck().ifPresent(t -> {
-    		if(BlockPos.ZERO.equals(t.actualPos)) {
-	        	if(!master().worldPosition.equals(t.actualPos))
-	        		t.onPosChange();
-	        	this.setWorking(t.isWorking);
-	        	this.setOverdrive(t.isOverdrive);
-	            t.actualPos = master().worldPosition;
-	            t.dimension = this.level.dimension();
-    		}
-        });
-    }
 
-	@Override
-	public void onOwnerChange() {
-		if(!this.isDummy())
-			regist();
-	}
     @Override
     public void tick() {
 
@@ -456,12 +374,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     public void tickHeat(boolean isWorking) {
     }
-    public void unregist() {
-        getDataNoCheck().ifPresent(t -> {
-            t.actualPos = BlockPos.ZERO;
-            t.dimension = null;
-        });
-    }
+
 
     @Override
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
@@ -473,29 +386,6 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         }
     }
 
-
-    @Override
-    public int getLowerBound() {
-        return Mth.ceil(getRangeLevel()*2+1);
-    }
-
-    @Override
-    public int getUpperBound() {
-        return Mth.ceil(getRangeLevel() * 4+1);
-    }
-	@Override
-	protected void callBlockConsumerWithTypeCheck(Consumer<T> consumer, BlockEntity te) {
-	}
-
-	@Override
-	public void setRangeLevel(float f) {
-		super.setRangeLevel(f);
-	}
-
-	@Override
-	public void setTemperatureLevel(float temperatureLevel) {
-		super.setTemperatureLevel(temperatureLevel);
-	}
 
 	public boolean hasFuel() {
 		return hasFuel;
