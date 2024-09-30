@@ -139,18 +139,6 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     @Nonnull
     @Override
-    protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
-        return new IFluidTank[0];
-    }
-
-    @Nonnull
-    @Override
-    public VoxelShape getBlockBounds(@Nullable CollisionContext ctx) {
-        return Shapes.block();
-    }
-
-    @Nonnull
-    @Override
     public <X> LazyOptional<X> getCapability(@Nonnull Capability<X> capability, Direction facing) {
         if (capability == ForgeCapabilities.ITEM_HANDLER) {
             T master = master();
@@ -159,7 +147,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         }
         return super.getCapability(capability, facing);
     }
-
+/*
     @Override
     public int[] getCurrentProcessesMax() {
         T master = master();
@@ -174,24 +162,8 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         if (master != this && master != null)
             return master.getCurrentProcessesStep();
         return new int[]{getData().map(t -> t.processMax - t.process).orElse(0)};
-    }
+    }*/
 
-    @Nullable
-    @Override
-    public IEBlockInterfaces.IInteractionObjectIE getGuiMaster() {
-        return master();
-    }
-
-    @Override
-    public NonNullList<ItemStack> getInventory() {
-        T master = master();
-        return Optional.ofNullable(master).flatMap(MasterGeneratorTileEntity::getData).map(GeneratorData::getInventory).orElseGet(() -> master != null ? master.linventory : this.linventory);
-    }
-
-    @Override
-    public int getSlotLimit(int slot) {
-        return 64;
-    }
 
 
 
@@ -221,7 +193,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         }
 
     }
-
+/*
     @Override
     public boolean triggerEvent(int id, int arg) {
         if (id == 0)
@@ -229,7 +201,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         setChanged();
         this.markContainingBlockForUpdate(null);
         return true;
-    }
+    }*/
     public void onUpgradeMaintainClicked(ServerPlayer player) {
     	if(isBroken) {
     		repairStructure(player);
@@ -245,7 +217,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	IETemplateMultiblock ietm=getNextLevelMultiblock();
         if(ietm!=null) {
         	if(upgrade==null) {
-        		upgrade=Arrays.stream(ietm.getTotalMaterials()).filter(Ingredient.of(FHBlocks.generator_core_t1.get()).negate()).map(IngredientWithSize::of).collect(Collectors.toList());
+        		upgrade=Arrays.stream(ietm.initializeClient(null)).filter(Ingredient.of(FHBlocks.generator_core_t1.get()).negate()).map(IngredientWithSize::of).collect(Collectors.toList());
         	}
         	return upgrade;
         }
