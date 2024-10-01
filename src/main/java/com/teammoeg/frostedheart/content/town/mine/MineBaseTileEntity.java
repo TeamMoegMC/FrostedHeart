@@ -9,6 +9,7 @@ import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.LongArrayNBT;
 import net.minecraft.nbt.LongNBT;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Direction;
@@ -17,6 +18,7 @@ import net.minecraft.util.math.BlockPos;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner.isHouseBlock;
 import static java.lang.Math.exp;
@@ -89,7 +91,7 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
 
     @Override
     public TownWorkerType getWorkerType() {
-        return null;
+        return TownWorkerType.MINE_BASE;
     }
 
 
