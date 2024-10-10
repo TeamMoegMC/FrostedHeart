@@ -128,7 +128,7 @@ public class HeaterVestItem extends FHBaseItem implements IHeatingEquipment, ICh
 	}
 
 	@Override
-	public @org.jetbrains.annotations.Nullable ICapabilityProvider initCapabilities(ItemStack stack, @org.jetbrains.annotations.Nullable CompoundTag nbt) {
+	public ICapabilityProvider initCapabilities(ItemStack stack,CompoundTag nbt) {
 		return FHCapabilities.ITEM_HEAT.provider(()->new HeatStorageCapability(stack, 30000));
 	}
 
