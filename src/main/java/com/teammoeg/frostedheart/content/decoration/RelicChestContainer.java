@@ -44,8 +44,4 @@ public class RelicChestContainer extends FHBaseContainer<RelicChestTileEntity> {
             addSlot(new Slot(inventoryPlayer, i, 8 + i * 18, 142));
     }
 
-	@Override
-	public boolean quickMoveIn(ItemStack slotStack) {
-		return this.moveItemStackTo(slotStack, 0, 15, false);
-	}
 }

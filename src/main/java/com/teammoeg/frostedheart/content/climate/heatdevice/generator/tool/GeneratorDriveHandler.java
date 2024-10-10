@@ -1,7 +1,5 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.tool;
 
-import blusunrize.immersiveengineering.common.blocks.stone.AlloySmelterTileEntity;
-import blusunrize.immersiveengineering.common.blocks.stone.BlastFurnaceTileEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 

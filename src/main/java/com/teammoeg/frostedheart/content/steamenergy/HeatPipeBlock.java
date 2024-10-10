@@ -19,25 +19,22 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
-
-public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock>{
+public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements FHEntityBlock<HeatPipeTileEntity>{
 
     public HeatPipeBlock(Properties blockProps) {
         super(HeatPipeBlock.class,  blockProps);
@@ -51,17 +48,18 @@ public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock>{
 	}
 
 
-    @Nullable
-    @Override
-    public BlockEntity createTileEntity(@Nonnull BlockState state, @Nonnull BlockGetter world) {
-        return FHTileTypes.HEATPIPE.get().create();
-    }
 
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
     }
+
+
+	@Override
+	public Supplier<BlockEntityType<HeatPipeTileEntity>> getBlock() {
+		return FHTileTypes.HEATPIPE;
+	}
 
 
 }

@@ -24,7 +24,6 @@ import com.teammoeg.frostedheart.FHContainer;
 
 import blusunrize.immersiveengineering.common.gui.IESlot;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 public class IncubatorT1Container extends FHBaseContainer<IncubatorTileEntity> {
@@ -32,7 +31,7 @@ public class IncubatorT1Container extends FHBaseContainer<IncubatorTileEntity> {
     public IncubatorT1Container(int id, Inventory inventoryPlayer, IncubatorTileEntity tile) {
         super(FHContainer.INCUBATOR_T1.get(), tile, id, 4);
 
-        this.addSlot(new IESlot(this, tile., 0, 34, 52) {
+        this.addSlot(new IESlot(this, this.inv, 0, 34, 52) {
             @Override
             public boolean mayPlace(ItemStack itemStack) {
                 return tile.isStackValid(0, itemStack);
@@ -52,13 +51,7 @@ public class IncubatorT1Container extends FHBaseContainer<IncubatorTileEntity> {
         });
         this.addSlot(new IESlot.Output(this, this.inv, 3, 143, 36));
 
-        slotCount = 4;
-
-        for (int i = 0; i < 3; i++)
-            for (int j = 0; j < 9; j++)
-                addSlot(new Slot(inventoryPlayer, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
-        for (int i = 0; i < 9; i++)
-            addSlot(new Slot(inventoryPlayer, i, 8 + i * 18, 142));
+        this.addPlayerInventory(inventoryPlayer,8,84,142);
     }
 }
 

@@ -97,7 +97,7 @@ public class MechCalcRenderer implements BlockEntityRenderer<MechCalcTileEntity>
         matrixStack.mulPose(rot);
 
         matrixStack.translate(0, -1.5 / 16, -1.5 / 16);
-        quads = MODEL.getNullQuads(ModelData.builder().with(DynamicSubmodelCallbacks.getProperty(), drum).build());
+        quads = MODEL.apply(ModelData.builder().with(DynamicSubmodelCallbacks.getProperty(), drum).build());
         RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
         matrixStack.popPose();
     }

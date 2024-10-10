@@ -69,7 +69,7 @@ public class DrawDeskContainer extends FHBaseContainer<DrawingDeskTileEntity> {
     }
 
     public DrawDeskContainer(int id, Inventory inventoryPlayer, DrawingDeskTileEntity tile) {
-        super(FHContainer.DRAW_DESK.get(), tile, id, 4);
+        super(FHContainer.DRAW_DESK.get(), tile, id, 3);
 
         this.addSlot(new EnableIESlot(this, inv, DrawingDeskTileEntity.PAPER_SLOT, 114, 161) {// paper
             @Override
@@ -90,7 +90,14 @@ public class DrawDeskContainer extends FHBaseContainer<DrawingDeskTileEntity> {
             }
 
         });
-
+        for (int i = 0; i < 36; i++) {
+            int posi = i;
+            if (i < 9)
+                posi += 27;
+            else
+                posi -= 9;
+            addSlot(new EnableSlot(inventoryPlayer, i, 10 + (posi % 6) * 17, 93 + (posi / 6) * 17));
+        }
         //this.inventorySlots.get(0).set
 
     }
@@ -101,9 +108,11 @@ public class DrawDeskContainer extends FHBaseContainer<DrawingDeskTileEntity> {
                 ((Enabled) s).setEnabled(en);
         }
     }
-
+    
+/*
 	@Override
 	public boolean quickMoveIn(ItemStack slotStack) {
+		
 		return this.moveItemStackTo(slotStack, 0,1, false)||this.moveItemStackTo(slotStack, 1, 2, false)||this.moveItemStackTo(slotStack, 2, 3, false);
-	}
+	}*/
 }

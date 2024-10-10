@@ -51,7 +51,7 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.ticks.TickPriority;
 
-public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends PipeBlock implements SimpleWaterloggedBlock,FHEntityBlock {
+public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends PipeBlock implements SimpleWaterloggedBlock{
 	Class<T> type;
 	protected int lightOpacity;
 	public static final BooleanProperty CASING = BooleanProperty.create("casing");
@@ -250,11 +250,5 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends PipeBlock imple
 		worldIn.setBlockAndUpdate(pos,updated);
 	}
 
-	@Override
-	public Supplier<BlockEntityType<?>> getBlock() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
 
 }

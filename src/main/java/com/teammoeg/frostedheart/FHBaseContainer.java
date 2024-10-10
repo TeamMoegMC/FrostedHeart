@@ -1,5 +1,10 @@
 package com.teammoeg.frostedheart;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
 import blusunrize.immersiveengineering.common.gui.BlockEntityInventory;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.world.Container;
@@ -10,8 +15,51 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.common.util.Lazy;
 
 public abstract class FHBaseContainer<T extends BlockEntity> extends AbstractContainerMenu {
+	public static class QuickMoveStackBuilder{
+		private static record Range(int start,int end,boolean reverse){
+			private Range(int slot) {
+				this(slot,slot+1,false);
+			}
+			
+		}
+		List<Range> ranges=new ArrayList<>();
+		private QuickMoveStackBuilder() {}
+		
+		public static QuickMoveStackBuilder begin() {
+			return new QuickMoveStackBuilder();
+		}
+		public static QuickMoveStackBuilder first(int slot) {
+			return begin().then(slot);
+		}
+		public static QuickMoveStackBuilder first(int beginInclusive,int endExclusive) {
+			return begin().then(beginInclusive,endExclusive);
+		}
+		public QuickMoveStackBuilder then(int slot) {
+			ranges.add(new Range(slot));
+			return this;
+		}
+		public QuickMoveStackBuilder then(int beginInclusive,int endExclusive) {
+			ranges.add(new Range(beginInclusive,endExclusive,false));
+			return this;
+		}
+		public QuickMoveStackBuilder then(int beginInclusive,int endExclusive,boolean reversed) {
+			ranges.add(new Range(beginInclusive,endExclusive,reversed));
+			return this;
+		}
+		public Function<ItemStack,Boolean> build(FHBaseContainer t){
+			return i->{
+				for(Range r:ranges) {
+					if(t.moveItemStackTo(i, r.start(), r.end(), r.reverse()))
+						return true;
+				}
+				return false;
+			};
+			
+		}
+	}
 	protected T blockEntity;
 	public Container inv;
 
@@ -33,7 +81,7 @@ public abstract class FHBaseContainer<T extends BlockEntity> extends AbstractCon
 	protected final int INV_START;
 	protected static final int INV_SIZE = 36;
 	protected static final int INV_QUICK = 27;
-
+	protected Lazy<Function<ItemStack,Boolean>> moveFunction=Lazy.of(()->defineQuickMoveStack().build(this));
 	protected void addPlayerInventory(Inventory inv, int dx, int dy, int quickBarY) {
 		for (int i = 0; i < 3; i++)
 			for (int j = 0; j < 9; j++)
@@ -41,11 +89,15 @@ public abstract class FHBaseContainer<T extends BlockEntity> extends AbstractCon
 		for (int i = 0; i < 9; i++)
 			addSlot(new Slot(inv, i, dx + i * 18, quickBarY));
 	}
-
+	public QuickMoveStackBuilder defineQuickMoveStack() {
+		return QuickMoveStackBuilder.first(0,INV_START);
+	} 
 	/*
 	 * Logics for quick move inside the container; return true if succeed
 	 */
-	public abstract boolean quickMoveIn(ItemStack slotStack);
+	public boolean quickMoveIn(ItemStack slotStack) {
+		return moveFunction.get().apply(slotStack);
+	};
 
 	@Override
 	public ItemStack quickMoveStack(Player playerIn, int index) {
@@ -88,5 +140,9 @@ public abstract class FHBaseContainer<T extends BlockEntity> extends AbstractCon
 	public boolean stillValid(Player pPlayer) {
 		return !blockEntity.isRemoved();
 	}
-
+	//modify: make public
+	@Override
+	public boolean moveItemStackTo(ItemStack pStack, int pStartIndex, int pEndIndex, boolean pReverseDirection) {
+		return super.moveItemStackTo(pStack, pStartIndex, pEndIndex, pReverseDirection);
+	}
 }
