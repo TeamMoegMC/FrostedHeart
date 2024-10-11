@@ -10,7 +10,6 @@ import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
@@ -24,17 +23,14 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.ToolType;
-
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public abstract class AbstractTownWorkerBlock extends FHBaseBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
     public static final Properties TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY = Block.Properties
-            .of(Material.WOOD)
+            .of()
             .sound(SoundType.WOOD)
             .requiresCorrectToolForDrops()
-            .harvestTool(ToolType.AXE)
             .strength(2, 6)
             .noOcclusion();
 
@@ -44,17 +40,10 @@ public abstract class AbstractTownWorkerBlock extends FHBaseBlock {
     }
 
     @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
-    }
-
-    @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         builder.add(LIT,BlockStateProperties.FACING);
     }
-
-    public abstract BlockEntity createTileEntity(@Nonnull BlockState state, @Nonnull BlockGetter world);
 
     @Override
     public void setPlacedBy(Level world, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {

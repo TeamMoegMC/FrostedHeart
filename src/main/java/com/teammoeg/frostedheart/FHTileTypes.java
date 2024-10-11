@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.contraptions.base.HalfShaftInstance;
+import com.simibubi.create.content.kinetics.base.HorizontalHalfShaftInstance;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.repack.registrate.util.entry.TileEntityEntry;
 import com.teammoeg.frostedheart.client.renderer.HalfShaftRenderer;
@@ -109,7 +110,7 @@ public class FHTileTypes {
     );*/
     public static final BlockEntityEntry<SteamCoreTileEntity> STEAM_CORE = REGISTRATE
         .blockEntity("steam_core", SteamCoreTileEntity::new)
-        .instance(() -> HalfShaftInstance::new)
+        .instance(() -> HorizontalHalfShaftInstance::new)
         .validBlocks(FHBlocks.steam_core)
         .renderer(() -> HalfShaftRenderer::new)
         .register();

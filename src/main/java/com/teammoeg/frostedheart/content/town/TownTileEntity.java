@@ -20,8 +20,6 @@
 package com.teammoeg.frostedheart.content.town;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.math.ColumnPos;
-
 import java.util.Collection;
 
 /**
