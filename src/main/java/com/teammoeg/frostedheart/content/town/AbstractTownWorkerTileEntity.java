@@ -5,17 +5,19 @@ import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.scheduler.ScheduledTaskTileEntity;
 import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 
 public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity implements
         TownTileEntity, ScheduledTaskTileEntity, FHBlockInterfaces.IActiveState {
     public TownWorkerState workerState = TownWorkerState.NOT_INITIALIZED;
     public OccupiedArea occupiedArea;
     protected boolean addedToSchedulerQueue = false;
-    public AbstractTownWorkerTileEntity(BlockEntityType<? extends BlockEntity> type)  {
-        super(type);
+    public AbstractTownWorkerTileEntity(BlockEntityType<? extends BlockEntity> type,BlockPos pos,BlockState state)  {
+        super(type,pos,state);
     }
     public abstract void refresh();
     protected boolean isAddedToSchedulerQueue = false;

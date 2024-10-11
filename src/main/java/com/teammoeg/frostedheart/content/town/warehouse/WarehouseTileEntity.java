@@ -9,6 +9,7 @@ import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 
@@ -20,8 +21,8 @@ public class WarehouseTileEntity extends AbstractTownWorkerTileEntity{
     private double capacity;//最大容量
     private boolean addedToSchedulerQueue = false;
 
-    public WarehouseTileEntity() {
-        super(FHTileTypes.WAREHOUSE.get());
+    public WarehouseTileEntity(BlockPos pos,BlockState state) {
+        super(FHTileTypes.WAREHOUSE.get(),pos,state);
     }
 
     public boolean isStructureValid(){

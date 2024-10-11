@@ -11,6 +11,7 @@ import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
@@ -37,8 +38,8 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
     private double temperatureModifier = 0;
     private int maxResident;
 
-    public HuntingBaseTileEntity() {
-        super(FHTileTypes.HUNTING_BASE.get());
+    public HuntingBaseTileEntity(BlockPos pos,BlockState state) {
+        super(FHTileTypes.HUNTING_BASE.get(),pos,state);
     }
 
     public double getRating(){

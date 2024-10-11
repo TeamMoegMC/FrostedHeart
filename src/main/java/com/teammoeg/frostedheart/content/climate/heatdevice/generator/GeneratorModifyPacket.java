@@ -24,7 +24,7 @@ public class GeneratorModifyPacket implements FHMessage{
 			AbstractContainerMenu container=spe.containerMenu;
 			if(container instanceof MasterGeneratorContainer) {
 				MasterGeneratorContainer crncontainer=(MasterGeneratorContainer) container;
-				((MasterGeneratorTileEntity)crncontainer.tile).onUpgradeMaintainClicked(spe);
+				((MasterGeneratorTileEntity)crncontainer.getBlock()).onUpgradeMaintainClicked(spe);
 			}
 		});
 		context.get().setPacketHandled(true);

@@ -6,11 +6,14 @@ import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
+
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class HuntingCampTileEntity extends AbstractTownWorkerTileEntity {
-    public HuntingCampTileEntity() {
-        super(FHTileTypes.HUNTING_CAMP.get());
+    public HuntingCampTileEntity(BlockPos pos,BlockState state) {
+        super(FHTileTypes.HUNTING_CAMP.get(),pos,state);
     }
 
     private boolean isStructureValid(){

@@ -10,6 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -25,8 +26,8 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
     private double rating;
     private boolean addedToSchedulerQueue = false;
 
-    public MineTileEntity(){
-        super(FHTileTypes.MINE.get());
+    public MineTileEntity(BlockPos pos,BlockState state){
+        super(FHTileTypes.MINE.get(),pos,state);
     }
 
     public boolean isStructureValid(){
