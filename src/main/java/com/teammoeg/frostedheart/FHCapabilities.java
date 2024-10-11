@@ -18,6 +18,7 @@ import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.robotics.logistics.RobotChunk;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
+import com.teammoeg.frostedheart.content.waypoint.capability.WaypointCapability;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.content.town.ChunkTownResourceCapability;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
@@ -39,11 +40,12 @@ public class FHCapabilities {
 	public static final FHCodecCapability<ChunkHeatData> CHUNK_HEAT=register(ChunkHeatData.class,ChunkHeatData.CODEC);
 	public static final FHNBTCapability<HeatEndpoint> HEAT_EP=register(HeatEndpoint.class);
 	public static final FHNPCapability<HeatStorageCapability> ITEM_HEAT=registerNotPresist(HeatStorageCapability.class,errorFactory);
-	
+
 	public static final FHNBTCapability<WantedFoodCapability> WANTED_FOOD=register(WantedFoodCapability.class);
 	public static final FHNBTCapability<ChunkTownResourceCapability> CHUNK_TOWN_RESOURCE=register(ChunkTownResourceCapability.class);
 	public static final FHNPCapability<RobotChunk> ROBOTIC_LOGISTIC_CHUNK=registerNotPresist(RobotChunk.class);
-	
+	public static final FHNBTCapability<WaypointCapability> WAYPOINT=register(WaypointCapability.class);
+
 	public static void setup() {
 	
 	}

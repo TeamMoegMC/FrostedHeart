@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
 import com.teammoeg.frostedheart.util.TranslateUtils;
-
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -11,7 +10,7 @@ public class EmptyScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
     }
 
     @Override
