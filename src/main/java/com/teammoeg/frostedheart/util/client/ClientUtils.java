@@ -25,14 +25,18 @@ import com.teammoeg.frostedheart.content.research.gui.ResearchGui;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.IScreenWrapper;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.client.DimensionSpecialEffectsManager;
+
 /**
  * Rendering not related client functions, used for get/set client data, spawning particles
  * */
@@ -52,6 +56,9 @@ public class ClientUtils {
     }
     public static Minecraft mc() {
         return Minecraft.getInstance();
+    }
+    public static Font font() {
+        return mc().font;
     }
     public static void refreshResearchGui() {
         Screen cur = mc().screen;
@@ -129,5 +136,17 @@ public class ClientUtils {
         worldIn.addParticle(ParticleTypes.FLAME, pos.getX() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), -0.01D, 0D, 0.0D);
         worldIn.addParticle(ParticleTypes.FLAME, pos.getX() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0D, 0.01D);
         worldIn.addParticle(ParticleTypes.FLAME, pos.getX() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.5D + random.nextDouble() / 2.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0D, -0.01D);
+    }
+
+    public static int screenWidth() {
+        return mc().getWindow().getGuiScaledHeight();
+    }
+
+    public static int screenHeight() {
+        return mc().getWindow().getGuiScaledHeight();
+    }
+
+    public static ResourceLocation getDimLocation() {
+        return getWorld().dimension().location();
     }
 }

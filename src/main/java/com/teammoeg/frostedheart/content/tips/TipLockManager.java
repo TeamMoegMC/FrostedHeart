@@ -1,10 +1,11 @@
-package com.teammoeg.frostedheart.content.tips.client;
+package com.teammoeg.frostedheart.content.tips;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.mojang.logging.LogUtils;
+import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import net.minecraftforge.fml.loading.FMLPaths;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.FileReader;
@@ -15,28 +16,28 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UnlockedTipManager {
+public class TipLockManager {
     public static final File CONFIG_PATH = new File(FMLPaths.CONFIGDIR.get().toFile(), "fhtips");
     public static final File TIPS = new File(CONFIG_PATH, "tips");
     public static final File UNLOCKED_FILE = new File(CONFIG_PATH, "unlocked_tips.json");
-    
     private static final Gson GSON = new Gson();
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private List<String> visible = new ArrayList<>();
     private List<String> hide = new ArrayList<>();
     private List<List<String>> custom = new ArrayList<>();
 
-    public static final UnlockedTipManager manager = new UnlockedTipManager();
-    public static String error = "";
+    public static final TipLockManager manager = new TipLockManager();
+    public static String errorType = "";
 
     static {
         if (TIPS.mkdir()) {
-            LOGGER.info("Config path created");
+            LOGGER.info("Config path created: '{}'", TIPS);
         }
         manager.loadFromFile();
     }
 
-    private UnlockedTipManager() {
+    private TipLockManager() {
     }
 
     public void loadFromFile() {
@@ -47,15 +48,14 @@ public class UnlockedTipManager {
 
         LOGGER.debug("Loading unlocked tips");
         try (FileReader reader = new FileReader(UNLOCKED_FILE)) {
-            UnlockedTipManager fileManager = GSON.fromJson(reader, UnlockedTipManager.class);
+            TipLockManager fileManager = GSON.fromJson(reader, TipLockManager.class);
             this.visible = fileManager.visible;
             this.hide = fileManager.hide;
             this.custom = fileManager.custom;
 
         } catch (IOException | JsonSyntaxException e) {
-            e.printStackTrace();
-            error = "load";
-            LOGGER.error("Unable to load file: '{}'", UNLOCKED_FILE);
+            errorType = "load";
+            LOGGER.error("Unable to load file: '{}'", UNLOCKED_FILE, e);
             createFile();
         }
     }
@@ -64,9 +64,8 @@ public class UnlockedTipManager {
         try (FileWriter writer = new FileWriter(UNLOCKED_FILE)) {
             GSON.toJson(this, writer);
         } catch (IOException e) {
-            e.printStackTrace();
-            error = "save";
-            LOGGER.error("Unable to save file: '{}'", UNLOCKED_FILE);
+            errorType = "save";
+            LOGGER.error("Unable to save file: '{}'", UNLOCKED_FILE, e);
         }
     }
 
@@ -75,9 +74,9 @@ public class UnlockedTipManager {
             File backupFile = new File(UNLOCKED_FILE + ".bak");
             try {
                 Files.copy(UNLOCKED_FILE.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                LOGGER.warn("Old file has been saved as '{}'", backupFile);
+                LOGGER.warn("Old file has been renamed as '{}'", backupFile);
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.error("Unable to rename file: '{}'", backupFile, e);
             }
         }
 
@@ -86,7 +85,7 @@ public class UnlockedTipManager {
             reset();
             GSON.toJson(this, writer);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Unable to create file: '{}'", UNLOCKED_FILE, e);
         }
     }
 

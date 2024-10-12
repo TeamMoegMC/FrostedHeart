@@ -116,6 +116,14 @@ public class TranslateUtils {
         return translate("tooltip." + FHMain.MODID + "." + name, args);
     }
 
+    public static MutableComponent translateTips(String name, Object... args) {
+        return translate("tips." + FHMain.MODID + "." + name, args);
+    }
+
+    public static MutableComponent translateWaypoint(String name, Object... args) {
+        return translate("Waypoint." + FHMain.MODID + "." + name, args);
+    }
+
 	public static Component empty() {
 		// TODO Auto-generated method stub
 		return MutableComponent.create(LiteralContents.EMPTY);

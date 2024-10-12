@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.content.research.blocks.FHBasePen;
 import com.teammoeg.frostedheart.content.research.blocks.FHReusablePen;
 import com.teammoeg.frostedheart.content.research.blocks.RubbingTool;
 import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
-import com.teammoeg.frostedheart.content.tips.DebugItem;
+import com.teammoeg.frostedheart.content.utility.DebugItem;
 import com.teammoeg.frostedheart.content.utility.CeramicBucket;
 import com.teammoeg.frostedheart.content.utility.MushroomBed;
 import com.teammoeg.frostedheart.content.utility.SoilThermometer;
