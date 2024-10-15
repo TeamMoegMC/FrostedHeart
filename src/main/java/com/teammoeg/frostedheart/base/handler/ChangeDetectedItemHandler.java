@@ -2,17 +2,26 @@ package com.teammoeg.frostedheart.base.handler;
 
 import org.jetbrains.annotations.NotNull;
 
+import com.teammoeg.frostedheart.base.blockentity.SyncableTileEntity;
+
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.items.IItemHandler;
 
 public class ChangeDetectedItemHandler implements IItemHandler{
 	IItemHandler handler;
-	BlockEntity block;
-	public ChangeDetectedItemHandler(BlockEntity block,IItemHandler handler) {
+	Runnable onchange;
+	public ChangeDetectedItemHandler(IItemHandler handler,Runnable onchange) {
 		super();
 		this.handler = handler;
-		this.block = block;
+		this.onchange = onchange;
+	}
+	public static <T extends BlockEntity> IItemHandler fromBESetChanged(T blockEntity,IItemHandler nested) {
+		return new ChangeDetectedItemHandler(nested,()->{blockEntity.setChanged();});
+	}
+	
+	public static <T extends BlockEntity&SyncableTileEntity> IItemHandler fromBESynced(T blockEntity,IItemHandler nested) {
+		return new ChangeDetectedItemHandler(nested,()->{blockEntity.setChanged();blockEntity.syncData();});
 	}
 	public int getSlots() {
 		return handler.getSlots();
@@ -39,7 +48,7 @@ public class ChangeDetectedItemHandler implements IItemHandler{
 		return handler.isItemValid(slot, stack);
 	}
 	protected void onContentsChanged(int slot) {
-		block.setChanged();
+		onchange.run();
 	}
 
 }

@@ -36,11 +36,15 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerChangeListener;
 import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
 
+import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.util.CapabilityPosition;
 import blusunrize.immersiveengineering.api.utils.DirectionUtils;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IProcessBE;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.world.level.block.Blocks;
@@ -54,6 +58,7 @@ import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.minecraft.core.Direction;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
@@ -62,6 +67,7 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -70,6 +76,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.core.Vec3i;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
@@ -137,16 +144,14 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     }
 
-    @Nonnull
     @Override
-    public <X> LazyOptional<X> getCapability(@Nonnull Capability<X> capability, Direction facing) {
+	public <C> LazyOptional<C> getCapability(IMultiblockContext<R> ctx, CapabilityPosition position, Capability<C> capability) {
         if (capability == ForgeCapabilities.ITEM_HANDLER) {
-            T master = master();
-            if (master != null)
-                return master.invHandler.cast();
+            return ctx.getState().getData().map(t->t.invCap).orElse(LazyOptional.empty()).cast();
         }
-        return super.getCapability(capability, facing);
-    }
+        return super.getCapability(ctx,position,capability);
+	}
+
 /*
     @Override
     public int[] getCurrentProcessesMax() {
@@ -166,7 +171,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
 
 
-
+/*
     @Override
     public boolean isStackValid(int slot, ItemStack stack) {
         if (stack.isEmpty())
@@ -174,22 +179,19 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         if (slot == INPUT_SLOT)
             return findRecipe(stack) != null;
         return false;
-    }
-    public GeneratorRecipe findRecipe(ItemStack input) {
-        for (GeneratorRecipe recipe : FHUtils.filterRecipes(this.getLevel().getRecipeManager(), GeneratorRecipe.TYPE))
+    }*/
+    public GeneratorRecipe findRecipe(IMultiblockContext<R> ctx,ItemStack input) {
+        for (GeneratorRecipe recipe : FHUtils.filterRecipes(ctx.getLevel().getRawLevel().getRecipeManager(), GeneratorRecipe.TYPE))
             if (recipe.input.test(input))
                 return recipe;
         return null;
     }
     @Override
-    public void onShutDown() {
-    }
-    @Override
-    public void shutdownTick() {
+    public void shutdownTick(IMultiblockContext<R> ctx) {
         boolean invState = !this.getInventory().get(INPUT_SLOT).isEmpty()||this.guiData.get(PROCESS)>0;
         if (invState != hasFuel) {
             hasFuel = invState;
-            this.markContainingBlockForUpdate(null);
+            ctx.requestMasterBESync();
         }
 
     }
@@ -202,36 +204,49 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         this.markContainingBlockForUpdate(null);
         return true;
     }*/
-    public void onUpgradeMaintainClicked(ServerPlayer player) {
-    	if(isBroken) {
-    		repairStructure(player);
-    	} else {
-    		upgradeStructure(player);
-    	}
-    };
+
     private final List<IngredientWithSize> repair=Arrays.asList(new IngredientWithSize(Ingredient.of(ItemTags.create(new ResourceLocation("forge","ingots/copper"))),32),new IngredientWithSize(Ingredient.of(ItemTags.create(new ResourceLocation("forge","stone"))),8));
     public final List<IngredientWithSize> getRepairCost(){
     	return repair;
     };
-    public List<IngredientWithSize> getUpgradeCost(){
+    public List<IngredientWithSize> getUpgradeCost(IMultiblockContext<R> ctx){
     	IETemplateMultiblock ietm=getNextLevelMultiblock();
         if(ietm!=null) {
         	if(upgrade==null) {
-        		upgrade=Arrays.stream(ietm.initializeClient(null)).filter(Ingredient.of(FHBlocks.generator_core_t1.get()).negate()).map(IngredientWithSize::of).collect(Collectors.toList());
+    			List<StructureBlockInfo> structure = multiblock.getStructure(ctx.getLevel().getRawLevel());
+    			NonNullList<ItemStack> materials = NonNullList.create();
+    			for(StructureBlockInfo info : structure)
+    			{
+    				// Skip dummy blocks in total
+    				if(info.state().hasProperty(IEProperties.MULTIBLOCKSLAVE)&&info.state().getValue(IEProperties.MULTIBLOCKSLAVE))
+    					continue;
+    				ItemStack picked = Utils.getPickBlock(info.state());
+    				boolean added = false;
+    				for(ItemStack existing : materials)
+    					if(ItemStack.isSameItem(existing, picked))
+    					{
+    						existing.grow(1);
+    						added = true;
+    						break;
+    					}
+    				if(!added)
+    					materials.add(picked.copy());
+    			}
+        		upgrade=materials.stream().filter(Ingredient.of(FHBlocks.generator_core_t1.get()).negate()).map(IngredientWithSize::of).collect(Collectors.toList());
         	}
         	return upgrade;
         }
     	return null;
     };
     public abstract IETemplateMultiblock getNextLevelMultiblock();
-    public boolean isValidStructure() { 
+    public boolean isValidStructure(IMultiblockContext<R> ctx) { 
     	IETemplateMultiblock ietm=getNextLevelMultiblock();
     	if(ietm==null)
     		return false;
-    	Vec3i csize=this.multiblockInstance.getSize(level);
-    	Vec3i nsize=ietm.getSize(level);
-    	BlockPos masterOffset=ietm.getMasterFromOriginOffset().subtract(this.multiblockInstance.getMasterFromOriginOffset());
-    	BlockPos negMasterOffset=this.multiblockInstance.getMasterFromOriginOffset().subtract(ietm.getMasterFromOriginOffset());
+    	Vec3i csize=this.multiblock.getSize(ctx.getLevel().getRawLevel());
+    	Vec3i nsize=ietm.getSize(ctx.getLevel().getRawLevel());
+    	BlockPos masterOffset=ietm.getMasterFromOriginOffset().subtract(this.multiblock.getMasterFromOriginOffset());
+    	BlockPos negMasterOffset=this.multiblock.getMasterFromOriginOffset().subtract(ietm.getMasterFromOriginOffset());
     	AABB aabb=new AABB(masterOffset,masterOffset.offset(csize));
     	
     	for(int x=0;x<nsize.getX();x++) {
@@ -240,8 +255,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     				if(aabb.contains(x,y,z))
     					continue;
     				BlockPos cpos=negMasterOffset.offset(x, y, z);
-    				BlockPos actual=this.getBlockPosForPos(cpos);
-    				if(level.getBlockState(actual).getBlock()!=Blocks.AIR) {
+    				if(ctx.getLevel().getBlockState(cpos).getBlock()!=Blocks.AIR) {
     					return false;
     				}
     	    	}
@@ -249,26 +263,26 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	}
     	return true;
     }
-    public void upgradeStructure(ServerPlayer entityplayer) {
-    	if(!isValidStructure())
+    public void upgradeStructure(IMultiblockContext<R> ctx,ServerPlayer entityplayer) {
+    	if(!isValidStructure(ctx))
     		return;
-    	if(!ResearchListeners.hasMultiblock(getOwner(), getNextLevelMultiblock()))
+    	if(!ResearchListeners.hasMultiblock(ctx.getState().getOwner(), getNextLevelMultiblock()))
     		return;
-    	if(!FHUtils.costItems(entityplayer, getUpgradeCost()))
+    	if(!FHUtils.costItems(entityplayer, getUpgradeCost(ctx)))
     		return;
-    	BlockPos negMasterOffset=this.multiblockInstance.getMasterFromOriginOffset().subtract(getNextLevelMultiblock().getMasterFromOriginOffset());
-        Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, getFacing().getOpposite());
+    	BlockPos negMasterOffset=this.multiblock.getMasterFromOriginOffset().subtract(getNextLevelMultiblock().getMasterFromOriginOffset());
+        Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, ctx.getLevel().getOrientation().front());
         ((MultiBlockAccess) getNextLevelMultiblock()).setPlayer(entityplayer);
-        ((MultiBlockAccess) getNextLevelMultiblock()).callForm(level, getBlockPosForPos(negMasterOffset), rot, Mirror.NONE, getFacing());
+        ((MultiBlockAccess) getNextLevelMultiblock()).callForm(ctx.getLevel().getRawLevel(), ctx.getLevel().toAbsolute(negMasterOffset), rot, Mirror.NONE, ctx.getLevel().getOrientation().front());
 
     }
-    public void repairStructure(ServerPlayer entityplayer) {
-    	if(!isBroken)
+    public void repairStructure(IMultiblockContext<R> ctx,ServerPlayer entityplayer) {
+    	if(!ctx.getState().isBroken)
     		return;
     	if(!FHUtils.costItems(entityplayer, getRepairCost()))
     		return;
-    	isBroken=false;
-    	getData().ifPresent(t->{t.isBroken=false;t.overdriveLevel=0;});
+    	ctx.getState().isBroken=false;
+    	ctx.getState().getData().ifPresent(t->{t.isBroken=false;t.overdriveLevel=0;});
 
     }
     @Override
@@ -287,31 +301,15 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
 
-    @Override
-    public void tick() {
 
-        super.tick();
 
-    }
-
-    @Override
-    protected void tickEffects(boolean isActive) {
-
-    }
-    protected void tickDrives(boolean isActive) {
-
-    }
     int remTicks;
     @Override
-    protected boolean tickFuel() {
+    protected boolean tickFuel(IMultiblockContext<R> ctx) {
         // just finished process or during process
-    	tryRegist();
-        Optional<GeneratorData> data = this.getData();
-        data.ifPresent(t -> {
-            t.isOverdrive = this.isOverdrive;
-            t.isWorking = this.isWorking;
-        });
-        data.ifPresent(t -> t.tick(this.getLevel()));
+    	ctx.getState().tryRegist(ctx.getLevel().getRawLevel());
+        Optional<GeneratorData> data = ctx.getState().getData();
+        data.ifPresent(t -> t.tick(ctx.getLevel().getRawLevel()));
         boolean isWorking=data.map(t -> t.isActive).orElse(false);
         setTemperatureLevel(data.map(t -> t.TLevel).orElse(0F));
         setRangeLevel(data.map(t -> t.RLevel).orElse(0F));
@@ -345,17 +343,6 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
     public void tickHeat(boolean isWorking) {
-    }
-
-
-    @Override
-    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
-        super.writeCustomNBT(nbt, descPacket);
-        if(!this.isDummy()||descPacket) {
-	        ContainerHelper.saveAllItems(nbt, linventory);
-	        nbt.putBoolean("hasFuel", hasFuel);
-	        nbt.putBoolean("isBroken", isBroken);
-        }
     }
 
 

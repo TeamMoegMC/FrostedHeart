@@ -21,22 +21,28 @@
 
 package com.teammoeg.frostedheart.base.handler;
 
+import com.teammoeg.frostedheart.base.blockentity.SyncableTileEntity;
+
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 
 public class ChangeDetectedFluidHandler implements IFluidHandler {
-	BlockEntity block;
+	Runnable onchange;
 	IFluidHandler nested;
-	public ChangeDetectedFluidHandler(BlockEntity block, IFluidHandler nested) {
+	public ChangeDetectedFluidHandler(IFluidHandler nested,Runnable onchange) {
 		super();
-		this.block = block;
+		this.onchange = onchange;
 		this.nested = nested;
 	}
 
+	public static <T extends BlockEntity> IFluidHandler fromBESetChanged(T blockEntity,IFluidHandler nested) {
+		return new ChangeDetectedFluidHandler(nested,()->{blockEntity.setChanged();});
+	}
 	
-	
-
+	public static <T extends BlockEntity&SyncableTileEntity> IFluidHandler fromBESynced(T blockEntity,IFluidHandler nested) {
+		return new ChangeDetectedFluidHandler(nested,()->{blockEntity.setChanged();blockEntity.syncData();});
+	}
 	@Override
 	public int getTanks() {
 		return nested.getTanks();
@@ -84,7 +90,7 @@ public class ChangeDetectedFluidHandler implements IFluidHandler {
 		return drained;
 	}
 	protected void onContentsChanged() {
-		block.setChanged();
+		onchange.run();
 	}
 
 }

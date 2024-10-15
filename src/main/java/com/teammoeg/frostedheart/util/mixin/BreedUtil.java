@@ -22,16 +22,14 @@ package com.teammoeg.frostedheart.util.mixin;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.cannolicatfish.rankine.init.RankineTags;
-
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.Tags.IOptionalNamedTag;
 
 public class BreedUtil {
-    static Map<EntityType<?>, IOptionalNamedTag<Item>> tag = new HashMap<>();
-
+   static Map<EntityType<?>, TagKey<Item>> tag = new HashMap<>();
+/*
     static {
         tag.put(EntityType.PIG, RankineTags.Items.BREEDABLES_PIG);
         tag.put(EntityType.COW, RankineTags.Items.BREEDABLES_COW);
@@ -45,12 +43,12 @@ public class BreedUtil {
         tag.put(EntityType.CAT, RankineTags.Items.BREEDABLES_CAT);
         tag.put(EntityType.HORSE, RankineTags.Items.BREEDABLES_HORSE);
         tag.put(EntityType.DONKEY, RankineTags.Items.BREEDABLES_HORSE);
-    }
+    }*/
 
     public static boolean isBreedingItem(EntityType<?> type, ItemStack itemStack) {
-        IOptionalNamedTag<Item> t = tag.get(type);
+    	TagKey<Item> t = tag.get(type);
         if (t != null)
-            return itemStack.getItem().is(t);
+            return itemStack.is(t);
         return false;
     }
 }

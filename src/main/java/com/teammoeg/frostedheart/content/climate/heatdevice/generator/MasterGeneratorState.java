@@ -8,7 +8,7 @@ import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 
@@ -51,7 +51,13 @@ public class MasterGeneratorState extends BaseHeatingState {
             t.dimension = level.dimension();
         });
     }
-    
+    public void onUpgradeMaintainClicked(ServerPlayer player) {
+    	if(isBroken) {
+    		repairStructure(player);
+    	} else {
+    		upgradeStructure(player);
+    	}
+    };
     public void tryRegist(Level level) {
     	getDataNoCheck().ifPresent(t -> {
     		if(BlockPos.ZERO.equals(t.actualPos)) {
