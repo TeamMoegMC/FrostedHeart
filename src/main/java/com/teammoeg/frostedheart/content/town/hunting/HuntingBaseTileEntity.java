@@ -91,7 +91,6 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
                 }
                 HuntingBaseBlockScanner scanner = new HuntingBaseBlockScanner(this.level, startPos);
                 if (scanner.scan()) {
-                    //FHMain.LOGGER.debug("HouseScanner: scan successful");
                     this.volume = scanner.getVolume();
                     this.area = scanner.getArea();
                     this.decorations = scanner.getDecorations();
@@ -194,13 +193,6 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
         if(this.isValid()){
             nbt.putDouble("rating",this.rating);
             nbt.putInt("maxResident",this.maxResident);
-            nbt.putInt("volume",this.volume);
-            nbt.putInt("area",this.area);
-            nbt.putInt("chestNum",this.chestNum);
-            nbt.putInt("bedNum",this.bedNum);
-            nbt.putInt("tanningRackNum",this.tanningRackNum);
-            nbt.putDouble("temperature", this.temperature);
-            nbt.putDouble("temperatureModifier",this.temperatureModifier);
         }
         return nbt;
     }
@@ -208,22 +200,6 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
     @Override
     public void setWorkData(CompoundTag data) {
         this.setBasicWorkData(data);
-        if(this.isValid()){
-            this.rating=data.getDouble("rating");
-            this.maxResident=data.getInt("maxResident");
-            this.volume=data.getInt("volume");
-            this.area=data.getInt("area");
-            this.chestNum=data.getInt("chestNum");
-            this.bedNum=data.getInt("bedNum");
-            this.tanningRackNum=data.getInt("tanningRackNum");
-            this.temperature=data.getDouble("temperature");
-            this.temperatureModifier=data.getDouble("temperatureModifier");
-        }
-    }
-
-    @Override
-    public void executeTask() {
-        this.refresh();
     }
 
     public static class HuntingBaseWorker implements TownWorker {

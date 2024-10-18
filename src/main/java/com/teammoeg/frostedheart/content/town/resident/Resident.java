@@ -23,8 +23,10 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
+import com.teammoeg.frostedheart.util.MathUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import mezz.jei.util.MathUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.core.SerializableUUID;
@@ -45,7 +47,17 @@ public class Resident {
 	public static final Codec<Resident> CODEC=RecordCodecBuilder.create(t->t.group(
             Codec.STRING.fieldOf("firstName").forGetter(o->o.firstName),
             Codec.STRING.fieldOf("lastName").forGetter(o->o.lastName),
-            SerializableUUID.CODEC.fieldOf("uuid").forGetter(o->o.uuid)
+            SerializableUUID.CODEC.fieldOf("uuid").forGetter(o->o.uuid),
+            CodecUtil.defaultValue(Codec.INT, 50).fieldOf("health").forGetter(o->o.health),
+            CodecUtil.defaultValue(Codec.INT, 50).fieldOf("mental").forGetter(o->o.mental),
+            CodecUtil.defaultValue(Codec.INT, 50).fieldOf("social").forGetter(o->o.social),
+            CodecUtil.defaultValue(Codec.INT, 50).fieldOf("wealth").forGetter(o->o.wealth),
+            CodecUtil.defaultValue(Codec.INT, 50).fieldOf("trust").forGetter(o->o.trust),
+            CodecUtil.defaultValue(Codec.INT, 50).fieldOf("culture").forGetter(o->o.culture),
+            CodecUtil.defaultValue(Codec.INT, 0).fieldOf("educationLevel").forGetter(o->o.educationLevel),
+            CodecUtil.defaultValue(CodecUtil.mapCodec("type", TownWorkerType.CODEC, "proficiency", Codec.INT), null).fieldOf("workProficiency").forGetter(o->o.workProficiency),
+            CodecUtil.defaultValue(BlockPos.CODEC, null).fieldOf("housePos").forGetter(o->o.housePos),
+            CodecUtil.defaultValue(BlockPos.CODEC, null).fieldOf("workPos").forGetter(o->o.workPos)
 		).apply(t, Resident::new));
 
     private UUID uuid;
@@ -68,7 +80,7 @@ public class Resident {
     private int educationLevel = 0;
     //work proficiency.
     // If the number is negative, this type is considered as unworkable type.
-    private EnumMap<TownWorkerType, Integer> workProficiency = new EnumMap<>(TownWorkerType.class);
+    private final EnumMap<TownWorkerType, Integer> workProficiency = new EnumMap<>(TownWorkerType.class);
     //the pos of the HouseBlock that the resident is living in
     private BlockPos housePos;
     //the pos of the worker block that the resident is working in
@@ -78,8 +90,9 @@ public class Resident {
         this.firstName = firstName;
         this.lastName = lastName;
         this.uuid = UUID.randomUUID();
-        Random random = new Random();
-        workProficiency.forEach((k, v) -> workProficiency.put(k, random.nextInt(20)-2));//have 20% chance to be unworkable type
+        workProficiency.forEach((k, v) -> {
+            if(k.needsResident()) workProficiency.put(k, MathUtils.RANDOM.nextInt(20)-2);
+        });//have 20% chance to be unworkable type
     }
 
     //public Resident() {
@@ -97,6 +110,24 @@ public class Resident {
 
     public Resident (String firstName, String lastName, String uuid){
         this(firstName,lastName,UUID.fromString(uuid));
+    }
+
+    public Resident(String firstName, String lastName, UUID uuid, int health, int mental, int social, int wealth, int trust, int culture, int educationLevel, Map<TownWorkerType, Integer> workProficiency, BlockPos housePos, BlockPos workPos) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.uuid = uuid;
+        this.health = health;
+        this.mental = mental;
+        this.wealth = wealth;
+        this.social = social;
+        this.trust = trust;
+        this.culture = culture;
+        this.educationLevel = educationLevel;
+        if(workProficiency!=null){
+            this.workProficiency.putAll(workProficiency);
+        }
+        this.housePos = housePos;
+        this.workPos = workPos;
     }
 
     public String getFirstName() {

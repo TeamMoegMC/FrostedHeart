@@ -10,7 +10,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.NetherVines;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.math.ColumnPos;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.Tags;
 import se.mickelus.tetra.blocks.rack.RackBlock;
@@ -93,7 +92,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
     public boolean scan(){
         this.scan(256, (blockPos) -> {
             area++;
-            FHMain.LOGGER.info("Scanning pos: " + blockPos);
+            //FHMain.LOGGER.info("Scanning pos: " + blockPos);
             occupiedArea.add(toColumnPos(blockPos));
             }, BlockScanner.PREDICATE_FALSE);
         temperature /= counter_for_temperature;

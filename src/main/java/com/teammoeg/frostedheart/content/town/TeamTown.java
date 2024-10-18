@@ -30,7 +30,6 @@ import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.BlockPos;
-import net.minecraftforge.common.util.LazyOptional;
 
 /**
  * The town for a player team.
@@ -38,7 +37,7 @@ import net.minecraftforge.common.util.LazyOptional;
  * The TeamTown is only an interface of the underlying TeamTownData.
  * You may use this to access or modify town data.
  */
-public class TeamTown implements Town {
+public class TeamTown implements Town, TownWithResident {
     /** Linked to town data resources. */
     Map<TownResourceType, Integer> storage;
     /** Linked to town data backup resources. */
@@ -51,8 +50,6 @@ public class TeamTown implements Town {
     Map<TownResourceType, Integer> maxStorage = new EnumMap<>(TownResourceType.class);
     /** The town data, actual data stored on disk. */
     TeamTownData data;
-    /** Workable residents, will be gotten every tick, and consumed by workers in tick. */
-    Collection<Resident> workableResidents;
 
     /**
      * Create a new town based on data.
@@ -93,7 +90,6 @@ public class TeamTown implements Town {
         this.storage = td.resources;
         this.backupStorage = td.backupResources;
         this.data = td;
-        this.workableResidents = new ArrayList<>(data.residents.values());//get all residents from data. maybe there will be a method to get workable residents,idk.
     }
 
     @Override
@@ -300,6 +296,14 @@ public class TeamTown implements Town {
         return data.residents;
     }
 
+    public Collection<Resident> getAllResidents(){
+        return data.residents.values();
+    }
+
+    public Optional<Resident> getResident(UUID id){
+        return Optional.of(data.residents.get(id));
+    }
+
     public void addResident(Resident resident) {
         data.residents.put(resident.getUUID(), resident);
     }
@@ -351,21 +355,5 @@ public class TeamTown implements Town {
     @Override
     public Optional<TeamTownData> getTownData() {
         return Optional.of(data);
-    }
-
-    public LazyOptional<Resident> consumeWorkableResident(TownWorkerType type){
-        Resident bestResident = null;
-        for(Resident resident : workableResidents){
-            if(resident.getWorkProficiency(type) < 0) continue;
-            if(bestResident==null|| bestResident.getWorkProficiency(type) < resident.getWorkProficiency(type)){
-                bestResident=resident;
-            }
-        }
-        Resident finalBestResident = bestResident;
-        if(finalBestResident!=null){
-            workableResidents.remove(finalBestResident);
-            return LazyOptional.of(()-> finalBestResident);
-        }
-        return LazyOptional.empty();
     }
 }
