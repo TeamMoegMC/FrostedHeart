@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorM
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
+import com.teammoeg.frostedheart.content.nutrition.PlayerNutritionSyncPacket;
 import com.teammoeg.frostedheart.content.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.content.research.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.content.research.network.FHDrawingDeskOperationPacket;
@@ -54,6 +55,7 @@ import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioScenePack
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
+import com.teammoeg.frostedheart.content.water.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.content.town.TeamTownDataS2CPacket;
 import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
@@ -176,6 +178,12 @@ public class FHNetwork {
         // Waypoint Messages
         registerMessage("waypoint_sync", WaypointSyncPacket.class);
         registerMessage("waypoint_sync_all", WaypointSyncAllPacket.class);
+
+        // Water level
+        registerMessage("water_level", PlayerWaterLevelSyncPacket.class);
+
+        // Nutrition
+        registerMessage("nutrition", PlayerNutritionSyncPacket.class);
     }
 
     public static void sendPlayer(ServerPlayer p, FHMessage message) {
