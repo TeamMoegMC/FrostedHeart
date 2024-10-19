@@ -54,6 +54,7 @@ import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioScenePack
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
+import com.teammoeg.frostedheart.content.water.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.content.town.TeamTownDataS2CPacket;
 import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
@@ -176,6 +177,9 @@ public class FHNetwork {
         // Waypoint Messages
         registerMessage("waypoint_sync", WaypointSyncPacket.class);
         registerMessage("waypoint_sync_all", WaypointSyncAllPacket.class);
+
+        // Water level
+        registerMessage("water_level", PlayerWaterLevelSyncPacket.class);
     }
 
     public static void sendPlayer(ServerPlayer p, FHMessage message) {
