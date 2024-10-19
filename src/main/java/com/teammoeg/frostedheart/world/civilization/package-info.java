@@ -23,8 +23,7 @@
  * The package is divided by the main civilizations or forces in the world of TWR.
  *
  * Alliance: The weak, scattered alliance of various refuge cities who use the power of steam.
- * Ancient: All ancient civilizations that once ruled the world, until mid 21st century.
- * Empire: The human empire, located once in the west of North America, now perished, but its remaining members
+ * Federation: The human empire, located once in the west of North America, now perished, but its remaining members
  * are said to be in an expedition below the crust to seek the reason of the apocalypse.
  * Nanites: The nano-robots created by the Empire that now completely fill the ecosystem of Earth.
  * Orbit: The space station orbiting Earth where the Planetary Climate Concil resides.

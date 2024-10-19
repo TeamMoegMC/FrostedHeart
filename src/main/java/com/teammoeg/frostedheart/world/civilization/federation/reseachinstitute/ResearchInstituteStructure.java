@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.world.civilization.empire.reseachinstitute;
+package com.teammoeg.frostedheart.world.civilization.federation.reseachinstitute;
 
 import com.mojang.serialization.Codec;
 

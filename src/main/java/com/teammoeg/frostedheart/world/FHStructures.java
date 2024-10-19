@@ -27,8 +27,8 @@ import com.google.common.collect.ImmutableMap;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.world.civilization.alliance.DestroyedGeneratorStructure;
-import com.teammoeg.frostedheart.world.civilization.orbit.observatory.ObservatoryPiece;
-import com.teammoeg.frostedheart.world.civilization.orbit.observatory.ObservatoryStructure;
+import com.teammoeg.frostedheart.world.civilization.federation.observatory.ObservatoryPiece;
+import com.teammoeg.frostedheart.world.civilization.federation.observatory.ObservatoryStructure;
 
 import net.minecraft.core.Registry;
 import net.minecraft.data.BuiltinRegistries;
