@@ -1,8 +1,0 @@
-{
-  "variants": {
-      "": {
-      "model": "frostedheart:block/oil_burner",
-      "uvlock": true
-    }
-  }
-}

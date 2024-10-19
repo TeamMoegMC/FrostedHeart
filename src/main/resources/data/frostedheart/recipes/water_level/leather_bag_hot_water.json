@@ -1,9 +1,0 @@
-{
-    "type": "watersource:water_level_fluid",
-    "ingredient": {
-        "item": "watersource:leather_water_bag"
-    },
-	"fluid": "thermopolium:nail_soup",
-	"waterLevel": 4,
-	"waterSaturationLevel": 2
-}

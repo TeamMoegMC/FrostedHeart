@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "frostedheart:item/aluminum_foil_small_packs"
-  }
-}

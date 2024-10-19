@@ -1,8 +1,0 @@
-{
-  "variants": {
-    "": {
-      "model": "frostedheart:block/sauna_vent",
-      "uvlock": true
-    }
-  }
-}

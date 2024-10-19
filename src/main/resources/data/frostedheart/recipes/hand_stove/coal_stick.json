@@ -1,7 +1,0 @@
-{
-  "type": "frostedheart:fuel_stove",
-  "input": {
-    "item": "frostedheart:charcoal_stick"
-  },
-  "fuel":400
-}

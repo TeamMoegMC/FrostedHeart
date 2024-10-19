@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/cube_bottom_top",
-  "textures": {
-    "bottom": "frostedheart:block/broken_makeshift_core",
-    "top": "frostedheart:block/broken_makeshift_core",
-    "side": "frostedheart:block/broken_makeshift_core"
-  }
-}

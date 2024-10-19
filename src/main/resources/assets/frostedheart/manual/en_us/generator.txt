@@ -1,3 +1,0 @@
-Generator T1
-
-<&generator>

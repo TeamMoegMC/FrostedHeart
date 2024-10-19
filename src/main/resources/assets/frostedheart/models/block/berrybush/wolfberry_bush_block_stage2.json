@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:block/cross",
-  "textures": {
-    "cross": "frostedheart:block/berrybush/wolfberry_bush_block_stage2"
-  }
-}

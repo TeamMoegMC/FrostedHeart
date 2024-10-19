@@ -1,3 +1,0 @@
-T2能量塔
-
-<&generator_t2>

@@ -1,9 +1,0 @@
-{
-  "type": "watersource:water_level_fluid",
-  "ingredient": {
-    "tag": "frostedheart:thermos"
-  },
-  "fluid": "minecraft:water",
-  "waterLevel": 4,
-  "waterSaturationLevel": 2
-}

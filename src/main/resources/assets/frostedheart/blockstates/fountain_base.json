@@ -1,8 +1,0 @@
-{
-  "variants": {
-    "": {
-      "model": "frostedheart:block/fountain/base",
-      "uvlock": true
-    }
-  }
-}
