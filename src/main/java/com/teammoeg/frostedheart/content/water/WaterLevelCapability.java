@@ -175,6 +175,7 @@ public class WaterLevelCapability implements NBTSerializable {
                 player.level().playSound(player, player, SoundEvents.GUARDIAN_ATTACK, SoundSource.PLAYERS, 1.0F, 1.0F);
             }
         }
+        //TODO:当水分为0时死亡
     }
 
 

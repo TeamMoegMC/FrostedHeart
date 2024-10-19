@@ -1,16 +1,13 @@
 package com.teammoeg.frostedheart.content.nutrition;
 
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.water.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.food.FoodData;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.network.PacketDistributor;
 
@@ -23,7 +20,7 @@ public class NutritionCapability implements NBTSerializable {
         CompoundTag compound = new CompoundTag();
         compound.putFloat("fruit", this.fruit);
         compound.putFloat("grain", this.grain);
-        compound.putFloat("protein", this.portein);
+        compound.putFloat("protein", this.protein);
         compound.putFloat("vegetable", this.vegetable);
         compound.putFloat("sugar", this.sugar);
     }
@@ -39,7 +36,7 @@ public class NutritionCapability implements NBTSerializable {
 
     private float fruit = 1.0f;
     private float grain = 1.0f;
-    private float portein = 1.0f;
+    private float protein = 1.0f;
     private float vegetable = 1.0f;
     private float sugar = 1.0f;
 
@@ -54,7 +51,7 @@ public class NutritionCapability implements NBTSerializable {
     }
 
     public void addProtein(Player player, float add) {
-        this.portein = Math.min(this.portein + add, 1.0f);
+        this.protein = Math.min(this.protein + add, 1.0f);
         syncToClientOnRestore(player);
     }
 
@@ -77,7 +74,7 @@ public class NutritionCapability implements NBTSerializable {
     }
 
     public void setProtein(float temp) {
-        this.portein = temp;
+        this.protein = temp;
     }
 
     public void setVegetable(float temp) {
@@ -97,7 +94,7 @@ public class NutritionCapability implements NBTSerializable {
     }
 
     public float getProtein() {
-        return portein;
+        return protein;
     }
 
     public float getVegetable() {
@@ -119,28 +116,28 @@ public class NutritionCapability implements NBTSerializable {
             syncToClient(serverPlayer);
         }
     }
+    public void eat(Player player, ItemStack food) {
+        //TODO
+        CompoundTag tag = food.getOrCreateTag();
+        eat(player, tag.getFloat("fruit"), tag.getFloat("grain"), tag.getFloat("protein"), tag.getFloat("vegetable"), tag.getFloat("sugar"));
+    }
+
+
+    public void eat(Player player, float fruit, float grain, float protein, float vegetable, float sugar) {
+        addFruit(player, fruit);
+        addGrain(player, grain);
+        addProtein(player, protein);
+        addVegetable(player, vegetable);
+        addSugar(player, sugar);
+    }
+
 
     public void award(Player player) {
-        FoodData foodData = player.getFoodData();
-
+        //TODO
     }
 
     public void punishment(Player player) {
-
-
-    }
-
-
-    protected static void mobEffectPunishment(Player player, int level) {
-        int weAmp = FHConfig.SERVER.weaknessEffectAmplifier.get();
-        int slAmp = FHConfig.SERVER.weaknessEffectAmplifier.get();
-        MobEffectInstance weaknessEffect = player.getEffect(MobEffects.WEAKNESS);
-        MobEffectInstance movementSlowDownEffect = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
-        if (weAmp > -1 && (weaknessEffect == null || weaknessEffect.getDuration() <= 100))
-            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 400, weAmp + level, false, false));
-        if (slAmp > -1 && movementSlowDownEffect == null || movementSlowDownEffect.getDuration() <= 100)
-            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 400, slAmp, false, false));
-
+        //TODO
     }
 
     public static LazyOptional<NutritionCapability> getCapability(@Nullable Player player) {
