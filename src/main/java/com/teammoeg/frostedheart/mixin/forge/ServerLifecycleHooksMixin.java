@@ -40,7 +40,7 @@ import com.teammoeg.frostedheart.util.version.FHVersion;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.server.ServerLifecycleHooks;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 @Mixin(ServerLifecycleHooks.class)
 public class ServerLifecycleHooksMixin {
