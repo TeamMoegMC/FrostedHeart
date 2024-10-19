@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.mixin.client;
 
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.entity.ItemRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
@@ -30,13 +33,16 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.util.Mth;
-import net.minecraftforge.client.gui.ForgeIngameGui;
+import net.minecraftforge.client.gui.overlay.ForgeGui;
+import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(ForgeIngameGui.class)
-public class ForgeIngameGuiMixin extends Gui {
+@Mixin(ForgeGui.class)
+public class ForgeGuiMixin extends Gui {
 
-    public ForgeIngameGuiMixin(Minecraft mcIn) {
-        super(mcIn);
+    @Shadow private Font font;
+
+    public ForgeGuiMixin(Minecraft pMinecraft, ItemRenderer pItemRenderer) {
+        super(pMinecraft, pItemRenderer);
     }
 
     /**
@@ -44,7 +50,7 @@ public class ForgeIngameGuiMixin extends Gui {
      * @reason change style
      */
     @Overwrite(remap = false)
-    public void renderAir(int width, int height, PoseStack stack) {
+    public void renderAir(int width, int height, GuiGraphics stack) {
         Player player = FrostedHud.getRenderViewPlayer();
         if (player == null) return;
         int x = width / 2;
@@ -56,7 +62,7 @@ public class ForgeIngameGuiMixin extends Gui {
      * @reason change text position
      */
     @Overwrite(remap = false)
-    public void renderRecordOverlay(int width, int height, float partialTicks, PoseStack mStack) {
+    public void renderRecordOverlay(int width, int height, float partialTicks, GuiGraphics mStack) {
         if (overlayMessageTime > 0) {
             minecraft.getProfiler().push("overlayMessage");
             float hue = overlayMessageTime - partialTicks;
@@ -64,17 +70,19 @@ public class ForgeIngameGuiMixin extends Gui {
             if (opacity > 255) opacity = 255;
 
             if (opacity > 8) {
-                RenderSystem.pushMatrix();
-                RenderSystem.translatef((float) width / 2, height - 68, 0.0F);
+                mStack.pose().pushPose();
+                mStack.pose().translate((float) width / 2, height - 68, 0.0F);
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
                 int color = (animateOverlayMessageColor ? Mth.hsvToRgb(hue / 50.0F, 0.7F, 0.6F) & 0xFFFFFF : 0xFFFFFF);
-                // original: Minecraft.getInstance().fontRenderer.draw(mStack, overlayMessage.getVisualOrderText(), -Minecraft.getInstance().fontRenderer.getStringPropertyWidth(overlayMessage) / 2, -4, color | (opacity << 24));
-                // new:
-                Minecraft.getInstance().font.draw(mStack, overlayMessageString.getVisualOrderText(), (float) -Minecraft.getInstance().font.width(overlayMessageString) / 2, -15, color | (opacity << 24));
-                drawBackdrop(mStack, Minecraft.getInstance().font, -4, Minecraft.getInstance().font.width(overlayMessageString), 16777215 | (opacity << 24));
+
+                int messageWidth = font.width(overlayMessageString);
+                drawBackdrop(mStack, font, -4, messageWidth, 16777215 | (opacity << 24));
+                // we changed pY position to -15
+                mStack.drawString(font, overlayMessageString.getVisualOrderText(), -messageWidth / 2, -15, color | (opacity << 24));
+
                 RenderSystem.disableBlend();
-                RenderSystem.popMatrix();
+                mStack.pose().popPose();
             }
 
             minecraft.getProfiler().pop();

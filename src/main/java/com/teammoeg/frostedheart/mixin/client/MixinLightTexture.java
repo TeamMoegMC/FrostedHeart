@@ -33,10 +33,13 @@ public class MixinLightTexture {
     public MixinLightTexture() {
     }
 
-    @ModifyVariable(method = "updateLightmap", index = 16, at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/vector/Vector3f;apply(Lit/unimi/dsi/fastutil/floats/Float2FloatFunction;)V"))
+    // TODO: Fix this
+    /*
+    @ModifyVariable(method = "updateLightTexture", index = 16, at = @At(value = "INVOKE", target = "Lorg/joml/Vector3f;apply(Lit/unimi/dsi/fastutil/floats/Float2FloatFunction;)V"))
     public float modifygamma(float val) {
         if (ClientUtils.applyspg)
             return ClientUtils.spgamma;
         return val;
     }
+     */
 }

@@ -41,28 +41,28 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  */
 @OnlyIn(Dist.CLIENT)
 @Mixin(value = LevelRenderer.class, priority = 1)
-public abstract class WorldRendererMixin {
+public abstract class LevelRendererMixin {
     @Shadow
     @Final
-    private Minecraft mc;
+    private Minecraft minecraft;
     @Shadow
-    private ClientLevel world;
+    private ClientLevel level;
     @Shadow
     private int ticks;
 
-    @Inject(method = "renderRainSnow", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "renderSnowAndRain", at = @At("HEAD"), cancellable = true)
     public void inject$renderWeather(LightTexture manager, float partialTicks, double x, double y, double z, CallbackInfo ci) {
-        if (this.mc != null && this.mc.gameRenderer != null) {
+        if (this.minecraft != null && this.minecraft.gameRenderer != null) {
             // ClimateData data = ClimateData.get(world);
             // blizzard when vanilla 'thundering' is true, to save us from doing sync
-            if (world.isThundering()) {
-                BlizzardRenderer.render(mc, this.world, manager, ticks, partialTicks, x, y, z);
+            if (level.isThundering()) {
+                BlizzardRenderer.render(minecraft, this.level, manager, ticks, partialTicks, x, y, z);
                 // Road-block injection to remove any Vanilla / Primal Winter weather rendering code
                 ci.cancel();
             }
             /*
              * if not blizzard, use primal winter's rendering
-             * @see primalwinter's WorldRendererMixin
+             * @see primalwinter's LevelRendererMixin
              */
         }
     }

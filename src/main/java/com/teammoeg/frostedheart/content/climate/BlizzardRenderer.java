@@ -41,7 +41,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
  * Render cool Blizzard!
  * <p>
  * To integrate it to the game,
- * let `render` be called in `com.teammoeg.frostedheart.mixin.client.WorldRendererMixin.inject$renderWeather`
+ * let `render` be called in `com.teammoeg.frostedheart.mixin.client.LevelRendererMixin.inject$renderWeather`
  * with appropriate context after confirming that a blizzard is present in the world.
  * <p>
  * We want to thank BetterWeather's author CorgiTaco, who wrote the code we adapted from.

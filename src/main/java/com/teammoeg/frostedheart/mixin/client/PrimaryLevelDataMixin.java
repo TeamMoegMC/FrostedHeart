@@ -22,20 +22,22 @@ package com.teammoeg.frostedheart.mixin.client;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import net.minecraft.client.gui.components.toasts.Toast;
-import net.minecraft.client.gui.components.toasts.ToastComponent;
-import net.minecraft.client.gui.components.toasts.TutorialToast;
+import com.mojang.serialization.Lifecycle;
 
-@Mixin(ToastComponent.class)
-public class ToastGuiMixin {
+import net.minecraft.world.level.storage.PrimaryLevelData;
 
-    @Inject(method = "add", at = @At(value = "HEAD"), cancellable = true)
-    public void disable(Toast toastIn, CallbackInfo ci) {
-        if (toastIn instanceof TutorialToast) {
-            ci.cancel();
-        }
+@Mixin(PrimaryLevelData.class)
+public class PrimaryLevelDataMixin {
+
+    /**
+     * Reference: <a href="https://github.com/CorgiTaco/ShutupExperimentalSettings/blob/master/src/main/java/corgitaco/shutupexperimentalsettings/mixin/client/MixinServerWorldInfo.java">...</a>
+     *
+     * @reason Shut up experimental settings
+     */
+    @Inject(method = "worldGenSettingsLifecycle", at = @At("HEAD"), cancellable = true)
+    private void forceStableLifeCycle(CallbackInfoReturnable<Lifecycle> cir) {
+        cir.setReturnValue(Lifecycle.stable());
     }
-
 }
