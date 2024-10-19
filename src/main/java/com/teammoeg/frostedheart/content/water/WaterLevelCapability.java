@@ -4,7 +4,6 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.content.waypoint.waypoints.AbstractWaypoint;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
@@ -23,23 +22,8 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
 
 public class WaterLevelCapability implements NBTSerializable {
-    private final Map<String, AbstractWaypoint> waypoints = new HashMap<>();
-
-    public Map<String, AbstractWaypoint> getWaypoints() {
-        return waypoints;
-    }
-
-    public void put(AbstractWaypoint waypoint) {
-        waypoints.put(waypoint.getID(), waypoint);
-    }
-
-    public void remove(String id) {
-        waypoints.remove(id);
-    }
 
     @Override
     public void save(CompoundTag nbt, boolean isPacket) {
