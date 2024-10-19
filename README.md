@@ -3,13 +3,25 @@
 - Issues should go to the [TWR Issue Tracker](https://github.com/TeamMoegMC/The-Winter-Rescue/issues)
 
 This Mod is where most of the contents of The Winter Rescue
-are implemented. It is a Forge mod for Minecraft 1.16.5.
-It is designed to be a bridge mod between various mods,
-most importantly *Create* and *Immersive Engineering*, 
-which we extensively use their APIs. Content-wise, we also
-rely on *Project Rankine* as a content provider mod, which
-provides extensive building blocks, materials, and basic
-world generation.
+are implemented. It is a Forge mod for Minecraft 1.20.1.
+
+Core APIs:
+- [Create](https://www.curseforge.com/minecraft/mc-mods/create)
+- [Immersive Engineering](https://www.curseforge.com/minecraft/mc-mods/immersive-engineering)
+- [FTB Teams](https://www.curseforge.com/minecraft/mc-mods/ftb-teams)
+
+Content integration:
+- [Tetra](https://www.curseforge.com/minecraft/mc-mods/tetra)
+- [Curios](https://www.curseforge.com/minecraft/mc-mods/curios)
+- [Just Enough Items](https://www.curseforge.com/minecraft/mc-mods/jei)
+- [FTB Chunks](https://www.curseforge.com/minecraft/mc-mods/ftb-chunks)
+- [FTB Quests](https://www.curseforge.com/minecraft/mc-mods/ftb-quests)
+
+Libraries:
+- [Flywheel](https://www.curseforge.com/minecraft/mc-mods/flywheel)
+- [MUtils](https://www.curseforge.com/minecraft/mc-mods/mutils)
+- [FTB Library](https://www.curseforge.com/minecraft/mc-mods/ftb-library)
+- [Architectury](https://www.curseforge.com/minecraft/mc-mods/architectury-forge)
 
 The following are written for anyone who wishes to join the
 development of this exciting project. 
@@ -22,7 +34,7 @@ and let any dev team member know. If you don't use Discord,
 send a PR or issue.
 
 To get started, you need to have a working Forge development
-environment. Install Java 8 JDK, and import the project into
+environment. Install Java 17 JDK, and import the project into
 your IDE. You can use IntelliJ IDEA, Eclipse, or any other
 IDE that supports Gradle. You should be familar with Forge before 
 contributing. There are extensive tutorials, below are some:
