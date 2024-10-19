@@ -26,11 +26,12 @@ import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.content.utility.handstoves.CoalHandStove;
 import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
 
-import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
+import mezz.jei.api.gui.ingredient.ICraftingGridHelper;
+import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.category.extensions.vanilla.crafting.ICraftingCategoryExtension;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 
 public class FuelingExtension implements ICraftingCategoryExtension {
     FuelingRecipe fuel;
@@ -45,11 +46,12 @@ public class FuelingExtension implements ICraftingCategoryExtension {
     }
 
     @Override
-    public void setIngredients(IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Collections.singletonList(new ItemStack(FHItems.hand_stove.get())), Arrays.asList(fuel.getIngredient().getItems())));
+    public void setRecipe(IRecipeLayoutBuilder builder, ICraftingGridHelper craftingGridHelper, IFocusGroup focuses) {
+    	builder.setShapeless();
+    	craftingGridHelper.createAndSetInputs(builder, Arrays.asList(Collections.singletonList(new ItemStack(FHItems.hand_stove.get())), Arrays.asList(fuel.getIngredient().getItems())),0,0);
         ItemStack out = new ItemStack(FHItems.hand_stove.get());
         CoalHandStove.setFuelAmount(out, fuel.getFuel());
-        ingredients.setOutput(VanillaTypes.ITEM, out);
+        craftingGridHelper.createAndSetOutputs(builder, Arrays.asList(out));
     }
 
 }

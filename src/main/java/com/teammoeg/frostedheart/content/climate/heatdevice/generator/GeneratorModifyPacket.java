@@ -7,7 +7,7 @@ import com.teammoeg.frostedheart.base.network.FHMessage;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fml.network.NetworkEvent.Context;
+import net.minecraftforge.network.NetworkEvent.Context;
 
 public class GeneratorModifyPacket implements FHMessage{
 	public GeneratorModifyPacket() {
@@ -24,7 +24,7 @@ public class GeneratorModifyPacket implements FHMessage{
 			AbstractContainerMenu container=spe.containerMenu;
 			if(container instanceof MasterGeneratorContainer) {
 				MasterGeneratorContainer crncontainer=(MasterGeneratorContainer) container;
-				((MasterGeneratorTileEntity)crncontainer.tile).onUpgradeMaintainClicked(spe);
+				((MasterGeneratorTileEntity)crncontainer.getBlock()).onUpgradeMaintainClicked(spe);
 			}
 		});
 		context.get().setPacketHandled(true);

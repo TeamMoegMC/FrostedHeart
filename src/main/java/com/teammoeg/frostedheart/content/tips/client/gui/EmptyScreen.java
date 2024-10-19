@@ -1,16 +1,16 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.teammoeg.frostedheart.util.TranslateUtils;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TextComponent;
 
 public class EmptyScreen extends Screen {
     public EmptyScreen() {
-        super(new TextComponent(""));
+        super(TranslateUtils.str(""));
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
     }
 
     @Override

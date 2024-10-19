@@ -3,6 +3,8 @@ package com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d;
 import java.awt.AlphaComposite;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Optional;
 
 import javax.imageio.ImageIO;
 
@@ -13,6 +15,7 @@ import com.teammoeg.frostedheart.util.client.Rect;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
 
 public class GraphicsImageContent extends GraphicLayerContent {
 	public ResourceLocation showingImage;
@@ -49,11 +52,14 @@ public class GraphicsImageContent extends GraphicLayerContent {
 
 	@Override
 	public void prerender(PrerenderParams params) {
-		BufferedImage image;
-		if(Minecraft.getInstance().getResourceManager().hasResource(showingImage)) {
-			try {
-
-				image = ImageIO.read(Minecraft.getInstance().getResourceManager().getResource(showingImage).getInputStream());
+		;
+		Optional<Resource> resource=Minecraft.getInstance().getResourceManager().getResource(showingImage);
+		if(resource.isPresent()) {
+			try (
+				InputStream stream=resource.get().open();
+				
+				){
+				BufferedImage image= ImageIO.read(stream);
 				if(iw<0)
 					iw=image.getWidth();
 				if(ih<0)

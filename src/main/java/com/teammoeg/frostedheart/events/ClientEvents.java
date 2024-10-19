@@ -19,33 +19,13 @@
 
 package com.teammoeg.frostedheart.events;
 
-import java.util.List;
-import java.util.Map;
-
-import com.teammoeg.frostedheart.content.tips.client.TipElement;
-import com.teammoeg.frostedheart.content.tips.client.UnlockedTipManager;
-import com.teammoeg.frostedheart.content.tips.client.util.TipDisplayUtil;
-import net.minecraft.client.gui.screens.SoundOptionsScreen;
-import net.minecraftforge.client.event.*;
-import net.minecraftforge.client.gui.overlay.GuiOverlayManager;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
-
-import org.lwjgl.glfw.GLFW;
-
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.frostedheart.FHClientTeamDataManager;
-import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHDataManager;
-import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.gui.ResearchToast;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
@@ -54,40 +34,42 @@ import com.teammoeg.frostedheart.content.research.research.effects.EffectShowCat
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacket;
-import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestRenderer;
+import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
+import com.teammoeg.frostedheart.content.tips.TipLockManager;
+import com.teammoeg.frostedheart.content.tips.client.TipElement;
+import com.teammoeg.frostedheart.content.waypoint.WaypointRenderer;
+import com.teammoeg.frostedheart.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.client.GuiClickedEvent;
+import com.teammoeg.frostedheart.util.client.RenderHelper;
 import com.teammoeg.frostedheart.util.version.FHVersion;
-
-import dev.architectury.event.events.common.PlayerEvent.OpenMenu;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.entity.ArmorStandRenderer;
-import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.world.level.GameType;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.*;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
@@ -96,12 +78,15 @@ import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.event.level.LevelEvent.Unload;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.server.ServerLifecycleHooks;
+import org.lwjgl.glfw.GLFW;
+
+import java.util.List;
+import java.util.Map;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEvents {
@@ -344,6 +329,8 @@ public class ClientEvents {
                     FrostedHud.renderFrozenVignette(stack, anchorX, anchorY, mc, renderViewPlayer);
                 if (FrostedHud.renderHeatVignette)
                     FrostedHud.renderHeatVignette(stack, anchorX, anchorY, mc, renderViewPlayer);
+                if (FrostedHud.renderWaypoint)
+                    WaypointRenderer.render(stack);
 
 
             }
@@ -495,7 +482,7 @@ public class ClientEvents {
     public static void unloadWorld(LevelEvent.Unload event) {
         ClientUtils.applyspg = false;
     }
-
+/*
     @SuppressWarnings({"resource", "unchecked", "rawtypes"})
     @SubscribeEvent
     public void onWorldLoad(LevelEvent.Load event) {
@@ -507,7 +494,8 @@ public class ClientEvents {
                     ((ArmorStandRenderer) render).addLayer(new HeaterVestRenderer<>((ArmorStandRenderer) render));
             HeaterVestRenderer.rendersAssigned = true;
         }
-    }    @SuppressWarnings({"resource", "unchecked", "rawtypes"})
+    }*/
+    @SuppressWarnings({"resource", "unchecked", "rawtypes"})
 
     
     @SubscribeEvent
@@ -580,42 +568,49 @@ public class ClientEvents {
      */
 
     @SubscribeEvent
-    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-        TipDisplayUtil.clearRenderQueue();
-        TipDisplayUtil.displayTip("_default", false);
-        TipDisplayUtil.displayTip("_default2", false);
-        if (Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC) == 0) {
-            TipDisplayUtil.displayTip("_music_warning", false);
+    public static void onWorldRender(RenderLevelStageEvent event) {
+        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_LEVEL) {
+            //获取渲染信息
+            RenderHelper.projectionMatrix = event.getProjectionMatrix();
+            RenderHelper.frustum = event.getFrustum();
+            RenderHelper.camera = event.getCamera();
         }
     }
 
     @SubscribeEvent
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        TipDisplayManager.clearRenderQueue();
+        TipDisplayManager.displayTip("default", false);
+        TipDisplayManager.displayTip("default2", false);
+//        if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) == 0) {
+//            TipDisplayManager.displayTip("music_warning", false);
+//        }
+    }
+
+    @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        TipDisplayUtil.clearRenderQueue();
+        TipDisplayManager.clearRenderQueue();
+        WaypointRenderer.clear();
     }
 
     @SubscribeEvent
     public static void onGUIOpen(ScreenEvent.Opening event) {
         if (event.getScreen() instanceof TitleScreen) {
-            if (!UnlockedTipManager.error.isEmpty()) {
+            if (!TipLockManager.errorType.isEmpty()) {
                 TipElement ele = new TipElement();
-                ele.replaceToError(UnlockedTipManager.UNLOCKED_FILE, UnlockedTipManager.error);
-                TipDisplayUtil.displayTip(ele, true);
-                UnlockedTipManager.error = "";
+                ele.replaceToError(TipLockManager.UNLOCKED_FILE, TipLockManager.errorType);
+                TipDisplayManager.displayTip(ele, true);
+                TipLockManager.errorType = "";
             }
+        }
+    }
 
-//            if (...如果有新版本) {
-//              TipHandler.displayTip("update", false);
+//    @SubscribeEvent
+//    public static void onGUIRender(ScreenEvent.Render event) {
+//        if (event.getScreen() instanceof SoundOptionsScreen) {
+//            if (Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC) <= 0) {
+//                TipDisplayManager.displayTip("music_warning", false);
 //            }
-        }
-    }
-
-    @SubscribeEvent
-    public static void onGUIRender(ScreenEvent.Render event) {
-        if (event.getScreen() instanceof SoundOptionsScreen) {
-            if (Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC) <= 0) {
-                TipDisplayUtil.displayTip("_music_warning", false);
-            }
-        }
-    }
+//        }
+//    }
 }

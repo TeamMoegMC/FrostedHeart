@@ -37,8 +37,8 @@ public class PebbleBlock extends FHBaseBlock {
     }
 
     public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-        Integer finalType = Math.abs(RANDOM.nextInt()) % typeCount;
-        Integer finalColor = Math.abs(RANDOM.nextInt()) % colorCount;
+        Integer finalType = Math.abs(worldIn.random.nextInt()) % typeCount;
+        Integer finalColor = Math.abs(worldIn.random.nextInt()) % colorCount;
         BlockState newState = this.stateDefinition.any().setValue(TYPE, finalType).setValue(COLOR, finalColor);
         worldIn.setBlockAndUpdate(pos, newState);
     }

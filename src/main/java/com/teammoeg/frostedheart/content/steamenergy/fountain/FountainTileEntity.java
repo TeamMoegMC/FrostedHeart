@@ -24,35 +24,34 @@ import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
+
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
+
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
-import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
-
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
-public class FountainTileEntity extends IEBaseTileEntity implements
-        INetworkConsumer, TickableBlockEntity, FHBlockInterfaces.IActiveState {
+public class FountainTileEntity extends IEBaseBlockEntity implements
+        INetworkConsumer, FHTickableBlockEntity, FHBlockInterfaces.IActiveState {
 
     private static final UUID WARMTH_EFFECT_UUID = UUID.fromString("95c1f024-8f3a-4828-aaa7-a86733cffbf2");
     private static final float POWER_CAP = 400;
@@ -69,8 +68,8 @@ public class FountainTileEntity extends IEBaseTileEntity implements
 
     HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 10, 1);
 
-    public FountainTileEntity() {
-        super(FHTileTypes.FOUNTAIN.get());
+    public FountainTileEntity(BlockPos pos,BlockState state) {
+        super(FHTileTypes.FOUNTAIN.get(),pos,state);
     }
 
     LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
@@ -260,9 +259,10 @@ public class FountainTileEntity extends IEBaseTileEntity implements
         refilling = true;
     }
 
-    @Override
-    public void setRemoved() {
-        super.setRemoved();
+
+	@Override
+    public void setRemovedIE() {
+        super.setRemovedIE();
         removeHeat();
 
         for (int i = 0; i < MAX_HEIGHT; i++) {

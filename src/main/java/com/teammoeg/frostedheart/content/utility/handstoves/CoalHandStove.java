@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.utility.handstoves;
 
+import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -35,23 +36,23 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
-import net.minecraft.tags.Tag;
-import net.minecraft.tags.SerializationTags;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.Level;
-
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraft.world.item.Item.Properties;
 
 public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
     public final static int max_fuel = 800;
 
-    ResourceLocation ashitem = new ResourceLocation("frostedheart", "ash");
-
+    TagKey<Item> ashitem=ItemTags.create(new ResourceLocation("frostedheart", "ash"));
     public static int getAshAmount(ItemStack is) {
         return is.getOrCreateTag().getInt("ash");
     }
@@ -124,14 +125,14 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
     public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
         int ash = getAshAmount(stack);
         if (ash >= 800) {
-            Tag<Item> item = SerializationTags.getInstance().getItems().getTag(ashitem);
+            Iterator<Item> item=ForgeRegistries.ITEMS.tags().getTag(ashitem).iterator();
             setAshAmount(stack, ash - 800);
             if (getFuelAmount(stack) < 2)
                 stack.getTag().putInt("CustomModelData", 0);
             else
                 stack.getTag().putInt("CustomModelData", 1);
-            if (item != null && entityLiving instanceof Player && !item.getValues().isEmpty()) {
-                ItemStack ret = new ItemStack(item.getValues().get(0));
+            if (item.hasNext() && entityLiving instanceof Player ) {
+                ItemStack ret = new ItemStack(item.next());
                 FHUtils.giveItem((Player) entityLiving, ret);
             }
         }

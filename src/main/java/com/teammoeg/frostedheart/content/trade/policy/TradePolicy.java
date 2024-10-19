@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.util.RegistryUtils;
@@ -34,19 +35,22 @@ import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
+import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
-import net.minecraft.util.WeighedRandom;
 import net.minecraft.util.random.Weight;
 import net.minecraft.util.random.WeightedEntry;
 import net.minecraft.util.random.WeightedRandom;
 import net.minecraftforge.registries.RegistryObject;
+import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
+import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class TradePolicy extends IESerializableRecipe {
@@ -62,12 +66,12 @@ public class TradePolicy extends IESerializableRecipe {
             ResourceLocation name = SerializeUtil.readOptional(buffer, FriendlyByteBuf::readResourceLocation).orElse(null);
             List<PolicyGroup> groups = SerializeUtil.readList(buffer, PolicyGroup::read);
             int root = buffer.readVarInt();
-            VillagerProfession vp = buffer.readRegistryIdUnsafe(ForgeRegistries.PROFESSIONS);
+            VillagerProfession vp = buffer.readRegistryIdUnsafe(ForgeRegistries.VILLAGER_PROFESSIONS);
             return new TradePolicy(recipeId, name, groups, root, vp, buffer.readVarIntArray());
         }
 
         @Override
-        public TradePolicy readFromJson(ResourceLocation recipeId, JsonObject json) {
+        public TradePolicy readFromJson(ResourceLocation recipeId, JsonObject json,IContext ctx) {
             ResourceLocation name = json.has("name") ? new ResourceLocation(json.get("name").getAsString()) : null;
             List<PolicyGroup> groups = SerializeUtil.parseJsonList(json.get("policies"), PolicyGroup::read);
             int root = json.has("weight") ? json.get("weight").getAsInt() : 0;
@@ -105,8 +109,8 @@ public class TradePolicy extends IESerializableRecipe {
 			return weight;
 		}
     }
-    public static RegistryObject<RecipeType<Recipe<?>>> TYPE;
-
+    public static RegistryObject<RecipeType<TradePolicy>> TYPE;
+    public static Lazy<TypeWithClass<TradePolicy>> IEType=Lazy.of(()->new TypeWithClass<>(TYPE, TradePolicy.class));
     public static RegistryObject<IERecipeSerializer<TradePolicy>> SERIALIZER;
 
     public static Map<ResourceLocation, TradePolicy> policies;
@@ -120,11 +124,11 @@ public class TradePolicy extends IESerializableRecipe {
     int weight = 0;
 
     public static TradePolicy random(RandomSource rnd) {
-        return WeightedRandom.getRandomItem(rnd, items, totalW).policy;
+        return WeightedRandom.getRandomItem(rnd, items, totalW).map(t->t.policy).orElse(null);
     }
 
     public TradePolicy(ResourceLocation id, ResourceLocation name, List<PolicyGroup> groups, int weight, VillagerProfession vp, int[] expBar) {
-        super(ItemStack.EMPTY, TYPE, id);
+        super(Lazy.of(()->ItemStack.EMPTY), IEType.get(), id);
         this.name = name;
         this.groups = groups;
         this.weight = weight;
@@ -170,7 +174,7 @@ public class TradePolicy extends IESerializableRecipe {
     }
 
     @Override
-    public ItemStack getResultItem() {
+    public ItemStack getResultItem(RegistryAccess ra) {
         return ItemStack.EMPTY;
     }
 }

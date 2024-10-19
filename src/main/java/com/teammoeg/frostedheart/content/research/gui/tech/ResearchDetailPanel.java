@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import java.util.List;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
@@ -121,7 +121,7 @@ public class ResearchDetailPanel extends Panel {
         infoPanel.setPosAndSize(150, 15, 135, 151);
         Button closePanel = new Button(this) {
             @Override
-            public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+            public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
             }
 
             @Override
@@ -164,18 +164,18 @@ public class ResearchDetailPanel extends Panel {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         if (research == null) {
             return;
         }
-        matrixStack.pushPose();
-        matrixStack.translate(0, 0, 500);
+        matrixStack.pose().pushPose();
+        matrixStack.pose().translate(0, 0, 500);
         super.draw(matrixStack, theme, x, y, w, h);
-        matrixStack.popPose();
+        matrixStack.pose().popPose();
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         // drawBackground(matrixStack, theme, x, y, w, h);
         // theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
         TechIcons.DIALOG.draw(matrixStack, x, y, w, h);

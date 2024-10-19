@@ -19,10 +19,7 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.resources.ResourceLocation;
@@ -32,12 +29,6 @@ public class RelicChestScreen extends IEContainerScreen<RelicChestContainer> {
     private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("relic_chest");
 
     public RelicChestScreen(RelicChestContainer inventorySlotsIn, Inventory inv, Component title) {
-        super(inventorySlotsIn, inv, title);
-    }
-
-    @Override
-    protected void renderBg(PoseStack matrixStack, float partialTicks, int x, int y) {
-        ClientUtils.bindTexture(TEXTURE);
-        this.blit(matrixStack, leftPos, topPos, 0, 0, imageWidth, imageHeight);
+        super(inventorySlotsIn, inv, title,TEXTURE);
     }
 }

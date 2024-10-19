@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVariables;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 public class FHClientSettingsPacket implements FHMessage {
     double scale;

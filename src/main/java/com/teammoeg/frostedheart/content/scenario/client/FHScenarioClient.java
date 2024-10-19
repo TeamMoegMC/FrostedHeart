@@ -34,8 +34,8 @@ public class FHScenarioClient {
         client.callCommand(name, runner, params);
     }
     public static ResourceLocation getPathOf(ResourceLocation orig,String path) {
-    	ResourceLocation rl= new ResourceLocation(orig.getNamespace(),path+ClientUtils.mc().getLanguageManager().getSelected().getCode()+"/"+orig.getPath());
-    	if(ClientUtils.mc().getResourceManager().hasResource(rl)) {
+    	ResourceLocation rl= new ResourceLocation(orig.getNamespace(),path+ClientUtils.mc().getLanguageManager().getSelected()+"/"+orig.getPath());
+    	if(ClientUtils.mc().getResourceManager().getResource(rl).isPresent()) {
     		return rl;
     	}
     	return new ResourceLocation(orig.getNamespace(),path+orig.getPath());

@@ -12,6 +12,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.Tag;
@@ -32,8 +33,8 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
     private double temperature;
     private double rating;
 
-    public MineBaseTileEntity(){
-        super(FHTileTypes.MINE_BASE.get());
+    public MineBaseTileEntity(BlockPos pos,BlockState state){
+        super(FHTileTypes.MINE_BASE.get(),pos,state);
     }
 
     public boolean isStructureValid(){

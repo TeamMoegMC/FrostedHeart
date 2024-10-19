@@ -62,6 +62,7 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.MappedRegistry;
 
 public class CodecUtil {
@@ -145,12 +146,12 @@ public class CodecUtil {
 		
 	};
 	public static final Codec<ItemStack>  ITEMSTACK_CODEC = RecordCodecBuilder.create(t -> t.group(
-			CodecUtil.registryCodec(()->ForgeRegistries.ITEMS.getCodec()).fieldOf("id").forGetter(ItemStack::getItem),
+			CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).fieldOf("id").forGetter(ItemStack::getItem),
 			Codec.INT.fieldOf("Count").forGetter(ItemStack::getCount),
-			CompoundTag.CODEC.optionalfieldOf("tag").forGetter(ItemStack::getTag)),
-			CompoundTag.CODEC.optionalFieldOf("ForgeCaps").forGetter(ItemStack::serializeCaps)
-		.apply(t, (id,cnt,tag,caps)->{
-			ItemStack out=new ItemStack(id,cnt,caps.orElse(null));
+			CompoundTag.CODEC.optionalFieldOf("tag").forGetter(i->Optional.ofNullable(i.getTag())))/*,
+			CompoundTag.CODEC.optionalFieldOf("ForgeCaps").forGetter(ItemStack::serializeCaps)*/
+		.apply(t, (id,cnt,tag)->{
+			ItemStack out=new ItemStack(id,cnt);
 			tag.ifPresent(n->out.setTag(n));
 			return out;
 		}));

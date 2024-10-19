@@ -19,14 +19,18 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
-import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
+import com.teammoeg.frostedheart.FHBaseContainer;
+import com.teammoeg.frostedheart.FHContainer;
+
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-public class SaunaContainer extends IEBaseContainer<SaunaTileEntity> {
+public class SaunaContainer extends FHBaseContainer<SaunaTileEntity> {
+
     public SaunaContainer(int id, Inventory inventoryPlayer, SaunaTileEntity tile) {
-        super(tile, id);
+        super(FHContainer.SAUNA.get(), tile, id, 1);
+  
         // medicine slot
         addSlot(new Slot(this.inv, 0, 98, 26) {
             @Override
@@ -47,8 +51,10 @@ public class SaunaContainer extends IEBaseContainer<SaunaTileEntity> {
         // hotbar
         for (int i = 0; i < 9; i++)
             addSlot(new Slot(inventoryPlayer, i, 8 + i * 18, 142));
-
-        this.slotCount = 1;
-        this.tile = tile;
     }
+
+	@Override
+	public boolean quickMoveIn(ItemStack slotStack) {
+		return this.moveItemStackTo(slotStack, 0,1, false);
+	}
 }

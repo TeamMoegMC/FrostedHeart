@@ -26,25 +26,16 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import dev.ftb.mods.ftbteams.property.IntProperty;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.state.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
 import net.minecraft.core.Direction;
-import net.minecraft.util.Hand;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorldReader;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -62,7 +53,7 @@ public class FountainNozzleBlock extends FHBaseBlock {
     }
 
     @Override
-    public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, Random random) {
+    public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, RandomSource random) {
         super.animateTick(stateIn, worldIn, pos, random);
         final int height = stateIn.getValue(HEIGHT);
         if (height > 0) {
@@ -120,7 +111,7 @@ public class FountainNozzleBlock extends FHBaseBlock {
     }
 
     @Override
-    public void tick(BlockState state, ServerLevel world, BlockPos pos, Random rand) {
+    public void tick(BlockState state, ServerLevel world, BlockPos pos, RandomSource rand) {
         // Check if the nozzle is still valid
         int height = state.getValue(HEIGHT);
         if (height > 0) {
@@ -143,7 +134,7 @@ public class FountainNozzleBlock extends FHBaseBlock {
             BlockPos base = pos.below(height);
             BlockPos target = base.relative(direction, height);
 
-            if (world.getBlockState(target).isAir(world, target)) {
+            if (world.getBlockState(target).isAir()) {
                 world.setBlockAndUpdate(target, Blocks.WATER.defaultBlockState());
             }
         }

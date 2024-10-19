@@ -101,5 +101,7 @@ public class TexturedUV extends UV {
 		// TODO Auto-generated method stub
 		super.blit(s, texture, targetX, targetY, loc);
 	}
-
+    public static TexturedUV deltaWH(ResourceLocation texture,int x1, int y1, int x2, int y2,int tw,int th) {
+        return new TexturedUV(texture,UV.deltaWH(x1, y1, x2, y2, tw, th));
+    }
 }

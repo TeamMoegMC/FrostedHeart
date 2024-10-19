@@ -51,7 +51,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.gossip.GossipType;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.common.util.Tag;
 
 public class FHVillagerData implements MenuProvider {
     public ResourceLocation policytype;
@@ -94,7 +93,7 @@ public class FHVillagerData implements MenuProvider {
             flags.put(ks, nbt.getInt(ks));
         setTradelevel(data.getInt("level"));
         totaltraded = data.getLong("total");
-        ListTag rel = data.getList("relations", NBT.TAG_COMPOUND);
+        ListTag rel = data.getList("relations", Tag.TAG_COMPOUND);
         relations.clear();
         for (Tag u : rel) {
             CompoundTag item = (CompoundTag) u;
@@ -234,7 +233,7 @@ public class FHVillagerData implements MenuProvider {
     }
 
     public InteractionResult trade(Player pe) {
-        return InteractionResult.sidedSuccess(pe.level.isClientSide);
+        return InteractionResult.sidedSuccess(pe.level().isClientSide);
     }
 
     public void update(ServerLevel w, Player trigger) {

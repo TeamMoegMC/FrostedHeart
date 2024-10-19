@@ -21,22 +21,25 @@ package com.teammoeg.frostedheart.content.foods.dailykitchen;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.BaseComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
+import net.minecraftforge.registries.ForgeRegistries;
 
 class WantedFoodsGenerator {
     private final Random random;
     private final Set<Item> foodsEaten;
-    private BaseComponent wantedFoodsText = TranslateUtils.translateMessage("wanted_foods");
+    private MutableComponent wantedFoodsText = TranslateUtils.translateMessage("wanted_foods");
     private final int eatenFoodsAmount;
     private final int maxGenerateAmount;
     private HashSet<Item> wantedFoods = new HashSet<>();
@@ -48,14 +51,10 @@ class WantedFoodsGenerator {
         maxGenerateAmount = Math.min(eatenFoodsAmount / 10, 3);
 
     }
-
+    static TagKey<Item> raw_food=ItemTags.create(FHMain.rl("raw_food"));
+    static TagKey<Item> bad_food=ItemTags.create(FHMain.rl("bad_food"));
     private static boolean isNotBadFood(Item food) {
-        Set<ResourceLocation> tags = food.getTags();
-        for (ResourceLocation tag : tags) {
-            String path = tag.getPath();
-            if (path.equals("raw_food") || path.equals("bad_food")) return false;
-        }
-        return true;
+        return ForgeRegistries.ITEMS.getDelegate(food).map(t->t.is(raw_food)||t.is(bad_food)).orElse(false);
     }
 
     public HashSet<Item> generate() {
@@ -81,7 +80,7 @@ class WantedFoodsGenerator {
         return wantedFoods;
     }
 
-    public BaseComponent getWantedFoodsText() {
+    public MutableComponent getWantedFoodsText() {
         return wantedFoodsText;
     }
 }

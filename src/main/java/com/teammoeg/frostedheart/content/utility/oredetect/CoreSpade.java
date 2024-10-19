@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -39,12 +40,12 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.FakePlayer;
 import se.mickelus.tetra.properties.IToolProvider;
@@ -52,12 +53,11 @@ import se.mickelus.tetra.properties.IToolProvider;
 import net.minecraft.world.item.Item.Properties;
 
 public class CoreSpade extends FHLeveledTool {
-    public static ResourceLocation otag = new ResourceLocation("forge:ores");
-    public static ResourceLocation stag = new ResourceLocation("forge:stone");
-
+    public static TagKey<Block> otag = BlockTags.create(new ResourceLocation("forge:ores"));
+    public static TagKey<Block> stag = BlockTags.create(new ResourceLocation("forge:stone"));
     public static InteractionResult doProspect(Player player, Level world, BlockPos blockpos, ItemStack is, InteractionHand h) {
         if (player != null && (!(player instanceof FakePlayer))) {// fake players does not deserve XD
-            if (!world.isClientSide && world.getBlockState(blockpos).getBlock().getTags().contains(otag)) {// early exit 'cause ore found
+            if (!world.isClientSide && world.getBlockState(blockpos).is(otag)) {// early exit 'cause ore found
                 player.displayClientMessage(
                         TranslateUtils.translate(world.getBlockState(blockpos).getBlock().getDescriptionId())
                                 .withStyle(ChatFormatting.GOLD),
@@ -74,14 +74,14 @@ public class CoreSpade extends FHLeveledTool {
                 // This is predictable, but not any big problem. Cheaters can use x-ray or other
                 // things rather than hacking in this.
 
-                Predicate<Set<ResourceLocation>> tagdet;
+                Predicate<BlockState> tagdet;
                 float corr = getCorrectness(is);
                 if (rnd.nextInt((int) (20 * corr)) != 0) {
-                    tagdet = ts -> (ts.contains(otag)) || ts.contains(stag);
+                    tagdet = ts -> (ts.is(otag)) || ts.is(stag);
                 } else
-                    tagdet = ts -> ts.contains(stag);
+                    tagdet = ts -> ts.is(stag);
                 BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos(x, y, z);
-                Block ore;
+                BlockState ore;
                 HashMap<String, Integer> founded = new HashMap<>();
                 final int hrange = getHorizonalRange(is);
                 int vrange = getVerticalRange(is);
@@ -94,9 +94,9 @@ public class CoreSpade extends FHLeveledTool {
                             int BlockX = x + x2;
                             int BlockY = y + y2;
                             int BlockZ = z + z2;
-                            ore = world.getBlockState(mutable.set(BlockX, BlockY, BlockZ)).getBlock();
-                            if (!RegistryUtils.getRegistryName(ore).getNamespace().equals("minecraft") && tagdet.test(ore.getTags())) {
-                                founded.merge(ore.getDescriptionId(), 1, Integer::sum);
+                            ore = world.getBlockState(mutable.set(BlockX, BlockY, BlockZ));
+                            if (!RegistryUtils.getRegistryName(ore.getBlock()).getNamespace().equals("minecraft") && tagdet.test(ore)) {
+                                founded.merge(ore.getBlock().getDescriptionId(), 1, Integer::sum);
                             }
                         }
 

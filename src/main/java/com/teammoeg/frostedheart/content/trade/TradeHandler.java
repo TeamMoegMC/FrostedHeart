@@ -20,13 +20,13 @@
 package com.teammoeg.frostedheart.content.trade;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.NetworkHooks;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraftforge.fml.network.NetworkHooks;
 
 public class TradeHandler {
     public static void openTradeScreen(ServerPlayer spe, FHVillagerData vd) {
-        vd.update(spe.getLevel(), spe);
-        NetworkHooks.openGui(spe, vd, e -> {
+        vd.update(spe.serverLevel(), spe);
+        NetworkHooks.openScreen(spe, vd, e -> {
             e.writeVarInt(vd.parent.getId());
             CompoundTag tag = new CompoundTag();
             e.writeNbt(vd.serializeForSend(tag));

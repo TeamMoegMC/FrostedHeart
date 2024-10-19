@@ -29,7 +29,6 @@ import javax.annotation.Nonnull;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.recipes.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.recipes.DietValueRecipe;
 import com.teammoeg.frostedheart.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
 
@@ -49,6 +48,7 @@ import net.minecraftforge.event.TagsUpdatedEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.server.ServerLifecycleHooks;
 
 public class FHRecipeReloadListener implements ResourceManagerReloadListener {
@@ -70,10 +70,10 @@ public class FHRecipeReloadListener implements ResourceManagerReloadListener {
                 .filter(iRecipe -> iRecipe.getClass() == CampfireDefrostRecipe.class)
                 .map(e -> (CampfireDefrostRecipe) e)
                 .collect(Collectors.toMap(AbstractCookingRecipe::getId, recipe -> recipe));
-        DietValueRecipe.recipeList = filterRecipes(recipes,DietValueRecipe.class,DietValueRecipe.TYPE).values().stream()
+        /*DietValueRecipe.recipeList = filterRecipes(recipes,DietValueRecipe.class,DietValueRecipe.TYPE).values().stream()
                 .filter(iRecipe -> iRecipe.getClass() == DietValueRecipe.class)
                 .map(e -> e)
-                .collect(Collectors.toMap(recipe -> recipe.item, recipe -> recipe));
+                .collect(Collectors.toMap(recipe -> recipe.item, recipe -> recipe));*/
        // InspireRecipe.recipes = filterRecipes(recipes, InspireRecipe.class, InspireRecipe.TYPE).values().stream().collect(Collectors.toList());
         //ResearchPaperRecipe.recipes = filterRecipes(recipes, ResearchPaperRecipe.class, ResearchPaperRecipe.TYPE).values().stream().collect(Collectors.toList());
        // SaunaRecipe.recipeList = filterRecipes(recipes, SaunaRecipe.class, SaunaRecipe.TYPE);
@@ -95,9 +95,9 @@ public class FHRecipeReloadListener implements ResourceManagerReloadListener {
                 .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
     }
 
-    static <R extends Recipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<Recipe<?>> recipes, Class<R> recipeClass, RecipeType<R> recipeType) {
+    static <R extends Recipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<Recipe<?>> recipes, Class<R> recipeClass, RegistryObject<RecipeType<R>> recipeType) {
         return recipes.stream()
-                .filter(iRecipe -> iRecipe.getType() == recipeType)
+                .filter(iRecipe -> iRecipe.getType() == recipeType.get())
                 .map(recipeClass::cast)
                 .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
     }

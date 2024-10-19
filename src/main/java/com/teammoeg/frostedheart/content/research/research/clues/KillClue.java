@@ -28,15 +28,15 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.core.Registry;
-import net.minecraft.network.chat.Component;
 
 public class KillClue extends ListenerClue {
 	public static final Codec<KillClue> CODEC=RecordCodecBuilder.create(t->t.group(
 		ListenerClue.BASE_CODEC.forGetter(o->o.getData()),
-		CodecUtil.registryCodec(()->Registry.ENTITY_TYPE).fieldOf("entity").forGetter(o->o.type)
+		CodecUtil.registryCodec(()->BuiltInRegistries.ENTITY_TYPE).fieldOf("entity").forGetter(o->o.type)
 		).apply(t,KillClue::new));
     EntityType<?> type;
 

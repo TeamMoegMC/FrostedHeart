@@ -32,18 +32,18 @@ import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.core.Registry;
-import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Block;
 
 /**
  * Allows the research team to use certain machines
  */
 public class EffectUse extends Effect {
 	public static final Codec<EffectUse> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
-	Codec.list(CodecUtil.registryCodec(()->Registry.BLOCK)).fieldOf("blocks").forGetter(o->o.blocks))
+	Codec.list(CodecUtil.registryCodec(()->BuiltInRegistries.BLOCK)).fieldOf("blocks").forGetter(o->o.blocks))
 	.apply(t,EffectUse::new));
     List<Block> blocks;
 

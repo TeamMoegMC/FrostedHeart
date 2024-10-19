@@ -27,6 +27,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 
@@ -45,7 +46,7 @@ public class CuttingRecipe implements Recipe<Container> {
     }
 
     @Override
-    public ItemStack assemble(Container inv) {
+    public ItemStack assemble(Container inv, RegistryAccess pRegistryAccess) {
         return ItemStack.EMPTY;
     }
 
@@ -55,7 +56,7 @@ public class CuttingRecipe implements Recipe<Container> {
     }
 
     @Override
-    public ItemStack getResultItem() {
+    public ItemStack getResultItem(RegistryAccess pRegistryAccess) {
         return out;
     }
 
@@ -73,5 +74,6 @@ public class CuttingRecipe implements Recipe<Container> {
     public boolean matches(Container inv, Level worldIn) {
         return false;
     }
+
 
 }

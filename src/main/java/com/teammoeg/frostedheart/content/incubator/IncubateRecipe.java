@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -33,16 +34,20 @@ import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
+import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.registries.RegistryObject;
 
@@ -60,11 +65,11 @@ public class IncubateRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public IncubateRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+        public IncubateRecipe readFromJson(ResourceLocation recipeId, JsonObject json, IContext context) {
             IngredientWithSize input = IngredientWithSize.deserialize(GsonHelper.getAsJsonObject(json, "input"));
             ItemStack output = ItemStack.EMPTY;
             if (json.has("output"))
-                output = readOutput(json.get("output"));
+                output = readOutput(json.get("output")).get();
             FluidStack output_fluid = FluidStack.EMPTY;
             if (json.has("fluid"))
                 output_fluid = ApiUtils.jsonDeserializeFluidStack(json.get("fluid").getAsJsonObject());
@@ -96,8 +101,8 @@ public class IncubateRecipe extends IESerializableRecipe {
             buffer.writeVarInt(recipe.time);
         }
     }
-    public static RegistryObject<RecipeType<Recipe<?>>> TYPE;
-
+    public static RegistryObject<RecipeType<IncubateRecipe>> TYPE;
+    public static Lazy<TypeWithClass<IncubateRecipe>> IEType=Lazy.of(()->new TypeWithClass<>(TYPE, IncubateRecipe.class));
     public static RegistryObject<Serializer> SERIALIZER;
     public IngredientWithSize input;
     public IngredientWithSize catalyst;
@@ -114,7 +119,7 @@ public class IncubateRecipe extends IESerializableRecipe {
 
 
     public IncubateRecipe() {
-        super(ItemStack.EMPTY, TYPE, IncubatorTileEntity.food);
+        super(Lazy.of(()->ItemStack.EMPTY), IEType.get(), IncubatorTileEntity.food);
         isFood = true;
         List<ItemLike> items = new ArrayList<>();
         for (Item i : RegistryUtils.getItems()) {
@@ -134,7 +139,7 @@ public class IncubateRecipe extends IESerializableRecipe {
     public IncubateRecipe(ResourceLocation id, IngredientWithSize input,
                           IngredientWithSize catalyst, ItemStack output, FluidStack output_fluid, boolean consume_catalyst, int water,
                           int time) {
-        super(output, TYPE, id);
+        super(Lazy.of(()->output), IEType.get(), id);
         this.input = input;
         this.catalyst = catalyst;
         this.output = output;
@@ -151,7 +156,7 @@ public class IncubateRecipe extends IESerializableRecipe {
     }
 
     @Override
-    public ItemStack getResultItem() {
+    public ItemStack getResultItem(RegistryAccess ra) {
         return this.output;
     }
 }

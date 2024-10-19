@@ -27,9 +27,15 @@ import net.minecraft.world.item.ItemStack;
 
 @Mixin(Gui.class)
 public interface IngameGuiAccess {
-    @Accessor("highlightingItemStack")
+    @Accessor("lastToolHighlight")
     ItemStack getHighlightingItemStack();
 
-    @Accessor("remainingHighlightTicks")
+    @Accessor("toolHighlightTimer")
     int getRemainingHighlightTicks();
+
+    @Accessor("screenWidth")
+    int getScreenWidth();
+
+    @Accessor("screenHeight")
+    int getScreenHeight();
 }

@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.nbt.CompoundTag;
@@ -35,7 +35,7 @@ public class ResearchDataAPI {
 
     public static TeamResearchData getData(Player id) {
         if (id instanceof ServerPlayer)
-            return FHTeamDataManager.INSTANCE.get(FTBTeamsAPI.getPlayerTeam((ServerPlayer) id)).getData(SpecialDataTypes.RESEARCH_DATA);
+            return FHTeamDataManager.INSTANCE.get(FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer) id).get()).getData(SpecialDataTypes.RESEARCH_DATA);
        // return TeamResearchData.getClientInstance();
         return ClientResearchDataAPI.getData();
     }
@@ -97,7 +97,7 @@ public class ResearchDataAPI {
     
     public static boolean isResearchComplete(Player id, String research) {
         if (id instanceof ServerPlayer)
-            return FHTeamDataManager.INSTANCE.get(FTBTeamsAPI.getPlayerTeam((ServerPlayer) id)).getData(SpecialDataTypes.RESEARCH_DATA).getData(research).isCompleted();
+            return FHTeamDataManager.INSTANCE.get(FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer) id).get()).getData(SpecialDataTypes.RESEARCH_DATA).getData(research).isCompleted();
         return ClientResearchDataAPI.getData().getData(research).isCompleted();
     }
 

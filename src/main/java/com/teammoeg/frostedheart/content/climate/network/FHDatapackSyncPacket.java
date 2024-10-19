@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.util.io.IdDataPair;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 public class FHDatapackSyncPacket implements FHMessage {
     List<IdDataPair<?>> entries;

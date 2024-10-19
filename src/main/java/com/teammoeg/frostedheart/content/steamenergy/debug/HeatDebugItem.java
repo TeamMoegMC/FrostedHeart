@@ -46,13 +46,9 @@ import net.minecraft.world.item.Item.Properties;
 
 public class HeatDebugItem extends Item {
     public HeatDebugItem() {
-        super(new Properties().stacksTo(1).setNoRepair().tab(FHMain.itemGroup));
+        super(new Properties().stacksTo(1).setNoRepair());
     }
 
-    //Dont add to creative tag
-    @Override
-    public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> items) {
-    }
 
     public UseAnim getUseAnimation(ItemStack stack) {
         return UseAnim.NONE;
@@ -74,9 +70,9 @@ public class HeatDebugItem extends Item {
 	            if (te instanceof EnergyNetworkProvider) {
 	            	if(((EnergyNetworkProvider) te).getNetwork()!=null)
 	            		HeatHandler.openHeatScreen((ServerPlayer) playerIn, ((EnergyNetworkProvider) te).getNetwork());
-	            	else playerIn.sendMessage(TranslateUtils.str("EnergyNetwork " + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUUID());
+	            	else playerIn.sendSystemMessage(TranslateUtils.str("EnergyNetwork " + ((EnergyNetworkProvider) te).getNetwork()));
 	            }else if(te!=null) {
-	            	playerIn.sendMessage(TranslateUtils.str("EnergyEndpoint "+te.getCapability(FHCapabilities.HEAT_EP.capability(), raytraceresult.getDirection()).orElse(null)), playerIn.getUUID());
+	            	playerIn.sendSystemMessage(TranslateUtils.str("EnergyEndpoint "+te.getCapability(FHCapabilities.HEAT_EP.capability(), raytraceresult.getDirection()).orElse(null)));
 	            }
             }
             return InteractionResultHolder.success(itemstack);

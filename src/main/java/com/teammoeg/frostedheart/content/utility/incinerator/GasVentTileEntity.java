@@ -20,26 +20,28 @@
 package com.teammoeg.frostedheart.content.utility.incinerator;
 
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
+import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
+import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
-import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState, TickableBlockEntity {
-    FluidTank input = new FluidTank(10000, s -> s.getFluid().getAttributes().isGaseous());
+public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState, FHTickableBlockEntity {
+    FluidTank input = new FluidTank(10000, s -> s.getFluid().getFluidType().isLighterThanAir());
     private LazyOptional<IFluidHandler> holder = LazyOptional.empty();
 
-    public GasVentTileEntity() {
-        super(FHTileTypes.GAS_VENT.get());
+    public GasVentTileEntity(BlockPos bp,BlockState bs) {
+        super(FHTileTypes.GAS_VENT.get(),bp,bs);
     }
 
     @Override

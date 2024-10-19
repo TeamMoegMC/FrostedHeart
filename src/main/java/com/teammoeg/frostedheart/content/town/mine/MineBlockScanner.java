@@ -1,18 +1,17 @@
 package com.teammoeg.frostedheart.content.town.mine;
 
+import java.util.HashSet;
+import java.util.function.Consumer;
+
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.NetherVines;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.math.ColumnPos;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.common.Tags;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.Consumer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.NetherVines;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.Tags;
 
 public class MineBlockScanner extends ConfinedSpaceScanner {
     private final int startX;
@@ -78,7 +77,7 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
                 validStone++;
                 occupiedArea.add(toColumnPos(pos));
             }
-            light += world.getBlockState(pos).getLightValue(world, pos);
+            light += world.getBlockState(pos).getLightEmission(world, pos);
         }, PREDICATE_FALSE);
         if(validStone <= 0){
             this.isValid = false;

@@ -50,6 +50,7 @@ import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class ResearchEditorDialog extends BaseEditDialog {
     public static final Editor<Collection<Research>> RESEARCH_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, SelectDialog.EDITOR_RESEARCH, e -> e.getName().getString(), Research::getIcon, c).open();
@@ -87,7 +88,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
     public void addWidgets() {
         add(EditUtils.getTitle(this, "Edit/New Research"));
         add(id);
-        add(new SimpleTextButton(this, TranslateUtils.str("Reset id"), Icon.EMPTY) {
+        add(new SimpleTextButton(this, TranslateUtils.str("Reset id"), Icon.empty()) {
             @Override
             public void onClicked(MouseButton arg0) {
                 id.setText(r.getId());
@@ -124,7 +125,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
             r.getClues().addAll(s);
             r.doIndex();
         }));
-        add(new SimpleTextButton(this, TranslateUtils.str("Remove"), Icon.EMPTY) {
+        add(new SimpleTextButton(this, TranslateUtils.str("Remove"), Icon.empty()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -142,7 +143,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         super.draw(matrixStack, theme, x, y, w, h);
         Research r = FHResearch.researches.getByName(id.getText());
         if (r != null && r != this.r)

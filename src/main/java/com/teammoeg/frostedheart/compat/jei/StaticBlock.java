@@ -19,11 +19,14 @@
 
 package com.teammoeg.frostedheart.compat.jei;
 
+import org.joml.Quaternionf;
+
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.compat.jei.category.animations.AnimatedKinetics;
 
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
-import com.mojang.math.Vector3f;
 
 //borrowed from create
 public class StaticBlock extends AnimatedKinetics {
@@ -34,13 +37,13 @@ public class StaticBlock extends AnimatedKinetics {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, int xOffset, int yOffset) {
-        matrixStack.pushPose();
-        matrixStack.translate(xOffset, yOffset, 0);
-        matrixStack.translate(0, 0, 200);
-        matrixStack.translate(2, 22, 0);
-        matrixStack.mulPose(Vector3f.XP.rotationDegrees(-15.5f));
-        matrixStack.mulPose(Vector3f.YP.rotationDegrees(22.5f + 90));
+    public void draw(GuiGraphics matrixStack, int xOffset, int yOffset) {
+        matrixStack.pose().pushPose();
+        matrixStack.pose().translate(xOffset, yOffset, 0);
+        matrixStack.pose().translate(0, 0, 200);
+        matrixStack.pose().translate(2, 22, 0);
+        matrixStack.pose().mulPose(new Quaternionf().rotationX(-15.5f/180*Mth.PI));
+        matrixStack.pose().mulPose(new Quaternionf().rotationY((22.5f + 90)/180*Mth.PI));
         int scale = 30;
 
         blockElement(bs)
@@ -48,7 +51,7 @@ public class StaticBlock extends AnimatedKinetics {
                 .scale(scale)
                 .render(matrixStack);
 
-        matrixStack.popPose();
+        matrixStack.pose().popPose();
     }
 
 }

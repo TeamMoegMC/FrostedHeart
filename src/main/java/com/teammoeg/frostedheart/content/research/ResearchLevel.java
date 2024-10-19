@@ -22,9 +22,8 @@ package com.teammoeg.frostedheart.content.research;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.TranslatableComponent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 public enum ResearchLevel {
     DRAWING_DESK("drawing_desk"),
@@ -34,7 +33,7 @@ public enum ResearchLevel {
     COMPUTING_MATRIX("computing_matrix");
 
     final ResourceLocation icon;
-    final TranslatableComponent name;
+    final MutableComponent name;
 
     ResearchLevel(String levelName) {
         icon = FHMain.rl("textures/gui/research/level/" + levelName);
@@ -45,7 +44,7 @@ public enum ResearchLevel {
         return icon;
     }
 
-    public TranslatableComponent getName() {
+    public MutableComponent getName() {
         return name;
     }
 }

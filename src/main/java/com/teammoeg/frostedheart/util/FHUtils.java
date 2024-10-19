@@ -73,6 +73,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.registries.RegistryObject;
 
 public class FHUtils {
 
@@ -329,14 +330,14 @@ public class FHUtils {
 	    stack.setDamageValue((int) (stack.getMaxDamage() - base - Math.random() * mult));
 	    return stack;
 	}
-	public static <R extends Recipe<Container>> List<R> filterRecipes(@Nullable RecipeManager recipeManager, RecipeType<R> recipeType) {
+	public static <R extends Recipe<Container>> List<R> filterRecipes(@Nullable RecipeManager recipeManager, RegistryObject<RecipeType<R>> recipeType) {
         if(recipeManager==null) {
         	if(ClientUtils.mc().level!=null)
         		recipeManager=ClientUtils.mc().level.getRecipeManager();
         }
         if(recipeManager==null)
         	return ImmutableList.of();
-		return recipeManager.getAllRecipesFor(recipeType);
+		return recipeManager.getAllRecipesFor(recipeType.get());
     }
 	public static ItemStack ArmorLiningNBT(ItemStack stack) {
 	    stack.getOrCreateTag().putString("inner_cover", "frostedheart:straw_lining");

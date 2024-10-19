@@ -44,14 +44,6 @@ public class FrostbiteRenderer<T extends LivingEntity, M extends HumanoidModel<T
     @Override
     @ParametersAreNonnullByDefault
     public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, T living, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-        ItemStack heaterVest = new ItemStack(FHItems.heater_vest.get());
-        HumanoidModel<T> model = FHItems.heater_vest.get().getArmorModel(living, heaterVest, EquipmentSlot.CHEST, null);
-        if (model != null) {
-            model.setupAnim(living, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
-            RenderType type = model.renderType(
-                    new ResourceLocation(FHItems.heater_vest.get().getArmorTexture(heaterVest, living, EquipmentSlot.CHEST, null))
-            );
-            model.renderToBuffer(matrixStackIn, bufferIn.getBuffer(type), packedLightIn, OverlayTexture.NO_OVERLAY, 1F, 1F, 1F, 1F);
-        }
+
     }
 }

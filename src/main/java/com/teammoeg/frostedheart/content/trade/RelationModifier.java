@@ -21,8 +21,7 @@ package com.teammoeg.frostedheart.content.trade;
 
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import net.minecraft.network.chat.TranslatableComponent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import net.minecraft.network.chat.MutableComponent;
 
 public enum RelationModifier {
     KILLED_HISTORY("history_killed"),
@@ -41,7 +40,7 @@ public enum RelationModifier {
         this.tkey = tkey;
     }
 
-    public TranslatableComponent getDesc() {
+    public MutableComponent getDesc() {
         return TranslateUtils.translateGui("trade.relation." + tkey);
     }
 }

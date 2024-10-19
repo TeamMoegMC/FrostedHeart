@@ -37,6 +37,9 @@ public class TranslateUtils {
     }
 
     public static MutableComponent str(String s) {
+    	if(s==null||s.isEmpty()) {
+    		return Component.empty();
+    	}
         return MutableComponent.create(new LiteralContents(s));
     }
 
@@ -111,6 +114,14 @@ public class TranslateUtils {
 
     public static MutableComponent translateTooltip(String name, Object... args) {
         return translate("tooltip." + FHMain.MODID + "." + name, args);
+    }
+
+    public static MutableComponent translateTips(String name, Object... args) {
+        return translate("tips." + FHMain.MODID + "." + name, args);
+    }
+
+    public static MutableComponent translateWaypoint(String name, Object... args) {
+        return translate("Waypoint." + FHMain.MODID + "." + name, args);
     }
 
 	public static Component empty() {

@@ -23,6 +23,7 @@ import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.client.model.DynamicBlockModelReference;
 
 import blusunrize.immersiveengineering.api.IEProperties.IEObjState;
 import blusunrize.immersiveengineering.api.IEProperties.Model;
@@ -40,7 +41,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 
 public class T2GeneratorRenderer extends BlockEntityRenderer<T2GeneratorTileEntity> {
-    public static DynamicModel<Direction> FUEL;
+    public static DynamicBlockModelReference FUEL;
 
     public T2GeneratorRenderer(BlockEntityRenderDispatcher rendererDispatcherIn) {
         super(rendererDispatcherIn);

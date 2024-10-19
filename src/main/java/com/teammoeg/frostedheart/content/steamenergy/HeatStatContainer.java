@@ -23,14 +23,15 @@ import java.util.Collection;
 
 import com.teammoeg.frostedheart.FHContainer;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.thermopolium.data.recipes.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.network.PacketDistributor;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fml.network.PacketDistributor;
 
 public class HeatStatContainer extends AbstractContainerMenu {
     public static final int RELATION_TO_TRADE = -30;
@@ -66,4 +67,10 @@ public class HeatStatContainer extends AbstractContainerMenu {
     		FHNetwork.send(PacketDistributor.PLAYER.with(()->openedPlayer), epp);
     	}
     }
+
+	@Override
+	public ItemStack quickMoveStack(Player pPlayer, int pIndex) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

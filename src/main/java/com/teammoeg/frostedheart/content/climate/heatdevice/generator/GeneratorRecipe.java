@@ -23,8 +23,10 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.recipes.ResearchPaperRecipe;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.world.item.ItemStack;
@@ -35,6 +37,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
+import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.registries.RegistryObject;
 
 public class GeneratorRecipe extends IESerializableRecipe {
@@ -74,9 +77,10 @@ public class GeneratorRecipe extends IESerializableRecipe {
 			return super.fromJson(recipeId, serializedRecipe);
 		}
     }
-    public static RegistryObject<RecipeType<Recipe<?>>> TYPE;
+    public static RegistryObject<RecipeType<GeneratorRecipe>> TYPE;
 
     public static RegistryObject<IERecipeSerializer<GeneratorRecipe>> SERIALIZER;
+    public static Lazy<TypeWithClass<GeneratorRecipe>> IEType=Lazy.of(()->new TypeWithClass<>(TYPE, GeneratorRecipe.class));
     public final IngredientWithSize input;
 
     public final ItemStack output;
@@ -102,7 +106,7 @@ public class GeneratorRecipe extends IESerializableRecipe {
     }*/
 
     public GeneratorRecipe(ResourceLocation id, ItemStack output, IngredientWithSize input, int time) {
-        super(output, TYPE, id);
+        super(Lazy.of(()->output), IEType.get(), id);
         this.output = output;
         this.input = input;
         this.time = time;

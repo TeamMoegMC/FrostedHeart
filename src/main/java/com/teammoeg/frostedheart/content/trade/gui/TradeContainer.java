@@ -51,10 +51,10 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
+import net.minecraftforge.network.PacketDistributor;
 
 public class TradeContainer extends AbstractContainerMenu {
     public class DetectionSlot extends Slot {
@@ -273,10 +273,10 @@ public class TradeContainer extends AbstractContainerMenu {
                 pPlayer.drop(inv.getStackInSlot(j), false);
             }
         } else {
-            Inventory inventory = pPlayer.inventory;
+            Inventory inventory = pPlayer.getInventory();
             if (inventory.player instanceof ServerPlayer) {
                 for (int i = 0; i < inv.getSlots(); ++i) {
-                    inventory.placeItemBackInInventory(pPlayer.level, inv.getStackInSlot(i));
+                    inventory.placeItemBackInInventory(inv.getStackInSlot(i));
                 }
             }
         }

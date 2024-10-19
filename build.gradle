@@ -134,39 +134,71 @@ repositories {
         // location of the maven that hosts JEI files before January 2023
         name = "Progwml6's maven"
         url = "https://dvs1.progwml6.com/files/maven/"
+        content {
+            excludeGroup "curse.maven"
+            excludeGroup "net.minecraftforge"
+        }
     }
     maven {
         // location of the maven that hosts JEI files since January 2023
         name = "Jared's maven"
         url = "https://maven.blamejared.com/"
+        content {
+            excludeGroup "curse.maven"
+            excludeGroup "net.minecraftforge"
+        }
     }
     maven {
         // location of a maven mirror for JEI files, as a fallback
         name = "ModMaven"
         url = "https://modmaven.dev"
+        content {
+            excludeGroup "curse.maven"
+            excludeGroup "net.minecraftforge"
+        }
     }
     maven {
         //location of the maven for mixed mappings, create, registrate, and flywheel
         name = "tterrag maven"
         url = "https://maven.tterrag.com/"
+        content {
+            excludeGroup "curse.maven"
+            excludeGroup "net.minecraftforge"
+        }
     }
     // Needed for JEI
     maven {
         name = "latvian maven"
         url = "https://maven.latmod.com/"
+        content {
+            excludeGroup "curse.maven"
+            excludeGroup "net.minecraftforge"
+        }
     }
     // Needed for Curios API
     maven {
         name = "theillusivec4 maven"
         url = "https://maven.theillusivec4.top/"
+        content {
+            excludeGroup "curse.maven"
+            excludeGroup "net.minecraftforge"
+        }
     }
     maven {
         name = "architectury maven"
         url = "https://maven.architectury.dev/"
+        content {
+            excludeGroup "curse.maven"
+            excludeGroup "net.minecraftforge"
+        }
     }
     maven {
         name = "saps maven"
         url = "https://maven.saps.dev/minecraft"
+        content {
+            excludeGroup "curse.maven"
+            excludeGroup "net.minecraftforge"
+        }
     }
     maven {
         name = "TeamMoeg COS Maven"
@@ -181,10 +213,18 @@ repositories {
     maven {
         name = "ftbMavenReleases"
         url = "https://maven.ftb.dev/releases"
+        content {
+            excludeGroup "curse.maven"
+            excludeGroup "net.minecraftforge"
+        }
     }
     maven {
         name = "Curse Maven"
         url = "https://www.cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+            excludeGroup "net.minecraftforge"
+        }
     }
 }
 
@@ -203,7 +243,7 @@ dependencies {
     compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"))
     compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}"))
     // at runtime, use the full JEI jar for Forge
-    runtimeOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}"))
+    implementation(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}"))
 
     compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api")
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}")

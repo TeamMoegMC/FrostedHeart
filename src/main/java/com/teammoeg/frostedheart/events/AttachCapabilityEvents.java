@@ -59,6 +59,7 @@ public class AttachCapabilityEvents {
                 event.addCapability(new ResourceLocation(FHMain.MODID, "death_inventory"), FHCapabilities.DEATH_INV.provider());
                 event.addCapability(new ResourceLocation(FHMain.MODID, "scenario"       ), FHCapabilities.SCENARIO.provider());
                 event.addCapability(new ResourceLocation(FHMain.MODID, "wanted_food"    ), FHCapabilities.WANTED_FOOD.provider());
+                event.addCapability(new ResourceLocation(FHMain.MODID, "waypoints"      ), FHCapabilities.WAYPOINT.provider());
             }
         }
         //Common capabilities

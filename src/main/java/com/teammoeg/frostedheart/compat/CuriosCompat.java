@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
+
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestItem;
 

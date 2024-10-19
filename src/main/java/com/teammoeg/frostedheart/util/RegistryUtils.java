@@ -1,6 +1,9 @@
 package com.teammoeg.frostedheart.util;
 
 import java.util.Collection;
+import java.util.stream.Stream;
+
+import com.teammoeg.frostedheart.compat.jei.category.CuttingCategory;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -9,6 +12,7 @@ import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.effect.MobEffect;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
@@ -66,6 +70,9 @@ public class RegistryUtils {
 	}
 	public static Collection<Item> getItems() {
 		return ForgeRegistries.ITEMS.getValues();
+	}
+	public static Stream<Holder<Item>> getItemHolders() {
+		return ForgeRegistries.ITEMS.getValues().stream().flatMap(t->ForgeRegistries.ITEMS.getHolder(t).stream());
 	}
 	public static Enchantment getEnchantment(ResourceLocation enchID) {
 		return ForgeRegistries.ENCHANTMENTS.getValue(enchID);

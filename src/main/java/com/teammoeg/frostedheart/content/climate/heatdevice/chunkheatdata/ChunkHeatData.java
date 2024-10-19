@@ -199,7 +199,7 @@ public class ChunkHeatData{
         //if (data == null) {
         //System.out.println("no cache at"+pos);
         if (world instanceof LevelAccessor)
-            return ((LevelAccessor) world).getChunkSource().isEntityTickingChunk(pos) ? getCapability(world.getChunk(pos.getWorldPosition()))
+            return ((LevelAccessor) world).getChunkSource().hasChunk(pos.x, pos.z) ? getCapability(world.getChunk(pos.getWorldPosition()))
                     .resolve() : Optional.empty();
         return world.hasChunk(pos.x, pos.z) ? getCapability(world.getChunk(pos.getWorldPosition())).resolve() : Optional.empty();
         //}

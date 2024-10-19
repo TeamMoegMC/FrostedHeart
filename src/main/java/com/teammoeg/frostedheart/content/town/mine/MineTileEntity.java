@@ -12,6 +12,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongNBT;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,8 +25,8 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
     private double temperature;
     private double rating;
 
-    public MineTileEntity(){
-        super(FHTileTypes.MINE.get());
+    public MineTileEntity(BlockPos pos,BlockState state){
+        super(FHTileTypes.MINE.get(),pos,state);
     }
 
     public boolean isStructureValid(){

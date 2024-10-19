@@ -33,6 +33,8 @@ import com.teammoeg.frostedheart.world.civilization.orbit.spacecraft.SpacecraftF
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.world.level.levelgen.feature.configurations.BlockStateConfiguration;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
@@ -126,9 +128,9 @@ public class FHFeatures {
     public static final Feature<BlockStateConfiguration> FLOWER_COVERED_DEPOSIT_FEATURE = new FlowerCoveredDepositFeature(BlockStateConfiguration.CODEC);
 
     // Configured features, generate at CommonEvents#addOreGenFeatures
-    public static final ConfiguredFeature<?, ?> spacecraft_feature = Registry.register(BuiltinRegistries.CONFIGURED_FEATURE, "spacecraft", SPACECRAFT.configured(FeatureConfiguration.NONE));
-    public static final ConfiguredFeature<?, ?> clay_deposit = Registry.register(BuiltinRegistries.CONFIGURED_FEATURE, "clay_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.configured(new BlockStateConfiguration(FHFeatures.CLAY)).decorated(Features.Decorators.HEIGHTMAP_SQUARE).chance(4));
-    public static final ConfiguredFeature<?, ?> gravel_deposit = Registry.register(BuiltinRegistries.CONFIGURED_FEATURE, "gravel_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.configured(new BlockStateConfiguration(FHFeatures.GRAVEL)).decorated(Features.Decorators.HEIGHTMAP_SQUARE).chance(4));
+    public static final ConfiguredFeature<?, ?> spacecraft_feature = Registry.register(Registries.CONFIGURED_FEATURE, "spacecraft", SPACECRAFT.configured(FeatureConfiguration.NONE));
+    public static final ConfiguredFeature<?, ?> clay_deposit = Registry.register(Registries.CONFIGURED_FEATURE, "clay_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.configured(new BlockStateConfiguration(FHFeatures.CLAY)).decorated(Features.Decorators.HEIGHTMAP_SQUARE).chance(4));
+    public static final ConfiguredFeature<?, ?> gravel_deposit = Registry.register(Registries.CONFIGURED_FEATURE, "gravel_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.configured(new BlockStateConfiguration(FHFeatures.GRAVEL)).decorated(Features.Decorators.HEIGHTMAP_SQUARE).chance(4));
 
     public static ArrayList<ConfiguredFeature<?, ?>> FH_ORES = new ArrayList<>();
     public static ArrayList<ConfiguredFeature<?, ?>> FH_DISK = new ArrayList<>();

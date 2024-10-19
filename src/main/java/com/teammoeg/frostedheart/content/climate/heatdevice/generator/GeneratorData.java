@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import com.mojang.serialization.Codec;
@@ -32,19 +30,18 @@ import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.io.codec.DiscreteListCodec;
-
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemHandlerHelper;
+import net.minecraftforge.items.ItemStackHandler;
 
 public class GeneratorData implements SpecialData{
 	public static final int INPUT_SLOT = 0;
@@ -58,8 +55,8 @@ public class GeneratorData implements SpecialData{
     public Fluid fluid;
     public boolean isWorking, isOverdrive, isActive, isBroken;
     public float TLevel,RLevel;
-    protected NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
-
+    public final ItemStackHandler inventory = new ItemStackHandler(2);
+    public final LazyOptional<ItemStackHandler> invCap=LazyOptional.of(()->inventory);
     public ItemStack currentItem;
     private SpecialDataHolder<? extends SpecialDataHolder> teamData;
     public BlockPos actualPos = BlockPos.ZERO;
@@ -77,16 +74,16 @@ public class GeneratorData implements SpecialData{
 
     public boolean consumesFuel(Level w) {
         if (!currentItem.isEmpty()) {
-            if (!inventory.get(OUTPUT_SLOT).isEmpty() && ItemHandlerHelper.canItemStacksStack(inventory.get(OUTPUT_SLOT), currentItem))
-                inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
-            else if (inventory.get(OUTPUT_SLOT).isEmpty())
-                inventory.set(OUTPUT_SLOT, currentItem);
+            if (!inventory.getStackInSlot(OUTPUT_SLOT).isEmpty() && ItemHandlerHelper.canItemStacksStack(inventory.getStackInSlot(OUTPUT_SLOT), currentItem))
+                inventory.getStackInSlot(OUTPUT_SLOT).grow(currentItem.getCount());
+            else if (inventory.getStackInSlot(OUTPUT_SLOT).isEmpty())
+                inventory.setStackInSlot(OUTPUT_SLOT, currentItem);
             currentItem = ItemStack.EMPTY;
         }
         GeneratorRecipe recipe = getRecipe(w);
         if (recipe != null) {
             int count = recipe.input.getCount();
-            Utils.modifyInvStackSize(inventory, INPUT_SLOT, -count);
+            inventory.extractItem(INPUT_SLOT, count, false);
             currentItem = recipe.output.copy();
             currentItem.setCount(currentItem.getCount());
             double effi = getEfficiency();
@@ -105,23 +102,19 @@ public class GeneratorData implements SpecialData{
         return teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
     }
 
-    public NonNullList<ItemStack> getInventory() {
-        return inventory;
-    }
-
     public GeneratorRecipe getRecipe(Level w) {
-        if (inventory.get(INPUT_SLOT).isEmpty())
+        if (inventory.getStackInSlot(INPUT_SLOT).isEmpty())
             return null;
         GeneratorRecipe recipe=null;
         for(GeneratorRecipe recipet:FHUtils.filterRecipes(w.getRecipeManager(),GeneratorRecipe.TYPE))
-        	if(recipet.input.test(inventory.get(INPUT_SLOT))) {
+        	if(recipet.input.test(inventory.getStackInSlot(INPUT_SLOT))) {
         		recipe=recipet;
         		break;
         	}
         if (recipe == null)
             return null;
-        if (inventory.get(OUTPUT_SLOT).isEmpty() || (ItemStack.isSame(inventory.get(OUTPUT_SLOT), recipe.output)
-                && inventory.get(OUTPUT_SLOT).getCount() + recipe.output.getCount() <= getSlotLimit(OUTPUT_SLOT))) {
+        if (inventory.getStackInSlot(OUTPUT_SLOT).isEmpty() || (ItemStack.isSameItemSameTags(inventory.getStackInSlot(OUTPUT_SLOT), recipe.output)
+                && inventory.getStackInSlot(OUTPUT_SLOT).getCount() + recipe.output.getCount() <= getSlotLimit(OUTPUT_SLOT))) {
             return recipe;
         }
         return null;
@@ -245,16 +238,16 @@ public class GeneratorData implements SpecialData{
     	Codec.FLOAT.fieldOf("powerLevel").forGetter(o->o.power),
     	CodecUtil.defaultValue(Codec.INT,0).fieldOf("heated").forGetter(o->o.heated),
     	CodecUtil.defaultValue(Codec.INT,0).fieldOf("ranged").forGetter(o->o.ranged),
-    	CodecUtil.registryCodec(()->Registry.FLUID).optionalFieldOf("steamFluid").forGetter(o->Optional.ofNullable(o.fluid)),
+    	CodecUtil.registryCodec(()->BuiltInRegistries.FLUID).optionalFieldOf("steamFluid").forGetter(o->Optional.ofNullable(o.fluid)),
     	Codec.FLOAT.fieldOf("tempLevel").forGetter(o->o.TLevel),
     	Codec.FLOAT.fieldOf("rangeLevel").forGetter(o->o.RLevel),
-    	CodecUtil.path(new DiscreteListCodec<>(CodecUtil.ITEMSTACK_CODEC,ItemStack::isEmpty,()->ItemStack.EMPTY,"Slot"),"inv","Items").forGetter(o->o.inventory),
+    	CompoundTag.CODEC.fieldOf("items").forGetter(o->o.inventory.serializeNBT()),
     	CodecUtil.defaultValue(CodecUtil.ITEMSTACK_CODEC, ItemStack.EMPTY).fieldOf("res").forGetter(o->o.currentItem),
     	CodecUtil.BLOCKPOS.fieldOf("actualPos").forGetter(o->o.actualPos),
     	ResourceLocation.CODEC.optionalFieldOf("dim").forGetter(o->o.dimension==null?Optional.empty():Optional.of(o.dimension.location()))
     	).apply(t,GeneratorData::new));
     
-	public GeneratorData(int process, int processMax, int steamProcess, int overdriveLevel, boolean[] flags, float steamLevel, float power, int heated, int ranged, Optional<Fluid> fluid, float tLevel, float rLevel, List<ItemStack> inventory, ItemStack currentItem, BlockPos actualPos, Optional<ResourceLocation> dimension) {
+	public GeneratorData(int process, int processMax, int steamProcess, int overdriveLevel, boolean[] flags, float steamLevel, float power, int heated, int ranged, Optional<Fluid> fluid, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, BlockPos actualPos, Optional<ResourceLocation> dimension) {
 		super();
 		this.process = process;
 		this.processMax = processMax;
@@ -271,11 +264,10 @@ public class GeneratorData implements SpecialData{
 		this.isBroken = flags[3];
 		this.TLevel = tLevel;
 		this.RLevel = rLevel;
-		for(int i=0;i<inventory.size();i++)
-			this.inventory.set(i, inventory.get(i));
+		this.inventory.deserializeNBT(inventory);
 		this.currentItem = currentItem;
 		this.actualPos = actualPos;
-		this.dimension = dimension.map(t->ResourceKey.create(Registry.DIMENSION_REGISTRY, t)).orElse(null);
+		this.dimension = dimension.map(t->ResourceKey.create(Registries.DIMENSION, t)).orElse(null);
 	}
 	@Override
 	public void setHolder(SpecialDataHolder holder) {

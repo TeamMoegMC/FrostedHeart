@@ -32,8 +32,8 @@ public class bloodBlock extends FHBaseBlock {
     }
 
     public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-        Integer finalType = Math.abs(RANDOM.nextInt()) % 4;
-        Integer finalColor = Math.abs(RANDOM.nextInt()) % 2;
+        Integer finalType = Math.abs(worldIn.random.nextInt()) % 4;
+        Integer finalColor = Math.abs(worldIn.random.nextInt()) % 2;
         BlockState newState = this.stateDefinition.any().setValue(BLDT, finalType).setValue(BLDC, finalColor);
         worldIn.setBlockAndUpdate(pos, newState);
     }

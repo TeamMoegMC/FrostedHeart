@@ -80,7 +80,7 @@ public class LabeledSelection<R> extends LabeledPane<Button> {
         this.objs = aobjs;
         this.tostr = atostr;
         sel = objs.indexOf(val);
-        obj = new SimpleTextButton(this, TranslateUtils.str(tostr.apply(val)), Icon.EMPTY) {
+        obj = new SimpleTextButton(this, TranslateUtils.str(tostr.apply(val)), Icon.empty()) {
 
             @Override
             public void addMouseOverText(TooltipList list) {

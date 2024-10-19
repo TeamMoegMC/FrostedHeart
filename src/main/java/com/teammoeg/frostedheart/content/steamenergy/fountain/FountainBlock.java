@@ -20,12 +20,14 @@
 package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
 import java.util.Random;
+import java.util.function.Supplier;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -36,8 +38,9 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.util.Direction;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
@@ -46,7 +49,7 @@ import net.minecraft.world.level.Level;
 
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
-public class FountainBlock extends FHBaseBlock {
+public class FountainBlock extends FHBaseBlock implements FHEntityBlock<FountainTileEntity>{
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public FountainBlock(Properties blockProps) {
@@ -55,28 +58,18 @@ public class FountainBlock extends FHBaseBlock {
     }
 
     @Override
-    public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, Random rand) {
+    public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, RandomSource rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
         if (stateIn.getValue(LIT)) {
             ClientUtils.spawnSteamParticles(worldIn, pos);
         }
     }
 
-    @Nullable
-    @Override
-    public BlockEntity createTileEntity(@Nonnull BlockState state, @Nonnull BlockGetter world) {
-        return FHTileTypes.FOUNTAIN.get().create();
-    }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         builder.add(LIT);
-    }
-
-    @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
     }
 
     // Refill on click, (refilling reevaluates the height etc)
@@ -92,4 +85,9 @@ public class FountainBlock extends FHBaseBlock {
 
         return InteractionResult.SUCCESS;
     }
+
+	@Override
+	public Supplier<BlockEntityType<FountainTileEntity>> getBlock() {
+		return FHTileTypes.FOUNTAIN;
+	}
 }

@@ -10,6 +10,9 @@ import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.Rect;
 
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.util.FastColor;
+
+import com.jozufozu.flywheel.util.Color;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.NativeImage.Format;
 
@@ -78,7 +81,8 @@ public class PrerenderParams {
 		for (int y = 0; y < cur.getHeight(); y++) {
 			for (int x = 0; x < cur.getWidth(); x++) {
 				int pixel = pixels[y * cur.getWidth() + x];
-				texture.setPixelRGBA(x, y,NativeImage.combine((pixel >> 24) & 0xFF,pixel & 0xFF,(pixel >> 8) & 0xFF, (pixel >> 16) & 0xFF));
+				
+				texture.setPixelRGBA(x, y,FastColor.ABGR32.color((pixel >> 24) & 0xFF,pixel & 0xFF,(pixel >> 8) & 0xFF, (pixel >> 16) & 0xFF));
 			}
 		}
 		/*try {

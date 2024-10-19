@@ -29,6 +29,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
@@ -45,6 +46,8 @@ import com.teammoeg.frostedheart.util.client.AtlasUV;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.client.Point;
 import com.teammoeg.frostedheart.util.client.PointSet;
+import com.teammoeg.frostedheart.util.client.TextPosition;
+import com.teammoeg.frostedheart.util.client.TexturedUV;
 import com.teammoeg.frostedheart.util.client.UV;
 import com.teammoeg.frostedheart.util.client.UV.Transition;
 
@@ -117,14 +120,14 @@ public class FrostedHud {
         static final Point right_half_3 = new Point(/* 96, -64, */58, -64);
         static final Point forecast_window = new Point(-179, 0);
         static final Point forecast_frame = new Point(-81,0);
-        static final Point forecast_date = new Point(forecast_window.getX() + 60, 4);
-        static final Point forecast_temp = new Point(forecast_window.getX() + 7, 4);
+        static final TextPosition forecast_date = new TextPosition(forecast_window.getX() + 60, 4);
+        static final TextPosition forecast_temp = new TextPosition(forecast_window.getX() + 7, 4);
         static final Point forecast_unit = new Point(forecast_window.getX() + 34, 4);
         static final Point forecast_marker = new Point(-158, 0);
-        static final Point act_title = new Point(5, 70);
+        static final TextPosition act_title = new TextPosition(5, 70);
         static final Point act_split = new Point(5, 80);
         
-        static final Point act_subtitle = new Point(5, 83);
+        static final TextPosition act_subtitle = new TextPosition(5, 83);
         static final Point sign=new Point(1, 12);
         static final Point unit=new Point(11, 24);
         
@@ -134,67 +137,68 @@ public class FrostedHud {
         new PointSet(new Point(7 , 7 ), new Point(14, 7 ), new Point(24, 7 ), sign, unit)};
     }
     static final class HUDElements {
-        static final UV hotbar_slot = new UV(1, 1, 20, 20);
-        static final UV off_hand_slot = new UV(22, 1, 22, 22);
-        static final UV selected = new UV(108, 109, 22, 22);
-        static final UV exp_bar_frame = new UV(45, 1, 184, 7);
-        static final UV temperature_orb_frame = new UV(1, 24, 43, 43);
-        static final UV left_threequarters_frame = new UV(45, 9, 36, 38);
-        static final UV right_threequarters_frame = new UV(1, 113, 36, 38);
-        static final UV left_half_frame = new UV(82, 9, 23, 24 + 10);
-        static final UV right_half_frame = new UV(106, 9, 23, 24 + 10);
-        static final UV exp_bar = new UV(1, 70, 182, 5);
-        static final UV hypothermia_bar = new UV(1, 152, 182, 5);
-        static final UV hyperthermia_bar = new UV(1, 164, 182, 5);
-        static final UV dangerthermia_bar = new UV(1, 158, 182, 5);
-        static final UV icon_health_normal = new UV(130, 9, 12, 12);
-        static final UV icon_health_abnormal_white = new UV(130, 22, 12, 12);
-        static final UV icon_health_abnormal_green = new UV(130, 35, 12, 12);
-        static final UV icon_health_abnormal_black = new UV(130, 48, 12, 12);
-        static final UV icon_health_abnormal_cyan = new UV(195, 9, 12, 12);
-        static final UV icon_health_hardcore_normal = new UV(208, 9, 12, 12);
-        static final UV icon_health_hardcore_abnormal_white = new UV(208, 22, 12, 12);
-        static final UV icon_health_abnormal_orange = new UV(221, 9, 12, 12);
-        static final UV icon_health_hardcore_abnormal_orange = new UV(221, 22, 12, 12);
-        static final UV icon_health_hardcore_abnormal_green = new UV(208, 35, 12, 12);
-        static final UV icon_health_hardcore_abnormal_black = new UV(208, 48, 12, 12);
-        static final UV icon_health_hardcore_abnormal_cyan = new UV(195, 22, 12, 12);
-        static final UV icon_hunger_normal = new UV(143, 9, 12, 12);
-        static final UV icon_hunger_abnormal_white = new UV(143, 22, 12, 12);
-        static final UV icon_hunger_abnormal_green = new UV(143, 35, 12, 12);
-        static final UV icon_thirst_normal = new UV(156, 9, 12, 12);
-        static final UV icon_thirst_abnormal_white = new UV(156, 22, 12, 12);
-        static final UV icon_thirst_abnormal_green = new UV(156, 35, 12, 12);
-        static final UV icon_oxygen_normal = new UV(169, 9, 12, 12);
-        static final UV icon_oxygen_abnormal_white = new UV(169, 22, 12, 12);
-        static final UV icon_oxygen_abnormal_green = new UV(169, 35, 12, 12);
-        static final UV icon_defence_normal = new UV(182, 9, 12, 12);
-        static final UV icon_defence_abnormal_white = new UV(182, 22, 12, 12);
-        static final UV icon_horse_normal = new UV(143, 48, 12, 12);
-        static final UV icon_horse_abnormal_white = new UV(156, 48, 12, 12);
-        static final UV forecast_window = new UV(0, 0, 358, 16, 512, 256);
-        static final UV forecast_increase = new UV(0, 32, 12, 12, 512, 256);
-        static final UV forecast_decrease = new UV(0, 44, 12, 12, 512, 256);
-        static final UV[] hud_decimal_digits=new UV[10];
-        static final UV[] hud_integer_digits=new UV[10];
+        static final TexturedUV hotbar_slot = new TexturedUV(FrostedHud.HUD_ELEMENTS,1, 1, 20, 20);
+        static final TexturedUV off_hand_slot = new TexturedUV(FrostedHud.HUD_ELEMENTS,22, 1, 22, 22);
+        static final TexturedUV selected = new TexturedUV(FrostedHud.HUD_ELEMENTS,108, 109, 22, 22);
+        static final TexturedUV exp_bar_frame = new TexturedUV(FrostedHud.HUD_ELEMENTS,45, 1, 184, 7);
+        static final TexturedUV temperature_orb_frame = new TexturedUV(FrostedHud.HUD_ELEMENTS,1, 24, 43, 43);
+        static final TexturedUV left_threequarters_frame = new TexturedUV(FrostedHud.HUD_ELEMENTS,45, 9, 36, 38);
+        static final TexturedUV right_threequarters_frame = new TexturedUV(FrostedHud.HUD_ELEMENTS,1, 113, 36, 38);
+        static final TexturedUV left_half_frame = new TexturedUV(FrostedHud.HUD_ELEMENTS,82, 9, 23, 24 + 10);
+        static final TexturedUV right_half_frame = new TexturedUV(FrostedHud.HUD_ELEMENTS,106, 9, 23, 24 + 10);
+        static final TexturedUV exp_bar = new TexturedUV(FrostedHud.HUD_ELEMENTS,1, 70, 182, 5);
+        static final TexturedUV hypothermia_bar = new TexturedUV(FrostedHud.HUD_ELEMENTS,1, 152, 182, 5);
+        static final TexturedUV hyperthermia_bar = new TexturedUV(FrostedHud.HUD_ELEMENTS,1, 164, 182, 5);
+        static final TexturedUV dangerthermia_bar = new TexturedUV(FrostedHud.HUD_ELEMENTS,1, 158, 182, 5);
+        static final TexturedUV icon_health_normal = new TexturedUV(FrostedHud.HUD_ELEMENTS,130, 9, 12, 12);
+        static final TexturedUV icon_health_abnormal_white = new TexturedUV(FrostedHud.HUD_ELEMENTS,130, 22, 12, 12);
+        static final TexturedUV icon_health_abnormal_green = new TexturedUV(FrostedHud.HUD_ELEMENTS,130, 35, 12, 12);
+        static final TexturedUV icon_health_abnormal_black = new TexturedUV(FrostedHud.HUD_ELEMENTS,130, 48, 12, 12);
+        static final TexturedUV icon_health_abnormal_cyan = new TexturedUV(FrostedHud.HUD_ELEMENTS,195, 9, 12, 12);
+        static final TexturedUV icon_health_hardcore_normal = new TexturedUV(FrostedHud.HUD_ELEMENTS,208, 9, 12, 12);
+        static final TexturedUV icon_health_hardcore_abnormal_white = new TexturedUV(FrostedHud.HUD_ELEMENTS,208, 22, 12, 12);
+        static final TexturedUV icon_health_abnormal_orange = new TexturedUV(FrostedHud.HUD_ELEMENTS,221, 9, 12, 12);
+        static final TexturedUV icon_health_hardcore_abnormal_orange = new TexturedUV(FrostedHud.HUD_ELEMENTS,221, 22, 12, 12);
+        static final TexturedUV icon_health_hardcore_abnormal_green = new TexturedUV(FrostedHud.HUD_ELEMENTS,208, 35, 12, 12);
+        static final TexturedUV icon_health_hardcore_abnormal_black = new TexturedUV(FrostedHud.HUD_ELEMENTS,208, 48, 12, 12);
+        static final TexturedUV icon_health_hardcore_abnormal_cyan = new TexturedUV(FrostedHud.HUD_ELEMENTS,195, 22, 12, 12);
+        static final TexturedUV icon_hunger_normal = new TexturedUV(FrostedHud.HUD_ELEMENTS,143, 9, 12, 12);
+        static final TexturedUV icon_hunger_abnormal_white = new TexturedUV(FrostedHud.HUD_ELEMENTS,143, 22, 12, 12);
+        static final TexturedUV icon_hunger_abnormal_green = new TexturedUV(FrostedHud.HUD_ELEMENTS,143, 35, 12, 12);
+        static final TexturedUV icon_thirst_normal = new TexturedUV(FrostedHud.HUD_ELEMENTS,156, 9, 12, 12);
+        static final TexturedUV icon_thirst_abnormal_white = new TexturedUV(FrostedHud.HUD_ELEMENTS,156, 22, 12, 12);
+        static final TexturedUV icon_thirst_abnormal_green = new TexturedUV(FrostedHud.HUD_ELEMENTS,156, 35, 12, 12);
+        static final TexturedUV icon_oxygen_normal = new TexturedUV(FrostedHud.HUD_ELEMENTS,169, 9, 12, 12);
+        static final TexturedUV icon_oxygen_abnormal_white = new TexturedUV(FrostedHud.HUD_ELEMENTS,169, 22, 12, 12);
+        static final TexturedUV icon_oxygen_abnormal_green = new TexturedUV(FrostedHud.HUD_ELEMENTS,169, 35, 12, 12);
+        static final TexturedUV icon_defence_normal = new TexturedUV(FrostedHud.HUD_ELEMENTS,182, 9, 12, 12);
+        static final TexturedUV icon_defence_abnormal_white = new TexturedUV(FrostedHud.HUD_ELEMENTS,182, 22, 12, 12);
+        static final TexturedUV icon_horse_normal = new TexturedUV(FrostedHud.HUD_ELEMENTS,143, 48, 12, 12);
+        static final TexturedUV icon_horse_abnormal_white = new TexturedUV(FrostedHud.HUD_ELEMENTS,156, 48, 12, 12);
+        static final TexturedUV forecast_window = new TexturedUV(FrostedHud.FORECAST_ELEMENTS,0, 0, 358, 16, 512, 256);
+        static final TexturedUV forecast_increase = new TexturedUV(FrostedHud.FORECAST_ELEMENTS,0, 32, 12, 12, 512, 256);
+        static final TexturedUV forecast_decrease = new TexturedUV(FrostedHud.FORECAST_ELEMENTS,0, 44, 12, 12, 512, 256);
+        static final TexturedUV[] hud_decimal_digits=new TexturedUV[10];
+        static final TexturedUV[] hud_integer_digits=new TexturedUV[10];
         static {
         	for(int i=0;i<10;i++) {
-        		hud_decimal_digits[(i+1)%10]=new UV(6*i, 17, 6, 8, 100, 34);
-        		hud_integer_digits[(i+1)%10]=new UV(10*i, 0, 10, 17, 100, 34);
+        		hud_decimal_digits[(i+1)%10]=new TexturedUV(FrostedHud.digits,6*i, 17, 6, 8, 100, 34);
+        		hud_integer_digits[(i+1)%10]=new TexturedUV(FrostedHud.digits,10*i, 0, 10, 17, 100, 34);
         	}
         }
-        static final UV hud_positive=UV.deltaWH(61, 17, 68, 24, 100, 34);
-        static final UV hud_negative=UV.deltaWH(68, 17, 75, 24, 100, 34);
-        static final UV hud_celsius =UV.deltaWH(0, 25, 13, 34, 100, 34);
-        static final UV hud_farenhit=UV.deltaWH(13, 25, 26, 34, 100, 34);
+        static final TexturedUV hud_positive=TexturedUV.deltaWH(FrostedHud.digits,61, 17, 68, 24, 100, 34);
+        static final TexturedUV hud_negative=TexturedUV.deltaWH(FrostedHud.digits,68, 17, 75, 24, 100, 34);
+        static final TexturedUV hud_celsius =TexturedUV.deltaWH(FrostedHud.digits,0, 25, 13, 34, 100, 34);
+        static final TexturedUV hud_farenhit=TexturedUV.deltaWH(FrostedHud.digits,13, 25, 26, 34, 100, 34);
         
-        static final UV forecast_snow = new UV(0, 56, 12, 12, 512, 256);
-        static final UV forecast_blizzard = new UV(0, 68, 12, 12, 512, 256);
-        static final UV forecast_sun = new UV(0, 80, 12, 12, 512, 256);
-        static final UV forecast_cloud = new UV(0, 92, 12, 12, 512, 256);
-        static final UV forecast_marker = new UV(0, 16, 50, 4, 512, 256);
-        static final UV forecast_celsius = new UV(12, 32, 7, 7, 512, 256);
-        static final UV forecast_fehrenheit = new UV(19, 32, 7, 7, 512, 256);
+        static final TexturedUV forecast_snow = new TexturedUV(FrostedHud.FORECAST_ELEMENTS,0, 56, 12, 12, 512, 256);
+        static final TexturedUV forecast_blizzard = new TexturedUV(FrostedHud.FORECAST_ELEMENTS,0, 68, 12, 12, 512, 256);
+        static final TexturedUV forecast_sun = new TexturedUV(FrostedHud.FORECAST_ELEMENTS,0, 80, 12, 12, 512, 256);
+        static final TexturedUV forecast_cloud = new TexturedUV(FrostedHud.FORECAST_ELEMENTS,0, 92, 12, 12, 512, 256);
+        static final TexturedUV forecast_marker = new TexturedUV(FrostedHud.FORECAST_ELEMENTS,0, 16, 50, 4, 512, 256);
+        static final TexturedUV forecast_celsius = new TexturedUV(FrostedHud.FORECAST_ELEMENTS,12, 32, 7, 7, 512, 256);
+        static final TexturedUV forecast_fehrenheit = new TexturedUV(FrostedHud.FORECAST_ELEMENTS,19, 32, 7, 7, 512, 256);
+        static final UV temperature_orb= new UV(0,0,36,36,36,36);
     }
     static final class IconPos {
         static final Point left_threequarters = new Point(-47, -56);
@@ -220,6 +224,7 @@ public class FrostedHud {
     public static boolean renderForecast = true;
     public static boolean renderFrozenVignette = true;
     public static boolean renderHeatVignette = true;
+    public static boolean renderWaypoint = true;
 	public static float smoothedBody;
     static final ResourceLocation HUD_ELEMENTS = new ResourceLocation(FHMain.MODID, "textures/gui/hud/hudelements.png");
     // static final ResourceLocation FROZEN_OVERLAY_PATH = new
@@ -302,7 +307,7 @@ public class FrostedHud {
 
     static final ResourceLocation hadean = new ResourceLocation(FHMain.MODID,
             "textures/gui/temperature_orb/hadean.png");
-
+    static final ResourceLocation GUI_ICONS_LOCATION = new ResourceLocation("textures/gui/icons.png");
     private static double calculateHypoBarLength(double startTemp, double endTemp, float curtemp) {
         double atemp = Math.abs(curtemp);
         if (atemp < startTemp)
@@ -311,9 +316,9 @@ public class FrostedHud {
     }
 
 
-    private static ArrayList<UV> getIntegerDigitUVs(int digit) {
+    private static ArrayList<TexturedUV> getIntegerDigitUVs(int digit) {
 
-        ArrayList<UV> rtn = new ArrayList<>(3);
+        ArrayList<TexturedUV> rtn = new ArrayList<>(3);
         do{
         	int crnDigit=digit%10;
         	digit=digit/10;
@@ -333,7 +338,6 @@ public class FrostedHud {
         int air = player.getAirSupply();
         int maxAir = 300;
         if (player.isEyeInFluid(FluidTags.WATER) || air < maxAir) {
-            mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
             
             HUDElements.right_half_frame.blitAt(stack, x, y, BasePos.right_half_3);
             if (air <= 30) {
@@ -374,18 +378,17 @@ public class FrostedHud {
 	            	deflen=Math.max(deflen, len-30);
 	            	if(ClientScene.INSTANCE.ticksActUpdate>0)
 		        		GuiHelper.pushScissor(mc.getWindow(), BasePos.act_title.getX(), BasePos.act_title.getY(), (int) (len*(1-ClientScene.INSTANCE.ticksActUpdate/20f)),40);
-	            	mc.font.drawShadow(stack, t, BasePos.act_title.getX(), BasePos.act_title.getY(), 0xfeff06);
+	            	BasePos.act_title.drawText(stack, t, 0xfeff06);
 	            	if(ClientScene.INSTANCE.ticksActUpdate>0)
 	            		GuiHelper.popScissor(mc.getWindow());
 	            }
-	            
-	            FHGuiHelper.drawLine(stack, Color4I.rgba(255, 255, 6, 255),BasePos.act_split.getX(),BasePos.act_split.getY(), BasePos.act_split.getX()+deflen, BasePos.act_split.getY(),1000);
+	            FHGuiHelper.drawLine(stack.pose(), Color4I.rgba(255, 255, 6, 255),BasePos.act_split.getX(),BasePos.act_split.getY(), BasePos.act_split.getX()+deflen, BasePos.act_split.getY(),1000);
 	            
 	            if(st!=null) {
 	            	int len=mc.font.width(st.getString());
 	            	if(ClientScene.INSTANCE.ticksActStUpdate>0)
 		        		GuiHelper.pushScissor(mc.getWindow(), BasePos.act_title.getX(), BasePos.act_title.getY(), (int) (len*(1-ClientScene.INSTANCE.ticksActStUpdate/20f)),40);
-	            	mc.font.drawShadow(stack, st, BasePos.act_subtitle.getX(), BasePos.act_subtitle.getY(), 0xffffff);
+	            	BasePos.act_subtitle.drawText(stack, st, 0xffffff);
 	            	if(ClientScene.INSTANCE.ticksActStUpdate>0)
 		            	GuiHelper.popScissor(mc.getWindow());
 	            }
@@ -399,7 +402,6 @@ public class FrostedHud {
 
     public static void renderArmor(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
         mc.getProfiler().push("frostedheart_armor");
-        mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
 
         HUDElements.left_half_frame.blitAt(stack, x, y, BasePos.left_half_1);
@@ -414,7 +416,7 @@ public class FrostedHud {
 
     public static void renderExperience(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
         mc.getProfiler().push("frostedheart_experience");
-        mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
+
         RenderSystem.enableBlend();
 
         HUDElements.exp_bar_frame.blitAt(stack, x, y, BasePos.exp_bar);
@@ -426,11 +428,12 @@ public class FrostedHud {
             String s = "" + mc.player.experienceLevel;
             int i1 = (x * 2 - mc.font.width(s)) / 2;
             int j1 = y - 29;
-            mc.font.draw(stack, s, i1 + 1, j1, 0);
-            mc.font.draw(stack, s, i1 - 1, j1, 0);
-            mc.font.draw(stack, s, i1, j1 + 1, 0);
-            mc.font.draw(stack, s, i1, j1 - 1, 0);
-            mc.font.draw(stack, s, i1, j1, 8453920);
+
+            stack.drawString(mc.font, s, i1 + 1, j1, 0, false);
+            stack.drawString(mc.font, s, i1 - 1, j1, 0, false);
+            stack.drawString(mc.font, s, i1, j1 + 1, 0, false);
+            stack.drawString(mc.font, s, i1, j1 - 1, 0, false);
+            stack.drawString(mc.font, s, i1, j1, 8453920, false);
         }
 
         RenderSystem.disableBlend();
@@ -439,7 +442,6 @@ public class FrostedHud {
 
     public static void renderFood(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_food");
-        mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
 
         HUDElements.right_half_frame.blitAt(stack, x, y, BasePos.right_half_1);
@@ -462,7 +464,6 @@ public class FrostedHud {
 
     public static void renderForecast(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_forecast");
-        mc.getTextureManager().bind(FrostedHud.FORECAST_ELEMENTS);
         RenderSystem.enableBlend();
 
         long date = ClientClimateData.getDate();
@@ -490,14 +491,14 @@ public class FrostedHud {
                         if (lastLevel != 0) {
                             int end = windowX + i * segmentLength / 2 - 2;
                             int clr = clrs.get(lastLevel);
-                            FHGuiHelper.fillGradient(stack, end, 1, end + 6, 15, clr, clrs.get((int) fr.toState));
+                            stack.fillGradient(end, 1, end + 6, 15, clr, clrs.get((int) fr.toState));
                             int start = windowX + lastStart * segmentLength / 2 + 4;
                             if (lastStart == 0)
                                 start -= 3;
-                            GuiComponent.fill(stack, start, 1, end, 15, clr);
+                            stack.fill( start, 1, end, 15, clr);
                         } else if (lastLevel == 0) {
                             int end = windowX + i * segmentLength / 2 - 2;
-                            FHGuiHelper.fillGradient(stack, end, 1, end + 6, 15, 0, clrs.get((int) fr.toState));
+                            stack.fillGradient(end, 1, end + 6, 15, 0, clrs.get((int) fr.toState));
                         }
                     }
                     lastStart = i;
@@ -506,14 +507,14 @@ public class FrostedHud {
             }
         }
         if (lastLevel != 0 && lastStart * segmentLength / 2 < 253) {
-            GuiComponent.fill(stack, windowX + lastStart * segmentLength / 2 + 4, 1, windowX + 257, 15,
+        	stack.fill(windowX + lastStart * segmentLength / 2 + 4, 1, windowX + 257, 15,
                     clrs.get(lastLevel));
         }
         RenderSystem.enableBlend();
         // window
         HUDElements.forecast_window.blitAt(stack, x, 0, BasePos.forecast_window);
         // markers (moving across window by hour)
-        Gui.blit(stack, windowX + 2, 0, firstDayU, markerV, firstDayW, markerH, 512, 256);
+        stack.blit(FrostedHud.FORECAST_ELEMENTS,windowX + 2, 0, firstDayU, markerV, firstDayW, markerH, 512, 256);
 
         HUDElements.forecast_marker.blit(stack, x - markerMovingOffset + markerLength, 0, BasePos.forecast_frame);
         HUDElements.forecast_marker.blit(stack, x - markerMovingOffset + markerLength * 2, 0, BasePos.forecast_frame);
@@ -529,7 +530,7 @@ public class FrostedHud {
                 last = FrameType.NOP;
                 continue;
             }
-            UV uv = null;
+            TexturedUV uv = null;
             if (fr.type == FrameType.INCRESING)
                 uv = HUDElements.forecast_increase;
             if (fr.type == FrameType.DECREASING)
@@ -551,7 +552,7 @@ public class FrostedHud {
         float temperature = 0;
         float tlvl = PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getEnvTemp).orElse(0F);
         tlvl = Math.max(-273, tlvl);
-        UV unit;
+        TexturedUV unit;
         if (f) {
             temperature = (tlvl * 9 / 5 + 32);
             unit = HUDElements.forecast_fehrenheit;
@@ -561,10 +562,9 @@ public class FrostedHud {
         }
         unit.blit(stack, x, 0, BasePos.forecast_unit);
         // day render
-        mc.font.draw(stack, "" + date, x + BasePos.forecast_date.getX(), BasePos.forecast_date.getY(), 0xe6e6f2);
+        BasePos.forecast_date.drawText(stack,"" + date,x,y,0xe6e6f2);
 
-
-        mc.font.draw(stack, "" + Math.round(temperature), x + BasePos.forecast_temp.getX(), BasePos.forecast_date.getY(), 0xe6e6f2);
+        BasePos.forecast_temp.drawText(stack,"" + Math.round(temperature),x,y,0xe6e6f2);
 
 
         RenderSystem.disableBlend();
@@ -580,12 +580,12 @@ public class FrostedHud {
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
-        RenderSystem.disableAlphaTest();
+       // RenderSystem.disableAlphaTest();
         texture = FROZEN_OVERLAY;
-        mc.getTextureManager().bind(texture);
+        mc.getTextureManager().bindForSetup(texture);
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBuilder();
-        bufferbuilder.begin(7, DefaultVertexFormat.POSITION_COLOR_TEX);
+        bufferbuilder.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
         bufferbuilder.vertex(0.0D, y, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(0.0F, 1.0F).endVertex();
         bufferbuilder.vertex((double) x * 2, y, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(1.0F, 1.0F).endVertex();
         bufferbuilder.vertex((double) x * 2, 0.0D, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(1.0F, 0.0F).endVertex();
@@ -593,7 +593,7 @@ public class FrostedHud {
         tessellator.end();
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
-        RenderSystem.enableAlphaTest();
+        //RenderSystem.enableAlphaTest();
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
@@ -605,11 +605,11 @@ public class FrostedHud {
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
-        RenderSystem.disableAlphaTest();
-        mc.getTextureManager().bind(ICE_VIGNETTE);
+        //RenderSystem.disableAlphaTest();
+        mc.getTextureManager().bindForSetup(ICE_VIGNETTE);
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder buffer = tessellator.getBuilder();
-        buffer.begin(7, DefaultVertexFormat.POSITION_COLOR_TEX);
+        buffer.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
         buffer.vertex(0.0D, y, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(0.0F, 1.0F).endVertex();
         buffer.vertex(x * 2, y, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(1.0F, 1.0F).endVertex();
         buffer.vertex(x * 2, 0.0D, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(1.0F, 0.0F).endVertex();
@@ -617,13 +617,12 @@ public class FrostedHud {
         tessellator.end();
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
-        RenderSystem.enableAlphaTest();
+        //RenderSystem.enableAlphaTest();
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
     public static void renderHealth(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_health");
-        mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
 
         HUDElements.left_threequarters_frame.blitAt(stack, x, y, BasePos.left_threequarters);
@@ -638,7 +637,7 @@ public class FrostedHud {
             healthMax = 20;
         float absorb = player.getAbsorptionAmount(); // let's say max is 20
 
-        UV heart;
+        TexturedUV heart;
         if (mc.level.getLevelData().isHardcore()) {
             if (player.hasEffect(MobEffects.WITHER)) {
                 heart = HUDElements.icon_health_hardcore_abnormal_black;
@@ -672,10 +671,9 @@ public class FrostedHud {
         Atlases.health_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_inner, healthState);
         Atlases.absorption_bar.blitAtlasVH(stack, x, y, BarPos.left_threequarters_outer, absorbState);
         int ihealth = (int) Math.ceil(health);
-        int offset = mc.font.width(String.valueOf(ihealth)) / 2;
-        mc.font.drawShadow(stack, String.valueOf(ihealth),
-                x + BasePos.left_threequarters.getX() + HUDElements.left_threequarters_frame.getW() / 2.0F - offset,
-                y + BasePos.left_threequarters.getY() + HUDElements.left_threequarters_frame.getH() / 2.0F, 0xFFFFFF);
+        stack.drawCenteredString(mc.font, String.valueOf(ihealth), x + BasePos.left_threequarters.getX() + HUDElements.left_threequarters_frame.getW() / 2,
+        		y + BasePos.left_threequarters.getY() + HUDElements.left_threequarters_frame.getH() / 2, 0xFFFFFF);
+
 
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
@@ -688,11 +686,11 @@ public class FrostedHud {
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
-        RenderSystem.disableAlphaTest();
-        mc.getTextureManager().bind(FIRE_VIGNETTE);
+        //RenderSystem.disableAlphaTest();
+        mc.getTextureManager().bindForSetup(FIRE_VIGNETTE);
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder buffer = tessellator.getBuilder();
-        buffer.begin(7, DefaultVertexFormat.POSITION_COLOR_TEX);
+        buffer.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
         buffer.vertex(0.0D, y, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(0.0F, 1.0F).endVertex();
         buffer.vertex(x * 2, y, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(1.0F, 1.0F).endVertex();
         buffer.vertex(x * 2, 0.0D, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(1.0F, 0.0F).endVertex();
@@ -700,14 +698,13 @@ public class FrostedHud {
         tessellator.end();
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
-        RenderSystem.enableAlphaTest();
+        //RenderSystem.enableAlphaTest();
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
     public static void renderHotbar(GuiGraphics stack, int x, int y, Minecraft mc, Player player,
                                     float partialTicks) {
         mc.getProfiler().push("frostedheart_hotbar");
-        mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
 
         HUDElements.hotbar_slot.blitAt(stack, x, y, BasePos.hotbar_1);
@@ -721,7 +718,7 @@ public class FrostedHud {
         HUDElements.hotbar_slot.blitAt(stack, x, y, BasePos.hotbar_9);
 
         // Selection overlay
-        HUDElements.selected.blitAt(stack, x - 1 + player.inventory.selected * 20, y - 1,
+        HUDElements.selected.blitAt(stack, x - 1 + player.getInventory().selected * 20, y - 1,
                 BasePos.hotbar_1);
 
         if (player.getOffhandItem().isEmpty()) {
@@ -732,25 +729,24 @@ public class FrostedHud {
 
         ItemStack itemstack = player.getOffhandItem();
         HumanoidArm handside = player.getMainArm().getOpposite();
-
-        RenderSystem.enableRescaleNormal();
-
+        //RenderSystem.enableRescaleNormal();
+        int l=1;
         for (int i1 = 0; i1 < 9; ++i1) {
             int j1 = x - 90 + i1 * 20 + 2;
             int k1 = y - 16 - 3 + 1; // +1
-            renderHotbarItem(j1, k1, partialTicks, player, player.inventory.items.get(i1));
+            renderHotbarItem(stack,j1, k1, partialTicks, player, player.getInventory().items.get(i1),l++);
         }
 
         if (!itemstack.isEmpty()) {
             int i2 = y - 16 - 3 + 1; // +1
             if (handside == HumanoidArm.LEFT) {
-                renderHotbarItem(x - 91 - 26 - 2 - 2, i2, partialTicks, player, itemstack);
+                renderHotbarItem(stack,x - 91 - 26 - 2 - 2, i2, partialTicks, player, itemstack,l++);
             } else {
-                renderHotbarItem(x + 91 + 10, i2, partialTicks, player, itemstack);
+                renderHotbarItem(stack,x + 91 + 10, i2, partialTicks, player, itemstack,l++);
             }
         }
 
-        if (mc.options.attackIndicator == AttackIndicatorStatus.HOTBAR) {
+        if (mc.options.attackIndicator().get() == AttackIndicatorStatus.HOTBAR) {
             float f = mc.player.getAttackStrengthScale(0.0F);
             if (f < 1.0F) {
                 int j2 = y - 20;
@@ -759,41 +755,39 @@ public class FrostedHud {
                     k2 = x - 91 - 22;
                 }
 
-                mc.getTextureManager().bind(Gui.GUI_ICONS_LOCATION);
                 int l1 = (int) (f * 19.0F);
-                mc.gui.blit(stack, k2, j2, 0, 94, 18, 18);
-                mc.gui.blit(stack, k2, j2 + 18 - l1, 18, 112 - l1, 18, l1);
+                stack.blit(GUI_ICONS_LOCATION, k2, j2, 0, 94, 18, 18);
+                stack.blit(GUI_ICONS_LOCATION, k2, j2 + 18 - l1, 18, 112 - l1, 18, l1);
             }
         }
 
-        RenderSystem.disableRescaleNormal();
+        //RenderSystem.disableRescaleNormal();
         RenderSystem.disableBlend();
 
         mc.getProfiler().pop();
     }
-    private static void renderHotbarItem(int x, int y, float partialTicks, Player player, ItemStack stack) {
+    private static void renderHotbarItem(GuiGraphics pGuiGraphics,int x, int y, float partialTicks, Player player, ItemStack stack,int seed) {
         Minecraft mc = Minecraft.getInstance();
         if (!stack.isEmpty()) {
             float f = stack.getPopTime() - partialTicks;
             if (f > 0.0F) {
-                RenderSystem.pushMatrix();
                 float f1 = 1.0F + f / 5.0F;
-                RenderSystem.translatef(x + 8, y + 12, 0.0F);
-                RenderSystem.scalef(1.0F / f1, (f1 + 1.0F) / 2.0F, 1.0F);
-                RenderSystem.translatef((-(x + 8)), (-(y + 12)), 0.0F);
+                pGuiGraphics.pose().pushPose();
+                pGuiGraphics.pose().translate((float)(x + 8), (float)(y + 12), 0.0F);
+                pGuiGraphics.pose().scale(1.0F / f1, (f1 + 1.0F) / 2.0F, 1.0F);
+                pGuiGraphics.pose().translate((float)(-(x + 8)), (float)(-(y + 12)), 0.0F);
             }
 
-            mc.getItemRenderer().renderAndDecorateItem(player, stack, x, y);
+            pGuiGraphics.renderItem(player, stack, x, y,seed);
             if (f > 0.0F) {
-                RenderSystem.popMatrix();
+            	pGuiGraphics.pose().popPose();
             }
 
-            mc.getItemRenderer().renderGuiItemDecorations(mc.font, stack, x, y);
+            pGuiGraphics.renderItemDecorations(mc.font, stack, x, y);
         }
     }
     public static void renderHypothermia(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
         mc.getProfiler().push("frostedheart_hypothermia");
-        mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
 
         float temp = PlayerTemperatureData.getCapability(player).map(t->t.smoothedBody).orElse(0F);
@@ -820,7 +814,6 @@ public class FrostedHud {
     }
     public static void renderJumpbar(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
         mc.getProfiler().push("frostedheart_jumpbar");
-        mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
 
         float jumpPower = player.getJumpRidingScale();
@@ -832,7 +825,6 @@ public class FrostedHud {
     }
     public static void renderMountHealth(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
         mc.getProfiler().push("frostedheart_mounthealth");
-        mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
         HUDElements.right_threequarters_frame.blitAt(stack, x, y, BasePos.right_threequarters);
         HUDElements.icon_horse_normal.blitAt(stack, x, y, IconPos.right_threequarters);
@@ -854,7 +846,7 @@ public class FrostedHud {
         renderHealthMount = renderHealth && player.getVehicle() instanceof LivingEntity;
         renderFood = renderHealth && !renderHealthMount;
         renderThirst = renderHealth && !renderHealthMount;
-        renderJumpBar = renderHealth && player.isRidingJumpable();
+        renderJumpBar = renderHealth && player.jumpableVehicle()!=null;
         renderArmor = renderHealth && player.getArmorValue() > 0;
         renderExperience = renderHealth;
 
@@ -867,6 +859,9 @@ public class FrostedHud {
         renderFrozenVignette = FHConfig.CLIENT.enableFrozenVignette.get() && renderHealth && bt <= -0.5;
         renderHeatVignette = FHConfig.CLIENT.enableHeatVignette.get() && renderHealth && bt >= 0.5;
 
+        // Waypoint
+        renderWaypoint = FHConfig.CLIENT.enableWaypoint.get();
+
         // Forecast
         boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
         renderForecast = configAllows && ClientResearchDataAPI.getData().getVariantDouble(ResearchVariant.HAS_FORECAST)>0;
@@ -874,41 +869,41 @@ public class FrostedHud {
 
     private static void renderTemp(GuiGraphics stack, Minecraft mc, float temp, int tlevel, int offsetX, int offsetY,
                                    boolean celsius) {
-        UV unitUV = celsius ? HUDElements.hud_celsius : HUDElements.hud_farenhit;
-        UV signUV = temp >= 0 ? HUDElements.hud_positive : HUDElements.hud_negative;
+    	TexturedUV unitUV = celsius ? HUDElements.hud_celsius : HUDElements.hud_farenhit;
+    	TexturedUV signUV = temp >= 0 ? HUDElements.hud_positive : HUDElements.hud_negative;
  
         double abs = Math.abs(temp);
+        ResourceLocation orb;
         // draw orb
         if (tlevel > 80) {
-            mc.getTextureManager().bind(ardent);
+            orb=(ardent);
         } else if (tlevel > 60) {
-            mc.getTextureManager().bind(fervid);
+            orb=(fervid);
         } else if (tlevel > 40) {
-            mc.getTextureManager().bind(hot);
+            orb=(hot);
         } else if (tlevel > 20) {
-            mc.getTextureManager().bind(warm);
+            orb=(warm);
         } else if (tlevel > 0) {
-            mc.getTextureManager().bind(moderate);
+            orb=(moderate);
         } else if (tlevel > -20) {
-            mc.getTextureManager().bind(chilly);
+            orb=(chilly);
         } else if (tlevel > -40) {
-            mc.getTextureManager().bind(cold);
+            orb=(cold);
         } else if (tlevel > -80) {
-            mc.getTextureManager().bind(frigid);
+            orb=(frigid);
         } else {
-            mc.getTextureManager().bind(hadean);
+            orb=(hadean);
         }
-        Gui.blit(stack, offsetX, offsetY, 0, 0, 36, 36, 36, 36);
+        HUDElements.temperature_orb.blit(stack, orb, offsetX, offsetY);
 
         // draw temperature
-        mc.getTextureManager().bind(digits);
         // sign and unit
 
         //signUV.blit(stack, offsetX, offsetY, BasePos.sign);
         //unitUV.blit(stack, offsetX, offsetY, BasePos.unit);
 
         // digits
-        ArrayList<UV> uv4is = getIntegerDigitUVs((int) Math.round(abs));
+        ArrayList<TexturedUV> uv4is = getIntegerDigitUVs((int) Math.round(abs));
         int size=uv4is.size();
         if(size < 3)
         	uv4is.add(HUDElements.hud_decimal_digits[(int) (Math.round(abs*10)%10)]);
@@ -921,7 +916,6 @@ public class FrostedHud {
 
     public static void renderTemperature(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_temperature");
-        mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
 
         HUDElements.temperature_orb_frame.blitAt(stack, x, y + 3, BasePos.temperature_orb_frame);
@@ -941,8 +935,7 @@ public class FrostedHud {
     }
 
     public static void renderThirst(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
-        mc.getProfiler().push("frostedheart_thirst");
-        mc.getTextureManager().bind(FrostedHud.HUD_ELEMENTS);
+      /*  mc.getProfiler().push("frostedheart_thirst");
         RenderSystem.enableBlend();
 
         MobEffectInstance effectInstance = mc.player.getEffect(EffectRegistry.THIRST);
@@ -960,6 +953,6 @@ public class FrostedHud {
         });
 
         RenderSystem.disableBlend();
-        mc.getProfiler().pop();
+        mc.getProfiler().pop();*/
     }
 }

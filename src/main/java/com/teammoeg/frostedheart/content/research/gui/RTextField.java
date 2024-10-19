@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui;
 
 import java.util.List;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -35,18 +35,17 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.Mth;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
-import net.minecraft.network.chat.TextComponent;
 
 public class RTextField extends Widget {
 
-    private Component component = TextComponent.EMPTY;
+    private Component component = TranslateUtils.str("");
     private FormattedText[] formattedText = new FormattedText[0];
     public int textFlags = 0;
     public int minWidth = 0;
     public int maxWidth = 5000;
     public int textSpacing = 10;
     public float scale = 1.0F;
-    public Color4I textColor = Icon.EMPTY;
+    public Color4I textColor = Icon.empty();
     public int maxLine = 0;
 
     public RTextField(Panel panel) {
@@ -65,7 +64,7 @@ public class RTextField extends Widget {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         //drawBackground(matrixStack, theme, x, y, w, h);
 
         if (formattedText.length != 0) {
@@ -85,16 +84,16 @@ public class RTextField extends Widget {
                             textFlags);
                 }
             } else {
-                matrixStack.pushPose();
-                matrixStack.translate(tx, ty, 0.0D);
-                matrixStack.scale(scale, scale, 1.0F);
+                matrixStack.pose().pushPose();
+                matrixStack.pose().translate(tx, ty, 0.0D);
+                matrixStack.pose().scale(scale, scale, 1.0F);
 
                 for (i = 0; i < formattedText.length; ++i) {
 
-                    theme.drawString(matrixStack, formattedText[i], 0.0F, i * textSpacing, col, textFlags);
+                    theme.drawString(matrixStack, formattedText[i], 0, i * textSpacing, col, textFlags);
                 }
 
-                matrixStack.popPose();
+                matrixStack.pose().popPose();
             }
         }
     }

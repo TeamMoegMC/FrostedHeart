@@ -18,10 +18,10 @@ public class OccupiedArea {
         this.occupiedArea = occupiedArea;
         if(occupiedArea == null || occupiedArea.isEmpty()) return;
         for (ColumnPos pos : occupiedArea) {
-            if (pos.x > maxX) maxX = pos.x;
-            if (pos.x < minX) minX = pos.x;
-            if (pos.z > maxZ) maxZ = pos.z;
-            if (pos.z < minZ) minZ = pos.z;
+            if (pos.x() > maxX) maxX = pos.x();
+            if (pos.x() < minX) minX = pos.x();
+            if (pos.z() > maxZ) maxZ = pos.z();
+            if (pos.z() < minZ) minZ = pos.z();
         }
         this.calculateMaxXandZ();
     }
@@ -61,8 +61,8 @@ public class OccupiedArea {
         if(occupiedArea.isEmpty()) return;
         Iterator<ColumnPos> iterator = occupiedArea.iterator();
         ColumnPos pos = iterator.next();
-        maxX = minX = pos.x;
-        maxZ = minZ = pos.z;
+        maxX = minX = pos.x();
+        maxZ = minZ = pos.z();
         while (iterator.hasNext()) {
             pos = iterator.next();
             updateMaxXandZ(pos);
@@ -70,10 +70,10 @@ public class OccupiedArea {
     }
 
     public void updateMaxXandZ(ColumnPos pos){
-        if (pos.x > maxX) maxX = pos.x;
-        if (pos.z > maxZ) maxZ = pos.z;
-        if (pos.x < minX) minX = pos.x;
-        if (pos.z < minZ) minZ = pos.z;
+        if (pos.x() > maxX) maxX = pos.x();
+        if (pos.z() > maxZ) maxZ = pos.z();
+        if (pos.x() < minX) minX = pos.x();
+        if (pos.z() < minZ) minZ = pos.z();
     }
 
     public void add(ColumnPos pos){
@@ -84,7 +84,7 @@ public class OccupiedArea {
 
     public void remove(ColumnPos pos){
         if(this.occupiedArea.remove(pos)){
-            if(pos.x == maxX || pos.z == maxZ || pos.x == minX || pos.z == minZ){
+            if(pos.x() == maxX || pos.z() == maxZ || pos.x() == minX || pos.z() == minZ){
                 calculateMaxXandZ();
             }
         }
@@ -129,7 +129,7 @@ public class OccupiedArea {
         CompoundTag nbt = new CompoundTag();
         ListTag list = new ListTag();
         for (ColumnPos pos : occupiedArea) {
-            list.add(LongTag.valueOf(BlockPos.asLong(pos.x, 0, pos.z)));
+            list.add(LongTag.valueOf(BlockPos.asLong(pos.x(), 0, pos.z())));
         }
         nbt.put("occupiedAreaList", list);
         list.clear();

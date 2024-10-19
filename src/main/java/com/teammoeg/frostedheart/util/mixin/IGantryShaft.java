@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.util.mixin;
 
-import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
+import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 
 public interface IGantryShaft {
     void setEntity(AbstractContraptionEntity comp);

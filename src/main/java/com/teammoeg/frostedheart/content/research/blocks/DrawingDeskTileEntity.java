@@ -22,29 +22,41 @@ package com.teammoeg.frostedheart.content.research.blocks;
 import java.util.Optional;
 import java.util.Random;
 
+import com.teammoeg.frostedheart.FHContainer;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.recipes.ResearchPaperRecipe;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardPos;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.GenerateInfo;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.ResearchGame;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
+import blusunrize.immersiveengineering.common.register.IEMenuTypes.ArgContainer;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteractionObjectIE, IIEInventory {
+public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProvider, IIEInventory {
     public static final int INK_SLOT = 2;
     public static final int PAPER_SLOT = 1;
     public static final int EXAMINE_SLOT = 0;
@@ -53,14 +65,10 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
     protected NonNullList<ItemStack> inventory = NonNullList.withSize(3, ItemStack.EMPTY);
     ResearchGame game = new ResearchGame();
 
-    public DrawingDeskTileEntity() {
-        super(FHTileTypes.DRAWING_DESK.get());
+    public DrawingDeskTileEntity(BlockPos pos,BlockState state) {
+        super(FHTileTypes.DRAWING_DESK.get(), pos, state);
     }
 
-    @Override
-    public boolean canUseGui(Player arg0) {
-        return true;
-    }
 
     private boolean damageInk(ServerPlayer spe, int val, int lvl) {
         ItemStack is = inventory.get(INK_SLOT);
@@ -78,10 +86,6 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
         return game;
     }
 
-    @Override
-    public IInteractionObjectIE getGuiMaster() {
-        return this;
-    }
 
     @Override
     public NonNullList<ItemStack> getInventory() {
@@ -181,5 +185,16 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
             ContainerHelper.saveAllItems(nbt, inventory);
         }
     }
+
+	@Override
+	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
+		return new DrawDeskContainer(pContainerId,pPlayerInventory,this);
+	}
+
+
+	@Override
+	public Component getDisplayName() {
+		return TranslateUtils.translate("gui.frostedheart.draw_desk");
+	}
 
 }

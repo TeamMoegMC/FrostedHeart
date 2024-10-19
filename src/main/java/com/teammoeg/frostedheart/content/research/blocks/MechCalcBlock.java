@@ -20,14 +20,15 @@
 package com.teammoeg.frostedheart.content.research.blocks;
 
 import java.util.List;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import java.util.function.Supplier;
 
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.base.block.FHKineticBlock;
 import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.level.block.Block;
@@ -35,15 +36,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.core.NonNullList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -55,9 +55,7 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.FakePlayer;
 
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
-
-public class MechCalcBlock extends FHKineticBlock {
+public class MechCalcBlock extends FHKineticBlock implements FHEntityBlock<MechCalcTileEntity>,ICreativeModeTabItem{
     static final VoxelShaper shape = VoxelShaper.forDirectional(Shapes.or(Block.box(0, 0, 0, 16, 9, 16), Block.box(0, 9, 0, 16, 16, 13)), Direction.SOUTH);
 
     public MechCalcBlock( Properties blockProps) {
@@ -76,20 +74,8 @@ public class MechCalcBlock extends FHKineticBlock {
     }
 
 
-    @Nullable
-    @Override
-    public BlockEntity createTileEntity(@Nonnull BlockState state, @Nonnull BlockGetter world) {
-        return FHTileTypes.MECH_CALC.get().create();
-    }
 
 
-    @Override
-    public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> items) {
-        super.fillItemCategory(group, items);
-        ItemStack is = new ItemStack(this);
-        is.getOrCreateTag().putBoolean("prod", true);
-        items.add(is);
-    }
 
     @Override
     public Axis getRotationAxis(BlockState state) {
@@ -109,10 +95,6 @@ public class MechCalcBlock extends FHKineticBlock {
     }
 
 
-    @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
-    }
 
 
     @Override
@@ -139,6 +121,23 @@ public class MechCalcBlock extends FHKineticBlock {
         super.setPlacedBy(worldIn, pos, state, placer, stack);
 
     }
+
+
+
+
+	@Override
+	public void fillItemCategory(CreativeTabItemHelper helper) {
+		helper.accept(this);
+        ItemStack is = new ItemStack(this);
+        is.getOrCreateTag().putBoolean("prod", true);
+        helper.accept(is);
+	}
+
+
+	@Override
+	public Supplier<BlockEntityType<MechCalcTileEntity>> getBlock() {
+		return FHTileTypes.MECH_CALC;
+	}
 
 
 	/*@Override

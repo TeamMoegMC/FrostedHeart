@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
@@ -23,9 +24,13 @@ import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonState;
+import blusunrize.immersiveengineering.client.gui.info.FluidInfoArea;
+import blusunrize.immersiveengineering.client.gui.info.InfoArea;
 import blusunrize.immersiveengineering.client.utils.GuiHelper;
 import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -60,7 +65,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		public MasterGeneratorGuiButtonUpgrade(int x, int y, int w, int h,
 				int initialState,  int u, int v,
 				IIEPressable<GuiButtonState<Integer>> handler) {
-			super(x, y, w, h, TextComponent.EMPTY, new Integer[] {0,1,2,3}, initialState, TEXTURE, u, v, 1, handler);
+			super(x, y, w, h, Component.empty(), new Integer[] {0,1,2,3}, initialState, TEXTURE, u, v, 1, handler);
 		}
 
 		public void blit(PoseStack matrixStack, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight) {
@@ -94,10 +99,13 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		return menu;
 	}
 	@Override
-	protected void renderBg(PoseStack matrixStack, float partialTicks, int x, int y) {
-		ClientUtils.bindTexture(TEXTURE);
+	protected List<InfoArea> makeInfoAreas() {
+		return ImmutableList.of(new FluidInfoArea(menu.getTank(),new Rect2i(135,27,16,60), 0, 0, 0, 0, TEXTURE));
+	}
+	@Override
+	protected void drawContainerBackgroundPre(GuiGraphics matrixStack, float partialTicks, int x, int y) {
 		//background
-		this.blit(matrixStack, 0, 0, this.imageWidth, this.imageHeight, 0, 0);
+		matrixStack.blit(TEXTURE, 0, 0, this.imageWidth, this.imageHeight, 0, 0);
 
 		//System.out.println(ininvarrx+","+ininvarry+"-"+inarryl);
 		//range circle
@@ -116,21 +124,20 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		int inarryl=76-ininvarrx;
 		int outarryl=out.getX()-2-outinvarrx;
 		//arrows
-		this.blit(matrixStack, ininvarrx,ininvarry, inarryl, 4, 511-inarryl, 132);
-		this.blit(matrixStack, outinvarrx,outinvarry, outarryl, 4,511-outarryl,132);
+		matrixStack.blit(TEXTURE, ininvarrx,ininvarry, inarryl, 4, 511-inarryl, 132);
+		matrixStack.blit(TEXTURE, outinvarrx,outinvarry, outarryl, 4,511-outarryl,132);
 		//slot background
-		this.blit(matrixStack,in.getX()-2, in.getY()-2, 20, 20, 404, 128);
-		this.blit(matrixStack,out.getX()-2, out.getY()-2, 20, 20, 424, 128);
+		matrixStack.blit(TEXTURE,in.getX()-2, in.getY()-2, 20, 20, 404, 128);
+		matrixStack.blit(TEXTURE,out.getX()-2, out.getY()-2, 20, 20, 424, 128);
 		if(menu.getTank()!=null) {
-			this.blit(matrixStack,133,55, 20, 64, 384, 128);
-			this.blit(matrixStack,98, 84, 34, 4, 444, 128);
-			GuiHelper.handleGuiTank(matrixStack, menu.getTank(), leftPos + 135, topPos + 57, 16, 60, 0, 0, 0, 0, x, y, TEXTURE, null);
+			matrixStack.blit(TEXTURE,133,55, 20, 64, 384, 128);
+			matrixStack.blit(TEXTURE,98, 84, 34, 4, 444, 128);
 			ClientUtils.bindTexture(TEXTURE);
 		}
 		
 
 		//upgrade arrow
-		this.blit(matrixStack, 85, 93, 6, 22, 412, 148);
+		matrixStack.blit(TEXTURE, 85, 93, 6, 22, 412, 148);
 
 		//generator symbol
 		generatorSymbol.blitAtlas(matrixStack, leftPos, topPos, generatorPos,((tile.isWorking()&&tile.guiData.get(MasterGeneratorTileEntity.PROCESS)>0)?2:1),(menu.getTier()-1));

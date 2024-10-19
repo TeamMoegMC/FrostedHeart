@@ -55,15 +55,16 @@ public class GLTextContent extends GLLayerContent{
 		 params.getMatrixStack().translate(params.getContentX(),ty, 0);
 		 params.getMatrixStack().scale(resize, resize, resize);
 		for(FormattedCharSequence i:li) {
-			int w=params.getMinecraft().font.width(ClientScene.toString(i));
+			int w=params.getFont().width(ClientScene.toString(i));
 			int tx=0;
 			if(centerH) {
 				tx=(int) Math.max(0,(params.getContentWidth()/resize-w)/2);
 			}
 			if(shadow)
-				params.getMinecraft().font.drawShadow(params.getMatrixStack(), i, tx, y, color|(((int)(0xFF*params.getOpacity()))<<24));
+				params.getGuiGraphics().drawString(params.getFont(), i, tx, y, color|(((int)(0xFF*params.getOpacity()))<<24));
+				//params.getMinecraft().font.drawShadow(params.getMatrixStack(), i, tx, y, color|(((int)(0xFF*params.getOpacity()))<<24));
 			else
-				params.getMinecraft().font.draw(params.getMatrixStack(), i,tx, y, color|(((int)(0xFF*params.getOpacity()))<<24));
+				params.getGuiGraphics().drawString(params.getFont(), i, tx, y, color|(((int)(0xFF*params.getOpacity()))<<24),false);
 			y+=9;
 			if(y>params.getContentHeight()+params.getContentY())break;
 		}

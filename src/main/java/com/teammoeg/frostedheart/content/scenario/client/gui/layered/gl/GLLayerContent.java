@@ -43,9 +43,9 @@ public abstract class GLLayerContent extends OrderedRenderableContent {
 	@Override
 	public void render(RenderParams params) {
 		params=params.copyWithCurrent(this);
-		GuiHelper.pushScissor(params.getMinecraft().getWindow(), params.getX(), params.getY(), params.getWidth(), params.getHeight());
+		params.getGuiGraphics().enableScissor( params.getX(), params.getY(), params.getWidth(), params.getHeight());
 		this.renderContents(params);
-		GuiHelper.popScissor(params.getMinecraft().getWindow());
+		params.getGuiGraphics().disableScissor();
 	}
 	public float getOpacity() {
 		return opacity;

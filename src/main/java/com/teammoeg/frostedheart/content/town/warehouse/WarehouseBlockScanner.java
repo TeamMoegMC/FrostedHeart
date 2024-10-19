@@ -5,7 +5,6 @@ import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import net.minecraft.world.level.block.NetherVines;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.math.ColumnPos;
 import net.minecraft.world.level.Level;
 
 import java.util.AbstractMap;

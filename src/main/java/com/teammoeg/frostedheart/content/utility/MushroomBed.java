@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
+import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
 
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.LivingEntity;
@@ -41,6 +42,8 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
@@ -48,7 +51,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.item.Item.Properties;
 
 public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
-    public static final ResourceLocation ktag = new ResourceLocation(FHMain.MODID, "knife");
+    public static final TagKey<Item> ktag = ItemTags.create(new ResourceLocation(FHMain.MODID, "knife"));
 
     Item resultType;
 
@@ -68,12 +71,12 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
 
 
     @Override
-    public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> items) {
-        if (this.allowdedIn(group)) {
+    public void fillItemCategory(CreativeTabItemHelper helper) {
+        if (helper.isType(FHMain.itemGroup)) {
             ItemStack is = new ItemStack(this);
-            items.add(is);
+            helper.accept(is);
             is.setDamageValue(is.getMaxDamage());
-            items.add(is);
+            helper.accept(is);
         }
     }
     @Override
@@ -101,7 +104,7 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
 
 
         InteractionHand otherHand = handIn == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
-        if (playerIn.getItemInHand(otherHand).getItem().getTags().contains(ktag)) {
+        if (playerIn.getItemInHand(otherHand).is(ktag)) {
             playerIn.startUsingItem(handIn);
             return new InteractionResultHolder<>(InteractionResult.SUCCESS, stack);
         }

@@ -41,6 +41,8 @@ public class FHConfig {
         public final ForgeConfigSpec.BooleanValue enableFrozenVignette;
         public final ForgeConfigSpec.BooleanValue enableHeatVignette;
         public final ForgeConfigSpec.BooleanValue enableFrozenSound;
+        public final ForgeConfigSpec.BooleanValue enableBreathParticle;
+        public final ForgeConfigSpec.BooleanValue enableWaypoint;
         public final ForgeConfigSpec.BooleanValue autoMode;
         public final ForgeConfigSpec.IntValue autoModeInterval;
         public final ForgeConfigSpec.DoubleValue textSpeed;
@@ -77,8 +79,15 @@ public class FHConfig {
             enableFrozenSound = builder
                     .comment("Enables the frozen sound when player is freezing. ")
                     .define("enableFrozenSound", true);
+            enableBreathParticle = builder
+                    .comment("Enables the breath particle when environment is cold. ")
+                    .define("enableBreathParticle", true);
+            enableWaypoint = builder
+                    .comment("Enables the waypoints rendering. ")
+                    .define("enableWaypoint", true);
+
             builder.push("scenario");
-            autoMode=builder.comment("EnableaAuto click when scenario requires")
+            autoMode=builder.comment("Enables Auto click when scenario requires")
             	.define("autoMode", true);
             autoModeInterval=builder.comment("Tick before click when a click is required to progress")
             	.defineInRange("autoModeInterval",40,0,500);

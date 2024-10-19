@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 // send when player join
 public class FHResearchDataSyncPacket implements FHMessage {

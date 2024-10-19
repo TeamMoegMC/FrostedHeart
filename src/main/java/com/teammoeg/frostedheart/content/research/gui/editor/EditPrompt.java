@@ -48,7 +48,7 @@ public class EditPrompt extends BaseEditDialog {
     public EditPrompt(Widget panel, String label, String val, Consumer<String> onFinished) {
         super(panel);
         box = new LabeledTextBox(this, label, val);
-        ok = new SimpleTextButton(this, TranslateUtils.str("OK"), Icon.EMPTY) {
+        ok = new SimpleTextButton(this, TranslateUtils.str("OK"), Icon.empty()) {
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -61,7 +61,7 @@ public class EditPrompt extends BaseEditDialog {
             }
 
         };
-        cancel = new SimpleTextButton(this, TranslateUtils.str("Cancel"), Icon.EMPTY) {
+        cancel = new SimpleTextButton(this, TranslateUtils.str("Cancel"), Icon.empty()) {
 
             @Override
             public void onClicked(MouseButton arg0) {

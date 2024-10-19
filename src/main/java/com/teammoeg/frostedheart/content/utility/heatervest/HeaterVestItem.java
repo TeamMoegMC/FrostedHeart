@@ -20,75 +20,80 @@
 package com.teammoeg.frostedheart.content.utility.heatervest;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
+import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
 
-import blusunrize.immersiveengineering.common.util.EnergyHelper;
-import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-
-import net.minecraft.world.item.Item.Properties;
+import net.minecraftforge.client.extensions.common.IClientItemExtensions;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 
 /**
  * Heater Vest: wear it to warm yourself from the coldness.
  * 加温背心：穿戴抵御寒冷
  */
-public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergyItem, IHeatingEquipment, IChargable {
-
+public class HeaterVestItem extends FHBaseItem implements IHeatingEquipment, IChargable {
+	private static final String ENERGY_KEY="steam";
     public HeaterVestItem(Properties properties) {
         super(properties);
     }
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> list, TooltipFlag flag) {
-        String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
+        String stored = FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->{
+			return t.getEnergyStored();
+		}).orElse(0F) + "/" + this.getMaxEnergyStored(stack);
         list.add(TranslateUtils.translateTooltip("charger.heat_vest").withStyle(ChatFormatting.GRAY));
         list.add(TranslateUtils.translateTooltip("steam_stored", stored).withStyle(ChatFormatting.GOLD));
     }
 
     @Override
     public float charge(ItemStack stack, float value) {
-        return this.receiveEnergy(stack, (int) value, false);
+		return FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->{
+			return t.receiveEnergy(value, false);
+		}).orElse(value);
     }
 
 
+
     @Override
-    public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> items) {
-        if (this.allowdedIn(group)) {
-            items.add(new ItemStack(this));
+	public void fillItemCategory(CreativeTabItemHelper helper) {
+		if(helper.isType(FHMain.itemGroup)) {
+        	helper.accept(new ItemStack(this));
             ItemStack is = new ItemStack(this);
-            this.receiveEnergy(is, this.getMaxEnergyStored(is), false);
-            items.add(is);
-        }
+            FHCapabilities.ITEM_HEAT.getCapability(is).ifPresent(t->t.receiveEnergy(30000, false));
+            helper.accept(is);
+	        
+		}
+	}
 
-    }
-
+	@OnlyIn(Dist.CLIENT)
     @Override
-    @OnlyIn(Dist.CLIENT)
-    public HumanoidModel getArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlot armorSlot,
-                                    HumanoidModel _default) {
-        return HeaterVestModel.getModel();
-    }
+	public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+		super.initializeClient(consumer);
+		consumer.accept(new HeaterVestExtension());
+	}
 
-    @Override
+	@Override
     public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, String type) {
         return FHMain.rl("textures/models/heater_vest.png").toString();
     }
@@ -99,7 +104,6 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
         return EquipmentSlot.CHEST;
     }
 
-    @Override
     public int getMaxEnergyStored(ItemStack container) {
         return 30000;
     }
@@ -110,14 +114,23 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
 			return 50;
 		}
 		int energycost = 1;
-		if (effectiveTemp < 30.05f) {
-		    float delta = 30.05f - effectiveTemp;
-		    if (delta > 50)
-		        delta = 50F;
-		    float rex = Math.max(this.extractEnergy(stack, energycost + (int) (delta * 0.24f), false) - energycost, 0F);
-		    return rex / 0.24f;
-		} else this.extractEnergy(stack, energycost, false);
-		return 0;
+		return FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->{
+			if (effectiveTemp < 30.05f) {
+			    float delta = 30.05f - effectiveTemp;
+			    if (delta > 50)
+			        delta = 50F;
+			    float rex = Math.max(t.extractEnergy( energycost + (int) (delta * 0.24f), false) - energycost, 0F);
+			    return rex / 0.24f;
+			} else t.extractEnergy(energycost, false);
+			return 0f;
+		}).orElse(0f);
+		
 	}
+
+	@Override
+	public ICapabilityProvider initCapabilities(ItemStack stack,CompoundTag nbt) {
+		return FHCapabilities.ITEM_HEAT.provider(()->new HeatStorageCapability(stack, 30000));
+	}
+
 
 }

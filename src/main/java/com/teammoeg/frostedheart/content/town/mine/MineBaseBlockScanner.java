@@ -1,22 +1,23 @@
 package com.teammoeg.frostedheart.content.town.mine;
 
+import java.util.AbstractMap;
+import java.util.HashSet;
+import java.util.Set;
+
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.NetherVines;
-import net.minecraft.tags.BlockTags;
+
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.NetherVines;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.Tags;
 import se.mickelus.tetra.blocks.rack.RackBlock;
-
-import java.util.AbstractMap;
-import java.util.HashSet;
-import java.util.Set;
 
 //矿场基地需要有铁轨连通到矿场，因此不做任何的密封性要求，有个顶就行。
 public class MineBaseBlockScanner extends FloorBlockScanner {

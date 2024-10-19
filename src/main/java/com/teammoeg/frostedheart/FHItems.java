@@ -32,9 +32,8 @@ import com.teammoeg.frostedheart.content.research.blocks.FHBasePen;
 import com.teammoeg.frostedheart.content.research.blocks.FHReusablePen;
 import com.teammoeg.frostedheart.content.research.blocks.RubbingTool;
 import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
-import com.teammoeg.frostedheart.content.tips.DebugItem;
+import com.teammoeg.frostedheart.content.utility.DebugItem;
 import com.teammoeg.frostedheart.content.utility.CeramicBucket;
-import com.teammoeg.frostedheart.content.utility.GeneratorUpgraderI;
 import com.teammoeg.frostedheart.content.utility.MushroomBed;
 import com.teammoeg.frostedheart.content.utility.SoilThermometer;
 import com.teammoeg.frostedheart.content.utility.SteamBottleItem;
@@ -117,12 +116,12 @@ public class FHItems {
     public static RegistryObject<Item> hide_hat = register("hide_hat",n->new FHBaseArmorItem( FHArmorMaterial.HIDE, Type.HELMET, createProps()));
     public static RegistryObject<Item> hide_jacket = register("hide_jacket",n->new FHBaseArmorItem( FHArmorMaterial.HIDE, Type.CHESTPLATE, createProps()));
     public static RegistryObject<Item> hide_pants = register("hide_pants",n->new FHBaseArmorItem( FHArmorMaterial.HIDE, Type.BOOTS, createProps()));
-    public static RegistryObject<Item> heater_vest = register("heater_vest",n->new HeaterVestItem( createProps().stacksTo(1).setNoRepair()));
+    public static RegistryObject<HeaterVestItem> heater_vest = register("heater_vest",n->new HeaterVestItem( createProps().stacksTo(1).setNoRepair()));
     public static List<RegistryObject<Item>> allthermos = new ArrayList<>();
     public static List<RegistryObject<Item>> alladvthermos = new ArrayList<>();
     public static RegistryObject<Item> thermos = register("thermos",n->new ThermosItem( "item.frostedheart.thermos", 1500, 250, true));
     public static RegistryObject<Item> advanced_thermos = register("advanced_thermos",n->new ThermosItem( "item.frostedheart.advanced_thermos", 3000, 250, true));
-    public static RegistryObject<Item> generatorupgrader = register("generator_upgrade_i",n->new GeneratorUpgraderI( createProps().stacksTo(0)));
+    //public static RegistryObject<Item> generatorupgrader = register("generator_upgrade_i",n->new GeneratorUpgraderI( createProps().stacksTo(0)));
     static {
         for (String s : FHItems.colors) {
             allthermos.add(register(s + "_thermos",n->new ThermosItem( "item.frostedheart.thermos", 1500, 250, false)));

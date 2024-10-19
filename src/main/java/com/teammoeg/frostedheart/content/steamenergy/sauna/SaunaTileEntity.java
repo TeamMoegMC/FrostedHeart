@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -39,12 +40,15 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
+import blusunrize.immersiveengineering.common.register.IEMenuTypes.ArgContainer;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.item.ItemStack;
@@ -54,21 +58,22 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fml.network.NetworkHooks;
-import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.network.NetworkHooks;
 
-public class SaunaTileEntity extends IEBaseTileEntity implements TickableBlockEntity, FHBlockInterfaces.IActiveState, IIEInventory, IInteractionObjectIE {
+public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity, FHBlockInterfaces.IActiveState, IIEInventory,MenuProvider {
 
     private static final int RANGE = 5;
     private static final int WALL_HEIGHT = 3;
@@ -89,16 +94,12 @@ public class SaunaTileEntity extends IEBaseTileEntity implements TickableBlockEn
     protected NonNullList<ItemStack> inventory;
     private LazyOptional<IItemHandler> insertionCap;
 
-    public SaunaTileEntity() {
-        super(FHTileTypes.SAUNA.get());
+    public SaunaTileEntity(BlockPos pos,BlockState state) {
+        super(FHTileTypes.SAUNA.get(),pos,state);
         this.inventory = NonNullList.withSize(1, ItemStack.EMPTY);
         this.insertionCap = LazyOptional.of(() -> new IEInventoryHandler(1, this));
     }
 
-    @Override
-    public boolean canUseGui(Player playerEntity) {
-        return true;
-    }
 
 
     private boolean dist(BlockPos crn, BlockPos orig) {
@@ -116,7 +117,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements TickableBlockEn
                 for (Direction dir : HORIZONTALS) {
                     BlockPos act = crn.relative(dir);
                     // if crn connected to plank
-                    if (l.isLoaded(act) && (l.getBlockState(act).is(BlockTags.PLANKS) || l.getBlockState(act).getBlock().is(FHBlocks.sauna.get()))) {
+                    if (l.isLoaded(act) && (l.getBlockState(act).is(BlockTags.PLANKS) || l.getBlockState(act).is(FHBlocks.sauna.get()))) {
                         findNext(l, act, orig, poss, edges);
                     }
                     // otherwise, crn is an edge block
@@ -148,12 +149,6 @@ public class SaunaTileEntity extends IEBaseTileEntity implements TickableBlockEn
 
     public float getEffectTimeFraction() {
         return (float) remainTime / (float) maxTime;
-    }
-
-    @Nullable
-    @Override
-    public IInteractionObjectIE getGuiMaster() {
-        return this;
     }
 
     @Nullable
@@ -213,10 +208,10 @@ public class SaunaTileEntity extends IEBaseTileEntity implements TickableBlockEn
     }
 
     public InteractionResult onClick(Player player) {
-        if (!player.level.isClientSide) {
+        if (!player.level().isClientSide) {
             if (formed) {
                 // player.sendStatusMessage(GuiUtils.translateMessage("structure_formed"), true);
-                NetworkHooks.openGui((ServerPlayer) player, this, this.getBlockPos());
+                NetworkHooks.openScreen((ServerPlayer) player, this, this.getBlockPos());
             } else {
                 player.displayClientMessage(TranslateUtils.translateMessage("structure_not_formed"), true);
             }
@@ -364,4 +359,20 @@ public class SaunaTileEntity extends IEBaseTileEntity implements TickableBlockEn
         nbt.put("floor", floorNBT);
         network.save(nbt, descPacket);
     }
+
+
+
+	@Override
+	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
+		return new SaunaContainer(pContainerId,pPlayerInventory,this);
+	}
+
+
+
+	@Override
+	public Component getDisplayName() {
+		return this.getBlockState().getBlock().getName();
+	}
+
+
 }

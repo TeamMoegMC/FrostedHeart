@@ -205,7 +205,7 @@ public class CommonEvents {
         ReloadableServerResources dataPackRegistries = event.getServerResources();
         event.addListener(new FHRecipeCachingReloadListener(dataPackRegistries));
     }
-
+/*
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void biomeLoadingEventRemove(@Nonnull BiomeLoadingEvent event) {
         MobSpawnInfoBuilder spawns = event.getSpawns();
@@ -215,7 +215,7 @@ public class CommonEvents {
             
         }
 
-    }
+    }*/
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void doPlayerInteract(PlayerInteractEvent ite) {
     	if(ite.getEntity() instanceof ServerPlayer&&!(ite.getEntity() instanceof FakePlayer)) {
@@ -225,18 +225,17 @@ public class CommonEvents {
     @SubscribeEvent
     public static void canUseBlock(PlayerInteractEvent.RightClickBlock event) {
         if (event.getItemStack().getItem() instanceof IModularItem) {
-            Set<ToolType> tt = event.getItemStack().getToolTypes();
             int type = 0;
-            if (tt.contains(TetraCompat.coreSpade))
+            if (event.getItemStack().canPerformAction(TetraCompat.coreSpade))
                 type = 1;
-            else if (tt.contains(TetraCompat.geoHammer))
+            else if (event.getItemStack().canPerformAction(TetraCompat.geoHammer))
                 type = 2;
-            else if (tt.contains(TetraCompat.proPick))
+            else if (event.getItemStack().canPerformAction(TetraCompat.proPick))
                 type = 3;
             if (type != 0)
                 if (!event.getEntity().getCooldowns().isOnCooldown(event.getItemStack().getItem())) {
                     event.getEntity().getCooldowns().addCooldown(event.getItemStack().getItem(), 10);
-                    if ((type == 3 && event.getLevel().getRandom().nextBoolean()) || (type != 3 && event.getWorld().getRandom().nextBoolean()))
+                    if ((type == 3 && event.getLevel().getRandom().nextBoolean()) || (type != 3 && event.getLevel().getRandom().nextBoolean()))
                         ((IModularItem) event.getItemStack().getItem()).tickProgression(event.getEntity(), event.getItemStack(), 1);
                     switch (type) {
                         case 1:
@@ -266,6 +265,7 @@ public class CommonEvents {
         FHUtils.clonePlayerCapability(FHCapabilities.WANTED_FOOD.capability(),ev.getOriginal(),ev.getEntity());
         FHUtils.clonePlayerCapability(FHCapabilities.ENERGY,ev.getOriginal(),ev.getEntity());
         FHUtils.clonePlayerCapability(FHCapabilities.SCENARIO,ev.getOriginal(),ev.getEntity());
+        FHUtils.clonePlayerCapability(FHCapabilities.WAYPOINT,ev.getOriginal(),ev.getEntity());
         //FHUtils.clonePlayerCapability(PlayerTemperatureData.CAPABILITY,ev.getOriginal(),ev.getEntity());
         //FHMain.LOGGER.info("clone");
         if (!ev.getEntity().level().isClientSide) {

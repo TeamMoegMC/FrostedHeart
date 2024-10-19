@@ -28,7 +28,6 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.recipes.DietGroupCodec;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
@@ -43,9 +42,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fml.network.PacketDistributor;
-import top.theillusivec4.diet.api.DietCapability;
-import top.theillusivec4.diet.api.IDietTracker;
+import net.minecraftforge.network.PacketDistributor;
 
 public class EnergyCore implements NBTSerializable {
     /*long energy;
@@ -105,7 +102,7 @@ public class EnergyCore implements NBTSerializable {
     public static void applySleep(ServerPlayer player) {
         EnergyCore data=getCapability(player).orElse(null);
         long lsd = data.lastsleepdate;
-        long csd = (player.level.getDayTime() + 12000L) / 24000L;
+        long csd = (player.level().getDayTime() + 12000L) / 24000L;
         //System.out.println("slept");
         if (csd == lsd) return;
         //System.out.println("sleptx");
@@ -128,8 +125,9 @@ public class EnergyCore implements NBTSerializable {
         	initValue *= 0.5;
         }
         double dietValue = 0;
-        IDietTracker idt = DietCapability.get(player).orElse(null);
-        if (idt != null) {
+        //TODO implement diet
+        //IDietTracker idt = DietCapability.get(player).orElse(null);
+        /*if (idt != null) {
             int tdv = 0;
             for (Entry<String, Float> vs : idt.getValues().entrySet())
                 if (DietGroupCodec.getGroup(vs.getKey()).isBeneficial()) {
@@ -139,7 +137,7 @@ public class EnergyCore implements NBTSerializable {
 
             if (tdv != 0)
                 dietValue /= tdv;
-        }
+        }*/
         initValue+=(dietValue - 0.4);
         initValue/=1+(trd.getHolder().getOnlineMembers().size()-1)*0.8f;
         return (float) initValue;
@@ -159,7 +157,7 @@ public class EnergyCore implements NBTSerializable {
     }
 
     public static void reportEnergy(Player player) {
-    	getCapability(player).ifPresent(data->player.sendMessage(TranslateUtils.str("Energy:" + data.level + ",Persist Energy: " + data.persistLevel), player.getUUID()));
+    	getCapability(player).ifPresent(data->player.sendSystemMessage(TranslateUtils.str("Energy:" + data.level + ",Persist Energy: " + data.persistLevel)));
     }
  
 

@@ -58,6 +58,6 @@ public class FHSoupItem extends FHBaseItem {
             }
         }*/
 
-        return entityLiving instanceof Player && ((Player) entityLiving).abilities.instabuild ? itemstack : new ItemStack(Items.BOWL);
+        return entityLiving instanceof Player && ((Player) entityLiving).getAbilities().instabuild ? itemstack : new ItemStack(Items.BOWL);
     }
 }

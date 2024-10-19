@@ -81,7 +81,7 @@ public class ThermometerItem extends FHBaseItem {
     public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
         playerIn.displayClientMessage(TranslateUtils.translateMessage("thermometer.testing"), true);
         playerIn.startUsingItem(handIn);
-        if (playerIn instanceof ServerPlayer && playerIn.abilities.instabuild) {
+        if (playerIn instanceof ServerPlayer && playerIn.getAbilities().instabuild) {
             TemperatureDisplayHelper.sendTemperature((ServerPlayer) playerIn, "info.thermometerbody", getTemperature((ServerPlayer) playerIn) / 10f + 37f);
         }
         return new InteractionResultHolder<>(InteractionResult.SUCCESS, playerIn.getItemInHand(handIn));

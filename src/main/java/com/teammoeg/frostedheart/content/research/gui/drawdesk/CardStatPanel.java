@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardStat;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.ClientResearchGame;
@@ -27,6 +26,7 @@ import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.ClientResear
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class CardStatPanel extends Panel {
     ClientResearchGame rg;
@@ -54,7 +54,7 @@ public class CardStatPanel extends Panel {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         CardStat cs = rg.getStats().get(cardstate);
         tf.setColor(cs.isGood() ? TechIcons.text : TechIcons.text_red);
         tf.setText("" + cs.num);

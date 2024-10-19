@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftbquests.client.ClientQuestFile;
-import dev.ftb.mods.ftbquests.gui.quests.QuestScreen;
+import dev.ftb.mods.ftbquests.client.gui.quests.QuestScreen;
 
 @Mixin(QuestScreen.class)
 public abstract class QuestScreenMixin extends BaseScreen {

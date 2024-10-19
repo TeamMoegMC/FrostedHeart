@@ -21,17 +21,19 @@ package com.teammoeg.frostedheart.content.steamenergy.debug;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class DebugHeaterTileEntity extends IEBaseTileEntity implements  TickableBlockEntity {
+public class DebugHeaterTileEntity extends IEBaseBlockEntity implements  FHTickableBlockEntity {
 
     HeatEnergyNetwork manager = new HeatEnergyNetwork(this, c -> {
         for (Direction d : Direction.values()) {
@@ -39,8 +41,8 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements  Tickable
         }
     });
     HeatProviderEndPoint endpoint=new HeatProviderEndPoint(-1, Integer.MAX_VALUE, Integer.MAX_VALUE);
-    public DebugHeaterTileEntity() {
-        super(FHTileTypes.DEBUGHEATER.get());
+    public DebugHeaterTileEntity(BlockPos pos,BlockState state) {
+        super(FHTileTypes.DEBUGHEATER.get(),pos,state);
     }
 
 

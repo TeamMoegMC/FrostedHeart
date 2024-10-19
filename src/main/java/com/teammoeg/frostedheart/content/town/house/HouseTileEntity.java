@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
@@ -76,8 +77,8 @@ public class HouseTileEntity extends AbstractTownWorkerTileEntity{
     /** Tile data, stored in tile entity. */
     HeatConsumerEndpoint endpoint = new HeatConsumerEndpoint(99,10,1);
 
-    public HouseTileEntity() {
-        super(FHTileTypes.HOUSE.get());
+    public HouseTileEntity(BlockPos pos,BlockState state) {
+        super(FHTileTypes.HOUSE.get(),pos,state);
     }
 
     @Override

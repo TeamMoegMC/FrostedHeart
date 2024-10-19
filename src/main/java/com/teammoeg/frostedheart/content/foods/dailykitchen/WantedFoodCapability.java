@@ -58,6 +58,7 @@ import net.minecraft.nbt.Tag;
 public class WantedFoodCapability implements NBTSerializable{
 
     private Set<Item> wantedFoods = new HashSet<>();
+    private Set<Item> foodsEaten= new HashSet<>();
     private int eatenTimes = 0;
     private int eatenFoodsAmount = 0;
     private final String key_wantedFoods = "wantedFoods";
@@ -132,5 +133,9 @@ public class WantedFoodCapability implements NBTSerializable{
         for(Tag itemNBT : list){
             wantedFoods.add(turnStringNBTToItem(itemNBT));
         }
+	}
+
+	public Set<Item> getFoodsEaten() {
+		return foodsEaten;
 	}
 }

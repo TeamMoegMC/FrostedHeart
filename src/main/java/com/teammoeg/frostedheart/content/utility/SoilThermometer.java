@@ -71,11 +71,11 @@ public class SoilThermometer extends FHBaseItem {
     public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
         playerIn.displayClientMessage(TranslateUtils.translateMessage("thermometer.testing"), true);
         playerIn.startUsingItem(handIn);
-        if (playerIn instanceof ServerPlayer && playerIn.abilities.instabuild) {
+        if (playerIn instanceof ServerPlayer && playerIn.getAbilities().instabuild) {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, playerIn, Fluid.ANY);
             if (brtr.getType() != Type.MISS) {
 
-            	playerIn.sendMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(ChunkHeatData.getTemperature(playerIn.level, brtr.getBlockPos()))), playerIn.getUUID());
+            	playerIn.sendSystemMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(ChunkHeatData.getTemperature(playerIn.level(), brtr.getBlockPos()))));
             }
 
         }
@@ -89,8 +89,7 @@ public class SoilThermometer extends FHBaseItem {
         if (entityplayer instanceof ServerPlayer) {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, Fluid.ANY);
             if (brtr.getType() == Type.MISS) return stack;
-            TemperatureDisplayHelper.sendTemperature((ServerPlayer) entityLiving,
-                    "info.soil_thermometerbody", (int) (ChunkHeatData.getTemperature(entityLiving.level, brtr.getBlockPos()) * 10) / 10f);
+            entityplayer.sendSystemMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(ChunkHeatData.getTemperature(entityplayer.level(), brtr.getBlockPos()))));
         }
         return stack;
     }

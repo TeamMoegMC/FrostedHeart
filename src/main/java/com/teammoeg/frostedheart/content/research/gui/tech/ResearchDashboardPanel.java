@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import java.text.DecimalFormat;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
@@ -95,7 +95,7 @@ public class ResearchDashboardPanel extends Panel {
         tf.setText(detailPanel.research.getName());
         if (FHResearch.editor) {
             Button create = new TechTextButton(this, TranslateUtils.str("edit"),
-                    Icon.EMPTY) {
+                    Icon.empty()) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
                     EditUtils.editResearch(this, detailPanel.research);
@@ -114,7 +114,7 @@ public class ResearchDashboardPanel extends Panel {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         ResearchData rd = detailPanel.research.getData();
 
         techpoint.setColor(TechIcons.text);

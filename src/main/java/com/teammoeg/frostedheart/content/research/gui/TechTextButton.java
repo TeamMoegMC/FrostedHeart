@@ -19,12 +19,15 @@
 
 package com.teammoeg.frostedheart.content.research.gui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
+
+import java.util.Optional;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import dev.ftb.mods.ftblibrary.util.client.PositionedIngredient;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 
@@ -44,7 +47,7 @@ public abstract class TechTextButton extends TechButton {
     }
 
     @Override
-    public void draw(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         drawBackground(matrixStack, theme, x, y, w, h);
         int s = h >= 16 ? 16 : 8;
         int off = (h - s) / 2;
@@ -75,8 +78,9 @@ public abstract class TechTextButton extends TechButton {
     }
 
     @Override
-    public Object getIngredientUnderMouse() {
-        return icon.getIngredient();
+    public Optional<PositionedIngredient> getIngredientUnderMouse() {
+        Object igd=icon.getIngredient();
+    	return igd instanceof PositionedIngredient?Optional.of((PositionedIngredient)igd):Optional.empty();
     }
 
 

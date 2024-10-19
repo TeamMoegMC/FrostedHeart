@@ -20,39 +20,36 @@
 package com.teammoeg.frostedheart.compat.jei.category;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
-import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.gui.IRecipeLayout;
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableAnimated;
 import mezz.jei.api.gui.drawable.IDrawableStatic;
-import mezz.jei.api.gui.ingredient.IGuiItemStackGroup;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
-import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.recipe.IFocusGroup;
+import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import mezz.jei.config.Constants;
-import net.minecraft.world.level.block.Blocks;
+import mezz.jei.common.Constants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.text.TranslationTextComponent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
 
 public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRecipe> {
-    public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "defrost_smoking");
+    public static RecipeType<SmokingDefrostRecipe> UID = RecipeType.create(FHMain.MODID, "defrost_smoking",SmokingDefrostRecipe.class);
     private IDrawable BACKGROUND;
     private IDrawable ICON;
     private LoadingCache<Integer, IDrawableAnimated> cachedArrows;
@@ -78,14 +75,14 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
     }
 
     @Override
-    public void draw(SmokingDefrostRecipe recipe, PoseStack transform, double mouseX, double mouseY) {
+    public void draw(SmokingDefrostRecipe recipe, IRecipeSlotsView view, GuiGraphics transform, double mouseX, double mouseY) {
         animatedFlame.draw(transform, 1, 20);
         IDrawableAnimated arrow = getArrow(recipe);
         arrow.draw(transform, 24, 8);
         drawCookTime(recipe, transform, 35);
     }
 
-    protected void drawCookTime(SmokingDefrostRecipe recipe, PoseStack matrixStack, int y) {
+    protected void drawCookTime(SmokingDefrostRecipe recipe, GuiGraphics matrixStack, int y) {
         int cookTime = recipe.getCookingTime();
         if (cookTime > 0) {
             int cookTimeSeconds = cookTime / 20;
@@ -94,7 +91,7 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
             Minecraft minecraft = Minecraft.getInstance();
             Font fontRenderer = minecraft.font;
             int stringWidth = fontRenderer.width(timeString);
-            fontRenderer.draw(matrixStack, timeString, BACKGROUND.getWidth() - stringWidth, y, 0xFF808080);
+            matrixStack.drawString(fontRenderer, timeString, BACKGROUND.getWidth() - stringWidth, y, 0xFF808080);
         }
     }
 
@@ -117,34 +114,23 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
         return ICON;
     }
 
-    @Override
-    public Class<? extends SmokingDefrostRecipe> getRecipeClass() {
-        return SmokingDefrostRecipe.class;
-    }
-
-    public String getTitle() {
-        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".defrost_smoking").getString());
-    }
-
-    @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
-
-    @Override
-    public void setIngredients(SmokingDefrostRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.getIngredient().getItems())));
-        ingredients.setOutputLists(VanillaTypes.ITEM, Collections.singletonList(Arrays.asList(recipe.getIss())));
+    public Component getTitle() {
+        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".defrost_smoking"));
     }
 
 
-    @Override
-    public void setRecipe(IRecipeLayout recipeLayout, SmokingDefrostRecipe recipe, IIngredients ingredients) {
-        IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
 
-        guiItemStacks.init(0, true, 0, 0);
-        guiItemStacks.init(1, false, 60, 8);
 
-        guiItemStacks.set(ingredients);
-    }
+
+
+	@Override
+	public RecipeType<SmokingDefrostRecipe> getRecipeType() {
+		return UID;
+	}
+
+	@Override
+	public void setRecipe(IRecipeLayoutBuilder builder, SmokingDefrostRecipe recipe, IFocusGroup focuses) {
+		builder.addSlot(RecipeIngredientRole.INPUT, 0, 0).addIngredients(recipe.getIngredient());
+		builder.addSlot(RecipeIngredientRole.OUTPUT, 60, 8).addItemStacks(Arrays.asList(recipe.getIss()));
+	}
 }

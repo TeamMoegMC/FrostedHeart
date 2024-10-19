@@ -26,7 +26,9 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
@@ -34,8 +36,8 @@ import net.minecraftforge.common.util.LazyOptional;
 public class HeatIncubatorTileEntity extends IncubatorTileEntity{
     HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 80, 5);
 
-    public HeatIncubatorTileEntity() {
-        super(FHTileTypes.INCUBATOR2.get());
+    public HeatIncubatorTileEntity(BlockPos bp,BlockState bs) {
+        super(FHTileTypes.INCUBATOR2.get(),bp,bs);
     }
 
 

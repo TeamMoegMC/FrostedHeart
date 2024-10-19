@@ -32,7 +32,7 @@ public class DeskBlock extends FHBaseBlock {
     }
 
     public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-        Integer finalType = Math.abs(RANDOM.nextInt()) % typeCount;
+        Integer finalType = Math.abs(worldIn.random.nextInt()) % typeCount;
         BlockState newState = this.stateDefinition.any().setValue(TYPE, finalType);
         worldIn.setBlockAndUpdate(pos, newState);
     }

@@ -24,7 +24,6 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 
-import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.world.level.block.state.BlockState;
@@ -34,22 +33,22 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.text.TranslationTextComponent;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
-import com.teammoeg.frostedheart.base.capability.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
 
 public class RelicChestTileEntity extends RandomizableContainerBlockEntity implements IIEInventory {
     protected NonNullList<ItemStack> inventory;
     private LazyOptional<IItemHandler> insertionCap;
 
-    public RelicChestTileEntity() {
-        super(FHTileTypes.RELIC_CHEST.get());
+    public RelicChestTileEntity(BlockPos bp,BlockState bs) {
+        super(FHTileTypes.RELIC_CHEST.get(),bp,bs);
         this.inventory = NonNullList.withSize(15, ItemStack.EMPTY);
         this.insertionCap = LazyOptional.of(() -> new IEInventoryHandler(15, this));
 
@@ -57,7 +56,7 @@ public class RelicChestTileEntity extends RandomizableContainerBlockEntity imple
 
     @Override
     protected AbstractContainerMenu createMenu(int id, Inventory player) {
-        return GuiHandler.createContainer(player, this, id);
+        return new RelicChestContainer(id, player, this);
     }
 
     @Override
@@ -102,8 +101,8 @@ public class RelicChestTileEntity extends RandomizableContainerBlockEntity imple
     }
 
     @Override
-    public void load(BlockState state, CompoundTag nbt) {
-        super.load(state, nbt);
+    public void load(CompoundTag nbt) {
+        super.load(nbt);
         this.inventory = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
         if (!this.tryLoadLootTable(nbt)) {
             ContainerHelper.loadAllItems(nbt, this.inventory);
@@ -126,12 +125,10 @@ public class RelicChestTileEntity extends RandomizableContainerBlockEntity imple
     }
 
     @Override
-    public CompoundTag save(CompoundTag compound) {
-        super.save(compound);
+    public void saveAdditional(CompoundTag compound) {
+        super.saveAdditional(compound);
         if (!this.trySaveLootTable(compound)) {
             ContainerHelper.saveAllItems(compound, this.inventory);
         }
-
-        return compound;
     }
 }

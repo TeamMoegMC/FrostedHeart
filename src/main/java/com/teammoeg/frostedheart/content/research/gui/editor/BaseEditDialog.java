@@ -19,12 +19,11 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
+import net.minecraft.client.gui.GuiGraphics;
 
 public abstract class BaseEditDialog extends EditDialog {
 
@@ -39,7 +38,7 @@ public abstract class BaseEditDialog extends EditDialog {
     }
 
     @Override
-    public void drawBackground(PoseStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         theme.drawGui(matrixStack, x - 5, y - 5, w + 10, h + 10, WidgetType.NORMAL);
     }
 }
