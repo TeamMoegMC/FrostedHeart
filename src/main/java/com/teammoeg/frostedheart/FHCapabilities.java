@@ -14,6 +14,7 @@ import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.foods.dailykitchen.WantedFoodCapability;
+import com.teammoeg.frostedheart.content.nutrition.NutritionCapability;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.robotics.logistics.RobotChunk;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
@@ -47,6 +48,7 @@ public class FHCapabilities {
 	public static final FHNPCapability<RobotChunk> ROBOTIC_LOGISTIC_CHUNK=registerNotPresist(RobotChunk.class);
 	public static final FHNBTCapability<WaypointCapability> WAYPOINT=register(WaypointCapability.class);
 	public static final FHNBTCapability<WaterLevelCapability> PLAYER_WATER_LEVEL = register(WaterLevelCapability.class);
+	public static final FHNBTCapability<NutritionCapability> PLAYER_NUTRITION = register(NutritionCapability.class);
 
 	public static void setup() {
 	
