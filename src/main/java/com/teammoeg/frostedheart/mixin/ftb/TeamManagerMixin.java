@@ -28,9 +28,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.util.mixin.FTBFixUtils;
 
-import dev.ftb.mods.ftbteams.data.ClientTeamManager;
-import dev.ftb.mods.ftbteams.data.Team;
-import dev.ftb.mods.ftbteams.data.TeamManager;
+import dev.ftb.mods.ftbteams.api.client.ClientTeamManager;
+import dev.ftb.mods.ftbteams.api.Team;
+import dev.ftb.mods.ftbteams.api.TeamManager;
 import dev.ftb.mods.ftbteams.net.SyncTeamsMessage;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;

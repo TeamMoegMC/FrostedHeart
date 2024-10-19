@@ -33,8 +33,8 @@ import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.util.mixin.FTBFixUtils;
 
 import dev.ftb.mods.ftbteams.data.ClientTeam;
-import dev.ftb.mods.ftbteams.data.ClientTeamManager;
-import dev.ftb.mods.ftbteams.data.KnownClientPlayer;
+import dev.ftb.mods.ftbteams.api.client.ClientTeamManager;
+import dev.ftb.mods.ftbteams.api.client.KnownClientPlayer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
 
