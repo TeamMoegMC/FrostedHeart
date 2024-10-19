@@ -71,9 +71,12 @@ minecraft {
             // GLFW library file libglfw.3.dylib
             // NOTE for IDEA user: You need to manually set the JVM arg
             // and the environment variable in the IDEA run configuration.
+
             if (System.env.LIBGLFW_PATH_MACOS != null) {
-                println "LIBGLFW_PATH_MACOS is set to ${System.env.LIBGLFW_PATH_MACOS}"
-                jvmArgs "-Dorg.lwjgl.glfw.libname=${System.env.LIBGLFW_PATH_MACOS}"
+                jvmArgs "-Dorg.lwjgl.glfw.libname=/Users/wyc/Development/glfw-3.4.bin.MACOS/lib-universal/libglfw.3.dylib"
+                println "LIBGLFW_PATH_MACOS is set to jvmArgs \"-Dorg.lwjgl.glfw.libname=/Users/wyc/Development/glfw-3.4.bin.MACOS/lib-universal/libglfw.3.dylib\""
+//                println "LIBGLFW_PATH_MACOS is set to ${System.env.LIBGLFW_PATH_MACOS}"
+//                jvmArgs "-Dorg.lwjgl.glfw.libname=${System.env.LIBGLFW_PATH_MACOS}"
             }
 
             // Similar steps for Linux users
@@ -245,19 +248,19 @@ dependencies {
     // at runtime, use the full JEI jar for Forge
     implementation(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}"))
 
-    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api")
-    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}")
-
-    implementation fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
-    implementation fg.deobf("dev.ftb.mods:ftb-library-forge:${ftb_library_version}")
-    implementation fg.deobf("dev.ftb.mods:ftb-teams-forge:${ftb_teams_version}")
-    implementation fg.deobf("dev.ftb.mods:ftb-chunks-forge:${ftb_chunks_version}")
-    implementation fg.deobf("dev.ftb.mods:ftb-quests-forge:${ftb_quests_version}")
-
-    implementation fg.deobf("curse.maven:tetra-289712:5544287")
-    implementation fg.deobf("curse.maven:mutil-351914:4824501")
-    implementation fg.deobf("curse.maven:diet-443570:4813904")
-    implementation fg.deobf("curse.maven:primal-winter-393321:4575861")
+//    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api")
+//    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}")
+//
+//    implementation fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
+//    implementation fg.deobf("dev.ftb.mods:ftb-library-forge:${ftb_library_version}")
+//    implementation fg.deobf("dev.ftb.mods:ftb-teams-forge:${ftb_teams_version}")
+//    implementation fg.deobf("dev.ftb.mods:ftb-chunks-forge:${ftb_chunks_version}")
+//    implementation fg.deobf("dev.ftb.mods:ftb-quests-forge:${ftb_quests_version}")
+//
+//    implementation fg.deobf("curse.maven:tetra-289712:5544287")
+//    implementation fg.deobf("curse.maven:mutil-351914:4824501")
+//    implementation fg.deobf("curse.maven:diet-443570:4813904")
+//    implementation fg.deobf("curse.maven:primal-winter-393321:4575861")
 
     // dead mods:
 //    implementation fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
