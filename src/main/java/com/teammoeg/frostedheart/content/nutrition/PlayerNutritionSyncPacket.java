@@ -12,10 +12,10 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public class PlayerNutritionSyncPacket extends NBTMessage {
-     float fruit ,grain ,portein,vegetable,sugar = 1.0f;
+    private float vitamin , carbohydrate, protein,vegetable;
 
-     public PlayerNutritionSyncPacket(float fruit ,float grain ,float portein,float vegetable,float sugar) {
-         super(toTag(fruit, grain, portein, vegetable, sugar));
+     public PlayerNutritionSyncPacket(float vitamin ,float carbohydrate ,float portein,float vegetable) {
+         super(toTag(vitamin, carbohydrate, portein, vegetable));
      }
 
 
@@ -23,13 +23,12 @@ public class PlayerNutritionSyncPacket extends NBTMessage {
         super(NutritionCapability.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundTag::new));
     }
 
-    public static CompoundTag toTag(float fruit ,float grain ,float portein,float vegetable,float sugar) {
+    public static CompoundTag toTag(float vitamin ,float carbohydrate ,float portein,float vegetable) {
         CompoundTag compound = new CompoundTag();
-        compound.putFloat("fruit", fruit);
-        compound.putFloat("grain", grain);
+        compound.putFloat("vitamin", vitamin);
+        compound.putFloat("carbohydrate", carbohydrate);
         compound.putFloat("protein", portein);
         compound.putFloat("vegetable", vegetable);
-        compound.putFloat("sugar", sugar);
         return compound;
     }
 
@@ -37,11 +36,10 @@ public class PlayerNutritionSyncPacket extends NBTMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         if (context.get().getDirection() == NetworkDirection.PLAY_TO_CLIENT) {
             context.get().enqueueWork(() -> NutritionCapability.getCapability(Minecraft.getInstance().player).ifPresent(date -> {
-                date.setFruit(fruit);
-                date.setGrain(grain);
-                date.setProtein(portein);
+                date.setCarbohydrate(carbohydrate);
+                date.setProtein(protein);
                 date.setVegetable(vegetable);
-                date.setSugar(sugar);
+                date.setVitamin(vitamin);
             }));
         }
     }

@@ -18,59 +18,51 @@ public class NutritionCapability implements NBTSerializable {
     @Override
     public void save(CompoundTag nbt, boolean isPacket) {
         CompoundTag compound = new CompoundTag();
-        compound.putFloat("fruit", this.fruit);
-        compound.putFloat("grain", this.grain);
+        compound.putFloat("vitamin", this.vitamin);
+        compound.putFloat("carbohydrate", this.carbohydrate);
         compound.putFloat("protein", this.protein);
         compound.putFloat("vegetable", this.vegetable);
-        compound.putFloat("sugar", this.sugar);
     }
 
     @Override
     public void load(CompoundTag nbt, boolean isPacket) {
-        setFruit(nbt.getFloat("fruit"));
-        setGrain(nbt.getFloat("grain"));
+        setVitamin(nbt.getFloat("vitamin"));
+        setCarbohydrate(nbt.getFloat("carbohydrate"));
         setProtein(nbt.getFloat("protein"));
         setVegetable(nbt.getFloat("vegetable"));
-        setSugar(nbt.getFloat("sugar"));
     }
 
-    private float fruit = 1.0f;
-    private float grain = 1.0f;
-    private float protein = 1.0f;
-    private float vegetable = 1.0f;
-    private float sugar = 1.0f;
+    private float vitamin = 10000.0f;
+    private float carbohydrate = 10000.0f;
+    private float protein = 10000.0f;
+    private float vegetable = 10000.0f;
 
-    public void addFruit(Player player, float add) {
-        this.fruit = Math.min(this.fruit + add, 1.0f);
+    public void addVitamin(Player player, float add) {
+        this.vitamin += add;
         syncToClientOnRestore(player);
     }
 
-    public void addGrain(Player player, float add) {
-        this.grain = Math.min(this.grain + add, 1.0f);
+    public void addCarbohydrate(Player player, float add) {
+        this.carbohydrate += add;
         syncToClientOnRestore(player);
     }
 
     public void addProtein(Player player, float add) {
-        this.protein = Math.min(this.protein + add, 1.0f);
+        this.protein += add;
         syncToClientOnRestore(player);
     }
 
     public void addVegetable(Player player, float add) {
-        this.vegetable = Math.min(this.vegetable + add, 1.0f);
+        this.vegetable += add;
         syncToClientOnRestore(player);
     }
 
-    public void addSugar(Player player, float add) {
-        this.sugar = Math.min(this.sugar + add, 20);
-        syncToClientOnRestore(player);
+    public void setVitamin(float temp) {
+        this.vitamin = temp;
     }
 
-    public void setFruit(float temp) {
-        this.fruit = temp;
-    }
-
-    public void setGrain(float temp) {
-        this.grain = temp;
+    public void setCarbohydrate(float temp) {
+        this.carbohydrate = temp;
     }
 
     public void setProtein(float temp) {
@@ -81,16 +73,12 @@ public class NutritionCapability implements NBTSerializable {
         this.vegetable = temp;
     }
 
-    public void setSugar(float temp) {
-        this.sugar = temp;
+    public float getVitamin() {
+        return vitamin;
     }
 
-    public float getFruit() {
-        return fruit;
-    }
-
-    public float getGrain() {
-        return grain;
+    public float getCarbohydrate() {
+        return carbohydrate;
     }
 
     public float getProtein() {
@@ -101,9 +89,42 @@ public class NutritionCapability implements NBTSerializable {
         return vegetable;
     }
 
-    public float getSugar() {
-        return sugar;
+    public float getNutritionValue() {
+        return vitamin + carbohydrate + protein + vegetable;
     }
+
+    public float getVitaminPercentage() {
+        return vitamin / getNutritionValue();
+    }
+
+    public float getCarbohydratePercentage() {
+        return carbohydrate / getNutritionValue();
+    }
+
+    public float getProteinPercentage() {
+        return protein / getNutritionValue();
+    }
+
+    public float getVegetablePercentage() {
+        return vegetable / getNutritionValue();
+    }
+
+    public float getVitaminValue() {
+        return vitamin / (getNutritionValue() / 4);
+    }
+
+    public float getCarbohydrateValue() {
+        return carbohydrate / (getNutritionValue() / 4);
+    }
+
+    public float getProteinValue() {
+        return protein / (getNutritionValue() / 4);
+    }
+
+    public float getVegetableValue() {
+        return vegetable / (getNutritionValue() / 4);
+    }
+
 
     public static void syncToClient(ServerPlayer player) {
         player.getCapability(FHCapabilities.PLAYER_WATER_LEVEL.capability()).ifPresent(t -> FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new PlayerWaterLevelSyncPacket(t.getWaterLevel(), t.getWaterSaturationLevel(), t.getWaterExhaustionLevel())));
@@ -112,23 +133,32 @@ public class NutritionCapability implements NBTSerializable {
     public static void syncToClientOnRestore(Player player) {
         if (!player.level().isClientSide()) {
             ServerPlayer serverPlayer = (ServerPlayer) player;
-            //CriteriaTriggerRegistry.WATER_LEVEL_RESTORED_TRIGGER.trigger(serverPlayer);
             syncToClient(serverPlayer);
         }
     }
+
     public void eat(Player player, ItemStack food) {
         //TODO
         CompoundTag tag = food.getOrCreateTag();
-        eat(player, tag.getFloat("fruit"), tag.getFloat("grain"), tag.getFloat("protein"), tag.getFloat("vegetable"), tag.getFloat("sugar"));
+        eat(player, tag.getFloat("vitamin"), tag.getFloat("carbohydrate"), tag.getFloat("protein"), tag.getFloat("vegetable"));
     }
 
 
-    public void eat(Player player, float fruit, float grain, float protein, float vegetable, float sugar) {
-        addFruit(player, fruit);
-        addGrain(player, grain);
+    public void eat(Player player, float vitamin, float carbohydrate, float protein, float vegetable) {
+        addVitamin(player, vitamin);
+        addCarbohydrate(player, carbohydrate);
         addProtein(player, protein);
         addVegetable(player, vegetable);
-        addSugar(player, sugar);
+    }
+
+    public void tick(Player player) {
+        //TODO
+        float consume = 0.1f;
+
+        addVitamin(player, -getVitaminPercentage() * consume);
+        addCarbohydrate(player, -getCarbohydratePercentage() * consume);
+        addProtein(player, -getProteinPercentage() * consume);
+        addVegetable(player, -getVegetablePercentage() * consume);
     }
 
 
