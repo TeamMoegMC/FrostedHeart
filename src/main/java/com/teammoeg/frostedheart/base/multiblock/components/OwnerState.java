@@ -46,6 +46,11 @@ public class OwnerState implements IMultiblockState, IOwnerState<OwnerState> {
         return Optional.empty();
     }
 
+	@Override
+	public void onOwnerChange(IMultiblockContext<? extends OwnerState> ctx) {
+		
+	}
+
 
 
 }

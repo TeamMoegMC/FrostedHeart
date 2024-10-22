@@ -19,14 +19,14 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
-import com.teammoeg.frostedheart.FHBaseContainer;
+import com.teammoeg.frostedheart.FHBlockEntityContainer;
 import com.teammoeg.frostedheart.FHContainer;
 
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-public class RelicChestContainer extends FHBaseContainer<RelicChestTileEntity> {
+public class RelicChestContainer extends FHBlockEntityContainer<RelicChestTileEntity> {
     public RelicChestContainer(int id, Inventory inventoryPlayer, RelicChestTileEntity tile) {
         super(FHContainer.RELIC_CHEST.get(), tile, id, 15);
 
