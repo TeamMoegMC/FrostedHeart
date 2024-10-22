@@ -14,16 +14,9 @@ public class BaseHeatingState extends OwnerState {
     boolean isWorking;
     boolean isOverdrive;
     private boolean initialized;
-    protected final BlockPos origin;
 
-
-	public BlockPos getOrigin() {
-		return origin;
-	}
-
-	public BaseHeatingState(BlockPos origin) {
+	public BaseHeatingState() {
 		super();
-		this.origin = origin;
 	}
 
 	@Override

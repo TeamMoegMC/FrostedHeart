@@ -6,11 +6,15 @@ import java.util.BitSet;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
+import com.teammoeg.frostedheart.util.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.TranslateUtils;
@@ -19,6 +23,7 @@ import com.teammoeg.frostedheart.util.client.Point;
 import com.teammoeg.frostedheart.util.client.RotatableUV;
 
 import blusunrize.immersiveengineering.ImmersiveEngineering;
+import blusunrize.immersiveengineering.api.Lib;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
@@ -27,8 +32,8 @@ import blusunrize.immersiveengineering.client.gui.elements.GuiButtonState;
 import blusunrize.immersiveengineering.client.gui.info.FluidInfoArea;
 import blusunrize.immersiveengineering.client.gui.info.InfoArea;
 import blusunrize.immersiveengineering.client.utils.GuiHelper;
-import blusunrize.immersiveengineering.common.network.MessageTileSync;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.entity.player.Player;
@@ -39,38 +44,82 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.Vec3i;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.ChatFormatting;
 
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonIE.IIEPressable;
 
-public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> extends IEContainerScreen<MasterGeneratorContainer<T>> {
-	T tile;
+public class MasterGeneratorScreen<R extends MasterGeneratorState,T extends MasterGeneratorTileEntity<T,R>> extends IEContainerScreen<MasterGeneratorContainer<R,T>> {
 	public static final int TEXW=512;
 	public static final int TEXH=256;
 	private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("general_generator");
 	public static class MasterGeneratorGuiButtonBoolean extends GuiButtonBoolean{
 
-		public MasterGeneratorGuiButtonBoolean(int x, int y, int w, int h, boolean state,
+		public MasterGeneratorGuiButtonBoolean(int x, int y, int w, int h, Supplier<Boolean> state,
 				int u, int v, IIEPressable<GuiButtonState<Boolean>> handler) {
 			super(x, y, w, h, null, state, TEXTURE, u, v, 0, handler);
 		}
-		
-		public void blit(PoseStack matrixStack, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight) {
-		      blit(matrixStack, x, y,getBlitOffset(), uOffset, vOffset, uWidth, vHeight, TEXH, TEXW);
-		   }
+
+		@Override
+		public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
+		{
+			Minecraft mc = Minecraft.getInstance();
+			if(this.visible)
+			{
+				Font fontrenderer = mc.font;
+				this.isHovered = mouseX >= this.getX()&&mouseY >= this.getY()&&mouseX < this.getX()+this.width&&mouseY < this.getY()+this.height;
+				RenderSystem.enableBlend();
+				RenderSystem.blendFuncSeparate(770, 771, 1, 0);
+				RenderSystem.blendFunc(770, 771);
+				int u = texU+(offsetDir==0?width: offsetDir==2?-width: 0)*getStateAsInt();
+				int v = texV+(offsetDir==1?height: offsetDir==3?-height: 0)*getStateAsInt();
+				graphics.blit(texture, getX(), getY(), u, v, width, height, TEXH, TEXW);
+				if(!getMessage().getString().isEmpty())
+				{
+					int txtCol = 0xE0E0E0;
+					if(!this.active)
+						txtCol = 0xA0A0A0;
+					else if(this.isHovered)
+						txtCol = Lib.COLOUR_I_ImmersiveOrange;
+					int[] offset = getTextOffset(fontrenderer);
+					graphics.drawString(fontrenderer, getMessage(), getX()+offset[0], getY()+offset[1], txtCol, false);
+				}
+			}
+		}
 	}
 	public static class MasterGeneratorGuiButtonUpgrade extends GuiButtonState<Integer>{
 
 		public MasterGeneratorGuiButtonUpgrade(int x, int y, int w, int h,
-				int initialState,  int u, int v,
+			IntSupplier initialState,  int u, int v,
 				IIEPressable<GuiButtonState<Integer>> handler) {
 			super(x, y, w, h, Component.empty(), new Integer[] {0,1,2,3}, initialState, TEXTURE, u, v, 1, handler);
 		}
 
-		public void blit(PoseStack matrixStack, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight) {
-		      blit(matrixStack, x, y,getBlitOffset(), uOffset, vOffset, uWidth, vHeight, TEXH, TEXW);
-		   }
+		@Override
+		public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
+		{
+			Minecraft mc = Minecraft.getInstance();
+			if(this.visible)
+			{
+				Font fontrenderer = mc.font;
+				this.isHovered = mouseX >= this.getX()&&mouseY >= this.getY()&&mouseX < this.getX()+this.width&&mouseY < this.getY()+this.height;
+				RenderSystem.enableBlend();
+				RenderSystem.blendFuncSeparate(770, 771, 1, 0);
+				RenderSystem.blendFunc(770, 771);
+				int u = texU+(offsetDir==0?width: offsetDir==2?-width: 0)*getStateAsInt();
+				int v = texV+(offsetDir==1?height: offsetDir==3?-height: 0)*getStateAsInt();
+				graphics.blit(texture, getX(), getY(), u, v, width, height, TEXH, TEXW);
+				if(!getMessage().getString().isEmpty())
+				{
+					int txtCol = 0xE0E0E0;
+					if(!this.active)
+						txtCol = 0xA0A0A0;
+					else if(this.isHovered)
+						txtCol = Lib.COLOUR_I_ImmersiveOrange;
+					int[] offset = getTextOffset(fontrenderer);
+					graphics.drawString(fontrenderer, getMessage(), getX()+offset[0], getY()+offset[1], txtCol, false);
+				}
+			}
+		}
 	}
 	
 	private static final AtlasUV rangeicons=new AtlasUV(TEXTURE, 256, 0, 128, 64, 2, 5, TEXW, TEXH);
@@ -83,23 +132,18 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 	private static final AtlasUV generatorSymbol=new AtlasUV(TEXTURE, 176, 0, 24, 48, 3, 12, TEXW, TEXH);
 	private static final Point generatorPos=new Point(76, 44);
 	MasterGeneratorGuiButtonUpgrade upgrade;
-	public MasterGeneratorScreen(MasterGeneratorContainer<T> inventorySlotsIn, Inventory inv, Component title) {
-		super(inventorySlotsIn, inv, title);
-		tile=inventorySlotsIn.tile;
+	public MasterGeneratorScreen(MasterGeneratorContainer<R,T> inventorySlotsIn, Inventory inv, Component title) {
+		super(inventorySlotsIn, inv, title, TEXTURE);
 		this.imageHeight=222;
 		
 	}
-	public void blit(PoseStack matrixStack, int x, int y,int w,int h, int u, int v, int uWidth, int vHeight) {
-		GuiComponent.blit(matrixStack,leftPos + x,topPos+y, w, h, u, v, uWidth, vHeight, TEXW, TEXH);
-	}
-	public void blit(PoseStack matrixStack, int x, int y,int w,int h, int u, int v) {
-		blit(matrixStack,x,y, w, h, u, v, w, h);
-	}
-	public MasterGeneratorContainer<T> getMenu() {
+	public MasterGeneratorContainer<R,T> getMenu() {
 		return menu;
 	}
 	@Override
 	protected List<InfoArea> makeInfoAreas() {
+		if(menu.getTank()==null)
+			return super.makeInfoAreas();
 		return ImmutableList.of(new FluidInfoArea(menu.getTank(),new Rect2i(135,27,16,60), 0, 0, 0, 0, TEXTURE));
 	}
 	@Override
@@ -109,7 +153,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 
 		//System.out.println(ininvarrx+","+ininvarry+"-"+inarryl);
 		//range circle
-		int actualRangeLvl=(int) (tile.getRangeLevel()+0.05);
+		int actualRangeLvl=(int) (getMenu().data.get(MasterGeneratorTileEntity.RLEVEL)/100f+0.05);
 		rangeicons.blitAtlas(matrixStack, leftPos, topPos, rangePoint, actualRangeLvl);
 		
 		//fuel slots
@@ -140,56 +184,45 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		matrixStack.blit(TEXTURE, 85, 93, 6, 22, 412, 148);
 
 		//generator symbol
-		generatorSymbol.blitAtlas(matrixStack, leftPos, topPos, generatorPos,((tile.isWorking()&&tile.guiData.get(MasterGeneratorTileEntity.PROCESS)>0)?2:1),(menu.getTier()-1));
+		generatorSymbol.blitAtlas(matrixStack, leftPos, topPos, generatorPos,((getMenu().isWorking.get()&&getMenu().data.get(MasterGeneratorTileEntity.PROCESS)>0)?2:1),(menu.getTier()-1));
 		
 		
 		//range gauge
-		minorPointer.blitRotated(matrixStack, leftPos, topPos, rangeGauge, tile.getRangeLevel()/4f*271f);
+		minorPointer.blitRotated(matrixStack, leftPos, topPos, rangeGauge, getMenu().data.get(MasterGeneratorTileEntity.RLEVEL)/100f/4f*271f);
 		//temp gauge
-		majorPointer.blitRotated(matrixStack, leftPos, topPos, tempGauge, (tile.getTemperatureLevel())/4f*271f);
+		majorPointer.blitRotated(matrixStack, leftPos, topPos, tempGauge, (getMenu().data.get(MasterGeneratorTileEntity.TLEVEL)/100f)/4f*271f);
 		//overdrive gauge
 		minorPointer.blitRotated(matrixStack, leftPos, topPos, overGauge, menu.data.get(MasterGeneratorTileEntity.OVERDRIVE)/1000f*271f);
 	}
-	private void drawCenterText(PoseStack matrixStack,int x,int y,String s,int clr) {
-		this.font.draw(matrixStack,TranslateUtils.str(s),x- (float) this.font.width(s) /2, y-4, clr);
-	}
-	protected void renderLabels(PoseStack matrixStack, int x, int y) {
+	protected void renderLabels(GuiGraphics matrixStack, int x, int y) {
 		//titles
 	    this.font.draw(matrixStack, this.title, this.titleLabelX, this.titleLabelY, 0xff404040);
 	    //this.font.drawText(matrixStack, this.playerInventory.getDisplayName(), this.playerInventoryTitleX, this.playerInventoryTitleY+5, 0xff404040);
 	    //temp level
-	    drawCenterText(matrixStack,88,40, TemperatureDisplayHelper.toTemperatureDeltaInt( tile.getActualTemp())+"",0xffffffff);
+	    matrixStack.drawCenteredString(this.font,TemperatureDisplayHelper.toTemperatureDeltaInt( tile.getActualTemp())+"", 88, 40, 0xffffffff);
 	    //range level
-	    drawCenterText(matrixStack,35,45, tile.getActualRange()+"",0xffffffff);
+	    matrixStack.drawCenteredString(this.font, tile.getActualRange()+"",35,45,0xffffffff);
 	    //overdrive level
-	    drawCenterText(matrixStack,141,45,  menu.data.get(MasterGeneratorTileEntity.OVERDRIVE)/10+"",0xffffffff);
+	    matrixStack.drawCenteredString(this.font,  menu.data.get(MasterGeneratorTileEntity.OVERDRIVE)/10+"", 141,45,0xffffffff);
 	}
 	boolean validStructure;
-	
+	int level;
     @Override
     public void init() {
         super.init();
-        this.buttons.clear();
+        FHMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.masterPos);
         validStructure=tile.isValidStructure();
-        this.addButton(new MasterGeneratorGuiButtonBoolean(leftPos + 5, topPos + 24, 11, 22, tile.isWorking(), 472, 148,
+        this.addRenderableWidget(new MasterGeneratorGuiButtonBoolean(leftPos + 5, topPos + 24, 11, 22, menu.isWorking, 472, 148,
                 btn -> {
-                    CompoundTag tag = new CompoundTag();
-                    tile.setWorking(!btn.getState());
-                    tag.putBoolean("isWorking", tile.isWorking());
-                    ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(tile.master(), tag));
-                    fullInit();
+                    menu.sendMessage(1, btn.getNextState());
                 }));
-        this.addButton(new MasterGeneratorGuiButtonBoolean(leftPos + 160, topPos + 24, 11, 22, tile.isOverdrive(),450, 148,
+        this.addRenderableWidget(new MasterGeneratorGuiButtonBoolean(leftPos + 160, topPos + 24, 11, 22, menu.isOverdrive,450, 148,
                 btn -> {
-                    CompoundTag tag = new CompoundTag();
-                    tile.setOverdrive(!btn.getState());
-                    tag.putBoolean("isOverdrive", tile.isOverdrive());
-                    ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(tile.master(), tag));
-                    fullInit();
+                	menu.sendMessage(2, btn.getNextState());
                 }));
-        int level=1;
+        level=1;
         Player player=ClientUtils.mc().player;
-        if(tile.isBroken) {
+        if(menu.data.get(MasterGeneratorTileEntity.ISBROKEN)!=0) {
         	if(FHUtils.hasItems(player, tile.getRepairCost())) 
         		level=2;
         	else
@@ -199,25 +232,19 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         		 level=0;
         	 }
         }
-        this.addButton(upgrade=new MasterGeneratorGuiButtonUpgrade(leftPos + 75, topPos + 116, 26, 18, level,424, 148,
+        this.addButton(upgrade=new MasterGeneratorGuiButtonUpgrade(leftPos + 75, topPos + 116, 26, 18, ()->level,424, 148,
                 btn -> {
-                	
                 	FHNetwork.sendToServer(new GeneratorModifyPacket());
-                    fullInit();
                 }));
 
         
     }
     @Override
-    public void render(PoseStack transform, int mouseX, int mouseY, float partial) {
+    public void render(GuiGraphics transform, int mouseX, int mouseY, float partial) {
         super.render(transform, mouseX, mouseY, partial);
         List<Component> tooltip = new ArrayList<>();
-        if(menu.getTank()!=null) {
-        	
-        	GuiHelper.handleGuiTank(transform, menu.getTank(), leftPos + 135, topPos + 57, 16, 60, 384, 192, 16, 60, mouseX, mouseY, TEXTURE, tooltip);
-        }
         if (isMouseIn(mouseX, mouseY, 5, 24, 11, 22)) {
-            if (tile.isWorking()) {
+            if (menu.isWorking.get()) {
                 tooltip.add(TranslateUtils.translateGui("generator.mode.off"));
             } else {
                 tooltip.add(TranslateUtils.translateGui("generator.mode.on"));
@@ -225,7 +252,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
         }
 
         if (isMouseIn(mouseX, mouseY, 160, 24, 11, 22)) {
-            if (tile.isOverdrive()) {
+            if (menu.isOverdrive.get()) {
                 tooltip.add(TranslateUtils.translateGui("generator.overdrive.off"));
             } else {
                 tooltip.add(TranslateUtils.translateGui("generator.overdrive.on"));

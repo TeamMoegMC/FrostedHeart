@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 import java.util.function.Consumer;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveStateLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.util.FHMultiblockHelper;
+
 import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IServerTickableComponent;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockLogic;
@@ -33,15 +35,13 @@ import net.minecraft.core.Vec3i;
  * Common base class for any generator like block that maintains a heat area
  */
 public abstract class ZoneHeatingMultiblockLogic<T extends ZoneHeatingMultiblockLogic<T,?>,R extends BaseHeatingState> implements  IServerTickableComponent<R>,IMultiblockLogic<R>,IActiveStateLogic {
-	IETemplateMultiblock multiblock;
 
-	public ZoneHeatingMultiblockLogic(IETemplateMultiblock multiblock) {
+	public ZoneHeatingMultiblockLogic() {
 		super();
-		this.multiblock = multiblock;
 	}
     
     public final void forEachBlock(IMultiblockContext<R> ctx,Consumer<BlockPos> consumer) {
-        Vec3i vec = multiblock.getSize(ctx.getLevel().getRawLevel());
+        Vec3i vec = FHMultiblockHelper.getSize(ctx.getLevel());
         BlockPos.MutableBlockPos pos=new BlockPos.MutableBlockPos();
         for (int x = 0; x < vec.getX(); ++x) {
         	pos.setX(x);
@@ -71,12 +71,11 @@ public abstract class ZoneHeatingMultiblockLogic<T extends ZoneHeatingMultiblock
         // set activity status
         final boolean activeAfterTick = isActive;
         if (state.shouldUpdate()) {
-        	
             if (state.getActualRange() > 0 && state.getActualTemp() > 0) {
-                ChunkHeatData.addPillarTempAdjust(ctx.getLevel().getRawLevel(), ctx.getLevel().getAbsoluteOrigin().offset(ctx.getLevel().getOrientation().getAbsoluteOffset(multiblock.getMasterFromOriginOffset())), state.getActualRange(), state.getUpperBound(),
+                ChunkHeatData.addPillarTempAdjust(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()), state.getActualRange(), state.getUpperBound(),
                 	state.getLowerBound(), state.getActualTemp());
             }else {
-            	ChunkHeatData.removeTempAdjust(ctx.getLevel().getRawLevel(), ctx.getLevel().getAbsoluteOrigin().offset(ctx.getLevel().getOrientation().getAbsoluteOffset(multiblock.getMasterFromOriginOffset())));
+            	ChunkHeatData.removeTempAdjust(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
             }
         } else if (activeAfterTick) {
         	state.shouldUpdate();

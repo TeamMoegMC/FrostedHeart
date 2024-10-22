@@ -19,42 +19,70 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
-import com.teammoeg.frostedheart.FHBaseContainer;
+import com.teammoeg.frostedheart.FHBaseContianer;
+import com.teammoeg.frostedheart.FHBlockEntityContainer;
+import com.teammoeg.frostedheart.FHContainer;
+import com.teammoeg.frostedheart.util.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.client.Point;
 
-import blusunrize.immersiveengineering.common.gui.BlockEntityInventory;
-import blusunrize.immersiveengineering.common.gui.IEBaseContainerOld;
-import blusunrize.immersiveengineering.common.gui.IESlot;
+import blusunrize.immersiveengineering.common.gui.IEContainerMenu;
+import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
+import blusunrize.immersiveengineering.common.gui.IESlot.NewOutput;
+import blusunrize.immersiveengineering.common.gui.sync.GenericContainerData;
+import blusunrize.immersiveengineering.common.gui.sync.GetterAndSetter;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.SlotItemHandler;
 
-public abstract class MasterGeneratorContainer<T extends MasterGeneratorTileEntity<T>> extends FHBaseContainer<T> {
+public abstract class MasterGeneratorContainer<R extends MasterGeneratorState,T extends MasterGeneratorTileEntity<T,R>> extends FHBaseContianer {
     public ContainerData data;
-
-    public MasterGeneratorContainer(MenuType<?> mt,int id, Inventory inventoryPlayer, T tile) {
-        super(mt,tile, id,2);
+    public GetterAndSetter<Boolean> isWorking;
+    public GetterAndSetter<Boolean> isOverdrive;
+    public BlockPos masterPos;
+    public MasterGeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<R> ctx) {
+        super(type,id,2);
         Point in=getSlotIn();
-        BlockEntityInventory inv=new BlockEntityInventory(tile,this);
-        this.addSlot(new IESlot(this, inv, 0, in.getX(), in.getY()) {
+        R state=ctx.mbContext().getState();
+        isWorking=new GetterAndSetter<>(()->state.isWorking,t->state.isWorking=t);
+        isOverdrive=new GetterAndSetter<>(()->state.isOverdrive,t->state.isOverdrive=t);
+        masterPos=FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel());
+        IItemHandler handler=state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel())).get().inventory;
+        this.addSlot(new SlotItemHandler(handler, 0, in.getX(), in.getY()) {
             @Override
             public boolean mayPlace(ItemStack itemStack) {
-                return tile.isStackValid(0, itemStack);
+                return GeneratorData.isStackValid(inventoryPlayer.player.level(), 0, itemStack);
             }
         });
         Point out=getSlotOut();
-        this.addSlot(new IESlot.Output(this, inv, 1, out.getX(), out.getY()));
-        this.addPlayerInventory(inventoryPlayer, 8, 140, 198);
-        data = tile.guiData;
+        this.addSlot(new NewOutput(handler, 1, out.getX(), out.getY()));
+        super.addPlayerInventory(inventoryPlayer, 8, 140, 198);
+        data = state.guiData;
+       /* super.addGenericData(GenericContainerData.bool(isWorking, isWorking));
+        super.addGenericData(GenericContainerData.bool(isOverdrive, isOverdrive));
+        super.addGenericData(GenericContainerData);*/
         addDataSlots(data);
     }
     public abstract Point getSlotIn();
     public abstract Point getSlotOut();
     public abstract int getTier();
     public abstract FluidTank getTank();
+	public void receiveMessage(short btn,int state) {
+        switch(btn) {
+        case 1:isWorking.set(state>0);break;
+        case 2:isOverdrive.set(state>0);break;
+        }
+       /* if (message.contains("temperatureLevel", Tag.TAG_INT))
+            setTemperatureLevel(message.getInt("temperatureLevel"));
+        if (message.contains("rangeLevel", Tag.TAG_INT))
+            setRangeLevel(message.getInt("rangeLevel"));*/
+    }
 }
 

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import com.teammoeg.frostedheart.FHBaseContainer;
+import com.teammoeg.frostedheart.FHBlockEntityContainer;
 import com.teammoeg.frostedheart.FHContainer;
 
 import blusunrize.immersiveengineering.common.gui.IESlot;
@@ -27,7 +27,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-public class IncubatorT2Container extends FHBaseContainer<HeatIncubatorTileEntity> {
+public class IncubatorT2Container extends FHBlockEntityContainer<HeatIncubatorTileEntity> {
 
     public IncubatorT2Container(int id, Inventory inventoryPlayer, HeatIncubatorTileEntity tile) {
         super(FHContainer.INCUBATOR_T2.get(), tile, id, 4);

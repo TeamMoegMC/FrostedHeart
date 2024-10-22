@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.frostedheart.util.FHMultiblockHelper;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -19,12 +20,17 @@ public class GeneratorModifyPacket implements FHMessage{
 	}
 	@Override
 	public void handle(Supplier<Context> context) {
+		
 		context.get().enqueueWork(() -> {
 			ServerPlayer spe=context.get().getSender();
 			AbstractContainerMenu container=spe.containerMenu;
-			if(container instanceof MasterGeneratorContainer) {
-				MasterGeneratorContainer crncontainer=(MasterGeneratorContainer) container;
-				((MasterGeneratorTileEntity)crncontainer.getBlock()).onUpgradeMaintainClicked(spe);
+			if(container instanceof MasterGeneratorContainer crncontainer) {
+				FHMultiblockHelper.getBEHelper(spe.level(), crncontainer.masterPos).ifPresent(helper->{
+					if (helper.getMultiblock().logic()instanceof MasterGeneratorTileEntity mas) {
+						mas.onUpgradeMaintainClicked(helper.getContext(), spe);
+					}
+				});
+				
 			}
 		});
 		context.get().setPacketHandled(true);

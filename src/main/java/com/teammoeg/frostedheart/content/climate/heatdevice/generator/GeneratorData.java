@@ -101,7 +101,17 @@ public class GeneratorData implements SpecialData{
     protected double getEfficiency() {
         return teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
     }
-
+    public static boolean isStackValid(Level w,int slot, ItemStack stack) {
+        if (stack.isEmpty())
+            return false;
+        if (slot == INPUT_SLOT){
+        	for(GeneratorRecipe recipet:FHUtils.filterRecipes(w.getRecipeManager(),GeneratorRecipe.TYPE))
+            	if(recipet.input.test(stack)) {
+            		return true;
+            	}
+        }
+        return false;
+    }
     public GeneratorRecipe getRecipe(Level w) {
         if (inventory.getStackInSlot(INPUT_SLOT).isEmpty())
             return null;

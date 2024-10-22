@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.teammoeg.frostedheart.base.network.FHContainerOperation;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorModifyPacket;
@@ -122,6 +123,8 @@ public class FHNetwork {
         // CHANNEL.registerMessage(id++, TemperatureChangePacket.class,
         // TemperatureChangePacket::encode, TemperatureChangePacket::new,
         // TemperatureChangePacket::handle);
+        //Fundamental Message
+        registerMessage("container_operation",FHContainerOperation.class);
         
         //Climate Messages
         registerMessage("body_data", FHBodyDataSyncPacket.class);
@@ -144,6 +147,7 @@ public class FHNetwork {
         registerMessage("research_drawdesk", FHDrawingDeskOperationPacket.class);
         registerMessage("research_effect", FHEffectProgressSyncPacket.class);
         registerMessage("research_energy_data", FHEnergyDataSyncPacket.class);
+       
         
         //Trade Messages
         registerMessage("bargain_request", BargainRequestPacket.class);
