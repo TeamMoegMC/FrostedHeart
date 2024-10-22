@@ -141,7 +141,7 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
     //由于需要寻找Mine，MineBase可能需要扫描更远的位置，因此设置需要加载的区块更远。
     @Override
     public void refresh_safe(){
-        if(world != null && world.isAreaLoaded(pos,63)){
+        if(level != null && level.isAreaLoaded(this.worldPosition,63)){
             this.refresh();
         }
     }

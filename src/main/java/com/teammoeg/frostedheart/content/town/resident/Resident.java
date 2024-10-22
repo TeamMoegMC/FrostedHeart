@@ -26,7 +26,6 @@ import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.util.MathUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
-import mezz.jei.util.MathUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.core.BlockPos;
@@ -34,7 +33,6 @@ import net.minecraft.core.UUIDUtil;
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 
 /**

@@ -22,7 +22,7 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
     public abstract void refresh();
 
     public void refresh_safe(){
-        if(world != null && world.isAreaLoaded(pos,15)){
+        if(level != null && level.isAreaLoaded(worldPosition,15)){
             this.refresh();
         }
     }
@@ -101,7 +101,7 @@ public abstract class AbstractTownWorkerTileEntity extends FHBaseTileEntity impl
                 this.workerState = TownWorkerState.OCCUPIED_AREA_OVERLAPPED;
             } else{
                 if(this.workerState == TownWorkerState.OCCUPIED_AREA_OVERLAPPED){
-                    this.workerState = NOT_INITIALIZED;
+                    this.workerState = TownWorkerState.NOT_INITIALIZED;
                 }
             }
         }

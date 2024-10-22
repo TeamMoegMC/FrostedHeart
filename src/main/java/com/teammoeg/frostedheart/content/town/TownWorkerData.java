@@ -25,13 +25,11 @@ import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.*;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
 import java.util.Objects;
@@ -100,7 +98,7 @@ public class TownWorkerData {
 
     public void fromTileEntity(TownTileEntity te) {
         type = te.getWorkerType();
-        workData = new CompoundNBT();
+        workData = new CompoundTag();
         workData.put("tileEntity", te.getWorkData());
         priority = te.getPriority();
     }
@@ -109,9 +107,9 @@ public class TownWorkerData {
         te.setWorkData(workData.getCompound("town"));
     }
 
-    public void updateFromTileEntity(ServerWorld world){
+    public void updateFromTileEntity(ServerLevel world){
         if(loaded){
-            TownTileEntity te = (TownTileEntity) world.getTileEntity(pos);
+            TownTileEntity te = (TownTileEntity) world.getBlockEntity(pos);
             if(te != null){
                 workData.put("tileEntity", te.getWorkData());
             }
@@ -122,23 +120,23 @@ public class TownWorkerData {
         workData.put("tileEntity", te.getWorkData());
     }
 
-    public void toTileEntity(ServerWorld world){
+    public void toTileEntity(ServerLevel world){
         if(loaded){
-            TownTileEntity te = (TownTileEntity) world.getTileEntity(pos);
+            TownTileEntity te = (TownTileEntity) world.getBlockEntity(pos);
             if(te != null){
                 te.setWorkData(workData.getCompound("town"));
             }
         }
     }
 
-    public void setDataFromTown(String key, INBT nbt){
-        CompoundNBT nbt0 = workData.getCompound("town");
+    public void setDataFromTown(String key, Tag nbt){
+        CompoundTag nbt0 = workData.getCompound("town");
         nbt0.put(key, nbt);
         workData.put("town", nbt0);
     }
 
     public void setOverlappingState(boolean b){
-        this.setDataFromTown(KEY_IS_OVERLAPPED, b? ByteNBT.ONE: ByteNBT.ZERO);
+        this.setDataFromTown(KEY_IS_OVERLAPPED, b? ByteTag.ONE: ByteTag.ZERO);
     }
 
     public BlockPos getPos() {
@@ -209,7 +207,7 @@ public class TownWorkerData {
      * Should ONLY be used if the worker holds residents, like house, mine, etc.
      */
     public ListTag getResidents(){
-        return workData.getCompound("town").getList("residents", Constants.NBT.TAG_COMPOUND);
+        return workData.getCompound("town").getList("residents", Tag.TAG_COMPOUND);
     }
 
     /**
@@ -226,7 +224,7 @@ public class TownWorkerData {
      */
     public void addResident(UUID uuid){
         CompoundTag dataFromTown = workData.getCompound("town");
-        ListTag list = dataFromTown.getList("residents", Constants.NBT.TAG_STRING);
+        ListTag list = dataFromTown.getList("residents", Tag.TAG_STRING);
         list.add(StringTag.valueOf(uuid.toString()));
         dataFromTown.put("residents", list);
         workData.put("town", dataFromTown);

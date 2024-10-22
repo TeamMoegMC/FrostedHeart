@@ -172,7 +172,7 @@ public enum TownWorkerType {
         return this.getResidentPriorityFunction().apply(data.getResidents().size(), data.getWorkData());
     }
 
-    public double getResidentPriority(Integer integer, CompoundNBT nbt){
+    public double getResidentPriority(Integer integer, CompoundTag nbt){
         return this.getResidentPriorityFunction().apply(integer, nbt);
     }
 

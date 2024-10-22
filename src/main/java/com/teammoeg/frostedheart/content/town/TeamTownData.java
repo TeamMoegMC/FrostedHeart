@@ -30,23 +30,16 @@ import com.teammoeg.frostedheart.content.town.mine.MineTileEntity;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.LongTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ColumnPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.LongNBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.UUIDCodec;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ColumnPos;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.util.Constants;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -177,16 +170,16 @@ public class TeamTownData implements SpecialData{
         });
     }
 
-    void updateAllBlocks(ServerWorld world){
+    void updateAllBlocks(ServerLevel world){
         Iterator<TownWorkerData> iterator = blocks.values().iterator();
         while(iterator.hasNext()){
             TownWorkerData data = iterator.next();
             BlockPos pos = data.getPos();
             data.loaded = false;
-            if (world.isBlockLoaded(pos)) {
+            if (world.isLoaded(pos)) {
                 data.loaded = true;
                 BlockState bs = world.getBlockState(pos);
-                TileEntity te = Utils.getExistingTileEntity(world, pos);
+                BlockEntity te = Utils.getExistingTileEntity(world, pos);
                 TownWorkerType type = data.getType();
                 if(type.getBlock() != bs.getBlock() || !(te instanceof TownTileEntity)){
                     iterator.remove();
@@ -268,13 +261,13 @@ public class TeamTownData implements SpecialData{
         for(TownWorkerData data : blocks.values()){
             if(data.getType() == TownWorkerType.HOUSE || data.getType().needsResident()){
                 ListTag residentListNBT = data.getResidents();
-                residentListNBT.removeIf(residentNBT -> !residents.containsKey(UUID.fromString(residentNBT.getString())));
+                residentListNBT.removeIf(residentNBT -> !residents.containsKey(UUID.fromString(residentNBT.getAsString())));
                 int maxResident = data.getWorkData().getCompound("tileEntity").getInt("maxResident");
                 while(residentListNBT.size() > maxResident){
                     residentListNBT.remove(residentListNBT.size() - 1);
                 }
                 residentListNBT.stream()
-                        .map(nbt -> UUID.fromString(nbt.getString()))
+                        .map(nbt -> UUID.fromString(nbt.getAsString()))
                         .forEach(resident -> {
                             if(data.getType() == TownWorkerType.HOUSE) residents.get(resident).setHousePos(data.getPos());
                             else residents.get(resident).setWorkPos(data.getPos());
@@ -295,8 +288,8 @@ public class TeamTownData implements SpecialData{
             }
         }
         for(TownWorkerData mineBase : mineBases){
-            mineBase.getWorkData().getCompound("tileEntity").getList("linkedMines", Constants.NBT.TAG_LONG).stream()
-                    .map(nbt -> BlockPos.of(((LongTag)nbt).getLong()))
+            mineBase.getWorkData().getCompound("tileEntity").getList("linkedMines", Tag.TAG_LONG).stream()
+                    .map(nbt -> BlockPos.of(((LongTag)nbt).getAsLong()))
                     .forEach(pos -> mineMap.put(blocks.get(pos), mineBase.getPos()));
         }
         mineMap.forEach(MineTileEntity::setLinkedBase);
@@ -311,13 +304,13 @@ public class TeamTownData implements SpecialData{
         if(availableHouses.isEmpty()) return;
         Iterator<TownWorkerData> houseIterator = availableHouses.iterator();
         TownWorkerData currentHouseData = houseIterator.next();
-        ListNBT residentListNBT = currentHouseData.getResidents();
+        ListTag residentListNBT = currentHouseData.getResidents();
         int maxResident = currentHouseData.getMaxResident();
         Iterator<Resident> residentIterator = residents.values().iterator();
         while (true) {//遍历所有居民
             Resident resident = residentIterator.next();
             if (resident.getHousePos() == null) {//为没有house的居民分配进当前的house(暂存在ListNBT中)
-                residentListNBT.add(StringNBT.valueOf(resident.getUUID().toString()));
+                residentListNBT.add(StringTag.valueOf(resident.getUUID().toString()));
                 resident.setHousePos(currentHouseData.getPos());
             }
             if (residentListNBT.size() >= maxResident) {//如果当前house满了，将暂存在ListNBT中的居民信息存入TownWorkerData，然后尝试进入下一个house
@@ -345,7 +338,7 @@ public class TeamTownData implements SpecialData{
         }
         public TownWorkerData townWorkerData;
         public double residentPriority;
-        public ListNBT residentListNBT;
+        public ListTag residentListNBT;
         public void saveResidents(){
             if(residentListNBT != null) townWorkerData.setDataFromTown("residents", residentListNBT);
         }
@@ -353,7 +346,7 @@ public class TeamTownData implements SpecialData{
             if(residentListNBT == null){
                 residentListNBT = townWorkerData.getResidents();
             }
-            residentListNBT.add(StringNBT.valueOf(uuid.toString()));
+            residentListNBT.add(StringTag.valueOf(uuid.toString()));
             residents.get(uuid).setWorkPos(townWorkerData.getPos());
             residentPriority = townWorkerData.getResidentPriority(residentListNBT.size());
         }
