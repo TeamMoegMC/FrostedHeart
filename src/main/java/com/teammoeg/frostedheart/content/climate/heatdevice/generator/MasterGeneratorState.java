@@ -2,70 +2,65 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import java.util.Optional;
 
-import com.teammoeg.frostedheart.base.multiblock.components.OwnerState;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-
-import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.level.Level;
 
 public class MasterGeneratorState extends BaseHeatingState {
-	boolean isBroken;
+	int remTicks;
+	public ContainerData guiData;
+
     @Override
 	public void writeSaveNBT(CompoundTag nbt) {
 		super.writeSaveNBT(nbt);
-		nbt.putBoolean("isBroken", isBroken);
 	}
 	@Override
 	public void readSaveNBT(CompoundTag nbt) {
 		super.readSaveNBT(nbt);
-		isBroken=nbt.getBoolean("isBroken");
-        Optional<GeneratorData> data = this.getData();
+        Optional<GeneratorData> data = this.getDataNoCheck();
         data.ifPresent(t -> {
             this.isOverdrive=t.isOverdrive;
             this.isWorking=t.isWorking;
         });
 	}
-	public MasterGeneratorState(BlockPos origin) {
-		super(origin);
+	public MasterGeneratorState(IETemplateMultiblock multiblock,IETemplateMultiblock nextLevelMultiblock) {
+		super();
+		guiData = new SimpleContainerData(6);
 	}
 	public final Optional<GeneratorData> getDataNoCheck() {
         return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA));
     }
-    public final Optional<GeneratorData> getData() {
-        return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA)).filter(t -> getOrigin().equals(t.actualPos));
+    public final Optional<GeneratorData> getData(BlockPos origin) {
+        return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA)).filter(t -> origin.equals(t.actualPos));
     }
-    public boolean isDataPresent() {
-        return getData().isPresent();
+    public boolean isDataPresent(BlockPos origin) {
+        return getData(origin).isPresent();
     }
-    public void regist(Level level) {
+    public void regist(Level level,BlockPos origin) {
     	getDataNoCheck().ifPresent(t -> {
-        	if(!getOrigin().equals(t.actualPos))
+        	if(!origin.equals(t.actualPos))
         		t.onPosChange();
         	this.setWorking(t.isWorking);
         	this.setOverdrive(t.isOverdrive);
-            t.actualPos = getOrigin();
+            t.actualPos = origin;
             t.dimension = level.dimension();
         });
     }
-    public void onUpgradeMaintainClicked(ServerPlayer player) {
-    	if(isBroken) {
-    		repairStructure(player);
-    	} else {
-    		upgradeStructure(player);
-    	}
-    };
-    public void tryRegist(Level level) {
+
+
+    public void tryRegist(Level level,BlockPos origin) {
     	getDataNoCheck().ifPresent(t -> {
     		if(BlockPos.ZERO.equals(t.actualPos)) {
-	        	if(!getOrigin().equals(t.actualPos))
+	        	if(!origin.equals(t.actualPos))
 	        		t.onPosChange();
 	        	this.setWorking(t.isWorking);
 	        	this.setOverdrive(t.isOverdrive);
-	            t.actualPos = getOrigin();
+	            t.actualPos = origin;
 	            t.dimension = level.dimension();
     		}
         });
@@ -80,8 +75,5 @@ public class MasterGeneratorState extends BaseHeatingState {
     public int getUpperBound() {
         return Mth.ceil(getRangeLevel() * 4+1);
     }
-	@Override
-	public void onOwnerChange(IMultiblockContext<? extends OwnerState> ctx) {
-		regist(ctx.getLevel().getRawLevel());
-	}
+
 }

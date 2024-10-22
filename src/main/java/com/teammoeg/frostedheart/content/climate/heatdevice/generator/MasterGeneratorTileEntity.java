@@ -28,25 +28,31 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.base.multiblock.components.OwnerState;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
+import com.teammoeg.frostedheart.util.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerChangeListener;
 import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
 
 import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.CapabilityPosition;
 import blusunrize.immersiveengineering.api.utils.DirectionUtils;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IProcessBE;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import blusunrize.immersiveengineering.common.items.HammerItem;
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
@@ -83,50 +89,15 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.items.IItemHandler;
 
-public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEntity<T,?>,R extends MasterGeneratorState> extends ZoneHeatingMultiblockLogic<T,R> implements IIEInventory {
+public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEntity<T,?>,R extends MasterGeneratorState> extends ZoneHeatingMultiblockLogic<T,R> implements IIEInventory, OwnedMultiblockLogic<R> {
 	public static final int PROCESS=0;
 	public static final int PROCESS_MAX=1;
 	public static final int OVERDRIVE=2;
 	public static final int POWER=3;
 	public static final int TLEVEL=4;
 	public static final int RLEVEL=5;
-    public ContainerData guiData = new ContainerData() {
-
-    	ContainerData base=new SimpleContainerData(4);
-		@Override
-		public int get(int index) {
-			if(index<base.getCount())
-				return base.get(index);
-			index-=base.getCount();
-			switch(index) {
-			case 0:return (int) (getTemperatureLevel()*100);
-			case 1:return (int) (getRangeLevel()*100);
-			case 2:return isBroken?1:0;
-			}
-			return 0;
-		}
-
-		@Override
-		public void set(int index, int value) {
-			
-			if(index<base.getCount()) {
-				base.set(index,value);
-				return;
-			}
-			index-=base.getCount();
-			switch(index) {
-			case 0:setTemperatureLevel(value/100f);break;
-			case 1:setRangeLevel(value/100f);break;
-			case 2:isBroken=value!=0;
-			}
-		}
-
-		@Override
-		public int getCount() {
-			return base.getCount()+3;
-		}
-    	
-    };
+	public static final int ISBROKEN=6;
+    
 
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
@@ -135,11 +106,44 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     //local inventory, prevent lost
     List<IngredientWithSize> upgrade;
     
-    public MasterGeneratorTileEntity(IETemplateMultiblock multiblockInstance) {
-        super(multiblockInstance);
+    public MasterGeneratorTileEntity() {
+        super();
+    }
+    public Optional<GeneratorData> getData(IMultiblockContext<R> ctx){
+    	return ctx.getState().getData(FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
+    }
+    public void onUpgradeMaintainClicked(IMultiblockContext<R> ctx,ServerPlayer player) {
+    	if(getData(ctx).map(t->t.isBroken).orElse(false)) {
+    		repairStructure(ctx,player);
+    	} else {
+    		upgradeStructure(ctx,player);
+    	}
+    	HammerItem item;;
+    };
+    public abstract IETemplateMultiblock getNextLevel();
+    public void upgradeStructure(IMultiblockContext<R> ctx,ServerPlayer entityplayer) {
+    	if(!isValidStructure(ctx))
+    		return;
+    	if(!ResearchListeners.hasMultiblock(ctx.getState().getOwner(), getNextLevel()))
+    		return;
+    	if(!FHUtils.costItems(entityplayer, getUpgradeCost(ctx)))
+    		return;
+    	BlockPos negMasterOffset=FHMultiblockHelper.getMasterPos(ctx.getLevel()).subtract(getNextLevelMultiblock().getMasterFromOriginOffset());
+        Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, ctx.getLevel().getOrientation().front());
+        ((MultiBlockAccess) getNextLevelMultiblock()).setPlayer(entityplayer);
+        ((MultiBlockAccess) getNextLevelMultiblock()).callForm(ctx.getLevel().getRawLevel(), ctx.getLevel().toAbsolute(negMasterOffset), rot, Mirror.NONE, ctx.getLevel().getOrientation().front());
+
+    }
+    public void repairStructure(IMultiblockContext<R> ctx,ServerPlayer entityplayer) {
+    	if(!getData(ctx).map(t->t.isBroken).orElse(false))
+    		return;
+    	if(!FHUtils.costItems(entityplayer, getRepairCost()))
+    		return;
+    	getData(ctx).ifPresent(t->{t.isBroken=false;t.overdriveLevel=0;});
+
     }
 
-    @Override
+	@Override
     public void doGraphicalUpdates() {
 
     }
@@ -147,7 +151,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     @Override
 	public <C> LazyOptional<C> getCapability(IMultiblockContext<R> ctx, CapabilityPosition position, Capability<C> capability) {
         if (capability == ForgeCapabilities.ITEM_HANDLER) {
-            return ctx.getState().getData().map(t->t.invCap).orElse(LazyOptional.empty()).cast();
+            return getData(ctx).map(t->t.invCap).orElse(LazyOptional.empty()).cast();
         }
         return super.getCapability(ctx,position,capability);
 	}
@@ -188,7 +192,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
     @Override
     public void shutdownTick(IMultiblockContext<R> ctx) {
-        boolean invState = !this.getInventory().get(INPUT_SLOT).isEmpty()||this.guiData.get(PROCESS)>0;
+        boolean invState = !this.getInventory().get(INPUT_SLOT).isEmpty()||ctx.getState().guiData.get(PROCESS)>0;
         if (invState != hasFuel) {
             hasFuel = invState;
             ctx.requestMasterBESync();
@@ -213,7 +217,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	IETemplateMultiblock ietm=getNextLevelMultiblock();
         if(ietm!=null) {
         	if(upgrade==null) {
-    			List<StructureBlockInfo> structure = multiblock.getStructure(ctx.getLevel().getRawLevel());
+    			List<StructureBlockInfo> structure = FHMultiblockHelper.getBEHelper(ctx.getLevel()).map(t->t.getMultiblock().getStructure().apply(ctx.getLevel().getRawLevel())).orElse(ImmutableList.of());
     			NonNullList<ItemStack> materials = NonNullList.create();
     			for(StructureBlockInfo info : structure)
     			{
@@ -232,6 +236,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     				if(!added)
     					materials.add(picked.copy());
     			}
+    			if(materials.isEmpty())return null;
         		upgrade=materials.stream().filter(Ingredient.of(FHBlocks.generator_core_t1.get()).negate()).map(IngredientWithSize::of).collect(Collectors.toList());
         	}
         	return upgrade;
@@ -243,10 +248,11 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	IETemplateMultiblock ietm=getNextLevelMultiblock();
     	if(ietm==null)
     		return false;
-    	Vec3i csize=this.multiblock.getSize(ctx.getLevel().getRawLevel());
+    	Vec3i csize=FHMultiblockHelper.getSize(ctx.getLevel());
+    	BlockPos masterOrigin=FHMultiblockHelper.getMasterPos(ctx.getLevel());
     	Vec3i nsize=ietm.getSize(ctx.getLevel().getRawLevel());
-    	BlockPos masterOffset=ietm.getMasterFromOriginOffset().subtract(this.multiblock.getMasterFromOriginOffset());
-    	BlockPos negMasterOffset=this.multiblock.getMasterFromOriginOffset().subtract(ietm.getMasterFromOriginOffset());
+    	BlockPos masterOffset=ietm.getMasterFromOriginOffset().subtract(masterOrigin);
+    	BlockPos negMasterOffset=masterOrigin.subtract(ietm.getMasterFromOriginOffset());
     	AABB aabb=new AABB(masterOffset,masterOffset.offset(csize));
     	
     	for(int x=0;x<nsize.getX();x++) {
@@ -263,90 +269,64 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	}
     	return true;
     }
-    public void upgradeStructure(IMultiblockContext<R> ctx,ServerPlayer entityplayer) {
-    	if(!isValidStructure(ctx))
-    		return;
-    	if(!ResearchListeners.hasMultiblock(ctx.getState().getOwner(), getNextLevelMultiblock()))
-    		return;
-    	if(!FHUtils.costItems(entityplayer, getUpgradeCost(ctx)))
-    		return;
-    	BlockPos negMasterOffset=this.multiblock.getMasterFromOriginOffset().subtract(getNextLevelMultiblock().getMasterFromOriginOffset());
-        Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, ctx.getLevel().getOrientation().front());
-        ((MultiBlockAccess) getNextLevelMultiblock()).setPlayer(entityplayer);
-        ((MultiBlockAccess) getNextLevelMultiblock()).callForm(ctx.getLevel().getRawLevel(), ctx.getLevel().toAbsolute(negMasterOffset), rot, Mirror.NONE, ctx.getLevel().getOrientation().front());
-
+    public void tryRegist(IMultiblockContext<R> ctx) {
+    	ctx.getState().tryRegist(ctx.getLevel().getRawLevel(),FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
     }
-    public void repairStructure(IMultiblockContext<R> ctx,ServerPlayer entityplayer) {
-    	if(!ctx.getState().isBroken)
-    		return;
-    	if(!FHUtils.costItems(entityplayer, getRepairCost()))
-    		return;
-    	ctx.getState().isBroken=false;
-    	ctx.getState().getData().ifPresent(t->{t.isBroken=false;t.overdriveLevel=0;});
-
+    public void regist(IMultiblockContext<R> ctx) {
+    	ctx.getState().regist(ctx.getLevel().getRawLevel(),FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
     }
-    @Override
-    public void receiveMessageFromClient(CompoundTag message) {
-        super.receiveMessageFromClient(message);
-        if (message.contains("isWorking", Tag.TAG_BYTE))
-            setWorking(message.getBoolean("isWorking"));
-        if (message.contains("isOverdrive", Tag.TAG_BYTE))
-            setOverdrive(message.getBoolean("isOverdrive"));
-        this.markContainingBlockForUpdate(null);
-        this.setChanged();
-       /* if (message.contains("temperatureLevel", Tag.TAG_INT))
-            setTemperatureLevel(message.getInt("temperatureLevel"));
-        if (message.contains("rangeLevel", Tag.TAG_INT))
-            setRangeLevel(message.getInt("rangeLevel"));*/
-    }
-
-
-
-
-    int remTicks;
     @Override
     protected boolean tickFuel(IMultiblockContext<R> ctx) {
         // just finished process or during process
-    	ctx.getState().tryRegist(ctx.getLevel().getRawLevel());
-        Optional<GeneratorData> data = ctx.getState().getData();
+    	
+        Optional<GeneratorData> data = getData(ctx);
+        boolean lastIsBroken=data.map(t->t.isBroken).orElse(false);
         data.ifPresent(t -> t.tick(ctx.getLevel().getRawLevel()));
         boolean isWorking=data.map(t -> t.isActive).orElse(false);
-        setTemperatureLevel(data.map(t -> t.TLevel).orElse(0F));
-        setRangeLevel(data.map(t -> t.RLevel).orElse(0F));
-        boolean lastIsBroken=isBroken;
-        guiData.set(PROCESS, data.map(t -> t.process).orElse(0));
-        guiData.set(PROCESS_MAX, data.map(t -> t.processMax).orElse(0));
-        guiData.set(OVERDRIVE, data.map(t -> t.overdriveLevel*1000/t.getMaxOverdrive()).orElse(0));
-        guiData.set(POWER, (int)(float)data.map(t->t.power).orElse(0F));
-        isBroken = data.map(t->t.isBroken).orElse(false);
+       
+        ctx.getState().guiData.set(PROCESS, data.map(t -> t.process).orElse(0));
+        ctx.getState().guiData.set(PROCESS_MAX, data.map(t -> t.processMax).orElse(0));
+        ctx.getState().guiData.set(OVERDRIVE, data.map(t -> t.overdriveLevel*1000/t.getMaxOverdrive()).orElse(0));
+        ctx.getState().guiData.set(POWER, (int)(float)data.map(t->t.power).orElse(0F));
+        ctx.getState().guiData.set(TLEVEL, (int) (ctx.getState().getTemperatureLevel()*100));
+        ctx.getState().guiData.set(RLEVEL, (int) (ctx.getState().getRangeLevel()*100));
+        ctx.getState().guiData.set(ISBROKEN, data.map(t->t.isBroken).orElse(false)?1:0);
+        boolean isBroken=data.map(t->t.isBroken).orElse(false);
         if(lastIsBroken!=isBroken&&isBroken) {
-        	remTicks=100;
+        	ctx.getState().remTicks=100;
         }
-        if(remTicks>0) {
-        	if(remTicks%5==0) {
-	        	BlockPos pos=this.getBlockPosForPos(
-	        			new BlockPos(level.random.nextInt(multiblockInstance.getSize(level).getX()),
-	        						level.random.nextInt(multiblockInstance.getSize(level).getY()),
-	        						level.random.nextInt(multiblockInstance.getSize(level).getZ())));
-	            for(Player serverplayerentity : this.level.players()) {
+        Level level=ctx.getLevel().getRawLevel();
+        if(ctx.getState().remTicks>0) {
+        	Vec3i size=FHMultiblockHelper.getSize(ctx.getLevel());
+        	if(ctx.getState().remTicks%5==0) {
+        		BlockPos pos=ctx.getLevel().toAbsolute(new BlockPos(level.random.nextInt(size.getX()),
+					level.random.nextInt(size.getY()),
+					level.random.nextInt(size.getZ())));
+	            for(Player serverplayerentity : level.players()) {
 	                if (serverplayerentity.blockPosition().distSqr(pos) < 4096.0D) {
 	                   ((ServerPlayer)serverplayerentity).connection.send(new ClientboundExplodePacket(pos.getX(), pos.getY(), pos.getZ(), 8, Arrays.asList(), null));
 	                }
 	             }
         	}
-        	remTicks--;
+        	ctx.getState().remTicks--;
         }
-        tickDrives(isWorking);
+        tickDrives(ctx,isWorking);
         return isWorking;
     	/*if(this.getIsActive())
     		this.markContainingBlockForUpdate(null);*/
     }
-
+    protected void tickDrives(IMultiblockContext<R> ctx,boolean active) {
+    	
+    }
     public void tickHeat(boolean isWorking) {
     }
 
 
 	public boolean hasFuel() {
 		return hasFuel;
+	}
+	@Override
+	public void onOwnerChange(IMultiblockContext<R> ctx) {
+		regist(ctx);
 	}
 }

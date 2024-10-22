@@ -22,9 +22,9 @@ public class GeneratorModifyPacket implements FHMessage{
 		context.get().enqueueWork(() -> {
 			ServerPlayer spe=context.get().getSender();
 			AbstractContainerMenu container=spe.containerMenu;
-			if(container instanceof MasterGeneratorContainer) {
-				MasterGeneratorContainer crncontainer=(MasterGeneratorContainer) container;
-				((MasterGeneratorTileEntity)crncontainer.getBlock()).onUpgradeMaintainClicked(spe);
+			if(container instanceof MasterGeneratorContainer crncontainer) {
+
+				((MasterGeneratorTileEntity)crncontainer).onUpgradeMaintainClicked(spe);
 			}
 		});
 		context.get().setPacketHandled(true);
