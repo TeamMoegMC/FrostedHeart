@@ -55,10 +55,12 @@ public class FHMultiblocks {
 	public static class Logic{
 		public static final MultiblockRegistration<T1GeneratorState> GENERATOR = stone(new T1GeneratorTileEntity(), "generator_t1",false)
 			.structure(() -> FHMultiblocks.Multiblock.GENERATOR)
+			.notMirrored()
 			.component(FHContainer.GENERATOR_T1.createComponent())
 			.build();
 		public static final MultiblockRegistration<T2GeneratorState> GENERATOR_T2 = metal(new T2GeneratorTileEntity(), "generator_t2")
 			.structure(() -> FHMultiblocks.Multiblock.GENERATOR)
+			.notMirrored()
 			.component(FHContainer.GENERATOR_T2.createComponent())
 			.build();
 		

@@ -29,7 +29,7 @@ public abstract class FHBaseMultiblock extends IETemplateMultiblock {
         super(loc, masterFromOrigin, triggerFromOrigin, size, baseState);
     }
 
-    @Override
+	@Override
     public boolean canBeMirrored() {
         return false;
     }
