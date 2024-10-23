@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.MasterGeneratorContainer;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorContainer;
 import com.teammoeg.frostedheart.util.FHContainerData;
 import com.teammoeg.frostedheart.util.client.Point;
 
@@ -28,7 +28,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class T2GeneratorContainer extends MasterGeneratorContainer<T2GeneratorState,T2GeneratorTileEntity> {
+public class T2GeneratorContainer extends GeneratorContainer<T2GeneratorState, T2GeneratorLogic> {
 	FluidTank tank;
     public T2GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<T2GeneratorState> ctx) {
 		super(type, id, inventoryPlayer, ctx);

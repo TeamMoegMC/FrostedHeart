@@ -19,11 +19,11 @@
 
 package com.teammoeg.frostedheart;
 
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorMultiblock;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorMultiblock;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorState;
 import com.teammoeg.frostedheart.content.climate.heatdevice.radiator.RadiatorMultiblock;
 
@@ -42,24 +42,24 @@ import net.minecraft.world.level.material.MapColor;
 
 public class FHMultiblocks {
 	public static class Multiblock{
-		public static IETemplateMultiblock GENERATOR = new T1GeneratorMultiblock();
+		public static IETemplateMultiblock GENERATOR_T1 = new T1GeneratorMultiblock();
 		public static IETemplateMultiblock GENERATOR_T2 = new T2GeneratorMultiblock();
 		public static IETemplateMultiblock RADIATOR = new RadiatorMultiblock();
 		public static void init() {
-			MultiblockHandler.registerMultiblock(GENERATOR);
+			MultiblockHandler.registerMultiblock(GENERATOR_T1);
 			MultiblockHandler.registerMultiblock(RADIATOR);
 			MultiblockHandler.registerMultiblock(GENERATOR_T2);
 		}
 
 	}
 	public static class Logic{
-		public static final MultiblockRegistration<T1GeneratorState> GENERATOR = stone(new T1GeneratorTileEntity(), "generator_t1",false)
-			.structure(() -> FHMultiblocks.Multiblock.GENERATOR)
+		public static final MultiblockRegistration<T1GeneratorState> GENERATOR_T1 = stone(new T1GeneratorLogic(), "generator_t1",false)
+			.structure(() -> FHMultiblocks.Multiblock.GENERATOR_T1)
 			.notMirrored()
 			.component(FHContainer.GENERATOR_T1.createComponent())
 			.build();
-		public static final MultiblockRegistration<T2GeneratorState> GENERATOR_T2 = metal(new T2GeneratorTileEntity(), "generator_t2")
-			.structure(() -> FHMultiblocks.Multiblock.GENERATOR)
+		public static final MultiblockRegistration<T2GeneratorState> GENERATOR_T2 = metal(new T2GeneratorLogic(), "generator_t2")
+			.structure(() -> FHMultiblocks.Multiblock.GENERATOR_T1)
 			.notMirrored()
 			.component(FHContainer.GENERATOR_T2.createComponent())
 			.build();

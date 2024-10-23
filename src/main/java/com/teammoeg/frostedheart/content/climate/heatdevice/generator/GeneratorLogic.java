@@ -62,7 +62,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 
-public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEntity<T,?>,R extends MasterGeneratorState> extends ZoneHeatingMultiblockLogic<T,R> implements OwnedMultiblockLogic<R> {
+public abstract class GeneratorLogic<T extends GeneratorLogic<T,?>,R extends GeneratorState> extends HeatingLogic<T,R> implements OwnedLogic<R> {
     
 
 
@@ -74,7 +74,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     //local inventory, prevent lost
     List<IngredientWithSize> upgrade;
     
-    public MasterGeneratorTileEntity() {
+    public GeneratorLogic() {
         super();
     }
 

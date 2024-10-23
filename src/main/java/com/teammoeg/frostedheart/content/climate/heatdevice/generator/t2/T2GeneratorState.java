@@ -1,12 +1,12 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.MasterGeneratorState;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorState;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class T2GeneratorState extends MasterGeneratorState {
+public class T2GeneratorState extends GeneratorState {
     HeatEnergyNetwork manager;
     int liquidtick = 0;
     int noliquidtick = 0;

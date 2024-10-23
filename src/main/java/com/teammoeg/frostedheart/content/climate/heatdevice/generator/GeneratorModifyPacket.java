@@ -27,9 +27,9 @@ public class GeneratorModifyPacket implements FHMessage{
 		context.get().enqueueWork(() -> {
 			ServerPlayer spe=context.get().getSender();
 			AbstractContainerMenu container=spe.containerMenu;
-			if(container instanceof MasterGeneratorContainer<?,?> crncontainer) {
+			if(container instanceof GeneratorContainer<?,?> crncontainer) {
 				FHMultiblockHelper.getBEHelper(spe.level(), crncontainer.pos.getValue()).ifPresent(helper->{
-					if (helper.getMultiblock().logic()instanceof MasterGeneratorTileEntity mas) {
+					if (helper.getMultiblock().logic()instanceof GeneratorLogic mas) {
 						mas.onUpgradeMaintainClicked(helper.getContext(), spe);
 					}
 				});

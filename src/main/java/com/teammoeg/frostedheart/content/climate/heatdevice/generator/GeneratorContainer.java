@@ -39,7 +39,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 
-public abstract class MasterGeneratorContainer<R extends MasterGeneratorState,T extends MasterGeneratorTileEntity<T,R>> extends FHBaseContainer {
+public abstract class GeneratorContainer<R extends GeneratorState,T extends GeneratorLogic<T,R>> extends FHBaseContainer {
 	public FHDataSlot<Integer> process=FHContainerData.SLOT_INT.create(this);
 	public FHDataSlot<Integer> processMax=FHContainerData.SLOT_INT.create(this);
 	public FHDataSlot<Float> overdrive=FHContainerData.SLOT_FIXED.create(this);
@@ -52,7 +52,7 @@ public abstract class MasterGeneratorContainer<R extends MasterGeneratorState,T 
     public FHDataSlot<Boolean> isWorking=FHContainerData.SLOT_BOOL.create(this);
     public FHDataSlot<Boolean> isOverdrive=FHContainerData.SLOT_BOOL.create(this);
     public FHDataSlot<BlockPos> pos=FHContainerData.SLOT_BLOCKPOS.create(this);
-    public MasterGeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<R> ctx) {
+    public GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<R> ctx) {
     	super(type,id,inventoryPlayer.player,2);
         R state=ctx.mbContext().getState();
         if(state.getOwner()==null) {
@@ -67,8 +67,8 @@ public abstract class MasterGeneratorContainer<R extends MasterGeneratorState,T 
         	power.bind(()->data.power);
         	tempLevel.bind(()->data.TLevel);
         	rangeLevel.bind(()->data.RLevel);
-        	tempDegree.bind(()->state.getActualTemp());
-        	rangeBlock.bind(()->state.getActualRange());
+        	tempDegree.bind(()->state.getTempMod());
+        	rangeBlock.bind(()->state.getRadius());
         	isBroken.bind(()->data.isBroken);
         	isWorking.bind(()->data.isWorking,t->data.isWorking=t);
         	isOverdrive.bind(()->data.isOverdrive,t->data.isOverdrive=t);
@@ -79,7 +79,7 @@ public abstract class MasterGeneratorContainer<R extends MasterGeneratorState,T 
         IItemHandler handler=state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel())).map(t->t.inventory).orElseGet(()->new ItemStackHandler(2));
         createSlots(handler,inventoryPlayer);
     }
-    public MasterGeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer) {
+    public GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer) {
         super(type,id,inventoryPlayer.player,2);
         createSlots(new ItemStackHandler(2),inventoryPlayer);
     }

@@ -42,7 +42,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
-public class MasterGeneratorScreen<R extends MasterGeneratorState, T extends MasterGeneratorTileEntity<T, R>> extends IEContainerScreen<MasterGeneratorContainer<R, T>> {
+public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<T, R>> extends IEContainerScreen<GeneratorContainer<R, T>> {
 	public static final int TEXW = 512;
 	public static final int TEXH = 256;
 	private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("general_generator");
@@ -122,15 +122,15 @@ public class MasterGeneratorScreen<R extends MasterGeneratorState, T extends Mas
 	private static final AtlasUV generatorSymbol = new AtlasUV(TEXTURE, 176, 0, 24, 48, 3, 12, TEXW, TEXH);
 	private static final Point generatorPos = new Point(76, 44);
 	MasterGeneratorGuiButtonUpgrade upgrade;
-	MasterGeneratorTileEntity<T, R> tile;
+	GeneratorLogic<T, R> tile;
 
-	public MasterGeneratorScreen(MasterGeneratorContainer<R, T> inventorySlotsIn, Inventory inv, Component title) {
+	public GeneratorScreen(GeneratorContainer<R, T> inventorySlotsIn, Inventory inv, Component title) {
 		super(inventorySlotsIn, inv, title, TEXTURE);
 		this.imageHeight = 222;
 
 	}
 
-	public MasterGeneratorContainer<R, T> getMenu() {
+	public GeneratorContainer<R, T> getMenu() {
 		return menu;
 	}
 
@@ -209,7 +209,7 @@ public class MasterGeneratorScreen<R extends MasterGeneratorState, T extends Mas
 	public void init() {
 		super.init();
 		IMultiblockBEHelper<R> helper = (IMultiblockBEHelper<R>) FHMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.pos.getValue()).get();
-		tile = (MasterGeneratorTileEntity<T, R>) helper.getMultiblock().logic();
+		tile = (GeneratorLogic<T, R>) helper.getMultiblock().logic();
 		validStructure = tile.isValidStructure(Minecraft.getInstance().level, helper);
 		this.addRenderableWidget(new MasterGeneratorGuiButtonBoolean(leftPos + 5, topPos + 24, 11, 22, menu.isWorking.asSupplier(), 472, 148,
 			btn -> {

@@ -19,10 +19,11 @@
 
 package com.teammoeg.frostedheart.events;
 
-import java.util.Map;
 import java.util.function.Function;
 
 import com.teammoeg.frostedheart.client.particles.WetSteamParticle;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorLogic;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorLogic;
 import org.lwjgl.glfw.GLFW;
 
 import com.teammoeg.frostedheart.FHBlocks;
@@ -32,16 +33,13 @@ import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.model.DynamicBlockModelReference;
-import com.teammoeg.frostedheart.client.model.LiningFinalizedModel;
 import com.teammoeg.frostedheart.client.model.LiningModel;
 import com.teammoeg.frostedheart.client.particles.BreathParticle;
 import com.teammoeg.frostedheart.client.particles.SteamParticle;
 import com.teammoeg.frostedheart.compat.tetra.TetraClient;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.MasterGeneratorScreen;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorScreen;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorRenderer;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorRenderer;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
@@ -65,35 +63,18 @@ import blusunrize.lib.manual.Tree;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.inventory.MenuAccess;
-import net.minecraft.client.model.HumanoidModel;
-import net.minecraft.client.model.geom.ModelLayerLocation;
-import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.model.geom.PartPose;
-import net.minecraft.client.model.geom.builders.CubeDeformation;
-import net.minecraft.client.model.geom.builders.CubeListBuilder;
-import net.minecraft.client.model.geom.builders.LayerDefinition;
-import net.minecraft.client.model.geom.builders.MeshDefinition;
-import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.player.PlayerRenderer;
-import net.minecraft.client.renderer.texture.SpriteLoader;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.EntityRenderersEvent.AddLayers;
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterLayerDefinitions;
 import net.minecraftforge.client.event.ModelEvent;
@@ -169,8 +150,8 @@ public class ClientRegistryEvents {
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
         // Register screens
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), MasterGeneratorScreen<T1GeneratorTileEntity>::new);
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), MasterGeneratorScreen<T2GeneratorTileEntity>::new);
+        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen<T1GeneratorLogic>::new);
+        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), GeneratorScreen<T2GeneratorLogic>::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "relic_chest"), RelicChestScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "draw_desk"), FTBScreenFactory(DrawDeskScreen::new));
         registerFTBScreen(FHContainer.TRADE_GUI.get(), TradeScreen::new);
