@@ -25,10 +25,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
-import com.simibubi.create.content.contraptions.base.HalfShaftInstance;
 import com.simibubi.create.content.kinetics.base.HorizontalHalfShaftInstance;
 import com.simibubi.create.foundation.data.CreateRegistrate;
-import com.simibubi.create.repack.registrate.util.entry.TileEntityEntry;
 import com.teammoeg.frostedheart.client.renderer.HalfShaftRenderer;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorTileEntity;
@@ -65,11 +63,10 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class FHTileTypes {
     public static final DeferredRegister<BlockEntityType<?>> REGISTER = DeferredRegister.create(
             ForgeRegistries.BLOCK_ENTITY_TYPES, FHMain.MODID);
-    private static final CreateRegistrate REGISTRATE = FHMain.registrate.get()
-        .itemGroup(() -> FHMain.itemGroup);
-    public static final RegistryObject<BlockEntityType<T1GeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(
+    private static final CreateRegistrate REGISTRATE = FHMain.registrate;
+    /*public static final RegistryObject<BlockEntityType<T1GeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(
             "generator", makeType(T1GeneratorTileEntity::new, () -> FHMultiblocks.generator)
-    );
+    );*/
 
     public static final RegistryObject<BlockEntityType<HeatPipeTileEntity>> HEATPIPE = REGISTER.register(
             "heat_pipe", makeType(HeatPipeTileEntity::new, FHBlocks.heat_pipe)
@@ -81,12 +78,12 @@ public class FHTileTypes {
             "charger", makeType(ChargerTileEntity::new, FHBlocks.charger)
     );
 
-    public static final RegistryObject<BlockEntityType<RadiatorTileEntity>> RADIATOR = REGISTER.register(
+   /* public static final RegistryObject<BlockEntityType<RadiatorTileEntity>> RADIATOR = REGISTER.register(
             "heat_radiator", makeType(RadiatorTileEntity::new, () -> FHMultiblocks.radiator));
 
     public static final RegistryObject<BlockEntityType<T2GeneratorTileEntity>> GENERATOR_T2 = REGISTER.register(
             "generator_t2", makeType(T2GeneratorTileEntity::new, () -> FHMultiblocks.generator_t2)
-    );
+    );*/
     public static final RegistryObject<BlockEntityType<OilBurnerTileEntity>> OIL_BURNER = REGISTER.register(
             "oil_burner", makeType(OilBurnerTileEntity::new, FHBlocks.oilburner)
     );

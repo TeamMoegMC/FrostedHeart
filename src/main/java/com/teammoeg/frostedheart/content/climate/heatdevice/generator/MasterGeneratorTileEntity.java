@@ -22,84 +22,52 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.base.multiblock.components.OwnerState;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.mixin.IOwnerChangeListener;
 import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
 
 import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEHelper;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.CapabilityPosition;
 import blusunrize.immersiveengineering.api.utils.DirectionUtils;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IProcessBE;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
-import blusunrize.immersiveengineering.common.items.HammerItem;
 import blusunrize.immersiveengineering.common.util.Utils;
-import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
-import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.Vec3i;
+import net.minecraft.network.protocol.game.ClientboundExplodePacket;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.ContainerHelper;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.game.ClientboundExplodePacket;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
-import net.minecraft.core.Direction;
-import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Mirror;
-import net.minecraft.core.NonNullList;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
-import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.core.Vec3i;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.IFluidTank;
-import net.minecraftforge.items.IItemHandler;
 
-public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEntity<T,?>,R extends MasterGeneratorState> extends ZoneHeatingMultiblockLogic<T,R> implements IIEInventory, OwnedMultiblockLogic<R> {
-	public static final int PROCESS=0;
-	public static final int PROCESS_MAX=1;
-	public static final int OVERDRIVE=2;
-	public static final int POWER=3;
-	public static final int TLEVEL=4;
-	public static final int RLEVEL=5;
-	public static final int ISBROKEN=6;
+public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEntity<T,?>,R extends MasterGeneratorState> extends ZoneHeatingMultiblockLogic<T,R> implements OwnedMultiblockLogic<R> {
     
 
-    public static final int INPUT_SLOT = 0;
+
+
+	public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
     private boolean hasFuel;//for rendering
     
@@ -118,15 +86,14 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	} else {
     		upgradeStructure(ctx,player);
     	}
-    	HammerItem item;;
     };
-    public abstract IETemplateMultiblock getNextLevel();
     public void upgradeStructure(IMultiblockContext<R> ctx,ServerPlayer entityplayer) {
-    	if(!isValidStructure(ctx))
+    	IMultiblockBEHelper helper=FHMultiblockHelper.getBEHelper(ctx.getLevel()).get();
+    	if(!isValidStructure(ctx.getLevel().getRawLevel(),helper))
     		return;
-    	if(!ResearchListeners.hasMultiblock(ctx.getState().getOwner(), getNextLevel()))
+    	if(!ResearchListeners.hasMultiblock(ctx.getState().getOwner(), getNextLevelMultiblock()))
     		return;
-    	if(!FHUtils.costItems(entityplayer, getUpgradeCost(ctx)))
+    	if(!FHUtils.costItems(entityplayer, getUpgradeCost(ctx.getLevel().getRawLevel(),helper)))
     		return;
     	BlockPos negMasterOffset=FHMultiblockHelper.getMasterPos(ctx.getLevel()).subtract(getNextLevelMultiblock().getMasterFromOriginOffset());
         Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, ctx.getLevel().getOrientation().front());
@@ -142,12 +109,6 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	getData(ctx).ifPresent(t->{t.isBroken=false;t.overdriveLevel=0;});
 
     }
-
-	@Override
-    public void doGraphicalUpdates() {
-
-    }
-
     @Override
 	public <C> LazyOptional<C> getCapability(IMultiblockContext<R> ctx, CapabilityPosition position, Capability<C> capability) {
         if (capability == ForgeCapabilities.ITEM_HANDLER) {
@@ -192,11 +153,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
     @Override
     public void shutdownTick(IMultiblockContext<R> ctx) {
-        boolean invState = !this.getInventory().get(INPUT_SLOT).isEmpty()||ctx.getState().guiData.get(PROCESS)>0;
-        if (invState != hasFuel) {
-            hasFuel = invState;
-            ctx.requestMasterBESync();
-        }
+
 
     }
 /*
@@ -213,11 +170,11 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     public final List<IngredientWithSize> getRepairCost(){
     	return repair;
     };
-    public List<IngredientWithSize> getUpgradeCost(IMultiblockContext<R> ctx){
+    public List<IngredientWithSize> getUpgradeCost(Level level,IMultiblockBEHelper<R> ctx){
     	IETemplateMultiblock ietm=getNextLevelMultiblock();
         if(ietm!=null) {
         	if(upgrade==null) {
-    			List<StructureBlockInfo> structure = FHMultiblockHelper.getBEHelper(ctx.getLevel()).map(t->t.getMultiblock().getStructure().apply(ctx.getLevel().getRawLevel())).orElse(ImmutableList.of());
+    			List<StructureBlockInfo> structure = ctx.getMultiblock().getStructure().apply(level);
     			NonNullList<ItemStack> materials = NonNullList.create();
     			for(StructureBlockInfo info : structure)
     			{
@@ -244,13 +201,13 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     	return null;
     };
     public abstract IETemplateMultiblock getNextLevelMultiblock();
-    public boolean isValidStructure(IMultiblockContext<R> ctx) { 
+    public boolean isValidStructure(Level level,IMultiblockBEHelper<R> helper) { 
     	IETemplateMultiblock ietm=getNextLevelMultiblock();
     	if(ietm==null)
     		return false;
-    	Vec3i csize=FHMultiblockHelper.getSize(ctx.getLevel());
-    	BlockPos masterOrigin=FHMultiblockHelper.getMasterPos(ctx.getLevel());
-    	Vec3i nsize=ietm.getSize(ctx.getLevel().getRawLevel());
+    	Vec3i csize=helper.getMultiblock().size(level);
+    	BlockPos masterOrigin=helper.getMultiblock().getMasterPosInMB().get();
+    	Vec3i nsize=ietm.getSize(level);
     	BlockPos masterOffset=ietm.getMasterFromOriginOffset().subtract(masterOrigin);
     	BlockPos negMasterOffset=masterOrigin.subtract(ietm.getMasterFromOriginOffset());
     	AABB aabb=new AABB(masterOffset,masterOffset.offset(csize));
@@ -261,7 +218,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     				if(aabb.contains(x,y,z))
     					continue;
     				BlockPos cpos=negMasterOffset.offset(x, y, z);
-    				if(ctx.getLevel().getBlockState(cpos).getBlock()!=Blocks.AIR) {
+    				if(helper.getContext().getLevel().getBlockState(cpos).getBlock()!=Blocks.AIR) {
     					return false;
     				}
     	    	}
@@ -284,13 +241,6 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         data.ifPresent(t -> t.tick(ctx.getLevel().getRawLevel()));
         boolean isWorking=data.map(t -> t.isActive).orElse(false);
        
-        ctx.getState().guiData.set(PROCESS, data.map(t -> t.process).orElse(0));
-        ctx.getState().guiData.set(PROCESS_MAX, data.map(t -> t.processMax).orElse(0));
-        ctx.getState().guiData.set(OVERDRIVE, data.map(t -> t.overdriveLevel*1000/t.getMaxOverdrive()).orElse(0));
-        ctx.getState().guiData.set(POWER, (int)(float)data.map(t->t.power).orElse(0F));
-        ctx.getState().guiData.set(TLEVEL, (int) (ctx.getState().getTemperatureLevel()*100));
-        ctx.getState().guiData.set(RLEVEL, (int) (ctx.getState().getRangeLevel()*100));
-        ctx.getState().guiData.set(ISBROKEN, data.map(t->t.isBroken).orElse(false)?1:0);
         boolean isBroken=data.map(t->t.isBroken).orElse(false);
         if(lastIsBroken!=isBroken&&isBroken) {
         	ctx.getState().remTicks=100;
@@ -328,5 +278,14 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 	@Override
 	public void onOwnerChange(IMultiblockContext<R> ctx) {
 		regist(ctx);
+	}
+    @Override
+	public void tickEffects(IMultiblockContext<R> ctx,BlockPos pos, boolean isActive) {
+    	RandomSource rand=ctx.getLevel().getRawLevel().random;
+    	if (isActive&&rand.nextInt(50) == 0) {
+    		ctx.getLevel().getRawLevel().playLocalSound((double) pos.getX() + 0.5D, (double) pos.getY() + 0.5D, (double) pos.getZ() + 0.5D,
+                    SoundEvents.FURNACE_FIRE_CRACKLE, SoundSource.BLOCKS, 0.5F + rand.nextFloat(),
+                    rand.nextFloat() * 0.7F + 0.6F, false);
+        }
 	}
 }

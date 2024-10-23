@@ -28,6 +28,9 @@ public class FHMultiblockHelper {
 			return Optional.of(te.getHelper());
 		return Optional.empty();
 	}
+	public static Optional<IMultiblockLogic<?>> getMultiblockLogic(IMultiblockLevel level){
+		return getBEHelper(level).map(t->t.getMultiblock().logic());
+	}
 	public static Vec3i getSize(IMultiblockLevel level) {
 		return getBEHelper(level).map(t->t.getMultiblock().getSize().apply(level.getRawLevel())).orElse(Vec3i.ZERO);
 	}
@@ -37,4 +40,5 @@ public class FHMultiblockHelper {
 	public static BlockPos getAbsoluteMaster(IMultiblockLevel level) {
 		return getBEHelper(level).map(t->level.toAbsolute(t.getMultiblock().masterPosInMB())).orElse(BlockPos.ZERO);
 	}
+	
 }

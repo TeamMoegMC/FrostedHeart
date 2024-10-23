@@ -53,22 +53,14 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2GeneratorTileEntity>{
+public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2GeneratorTileEntity,T2GeneratorState>{
     private static final BlockPos fluidIn = new BlockPos(1, 0, 2);
 
     private static final BlockPos networkTile = new BlockPos(1, 0, 0);
     private static final BlockPos redstone = new BlockPos(1, 1, 2);
 
-    HeatEnergyNetwork manager;
-    int liquidtick = 0;
-    int noliquidtick = 0;
-    int tickUntilStopBoom = 20;
-    int notFullPowerTick = 0;
 
-    final int nextBoom = 200; //10s
 
-    public FluidTank tank = new FluidTank(200 * FluidAttributes.BUCKET_VOLUME,
-            f -> GeneratorSteamRecipe.findRecipe(f) != null);
 
     public T2GeneratorTileEntity() {
         super(FHMultiblocks.GENERATOR_T2, FHTileTypes.GENERATOR_T2.get(), false);

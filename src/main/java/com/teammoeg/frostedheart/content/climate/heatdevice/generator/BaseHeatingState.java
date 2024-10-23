@@ -2,7 +2,6 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import com.teammoeg.frostedheart.base.multiblock.components.OwnerState;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 
@@ -11,8 +10,6 @@ public class BaseHeatingState extends OwnerState {
     private float rangeLevel;
     private float lastTLevel;
     private float lastRLevel;
-    boolean isWorking;
-    boolean isOverdrive;
     private boolean initialized;
 
 	public BaseHeatingState() {
@@ -22,8 +19,8 @@ public class BaseHeatingState extends OwnerState {
 	@Override
 	public void writeSaveNBT(CompoundTag nbt) {
 		super.writeSaveNBT(nbt);
-        nbt.putBoolean("isWorking", isWorking);
-        nbt.putBoolean("isOverdrive", isOverdrive);
+        //nbt.putBoolean("isWorking", isWorking);
+        //nbt.putBoolean("isOverdrive", isOverdrive);
         nbt.putFloat("temperatureLevel", temperatureLevel);
         nbt.putFloat("rangeLevel", rangeLevel);
 	}
@@ -31,8 +28,8 @@ public class BaseHeatingState extends OwnerState {
 	@Override
 	public void readSaveNBT(CompoundTag nbt) {
 		super.readSaveNBT(nbt);
-        isWorking = nbt.getBoolean("isWorking");
-        isOverdrive = nbt.getBoolean("isOverdrive");
+       // isWorking = nbt.getBoolean("isWorking");
+        //isOverdrive = nbt.getBoolean("isOverdrive");
         temperatureLevel = nbt.getFloat("temperatureLevel");
         rangeLevel = nbt.getFloat("rangeLevel");
 	}
@@ -62,21 +59,6 @@ public class BaseHeatingState extends OwnerState {
 		this.rangeLevel = rangeLevel;
 	}
 
-	public boolean isWorking() {
-		return isWorking;
-	}
-
-	public void setWorking(boolean isWorking) {
-		this.isWorking = isWorking;
-	}
-
-	public boolean isOverdrive() {
-		return isOverdrive;
-	}
-
-	public void setOverdrive(boolean isOverdrive) {
-		this.isOverdrive = isOverdrive;
-	}
 
 	public boolean isInitialized() {
 		return initialized;

@@ -20,21 +20,22 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import java.util.function.Consumer;
+
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveStateLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.FHMultiblockHelper;
 
+import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IClientTickableComponent;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IServerTickableComponent;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockLogic;
-import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 
 /**
  * Common base class for any generator like block that maintains a heat area
  */
-public abstract class ZoneHeatingMultiblockLogic<T extends ZoneHeatingMultiblockLogic<T,?>,R extends BaseHeatingState> implements  IServerTickableComponent<R>,IMultiblockLogic<R>,IActiveStateLogic {
+public abstract class ZoneHeatingMultiblockLogic<T extends ZoneHeatingMultiblockLogic<T,?>,R extends BaseHeatingState> implements  IServerTickableComponent<R>,IMultiblockLogic<R>,IActiveStateLogic,IClientTickableComponent<R> {
 
 	public ZoneHeatingMultiblockLogic() {
 		super();
@@ -67,7 +68,8 @@ public abstract class ZoneHeatingMultiblockLogic<T extends ZoneHeatingMultiblock
         final boolean activeBeforeTick = getIsActive(ctx);
         boolean isActive=tickFuel(ctx);
         tickHeat(ctx,isActive);
-        setAllActive(ctx,isActive);
+        if(activeBeforeTick!=isActive)
+        	setAllActive(ctx,isActive);
         // set activity status
         final boolean activeAfterTick = isActive;
         if (state.shouldUpdate()) {
@@ -84,7 +86,15 @@ public abstract class ZoneHeatingMultiblockLogic<T extends ZoneHeatingMultiblock
         shutdownTick(ctx);
         
     }
-    protected abstract boolean tickFuel(IMultiblockContext<R> ctx);
+    
+    @Override
+	public void tickClient(IMultiblockContext<R> context) {
+    	tickEffects(context,FHMultiblockHelper.getAbsoluteMaster(context.getLevel()),getIsActive(context));
+	}
+    public void tickEffects(IMultiblockContext<R> ctx,BlockPos master,boolean isActive) {
+    	
+    }
+	protected abstract boolean tickFuel(IMultiblockContext<R> ctx);
 
     public abstract void tickHeat(IMultiblockContext<R> ctx,boolean isWorking);
 }

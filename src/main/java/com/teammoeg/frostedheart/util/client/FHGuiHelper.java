@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.util.client;
 
 import java.util.*;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
@@ -27,6 +28,7 @@ import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -34,6 +36,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 
@@ -43,6 +46,7 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
@@ -54,6 +58,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
  * Convenience functions for rendering
  * */
 public class FHGuiHelper {
+	public static final Function<Direction, Quaternionf> DIR_TO_FACING=Util.memoize(dir->new Quaternionf().rotateAxis(-(float)(dir.toYRot()/180*Math.PI),0,1,0));
     // hack to access render state protected members
     public static class RenderStateAccess extends RenderStateShard {
         public static RenderType.CompositeState getLineState(double width) {

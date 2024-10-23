@@ -69,7 +69,7 @@ public class DrawDeskContainer extends FHBlockEntityContainer<DrawingDeskTileEnt
     }
 
     public DrawDeskContainer(int id, Inventory inventoryPlayer, DrawingDeskTileEntity tile) {
-        super(FHContainer.DRAW_DESK.get(), tile, id, 3);
+        super(FHContainer.DRAW_DESK.get(), tile, id,inventoryPlayer.player, 3);
 
         this.addSlot(new EnableIESlot(this, inv, DrawingDeskTileEntity.PAPER_SLOT, 114, 161) {// paper
             @Override

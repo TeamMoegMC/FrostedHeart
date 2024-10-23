@@ -41,31 +41,13 @@ public class T2GeneratorMultiblock extends FHBaseMultiblock {
     public T2GeneratorMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/generator_t2"),
                 new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 7, 3),
-                () -> FHMultiblocks.generator_t2.defaultBlockState());
+                () -> FHMultiblocks);
     }
 
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public boolean canRenderFormedStructure() {
-        return true;
-    }
 
     @Override
     public float getManualScale() {
         return 14;
     }
 
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void renderFormedStructure(PoseStack transform, MultiBufferSource buffer) {
-        if (renderStack == null)
-            renderStack = new ItemStack(FHMultiblocks.generator_t2);
-        transform.translate(1.5D, 1.5D, 1.5D);
-        ClientUtils.mc().getItemRenderer().renderStatic(
-                renderStack,
-                ItemTransforms.TransformType.NONE,
-                0xf000f0,
-                OverlayTexture.NO_OVERLAY,
-                transform, buffer);
-    }
 }

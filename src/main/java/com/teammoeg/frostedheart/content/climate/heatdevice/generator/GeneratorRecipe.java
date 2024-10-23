@@ -23,19 +23,17 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMultiblocks;
-import com.teammoeg.frostedheart.recipes.ResearchPaperRecipe;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.util.GsonHelper;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
 import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.registries.RegistryObject;
@@ -44,7 +42,7 @@ public class GeneratorRecipe extends IESerializableRecipe {
     public static class Serializer extends IERecipeSerializer<GeneratorRecipe> {
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHMultiblocks.generator);
+            return new ItemStack(FHMultiblocks.Logic.GENERATOR.block().get());
         }
 
         @Nullable

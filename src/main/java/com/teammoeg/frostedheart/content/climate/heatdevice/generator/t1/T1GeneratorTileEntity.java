@@ -19,59 +19,56 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
-import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.FHMultiblocks;
-import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.MasterGeneratorTileEntity;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.tool.GeneratorDriveHandler;
+import com.teammoeg.frostedheart.util.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEHelper;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.util.ShapeType;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
-import blusunrize.immersiveengineering.common.blocks.stone.AlloySmelterTileEntity;
-import blusunrize.immersiveengineering.common.blocks.stone.BlastFurnaceTileEntity;
-import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.AlloySmelterLogic;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.BlastFurnaceLogic;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 
-public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1GeneratorTileEntity> {
-    GeneratorDriveHandler generatorDriveHandler;
-    private static BlockPos lastSupportPos;
+public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1GeneratorTileEntity,T1GeneratorState> {
     public T1GeneratorTileEntity() {
-        super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR_T1.get(), false);
-        this.generatorDriveHandler = new GeneratorDriveHandler(level);
-        lastSupportPos = new BlockPos(0,0,0);
+        super();
     }
-    public boolean isExistNeighborTileEntity() {
-        Vec3i vec = this.multiblockInstance.getSize(level);
+    public boolean findTileEntity(IMultiblockContext<T1GeneratorState> ctx) {
+        Vec3i vec = FHMultiblockHelper.getSize(ctx.getLevel());
         int xLow = -1, xHigh = vec.getX(), yLow = 0, yHigh = vec.getY(), zLow = -1, zHigh = vec.getZ();
         int blastBlockCount = 0, alloySmelterCount = 0;
+        BlockPos.MutableBlockPos blockpos=new BlockPos.MutableBlockPos();
         for (int x = xLow; x <= xHigh; ++x)
             for (int y = yLow; y < yHigh; ++y)
                 for (int z = zLow; z <= zHigh; ++z) {
-                    BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
+                	
                     // Enum a seamless NoUpandDown hollow cube
                     if ( ( (z>zLow && z<zHigh) && ((x==xLow) || (x==xHigh)) ) || ((z==zLow || z==zHigh) && (x>xLow && x<xHigh)) ) {
-                        BlockEntity te = Utils.getExistingTileEntity(level, actualPos);
-                        if (te instanceof BlastFurnaceTileEntity) {
+                    	blockpos.set(x, y, z);
+                        IMultiblockBEHelper<?> te = FHMultiblockHelper.getBEHelper(ctx.getLevel().getRawLevel(), ctx.getLevel().toAbsolute(blockpos)).orElse(null);
+                        IMultiblockState state=te.getContext().getState();
+                        if (state instanceof BlastFurnaceLogic.State) {
                             if (++blastBlockCount == 9) {
-                            	BlastFurnaceTileEntity master=((BlastFurnaceTileEntity) te).master();
-                                lastSupportPos = master.getBlockPos();
+                            	ctx.getState().lastSupportPos=te.getContext().getLevel().toAbsolute(te.getMultiblock().masterPosInMB());
                                 return true;
                             }
                         }
-                        if (te instanceof AlloySmelterTileEntity) {
+                        if (te instanceof AlloySmelterLogic.State) {
                             if (++alloySmelterCount == 4) {
-                                lastSupportPos = actualPos;
+                            	ctx.getState().lastSupportPos = te.getContext().getLevel().toAbsolute(te.getMultiblock().masterPosInMB());
                                 return true;
                             }
                         }
@@ -79,49 +76,37 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
                 }
         return false;
     }
-    @Override
-    protected void callBlockConsumerWithTypeCheck(Consumer<T1GeneratorTileEntity> consumer, BlockEntity te) {
-        if (te instanceof T1GeneratorTileEntity)
-            consumer.accept((T1GeneratorTileEntity) te);
-    }
 
-
-
-    @Override
-    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
-        super.readCustomNBT(nbt, descPacket);
-       
-    }
-
-    @Override
-    protected void tickEffects(boolean isActive) {
-        if (isActive) {
-            BlockPos blockpos = this.getBlockPos();
-            Random random = level.random;
+	@Override
+	public IETemplateMultiblock getNextLevelMultiblock() {
+		return FHMultiblocks.Multiblock.GENERATOR_T2;
+	}
+	@Override
+	public T1GeneratorState createInitialState(IInitialMultiblockContext<T1GeneratorState> capabilitySource) {
+		return new T1GeneratorState();
+	}
+	@Override
+	public Function<BlockPos, VoxelShape> shapeGetter(ShapeType forType) {
+		return b->Shapes.block();
+	}
+	@Override
+	public void tickHeat(IMultiblockContext<T1GeneratorState> ctx, boolean isWorking) {
+		
+	}
+	@Override
+	public void tickEffects(IMultiblockContext<T1GeneratorState> ctx, BlockPos pos, boolean isActive) {
+		if (isActive) {
+			Level level=ctx.getLevel().getRawLevel();
+            RandomSource random = level.random;
             if (random.nextFloat() < 0.2F) {
                 //for (int i = 0; i < random.nextInt(2) + 2; ++i) {
-                ClientUtils.spawnSmokeParticles(level, blockpos.relative(Direction.UP, 1));
-                ClientUtils.spawnSmokeParticles(level, blockpos);
-                ClientUtils.spawnFireParticles(level, blockpos);
+                ClientUtils.spawnSmokeParticles(level, pos.relative(Direction.UP, 1));
+                ClientUtils.spawnSmokeParticles(level, pos);
+                ClientUtils.spawnFireParticles(level, pos);
                 //}
             }
         }
-    }
-    @Override
-    protected void tickDrives(boolean isActive) {
-        if (isActive) {
-            if (isExistNeighborTileEntity()) {
-                this.generatorDriveHandler.checkExistOreAndUpdate(lastSupportPos);
-            }
-        }
-    }
-    @Override
-    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
-        super.writeCustomNBT(nbt, descPacket);
-        
-    }
-	@Override
-	public IETemplateMultiblock getNextLevelMultiblock() {
-		return FHMultiblocks.GENERATOR_T2;
+		super.tickEffects(ctx, pos, isActive);
 	}
+	
 }

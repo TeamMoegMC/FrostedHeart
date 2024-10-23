@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.base.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.FHBaseContianer;
+import com.teammoeg.frostedheart.FHBaseContainer;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,7 +26,7 @@ public record FHContainerOperation(int containerId, short buttonId, int state) i
 		context.get().enqueueWork(()->{
 			Context ctx=context.get();
 			ServerPlayer player=ctx.getSender();
-			if(player.containerMenu.containerId==containerId&&player.containerMenu instanceof FHBaseContianer container) {
+			if(player.containerMenu.containerId==containerId&&player.containerMenu instanceof FHBaseContainer container) {
 				container.reciveMessage(buttonId, state);
 			}
 		});

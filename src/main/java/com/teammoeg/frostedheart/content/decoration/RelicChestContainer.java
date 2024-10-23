@@ -28,7 +28,7 @@ import net.minecraft.world.item.ItemStack;
 
 public class RelicChestContainer extends FHBlockEntityContainer<RelicChestTileEntity> {
     public RelicChestContainer(int id, Inventory inventoryPlayer, RelicChestTileEntity tile) {
-        super(FHContainer.RELIC_CHEST.get(), tile, id, 15);
+        super(FHContainer.RELIC_CHEST.get(), tile, id,inventoryPlayer.player, 15);
 
         for (int j = 0; j < 3; ++j) {
             for (int k = 0; k < 5; ++k) {

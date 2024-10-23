@@ -29,7 +29,7 @@ import net.minecraft.world.item.ItemStack;
 public class IncubatorT1Container extends FHBlockEntityContainer<IncubatorTileEntity> {
 
     public IncubatorT1Container(int id, Inventory inventoryPlayer, IncubatorTileEntity tile) {
-        super(FHContainer.INCUBATOR_T1.get(), tile, id, 4);
+        super(FHContainer.INCUBATOR_T1.get(), tile, id,inventoryPlayer.player, 4);
 
         this.addSlot(new IESlot(this, this.inv, 0, 34, 52) {
             @Override

@@ -19,42 +19,73 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
-import com.teammoeg.frostedheart.FHBaseContianer;
-import com.teammoeg.frostedheart.FHBlockEntityContainer;
-import com.teammoeg.frostedheart.FHContainer;
+import java.util.Optional;
+
+import com.teammoeg.frostedheart.FHBaseContainer;
+import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.util.FHContainerData;
+import com.teammoeg.frostedheart.util.FHContainerData.FHDataSlot;
 import com.teammoeg.frostedheart.util.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.client.Point;
 
-import blusunrize.immersiveengineering.common.gui.IEContainerMenu;
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
 import blusunrize.immersiveengineering.common.gui.IESlot.NewOutput;
-import blusunrize.immersiveengineering.common.gui.sync.GenericContainerData;
-import blusunrize.immersiveengineering.common.gui.sync.GetterAndSetter;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 
-public abstract class MasterGeneratorContainer<R extends MasterGeneratorState,T extends MasterGeneratorTileEntity<T,R>> extends FHBaseContianer {
-    public ContainerData data;
-    public GetterAndSetter<Boolean> isWorking;
-    public GetterAndSetter<Boolean> isOverdrive;
-    public BlockPos masterPos;
+public abstract class MasterGeneratorContainer<R extends MasterGeneratorState,T extends MasterGeneratorTileEntity<T,R>> extends FHBaseContainer {
+	public FHDataSlot<Integer> process=FHContainerData.SLOT_INT.create(this);
+	public FHDataSlot<Integer> processMax=FHContainerData.SLOT_INT.create(this);
+	public FHDataSlot<Float> overdrive=FHContainerData.SLOT_FIXED.create(this);
+	public FHDataSlot<Float> power=FHContainerData.SLOT_FIXED.create(this);
+	public FHDataSlot<Float> tempLevel=FHContainerData.SLOT_FIXED.create(this);
+	public FHDataSlot<Float> rangeLevel=FHContainerData.SLOT_FIXED.create(this);
+	public FHDataSlot<Integer> tempDegree=FHContainerData.SLOT_INT.create(this);
+	public FHDataSlot<Integer> rangeBlock=FHContainerData.SLOT_INT.create(this);
+	public FHDataSlot<Boolean> isBroken=FHContainerData.SLOT_BOOL.create(this);
+    public FHDataSlot<Boolean> isWorking=FHContainerData.SLOT_BOOL.create(this);
+    public FHDataSlot<Boolean> isOverdrive=FHContainerData.SLOT_BOOL.create(this);
+    public FHDataSlot<BlockPos> pos=FHContainerData.SLOT_BLOCKPOS.create(this);
     public MasterGeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<R> ctx) {
-        super(type,id,2);
-        Point in=getSlotIn();
+    	super(type,id,inventoryPlayer.player,2);
         R state=ctx.mbContext().getState();
-        isWorking=new GetterAndSetter<>(()->state.isWorking,t->state.isWorking=t);
-        isOverdrive=new GetterAndSetter<>(()->state.isOverdrive,t->state.isOverdrive=t);
-        masterPos=FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel());
-        IItemHandler handler=state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel())).get().inventory;
+        if(state.getOwner()==null) {
+        	state.setOwner(FHTeamDataManager.get(inventoryPlayer.player).getId());
+        	state.regist(inventoryPlayer.player.level(), FHMultiblockHelper.getMasterPos(ctx.mbContext().getLevel()));
+        }
+        Optional<GeneratorData> optdata=state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel()));
+        optdata.ifPresent(data->{
+        	process.bind(()->data.process);
+        	processMax.bind(()->data.processMax);
+        	overdrive.bind(()->data.overdriveLevel*1f/data.getMaxOverdrive());
+        	power.bind(()->data.power);
+        	tempLevel.bind(()->data.TLevel);
+        	rangeLevel.bind(()->data.RLevel);
+        	tempDegree.bind(()->state.getActualTemp());
+        	rangeBlock.bind(()->state.getActualRange());
+        	isBroken.bind(()->data.isBroken);
+        	isWorking.bind(()->data.isWorking,t->data.isWorking=t);
+        	isOverdrive.bind(()->data.isOverdrive,t->data.isOverdrive=t);
+        	
+        });
+        pos.bind(()->ctx.clickedPos());
+        this.validator=new Validator(ctx.clickedPos(), 8).and(ctx.mbContext().isValid());
+        IItemHandler handler=state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel())).map(t->t.inventory).orElseGet(()->new ItemStackHandler(2));
+        createSlots(handler,inventoryPlayer);
+    }
+    public MasterGeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer) {
+        super(type,id,inventoryPlayer.player,2);
+        createSlots(new ItemStackHandler(2),inventoryPlayer);
+    }
+    protected void createSlots(IItemHandler handler,Inventory inventoryPlayer) {
+        Point in=getSlotIn();
+        
         this.addSlot(new SlotItemHandler(handler, 0, in.getX(), in.getY()) {
             @Override
             public boolean mayPlace(ItemStack itemStack) {
@@ -64,11 +95,6 @@ public abstract class MasterGeneratorContainer<R extends MasterGeneratorState,T 
         Point out=getSlotOut();
         this.addSlot(new NewOutput(handler, 1, out.getX(), out.getY()));
         super.addPlayerInventory(inventoryPlayer, 8, 140, 198);
-        data = state.guiData;
-       /* super.addGenericData(GenericContainerData.bool(isWorking, isWorking));
-        super.addGenericData(GenericContainerData.bool(isOverdrive, isOverdrive));
-        super.addGenericData(GenericContainerData);*/
-        addDataSlots(data);
     }
     public abstract Point getSlotIn();
     public abstract Point getSlotOut();
@@ -76,8 +102,8 @@ public abstract class MasterGeneratorContainer<R extends MasterGeneratorState,T 
     public abstract FluidTank getTank();
 	public void receiveMessage(short btn,int state) {
         switch(btn) {
-        case 1:isWorking.set(state>0);break;
-        case 2:isOverdrive.set(state>0);break;
+        case 1:isWorking.setValue(state>0);break;
+        case 2:isOverdrive.setValue(state>0);break;
         }
        /* if (message.contains("temperatureLevel", Tag.TAG_INT))
             setTemperatureLevel(message.getInt("temperatureLevel"));

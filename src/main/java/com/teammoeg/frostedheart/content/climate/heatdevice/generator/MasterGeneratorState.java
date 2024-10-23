@@ -3,34 +3,28 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 import java.util.Optional;
 
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
-import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.level.Level;
 
 public class MasterGeneratorState extends BaseHeatingState {
 	int remTicks;
-	public ContainerData guiData;
 
     @Override
 	public void writeSaveNBT(CompoundTag nbt) {
 		super.writeSaveNBT(nbt);
+		nbt.putInt("explodeTicks", remTicks);
 	}
 	@Override
 	public void readSaveNBT(CompoundTag nbt) {
 		super.readSaveNBT(nbt);
         Optional<GeneratorData> data = this.getDataNoCheck();
-        data.ifPresent(t -> {
-            this.isOverdrive=t.isOverdrive;
-            this.isWorking=t.isWorking;
-        });
+        remTicks=nbt.getInt("explodeTicks");
 	}
-	public MasterGeneratorState(IETemplateMultiblock multiblock,IETemplateMultiblock nextLevelMultiblock) {
+	public MasterGeneratorState() {
 		super();
-		guiData = new SimpleContainerData(6);
 	}
 	public final Optional<GeneratorData> getDataNoCheck() {
         return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA));
@@ -45,8 +39,6 @@ public class MasterGeneratorState extends BaseHeatingState {
     	getDataNoCheck().ifPresent(t -> {
         	if(!origin.equals(t.actualPos))
         		t.onPosChange();
-        	this.setWorking(t.isWorking);
-        	this.setOverdrive(t.isOverdrive);
             t.actualPos = origin;
             t.dimension = level.dimension();
         });
@@ -58,8 +50,6 @@ public class MasterGeneratorState extends BaseHeatingState {
     		if(BlockPos.ZERO.equals(t.actualPos)) {
 	        	if(!origin.equals(t.actualPos))
 	        		t.onPosChange();
-	        	this.setWorking(t.isWorking);
-	        	this.setOverdrive(t.isOverdrive);
 	            t.actualPos = origin;
 	            t.dimension = level.dimension();
     		}

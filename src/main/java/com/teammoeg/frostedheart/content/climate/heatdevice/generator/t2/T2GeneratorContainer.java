@@ -20,17 +20,31 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.MasterGeneratorContainer;
+import com.teammoeg.frostedheart.util.FHContainerData;
 import com.teammoeg.frostedheart.util.client.Point;
 
+import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class T2GeneratorContainer extends MasterGeneratorContainer<T2GeneratorTileEntity> {
-
-	public T2GeneratorContainer(int id, Inventory inventoryPlayer, T2GeneratorTileEntity tile) {
-		super(id, inventoryPlayer, tile);
+public class T2GeneratorContainer extends MasterGeneratorContainer<T2GeneratorState,T2GeneratorTileEntity> {
+	FluidTank tank;
+    public T2GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<T2GeneratorState> ctx) {
+		super(type, id, inventoryPlayer, ctx);
+		tank=ctx.mbContext().getState().tank;
+		FHContainerData.SLOT_TANK.create(this).bind(tank::getFluid);
+		
 	}
-    static final Point pin=new Point(29,63);
+
+	public T2GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer) {
+		super(type, id, inventoryPlayer);
+		tank=new FluidTank(T2GeneratorState.TANK_CAPACITY);
+		FHContainerData.SLOT_TANK.create(this).bind(tank::getFluid,tank::setFluid);
+		
+	}
+
+	static final Point pin=new Point(29,63);
     static final Point pout=new Point(112,55);
 	@Override
 	public Point getSlotIn() {
@@ -49,7 +63,7 @@ public class T2GeneratorContainer extends MasterGeneratorContainer<T2GeneratorTi
 
 	@Override
 	public FluidTank getTank() {
-		return super.tile.tank;
+		return tank;
 	}
 
 
