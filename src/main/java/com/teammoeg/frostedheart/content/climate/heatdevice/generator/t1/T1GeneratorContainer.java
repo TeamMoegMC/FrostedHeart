@@ -19,16 +19,15 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1;
 
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.MasterGeneratorContainer;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorContainer;
 import com.teammoeg.frostedheart.util.client.Point;
 
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class T1GeneratorContainer extends MasterGeneratorContainer<T1GeneratorState,T1GeneratorTileEntity> {
+public class T1GeneratorContainer extends GeneratorContainer<T1GeneratorState, T1GeneratorLogic> {
 
     public T1GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<T1GeneratorState> ctx) {
 		super(type, id, inventoryPlayer, ctx);

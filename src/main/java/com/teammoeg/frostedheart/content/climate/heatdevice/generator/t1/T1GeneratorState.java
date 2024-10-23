@@ -1,11 +1,11 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1;
 
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.MasterGeneratorState;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorState;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 
-public class T1GeneratorState extends MasterGeneratorState {
+public class T1GeneratorState extends GeneratorState {
 
 	/** The last position where the machine it supports is */
 	BlockPos lastSupportPos;

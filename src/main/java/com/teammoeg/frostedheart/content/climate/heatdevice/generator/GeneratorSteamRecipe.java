@@ -46,7 +46,7 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
     public static class Serializer extends IERecipeSerializer<GeneratorSteamRecipe> {
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHMultiblocks.Logic.GENERATOR.block().get());
+            return new ItemStack(FHMultiblocks.Logic.GENERATOR_T1.block().get());
         }
 
         @Nullable

@@ -9,7 +9,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 
-public class MasterGeneratorState extends BaseHeatingState {
+public class GeneratorState extends HeatingState {
     /** Remaining ticks to explode */
 	int remTicks;
 
@@ -24,7 +24,7 @@ public class MasterGeneratorState extends BaseHeatingState {
         Optional<GeneratorData> data = this.getDataNoCheck();
         remTicks=nbt.getInt("explodeTicks");
 	}
-	public MasterGeneratorState() {
+	public GeneratorState() {
 		super();
 	}
 
@@ -83,12 +83,12 @@ public class MasterGeneratorState extends BaseHeatingState {
     }
 
     @Override
-    public int getLowerBound() {
+    public int getDownwardRange() {
         return Mth.ceil(getRangeLevel()*2+1);
     }
 
     @Override
-    public int getUpperBound() {
+    public int getUpwardRange() {
         return Mth.ceil(getRangeLevel() * 4+1);
     }
 

@@ -19,24 +19,20 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
 
-import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.MasterGeneratorTileEntity;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorLogic;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
@@ -53,7 +49,7 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2GeneratorTileEntity,T2GeneratorState>{
+public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic,T2GeneratorState> {
     private static final BlockPos fluidIn = new BlockPos(1, 0, 2);
 
     private static final BlockPos networkTile = new BlockPos(1, 0, 0);
@@ -62,14 +58,14 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 
 
 
-    public T2GeneratorTileEntity() {
+    public T2GeneratorLogic() {
         super(FHMultiblocks.GENERATOR_T2, FHTileTypes.GENERATOR_T2.get(), false);
     }
 
     @Override
-    protected void callBlockConsumerWithTypeCheck(Consumer<T2GeneratorTileEntity> consumer, BlockEntity te) {
-        if (te instanceof T2GeneratorTileEntity)
-            consumer.accept((T2GeneratorTileEntity) te);
+    protected void callBlockConsumerWithTypeCheck(Consumer<T2GeneratorLogic> consumer, BlockEntity te) {
+        if (te instanceof T2GeneratorLogic)
+            consumer.accept((T2GeneratorLogic) te);
     }
 
 
@@ -89,7 +85,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 
     @Override
     protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
-        T2GeneratorTileEntity master = master();
+        T2GeneratorLogic master = master();
         if (master != null && side == this.getFacing() && this.posInMultiblock.equals(fluidIn))
             return new FluidTank[]{master.tank};
         return new FluidTank[0];

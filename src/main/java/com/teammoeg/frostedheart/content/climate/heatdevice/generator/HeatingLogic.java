@@ -35,9 +35,9 @@ import net.minecraft.core.Vec3i;
 /**
  * Common base class for any generator like block that maintains a heat area
  */
-public abstract class ZoneHeatingMultiblockLogic<T extends ZoneHeatingMultiblockLogic<T,?>,R extends BaseHeatingState> implements  IServerTickableComponent<R>,IMultiblockLogic<R>,IActiveStateLogic,IClientTickableComponent<R> {
+public abstract class HeatingLogic<T extends HeatingLogic<T,?>,R extends HeatingState> implements  IServerTickableComponent<R>,IMultiblockLogic<R>,IActiveStateLogic,IClientTickableComponent<R> {
 
-	public ZoneHeatingMultiblockLogic() {
+	public HeatingLogic() {
 		super();
 	}
     
@@ -64,7 +64,7 @@ public abstract class ZoneHeatingMultiblockLogic<T extends ZoneHeatingMultiblock
 
     @Override
     public void tickServer(IMultiblockContext<R> ctx) {
-    	BaseHeatingState state=ctx.getState();
+    	HeatingState state=ctx.getState();
         final boolean activeBeforeTick = getIsActive(ctx);
         boolean isActive=tickFuel(ctx);
         tickHeat(ctx,isActive);
@@ -73,9 +73,9 @@ public abstract class ZoneHeatingMultiblockLogic<T extends ZoneHeatingMultiblock
         // set activity status
         final boolean activeAfterTick = isActive;
         if (state.shouldUpdate()) {
-            if (state.getActualRange() > 0 && state.getActualTemp() > 0) {
-                ChunkHeatData.addPillarTempAdjust(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()), state.getActualRange(), state.getUpperBound(),
-                	state.getLowerBound(), state.getActualTemp());
+            if (state.getRadius() > 0 && state.getTempMod() > 0) {
+                ChunkHeatData.addPillarTempAdjust(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()), state.getRadius(), state.getUpwardRange(),
+                	state.getDownwardRange(), state.getTempMod());
             }else {
             	ChunkHeatData.removeTempAdjust(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
             }
