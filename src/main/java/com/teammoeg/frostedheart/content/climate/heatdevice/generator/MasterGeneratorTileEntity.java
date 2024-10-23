@@ -77,16 +77,20 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     public MasterGeneratorTileEntity() {
         super();
     }
+
+	/** Get the GeneratorData from context */
     public Optional<GeneratorData> getData(IMultiblockContext<R> ctx){
     	return ctx.getState().getData(FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
     }
+
+	/** Upgrading Generator logic */
     public void onUpgradeMaintainClicked(IMultiblockContext<R> ctx,ServerPlayer player) {
     	if(getData(ctx).map(t->t.isBroken).orElse(false)) {
     		repairStructure(ctx,player);
     	} else {
     		upgradeStructure(ctx,player);
     	}
-    };
+    }
     public void upgradeStructure(IMultiblockContext<R> ctx,ServerPlayer entityplayer) {
     	IMultiblockBEHelper helper=FHMultiblockHelper.getBEHelper(ctx.getLevel()).get();
     	if(!isValidStructure(ctx.getLevel().getRawLevel(),helper))

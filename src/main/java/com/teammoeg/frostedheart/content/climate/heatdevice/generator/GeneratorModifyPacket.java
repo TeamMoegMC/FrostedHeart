@@ -10,6 +10,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraftforge.network.NetworkEvent.Context;
 
+/**
+ * Packet to upgrade the generator with the maintenance button.
+ */
 public class GeneratorModifyPacket implements FHMessage{
 	public GeneratorModifyPacket() {
 	}

@@ -44,6 +44,12 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 
+/**
+ * Generator data and utility functions.
+ * Automatically maintained by the special data system,
+ * which is shared by the team.
+ * See {@link com.teammoeg.frostedheart.base.team.SpecialDataTypes}
+ */
 public class GeneratorData implements SpecialData{
 	public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;

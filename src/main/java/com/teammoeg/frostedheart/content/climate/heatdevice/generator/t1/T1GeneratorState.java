@@ -6,6 +6,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 
 public class T1GeneratorState extends MasterGeneratorState {
+
+	/** The last position where the machine it supports is */
 	BlockPos lastSupportPos;
 	public T1GeneratorState() {
 		super();
