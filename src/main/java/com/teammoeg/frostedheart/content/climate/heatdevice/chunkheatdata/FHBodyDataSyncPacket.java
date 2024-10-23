@@ -40,19 +40,19 @@ public class FHBodyDataSyncPacket extends NBTMessage {
     }
 
 
-	public FHBodyDataSyncPacket(FriendlyByteBuf buffer) {
-		super(buffer);
-	}
+    public FHBodyDataSyncPacket(FriendlyByteBuf buffer) {
+        super(buffer);
+    }
 
 
-	@Override
-	public void handle(Supplier<NetworkEvent.Context> context) {
+    @Override
+    public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
             Level world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getWorld);
             Player player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
             if (world != null) {
-            	PlayerTemperatureData.getCapability(player).ifPresent(t->t.deserializeNBT(super.getTag()));
+                PlayerTemperatureData.getCapability(player).ifPresent(t -> t.deserializeNBT(super.getTag()));
             }
         });
         context.get().setPacketHandled(true);

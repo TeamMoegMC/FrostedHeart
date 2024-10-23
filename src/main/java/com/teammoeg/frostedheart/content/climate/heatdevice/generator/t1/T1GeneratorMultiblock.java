@@ -38,8 +38,8 @@ public class T1GeneratorMultiblock extends FHBaseMultiblock {
 
     public T1GeneratorMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/generator"),
-                new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 4, 3),FHMultiblocks.Logic.GENERATOR_T1
-                );
+                new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 4, 3), FHMultiblocks.Logic.GENERATOR_T1
+        );
     }
 
     @Override
@@ -47,12 +47,12 @@ public class T1GeneratorMultiblock extends FHBaseMultiblock {
         return 16;
     }
 
-	@Override
-	public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
-		BlockPos master=this.getMasterFromOriginOffset();
-		ChunkHeatData.removeTempAdjust(world, origin.offset(master));
-		super.disassemble(world, origin, mirrored, clickDirectionAtCreation);
-	}
+    @Override
+    public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
+        BlockPos master = this.getMasterFromOriginOffset();
+        ChunkHeatData.removeTempAdjust(world, origin.offset(master));
+        super.disassemble(world, origin, mirrored, clickDirectionAtCreation);
+    }
 
 
 }

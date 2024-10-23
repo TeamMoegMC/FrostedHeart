@@ -49,14 +49,12 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic,T2GeneratorState> {
+public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2GeneratorState> {
     private static final BlockPos fluidIn = new BlockPos(1, 0, 2);
 
     private static final BlockPos networkTile = new BlockPos(1, 0, 0);
     private static final BlockPos redstone = new BlockPos(1, 1, 2);
-
-
-
+    LazyOptional<HeatProviderEndPoint> ep;
 
     public T2GeneratorLogic() {
         super(FHMultiblocks.GENERATOR_T2, FHTileTypes.GENERATOR_T2.get(), false);
@@ -68,20 +66,17 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic,T2Generato
             consumer.accept((T2GeneratorLogic) te);
     }
 
-
     @Override
     protected boolean canFillTankFrom(int iTank, Direction side, FluidStack resource) {
         return side == this.getFacing() && this.posInMultiblock.equals(fluidIn);
     }
 
-
     @Override
     public void disassemble() {
-    	if(manager!=null)
-        manager.invalidate();
+        if (manager != null)
+            manager.invalidate();
         super.disassemble();
     }
-
 
     @Override
     protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
@@ -90,10 +85,6 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic,T2Generato
             return new FluidTank[]{master.tank};
         return new FluidTank[0];
     }
-
-
-
-
 
     @Override
     public AABB getRenderBoundingBox() {
@@ -155,36 +146,36 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic,T2Generato
             }*/
         }
     }
-    LazyOptional<HeatProviderEndPoint> ep;
+
     @Override
-	public <X> LazyOptional<X> getCapability(Capability<X> capability, Direction facing) {
-    	if(capability==FHCapabilities.HEAT_EP.capability()&&facing == this.getFacing().getOpposite() && this.posInMultiblock.equals(networkTile)) {
-    		LazyOptional<HeatProviderEndPoint> cep=getData().map(t->t.epcap).orElseGet(LazyOptional::empty);
-    		if(ep!=cep) {
-    			ep=cep;
-    		}
-    		return ep==null?LazyOptional.empty():ep.cast();
-    	}
-		return super.getCapability(capability, facing);
-	}
-
-	@Override
-    protected boolean tickFuel() {
-    	if(manager==null) {
-    		 manager = new HeatEnergyNetwork(this, c -> {
-    		        Direction dir = this.getFacing();
-
-    		        c.accept(getBlockPosForPos(networkTile).relative(dir.getOpposite()), dir.getOpposite());
-
-    		    });
-    	}
-        if((!master().getData().map(t->t.ep.hasValidNetwork()).orElse(true)||manager.data.size()<=1)&&!manager.isUpdateRequested()) {
-        	manager.requestSlowUpdate();
+    public <X> LazyOptional<X> getCapability(Capability<X> capability, Direction facing) {
+        if (capability == FHCapabilities.HEAT_EP.capability() && facing == this.getFacing().getOpposite() && this.posInMultiblock.equals(networkTile)) {
+            LazyOptional<HeatProviderEndPoint> cep = getData().map(t -> t.epcap).orElseGet(LazyOptional::empty);
+            if (ep != cep) {
+                ep = cep;
+            }
+            return ep == null ? LazyOptional.empty() : ep.cast();
         }
-    	manager.tick();
-        boolean active=super.tickFuel();
-        if(active)
-        	this.tickLiquid();
+        return super.getCapability(capability, facing);
+    }
+
+    @Override
+    protected boolean tickFuel() {
+        if (manager == null) {
+            manager = new HeatEnergyNetwork(this, c -> {
+                Direction dir = this.getFacing();
+
+                c.accept(getBlockPosForPos(networkTile).relative(dir.getOpposite()), dir.getOpposite());
+
+            });
+        }
+        if ((!master().getData().map(t -> t.ep.hasValidNetwork()).orElse(true) || manager.data.size() <= 1) && !manager.isUpdateRequested()) {
+            manager.requestSlowUpdate();
+        }
+        manager.tick();
+        boolean active = super.tickFuel();
+        if (active)
+            this.tickLiquid();
         return active;
     }
 
@@ -214,14 +205,22 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic,T2Generato
             int actualDrain = rdrain * sgr.input.getAmount();
             FluidStack fs = this.tank.drain(actualDrain, FluidAction.SIMULATE);
             if (fs.getAmount() >= actualDrain) {
-                data.ifPresent(t->{t.steamProcess= rdrain;t.steamLevel = sgr.level;t.power=sgr.power;}); 
+                data.ifPresent(t -> {
+                    t.steamProcess = rdrain;
+                    t.steamLevel = sgr.level;
+                    t.power = sgr.power;
+                });
 
                 final FluidStack fs2 = this.tank.drain(actualDrain, FluidAction.EXECUTE);
                 data.ifPresent(t -> t.fluid = fs2.getFluid());
                 return;
             }
         } else {
-        	data.ifPresent(t->{t.steamLevel=0;t.steamProcess=0;t.power=0;});
+            data.ifPresent(t -> {
+                t.steamLevel = 0;
+                t.steamProcess = 0;
+                t.power = 0;
+            });
         }
         noliquidtick = 40;
     }
@@ -229,19 +228,19 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic,T2Generato
     @Override
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
-        if(!this.isDummy()||descPacket) {
-	        CompoundTag tankx = new CompoundTag();
-	        tank.writeToNBT(tankx);
-	        nbt.putFloat("liquid_tick", liquidtick);
-	        nbt.put("fluid", tankx);
+        if (!this.isDummy() || descPacket) {
+            CompoundTag tankx = new CompoundTag();
+            tank.writeToNBT(tankx);
+            nbt.putFloat("liquid_tick", liquidtick);
+            nbt.put("fluid", tankx);
         }
     }
 
 
-	@Override
-	public IETemplateMultiblock getNextLevelMultiblock() {
-		return null;
-	}
+    @Override
+    public IETemplateMultiblock getNextLevelMultiblock() {
+        return null;
+    }
 
 
 }

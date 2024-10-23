@@ -42,33 +42,34 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 
-public final class T1GeneratorLogic extends GeneratorLogic<T1GeneratorLogic,T1GeneratorState> {
+public final class T1GeneratorLogic extends GeneratorLogic<T1GeneratorLogic, T1GeneratorState> {
     public T1GeneratorLogic() {
         super();
     }
+
     public boolean findTileEntity(IMultiblockContext<T1GeneratorState> ctx) {
         Vec3i vec = FHMultiblockHelper.getSize(ctx.getLevel());
         int xLow = -1, xHigh = vec.getX(), yLow = 0, yHigh = vec.getY(), zLow = -1, zHigh = vec.getZ();
         int blastBlockCount = 0, alloySmelterCount = 0;
-        BlockPos.MutableBlockPos blockpos=new BlockPos.MutableBlockPos();
+        BlockPos.MutableBlockPos blockpos = new BlockPos.MutableBlockPos();
         for (int x = xLow; x <= xHigh; ++x)
             for (int y = yLow; y < yHigh; ++y)
                 for (int z = zLow; z <= zHigh; ++z) {
-                	
+
                     // Enum a seamless NoUpandDown hollow cube
-                    if ( ( (z>zLow && z<zHigh) && ((x==xLow) || (x==xHigh)) ) || ((z==zLow || z==zHigh) && (x>xLow && x<xHigh)) ) {
-                    	blockpos.set(x, y, z);
+                    if (((z > zLow && z < zHigh) && ((x == xLow) || (x == xHigh))) || ((z == zLow || z == zHigh) && (x > xLow && x < xHigh))) {
+                        blockpos.set(x, y, z);
                         IMultiblockBEHelper<?> te = FHMultiblockHelper.getBEHelper(ctx.getLevel().getRawLevel(), ctx.getLevel().toAbsolute(blockpos)).orElse(null);
-                        IMultiblockState state=te.getContext().getState();
+                        IMultiblockState state = te.getContext().getState();
                         if (state instanceof BlastFurnaceLogic.State) {
                             if (++blastBlockCount == 9) {
-                            	ctx.getState().lastSupportPos=te.getContext().getLevel().toAbsolute(te.getMultiblock().masterPosInMB());
+                                ctx.getState().lastSupportPos = te.getContext().getLevel().toAbsolute(te.getMultiblock().masterPosInMB());
                                 return true;
                             }
                         }
                         if (te instanceof AlloySmelterLogic.State) {
                             if (++alloySmelterCount == 4) {
-                            	ctx.getState().lastSupportPos = te.getContext().getLevel().toAbsolute(te.getMultiblock().masterPosInMB());
+                                ctx.getState().lastSupportPos = te.getContext().getLevel().toAbsolute(te.getMultiblock().masterPosInMB());
                                 return true;
                             }
                         }
@@ -77,26 +78,30 @@ public final class T1GeneratorLogic extends GeneratorLogic<T1GeneratorLogic,T1Ge
         return false;
     }
 
-	@Override
-	public IETemplateMultiblock getNextLevelMultiblock() {
-		return FHMultiblocks.Multiblock.GENERATOR_T2;
-	}
-	@Override
-	public T1GeneratorState createInitialState(IInitialMultiblockContext<T1GeneratorState> capabilitySource) {
-		return new T1GeneratorState();
-	}
-	@Override
-	public Function<BlockPos, VoxelShape> shapeGetter(ShapeType forType) {
-		return b->Shapes.block();
-	}
-	@Override
-	public void tickHeat(IMultiblockContext<T1GeneratorState> ctx, boolean isWorking) {
-		
-	}
-	@Override
-	public void tickEffects(IMultiblockContext<T1GeneratorState> ctx, BlockPos pos, boolean isActive) {
-		if (isActive) {
-			Level level=ctx.getLevel().getRawLevel();
+    @Override
+    public IETemplateMultiblock getNextLevelMultiblock() {
+        return FHMultiblocks.Multiblock.GENERATOR_T2;
+    }
+
+    @Override
+    public T1GeneratorState createInitialState(IInitialMultiblockContext<T1GeneratorState> capabilitySource) {
+        return new T1GeneratorState();
+    }
+
+    @Override
+    public Function<BlockPos, VoxelShape> shapeGetter(ShapeType forType) {
+        return b -> Shapes.block();
+    }
+
+    @Override
+    public void tickHeat(IMultiblockContext<T1GeneratorState> ctx, boolean isWorking) {
+
+    }
+
+    @Override
+    public void tickEffects(IMultiblockContext<T1GeneratorState> ctx, BlockPos pos, boolean isActive) {
+        if (isActive) {
+            Level level = ctx.getLevel().getRawLevel();
             RandomSource random = level.random;
             if (random.nextFloat() < 0.2F) {
                 //for (int i = 0; i < random.nextInt(2) + 2; ++i) {
@@ -106,7 +111,7 @@ public final class T1GeneratorLogic extends GeneratorLogic<T1GeneratorLogic,T1Ge
                 //}
             }
         }
-		super.tickEffects(ctx, pos, isActive);
-	}
-	
+        super.tickEffects(ctx, pos, isActive);
+    }
+
 }

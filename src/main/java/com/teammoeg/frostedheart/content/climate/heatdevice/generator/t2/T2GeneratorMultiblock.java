@@ -28,9 +28,9 @@ import net.minecraft.core.BlockPos;
 public class T2GeneratorMultiblock extends FHBaseMultiblock {
 
     public T2GeneratorMultiblock() {
-    	
+
         super(new ResourceLocation(FHMain.MODID, "multiblocks/generator_t2"),
-                new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 7, 3),Logic.GENERATOR_T2);
+                new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 7, 3), Logic.GENERATOR_T2);
     }
 
 

@@ -43,277 +43,275 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<T, R>> extends IEContainerScreen<GeneratorContainer<R, T>> {
-	public static final int TEXW = 512;
-	public static final int TEXH = 256;
-	private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("general_generator");
+    public static final int TEXW = 512;
+    public static final int TEXH = 256;
+    private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("general_generator");
+    private static final AtlasUV rangeicons = new AtlasUV(TEXTURE, 256, 0, 128, 64, 2, 5, TEXW, TEXH);
+    private static final Point rangePoint = new Point(24, 61);
+    private static final RotatableUV minorPointer = new RotatableUV(TEXTURE, 276, 192, 20, 20, 10, 10, TEXW, TEXH);
+    private static final RotatableUV majorPointer = new RotatableUV(TEXTURE, 248, 192, 28, 28, 14, 14, TEXW, TEXH);
+    private static final Point tempGauge = new Point(74, 12);
+    private static final Point rangeGauge = new Point(25, 25);
+    private static final Point overGauge = new Point(131, 25);
+    private static final AtlasUV generatorSymbol = new AtlasUV(TEXTURE, 176, 0, 24, 48, 3, 12, TEXW, TEXH);
+    private static final Point generatorPos = new Point(76, 44);
+    MasterGeneratorGuiButtonUpgrade upgrade;
+    GeneratorLogic<T, R> tile;
+    int level;
+    boolean validStructure;
+    boolean hasResearch;
+    List<Component> costStr;
 
-	public static class MasterGeneratorGuiButtonBoolean extends GuiButtonBoolean {
+    public GeneratorScreen(GeneratorContainer<R, T> inventorySlotsIn, Inventory inv, Component title) {
+        super(inventorySlotsIn, inv, title, TEXTURE);
+        this.imageHeight = 222;
 
-		public MasterGeneratorGuiButtonBoolean(int x, int y, int w, int h, Supplier<Boolean> state,
-			int u, int v, IIEPressable<GuiButtonState<Boolean>> handler) {
-			super(x, y, w, h, null, state, TEXTURE, u, v, 0, handler);
-		}
+    }
 
-		@Override
-		public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-			Minecraft mc = Minecraft.getInstance();
-			if (this.visible) {
-				Font fontrenderer = mc.font;
-				this.isHovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
-				RenderSystem.enableBlend();
-				RenderSystem.blendFuncSeparate(770, 771, 1, 0);
-				RenderSystem.blendFunc(770, 771);
-				int u = texU + (offsetDir == 0 ? width : offsetDir == 2 ? -width : 0) * getStateAsInt();
-				int v = texV + (offsetDir == 1 ? height : offsetDir == 3 ? -height : 0) * getStateAsInt();
-				graphics.blit(texture, getX(), getY(), u, v, width, height, TEXH, TEXW);
-				if (!getMessage().getString().isEmpty()) {
-					int txtCol = 0xE0E0E0;
-					if (!this.active)
-						txtCol = 0xA0A0A0;
-					else if (this.isHovered)
-						txtCol = Lib.COLOUR_I_ImmersiveOrange;
-					int[] offset = getTextOffset(fontrenderer);
-					graphics.drawString(fontrenderer, getMessage(), getX() + offset[0], getY() + offset[1], txtCol, false);
-				}
-			}
-		}
-	}
+    public GeneratorContainer<R, T> getMenu() {
+        return menu;
+    }
 
-	public static class MasterGeneratorGuiButtonUpgrade extends GuiButtonState<Integer> {
+    @Override
+    protected List<InfoArea> makeInfoAreas() {
+        if (menu.getTank() == null)
+            return super.makeInfoAreas();
+        return ImmutableList.of(new FluidInfoArea(menu.getTank(), new Rect2i(135, 27, 16, 60), 0, 0, 0, 0, TEXTURE));
+    }
 
-		public MasterGeneratorGuiButtonUpgrade(int x, int y, int w, int h,
-			IntSupplier initialState, int u, int v,
-			IIEPressable<GuiButtonState<Integer>> handler) {
-			super(x, y, w, h, Component.empty(), new Integer[] { 0, 1, 2, 3 }, initialState, TEXTURE, u, v, 1, handler);
-		}
+    @Override
+    protected void drawContainerBackgroundPre(GuiGraphics matrixStack, float partialTicks, int x, int y) {
+        // background
+        matrixStack.blit(TEXTURE, 0, 0, this.imageWidth, this.imageHeight, 0, 0);
 
-		@Override
-		public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-			Minecraft mc = Minecraft.getInstance();
-			if (this.visible) {
-				Font fontrenderer = mc.font;
-				this.isHovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
-				RenderSystem.enableBlend();
-				RenderSystem.blendFuncSeparate(770, 771, 1, 0);
-				RenderSystem.blendFunc(770, 771);
-				int u = texU + (offsetDir == 0 ? width : offsetDir == 2 ? -width : 0) * getStateAsInt();
-				int v = texV + (offsetDir == 1 ? height : offsetDir == 3 ? -height : 0) * getStateAsInt();
-				graphics.blit(texture, getX(), getY(), u, v, width, height, TEXH, TEXW);
-				if (!getMessage().getString().isEmpty()) {
-					int txtCol = 0xE0E0E0;
-					if (!this.active)
-						txtCol = 0xA0A0A0;
-					else if (this.isHovered)
-						txtCol = Lib.COLOUR_I_ImmersiveOrange;
-					int[] offset = getTextOffset(fontrenderer);
-					graphics.drawString(fontrenderer, getMessage(), getX() + offset[0], getY() + offset[1], txtCol, false);
-				}
-			}
-		}
-	}
+        // System.out.println(ininvarrx+","+ininvarry+"-"+inarryl);
+        // range circle
+        int actualRangeLvl = (int) (menu.rangeLevel.getValue() + 0.05);
+        rangeicons.blitAtlas(matrixStack, leftPos, topPos, rangePoint, actualRangeLvl);
 
-	private static final AtlasUV rangeicons = new AtlasUV(TEXTURE, 256, 0, 128, 64, 2, 5, TEXW, TEXH);
-	private static final Point rangePoint = new Point(24, 61);
-	private static final RotatableUV minorPointer = new RotatableUV(TEXTURE, 276, 192, 20, 20, 10, 10, TEXW, TEXH);
-	private static final RotatableUV majorPointer = new RotatableUV(TEXTURE, 248, 192, 28, 28, 14, 14, TEXW, TEXH);
-	private static final Point tempGauge = new Point(74, 12);
-	private static final Point rangeGauge = new Point(25, 25);
-	private static final Point overGauge = new Point(131, 25);
-	private static final AtlasUV generatorSymbol = new AtlasUV(TEXTURE, 176, 0, 24, 48, 3, 12, TEXW, TEXH);
-	private static final Point generatorPos = new Point(76, 44);
-	MasterGeneratorGuiButtonUpgrade upgrade;
-	GeneratorLogic<T, R> tile;
+        // fuel slots
+        Point in = menu.getSlotIn();
+        Point out = menu.getSlotOut();
 
-	public GeneratorScreen(GeneratorContainer<R, T> inventorySlotsIn, Inventory inv, Component title) {
-		super(inventorySlotsIn, inv, title, TEXTURE);
-		this.imageHeight = 222;
+        int ininvarry = in.getY() + 6;
+        int outinvarry = out.getY() + 6;
+        int ininvarrx = in.getX() + 18;
+        int outinvarrx = 98;
+        int inarryl = 76 - ininvarrx;
+        int outarryl = out.getX() - 2 - outinvarrx;
+        // arrows
+        matrixStack.blit(TEXTURE, ininvarrx, ininvarry, inarryl, 4, 511 - inarryl, 132);
+        matrixStack.blit(TEXTURE, outinvarrx, outinvarry, outarryl, 4, 511 - outarryl, 132);
+        // slot background
+        matrixStack.blit(TEXTURE, in.getX() - 2, in.getY() - 2, 20, 20, 404, 128);
+        matrixStack.blit(TEXTURE, out.getX() - 2, out.getY() - 2, 20, 20, 424, 128);
+        if (menu.getTank() != null) {
+            matrixStack.blit(TEXTURE, 133, 55, 20, 64, 384, 128);
+            matrixStack.blit(TEXTURE, 98, 84, 34, 4, 444, 128);
+            ClientUtils.bindTexture(TEXTURE);
+        }
 
-	}
+        // upgrade arrow
+        matrixStack.blit(TEXTURE, 85, 93, 6, 22, 412, 148);
 
-	public GeneratorContainer<R, T> getMenu() {
-		return menu;
-	}
+        // generator symbol
+        generatorSymbol.blitAtlas(matrixStack, leftPos, topPos, generatorPos, (menu.isWorking.getValue() && menu.process.getValue() > 0) ? 2 : 1, (menu.getTier() - 1));
 
-	@Override
-	protected List<InfoArea> makeInfoAreas() {
-		if (menu.getTank() == null)
-			return super.makeInfoAreas();
-		return ImmutableList.of(new FluidInfoArea(menu.getTank(), new Rect2i(135, 27, 16, 60), 0, 0, 0, 0, TEXTURE));
-	}
+        // range gauge
+        minorPointer.blitRotated(matrixStack, leftPos, topPos, rangeGauge, menu.rangeLevel.getValue() / 4f * 271f);
+        // temp gauge
+        majorPointer.blitRotated(matrixStack, leftPos, topPos, tempGauge, menu.tempLevel.getValue() / 4f * 271f);
+        // overdrive gauge
+        minorPointer.blitRotated(matrixStack, leftPos, topPos, overGauge, menu.overdrive.getValue() * 271f);
+    }
 
-	@Override
-	protected void drawContainerBackgroundPre(GuiGraphics matrixStack, float partialTicks, int x, int y) {
-		// background
-		matrixStack.blit(TEXTURE, 0, 0, this.imageWidth, this.imageHeight, 0, 0);
+    protected void renderLabels(GuiGraphics matrixStack, int x, int y) {
+        // titles
+        matrixStack.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, 0xff404040);
+        // this.font.drawText(matrixStack, this.playerInventory.getDisplayName(),
+        // this.playerInventoryTitleX, this.playerInventoryTitleY+5, 0xff404040);
+        // temp level
+        matrixStack.drawCenteredString(this.font, TemperatureDisplayHelper.toTemperatureDeltaInt(menu.tempDegree.getValue()) + "", 88, 40, 0xffffffff);
+        // range level
+        matrixStack.drawCenteredString(this.font, menu.rangeBlock.getValue() + "", 35, 45, 0xffffffff);
+        // overdrive level
+        matrixStack.drawCenteredString(this.font, menu.overdrive.getValue() * 100 + "", 141, 45, 0xffffffff);
+    }
 
-		// System.out.println(ininvarrx+","+ininvarry+"-"+inarryl);
-		// range circle
-		int actualRangeLvl = (int) (menu.rangeLevel.getValue() + 0.05);
-		rangeicons.blitAtlas(matrixStack, leftPos, topPos, rangePoint, actualRangeLvl);
+    @Override
+    public void init() {
+        super.init();
+        IMultiblockBEHelper<R> helper = (IMultiblockBEHelper<R>) FHMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.pos.getValue()).get();
+        tile = (GeneratorLogic<T, R>) helper.getMultiblock().logic();
+        validStructure = tile.isValidStructure(Minecraft.getInstance().level, helper);
+        this.addRenderableWidget(new MasterGeneratorGuiButtonBoolean(leftPos + 5, topPos + 24, 11, 22, menu.isWorking.asSupplier(), 472, 148,
+                btn -> {
+                    menu.sendMessage(1, btn.getNextState());
+                }));
+        this.addRenderableWidget(new MasterGeneratorGuiButtonBoolean(leftPos + 160, topPos + 24, 11, 22, menu.isOverdrive.asSupplier(), 450, 148,
+                btn -> {
+                    menu.sendMessage(2, btn.getNextState());
+                }));
+        level = 1;
+        Player player = ClientUtils.mc().player;
+        costStr = new ArrayList<>();
+        if (menu.isBroken.getValue()) {
+            costStr.add(TranslateUtils.translateGui("generator.repair_material"));
+            BitSet cost = FHUtils.checkItemList(ClientUtils.mc().player, tile.getRepairCost());
+            int i = 0;
+            for (IngredientWithSize iws : tile.getRepairCost()) {
+                ItemStack[] iss = iws.getMatchingStacks();
+                MutableComponent iftc = TranslateUtils.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
+                if (cost.get(i))
+                    iftc = iftc.withStyle(ChatFormatting.GREEN);
+                else
+                    iftc = iftc.withStyle(ChatFormatting.RED);
+                i++;
+                costStr.add(iftc);
+            }
+            if (cost.cardinality() == cost.length())
+                level = 2;
+            else
+                level = 3;
+        } else {
+            List<IngredientWithSize> upgcost = tile.getUpgradeCost(Minecraft.getInstance().level, helper);
+            BitSet cost = FHUtils.checkItemList(ClientUtils.mc().player, upgcost);
+            hasResearch = ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock());
+            Vec3i v3i = tile.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);
+            if (!validStructure) {
+                costStr.add(TranslateUtils.translateGui("generator.no_enough_space", v3i.getX(), v3i.getY(), v3i.getZ()));
+            } else if (!hasResearch) {
+                costStr.add(TranslateUtils.translateGui("generator.incomplete_research"));
+            } else {
+                costStr.add(TranslateUtils.translateGui("generator.upgrade_material"));
+                int i = 0;
+                for (IngredientWithSize iws : upgcost) {
+                    ItemStack[] iss = iws.getMatchingStacks();
+                    MutableComponent iftc = TranslateUtils.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
+                    if (cost.get(i))
+                        iftc = iftc.withStyle(ChatFormatting.GREEN);
+                    else
+                        iftc = iftc.withStyle(ChatFormatting.RED);
+                    i++;
+                    costStr.add(iftc);
+                }
+                if (cost.cardinality() == cost.length()) {
+                    level = 0;
+                }
+            }
 
-		// fuel slots
-		Point in = menu.getSlotIn();
-		Point out = menu.getSlotOut();
+        }
+        this.addRenderableWidget(upgrade = new MasterGeneratorGuiButtonUpgrade(leftPos + 75, topPos + 116, 26, 18, () -> level, 424, 148,
+                btn -> {
+                    FHNetwork.sendToServer(new GeneratorModifyPacket());
+                }));
 
-		int ininvarry = in.getY() + 6;
-		int outinvarry = out.getY() + 6;
-		int ininvarrx = in.getX() + 18;
-		int outinvarrx = 98;
-		int inarryl = 76 - ininvarrx;
-		int outarryl = out.getX() - 2 - outinvarrx;
-		// arrows
-		matrixStack.blit(TEXTURE, ininvarrx, ininvarry, inarryl, 4, 511 - inarryl, 132);
-		matrixStack.blit(TEXTURE, outinvarrx, outinvarry, outarryl, 4, 511 - outarryl, 132);
-		// slot background
-		matrixStack.blit(TEXTURE, in.getX() - 2, in.getY() - 2, 20, 20, 404, 128);
-		matrixStack.blit(TEXTURE, out.getX() - 2, out.getY() - 2, 20, 20, 424, 128);
-		if (menu.getTank() != null) {
-			matrixStack.blit(TEXTURE, 133, 55, 20, 64, 384, 128);
-			matrixStack.blit(TEXTURE, 98, 84, 34, 4, 444, 128);
-			ClientUtils.bindTexture(TEXTURE);
-		}
+    }
 
-		// upgrade arrow
-		matrixStack.blit(TEXTURE, 85, 93, 6, 22, 412, 148);
+    @Override
+    protected void gatherAdditionalTooltips(int mouseX, int mouseY, Consumer<Component> addLine, Consumer<Component> addGray) {
+        super.gatherAdditionalTooltips(mouseX, mouseY, addLine, addGray);
+        if (isMouseIn(mouseX, mouseY, 5, 24, 11, 22)) {
+            if (menu.isWorking.getValue()) {
+                addLine.accept(TranslateUtils.translateGui("generator.mode.off"));
+            } else {
+                addLine.accept(TranslateUtils.translateGui("generator.mode.on"));
+            }
+        }
 
-		// generator symbol
-		generatorSymbol.blitAtlas(matrixStack, leftPos, topPos, generatorPos, (menu.isWorking.getValue() && menu.process.getValue() > 0) ? 2 : 1, (menu.getTier() - 1));
+        if (isMouseIn(mouseX, mouseY, 160, 24, 11, 22)) {
+            if (menu.isOverdrive.getValue()) {
+                addLine.accept(TranslateUtils.translateGui("generator.overdrive.off"));
+            } else {
+                addLine.accept(TranslateUtils.translateGui("generator.overdrive.on"));
+            }
+        }
 
-		// range gauge
-		minorPointer.blitRotated(matrixStack, leftPos, topPos, rangeGauge, menu.rangeLevel.getValue() / 4f * 271f);
-		// temp gauge
-		majorPointer.blitRotated(matrixStack, leftPos, topPos, tempGauge, menu.tempLevel.getValue() / 4f * 271f);
-		// overdrive gauge
-		minorPointer.blitRotated(matrixStack, leftPos, topPos, overGauge, menu.overdrive.getValue() * 271f);
-	}
+        if (isMouseIn(mouseX, mouseY, 63, 0, 50, 50)) {
+            addLine.accept(TranslateUtils.translateGui("generator.temperature.level").append(TemperatureDisplayHelper.toTemperatureDeltaIntString(menu.tempDegree.getValue())));
+        }
 
-	protected void renderLabels(GuiGraphics matrixStack, int x, int y) {
-		// titles
-		matrixStack.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, 0xff404040);
-		// this.font.drawText(matrixStack, this.playerInventory.getDisplayName(),
-		// this.playerInventoryTitleX, this.playerInventoryTitleY+5, 0xff404040);
-		// temp level
-		matrixStack.drawCenteredString(this.font, TemperatureDisplayHelper.toTemperatureDeltaInt(menu.tempDegree.getValue()) + "", 88, 40, 0xffffffff);
-		// range level
-		matrixStack.drawCenteredString(this.font, menu.rangeBlock.getValue() + "", 35, 45, 0xffffffff);
-		// overdrive level
-		matrixStack.drawCenteredString(this.font, menu.overdrive.getValue() * 100 + "", 141, 45, 0xffffffff);
-	}
+        if (isMouseIn(mouseX, mouseY, 18, 18, 32, 32)) {
+            addLine.accept(TranslateUtils.translateGui("generator.range.level").append(Integer.toString(menu.rangeBlock.getValue())));
+        }
+        if (isMouseIn(mouseX, mouseY, 124, 18, 32, 32)) {
+            addLine.accept(TranslateUtils.translateGui("generator.over.level", menu.overdrive.getValue() * 100));
+        }
+        if (isMouseIn(mouseX, mouseY, 75, 116, 26, 18)) {
+            costStr.forEach(addLine);
+        }
+    }
 
-	int level;
-	boolean validStructure;
-	boolean hasResearch;
-	List<Component> costStr;
-
-	@Override
-	public void init() {
-		super.init();
-		IMultiblockBEHelper<R> helper = (IMultiblockBEHelper<R>) FHMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.pos.getValue()).get();
-		tile = (GeneratorLogic<T, R>) helper.getMultiblock().logic();
-		validStructure = tile.isValidStructure(Minecraft.getInstance().level, helper);
-		this.addRenderableWidget(new MasterGeneratorGuiButtonBoolean(leftPos + 5, topPos + 24, 11, 22, menu.isWorking.asSupplier(), 472, 148,
-			btn -> {
-				menu.sendMessage(1, btn.getNextState());
-			}));
-		this.addRenderableWidget(new MasterGeneratorGuiButtonBoolean(leftPos + 160, topPos + 24, 11, 22, menu.isOverdrive.asSupplier(), 450, 148,
-			btn -> {
-				menu.sendMessage(2, btn.getNextState());
-			}));
-		level = 1;
-		Player player = ClientUtils.mc().player;
-		costStr = new ArrayList<>();
-		if (menu.isBroken.getValue()) {
-			costStr.add(TranslateUtils.translateGui("generator.repair_material"));
-			BitSet cost = FHUtils.checkItemList(ClientUtils.mc().player, tile.getRepairCost());
-			int i = 0;
-			for (IngredientWithSize iws : tile.getRepairCost()) {
-				ItemStack[] iss = iws.getMatchingStacks();
-				MutableComponent iftc = TranslateUtils.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
-				if (cost.get(i))
-					iftc = iftc.withStyle(ChatFormatting.GREEN);
-				else
-					iftc = iftc.withStyle(ChatFormatting.RED);
-				i++;
-				costStr.add(iftc);
-			}
-			if (cost.cardinality() == cost.length())
-				level = 2;
-			else
-				level = 3;
-		} else {
-			List<IngredientWithSize> upgcost = tile.getUpgradeCost(Minecraft.getInstance().level, helper);
-			BitSet cost = FHUtils.checkItemList(ClientUtils.mc().player, upgcost);
-			hasResearch = ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock());
-			Vec3i v3i=tile.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);
-			if (!validStructure) {
-				costStr.add(TranslateUtils.translateGui("generator.no_enough_space", v3i.getX(), v3i.getY(), v3i.getZ()));
-			} else if (!hasResearch) {
-				costStr.add(TranslateUtils.translateGui("generator.incomplete_research"));
-			} else {
-				costStr.add(TranslateUtils.translateGui("generator.upgrade_material"));
-				int i = 0;
-				for (IngredientWithSize iws : upgcost) {
-					ItemStack[] iss = iws.getMatchingStacks();
-					MutableComponent iftc = TranslateUtils.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
-					if (cost.get(i))
-						iftc = iftc.withStyle(ChatFormatting.GREEN);
-					else
-						iftc = iftc.withStyle(ChatFormatting.RED);
-					i++;
-					costStr.add(iftc);
-				}
-				if (cost.cardinality() == cost.length()) {
-					level = 0;
-				}
-			}
-
-		}
-		this.addRenderableWidget(upgrade = new MasterGeneratorGuiButtonUpgrade(leftPos + 75, topPos + 116, 26, 18, () -> level, 424, 148,
-			btn -> {
-				FHNetwork.sendToServer(new GeneratorModifyPacket());
-			}));
-
-	}
-
-	@Override
-	protected void gatherAdditionalTooltips(int mouseX, int mouseY, Consumer<Component> addLine, Consumer<Component> addGray) {
-		super.gatherAdditionalTooltips(mouseX, mouseY, addLine, addGray);
-		if (isMouseIn(mouseX, mouseY, 5, 24, 11, 22)) {
-			if (menu.isWorking.getValue()) {
-				addLine.accept(TranslateUtils.translateGui("generator.mode.off"));
-			} else {
-				addLine.accept(TranslateUtils.translateGui("generator.mode.on"));
-			}
-		}
-
-		if (isMouseIn(mouseX, mouseY, 160, 24, 11, 22)) {
-			if (menu.isOverdrive.getValue()) {
-				addLine.accept(TranslateUtils.translateGui("generator.overdrive.off"));
-			} else {
-				addLine.accept(TranslateUtils.translateGui("generator.overdrive.on"));
-			}
-		}
-
-		if (isMouseIn(mouseX, mouseY, 63, 0, 50, 50)) {
-			addLine.accept(TranslateUtils.translateGui("generator.temperature.level").append(TemperatureDisplayHelper.toTemperatureDeltaIntString(menu.tempDegree.getValue())));
-		}
-
-		if (isMouseIn(mouseX, mouseY, 18, 18, 32, 32)) {
-			addLine.accept(TranslateUtils.translateGui("generator.range.level").append(Integer.toString(menu.rangeBlock.getValue())));
-		}
-		if (isMouseIn(mouseX, mouseY, 124, 18, 32, 32)) {
-			addLine.accept(TranslateUtils.translateGui("generator.over.level", menu.overdrive.getValue() * 100));
-		}
-		if (isMouseIn(mouseX, mouseY, 75, 116, 26, 18)) {
-			costStr.forEach(addLine);
-		}
-	}
-
-	@Override
-	public void render(GuiGraphics transform, int mouseX, int mouseY, float partial) {
-		super.render(transform, mouseX, mouseY, partial);
+    @Override
+    public void render(GuiGraphics transform, int mouseX, int mouseY, float partial) {
+        super.render(transform, mouseX, mouseY, partial);
 
 
-	}
+    }
+
+    public static class MasterGeneratorGuiButtonBoolean extends GuiButtonBoolean {
+
+        public MasterGeneratorGuiButtonBoolean(int x, int y, int w, int h, Supplier<Boolean> state,
+                                               int u, int v, IIEPressable<GuiButtonState<Boolean>> handler) {
+            super(x, y, w, h, null, state, TEXTURE, u, v, 0, handler);
+        }
+
+        @Override
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+            Minecraft mc = Minecraft.getInstance();
+            if (this.visible) {
+                Font fontrenderer = mc.font;
+                this.isHovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
+                RenderSystem.enableBlend();
+                RenderSystem.blendFuncSeparate(770, 771, 1, 0);
+                RenderSystem.blendFunc(770, 771);
+                int u = texU + (offsetDir == 0 ? width : offsetDir == 2 ? -width : 0) * getStateAsInt();
+                int v = texV + (offsetDir == 1 ? height : offsetDir == 3 ? -height : 0) * getStateAsInt();
+                graphics.blit(texture, getX(), getY(), u, v, width, height, TEXH, TEXW);
+                if (!getMessage().getString().isEmpty()) {
+                    int txtCol = 0xE0E0E0;
+                    if (!this.active)
+                        txtCol = 0xA0A0A0;
+                    else if (this.isHovered)
+                        txtCol = Lib.COLOUR_I_ImmersiveOrange;
+                    int[] offset = getTextOffset(fontrenderer);
+                    graphics.drawString(fontrenderer, getMessage(), getX() + offset[0], getY() + offset[1], txtCol, false);
+                }
+            }
+        }
+    }
+
+    public static class MasterGeneratorGuiButtonUpgrade extends GuiButtonState<Integer> {
+
+        public MasterGeneratorGuiButtonUpgrade(int x, int y, int w, int h,
+                                               IntSupplier initialState, int u, int v,
+                                               IIEPressable<GuiButtonState<Integer>> handler) {
+            super(x, y, w, h, Component.empty(), new Integer[]{0, 1, 2, 3}, initialState, TEXTURE, u, v, 1, handler);
+        }
+
+        @Override
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+            Minecraft mc = Minecraft.getInstance();
+            if (this.visible) {
+                Font fontrenderer = mc.font;
+                this.isHovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
+                RenderSystem.enableBlend();
+                RenderSystem.blendFuncSeparate(770, 771, 1, 0);
+                RenderSystem.blendFunc(770, 771);
+                int u = texU + (offsetDir == 0 ? width : offsetDir == 2 ? -width : 0) * getStateAsInt();
+                int v = texV + (offsetDir == 1 ? height : offsetDir == 3 ? -height : 0) * getStateAsInt();
+                graphics.blit(texture, getX(), getY(), u, v, width, height, TEXH, TEXW);
+                if (!getMessage().getString().isEmpty()) {
+                    int txtCol = 0xE0E0E0;
+                    if (!this.active)
+                        txtCol = 0xA0A0A0;
+                    else if (this.isHovered)
+                        txtCol = Lib.COLOUR_I_ImmersiveOrange;
+                    int[] offset = getTextOffset(fontrenderer);
+                    graphics.drawString(fontrenderer, getMessage(), getX() + offset[0], getY() + offset[1], txtCol, false);
+                }
+            }
+        }
+    }
 
 }

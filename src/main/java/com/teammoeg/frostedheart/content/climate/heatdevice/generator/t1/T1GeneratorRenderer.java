@@ -41,26 +41,27 @@ import net.minecraft.core.BlockPos;
 
 public class T1GeneratorRenderer implements BlockEntityRenderer<MultiblockBlockEntityMaster<T1GeneratorState>> {
     public static DynamicBlockModelReference FUEL;
-    public T1GeneratorRenderer(BlockEntityRendererProvider.Context pContext){
-    	
+
+    public T1GeneratorRenderer(BlockEntityRendererProvider.Context pContext) {
+
     }
-  
+
     @Override
     public void render(MultiblockBlockEntityMaster<T1GeneratorState> blockEntity, float partialTicks, PoseStack matrixStack,
                        MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
-		final IMultiblockBEHelperMaster<T1GeneratorState> helper = blockEntity.getHelper();
-		final T1GeneratorState state = helper.getState();
-		final MultiblockOrientation orientation = helper.getContext().getLevel().getOrientation();
+        final IMultiblockBEHelperMaster<T1GeneratorState> helper = blockEntity.getHelper();
+        final T1GeneratorState state = helper.getState();
+        final MultiblockOrientation orientation = helper.getContext().getLevel().getOrientation();
         BlockPos blockPos = blockEntity.getBlockPos();
-       
-        if(state.getData(blockPos).map(t->!t.inventory.getStackInSlot(GeneratorData.INPUT_SLOT).isEmpty()).orElse(false)){
-	        matrixStack.pushPose();
-			bufferIn = BERenderUtils.mirror(orientation, matrixStack, bufferIn);
-			Direction facing = orientation.front();
-			matrixStack.rotateAround(FHGuiHelper.DIR_TO_FACING.apply(facing), 0.5f, 0.5f, 0.5f);
-	        List<BakedQuad> quads = FUEL.getAllQuads();
-	        RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
-	        matrixStack.popPose();
+
+        if (state.getData(blockPos).map(t -> !t.inventory.getStackInSlot(GeneratorData.INPUT_SLOT).isEmpty()).orElse(false)) {
+            matrixStack.pushPose();
+            bufferIn = BERenderUtils.mirror(orientation, matrixStack, bufferIn);
+            Direction facing = orientation.front();
+            matrixStack.rotateAround(FHGuiHelper.DIR_TO_FACING.apply(facing), 0.5f, 0.5f, 0.5f);
+            List<BakedQuad> quads = FUEL.getAllQuads();
+            RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
+            matrixStack.popPose();
         }
     }
 

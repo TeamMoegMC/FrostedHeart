@@ -39,6 +39,48 @@ import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.registries.RegistryObject;
 
 public class GeneratorRecipe extends IESerializableRecipe {
+    public static RegistryObject<RecipeType<GeneratorRecipe>> TYPE;
+    public static RegistryObject<IERecipeSerializer<GeneratorRecipe>> SERIALIZER;
+    public static Lazy<TypeWithClass<GeneratorRecipe>> IEType = Lazy.of(() -> new TypeWithClass<>(TYPE, GeneratorRecipe.class));
+    public final IngredientWithSize input;
+    public final ItemStack output;
+    public final int time;
+
+    public GeneratorRecipe(ResourceLocation id, ItemStack output, IngredientWithSize input, int time) {
+        super(Lazy.of(() -> output), IEType.get(), id);
+        this.output = output;
+        this.input = input;
+        this.time = time;
+    }
+
+
+/*
+    public static List<ItemStack> listAll() {
+        ArrayList<ItemStack> all = new ArrayList<>();
+        recipeList.values().stream().map(e -> e.input.getMatchingStacks()).forEach(e -> {
+            for (ItemStack i : e) if (!all.contains(i)) all.add(i);
+        });
+        return all;
+    }
+
+    public static List<ItemStack> listOut() {
+        ArrayList<ItemStack> all = new ArrayList<>();
+        recipeList.values().stream().map(e -> e.output).forEach(i -> {
+            if (!all.contains(i)) all.add(i);
+        });
+        return all;
+    }*/
+
+    @Override
+    protected IERecipeSerializer<GeneratorRecipe> getIESerializer() {
+        return SERIALIZER.get();
+    }
+
+    @Override
+    public ItemStack getResultItem(RegistryAccess pRegistryAccess) {
+        return this.output;
+    }
+
     public static class Serializer extends IERecipeSerializer<GeneratorRecipe> {
         @Override
         public ItemStack getIcon() {
@@ -61,63 +103,19 @@ public class GeneratorRecipe extends IESerializableRecipe {
             buffer.writeInt(recipe.time);
         }
 
-		@Override
-		public GeneratorRecipe readFromJson(ResourceLocation recipeId, JsonObject json, IContext context) {
+        @Override
+        public GeneratorRecipe readFromJson(ResourceLocation recipeId, JsonObject json, IContext context) {
             ItemStack output = readOutput(json.get("result")).get();
             IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
             int time = GsonHelper.getAsInt(json, "time");
             return new GeneratorRecipe(recipeId, output, input, time);
-		}
+        }
 
-		@Override
-		public GeneratorRecipe fromJson(ResourceLocation recipeId, JsonObject serializedRecipe) {
-			// TODO Auto-generated method stub
-			return super.fromJson(recipeId, serializedRecipe);
-		}
-    }
-    public static RegistryObject<RecipeType<GeneratorRecipe>> TYPE;
-
-    public static RegistryObject<IERecipeSerializer<GeneratorRecipe>> SERIALIZER;
-    public static Lazy<TypeWithClass<GeneratorRecipe>> IEType=Lazy.of(()->new TypeWithClass<>(TYPE, GeneratorRecipe.class));
-    public final IngredientWithSize input;
-
-    public final ItemStack output;
-
-    public final int time;
-
-
-/*
-    public static List<ItemStack> listAll() {
-        ArrayList<ItemStack> all = new ArrayList<>();
-        recipeList.values().stream().map(e -> e.input.getMatchingStacks()).forEach(e -> {
-            for (ItemStack i : e) if (!all.contains(i)) all.add(i);
-        });
-        return all;
-    }
-
-    public static List<ItemStack> listOut() {
-        ArrayList<ItemStack> all = new ArrayList<>();
-        recipeList.values().stream().map(e -> e.output).forEach(i -> {
-            if (!all.contains(i)) all.add(i);
-        });
-        return all;
-    }*/
-
-    public GeneratorRecipe(ResourceLocation id, ItemStack output, IngredientWithSize input, int time) {
-        super(Lazy.of(()->output), IEType.get(), id);
-        this.output = output;
-        this.input = input;
-        this.time = time;
-    }
-
-    @Override
-    protected IERecipeSerializer<GeneratorRecipe> getIESerializer() {
-        return SERIALIZER.get();
-    }
-
-    @Override
-    public ItemStack getResultItem(RegistryAccess pRegistryAccess) {
-        return this.output;
+        @Override
+        public GeneratorRecipe fromJson(ResourceLocation recipeId, JsonObject serializedRecipe) {
+            // TODO Auto-generated method stub
+            return super.fromJson(recipeId, serializedRecipe);
+        }
     }
 
 }

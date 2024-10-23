@@ -46,12 +46,13 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     public static final int OUTPUT_SLOT = 1;
 
     HeatConsumerEndpoint network = new HeatConsumerEndpoint(100, 100, 4);
+    LazyOptional<HeatConsumerEndpoint> heatcap = LazyOptional.of(() -> network);
+
 
     public RadiatorTileEntity() {
         super(FHMultiblocks.RADIATOR, FHTileTypes.RADIATOR.get(), false);
-        
-    }
 
+    }
 
     @Override
     protected void callBlockConsumerWithTypeCheck(Consumer<RadiatorTileEntity> consumer, BlockEntity te) {
@@ -59,12 +60,10 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
             consumer.accept((RadiatorTileEntity) te);
     }
 
-
     @Override
     protected boolean canDrainTankFrom(int iTank, Direction side) {
         return false;
     }
-
 
     @Override
     protected boolean canFillTankFrom(int iTank, Direction side, FluidStack resource) {
@@ -76,15 +75,13 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
         return false;
     }
 
-
-    LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
     @Override
-	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-		if(cap==FHCapabilities.HEAT_EP.capability()&&offsetToMaster.getY() == 0) {
-			return heatcap.cast();
-		}
-		return super.getCapability(cap, side);
-	}
+    public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
+        if (cap == FHCapabilities.HEAT_EP.capability() && offsetToMaster.getY() == 0) {
+            return heatcap.cast();
+        }
+        return super.getCapability(cap, side);
+    }
 
     @Override
     protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
@@ -143,6 +140,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
             ClientUtils.spawnSteamParticles(level, this.getBlockPos());
         }
     }
+
     @Override
     protected boolean tickFuel() {
         if (!isWorking()) {
@@ -150,22 +148,21 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
                 this.setAllActive(false);
             return false;
         }
-        boolean hasFuel=false;
+        boolean hasFuel = false;
         if (network.tryDrainHeat(4)) {
 
             this.setTemperatureLevel(network.getTemperatureLevel());
             this.setRangeLevel(0.5f);
             this.setAllActive(true);
-            hasFuel=true;
+            hasFuel = true;
         } else {
             this.setAllActive(false);
             this.setTemperatureLevel(0);
             this.setRangeLevel(0);
-            hasFuel=false;
+            hasFuel = false;
         }
         return hasFuel;
     }
-
 
 
     @Override
@@ -175,9 +172,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     }
 
 
-
-
-	@Override
-	public void tickHeat(boolean isWorking) {
-	}
+    @Override
+    public void tickHeat(boolean isWorking) {
+    }
 }

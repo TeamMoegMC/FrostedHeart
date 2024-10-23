@@ -29,43 +29,42 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public class T2GeneratorContainer extends GeneratorContainer<T2GeneratorState, T2GeneratorLogic> {
-	FluidTank tank;
+    static final Point pin = new Point(29, 63);
+    static final Point pout = new Point(112, 55);
+    FluidTank tank;
+
     public T2GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<T2GeneratorState> ctx) {
-		super(type, id, inventoryPlayer, ctx);
-		tank=ctx.mbContext().getState().tank;
-		FHContainerData.SLOT_TANK.create(this).bind(tank::getFluid);
-		
-	}
+        super(type, id, inventoryPlayer, ctx);
+        tank = ctx.mbContext().getState().tank;
+        FHContainerData.SLOT_TANK.create(this).bind(tank::getFluid);
 
-	public T2GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer) {
-		super(type, id, inventoryPlayer);
-		tank=new FluidTank(T2GeneratorState.TANK_CAPACITY);
-		FHContainerData.SLOT_TANK.create(this).bind(tank::getFluid,tank::setFluid);
-		
-	}
+    }
+    public T2GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer) {
+        super(type, id, inventoryPlayer);
+        tank = new FluidTank(T2GeneratorState.TANK_CAPACITY);
+        FHContainerData.SLOT_TANK.create(this).bind(tank::getFluid, tank::setFluid);
 
-	static final Point pin=new Point(29,63);
-    static final Point pout=new Point(112,55);
-	@Override
-	public Point getSlotIn() {
-		return pin;
-	}
+    }
 
-	@Override
-	public Point getSlotOut() {
-		return pout;
-	}
+    @Override
+    public Point getSlotIn() {
+        return pin;
+    }
 
-	@Override
-	public int getTier() {
-		return 2;
-	}
+    @Override
+    public Point getSlotOut() {
+        return pout;
+    }
 
-	@Override
-	public FluidTank getTank() {
-		return tank;
-	}
+    @Override
+    public int getTier() {
+        return 2;
+    }
 
+    @Override
+    public FluidTank getTank() {
+        return tank;
+    }
 
 
 }

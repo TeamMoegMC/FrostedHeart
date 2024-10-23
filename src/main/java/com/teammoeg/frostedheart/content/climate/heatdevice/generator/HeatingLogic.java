@@ -35,22 +35,22 @@ import net.minecraft.core.Vec3i;
 /**
  * Common base class for any generator like block that maintains a heat area
  */
-public abstract class HeatingLogic<T extends HeatingLogic<T,?>,R extends HeatingState> implements  IServerTickableComponent<R>,IMultiblockLogic<R>,IActiveStateLogic,IClientTickableComponent<R> {
+public abstract class HeatingLogic<T extends HeatingLogic<T, ?>, R extends HeatingState> implements IServerTickableComponent<R>, IMultiblockLogic<R>, IActiveStateLogic, IClientTickableComponent<R> {
 
-	public HeatingLogic() {
-		super();
-	}
-    
-    public final void forEachBlock(IMultiblockContext<R> ctx,Consumer<BlockPos> consumer) {
+    public HeatingLogic() {
+        super();
+    }
+
+    public final void forEachBlock(IMultiblockContext<R> ctx, Consumer<BlockPos> consumer) {
         Vec3i vec = FHMultiblockHelper.getSize(ctx.getLevel());
-        BlockPos.MutableBlockPos pos=new BlockPos.MutableBlockPos();
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         for (int x = 0; x < vec.getX(); ++x) {
-        	pos.setX(x);
+            pos.setX(x);
             for (int y = 0; y < vec.getY(); ++y) {
-            	pos.setY(y);
+                pos.setY(y);
                 for (int z = 0; z < vec.getZ(); ++z) {
-                	pos.setZ(z);
-                	consumer.accept(pos);
+                    pos.setZ(z);
+                    consumer.accept(pos);
                 }
             }
         }
@@ -58,43 +58,45 @@ public abstract class HeatingLogic<T extends HeatingLogic<T,?>,R extends Heating
 
     protected abstract void shutdownTick(IMultiblockContext<R> ctx);
 
-    protected void setAllActive(IMultiblockContext<R> ctx,boolean state) {
-        forEachBlock(ctx,s -> setActive(ctx,s,state));
+    protected void setAllActive(IMultiblockContext<R> ctx, boolean state) {
+        forEachBlock(ctx, s -> setActive(ctx, s, state));
     }
 
     @Override
     public void tickServer(IMultiblockContext<R> ctx) {
-    	HeatingState state=ctx.getState();
+        HeatingState state = ctx.getState();
         final boolean activeBeforeTick = getIsActive(ctx);
-        boolean isActive=tickFuel(ctx);
-        tickHeat(ctx,isActive);
-        if(activeBeforeTick!=isActive)
-        	setAllActive(ctx,isActive);
+        boolean isActive = tickFuel(ctx);
+        tickHeat(ctx, isActive);
+        if (activeBeforeTick != isActive)
+            setAllActive(ctx, isActive);
         // set activity status
         final boolean activeAfterTick = isActive;
         if (state.shouldUpdate()) {
             if (state.getRadius() > 0 && state.getTempMod() > 0) {
                 ChunkHeatData.addPillarTempAdjust(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()), state.getRadius(), state.getUpwardRange(),
-                	state.getDownwardRange(), state.getTempMod());
-            }else {
-            	ChunkHeatData.removeTempAdjust(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
+                        state.getDownwardRange(), state.getTempMod());
+            } else {
+                ChunkHeatData.removeTempAdjust(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
             }
         } else if (activeAfterTick) {
-        	state.shouldUpdate();
+            state.shouldUpdate();
         }
         ctx.markMasterDirty();
         shutdownTick(ctx);
-        
-    }
-    
-    @Override
-	public void tickClient(IMultiblockContext<R> context) {
-    	tickEffects(context,FHMultiblockHelper.getAbsoluteMaster(context.getLevel()),getIsActive(context));
-	}
-    public void tickEffects(IMultiblockContext<R> ctx,BlockPos master,boolean isActive) {
-    	
-    }
-	protected abstract boolean tickFuel(IMultiblockContext<R> ctx);
 
-    public abstract void tickHeat(IMultiblockContext<R> ctx,boolean isWorking);
+    }
+
+    @Override
+    public void tickClient(IMultiblockContext<R> context) {
+        tickEffects(context, FHMultiblockHelper.getAbsoluteMaster(context.getLevel()), getIsActive(context));
+    }
+
+    public void tickEffects(IMultiblockContext<R> ctx, BlockPos master, boolean isActive) {
+
+    }
+
+    protected abstract boolean tickFuel(IMultiblockContext<R> ctx);
+
+    public abstract void tickHeat(IMultiblockContext<R> ctx, boolean isWorking);
 }

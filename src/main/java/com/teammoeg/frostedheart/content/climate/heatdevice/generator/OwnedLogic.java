@@ -6,6 +6,6 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockCon
 
 public interface OwnedLogic<R extends OwnerState> {
 
-	void onOwnerChange(IMultiblockContext<R> ctx);
+    void onOwnerChange(IMultiblockContext<R> ctx);
 
 }

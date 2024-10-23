@@ -29,11 +29,11 @@ import net.minecraft.core.BlockPos;
  * Pillar Temperature Adjust, would adjust temperature in a pillar.
  */
 public class PillarHeatArea extends CubicHeatArea {
-	public static Codec<PillarHeatArea> CODEC=RecordCodecBuilder.create(t->t.group(CodecUtil.BLOCKPOS.fieldOf("pos").forGetter(o->o.center),
-		Codec.INT.fieldOf("r").forGetter(o->o.r),
-		Codec.INT.fieldOf("u").forGetter(o->o.upper),
-		Codec.INT.fieldOf("d").forGetter(o->o.lower),
-		Codec.INT.fieldOf("v").forGetter(o->o.value)).apply(t,PillarHeatArea::new));
+    public static Codec<PillarHeatArea> CODEC = RecordCodecBuilder.create(t -> t.group(CodecUtil.BLOCKPOS.fieldOf("pos").forGetter(o -> o.center),
+            Codec.INT.fieldOf("r").forGetter(o -> o.r),
+            Codec.INT.fieldOf("u").forGetter(o -> o.upper),
+            Codec.INT.fieldOf("d").forGetter(o -> o.lower),
+            Codec.INT.fieldOf("v").forGetter(o -> o.value)).apply(t, PillarHeatArea::new));
     long r2;
     int upper;
     int lower;
@@ -49,12 +49,12 @@ public class PillarHeatArea extends CubicHeatArea {
     public boolean isEffective(int x, int y, int z) {
         if (y > upper + getCenterY() || y < getCenterY() - lower) return false;
         long l = (long) Math.pow(x - getCenterX(), 2);
-        l += (long) Math.pow(z - getCenterZ() , 2);
+        l += (long) Math.pow(z - getCenterZ(), 2);
         return l <= r2;
     }
 
-	@Override
-	public String toString() {
-		return "PillarHeatArea [center=" + center + ", r=" + r + ", value=" + value + ", upper=" + upper + ", lower=" + lower + "]";
-	}
+    @Override
+    public String toString() {
+        return "PillarHeatArea [center=" + center + ", r=" + r + ", value=" + value + ", upper=" + upper + ", lower=" + lower + "]";
+    }
 }

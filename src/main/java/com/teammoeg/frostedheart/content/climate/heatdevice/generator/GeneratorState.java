@@ -10,28 +10,32 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 
 public class GeneratorState extends HeatingState {
-    /** Remaining ticks to explode */
-	int remTicks;
+    /**
+     * Remaining ticks to explode
+     */
+    int remTicks;
+
+    public GeneratorState() {
+        super();
+    }
 
     @Override
-	public void writeSaveNBT(CompoundTag nbt) {
-		super.writeSaveNBT(nbt);
-		nbt.putInt("explodeTicks", remTicks);
-	}
-	@Override
-	public void readSaveNBT(CompoundTag nbt) {
-		super.readSaveNBT(nbt);
+    public void writeSaveNBT(CompoundTag nbt) {
+        super.writeSaveNBT(nbt);
+        nbt.putInt("explodeTicks", remTicks);
+    }
+
+    @Override
+    public void readSaveNBT(CompoundTag nbt) {
+        super.readSaveNBT(nbt);
         Optional<GeneratorData> data = this.getDataNoCheck();
-        remTicks=nbt.getInt("explodeTicks");
-	}
-	public GeneratorState() {
-		super();
-	}
+        remTicks = nbt.getInt("explodeTicks");
+    }
 
     /**
      * @return the GeneratorData from the owned team.
      */
-	public final Optional<GeneratorData> getDataNoCheck() {
+    public final Optional<GeneratorData> getDataNoCheck() {
         return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA));
     }
 
@@ -53,13 +57,14 @@ public class GeneratorState extends HeatingState {
 
     /**
      * Register the given origin to the GeneratorData from the owned team.
-     * @param level the level to check
+     *
+     * @param level  the level to check
      * @param origin the origin to check
      */
-    public void regist(Level level,BlockPos origin) {
-    	getDataNoCheck().ifPresent(t -> {
-        	if(!origin.equals(t.actualPos))
-        		t.onPosChange();
+    public void regist(Level level, BlockPos origin) {
+        getDataNoCheck().ifPresent(t -> {
+            if (!origin.equals(t.actualPos))
+                t.onPosChange();
             t.actualPos = origin;
             t.dimension = level.dimension();
         });
@@ -68,28 +73,29 @@ public class GeneratorState extends HeatingState {
     /**
      * Try to register the given origin to the GeneratorData from the owned team.
      * Check if the origin is not the zero position.
-     * @param level the level to check
+     *
+     * @param level  the level to check
      * @param origin the origin to check
      */
-    public void tryRegist(Level level,BlockPos origin) {
-    	getDataNoCheck().ifPresent(t -> {
-    		if(BlockPos.ZERO.equals(t.actualPos)) {
-	        	if(!origin.equals(t.actualPos))
-	        		t.onPosChange();
-	            t.actualPos = origin;
-	            t.dimension = level.dimension();
-    		}
+    public void tryRegist(Level level, BlockPos origin) {
+        getDataNoCheck().ifPresent(t -> {
+            if (BlockPos.ZERO.equals(t.actualPos)) {
+                if (!origin.equals(t.actualPos))
+                    t.onPosChange();
+                t.actualPos = origin;
+                t.dimension = level.dimension();
+            }
         });
     }
 
     @Override
     public int getDownwardRange() {
-        return Mth.ceil(getRangeLevel()*2+1);
+        return Mth.ceil(getRangeLevel() * 2 + 1);
     }
 
     @Override
     public int getUpwardRange() {
-        return Mth.ceil(getRangeLevel() * 4+1);
+        return Mth.ceil(getRangeLevel() * 4 + 1);
     }
 
 }

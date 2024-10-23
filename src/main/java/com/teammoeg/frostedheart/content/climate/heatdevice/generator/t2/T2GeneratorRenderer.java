@@ -49,22 +49,21 @@ public class T2GeneratorRenderer implements BlockEntityRenderer<MultiblockBlockE
     public void render(MultiblockBlockEntityMaster<T2GeneratorState> blockEntity, float partialTicks, PoseStack matrixStack,
                        MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
 
-		final IMultiblockBEHelperMaster<T2GeneratorState> helper = blockEntity.getHelper();
-		final T2GeneratorState state = helper.getState();
-		final MultiblockOrientation orientation = helper.getContext().getLevel().getOrientation();
+        final IMultiblockBEHelperMaster<T2GeneratorState> helper = blockEntity.getHelper();
+        final T2GeneratorState state = helper.getState();
+        final MultiblockOrientation orientation = helper.getContext().getLevel().getOrientation();
         BlockPos blockPos = blockEntity.getBlockPos();
-       
-        if(state.getData(blockPos).map(t->!t.inventory.getStackInSlot(GeneratorData.INPUT_SLOT).isEmpty()).orElse(false)){
-	        matrixStack.pushPose();
-			bufferIn = BERenderUtils.mirror(orientation, matrixStack, bufferIn);
-			Direction facing = orientation.front();
-			matrixStack.rotateAround(FHGuiHelper.DIR_TO_FACING.apply(facing), 0.5f, 0.5f, 0.5f);
-	        List<BakedQuad> quads = FUEL.getAllQuads();
-	        RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
-	        matrixStack.popPose();
+
+        if (state.getData(blockPos).map(t -> !t.inventory.getStackInSlot(GeneratorData.INPUT_SLOT).isEmpty()).orElse(false)) {
+            matrixStack.pushPose();
+            bufferIn = BERenderUtils.mirror(orientation, matrixStack, bufferIn);
+            Direction facing = orientation.front();
+            matrixStack.rotateAround(FHGuiHelper.DIR_TO_FACING.apply(facing), 0.5f, 0.5f, 0.5f);
+            List<BakedQuad> quads = FUEL.getAllQuads();
+            RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
+            matrixStack.popPose();
         }
     }
-
 
 
 }

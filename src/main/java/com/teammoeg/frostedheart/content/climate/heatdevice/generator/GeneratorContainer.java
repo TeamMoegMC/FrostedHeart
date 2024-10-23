@@ -39,71 +39,83 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 
-public abstract class GeneratorContainer<R extends GeneratorState,T extends GeneratorLogic<T,R>> extends FHBaseContainer {
-	public FHDataSlot<Integer> process=FHContainerData.SLOT_INT.create(this);
-	public FHDataSlot<Integer> processMax=FHContainerData.SLOT_INT.create(this);
-	public FHDataSlot<Float> overdrive=FHContainerData.SLOT_FIXED.create(this);
-	public FHDataSlot<Float> power=FHContainerData.SLOT_FIXED.create(this);
-	public FHDataSlot<Float> tempLevel=FHContainerData.SLOT_FIXED.create(this);
-	public FHDataSlot<Float> rangeLevel=FHContainerData.SLOT_FIXED.create(this);
-	public FHDataSlot<Integer> tempDegree=FHContainerData.SLOT_INT.create(this);
-	public FHDataSlot<Integer> rangeBlock=FHContainerData.SLOT_INT.create(this);
-	public FHDataSlot<Boolean> isBroken=FHContainerData.SLOT_BOOL.create(this);
-    public FHDataSlot<Boolean> isWorking=FHContainerData.SLOT_BOOL.create(this);
-    public FHDataSlot<Boolean> isOverdrive=FHContainerData.SLOT_BOOL.create(this);
-    public FHDataSlot<BlockPos> pos=FHContainerData.SLOT_BLOCKPOS.create(this);
+public abstract class GeneratorContainer<R extends GeneratorState, T extends GeneratorLogic<T, R>> extends FHBaseContainer {
+    public FHDataSlot<Integer> process = FHContainerData.SLOT_INT.create(this);
+    public FHDataSlot<Integer> processMax = FHContainerData.SLOT_INT.create(this);
+    public FHDataSlot<Float> overdrive = FHContainerData.SLOT_FIXED.create(this);
+    public FHDataSlot<Float> power = FHContainerData.SLOT_FIXED.create(this);
+    public FHDataSlot<Float> tempLevel = FHContainerData.SLOT_FIXED.create(this);
+    public FHDataSlot<Float> rangeLevel = FHContainerData.SLOT_FIXED.create(this);
+    public FHDataSlot<Integer> tempDegree = FHContainerData.SLOT_INT.create(this);
+    public FHDataSlot<Integer> rangeBlock = FHContainerData.SLOT_INT.create(this);
+    public FHDataSlot<Boolean> isBroken = FHContainerData.SLOT_BOOL.create(this);
+    public FHDataSlot<Boolean> isWorking = FHContainerData.SLOT_BOOL.create(this);
+    public FHDataSlot<Boolean> isOverdrive = FHContainerData.SLOT_BOOL.create(this);
+    public FHDataSlot<BlockPos> pos = FHContainerData.SLOT_BLOCKPOS.create(this);
+
     public GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<R> ctx) {
-    	super(type,id,inventoryPlayer.player,2);
-        R state=ctx.mbContext().getState();
-        if(state.getOwner()==null) {
-        	state.setOwner(FHTeamDataManager.get(inventoryPlayer.player).getId());
-        	state.regist(inventoryPlayer.player.level(), FHMultiblockHelper.getMasterPos(ctx.mbContext().getLevel()));
+        super(type, id, inventoryPlayer.player, 2);
+        R state = ctx.mbContext().getState();
+        if (state.getOwner() == null) {
+            state.setOwner(FHTeamDataManager.get(inventoryPlayer.player).getId());
+            state.regist(inventoryPlayer.player.level(), FHMultiblockHelper.getMasterPos(ctx.mbContext().getLevel()));
         }
-        Optional<GeneratorData> optdata=state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel()));
-        optdata.ifPresent(data->{
-        	process.bind(()->data.process);
-        	processMax.bind(()->data.processMax);
-        	overdrive.bind(()->data.overdriveLevel*1f/data.getMaxOverdrive());
-        	power.bind(()->data.power);
-        	tempLevel.bind(()->data.TLevel);
-        	rangeLevel.bind(()->data.RLevel);
-        	tempDegree.bind(()->state.getTempMod());
-        	rangeBlock.bind(()->state.getRadius());
-        	isBroken.bind(()->data.isBroken);
-        	isWorking.bind(()->data.isWorking,t->data.isWorking=t);
-        	isOverdrive.bind(()->data.isOverdrive,t->data.isOverdrive=t);
-        	
+        Optional<GeneratorData> optdata = state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel()));
+        optdata.ifPresent(data -> {
+            process.bind(() -> data.process);
+            processMax.bind(() -> data.processMax);
+            overdrive.bind(() -> data.overdriveLevel * 1f / data.getMaxOverdrive());
+            power.bind(() -> data.power);
+            tempLevel.bind(() -> data.TLevel);
+            rangeLevel.bind(() -> data.RLevel);
+            tempDegree.bind(() -> state.getTempMod());
+            rangeBlock.bind(() -> state.getRadius());
+            isBroken.bind(() -> data.isBroken);
+            isWorking.bind(() -> data.isWorking, t -> data.isWorking = t);
+            isOverdrive.bind(() -> data.isOverdrive, t -> data.isOverdrive = t);
+
         });
-        pos.bind(()->ctx.clickedPos());
-        this.validator=new Validator(ctx.clickedPos(), 8).and(ctx.mbContext().isValid());
-        IItemHandler handler=state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel())).map(t->t.inventory).orElseGet(()->new ItemStackHandler(2));
-        createSlots(handler,inventoryPlayer);
+        pos.bind(() -> ctx.clickedPos());
+        this.validator = new Validator(ctx.clickedPos(), 8).and(ctx.mbContext().isValid());
+        IItemHandler handler = state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel())).map(t -> t.inventory).orElseGet(() -> new ItemStackHandler(2));
+        createSlots(handler, inventoryPlayer);
     }
+
     public GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer) {
-        super(type,id,inventoryPlayer.player,2);
-        createSlots(new ItemStackHandler(2),inventoryPlayer);
+        super(type, id, inventoryPlayer.player, 2);
+        createSlots(new ItemStackHandler(2), inventoryPlayer);
     }
-    protected void createSlots(IItemHandler handler,Inventory inventoryPlayer) {
-        Point in=getSlotIn();
-        
+
+    protected void createSlots(IItemHandler handler, Inventory inventoryPlayer) {
+        Point in = getSlotIn();
+
         this.addSlot(new SlotItemHandler(handler, 0, in.getX(), in.getY()) {
             @Override
             public boolean mayPlace(ItemStack itemStack) {
                 return GeneratorData.isStackValid(inventoryPlayer.player.level(), 0, itemStack);
             }
         });
-        Point out=getSlotOut();
+        Point out = getSlotOut();
         this.addSlot(new NewOutput(handler, 1, out.getX(), out.getY()));
         super.addPlayerInventory(inventoryPlayer, 8, 140, 198);
     }
+
     public abstract Point getSlotIn();
+
     public abstract Point getSlotOut();
+
     public abstract int getTier();
+
     public abstract FluidTank getTank();
-	public void receiveMessage(short btn,int state) {
-        switch(btn) {
-        case 1:isWorking.setValue(state>0);break;
-        case 2:isOverdrive.setValue(state>0);break;
+
+    public void receiveMessage(short btn, int state) {
+        switch (btn) {
+            case 1:
+                isWorking.setValue(state > 0);
+                break;
+            case 2:
+                isOverdrive.setValue(state > 0);
+                break;
         }
        /* if (message.contains("temperatureLevel", Tag.TAG_INT))
             setTemperatureLevel(message.getInt("temperatureLevel"));

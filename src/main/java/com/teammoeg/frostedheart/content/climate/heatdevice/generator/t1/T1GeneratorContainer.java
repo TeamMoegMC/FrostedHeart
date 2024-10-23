@@ -29,38 +29,37 @@ import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public class T1GeneratorContainer extends GeneratorContainer<T1GeneratorState, T1GeneratorLogic> {
 
+    static final Point pin = new Point(46, 72);
+    static final Point pout = new Point(114, 72);
+
     public T1GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<T1GeneratorState> ctx) {
-		super(type, id, inventoryPlayer, ctx);
-		// TODO Auto-generated constructor stub
-	}
+        super(type, id, inventoryPlayer, ctx);
+        // TODO Auto-generated constructor stub
+    }
+    public T1GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer) {
+        super(type, id, inventoryPlayer);
+        // TODO Auto-generated constructor stub
+    }
 
-	public T1GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer) {
-		super(type, id, inventoryPlayer);
-		// TODO Auto-generated constructor stub
-	}
+    @Override
+    public Point getSlotIn() {
+        return pin;
+    }
 
-	static final Point pin=new Point(46,72);
-    static final Point pout=new Point(114,72);
+    @Override
+    public Point getSlotOut() {
+        return pout;
+    }
 
-	@Override
-	public Point getSlotIn() {
-		return pin;
-	}
+    @Override
+    public int getTier() {
+        return 1;
+    }
 
-	@Override
-	public Point getSlotOut() {
-		return pout;
-	}
-
-	@Override
-	public int getTier() {
-		return 1;
-	}
-
-	@Override
-	public FluidTank getTank() {
-		return null;
-	}
+    @Override
+    public FluidTank getTank() {
+        return null;
+    }
 
 
 }
