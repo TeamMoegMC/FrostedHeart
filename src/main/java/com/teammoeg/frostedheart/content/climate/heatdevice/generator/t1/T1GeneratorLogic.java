@@ -47,7 +47,12 @@ public final class T1GeneratorLogic extends GeneratorLogic<T1GeneratorLogic, T1G
         super();
     }
 
-    public boolean findTileEntity(IMultiblockContext<T1GeneratorState> ctx) {
+    /**
+     * Helper method to find tile entities to drive around the generator.
+     * @param ctx
+     * @return
+     */
+    private boolean findTileEntity(IMultiblockContext<T1GeneratorState> ctx) {
         Vec3i vec = FHMultiblockHelper.getSize(ctx.getLevel());
         int xLow = -1, xHigh = vec.getX(), yLow = 0, yHigh = vec.getY(), zLow = -1, zHigh = vec.getZ();
         int blastBlockCount = 0, alloySmelterCount = 0;
@@ -84,18 +89,13 @@ public final class T1GeneratorLogic extends GeneratorLogic<T1GeneratorLogic, T1G
     }
 
     @Override
-    public T1GeneratorState createInitialState(IInitialMultiblockContext<T1GeneratorState> capabilitySource) {
+    public T1GeneratorState createInitialState(IInitialMultiblockContext<T1GeneratorState> ctx) {
         return new T1GeneratorState();
     }
 
     @Override
     public Function<BlockPos, VoxelShape> shapeGetter(ShapeType forType) {
         return b -> Shapes.block();
-    }
-
-    @Override
-    public void tickHeat(IMultiblockContext<T1GeneratorState> ctx, boolean isWorking) {
-
     }
 
     @Override

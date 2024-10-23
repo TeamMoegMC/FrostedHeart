@@ -143,7 +143,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         super.init();
         IMultiblockBEHelper<R> helper = (IMultiblockBEHelper<R>) FHMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.pos.getValue()).get();
         tile = (GeneratorLogic<T, R>) helper.getMultiblock().logic();
-        validStructure = tile.isValidStructure(Minecraft.getInstance().level, helper);
+        validStructure = tile.nextLevelHasValidStructure(Minecraft.getInstance().level, helper);
         this.addRenderableWidget(new MasterGeneratorGuiButtonBoolean(leftPos + 5, topPos + 24, 11, 22, menu.isWorking.asSupplier(), 472, 148,
                 btn -> {
                     menu.sendMessage(1, btn.getNextState());

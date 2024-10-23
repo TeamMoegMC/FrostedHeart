@@ -19,178 +19,119 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
-import java.util.Optional;
-import java.util.Random;
-import java.util.function.Consumer;
-
+import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.util.CapabilityPosition;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.util.MultiblockFace;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.util.RelativeBlockFace;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.util.ShapeType;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHMultiblocks;
-import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorLogic;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
+import com.teammoeg.frostedheart.util.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-
-import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.core.Direction;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.IFluidTank;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
-import net.minecraftforge.fluids.capability.templates.FluidTank;
+
+import java.util.Optional;
+import java.util.function.Function;
 
 public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2GeneratorState> {
-    private static final BlockPos fluidIn = new BlockPos(1, 0, 2);
-
-    private static final BlockPos networkTile = new BlockPos(1, 0, 0);
-    private static final BlockPos redstone = new BlockPos(1, 1, 2);
-    LazyOptional<HeatProviderEndPoint> ep;
-
+    private static final MultiblockFace REDSTONE_OFFSET = new MultiblockFace(1, 1, 2, RelativeBlockFace.BACK);
+    // TODO: Check if FRONT is correct
+    private static final MultiblockFace NETWORK_OFFSET = new MultiblockFace(1, 0, 0, RelativeBlockFace.FRONT);
+    private static final CapabilityPosition NETWORK_CAP = CapabilityPosition.opposing(NETWORK_OFFSET);
+    private static final MultiblockFace FLUID_INPUT_OFFSET = new MultiblockFace(1, 0, 2, RelativeBlockFace.BACK);
+    private static final CapabilityPosition FLUID_INPUT_CAP = CapabilityPosition.opposing(FLUID_INPUT_OFFSET);
+    LazyOptional<HeatProviderEndPoint> endPoint;
     public T2GeneratorLogic() {
-        super(FHMultiblocks.GENERATOR_T2, FHTileTypes.GENERATOR_T2.get(), false);
+        super();
     }
 
     @Override
-    protected void callBlockConsumerWithTypeCheck(Consumer<T2GeneratorLogic> consumer, BlockEntity te) {
-        if (te instanceof T2GeneratorLogic)
-            consumer.accept((T2GeneratorLogic) te);
-    }
-
-    @Override
-    protected boolean canFillTankFrom(int iTank, Direction side, FluidStack resource) {
-        return side == this.getFacing() && this.posInMultiblock.equals(fluidIn);
-    }
-
-    @Override
-    public void disassemble() {
-        if (manager != null)
-            manager.invalidate();
-        super.disassemble();
-    }
-
-    @Override
-    protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
-        T2GeneratorLogic master = master();
-        if (master != null && side == this.getFacing() && this.posInMultiblock.equals(fluidIn))
-            return new FluidTank[]{master.tank};
-        return new FluidTank[0];
-    }
-
-    @Override
-    public AABB getRenderBoundingBox() {
-        return new AABB(worldPosition.getX() - 2, worldPosition.getY() - 2, worldPosition.getZ() - 2, worldPosition.getX() + 2, worldPosition.getY() + 6,
-                worldPosition.getZ() + 2);
-    }
-
-    @Override
-    public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
-        super.readCustomNBT(nbt, descPacket);
-        liquidtick = nbt.getInt("liquid_tick");
-        tank.readFromNBT(nbt.getCompound("fluid"));
+    public void tickHeat(IMultiblockContext<T2GeneratorState> ctx, boolean isActive) {
 
     }
 
     @Override
-    protected void tickControls() {
-        super.tickControls();
-        int power = this.level.getDirectSignalTo(getBlockPosForPos(redstone));
-        if (power > 0) {
-            if (power > 10) {
-                if (!this.isOverdrive()) this.setOverdrive(true);
-                if (!this.isWorking()) this.setWorking(true);
-            } else if (power > 5) {
-                if (this.isOverdrive()) this.setOverdrive(false);
-                if (!this.isWorking()) this.setWorking(true);
-            } else {
-                if (this.isWorking()) this.setWorking(false);
-            }
-        }
-    }
-
-    @Override
-    protected void tickEffects(boolean isActive) {
+    public void tickEffects(IMultiblockContext<T2GeneratorState> ctx, BlockPos pos, boolean isActive) {
         if (isActive) {
-            BlockPos blockpos = this.getBlockPos().relative(Direction.UP, 5);
-            Random random = level.random;
-            if (random.nextFloat() < (isOverdrive() ? 0.8F : 0.5F)) {
-                // for (int i = 0; i < random.nextInt(2)+1; ++i) {
-//                if (this.liquidtick != 0 && random.nextFloat() < 0.06F) {
-//                    ClientUtils.spawnSteamParticles(world, blockpos);
-//                }
+            Level level = ctx.getLevel().getRawLevel();
+            BlockPos blockpos = pos.relative(Direction.UP, 5);
+            RandomSource random = level.random;
+            boolean isOverdrive = ctx.getState().getData(pos).map(t -> t.isOverdrive).orElse(false);
+            if (random.nextFloat() < (isOverdrive ? 0.8F : 0.5F)) {
                 ClientUtils.spawnT2FireParticles(level, blockpos);
                 Vec3 wind = new Vec3(0, 0, 0);
                 ClientUtils.spawnInvertedConeSteam(level, blockpos, wind);
             }
-            /*
-            if (this.isWorking() && this.getHeated() == getMaxHeated() && this.tickUntilStopBoom > 0) {
-                ClientUtils.spawnSteamParticles(world, blockpos);
-                this.tickUntilStopBoom--;
-                this.notFullPowerTick = 0;
-            }
-            if (this.getHeated() < getMaxHeated()) {
-                this.notFullPowerTick++;
-                if (this.notFullPowerTick > this.nextBoom) {
-                    this.notFullPowerTick = this.nextBoom;
-                    this.tickUntilStopBoom = 20;
-                }
-            }*/
         }
     }
 
     @Override
-    public <X> LazyOptional<X> getCapability(Capability<X> capability, Direction facing) {
-        if (capability == FHCapabilities.HEAT_EP.capability() && facing == this.getFacing().getOpposite() && this.posInMultiblock.equals(networkTile)) {
-            LazyOptional<HeatProviderEndPoint> cep = getData().map(t -> t.epcap).orElseGet(LazyOptional::empty);
-            if (ep != cep) {
-                ep = cep;
+    public <C> LazyOptional<C> getCapability(IMultiblockContext<T2GeneratorState> ctx, CapabilityPosition position, Capability<C> capability) {
+        if (capability == FHCapabilities.HEAT_EP.capability() && NETWORK_CAP.equals(position)) {
+            LazyOptional<HeatProviderEndPoint> cep = getData(ctx).map(t -> t.epcap).orElseGet(LazyOptional::empty);
+            if (endPoint != cep) {
+                endPoint = cep;
             }
-            return ep == null ? LazyOptional.empty() : ep.cast();
+            return endPoint.cast();
+        } else if (capability == ForgeCapabilities.FLUID_HANDLER && FLUID_INPUT_CAP.equals(position)) {
+            LazyOptional<IFluidHandler> tankCap = ctx.getState().tankCap;
+            return tankCap.cast();
         }
-        return super.getCapability(capability, facing);
+        return super.getCapability(ctx, position, capability);
     }
 
     @Override
-    protected boolean tickFuel() {
-        if (manager == null) {
-            manager = new HeatEnergyNetwork(this, c -> {
-                Direction dir = this.getFacing();
-
-                c.accept(getBlockPosForPos(networkTile).relative(dir.getOpposite()), dir.getOpposite());
+    protected boolean tickFuel(IMultiblockContext<T2GeneratorState> ctx) {
+        if (ctx.getState().manager == null) {
+            ctx.getState().manager = new HeatEnergyNetwork(ctx.getLevel().getBlockEntity(BlockPos.ZERO), c -> {
+                BlockPos pos = FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel());
+                BlockPos networkPos = pos.offset(NETWORK_OFFSET.posInMultiblock());
+                Direction dir = ctx.getLevel().getOrientation().front();
+                c.accept(networkPos.relative(dir.getOpposite()), dir.getOpposite());
 
             });
         }
-        if ((!master().getData().map(t -> t.ep.hasValidNetwork()).orElse(true) || manager.data.size() <= 1) && !manager.isUpdateRequested()) {
-            manager.requestSlowUpdate();
+        if ((!getData(ctx).map(t -> t.ep.hasValidNetwork()).orElse(true) || ctx.getState().manager.data.size() <= 1) && !ctx.getState().manager.isUpdateRequested()) {
+            ctx.getState().manager.requestSlowUpdate();
         }
-        manager.tick();
-        boolean active = super.tickFuel();
+        ctx.getState().manager.tick();
+        boolean active = super.tickFuel(ctx);
         if (active)
-            this.tickLiquid();
+            this.tickLiquid(ctx);
+        tickControls(ctx);
         return active;
     }
 
-    protected void tickLiquid() {
-        Optional<GeneratorData> data = getData();
-        this.liquidtick = data.map(t -> t.steamProcess).orElse(0);
-        if (!this.getIsActive())
+    private void tickLiquid(IMultiblockContext<T2GeneratorState> ctx) {
+        Optional<GeneratorData> data = getData(ctx);
+        ctx.getState().liquidtick = data.map(t -> t.steamProcess).orElse(0);
+        if (!this.getIsActive(ctx))
             return;
-        float rt = this.getTemperatureLevel();
+        float rt = ctx.getState().getTempLevel();
         /*if (rt == 0) {
             this.spowerMod = 0;
             this.slevelMod = 0;
         }*/
-        if (noliquidtick > 0) {
-            noliquidtick--;
+        if (ctx.getState().noliquidtick > 0) {
+            ctx.getState().noliquidtick--;
             return;
         }
 
@@ -199,11 +140,11 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
             data.ifPresent(t -> t.steamProcess -= (int) rt);
             return;
         }
-        GeneratorSteamRecipe sgr = GeneratorSteamRecipe.findRecipe(this.tank.getFluid());
+        GeneratorSteamRecipe sgr = GeneratorSteamRecipe.findRecipe(ctx.getState().tank.getFluid());
         if (sgr != null) {
-            int rdrain = (int) (20 * super.getTemperatureLevel());
+            int rdrain = (int) (20 * ctx.getState().getTempLevel());
             int actualDrain = rdrain * sgr.input.getAmount();
-            FluidStack fs = this.tank.drain(actualDrain, FluidAction.SIMULATE);
+            FluidStack fs = ctx.getState().tank.drain(actualDrain, FluidAction.SIMULATE);
             if (fs.getAmount() >= actualDrain) {
                 data.ifPresent(t -> {
                     t.steamProcess = rdrain;
@@ -211,7 +152,7 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
                     t.power = sgr.power;
                 });
 
-                final FluidStack fs2 = this.tank.drain(actualDrain, FluidAction.EXECUTE);
+                final FluidStack fs2 = ctx.getState().tank.drain(actualDrain, FluidAction.EXECUTE);
                 data.ifPresent(t -> t.fluid = fs2.getFluid());
                 return;
             }
@@ -222,20 +163,48 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
                 t.power = 0;
             });
         }
-        noliquidtick = 40;
+        ctx.getState().noliquidtick = 40;
     }
 
-    @Override
-    public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
-        super.writeCustomNBT(nbt, descPacket);
-        if (!this.isDummy() || descPacket) {
-            CompoundTag tankx = new CompoundTag();
-            tank.writeToNBT(tankx);
-            nbt.putFloat("liquid_tick", liquidtick);
-            nbt.put("fluid", tankx);
+    // TODO: Check if the position is correct
+    private void tickControls(IMultiblockContext<T2GeneratorState> ctx) {
+        // Get origin position of the MB
+        BlockPos origin = FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel());
+        // get the position of the redstone block from the relative position in MB
+        BlockPos redstone = origin.offset(REDSTONE_OFFSET.posInMultiblock());
+
+        int power = ctx.getLevel().getRawLevel().getDirectSignalTo(redstone);
+
+        Optional<GeneratorData> data = getData(ctx);
+
+        // Check if isOverdrive is true
+        boolean isOverdrive = data.map(t -> t.isOverdrive).orElse(false);
+        // isWorking
+        boolean isWorking = data.map(t -> t.isWorking).orElse(false);
+
+        if (power > 0) {
+            if (power > 10) {
+                if (!isOverdrive) {
+                    data.ifPresent(t -> t.isOverdrive = true);
+                }
+                // Set isWorking to true if power is greater than 10
+                if (!isWorking) {
+                    data.ifPresent(t -> t.isWorking = true);
+                }
+            } else if (power > 5) {
+                if (isOverdrive) {
+                    data.ifPresent(t -> t.isOverdrive = false);
+                }
+                if (!isWorking) {
+                    data.ifPresent(t -> t.isWorking = true);
+                }
+            } else {
+                if (isWorking) {
+                    data.ifPresent(t -> t.isWorking = false);
+                }
+            }
         }
     }
-
 
     @Override
     public IETemplateMultiblock getNextLevelMultiblock() {
@@ -243,4 +212,50 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
     }
 
 
+    @Override
+    public T2GeneratorState createInitialState(IInitialMultiblockContext<T2GeneratorState> ctx) {
+        return new T2GeneratorState();
+    }
+
+    @Override
+    public Function<BlockPos, VoxelShape> shapeGetter(ShapeType forType) {
+        return b -> Shapes.block();
+    }
+
+
+    // TODO: Still need?
+//    @Override
+//    protected void callBlockConsumerWithTypeCheck(Consumer<T2GeneratorLogic> consumer, BlockEntity te) {
+//        if (te instanceof T2GeneratorLogic)
+//            consumer.accept((T2GeneratorLogic) te);
+//    }
+
+//    @Override
+//    protected boolean canFillTankFrom(int iTank, Direction side, FluidStack resource) {
+//        return side == this.getFacing() && this.posInMultiblock.equals(fluidIn);
+//    }
+
+    // TODO: Disassemble is moved to MB class. What about invalidate?
+//    @Override
+//    public void disassemble() {
+//        if (manager != null)
+//            manager.invalidate();
+//        super.disassemble();
+//    }
+
+    // TODO: Check if this is implemented correctly in new getCapability method
+//    @Override
+//    protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
+//        T2GeneratorLogic master = master();
+//        if (master != null && side == this.getFacing() && this.posInMultiblock.equals(fluidIn))
+//            return new FluidTank[]{master.tank};
+//        return new FluidTank[0];
+//    }
+
+    // TODO: Is this still needed?
+//    @Override
+//    public AABB getRenderBoundingBox() {
+//        return new AABB(worldPosition.getX() - 2, worldPosition.getY() - 2, worldPosition.getZ() - 2, worldPosition.getX() + 2, worldPosition.getY() + 6,
+//                worldPosition.getZ() + 2);
+//    }
 }

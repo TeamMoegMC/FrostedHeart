@@ -2,8 +2,10 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import java.util.Optional;
 
+import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
@@ -13,7 +15,7 @@ public class GeneratorState extends HeatingState {
     /**
      * Remaining ticks to explode
      */
-    int remTicks;
+    int explodeTicks;
 
     public GeneratorState() {
         super();
@@ -22,14 +24,14 @@ public class GeneratorState extends HeatingState {
     @Override
     public void writeSaveNBT(CompoundTag nbt) {
         super.writeSaveNBT(nbt);
-        nbt.putInt("explodeTicks", remTicks);
+        nbt.putInt("explodeTicks", explodeTicks);
     }
 
     @Override
     public void readSaveNBT(CompoundTag nbt) {
         super.readSaveNBT(nbt);
         Optional<GeneratorData> data = this.getDataNoCheck();
-        remTicks = nbt.getInt("explodeTicks");
+        explodeTicks = nbt.getInt("explodeTicks");
     }
 
     /**

@@ -96,7 +96,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
 
     public void upgradeStructure(IMultiblockContext<R> ctx, ServerPlayer entityplayer) {
         IMultiblockBEHelper helper = FHMultiblockHelper.getBEHelper(ctx.getLevel()).get();
-        if (!isValidStructure(ctx.getLevel().getRawLevel(), helper))
+        if (!nextLevelHasValidStructure(ctx.getLevel().getRawLevel(), helper))
             return;
         if (!ResearchListeners.hasMultiblock(ctx.getState().getOwner(), getNextLevelMultiblock()))
             return;
@@ -171,17 +171,9 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
         return true;
     }*/
 
-    @Override
-    public void shutdownTick(IMultiblockContext<R> ctx) {
-
-
-    }
-
     public final List<IngredientWithSize> getRepairCost() {
         return repair;
     }
-
-    ;
 
     public List<IngredientWithSize> getUpgradeCost(Level level, IMultiblockBEHelper<R> ctx) {
         IETemplateMultiblock ietm = getNextLevelMultiblock();
@@ -212,11 +204,9 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
         return null;
     }
 
-    ;
-
     public abstract IETemplateMultiblock getNextLevelMultiblock();
 
-    public boolean isValidStructure(Level level, IMultiblockBEHelper<R> helper) {
+    public boolean nextLevelHasValidStructure(Level level, IMultiblockBEHelper<R> helper) {
         IETemplateMultiblock ietm = getNextLevelMultiblock();
         if (ietm == null)
             return false;
@@ -250,47 +240,57 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
         ctx.getState().regist(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
     }
 
+    /**
+     * Implements the core tick logic from GeneratorData
+     * @param ctx
+     * @return
+     */
     @Override
     protected boolean tickFuel(IMultiblockContext<R> ctx) {
-        // just finished process or during process
-
         Optional<GeneratorData> data = getData(ctx);
         boolean lastIsBroken = data.map(t -> t.isBroken).orElse(false);
-        data.ifPresent(t -> t.tick(ctx.getLevel().getRawLevel()));
-        boolean isWorking = data.map(t -> t.isActive).orElse(false);
 
+        // Tick the GeneratorData
+        data.ifPresent(t -> t.tick(ctx.getLevel().getRawLevel()));
+        boolean isActive = data.map(t -> t.isActive).orElse(false);
+
+        // If newly broken, start exploding for 100 ticks
         boolean isBroken = data.map(t -> t.isBroken).orElse(false);
         if (lastIsBroken != isBroken && isBroken) {
-            ctx.getState().remTicks = 100;
+            ctx.getState().explodeTicks = 100;
         }
+
         Level level = ctx.getLevel().getRawLevel();
-        if (ctx.getState().remTicks > 0) {
+        if (ctx.getState().explodeTicks > 0) {
             Vec3i size = FHMultiblockHelper.getSize(ctx.getLevel());
-            if (ctx.getState().remTicks % 5 == 0) {
+            // Every 5 ticks, send explosion packet to nearby players
+            if (ctx.getState().explodeTicks % 5 == 0) {
                 BlockPos pos = ctx.getLevel().toAbsolute(new BlockPos(level.random.nextInt(size.getX()),
                         level.random.nextInt(size.getY()),
                         level.random.nextInt(size.getZ())));
-                for (Player serverplayerentity : level.players()) {
-                    if (serverplayerentity.blockPosition().distSqr(pos) < 4096.0D) {
-                        ((ServerPlayer) serverplayerentity).connection.send(new ClientboundExplodePacket(pos.getX(), pos.getY(), pos.getZ(), 8, Arrays.asList(), null));
+                for (Player player : level.players()) {
+                    if (player.blockPosition().distSqr(pos) < 4096.0D) {
+                        ((ServerPlayer) player).connection.send(new ClientboundExplodePacket(pos.getX(), pos.getY(), pos.getZ(), 8, Arrays.asList(), null));
                     }
                 }
             }
-            ctx.getState().remTicks--;
+            // Reduce the explode ticks
+            ctx.getState().explodeTicks--;
         }
-        tickDrives(ctx, isWorking);
-        return isWorking;
-    	/*if(this.getIsActive())
-    		this.markContainingBlockForUpdate(null);*/
+
+        // Tick the drives
+        tickDrives(ctx, isActive);
+        return isActive;
     }
 
+    /**
+     * For driving other machines.
+     * @param ctx
+     * @param active
+     */
     protected void tickDrives(IMultiblockContext<R> ctx, boolean active) {
 
     }
-
-    public void tickHeat(boolean isWorking) {
-    }
-
 
     public boolean hasFuel() {
         return hasFuel;
@@ -309,5 +309,15 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
                     SoundEvents.FURNACE_FIRE_CRACKLE, SoundSource.BLOCKS, 0.5F + rand.nextFloat(),
                     rand.nextFloat() * 0.7F + 0.6F, false);
         }
+    }
+
+    @Override
+    protected void tickShutdown(IMultiblockContext<R> ctx) {
+
+    }
+
+    @Override
+    public void tickHeat(IMultiblockContext<R> ctx, boolean isActive) {
+
     }
 }

@@ -185,6 +185,12 @@ public class GeneratorData implements SpecialData {
         return 64;
     }
 
+    /**
+     * Core tick function for generator called in HeatingLogic#tickFuel
+     * It does the internal logic for fuel and heating.
+     * But does not update the heat adjust. That is done in HeatingLogic#serverTick
+     * @param w
+     */
     public void tick(Level w) {
         isActive = tickFuelProcess(w);
         tickHeatedProcess(w);

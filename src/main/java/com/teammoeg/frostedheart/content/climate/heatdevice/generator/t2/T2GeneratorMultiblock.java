@@ -22,8 +22,11 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks.Logic;
 import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
+import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
+import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class T2GeneratorMultiblock extends FHBaseMultiblock {
 
@@ -37,6 +40,13 @@ public class T2GeneratorMultiblock extends FHBaseMultiblock {
     @Override
     public float getManualScale() {
         return 14;
+    }
+
+    @Override
+    public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
+        BlockPos master = this.getMasterFromOriginOffset();
+        ChunkHeatData.removeTempAdjust(world, origin.offset(master));
+        super.disassemble(world, origin, mirrored, clickDirectionAtCreation);
     }
 
 }

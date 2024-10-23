@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
+import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
 import com.teammoeg.frostedheart.base.multiblock.components.OwnerState;
 
 import net.minecraft.nbt.CompoundTag;
@@ -37,7 +38,7 @@ public class HeatingState extends OwnerState {
     /**
      * Determines whether the heat radius or temperature modification has changed.
      */
-    public boolean shouldUpdate() {
+    public boolean shouldUpdateAdjust() {
         int radius = this.getRadius();
         int tempMod = this.getTempMod();
 
