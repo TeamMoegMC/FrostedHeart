@@ -1,6 +1,7 @@
-package com.teammoeg.frostedheart.content.water;
+package com.teammoeg.frostedheart.content.water.network;
 
 import com.teammoeg.frostedheart.base.network.NBTMessage;
+import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;

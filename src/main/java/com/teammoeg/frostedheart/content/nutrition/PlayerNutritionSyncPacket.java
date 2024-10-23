@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.content.nutrition;
 
 import com.teammoeg.frostedheart.base.network.NBTMessage;
-import com.teammoeg.frostedheart.content.water.WaterLevelCapability;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;

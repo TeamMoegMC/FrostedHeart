@@ -19,7 +19,7 @@ import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.robotics.logistics.RobotChunk;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
-import com.teammoeg.frostedheart.content.water.WaterLevelCapability;
+import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.waypoint.capability.WaypointCapability;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.content.town.ChunkTownResourceCapability;
@@ -49,7 +49,6 @@ public class FHCapabilities {
 	public static final FHNBTCapability<WaypointCapability> WAYPOINT=register(WaypointCapability.class);
 	public static final FHNBTCapability<WaterLevelCapability> PLAYER_WATER_LEVEL = register(WaterLevelCapability.class);
 	public static final FHNBTCapability<NutritionCapability> PLAYER_NUTRITION = register(NutritionCapability.class);
-
 	public static void setup() {
 	
 	}

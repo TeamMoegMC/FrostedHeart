@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.nutrition;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.content.water.PlayerWaterLevelSyncPacket;
+import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;

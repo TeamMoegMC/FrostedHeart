@@ -21,10 +21,12 @@ package com.teammoeg.frostedheart;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.material.Fluid;
 
 public class FHTags {
 	public static final class Blocks {
@@ -44,6 +46,16 @@ public class FHTags {
 		private static TagKey<Item> tag(String name) {
 			return ItemTags.create(new ResourceLocation(FHMain.MODID, name));
 		}
+	}
+
+	public static final class Fluids{
+
+		public static final TagKey<Fluid> DRINK = tag("drink");
+
+		private static TagKey<Fluid> tag(String name) {
+			return FluidTags.create(new ResourceLocation(FHMain.MODID, name));
+		}
+
 	}
 
 }
