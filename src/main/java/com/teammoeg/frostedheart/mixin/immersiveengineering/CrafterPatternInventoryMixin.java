@@ -49,7 +49,7 @@ public class CrafterPatternInventoryMixin implements IOwnerTile{
     public CrafterPatternInventoryMixin() {
     }
     
-    @Inject(at=@At("TAIL"),method="recalculateOutput")
+    @Inject(at=@At("TAIL"),method="recalculateOutput",remap=false)
 	public void fh$recalculateOutput(@Nullable Level level,CallbackInfo cbi)
 	{
         if (level.isClientSide) {

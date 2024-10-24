@@ -40,7 +40,7 @@ public abstract class PlayerInventoryMixin implements Container, Nameable {
     public PlayerInventoryMixin() {
     }
 
-    @Inject(at = @At("HEAD"), method = "dropAllItems", cancellable = true)
+    @Inject(at = @At("HEAD"), method = "dropAll", cancellable = true)
     public void fh$dropAllItems(CallbackInfo cbi) {
         if (getThis().player instanceof FakePlayer)
             return;

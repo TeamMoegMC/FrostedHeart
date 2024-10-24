@@ -55,15 +55,13 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
         super(type, worldIn);
     }
 
-    @Shadow
-    protected abstract void displayMerchantGui(Player pe);
 
     @Inject(at = @At("HEAD"), method = "readAdditionalSaveData")
     public void fh$readAdditional(CompoundTag compound, CallbackInfo cbi) {
         fh$data.deserialize(compound.getCompound("fhdata"));
     }
 
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;stopTrading()V", ordinal = 0), method = "serverAiStep", cancellable = true, require = 1)
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/npc/Villager;stopTrading()V", ordinal = 0), method = "serverAiStep", cancellable = true, require = 1)
     public void fh$updateTask(CallbackInfo cbi) {
         super.customServerAiStep();
         cbi.cancel();
@@ -86,7 +84,7 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
         if (itemstack.getItem() != Items.VILLAGER_SPAWN_EGG && this.isAlive() && !this.isTrading()
                 && !this.isSleeping() && !playerIn.isSecondaryUseActive()) {
             if (this.isBaby()) {
-                this.shakeHead();
+                this.setUnhappy();
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
 			/*boolean flag = this.getOffers().isEmpty();
@@ -138,5 +136,5 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
     public abstract void setTradingPlayer(@Nullable Player player);
 
     @Shadow
-    protected abstract void shakeHead();
+    protected abstract void setUnhappy();
 }

@@ -67,7 +67,7 @@ public abstract class MixinPulleyTileEntity extends KineticBlockEntity {
         return lastStressApplied;
     }
 
-    @Inject(at = @At("TAIL"), method = "tick")
+    @Inject(at = @At("TAIL"), method = "tick",remap=false)
     public void FH_MICR_tick(CallbackInfo cbi) {
         if ((!level.isClientSide) && super.hasNetwork())
             getOrCreateNetwork().updateStressFor(this, calculateStressApplied());

@@ -67,13 +67,13 @@ public abstract class CampfireTileEntityMixin extends BlockEntity implements ICa
         return lifeTime;
     }
 
-    @Inject(at = @At("RETURN"), method = "<init>()V")
+    @Inject(at = @At("RETURN"), method = "<init>")
     private void init(CallbackInfo ci) {
         lifeTime = 0;
     }
 
-    @Inject(at = @At("TAIL"), method = "read")
-    public void readAdditional(BlockState state, CompoundTag nbt, CallbackInfo ci) {
+    @Inject(at = @At("TAIL"), method = "load")
+    public void readAdditional(CompoundTag nbt, CallbackInfo ci) {
         if (nbt.contains("LifeTime", 3)) {
             setLifeTime(nbt.getInt("LifeTime"));
         }
@@ -95,8 +95,8 @@ public abstract class CampfireTileEntityMixin extends BlockEntity implements ICa
         }
     }
 
-    @Inject(at = @At("HEAD"), method = "write", cancellable = true)
-    public void writeAdditional(CompoundTag compound, CallbackInfoReturnable<CompoundTag> cir) {
+    @Inject(at = @At("HEAD"), method = "saveAdditional")
+    public void writeAdditional(CompoundTag compound, CallbackInfo cir) {
         compound.putInt("LifeTime", lifeTime);
     }
 }

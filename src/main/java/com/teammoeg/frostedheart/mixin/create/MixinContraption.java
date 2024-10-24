@@ -61,7 +61,7 @@ public abstract class MixinContraption implements ISpeedContraption {
     float speed;
     float sc = 0;
 
-    @Shadow(remap = false)
+/*    @Shadow(remap = false)
     protected Map<BlockPos, StructureBlockInfo> blocks;
 
     @Shadow(remap = false)
@@ -71,7 +71,7 @@ public abstract class MixinContraption implements ISpeedContraption {
     protected abstract void addGlue(SuperGlueEntity entity);
 
     @Shadow(remap = false)
-    protected abstract Pair<StructureBlockInfo, BlockEntity> capture(Level world, BlockPos pos);
+    protected abstract Pair<StructureBlockInfo, BlockEntity> capture(Level world, BlockPos pos);*/
 
     @Override
     public void contributeSpeed(float s) {

@@ -39,7 +39,7 @@ import net.minecraft.world.item.ItemStack;
 @Mixin(ItemStack.class)
 public class ItemStackMixin {
     @Inject(at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/item/ItemStack;shrink(I)V",
+            target = "Lnet/minecraft/world/item/ItemStack;shrink(I)V",
             ordinal = 0), method = "hurtAndBreak")
     public void FH$InnerItemBreak(int amount, LivingEntity entityIn, Consumer onBroken, CallbackInfo cbi) {
         ItemStack item = DismantleInnerRecipe.tryDismantle((ItemStack) (Object) this);

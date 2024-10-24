@@ -38,9 +38,9 @@ import net.minecraft.util.Mth;
 public abstract class MixinDeployerMovementBehaviour implements MovementBehaviour {
     @Inject(method = "tick(Lcom/simibubi/create/content/contraptions/behaviour/MovementContext;)V",
             at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/nbt/CompoundNBT;putInt(Ljava/lang/String;I)V",
+                    target = "Lnet/minecraft/nbt/CompoundTag;putInt(Ljava/lang/String;I)V",
                     ordinal = 0
-            ), cancellable = true)
+            ), cancellable = true,remap=false)
 
     public void doTimer(MovementContext m, CallbackInfo cbi) {
         Contraption c = m.contraption;

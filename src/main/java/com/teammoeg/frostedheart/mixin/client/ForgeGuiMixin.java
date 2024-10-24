@@ -39,7 +39,6 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(ForgeGui.class)
 public class ForgeGuiMixin extends Gui {
 
-    @Shadow private Font font;
 
     public ForgeGuiMixin(Minecraft pMinecraft, ItemRenderer pItemRenderer) {
         super(pMinecraft, pItemRenderer);
@@ -76,10 +75,10 @@ public class ForgeGuiMixin extends Gui {
                 RenderSystem.defaultBlendFunc();
                 int color = (animateOverlayMessageColor ? Mth.hsvToRgb(hue / 50.0F, 0.7F, 0.6F) & 0xFFFFFF : 0xFFFFFF);
 
-                int messageWidth = font.width(overlayMessageString);
-                drawBackdrop(mStack, font, -4, messageWidth, 16777215 | (opacity << 24));
+                int messageWidth = this.minecraft.font.width(overlayMessageString);
+                drawBackdrop(mStack, this.minecraft.font, -4, messageWidth, 16777215 | (opacity << 24));
                 // we changed pY position to -15
-                mStack.drawString(font, overlayMessageString.getVisualOrderText(), -messageWidth / 2, -15, color | (opacity << 24));
+                mStack.drawString(this.minecraft.font, overlayMessageString.getVisualOrderText(), -messageWidth / 2, -15, color | (opacity << 24));
 
                 RenderSystem.disableBlend();
                 mStack.pose().popPose();

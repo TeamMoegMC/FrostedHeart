@@ -53,7 +53,7 @@ public abstract class ChickenEntityMixin extends Animal implements IFeedStore {
     private final static TagKey<Item> chicken_feed = ItemTags.create(new ResourceLocation(FHMain.MODID, "chicken_feed"));
 
     @Shadow
-    public int timeUntilNextEgg;
+    public int eggTime;
 
     byte feeded;
     int digestTimer;
@@ -76,18 +76,18 @@ public abstract class ChickenEntityMixin extends Animal implements IFeedStore {
         return false;
     }
 
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/ChickenEntity;playSound(Lnet/minecraft/util/SoundEvent;FF)V"), method = "livingTick", cancellable = true)
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/ChickenEntity;playSound(Lnet/minecraft/sounds/SoundEvent;FF)V"), method = "aiStep", cancellable = true)
     public void fh$layegg(CallbackInfo cbi) {
         if (egg > 0) {
             egg--;
             this.playSound(SoundEvents.CHICKEN_EGG, 1.0F,
                     (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F);
             this.spawnAtLocation(Items.EGG);
-            this.timeUntilNextEgg = this.random.nextInt(6000) + 6000;
+            this.eggTime = this.random.nextInt(6000) + 6000;
         } else if (feeded > 0) {
-            this.timeUntilNextEgg = 3000;
+            this.eggTime = 3000;
         } else
-            this.timeUntilNextEgg = 28800;
+            this.eggTime = 28800;
         cbi.cancel();
     }
 

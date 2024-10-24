@@ -55,13 +55,13 @@ public abstract class RabbitEntityMixin extends Animal implements IFeedStore {
         return false;
     }
 
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    @Inject(at = @At("HEAD"), method = "readAdditionalSaveData")
     public void fh$readAdditional(CompoundTag compound, CallbackInfo cbi) {
         feeded = compound.getByte("feed_stored");
     }
 
 
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    @Inject(at = @At("HEAD"), method = "addAdditionalSaveData")
     public void fh$writeAdditional(CompoundTag compound, CallbackInfo cbi) {
         compound.putByte("feed_stored", feeded);
 

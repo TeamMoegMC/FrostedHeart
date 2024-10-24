@@ -70,11 +70,6 @@ import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
  * */
 @Mixin(CampfireBlock.class)
 public abstract class CampfireBlockMixin extends BaseEntityBlock {
-    @Shadow
-    public static boolean isLit(BlockState state) {
-        return false;
-    }
-
     public CampfireBlockMixin(Properties builder) {
         super(builder);
     }
@@ -147,12 +142,12 @@ public abstract class CampfireBlockMixin extends BaseEntityBlock {
         return InteractionResult.PASS;
     }
 
-    @Inject(at = @At("HEAD"), method = "onEntityCollision")
-    public void onEntityCollision(BlockState state, Level worldIn, BlockPos pos, Entity entityIn, CallbackInfo callbackInfo) {
+    @Inject(at = @At("HEAD"), method = "stepOn")
+    public void stepOn(Level worldIn, BlockPos pos, BlockState state, Entity entityIn, CallbackInfo callbackInfo) {
         if (entityIn instanceof ItemEntity) {
             ItemEntity item = (ItemEntity) entityIn;
             int rawBurnTime = ForgeHooks.getBurnTime(item.getItem(),RecipeType.CAMPFIRE_COOKING);
-            if (worldIn.isClientSide && isLit(state) && rawBurnTime > 0)
+            if (worldIn.isClientSide && CampfireBlock.isLitCampfire(state) && rawBurnTime > 0)
                 worldIn.addParticle(ParticleTypes.SMOKE, entityIn.getX(), entityIn.getY() + 0.25D, entityIn.getZ(), 0, 0.05D, 0);
             if (!worldIn.isClientSide) {
                 if (rawBurnTime > 0) {

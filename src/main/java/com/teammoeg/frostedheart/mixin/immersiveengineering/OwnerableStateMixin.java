@@ -32,13 +32,13 @@ public abstract class OwnerableStateMixin implements IMultiblockState,IOwnerStat
 	public void onOwnerChange(IMultiblockContext<?> ctx) {
 		
 	}
-	@Inject(at=@At("TAIL"),method="writeSaveNBT")
+	@Inject(at=@At("TAIL"),method="writeSaveNBT",remap=false)
 	public void fh$writeSaveNBT(CompoundTag nbt,CallbackInfo cbi) {
 		if(owner!=null)
 			nbt.putUUID("owner", owner);
 	}
 
-	@Inject(at=@At("TAIL"),method="readSaveNBT")
+	@Inject(at=@At("TAIL"),method="readSaveNBT",remap=false)
 	public void fh$readSaveNBT(CompoundTag nbt,CallbackInfo cbi) {
 		if(nbt.contains("owner"))
 			owner=nbt.getUUID("owner");

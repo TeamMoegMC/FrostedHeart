@@ -44,7 +44,7 @@ public abstract class MooshroomMixin extends Animal {
         super(p_i48567_1_, p_i48567_2_);
     }
 
-    @Inject(at = @At("HEAD"), method = "getEntityInteractionResult", cancellable = true)
+    @Inject(at = @At("HEAD"), method = "mobInteract", cancellable = true)
     public void fhmo$getEntityInteractionResult(Player playerIn, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cbi) {
         ItemStack itemstack = playerIn.getItemInHand(hand);
         if (itemstack.getItem() == Items.BOWL && !this.isBaby()) {

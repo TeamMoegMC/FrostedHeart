@@ -56,7 +56,7 @@ public abstract class PigEntityMixin extends Animal implements IFeedStore {
         return false;
     }
 
-    @Inject(at = @At("HEAD"), method = "getEntityInteractionResult", cancellable = true)
+    @Inject(at = @At("HEAD"), method = "mobInteract", cancellable = true)
     public void fh$getEntityInteractionResult(Player playerIn, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cbi) {
         ItemStack itemstack = playerIn.getItemInHand(hand);
 
@@ -71,12 +71,12 @@ public abstract class PigEntityMixin extends Animal implements IFeedStore {
     }
 
 
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    @Inject(at = @At("HEAD"), method = "readAdditionalSaveData")
     public void fh$readAdditional(CompoundTag compound, CallbackInfo cbi) {
         feeded = compound.getByte("feed_stored");
     }
 
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    @Inject(at = @At("HEAD"), method = "addAdditionalSaveData")
     public void fh$writeAdditional(CompoundTag compound, CallbackInfo cbi) {
         compound.putByte("feed_stored", feeded);
 

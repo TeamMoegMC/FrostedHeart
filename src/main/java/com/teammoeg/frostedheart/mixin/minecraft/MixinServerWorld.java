@@ -56,7 +56,7 @@ public abstract class MixinServerWorld extends Level {
 
 	@Shadow
     @Final
-    public ServerLevelData serverWorldInfo;
+    public ServerLevelData serverLevelData;
 
 
     /**
@@ -64,7 +64,7 @@ public abstract class MixinServerWorld extends Level {
      * @reason Not allow sleep over weather
      */
     @Overwrite
-    private void resetRainAndThunder() {
+    private void resetWeatherCycle() {
 
     }
     
@@ -73,8 +73,8 @@ public abstract class MixinServerWorld extends Level {
      * @reason this allows us to add our own weather logic since we disabled it
      * @see GameRulesMixin#disableWeatherCycle
      */
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/DimensionType;hasSkyLight()Z"))
-    private void tick(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
+    @Overwrite
+    private void advanceWeatherCycle() {
         if (!((BooleanValue)(((GameRuleAccessor)this.getGameRules()).getRules().get(GameRules.RULE_WEATHER_CYCLE))).get())//vanilla rules
             return;
 
@@ -86,11 +86,11 @@ public abstract class MixinServerWorld extends Level {
         // System.out.println("Current Temp: " + currentTemp);
 
         // vanilla weather params
-        int clearTime = this.serverWorldInfo.getClearWeatherTime();
-        int rainTime = this.serverWorldInfo.getRainTime();
-        int thunderTime = this.serverWorldInfo.getThunderTime();
-        boolean isRaining = this.serverWorldInfo.isRaining();
-        boolean isThundering = this.serverWorldInfo.isThundering();
+        int clearTime = this.serverLevelData.getClearWeatherTime();
+        int rainTime = this.serverLevelData.getRainTime();
+        int thunderTime = this.serverLevelData.getThunderTime();
+        boolean isRaining = this.serverLevelData.isRaining();
+        boolean isThundering = this.serverLevelData.isThundering();
 
         // calculate raining status and blizzard status based on our temp system
         // 'thundering' is replaced by our BlizzardRenderer
@@ -116,11 +116,11 @@ public abstract class MixinServerWorld extends Level {
             isThundering = true;
         }
 
-        this.serverWorldInfo.setThunderTime(thunderTime);
-        this.serverWorldInfo.setRainTime(rainTime);
-        this.serverWorldInfo.setClearWeatherTime(clearTime);
-        this.serverWorldInfo.setThundering(isThundering);
-        this.serverWorldInfo.setRaining(isRaining);
+        this.serverLevelData.setThunderTime(thunderTime);
+        this.serverLevelData.setRainTime(rainTime);
+        this.serverLevelData.setClearWeatherTime(clearTime);
+        this.serverLevelData.setThundering(isThundering);
+        this.serverLevelData.setRaining(isRaining);
     }
 
 }
