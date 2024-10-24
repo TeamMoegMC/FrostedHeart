@@ -163,6 +163,54 @@ public class FHBlocks {
     public static RegistryObject<Block> BAUXITE_PERMAFROST = register("bauxite_permafrost", () -> new Block(BlockBehaviour.Properties.copy(GRAVEL).strength(2.0F)));
     public static RegistryObject<Block> KAOLIN_PERMAFROST = register("kaolin_permafrost", () -> new Block(BlockBehaviour.Properties.copy(CLAY).strength(2.0F)));
 
+    /*
+    copper
+    aluminum
+    steel
+    electrum
+    constantan
+    iron
+    cast_iron
+    brass
+    duralumin
+    gold
+    silver
+    nickel
+    lead
+    titanium
+    bronze
+    invar
+    tungstensteel
+    zinc
+    tin
+    magnesium
+    tungsten
+     */
+
+    // METAL BLOCKS
+//    public static RegistryObject<Block> COPPER_BLOCK = register("copper_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> ALUMINUM_BLOCK = register("aluminum_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> STEEL_BLOCK = register("steel_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> ELECTRUM_BLOCK = register("electrum_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> CONSTANTAN_BLOCK = register("constantan_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+//    public static RegistryObject<Block> IRON_BLOCK = register("iron_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> CAST_IRON_BLOCK = register("cast_iron_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+//    public static RegistryObject<Block> BRASS_BLOCK = register("brass_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> DURALUMIN_BLOCK = register("duralumin_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+//    public static RegistryObject<Block> GOLD_BLOCK = register("gold_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> SILVER_BLOCK = register("silver_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> NICKEL_BLOCK = register("nickel_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> LEAD_BLOCK = register("lead_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> TITANIUM_BLOCK = register("titanium_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> BRONZE_BLOCK = register("bronze_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> INVAR_BLOCK = register("invar_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> TUNGSTENSTEEL_BLOCK = register("tungstensteel_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> ZINC_BLOCK = register("zinc_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> TIN_BLOCK = register("tin_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> MAGNESIUM_BLOCK = register("magnesium_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> TUNGSTEN_BLOCK = register("tungsten_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+
+
     // Resource Blocks
     public static RegistryObject<Block> copper_gravel = register("copper_gravel", () -> new FHBaseBlock(FHProps.ore_gravel));
 
@@ -175,6 +223,7 @@ public class FHBlocks {
     public static RegistryObject<Block> generator_brick = register("generator_brick", () -> new FHBaseBlock(FHProps.stoneDecoProps));
     public static RegistryObject<Block> generator_core_t1 = register("generator_core_t1", () -> new FHBaseBlock(FHProps.stoneDecoProps));
     public static RegistryObject<Block> generator_amplifier_r1 = register("generator_amplifier_r1", () -> new FHBaseBlock(FHProps.stoneDecoProps));
+    public static RegistryObject<Block> DURALUMIN_SHEETMETAL = register("sheetmetal_duralumin", () -> new FHBaseBlock(FHProps.metalDecoProps));
 
     // Decoration Blocks
     public static RegistryObject<Block> blood_block = register("blood_block", () -> new bloodBlock(FHProps.stoneProps));

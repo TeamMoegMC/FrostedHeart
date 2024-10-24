@@ -72,6 +72,11 @@ public class FHItems {
 
     static final DeferredRegister<Item> registry = DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
 
+    // helper method: use FHBaseItem as the item class
+    public static RegistryObject<Item> register(String name) {
+        return register(name, n -> new FHBaseItem(createProps()));
+    }
+
     static <T extends Item> RegistryObject<T> register(String name, Function<String, T> supplier) {
         return registry.register(name, () -> {
             //item.setRegistryName(FHMain.MODID, name);
@@ -207,4 +212,145 @@ public class FHItems {
     public static RegistryObject<Item> CRUSHED_HALITE_ORE = register("crushed_halite_ore", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> CRUSHED_POTASH_ORE = register("crushed_potash_ore", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> CRUSHED_MAGNESITE_ORE = register("crushed_magnesite_ore", n -> new FHBaseItem(createProps()));
+
+    // MATERIALS
+
+    /*
+    copper
+    aluminum
+    steel
+    electrum
+    constantan
+    iron
+    cast_iron
+    brass
+    duralumin
+    gold
+    silver
+    nickel
+    lead
+    titanium
+    bronze
+    invar
+    tungstensteel
+    zinc
+    tin
+    magnesium
+    tungsten
+     */
+
+    // DUSTS
+    public static RegistryObject<Item> COPPER_DUST = register("copper_dust");
+    public static RegistryObject<Item> ALUMINUM_DUST = register("aluminum_dust");
+    public static RegistryObject<Item> STEEL_DUST = register("steel_dust");
+    public static RegistryObject<Item> ELECTRUM_DUST = register("electrum_dust");
+    public static RegistryObject<Item> CONSTANTAN_DUST = register("constantan_dust");
+    public static RegistryObject<Item> IRON_DUST = register("iron_dust");
+    public static RegistryObject<Item> CAST_IRON_DUST = register("cast_iron_dust");
+    public static RegistryObject<Item> BRASS_DUST = register("brass_dust");
+    public static RegistryObject<Item> DURALUMIN_DUST = register("duralumin_dust");
+    public static RegistryObject<Item> GOLD_DUST = register("gold_dust");
+    public static RegistryObject<Item> SILVER_DUST = register("silver_dust");
+    public static RegistryObject<Item> NICKEL_DUST = register("nickel_dust");
+    public static RegistryObject<Item> LEAD_DUST = register("lead_dust");
+    public static RegistryObject<Item> TITANIUM_DUST = register("titanium_dust");
+    public static RegistryObject<Item> BRONZE_DUST = register("bronze_dust");
+    public static RegistryObject<Item> INVAR_DUST = register("invar_dust");
+    public static RegistryObject<Item> TUNGSTENSTEEL_DUST = register("tungstensteel_dust");
+    public static RegistryObject<Item> ZINC_DUST = register("zinc_dust");
+    public static RegistryObject<Item> TIN_DUST = register("tin_dust");
+    public static RegistryObject<Item> MAGNESIUM_DUST = register("magnesium_dust");
+    public static RegistryObject<Item> TUNGSTEN_DUST = register("tungsten_dust");
+
+    // INGOTS
+
+    // public static RegistryObject<Item> COPPER_INGOT = register("copper_ingot");
+    public static RegistryObject<Item> ALUMINUM_INGOT = register("aluminum_ingot");
+    public static RegistryObject<Item> STEEL_INGOT = register("steel_ingot");
+    public static RegistryObject<Item> ELECTRUM_INGOT = register("electrum_ingot");
+    public static RegistryObject<Item> CONSTANTAN_INGOT = register("constantan_ingot");
+    // public static RegistryObject<Item> IRON_INGOT = register("iron_ingot");
+    public static RegistryObject<Item> CAST_IRON_INGOT = register("cast_iron_ingot");
+    // public static RegistryObject<Item> BRASS_INGOT = register("brass_ingot");
+    public static RegistryObject<Item> DURALUMIN_INGOT = register("duralumin_ingot");
+    // public static RegistryObject<Item> GOLD_INGOT = register("gold_ingot");
+    public static RegistryObject<Item> SILVER_INGOT = register("silver_ingot");
+    public static RegistryObject<Item> NICKEL_INGOT = register("nickel_ingot");
+    public static RegistryObject<Item> LEAD_INGOT = register("lead_ingot");
+    public static RegistryObject<Item> TITANIUM_INGOT = register("titanium_ingot");
+    public static RegistryObject<Item> BRONZE_INGOT = register("bronze_ingot");
+    public static RegistryObject<Item> INVAR_INGOT = register("invar_ingot");
+    public static RegistryObject<Item> TUNGSTENSTEEL_INGOT = register("tungstensteel_ingot");
+    // public static RegistryObject<Item> ZINC_INGOT = register("zinc_ingot");
+    public static RegistryObject<Item> TIN_INGOT = register("tin_ingot");
+    public static RegistryObject<Item> MAGNESIUM_INGOT = register("magnesium_ingot");
+    public static RegistryObject<Item> TUNGSTEN_INGOT = register("tungsten_ingot");
+
+    // NUGGET
+    // public static RegistryObject<Item> COPPER_NUGGET = register("copper_nugget");
+    public static RegistryObject<Item> ALUMINUM_NUGGET = register("aluminum_nugget");
+    public static RegistryObject<Item> STEEL_NUGGET = register("steel_nugget");
+    public static RegistryObject<Item> ELECTRUM_NUGGET = register("electrum_nugget");
+    public static RegistryObject<Item> CONSTANTAN_NUGGET = register("constantan_nugget");
+    // public static RegistryObject<Item> IRON_NUGGET = register("iron_nugget");
+    public static RegistryObject<Item> CAST_IRON_NUGGET = register("cast_iron_nugget");
+    // public static RegistryObject<Item> BRASS_NUGGET = register("brass_nugget");
+    public static RegistryObject<Item> DURALUMIN_NUGGET = register("duralumin_nugget");
+    // public static RegistryObject<Item> GOLD_NUGGET = register("gold_nugget");
+    public static RegistryObject<Item> SILVER_NUGGET = register("silver_nugget");
+    public static RegistryObject<Item> NICKEL_NUGGET = register("nickel_nugget");
+    public static RegistryObject<Item> LEAD_NUGGET = register("lead_nugget");
+    public static RegistryObject<Item> TITANIUM_NUGGET = register("titanium_nugget");
+    public static RegistryObject<Item> BRONZE_NUGGET = register("bronze_nugget");
+    public static RegistryObject<Item> INVAR_NUGGET = register("invar_nugget");
+    public static RegistryObject<Item> TUNGSTENSTEEL_NUGGET = register("tungstensteel_nugget");
+    // public static RegistryObject<Item> ZINC_NUGGET = register("zinc_nugget");
+    public static RegistryObject<Item> TIN_NUGGET = register("tin_nugget");
+    public static RegistryObject<Item> MAGNESIUM_NUGGET = register("magnesium_nugget");
+    public static RegistryObject<Item> TUNGSTEN_NUGGET = register("tungsten_nugget");
+
+    // SHEETS
+    // public static RegistryObject<Item> COPPER_SHEET = register("copper_sheet");
+    public static RegistryObject<Item> ALUMINUM_SHEET = register("aluminum_sheet");
+    public static RegistryObject<Item> STEEL_SHEET = register("steel_sheet");
+    public static RegistryObject<Item> ELECTRUM_SHEET = register("electrum_sheet");
+    public static RegistryObject<Item> CONSTANTAN_SHEET = register("constantan_sheet");
+    // public static RegistryObject<Item> IRON_SHEET = register("iron_sheet");
+    public static RegistryObject<Item> CAST_IRON_SHEET = register("cast_iron_sheet");
+    // public static RegistryObject<Item> BRASS_SHEET = register("brass_sheet");
+    public static RegistryObject<Item> DURALUMIN_SHEET = register("duralumin_sheet");
+    // public static RegistryObject<Item> GOLD_SHEET = register("gold_sheet");
+    public static RegistryObject<Item> SILVER_SHEET = register("silver_sheet");
+    public static RegistryObject<Item> NICKEL_SHEET = register("nickel_sheet");
+    public static RegistryObject<Item> LEAD_SHEET = register("lead_sheet");
+    public static RegistryObject<Item> TITANIUM_SHEET = register("titanium_sheet");
+    public static RegistryObject<Item> BRONZE_SHEET = register("bronze_sheet");
+    public static RegistryObject<Item> INVAR_SHEET = register("invar_sheet");
+    public static RegistryObject<Item> TUNGSTENSTEEL_SHEET = register("tungstensteel_sheet");
+
+    // RODS
+    public static RegistryObject<Item> COPPER_ROD = register("copper_rod");
+    public static RegistryObject<Item> ALUMINUM_ROD = register("aluminum_rod");
+    public static RegistryObject<Item> STEEL_ROD = register("steel_rod");
+    public static RegistryObject<Item> ELECTRUM_ROD = register("electrum_rod");
+    public static RegistryObject<Item> CONSTANTAN_ROD = register("constantan_rod");
+    public static RegistryObject<Item> IRON_ROD = register("iron_rod");
+    public static RegistryObject<Item> CAST_IRON_ROD = register("cast_iron_rod");
+
+    // WIRES
+    public static RegistryObject<Item> COPPER_WIRE = register("copper_wire");
+    public static RegistryObject<Item> ALUMINUM_WIRE = register("aluminum_wire");
+    public static RegistryObject<Item> STEEL_WIRE = register("steel_wire");
+    public static RegistryObject<Item> ELECTRUM_WIRE = register("electrum_wire");
+    public static RegistryObject<Item> CONSTANTAN_WIRE = register("constantan_wire");
+
+    // RUSTED ITEMS
+    public static RegistryObject<Item> RUSTED_IRON_INGOT = register("rusted_iron_ingot");
+    public static RegistryObject<Item> RUSTED_COPPER_INGOT = register("rusted_copper_ingot");
+    public static RegistryObject<Item> GRAY_TIN_INGOT = register("gray_tin_ingot");
+
+    // SLUGS
+    public static RegistryObject<Item> IRON_SLUG = register("iron_slug");
+    public static RegistryObject<Item> NICKEL_SLUG = register("nickel_slug");
+
 }
