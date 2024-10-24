@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.mixin.immersiveengineering;
 
+import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.AssemblerLogic;
+import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -10,6 +12,7 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockCon
 import blusunrize.immersiveengineering.common.blocks.metal.CrafterPatternInventory;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.AssemblerLogic.State;
 
+@Mixin(AssemblerLogic.class)
 public class AssemblerLogicMixin {
 
 	public AssemblerLogicMixin() {
