@@ -63,9 +63,9 @@ public abstract class PigEntityMixin extends Animal implements IFeedStore {
         if (!itemstack.isEmpty() && isFood(itemstack)) {
             if (feeded < 2) {
                 feeded++;
-                if (!this.level.isClientSide)
-                    this.usePlayerItem(playerIn, itemstack);
-                cbi.setReturnValue(InteractionResult.sidedSuccess(this.level.isClientSide));
+                if (!this.level().isClientSide)
+                    this.usePlayerItem(playerIn,hand, itemstack);
+                cbi.setReturnValue(InteractionResult.sidedSuccess(this.level().isClientSide));
             }
         }
     }

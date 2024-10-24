@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.util.mixin.BreedUtil;
 
-import net.minecraft.world.entity.AgableMob;
+import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.item.ItemStack;
@@ -38,9 +38,9 @@ import net.minecraft.world.level.Level;
  * For removal in 1.20+
  * */
 @Mixin({Animal.class})
-public abstract class AnimalEntityMixin extends AgableMob {
+public abstract class AnimalEntityMixin extends AgeableMob {
 
-    protected AnimalEntityMixin(EntityType<? extends AgableMob> type, Level worldIn) {
+    protected AnimalEntityMixin(EntityType<? extends AgeableMob> type, Level worldIn) {
         super(type, worldIn);
     }
 

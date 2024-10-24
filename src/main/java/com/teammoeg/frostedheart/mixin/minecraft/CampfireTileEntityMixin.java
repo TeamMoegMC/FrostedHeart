@@ -28,7 +28,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
 
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.CampfireBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -41,11 +43,14 @@ import net.minecraft.sounds.SoundEvents;
  * */
 @Mixin(CampfireBlockEntity.class)
 public abstract class CampfireTileEntityMixin extends BlockEntity implements ICampfireExtra {
-    public int lifeTime = 0;
+    public CampfireTileEntityMixin(BlockEntityType<?> pType, BlockPos pPos, BlockState pBlockState) {
+		super(pType, pPos, pBlockState);
+		// TODO Auto-generated constructor stub
+	}
 
-    public CampfireTileEntityMixin(BlockEntityType<?> tileEntityTypeIn) {
-        super(BlockEntityType.CAMPFIRE);
-    }
+	public int lifeTime = 0;
+
+
 
     @Override
     public void addLifeTime(int add) {
@@ -79,16 +84,14 @@ public abstract class CampfireTileEntityMixin extends BlockEntity implements ICa
         lifeTime = set;
     }
 
-    @Inject(at = @At("RETURN"), method = "tick()V")
-    public void tick(CallbackInfo ci) {
-        if (!this.level.isClientSide) {
-            if (CampfireBlock.isLitCampfire(level.getBlockState(getBlockPos())))
-                if (lifeTime > 0)
-                    lifeTime--;
-                else {
-                    lifeTime = 0;
-                    extinguishCampfire();
-                }
+    @Inject(at = @At("RETURN"), method = "cookTick")
+    public static void fh$cookTick(Level pLevel, BlockPos pPos, BlockState pState, CampfireBlockEntity pBlockEntity,CallbackInfo ci) {
+    	CampfireTileEntityMixin mxi=(CampfireTileEntityMixin)(BlockEntity)pBlockEntity;
+        if (mxi.lifeTime > 0)
+        	mxi.lifeTime--;
+        else {
+        	mxi.lifeTime = 0;
+        	mxi.extinguishCampfire();
         }
     }
 

@@ -34,6 +34,7 @@ import net.minecraft.world.level.block.grower.AbstractTreeGrower;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 /**
  * Reduces chance for big tree
  * <p>
@@ -41,7 +42,8 @@ import net.minecraft.server.level.ServerLevel;
 @Mixin(AbstractMegaTreeGrower.class)
 public abstract class BigTreeMixin extends AbstractTreeGrower {
     @Inject(at = @At("HEAD"), method = "growBigTree", cancellable = true)
-    public void placeMega(ServerLevel p_235678_1_, ChunkGenerator p_235678_2_, BlockPos p_235678_3_, BlockState p_235678_4_, Random p_235678_5_, int p_235678_6_, int p_235678_7_, CallbackInfoReturnable<Boolean> cr) {
+    
+    public void placeMega(ServerLevel p_235678_1_, ChunkGenerator p_235678_2_, BlockPos p_235678_3_, BlockState p_235678_4_, RandomSource p_235678_5_, int p_235678_6_, int p_235678_7_, CallbackInfoReturnable<Boolean> cr) {
         FHUtils.canBigTreeGenerate(p_235678_1_, p_235678_3_, p_235678_5_, cr);
     }
 }

@@ -51,7 +51,7 @@ public abstract class MooshroomMixin extends Animal {
             CowEntityMixin ot = (CowEntityMixin) (Object) this;
 
             if (ot.milk <= 0) {
-                if (!level.isClientSide) {
+                if (!level().isClientSide) {
                     if (ot.feeded <= 0)
                         playerIn.displayClientMessage(TranslateUtils.translateMessage("cow.nomilk.hungry"), true);
                     else

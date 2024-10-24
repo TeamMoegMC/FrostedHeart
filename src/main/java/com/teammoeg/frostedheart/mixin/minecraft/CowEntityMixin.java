@@ -44,6 +44,7 @@ import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -53,11 +54,13 @@ import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.Level;
 
 @Mixin(Cow.class)
 public abstract class CowEntityMixin extends Animal implements IMilkable, IFeedStore {
-    private final static ResourceLocation cow_feed = new ResourceLocation(FHMain.MODID, "cow_feed");
+    private final static TagKey<Item> cow_feed = ItemTags.create(new ResourceLocation(FHMain.MODID, "cow_feed"));
     private EatBlockGoal eatGrassGoal;
 
     byte feeded;
@@ -110,14 +113,14 @@ public abstract class CowEntityMixin extends Animal implements IMilkable, IFeedS
     public InteractionResult mobInteract(Player playerIn, InteractionHand hand) {
         ItemStack itemstack = playerIn.getItemInHand(hand);
         //FHMain.LOGGER.info("start feed"+this.isInLove());
-        if (!this.isBaby() && !itemstack.isEmpty() && itemstack.getItem().getTags().contains(cow_feed)) {
+        if (!this.isBaby() && !itemstack.isEmpty() && itemstack.is(cow_feed)) {
             if (feeded < 2) {
                 feeded++;
                 //FHMain.LOGGER.info("yield feed"+this.isInLove());
-                if (!this.level.isClientSide)
-                    this.usePlayerItem(playerIn, itemstack);
+                if (!this.level().isClientSide)
+                    this.usePlayerItem(playerIn,hand, itemstack);
                 //FHMain.LOGGER.info("ret feed"+this.isInLove());
-                return InteractionResult.sidedSuccess(this.level.isClientSide);
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
         }
         //FHMain.LOGGER.info("end feed"+this.isInLove());
@@ -127,9 +130,9 @@ public abstract class CowEntityMixin extends Animal implements IMilkable, IFeedS
                 ItemStack itemstack1 = ItemUtils.createFilledResult(itemstack, playerIn, Items.MILK_BUCKET.getDefaultInstance());
                 playerIn.setItemInHand(hand, itemstack1);
                 milk--;
-                return InteractionResult.sidedSuccess(this.level.isClientSide);
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
-            if (!level.isClientSide) {
+            if (!level().isClientSide) {
                 if (feeded <= 0)
                     playerIn.displayClientMessage(TranslateUtils.translateMessage("cow.nomilk.hungry"), true);
                 else
@@ -180,7 +183,7 @@ public abstract class CowEntityMixin extends Animal implements IMilkable, IFeedS
     @Override
     public void tick() {
         super.tick();
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
             if (digestTimer > 0) {
                 digestTimer--;
                 if (digestTimer == 0) {
@@ -193,11 +196,11 @@ public abstract class CowEntityMixin extends Animal implements IMilkable, IFeedS
             } else if (feeded > 0) {
                 digestTimer = 14400;
             }
-            if (FHUtils.isBlizzardHarming(level, this.blockPosition())) {
+            if (FHUtils.isBlizzardHarming(level(), this.blockPosition())) {
                 if (hxteTimer < 20) {
                     hxteTimer++;
                 } else {
-                    this.hurt(FHDamageSources.BLIZZARD, 1);
+                	 this.hurt(FHDamageSources.createSource(level(), FHDamageSources.BLIZZARD, this), 1);
                 }
             } else {
                 float temp = ChunkHeatData.getTemperature(this.getCommandSenderWorld(), this.blockPosition());
@@ -213,7 +216,7 @@ public abstract class CowEntityMixin extends Animal implements IMilkable, IFeedS
                             }
 
                         hxteTimer = 0;
-                        this.hurt(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
+                        this.hurt(FHDamageSources.createSource(level(), temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, this), 2);
                     }
                 } else if (hxteTimer > 0)
                     hxteTimer--;

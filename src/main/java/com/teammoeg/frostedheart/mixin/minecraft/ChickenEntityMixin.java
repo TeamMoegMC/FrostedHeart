@@ -36,6 +36,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.Chicken;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.nbt.CompoundTag;
@@ -43,11 +44,13 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.Level;
 
 @Mixin(Chicken.class)
 public abstract class ChickenEntityMixin extends Animal implements IFeedStore {
-    private final static ResourceLocation chicken_feed = new ResourceLocation(FHMain.MODID, "chicken_feed");
+    private final static TagKey<Item> chicken_feed = ItemTags.create(new ResourceLocation(FHMain.MODID, "chicken_feed"));
 
     @Shadow
     public int timeUntilNextEgg;
@@ -113,13 +116,13 @@ public abstract class ChickenEntityMixin extends Animal implements IFeedStore {
     public InteractionResult mobInteract(Player playerIn, InteractionHand hand) {
         ItemStack itemstack = playerIn.getItemInHand(hand);
 
-        if (!this.isBaby() && !itemstack.isEmpty() && itemstack.getItem().getTags().contains(chicken_feed)) {
+        if (!this.isBaby() && !itemstack.isEmpty() && itemstack.is(chicken_feed)) {
             if (feeded < 4) {
 
-                if (!this.level.isClientSide)
-                    this.usePlayerItem(playerIn, itemstack);
+                if (!this.level().isClientSide)
+                    this.usePlayerItem(playerIn, hand, itemstack);
                 feeded++;
-                return InteractionResult.sidedSuccess(this.level.isClientSide);
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
         }
         return super.mobInteract(playerIn, hand);
@@ -128,7 +131,7 @@ public abstract class ChickenEntityMixin extends Animal implements IFeedStore {
     @Override
     public void tick() {
         super.tick();
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
 
             if (digestTimer > 0) {
                 digestTimer--;
@@ -143,11 +146,11 @@ public abstract class ChickenEntityMixin extends Animal implements IFeedStore {
                 digestTimer = 6000;
             }
 
-            if (FHUtils.isBlizzardHarming(level, this.blockPosition())) {
+            if (FHUtils.isBlizzardHarming(level(), this.blockPosition())) {
                 if (hxteTimer < 20) {
                     hxteTimer++;
                 } else {
-                    this.hurt(FHDamageSources.BLIZZARD, 1);
+                    this.hurt(FHDamageSources.createSource(level(), FHDamageSources.BLIZZARD, this), 1);
                 }
             } else {
                 float temp = ChunkHeatData.getTemperature(this.getCommandSenderWorld(), this.blockPosition());
@@ -162,7 +165,7 @@ public abstract class ChickenEntityMixin extends Animal implements IFeedStore {
                                 return;
                             }
                         hxteTimer = 0;
-                        this.hurt(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
+                        this.hurt(FHDamageSources.createSource(level(), temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, this), 2);
                     }
                 } else if (hxteTimer > 0)
                     hxteTimer--;

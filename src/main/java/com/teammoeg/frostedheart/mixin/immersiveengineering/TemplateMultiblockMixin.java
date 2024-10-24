@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.mixin.immersiveengineering;
 
+import java.util.UUID;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,6 +30,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.multiblock.components.IOwnerState;
+import com.teammoeg.frostedheart.util.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
 
@@ -61,8 +65,15 @@ public abstract class TemplateMultiblockMixin implements IMultiblock, MultiBlock
 
     @Inject(at = @At("RETURN"), remap = false, method = "form", locals = LocalCapture.CAPTURE_FAILHARD)
     public void fh$on$form(Level world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit, CallbackInfo cbi, BlockPos master) {
-        if (pe != null)
-            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(world, master), FHTeamDataManager.get(pe).getId());
+        if (pe != null) {
+        	UUID user=FHTeamDataManager.get(pe).getId();
+            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(world, master), user);
+            FHMultiblockHelper.getBEHelper(world, pos).ifPresent(t->{
+            	if(t.getState() instanceof IOwnerState state) {
+            		state.setOwner(user);
+            	}
+            });
+        }
     }
 
 	@Override

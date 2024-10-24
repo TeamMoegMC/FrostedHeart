@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.mixin.minecraft;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
@@ -38,27 +39,32 @@ import net.minecraft.world.level.biome.Biome;
  * */
 @Mixin(Biome.class)
 public abstract class BiomeMixin {
-    public boolean doesWaterFreeze(LevelReader worldIn, BlockPos water, boolean mustBeAtEdge) {
-        if (this.getTemperature(water) >= 0.15F) {
-            return false;
-        }
-        if (water.getY() >= 0 && water.getY() < 256 && worldIn.getBrightness(LightLayer.BLOCK, water) < 10 && ChunkHeatData.getTemperature(worldIn, water) < 0) {
-            BlockState blockstate = worldIn.getBlockState(water);
-            FluidState fluidstate = worldIn.getFluidState(water);
-            if (fluidstate.getType() == Fluids.WATER && blockstate.getBlock() instanceof LiquidBlock) {
-                if (!mustBeAtEdge) {
-                    return true;
-                }
+	@Overwrite
+    public boolean shouldFreeze(LevelReader pLevel, BlockPos pWater, boolean pMustBeAtEdge) {
+	      if (this.warmEnoughToRain(pWater)) {
+	          return false;
+	       } else {
+	          if (pWater.getY() >= pLevel.getMinBuildHeight() && pWater.getY() < pLevel.getMaxBuildHeight() && pLevel.getBrightness(LightLayer.BLOCK, pWater) < 10 &&  ChunkHeatData.getTemperature(pLevel, pWater) < 0) {
+	             BlockState blockstate = pLevel.getBlockState(pWater);
+	             FluidState fluidstate = pLevel.getFluidState(pWater);
+	             if (fluidstate.getType() == Fluids.WATER && blockstate.getBlock() instanceof LiquidBlock) {
+	                if (!pMustBeAtEdge) {
+	                   return true;
+	                }
 
-                boolean flag = worldIn.isWaterAt(water.west()) && worldIn.isWaterAt(water.east())
-                        && worldIn.isWaterAt(water.north()) && worldIn.isWaterAt(water.south());
-                return !flag;
-            }
-        }
+	                boolean flag = pLevel.isWaterAt(pWater.west()) && pLevel.isWaterAt(pWater.east()) && pLevel.isWaterAt(pWater.north()) && pLevel.isWaterAt(pWater.south());
+	                if (!flag) {
+	                   return true;
+	                }
+	             }
+	          }
 
-        return false;
+	          return false;
+	       }
     }
 
     @Shadow
     public abstract float getTemperature(BlockPos pos);
+    @Shadow
+    public abstract boolean warmEnoughToRain(BlockPos pPos);
 }

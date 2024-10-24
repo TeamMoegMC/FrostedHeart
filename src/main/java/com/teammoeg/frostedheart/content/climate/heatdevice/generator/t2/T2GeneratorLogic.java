@@ -210,7 +210,9 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
 
     @Override
     public T2GeneratorState createInitialState(IInitialMultiblockContext<T2GeneratorState> ctx) {
-        return new T2GeneratorState();
+        
+    	return new T2GeneratorState();
+        
     }
 
     @Override
@@ -219,17 +221,6 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
     }
 
 
-    // TODO: Still need?
-//    @Override
-//    protected void callBlockConsumerWithTypeCheck(Consumer<T2GeneratorLogic> consumer, BlockEntity te) {
-//        if (te instanceof T2GeneratorLogic)
-//            consumer.accept((T2GeneratorLogic) te);
-//    }
-
-//    @Override
-//    protected boolean canFillTankFrom(int iTank, Direction side, FluidStack resource) {
-//        return side == this.getFacing() && this.posInMultiblock.equals(fluidIn);
-//    }
 
     // TODO: Disassemble is moved to MB class. What about invalidate?
 //    @Override
