@@ -34,6 +34,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 /**
@@ -61,7 +62,7 @@ public abstract class AbstractTopPlantBlockMixin extends GrowingPlantBlock {
      */
     @Inject(at = @At("HEAD"), method = "randomTick", cancellable = true)
 
-    public void fh$randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, Random random, CallbackInfo cbi) {
+    public void fh$randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random,CallbackInfo cbi) {
         if (state.getValue(GrowingPlantHeadBlock.AGE) < 25 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn,
                 pos, state,
                 random.nextDouble() < this.growthChance)) {

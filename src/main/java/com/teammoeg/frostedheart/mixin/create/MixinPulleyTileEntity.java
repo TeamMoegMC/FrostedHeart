@@ -25,25 +25,28 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.simibubi.create.content.contraptions.base.KineticTileEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.piston.LinearActuatorTileEntity;
+import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
+import com.simibubi.create.content.contraptions.piston.LinearActuatorBlockEntity;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-@Mixin({LinearActuatorTileEntity.class})
-public abstract class MixinPulleyTileEntity extends KineticTileEntity {
+@Mixin({LinearActuatorBlockEntity.class})
+public abstract class MixinPulleyTileEntity extends KineticBlockEntity {
 
-    @Shadow(remap = false)
+    public MixinPulleyTileEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
+		super(typeIn, pos, state);
+	}
+
+	@Shadow(remap = false)
     public AbstractContraptionEntity movedContraption;
 
     private int fh$cooldown;
 
-    public MixinPulleyTileEntity(BlockEntityType<?> typeIn) {
-        super(typeIn);
-    }
 
     @Override
     public float calculateStressApplied() {

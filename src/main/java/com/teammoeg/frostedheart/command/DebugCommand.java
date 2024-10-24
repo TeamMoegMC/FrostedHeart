@@ -46,20 +46,20 @@ import com.teammoeg.frostedheart.util.io.FileUtil;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 public class DebugCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("debug")
                 .then(Commands.literal("generate_airship").executes(ct -> {
-                    FHFeatures.spacecraft_feature.place(((ServerLevel) ct.getSource().getPlayerOrException().level()), ((ServerLevel) ct.getSource().getPlayerOrException().level()).getChunkSource().getGenerator(), ct.getSource().getPlayerOrException().level().random,
-                            ct.getSource().getPlayerOrException().blockPosition());
+                	//TODO Add spacecraft feature
+                    /*FHFeatures.spacecraft_feature.place(((ServerLevel) ct.getSource().getPlayerOrException().level()), ((ServerLevel) ct.getSource().getPlayerOrException().level()).getChunkSource().getGenerator(), ct.getSource().getPlayerOrException().level().random,
+                            ct.getSource().getPlayerOrException().blockPosition());*/
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("export_food").executes(ct -> {
                     Set<Item> items = new HashSet<>();

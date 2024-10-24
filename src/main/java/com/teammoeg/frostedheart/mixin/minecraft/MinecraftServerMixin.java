@@ -57,8 +57,9 @@ public class MinecraftServerMixin {
         if (y == 256)
             y = seaLevel;
         info.setYSpawn(y - 1);
-        FHFeatures.spacecraft_feature.place(serverWorld, serverWorld.getChunkSource().getGenerator(), serverWorld.random,
-                new BlockPos(info.getXSpawn(), info.getYSpawn(), info.getZSpawn()));
+        //TODO Add spacecraft feature
+        //FHFeatures.spacecraft_feature.place(serverWorld, serverWorld.getChunkSource().getGenerator(), serverWorld.random,
+        //        new BlockPos(info.getXSpawn(), info.getYSpawn(), info.getZSpawn()));
         serverWorld.setDefaultSpawnPos(new BlockPos(info.getXSpawn(), y - 1, info.getZSpawn()), info.getSpawnAngle());
 
     }

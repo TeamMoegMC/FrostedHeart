@@ -47,12 +47,12 @@ public class CoolableAnimals extends Mob {
         super(type, worldIn);
     }
 
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    @Inject(at = @At("HEAD"), method = "readAdditionalSaveData")
     public void fh$readAdditional(CompoundTag compound, CallbackInfo cbi) {
         hxteTimer = compound.getShort("hxthermia");
     }
 
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    @Inject(at = @At("HEAD"), method = "addAdditionalSaveData")
     public void fh$writeAdditional(CompoundTag compound, CallbackInfo cbi) {
         compound.putShort("hxthermia", hxteTimer);
 

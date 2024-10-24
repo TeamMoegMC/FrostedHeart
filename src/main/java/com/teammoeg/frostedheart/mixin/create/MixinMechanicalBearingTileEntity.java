@@ -25,24 +25,27 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.ControlledContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.bearing.IBearingTileEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.bearing.MechanicalBearingTileEntity;
+import com.simibubi.create.content.contraptions.ControlledContraptionEntity;
+import com.simibubi.create.content.contraptions.bearing.IBearingBlockEntity;
+import com.simibubi.create.content.contraptions.bearing.MechanicalBearingBlockEntity;
+import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
 import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 
-@Mixin(MechanicalBearingTileEntity.class)
-public abstract class MixinMechanicalBearingTileEntity extends GeneratingKineticTileEntity
-        implements IBearingTileEntity {
-    @Shadow(remap = false)
+@Mixin(MechanicalBearingBlockEntity.class)
+public abstract class MixinMechanicalBearingTileEntity extends GeneratingKineticBlockEntity
+        implements IBearingBlockEntity {
+    public MixinMechanicalBearingTileEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+		super(type, pos, state);
+	}
+
+	@Shadow(remap = false)
     protected ControlledContraptionEntity movedContraption;
 
     private int fh$cooldown;
-    public MixinMechanicalBearingTileEntity(BlockEntityType<?> typeIn) {
-        super(typeIn);
-    }
 
     @Override
     public float calculateStressApplied() {

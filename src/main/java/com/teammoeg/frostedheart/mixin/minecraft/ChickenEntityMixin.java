@@ -91,7 +91,7 @@ public abstract class ChickenEntityMixin extends Animal implements IFeedStore {
         cbi.cancel();
     }
 
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    @Inject(at = @At("HEAD"), method = "readAdditionalSaveData")
     public void fh$readAdditional(CompoundTag compound, CallbackInfo cbi) {
         egg = compound.getByte("egg_stored");
         feeded = compound.getByte("feed_stored");
@@ -99,7 +99,7 @@ public abstract class ChickenEntityMixin extends Animal implements IFeedStore {
         hxteTimer = compound.getShort("hxthermia");
     }
 
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    @Inject(at = @At("HEAD"), method = "addAdditionalSaveData")
     public void fh$writeAdditional(CompoundTag compound, CallbackInfo cbi) {
         compound.putByte("egg_stored", egg);
         compound.putByte("feed_stored", feeded);

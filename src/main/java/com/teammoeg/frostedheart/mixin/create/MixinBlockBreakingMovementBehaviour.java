@@ -23,9 +23,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import com.simibubi.create.content.contraptions.components.actors.BlockBreakingMovementBehaviour;
-import com.simibubi.create.content.contraptions.components.structureMovement.MovementBehaviour;
-import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
+import com.simibubi.create.content.contraptions.behaviour.MovementBehaviour;
+import com.simibubi.create.content.contraptions.behaviour.MovementContext;
+import com.simibubi.create.content.kinetics.base.BlockBreakingMovementBehaviour;
 import com.simibubi.create.foundation.utility.BlockHelper;
 import com.teammoeg.frostedheart.util.mixin.ISpeedContraption;
 
@@ -40,7 +40,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.Level;
 
 @Mixin(BlockBreakingMovementBehaviour.class)
-public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehaviour {
+public abstract class MixinBlockBreakingMovementBehaviour implements MovementBehaviour {
     @Shadow(remap = false)
     public abstract boolean canBreak(Level world, BlockPos breakingPos, BlockState state);
 

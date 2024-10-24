@@ -35,12 +35,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import com.simibubi.create.content.contraptions.components.structureMovement.AssemblyException;
-import com.simibubi.create.content.contraptions.components.structureMovement.BlockMovementChecks;
-import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
-import com.simibubi.create.content.contraptions.components.structureMovement.glue.SuperGlueEntity;
-import com.simibubi.create.foundation.config.AllConfigs;
+import com.simibubi.create.content.contraptions.AssemblyException;
+import com.simibubi.create.content.contraptions.BlockMovementChecks;
+import com.simibubi.create.content.contraptions.Contraption;
+import com.simibubi.create.content.contraptions.glue.SuperGlueEntity;
 import com.simibubi.create.foundation.utility.Iterate;
+import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.teammoeg.frostedheart.util.mixin.ISpeedContraption;
 
 import net.minecraft.world.level.block.Block;
@@ -109,6 +109,7 @@ public abstract class MixinContraption implements ISpeedContraption {
      * @author khjxiaogu
      * @reason now check collider
      */
+    /*
     @Inject(at = @At(value = "INVOKE_ASSIGN", target = "Lcom/simibubi/create/content/contraptions/components/structureMovement/glue/SuperGlueHandler;gatherGlue(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;)Ljava/util/Map;", remap = false, ordinal = 0)
             , method = "moveBlock", remap = false, locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
     protected void fh$moveBlock(Level world, @Nullable Direction forcedDirection, Queue<BlockPos> frontier,
@@ -157,19 +158,19 @@ public abstract class MixinContraption implements ISpeedContraption {
         }
 
         addBlock(pos, capture(world, pos));
-        if (blocks.size() <= AllConfigs.SERVER.kinetics.maxBlocksMoved.get())
+        if (blocks.size() <= AllConfigs.server().kinetics.maxBlocksMoved.get())
             r.setReturnValue(true);
         else
             throw AssemblyException.structureTooLarge();
     }
-
-    @Inject(at = @At("HEAD"), method = "readNBT", remap = false)
-    public void fh$readNBT(Level world, CompoundTag nbt, boolean spawnData, CallbackInfo cbi) {
+*/
+    @Inject(at = @At("HEAD"), method = "read", remap = false)
+    public void fh$readNBT(CompoundTag nbt, boolean client, CallbackInfo cbi) {
         sc = nbt.getFloat("speedCollected");
     }
 
-    @Inject(at = @At("RETURN"), method = "writeNBT", remap = false, locals = LocalCapture.CAPTURE_FAILHARD)
-    public void fh$writeNBT(boolean spawnPacket, CallbackInfoReturnable<CompoundTag> cbi, CompoundTag cnbt) {
+    @Inject(at = @At("RETURN"), method = "write", remap = false, locals = LocalCapture.CAPTURE_FAILHARD)
+    public void fh$writeNBT(CompoundTag cnbt,boolean client, CallbackInfoReturnable<CompoundTag> cbi) {
         cnbt.putFloat("speedCollected", sc);
     }
 

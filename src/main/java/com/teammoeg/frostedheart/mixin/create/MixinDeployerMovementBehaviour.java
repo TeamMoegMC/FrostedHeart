@@ -26,17 +26,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.simibubi.create.content.contraptions.components.deployer.DeployerMovementBehaviour;
-import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
-import com.simibubi.create.content.contraptions.components.structureMovement.MovementBehaviour;
-import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
+import com.simibubi.create.content.contraptions.Contraption;
+import com.simibubi.create.content.contraptions.behaviour.MovementBehaviour;
+import com.simibubi.create.content.contraptions.behaviour.MovementContext;
+import com.simibubi.create.content.kinetics.deployer.DeployerMovementBehaviour;
 import com.teammoeg.frostedheart.util.mixin.ISpeedContraption;
 
 import net.minecraft.util.Mth;
 
 @Mixin(DeployerMovementBehaviour.class)
-public abstract class MixinDeployerMovementBehaviour extends MovementBehaviour {
-    @Inject(method = "tick(Lcom/simibubi/create/content/contraptions/components/structureMovement/MovementContext;)V",
+public abstract class MixinDeployerMovementBehaviour implements MovementBehaviour {
+    @Inject(method = "tick(Lcom/simibubi/create/content/contraptions/behaviour/MovementContext;)V",
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/nbt/CompoundNBT;putInt(Ljava/lang/String;I)V",
                     ordinal = 0
@@ -53,7 +53,7 @@ public abstract class MixinDeployerMovementBehaviour extends MovementBehaviour {
 
     }
 
-    @ModifyConstant(method = "tick(Lcom/simibubi/create/content/contraptions/components/structureMovement/MovementContext;)V", remap = false, constant = @Constant(intValue = 20, ordinal = 0))
+    @ModifyConstant(method = "tick(Lcom/simibubi/create/content/contraptions/behaviour/MovementContext;)V", remap = false, constant = @Constant(intValue = 20, ordinal = 0))
     public int getTimerTick(int in) {
         return 10000;
     }

@@ -150,15 +150,15 @@ public class FHUtils {
     		return te.getCapability(cap,d).orElse(null);
     	return null;
     }
-    public static boolean canTreeGrow(Level w, BlockPos p, Random r) {
-        float temp = ChunkHeatData.getTemperature(w, p);
-        if (temp <= -6 || WorldClimate.isBlizzard(w))
+    public static boolean canTreeGrow(LevelAccessor worldIn, BlockPos p, RandomSource rand) {
+        float temp = ChunkHeatData.getTemperature(worldIn, p);
+        if (temp <= -6 || WorldClimate.isBlizzard(worldIn))
             return false;
         if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
             return false;
         if (temp > 0)
             return true;
-        return r.nextInt(Math.max(1, Mth.ceil(-temp / 2))) == 0;
+        return rand.nextInt(Math.max(1, Mth.ceil(-temp / 2))) == 0;
     }
     public static boolean hasItems(Player player,List<IngredientWithSize> costList) {
     	int i=0;

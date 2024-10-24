@@ -24,11 +24,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.simibubi.create.content.contraptions.components.crafter.MechanicalCraftingRecipe;
+import com.simibubi.create.content.kinetics.crafter.MechanicalCraftingRecipe;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.core.NonNullList;
@@ -39,12 +40,12 @@ import net.minecraft.world.level.Level;
 public class MixinMechanicalCraftingRecipe extends ShapedRecipe {
 
 
-    public MixinMechanicalCraftingRecipe(ResourceLocation idIn, String groupIn, int recipeWidthIn, int recipeHeightIn,
-                                         NonNullList<Ingredient> recipeItemsIn, ItemStack recipeOutputIn) {
-        super(idIn, groupIn, recipeWidthIn, recipeHeightIn, recipeItemsIn, recipeOutputIn);
-    }
 
-    @Inject(at = @At("HEAD"), method = "matches", cancellable = true)
+    public MixinMechanicalCraftingRecipe(ResourceLocation pId, String pGroup, CraftingBookCategory pCategory, int pWidth, int pHeight, NonNullList<Ingredient> pRecipeItems, ItemStack pResult) {
+		super(pId, pGroup, pCategory, pWidth, pHeight, pRecipeItems, pResult);
+	}
+
+	@Inject(at = @At("HEAD"), method = "matches", cancellable = true)
     public void fh$matches(CraftingContainer inv, Level worldIn, CallbackInfoReturnable<Boolean> cbi) {
         if (!ResearchListeners.canUseRecipe(ResearchListeners.te, this)) cbi.setReturnValue(false);
     }

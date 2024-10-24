@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import java.util.Random;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -33,15 +31,14 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.MushroomBlock;
-import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+import net.minecraft.util.RandomSource;
 
 /**
- * Disable any tree from growing when blizzard
+ * Disable mushroom from spreading in low
  * */
-@Mixin({SaplingBlock.class, MushroomBlock.class})
+@Mixin({MushroomBlock.class})
 public abstract class SaplingBlockMixin extends BushBlock implements BonemealableBlock {
 
     public SaplingBlockMixin(Properties properties) {
@@ -49,7 +46,7 @@ public abstract class SaplingBlockMixin extends BushBlock implements Bonemealabl
     }
 
     @Inject(at = @At("HEAD"), method = "randomTick", cancellable = true)
-    public void fh$randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, Random random, CallbackInfo cbi) {
+    public void fh$randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random, CallbackInfo cbi) {
         if (FHUtils.isBlizzardHarming(worldIn, pos)) {
             worldIn.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
             cbi.cancel();

@@ -24,9 +24,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.simibubi.create.content.contraptions.components.actors.BlockBreakingMovementBehaviour;
-import com.simibubi.create.content.contraptions.components.actors.SawMovementBehaviour;
-import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
+import com.simibubi.create.content.contraptions.behaviour.MovementContext;
+import com.simibubi.create.content.kinetics.base.BlockBreakingMovementBehaviour;
+import com.simibubi.create.content.kinetics.saw.SawMovementBehaviour;
 import com.simibubi.create.foundation.utility.TreeCutter;
 
 import net.minecraft.world.level.block.state.BlockState;

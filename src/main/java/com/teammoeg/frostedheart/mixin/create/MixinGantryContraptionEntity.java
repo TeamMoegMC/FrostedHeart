@@ -24,10 +24,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraption;
-import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraptionEntity;
-import com.simibubi.create.content.contraptions.relays.advanced.GantryShaftTileEntity;
+import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
+import com.simibubi.create.content.contraptions.gantry.GantryContraption;
+import com.simibubi.create.content.contraptions.gantry.GantryContraptionEntity;
+import com.simibubi.create.content.kinetics.gantry.GantryShaftBlockEntity;
 import com.teammoeg.frostedheart.util.mixin.IGantryShaft;
 
 import net.minecraft.world.entity.EntityType;
@@ -48,11 +48,12 @@ public abstract class MixinGantryContraptionEntity extends AbstractContraptionEn
     protected void checkPinionShaft(CallbackInfo cbi) {
         Direction facing = ((GantryContraption) contraption).getFacing();
         Vec3 currentPosition = getAnchorVec().add(.5, .5, .5);
-        BlockPos gantryShaftPos = new BlockPos(currentPosition).relative(facing.getOpposite());
 
-        BlockEntity te = level.getBlockEntity(gantryShaftPos);
+        BlockPos gantryShaftPos = BlockPos.containing(currentPosition).relative(facing.getOpposite());
+
+        BlockEntity te = level().getBlockEntity(gantryShaftPos);
         if (te instanceof IGantryShaft) {
-            GantryShaftTileEntity gte = (GantryShaftTileEntity) te;
+            GantryShaftBlockEntity gte = (GantryShaftBlockEntity) te;
             ((IGantryShaft) gte).setEntity(this);
             gte.networkDirty = true;
         }

@@ -33,6 +33,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.core.Holder;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.GameRules;
@@ -47,14 +49,15 @@ import net.minecraft.world.level.storage.WritableLevelData;
 @Mixin(ServerLevel.class)
 public abstract class MixinServerWorld extends Level {
 
-    @Shadow
+    protected MixinServerWorld(WritableLevelData pLevelData, ResourceKey<Level> pDimension, RegistryAccess pRegistryAccess, Holder<DimensionType> pDimensionTypeRegistration,
+		Supplier<ProfilerFiller> pProfiler, boolean pIsClientSide, boolean pIsDebug, long pBiomeZoomSeed, int pMaxChainedNeighborUpdates) {
+		super(pLevelData, pDimension, pRegistryAccess, pDimensionTypeRegistration, pProfiler, pIsClientSide, pIsDebug, pBiomeZoomSeed, pMaxChainedNeighborUpdates);
+	}
+
+	@Shadow
     @Final
     public ServerLevelData serverWorldInfo;
 
-    protected MixinServerWorld(WritableLevelData worldInfo, ResourceKey<Level> dimension, DimensionType dimensionType,
-                               Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed) {
-        super(worldInfo, dimension, dimensionType, profiler, isRemote, isDebug, seed);
-    }
 
     /**
      * @author khjxiaogu

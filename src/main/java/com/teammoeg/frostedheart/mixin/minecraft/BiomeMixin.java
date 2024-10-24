@@ -64,7 +64,5 @@ public abstract class BiomeMixin {
     }
 
     @Shadow
-    public abstract float getTemperature(BlockPos pos);
-    @Shadow
     public abstract boolean warmEnoughToRain(BlockPos pPos);
 }

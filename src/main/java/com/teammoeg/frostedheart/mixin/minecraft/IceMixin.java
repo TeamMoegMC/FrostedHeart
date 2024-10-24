@@ -19,20 +19,19 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import java.util.Random;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.IceBlock;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.IceBlock;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * Add generator effect for ice (melt)
@@ -45,13 +44,13 @@ public abstract class IceMixin {
      * @reason add generator effect on ice
      */
     @Overwrite
-    public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, Random random) {
+    public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
         if (worldIn.getBrightness(LightLayer.BLOCK, pos) > 11 - state.getLightBlock(worldIn, pos) || ChunkHeatData.getTemperature(worldIn, pos) > 0.5) {
-            this.turnIntoWater(state, worldIn, pos);
+            this.melt(state, worldIn, pos);
         }
 
     }
 
     @Shadow
-    protected abstract void turnIntoWater(BlockState state, Level world, BlockPos pos);
+    protected abstract void melt(BlockState state, Level world, BlockPos pos);
 }

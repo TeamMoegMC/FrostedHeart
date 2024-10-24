@@ -25,8 +25,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
+import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
+import com.simibubi.create.content.contraptions.Contraption;
 import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
 import com.teammoeg.frostedheart.util.mixin.IStressContraption;
 
@@ -83,9 +83,9 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
      * @author khjxiaogu
      * @reason force reset contraptions for mod propose
      */
-    @Inject(at = @At("TAIL"), method = "readAdditional(Lnet/minecraft/nbt/CompoundNBT;Z)V", remap = false)
+    @Inject(at = @At("TAIL"), method = "readAdditionalSaveData", remap = false)
     protected void readAdditional(CompoundTag compound, boolean spawnPacket, CallbackInfo cbi) {
-        if (!level.isClientSide)
+        if (!level().isClientSide)
             if (compound.getInt("spinst") != 2) {
                 shoulddisb = true;
             }
@@ -97,7 +97,7 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
      */
     @Inject(at = @At("TAIL"), method = "tick")
     protected void tick(CallbackInfo cbi) {
-        if (!level.isClientSide)
+        if (!level().isClientSide)
             if (this.shoulddisb)
                 this.disassemble();
     }
@@ -106,9 +106,9 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
      * @author khjxiaogu
      * @reason force reset contraptions for mod propose
      */
-    @Inject(at = @At("TAIL"), method = "writeAdditional(Lnet/minecraft/nbt/CompoundNBT;Z)V", remap = false)
+    @Inject(at = @At("TAIL"), method = "addAdditionalSaveData", remap = false)
     protected void writeAdditional(CompoundTag compound, boolean spawnPacket, CallbackInfo cbi) {
-        if (!level.isClientSide)
+        if (!level().isClientSide)
             compound.putInt("spinst", 2);
     }
 }

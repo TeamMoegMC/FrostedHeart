@@ -54,11 +54,9 @@ import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.world.FHGeneration;
-
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
-import com.teammoeg.frostedheart.world.FHStructures;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Entity.RemovalReason;
@@ -67,6 +65,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.nbt.CompoundTag;
@@ -80,7 +79,11 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AddReloadListenerEvent;
@@ -99,6 +102,7 @@ import net.minecraftforge.event.entity.player.PlayerXpEvent.PickupXp;
 import net.minecraftforge.event.entity.player.SleepingTimeCheckEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.event.level.SaplingGrowTreeEvent;
 import net.minecraftforge.eventbus.api.Event.Result;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -502,5 +506,17 @@ public class CommonEvents {
                 && event.player instanceof ServerPlayer) {
             ResearchListeners.tick((ServerPlayer) event.player);
         }
+    }
+    @SubscribeEvent
+    public static void saplingGrow(SaplingGrowTreeEvent event) {
+    	BlockPos pos=event.getPos();
+    	LevelAccessor worldIn=event.getLevel();
+    	RandomSource rand=event.getRandomSource();
+    	BlockState sapling=event.getLevel().getBlockState(pos);
+        if (FHUtils.isBlizzardHarming(worldIn, pos)) {
+            worldIn.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+            event.setResult(Result.DENY);
+        } else if (!FHUtils.canTreeGrow(worldIn, pos, rand))
+        	event.setResult(Result.DENY);
     }
 }

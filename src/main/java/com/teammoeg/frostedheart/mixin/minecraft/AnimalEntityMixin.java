@@ -44,13 +44,13 @@ public abstract class AnimalEntityMixin extends AgeableMob {
         super(type, worldIn);
     }
 
-    @ModifyConstant(method = "spawnBabyAnimal", constant = @Constant(intValue = 6000))
+    @ModifyConstant(method = "spawnChildFromBreeding", constant = @Constant(intValue = 6000))
     public int getBreedCooldown(int orig) {
         return 28800;
     }
 
-    @Inject(at = @At("HEAD"), method = "isBreedingItem", cancellable = true)
-    public void isBreedingItem(ItemStack itemStack, CallbackInfoReturnable<Boolean> cbi) {
+    @Inject(at = @At("HEAD"), method = "isFood", cancellable = true)
+    public void isFood(ItemStack itemStack, CallbackInfoReturnable<Boolean> cbi) {
         EntityType<?> type = getType();
         boolean f = BreedUtil.isBreedingItem(type, itemStack);
         if (f)
