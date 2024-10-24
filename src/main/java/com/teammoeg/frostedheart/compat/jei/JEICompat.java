@@ -286,11 +286,11 @@ public class JEICompat implements IModPlugin {
 
     @Override
     public void registerGuiHandlers(IGuiHandlerRegistration registry) {
-        registry.addGenericGuiContainerHandler(GeneratorScreen.class, new IGuiContainerHandler<GeneratorScreen<?>>() {
+        registry.addGenericGuiContainerHandler(GeneratorScreen.class, new IGuiContainerHandler<GeneratorScreen<?,?>>() {
 			@Override
-			public Collection<IGuiClickableArea> getGuiClickableAreas(GeneratorScreen<?> containerScreen, double mouseX, double mouseY) {
+			public Collection<IGuiClickableArea> getGuiClickableAreas(GeneratorScreen<?,?> containerScreen, double mouseX, double mouseY) {
 				List<IGuiClickableArea> col=new ArrayList<>(2);
-				GeneratorContainer<?> container=containerScreen.getMenu();
+				GeneratorContainer<?,?> container=containerScreen.getMenu();
 				if(container.getTank()!=null)
 					col.add(IGuiClickableArea.createBasic(98, 84, 34, 4, GeneratorSteamCategory.UID));
 				Point in=container.getSlotIn();
@@ -312,8 +312,8 @@ public class JEICompat implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.generator), GeneratorFuelCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.generator_t2), GeneratorFuelCategory.UID,
+        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.Logic.GENERATOR_T1.blockItem().get()), GeneratorFuelCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.Logic.GENERATOR_T2.blockItem().get()), GeneratorFuelCategory.UID,
                 GeneratorSteamCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(FHBlocks.charger.get()), ChargerCategory.UID, ChargerCookingCategory.UID,
                 ChargerDefrostCategory.UID);

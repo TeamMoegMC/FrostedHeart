@@ -60,7 +60,7 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
 
     public GeneratorSteamCategory(IGuiHelper guiHelper) {
         ResourceLocation guiMain = new ResourceLocation(FHMain.MODID, "textures/gui/generator_t2.png");
-        this.ICON = guiHelper.createDrawableItemStack(new ItemStack(FHMultiblocks.generator_t2));
+        this.ICON = guiHelper.createDrawableItemStack(new ItemStack(FHMultiblocks.Logic.GENERATOR_T2.blockItem().get()));
         this.TANK = guiHelper.createDrawable(guiMain, 178, 87, 16, 47);
         this.BACKGROUND = guiHelper.createDrawable(guiMain, 4, 4, 164, 72);
         IDrawableStatic tfire = guiHelper.createDrawable(guiMain, 179, 0, 9, 13);

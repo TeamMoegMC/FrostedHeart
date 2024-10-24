@@ -58,7 +58,7 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
     private static final CapabilityPosition NETWORK_CAP = CapabilityPosition.opposing(NETWORK_OFFSET);
     private static final MultiblockFace FLUID_INPUT_OFFSET = new MultiblockFace(1, 0, 2, RelativeBlockFace.BACK);
     private static final CapabilityPosition FLUID_INPUT_CAP = CapabilityPosition.opposing(FLUID_INPUT_OFFSET);
-    LazyOptional<HeatProviderEndPoint> endPoint;
+    
     public T2GeneratorLogic() {
         super();
     }
@@ -86,11 +86,7 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
     @Override
     public <C> LazyOptional<C> getCapability(IMultiblockContext<T2GeneratorState> ctx, CapabilityPosition position, Capability<C> capability) {
         if (capability == FHCapabilities.HEAT_EP.capability() && NETWORK_CAP.equals(position)) {
-            LazyOptional<HeatProviderEndPoint> cep = getData(ctx).map(t -> t.epcap).orElseGet(LazyOptional::empty);
-            if (endPoint != cep) {
-                endPoint = cep;
-            }
-            return endPoint.cast();
+           return getData(ctx).map(t -> t.epcap).orElseGet(LazyOptional::empty).cast();
         } else if (capability == ForgeCapabilities.FLUID_HANDLER && FLUID_INPUT_CAP.equals(position)) {
             LazyOptional<IFluidHandler> tankCap = ctx.getState().tankCap;
             return tankCap.cast();
