@@ -23,7 +23,9 @@ import java.util.function.Function;
 
 import com.teammoeg.frostedheart.client.particles.WetSteamParticle;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorLogic;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorLogic;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorState;
 import org.lwjgl.glfw.GLFW;
 
 import com.teammoeg.frostedheart.FHBlocks;
@@ -150,8 +152,8 @@ public class ClientRegistryEvents {
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
         // Register screens
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen<T1GeneratorLogic>::new);
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), GeneratorScreen<T2GeneratorLogic>::new);
+        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen<T1GeneratorState, T1GeneratorLogic>::new);
+        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), GeneratorScreen<T2GeneratorState, T2GeneratorLogic>::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "relic_chest"), RelicChestScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "draw_desk"), FTBScreenFactory(DrawDeskScreen::new));
         registerFTBScreen(FHContainer.TRADE_GUI.get(), TradeScreen::new);
@@ -174,8 +176,8 @@ public class ClientRegistryEvents {
         ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.radiator, RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.debug_heater.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.relic_chest.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.fluorite_ore.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.halite_ore.get(), RenderType.cutout());
+//        ItemBlockRenderTypes.setRenderLayer(FHBlocks.fluorite_ore.get(), RenderType.cutout());
+//        ItemBlockRenderTypes.setRenderLayer(FHBlocks.halite_ore.get(), RenderType.cutout());
 /*
         RenderTypeLookup.setRenderLayer(FHBlocks.blood_block, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.bone_block, RenderType.getCutout());
