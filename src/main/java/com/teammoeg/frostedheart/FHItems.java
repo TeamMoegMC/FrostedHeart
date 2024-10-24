@@ -353,4 +353,70 @@ public class FHItems {
     public static RegistryObject<Item> IRON_SLUG = register("iron_slug");
     public static RegistryObject<Item> NICKEL_SLUG = register("nickel_slug");
 
+    // CHEMICALS in dust
+    /*
+    copper_oxide
+    zinc_oxide
+    tin_oxide
+    alumina
+    magnesia
+    lead_oxide
+    aluminium_hydroxide
+    sodium_hydroxide
+    sodium_sulfide
+    sodium_choloride
+    potassium_choloride
+    sulfur
+    graphite
+    cryolite
+     */
+
+    public static RegistryObject<Item> COPPER_OXIDE_DUST = register("copper_oxide_dust");
+    public static RegistryObject<Item> ZINC_OXIDE_DUST = register("zinc_oxide_dust");
+    public static RegistryObject<Item> TIN_OXIDE_DUST = register("tin_oxide_dust");
+    public static RegistryObject<Item> ALUMINA_DUST = register("alumina_dust");
+    public static RegistryObject<Item> MAGNESIA_DUST = register("magnesia_dust");
+    public static RegistryObject<Item> LEAD_OXIDE_DUST = register("lead_oxide_dust");
+    public static RegistryObject<Item> ALUMINIUM_HYDROXIDE_DUST = register("aluminium_hydroxide_dust");
+    public static RegistryObject<Item> SODIUM_HYDROXIDE_DUST = register("sodium_hydroxide_dust");
+    public static RegistryObject<Item> SODIUM_SULFIDE_DUST = register("sodium_sulfide_dust");
+    public static RegistryObject<Item> SODIUM_CHLORIDE_DUST = register("sodium_chloride_dust");
+    public static RegistryObject<Item> POTASSIUM_CHLORIDE_DUST = register("potassium_chloride_dust");
+    public static RegistryObject<Item> SULFUR_DUST = register("sulfur_dust");
+    public static RegistryObject<Item> GRAPHITE_DUST = register("graphite_dust");
+    public static RegistryObject<Item> CRYOLITE_DUST = register("cryolite_dust");
+
+    // MISC MATERIALS
+    /*
+    mortar
+    vulcanized_rubber
+
+    pulp
+
+    fire_clay_ball
+
+    high_refractory_brick
+
+    sawdust
+    biomass
+    synthetic_leather
+    quicklime
+    sodium_ingot
+    refractory_brick
+
+     */
+
+    public static RegistryObject<Item> MORTAR = register("mortar");
+    public static RegistryObject<Item> VULCANIZED_RUBBER = register("vulcanized_rubber");
+    public static RegistryObject<Item> PULP = register("pulp");
+    public static RegistryObject<Item> FIRE_CLAY_BALL = register("fire_clay_ball");
+    public static RegistryObject<Item> HIGH_REFRACTORY_BRICK = register("high_refractory_brick");
+    public static RegistryObject<Item> SAWDUST = register("sawdust");
+    public static RegistryObject<Item> BIOMASS = register("biomass");
+    public static RegistryObject<Item> SYNTHETIC_LEATHER = register("synthetic_leather");
+    public static RegistryObject<Item> QUICKLIME = register("quicklime");
+    public static RegistryObject<Item> SODIUM_INGOT = register("sodium_ingot");
+    public static RegistryObject<Item> REFRACTORY_BRICK = register("refractory_brick");
+
+
 }

@@ -68,10 +68,7 @@ import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerBlock;
 import com.teammoeg.frostedheart.util.constants.FHProps;
 import com.tterrag.registrate.util.entry.BlockEntry;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.DropExperienceBlock;
-import net.minecraft.world.level.block.SnowLayerBlock;
-import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.item.Item;
@@ -104,11 +101,6 @@ public class FHBlocks {
     public static <T extends Block> RegistryObject<T> register(String name, Supplier<T> block, Function<T, Item> item) {
         return register(name, block, name, item);
     }
-
-    // Ore Blocks
-    public static String[] metalOres = new String[] { "iron", "copper", "gold", "zinc", "silver", "cassiterite", "pyrite", "pentlandite", "galena"};
-    public static String[] nonMetalOres = new String[] { "coal", "redstone", "halite", "potash", "magnesite" };
-    public static String[] soilOres = new String[] { "dirt", "mycelium", "podzol", "rooted_dirt", "coarse_dirt", "mud", "gravel", "sand", "red_sand", "clay", "peat", "rotten_wood", "bauxite", "kaolin" };
 
     // SNOW ORES
     public static RegistryObject<Block> CONDENSED_IRON_ORE = register("condensed_iron_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
@@ -209,6 +201,33 @@ public class FHBlocks {
     public static RegistryObject<Block> TIN_BLOCK = register("tin_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
     public static RegistryObject<Block> MAGNESIUM_BLOCK = register("magnesium_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
     public static RegistryObject<Block> TUNGSTEN_BLOCK = register("tungsten_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+
+    // Rankine Blocks
+    /*
+    生石灰块quicklime_block
+
+    耐火砖块refractory_brick
+
+    高耐火砖块high_refractory_bricks
+
+    菱镁矿块magnesite_block
+
+    氧化镁块magnesia_block
+
+    积雪packed_snow
+
+    积雪台阶
+
+    殷钢块invar_block
+     */
+
+    public static RegistryObject<Block> QUICKLIME_BLOCK = register("quicklime_block", () -> new Block(BlockBehaviour.Properties.copy(CALCITE)));
+    public static RegistryObject<Block> REFRACTORY_BRICK = register("refractory_brick", () -> new Block(BlockBehaviour.Properties.copy(BRICKS)));
+    public static RegistryObject<Block> HIGH_REFRACTORY_BRICKS = register("high_refractory_bricks", () -> new Block(BlockBehaviour.Properties.copy(BRICKS)));
+    public static RegistryObject<Block> MAGNESITE_BLOCK = register("magnesite_block", () -> new Block(BlockBehaviour.Properties.copy(CALCITE)));
+    public static RegistryObject<Block> MAGNESIA_BLOCK = register("magnesia_block", () -> new Block(BlockBehaviour.Properties.copy(CALCITE)));
+    public static RegistryObject<Block> PACKED_SNOW = register("packed_snow", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK).strength(1.0F)));
+    public static RegistryObject<Block> PACKED_SNOW_SLAB = register("packed_snow_slab", () -> new SlabBlock(BlockBehaviour.Properties.copy(SNOW_BLOCK).strength(1.0F)));
 
 
     // Resource Blocks
