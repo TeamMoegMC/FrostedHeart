@@ -82,7 +82,7 @@ public class FHMain {
     public static File lastbkf;
     public static File lastServerConfig;
     public static boolean saveNeedUpdate;
-    public static final CreateRegistrate registrate = CreateRegistrate.create(MODID);
+    public static final CreateRegistrate FH_REGISTRATE = CreateRegistrate.create(MODID);
 	public static final DeferredRegister<CreativeModeTab> TABS=DeferredRegister.create(MODID,Registries.CREATIVE_MODE_TAB);
 	public static final RegistrySupplier<CreativeModeTab> main=TABS.register("frostedheart_main",()->CreativeModeTab.builder().withTabsBefore(CreativeModeTabs.SPAWN_EGGS).icon(()->new ItemStack(FHItems.energy_core.get())).title(TranslateUtils.translate("itemGroup.frostedheart")).build());
     public static final TabType itemGroup = new TabType(main);
@@ -100,6 +100,7 @@ public class FHMain {
         CreateCompat.init();
 
         IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
+        FH_REGISTRATE.registerEventListeners(mod);
 
         mod.addListener(this::setup);
         mod.addListener(this::processIMC);

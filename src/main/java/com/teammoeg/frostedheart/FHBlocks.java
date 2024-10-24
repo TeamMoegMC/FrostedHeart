@@ -23,11 +23,9 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.simibubi.create.AllTags;
-import com.simibubi.create.Create;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
 import com.teammoeg.frostedheart.base.item.FoodBlockItem;
 import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
@@ -35,7 +33,6 @@ import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.decoration.BoneBlock;
-import com.teammoeg.frostedheart.content.decoration.FHOreBlock;
 import com.teammoeg.frostedheart.content.decoration.OddMark;
 import com.teammoeg.frostedheart.content.decoration.PackageBlock;
 import com.teammoeg.frostedheart.content.decoration.PebbleBlock;
@@ -73,10 +70,10 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.registries.RegistryObject;
-import net.minecraftforge.registries.ForgeRegistries.Keys;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import static com.teammoeg.frostedheart.FHMain.FH_REGISTRATE;
 import static net.minecraft.world.level.block.Blocks.*;
 
 public class FHBlocks {
@@ -85,8 +82,6 @@ public class FHBlocks {
     }
 
     static final DeferredRegister<Block> registry = DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
-
-    private static final CreateRegistrate REGISTRATE = FHMain.registrate;
 
     public static <T extends Block> RegistryObject<T> register(String name, Supplier<T> block, String itemName, Function<T, Item> item) {
         RegistryObject<T> blk = registry.register(name, block);
@@ -222,7 +217,7 @@ public class FHBlocks {
      */
 
     public static RegistryObject<Block> QUICKLIME_BLOCK = register("quicklime_block", () -> new Block(BlockBehaviour.Properties.copy(CALCITE)));
-    public static RegistryObject<Block> REFRACTORY_BRICK = register("refractory_brick", () -> new Block(BlockBehaviour.Properties.copy(BRICKS)));
+    public static RegistryObject<Block> REFRACTORY_BRICKS = register("refractory_bricks", () -> new Block(BlockBehaviour.Properties.copy(BRICKS)));
     public static RegistryObject<Block> HIGH_REFRACTORY_BRICKS = register("high_refractory_bricks", () -> new Block(BlockBehaviour.Properties.copy(BRICKS)));
     public static RegistryObject<Block> MAGNESITE_BLOCK = register("magnesite_block", () -> new Block(BlockBehaviour.Properties.copy(CALCITE)));
     public static RegistryObject<Block> MAGNESIA_BLOCK = register("magnesia_block", () -> new Block(BlockBehaviour.Properties.copy(CALCITE)));
@@ -330,7 +325,7 @@ public class FHBlocks {
             .requiresCorrectToolForDrops()
             .strength(2, 10)
             .noOcclusion()));
-    public static final BlockEntry<SteamCoreBlock> steam_core = REGISTRATE.block("steam_core", SteamCoreBlock::new)
+    public static final BlockEntry<SteamCoreBlock> steam_core = FH_REGISTRATE.block("steam_core", SteamCoreBlock::new)
             .properties(t -> t.sound(SoundType.METAL)
                     .requiresCorrectToolForDrops()
                     .strength(2, 10)

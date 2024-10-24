@@ -100,7 +100,6 @@ public class FHItems {
     public static RegistryObject<Item> energy_core = register("energy_core", n -> new FHBaseItem(createProps()));
 
     // Foods and plants
-    public static RegistryObject<Item> wolfberries = register("wolfberries", n -> new FHBaseItem(createProps().food(FHFoods.WOLFBERRIES)));
     public static RegistryObject<Item> dried_wolfberries = register("dried_wolfberries", n -> new FHBaseItem(createProps().food(FHFoods.DRIED_WOLFBERRIES)));
     public static RegistryObject<Item> rye = register("rye", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> frozen_seeds = register("frozen_seeds", n -> new FHBaseItem(createProps()));

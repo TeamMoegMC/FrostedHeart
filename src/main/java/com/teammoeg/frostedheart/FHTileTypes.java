@@ -57,11 +57,11 @@ import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import static com.teammoeg.frostedheart.FHMain.FH_REGISTRATE;
+
 public class FHTileTypes {
     public static final DeferredRegister<BlockEntityType<?>> REGISTER = DeferredRegister.create(
             ForgeRegistries.BLOCK_ENTITY_TYPES, FHMain.MODID);
-    private static final CreateRegistrate REGISTRATE = FHMain.registrate;
-
     public static final RegistryObject<BlockEntityType<HeatPipeTileEntity>> HEATPIPE = REGISTER.register(
             "heat_pipe", makeType(HeatPipeTileEntity::new, FHBlocks.heat_pipe)
     );
@@ -93,7 +93,7 @@ public class FHTileTypes {
     /*public static final RegistryObject<TileEntityType<SteamCoreTileEntity>> STEAM_CORE = REGISTER.register(
             "steam_core", makeType(SteamCoreTileEntity::new, FHBlocks.steam_core)
     );*/
-    public static final BlockEntityEntry<SteamCoreTileEntity> STEAM_CORE = REGISTRATE
+    public static final BlockEntityEntry<SteamCoreTileEntity> STEAM_CORE = FH_REGISTRATE
         .blockEntity("steam_core", SteamCoreTileEntity::new)
         .instance(() -> HorizontalHalfShaftInstance::new)
         .validBlocks(FHBlocks.steam_core)
