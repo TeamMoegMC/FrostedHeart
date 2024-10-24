@@ -17,4 +17,4 @@
  *
  */
 
-package com.teammoeg.frostedheart.world.civilization.orbit;
+package com.teammoeg.frostedheart.world.structures.refuge;

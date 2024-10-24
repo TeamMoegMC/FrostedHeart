@@ -165,7 +165,7 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
     // TODO: Check if the position is correct
     private void tickControls(IMultiblockContext<T2GeneratorState> ctx) {
         // Get origin position of the MB
-        BlockPos origin = FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel());
+        BlockPos origin = ctx.getLevel().getAbsoluteOrigin();
         // get the position of the redstone block from the relative position in MB
         BlockPos redstone = origin.offset(REDSTONE_OFFSET.posInMultiblock());
 

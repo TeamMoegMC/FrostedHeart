@@ -17,7 +17,17 @@
  *
  */
 
-package com.teammoeg.frostedheart.world.fauna.icefish;
+/**
+ * The package containing all the classes related to civilization, not nature.
+ *
+ * The package is divided by the main civilizations or forces in the world of TWR.
+ *
+ * Federation:
+ * are said to be in an expedition below the crust to seek the reason of the apocalypse.
+ * Nanites: The nano-robots created by the Empire that now completely fill the ecosystem of Earth.
+ * Refuge: The remnant of humanity that find their way to scavenge a living in the harsh winter.
+ * Symbiosis: The church that worships the nanites as gods and the only way to salvation.
+ *
+ */
 
-public class IcefishRenderer {
-}
+package com.teammoeg.frostedheart.world.structures;

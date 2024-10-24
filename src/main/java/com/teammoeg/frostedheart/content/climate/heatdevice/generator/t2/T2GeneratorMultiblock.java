@@ -23,6 +23,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks.Logic;
 import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.util.FHMultiblockHelper;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
@@ -46,6 +47,13 @@ public class T2GeneratorMultiblock extends FHBaseMultiblock {
     public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
         BlockPos master = this.getMasterFromOriginOffset();
         ChunkHeatData.removeTempAdjust(world, origin.offset(master));
+        FHMultiblockHelper.getBEHelper(world, origin.offset(master)).ifPresent(te -> {
+            T2GeneratorState state = (T2GeneratorState) te.getState();
+            if (state != null)
+                state.manager.invalidate();
+            else
+                FHMain.LOGGER.error("T2GeneratorState is null when disassembling T2GeneratorMultiblock.");
+        });
         super.disassemble(world, origin, mirrored, clickDirectionAtCreation);
     }
 

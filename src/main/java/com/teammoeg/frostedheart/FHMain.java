@@ -19,16 +19,6 @@
 
 package com.teammoeg.frostedheart;
 
-import java.io.File;
-
-import javax.annotation.Nonnull;
-
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.event.server.ServerAboutToStartEvent;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.google.gson.JsonParser;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.compat.CreateCompat;
@@ -39,50 +29,45 @@ import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.events.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
-import com.teammoeg.frostedheart.events.PlayerEvents;
 import com.teammoeg.frostedheart.loot.FHLoot;
 import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.constants.FHProps;
-import com.teammoeg.frostedheart.util.constants.VersionRemap;
 import com.teammoeg.frostedheart.util.creativeTab.TabType;
 import com.teammoeg.frostedheart.util.utility.BlackListPredicate;
 import com.teammoeg.frostedheart.util.version.FHRemote;
 import com.teammoeg.frostedheart.util.version.FHVersion;
 import com.teammoeg.frostedheart.world.FHBiomes;
-import com.teammoeg.frostedheart.world.FHFeatures;
-import com.teammoeg.frostedheart.world.FHStructures;
-
 import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.RegistrySupplier;
 import dev.ftb.mods.ftbteams.api.event.TeamEvent;
 import net.minecraft.advancements.critereon.ItemPredicate;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.item.Item;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameRules.IntegerValue;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.event.server.ServerAboutToStartEvent;
+import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.DeferredWorkQueue;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.MissingMappingsEvent;
-import net.minecraftforge.registries.RegistryObject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.File;
 
 @Mod(FHMain.MODID)
 public class FHMain {
@@ -139,36 +124,19 @@ public class FHMain {
         FHBiomes.BIOME_REGISTER.register(mod);
         FHAttributes.REGISTER.register(mod);
         FHEffects.EFFECTS.register(mod);
-        FHStructures.register(mod);
         FHLoot.LC_REGISTRY.register(mod);
         FHLoot.LM_REGISTRY.register(mod);
         TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
         TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
         TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);
         TeamEvent.OWNERSHIP_TRANSFERRED.register(FTBTeamsEvents::syncDataWhenTeamTransfer);
-//        FHStructures.STRUCTURE_DEFERRED_REGISTER.register(mod);
         ItemPredicate.register(new ResourceLocation(MODID, "blacklist"), BlackListPredicate::new);
-        //(FHRecipes::registerRecipeTypes);
-        JsonParser gs = new JsonParser();
-        // remove primal winter blocks not to temper rankine world
-        //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
-        //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
-        //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.PODZOL);
     }
 
     @SuppressWarnings("unused")
     private void enqueueIMC(final InterModEnqueueEvent event) {
         CuriosCompat.sendIMCS();
     }
-/*
-    private void missingMapping(MissingMappingsEvent miss) {
-        ResourceLocation hw = new ResourceLocation(MODID, "hot_water");
-        for (Mapping<Fluid> i : miss.getAllMappings()) {
-            if (i.key.equals(hw))
-                i.remap(RegistryUtils.getFluid(new ResourceLocation("thermopolium", "nail_soup")));
-        }
-    }
-*/
 
     public void modification(FMLLoadCompleteEvent event) {
         for (Item i : RegistryUtils.getItems()) {
@@ -214,24 +182,9 @@ public class FHMain {
         MinecraftForge.EVENT_BUS.addListener(this::serverStop);
         MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
 
-       // MinecraftForge.EVENT_BUS.addGenericListener(Fluid.class, this::missingMapping);
-       // MinecraftForge.EVENT_BUS.addGenericListener(Item.class, this::missingMappingR);
-      //  MinecraftForge.EVENT_BUS.addGenericListener(Block.class, this::missingMappingB);
-        /*if (ModList.get().isLoaded("projecte")) {
-            MinecraftForge.EVENT_BUS.addListener(PlayerEvents::onRC);
-        } else
-            try {
-                Class.forName("moze_intel.projecte.PECore");
-                MinecraftForge.EVENT_BUS.addListener(PlayerEvents::onRC);
-            } catch (Throwable ignored) {
-            }*/
-        //CrashReportExtender.registerCrashCallable(new ClimateCrash());
         FHNetwork.register();
         FHCapabilities.setup();
         FHBiomes.biomes();
-        FHStructures.registerStructureGenerate();
-        FHStructures.setupStructures();
-        FHFeatures.initFeatures();
         SurroundingTemperatureSimulator.init();
         // modify default value
         GameRules.GAME_RULE_TYPES.put(GameRules.RULE_SPAWN_RADIUS, IntegerValue.create(0));

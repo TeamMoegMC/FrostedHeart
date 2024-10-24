@@ -17,7 +17,4 @@
  *
  */
 
-package com.teammoeg.frostedheart.world.fauna.icefish;
-
-public class IcefishBucket {
-}
+package com.teammoeg.frostedheart.world.structures.symbiosis;
