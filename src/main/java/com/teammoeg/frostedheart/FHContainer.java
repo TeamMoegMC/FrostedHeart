@@ -63,8 +63,8 @@ public class FHContainer {
 	public static final RegistryObject<MenuType<TradeContainer>> TRADE_GUI = CONTAINERS.register("trade", () -> IForgeMenuType.create(TradeContainer::new));
 	public static final RegistryObject<MenuType<HeatStatContainer>> HEAT_STAT = CONTAINERS.register("heat_stat", () -> IForgeMenuType.create(HeatStatContainer::new));
 
-	public static final MultiblockContainer<T1GeneratorState, AbstractContainerMenu> GENERATOR_T1 = registerMultiblock("generator",T1GeneratorContainer::new,T1GeneratorContainer::new);
-	public static final MultiblockContainer<T2GeneratorState, AbstractContainerMenu> GENERATOR_T2 = registerMultiblock("generator_t2", T2GeneratorContainer::new, T2GeneratorContainer::new);
+	public static final MultiblockContainer<T1GeneratorState, T1GeneratorContainer> GENERATOR_T1 = registerMultiblock("generator",T1GeneratorContainer::new,T1GeneratorContainer::new);
+	public static final MultiblockContainer<T2GeneratorState, T2GeneratorContainer> GENERATOR_T2 = registerMultiblock("generator_t2", T2GeneratorContainer::new, T2GeneratorContainer::new);
 
 	public static final RegistryObject<MenuType<RelicChestContainer>> RELIC_CHEST = register(RelicChestTileEntity.class, ("relic_chest"), RelicChestContainer::new);
 	public static final RegistryObject<MenuType<DrawDeskContainer>> DRAW_DESK = register(DrawingDeskTileEntity.class, ("draw_desk"), DrawDeskContainer::new);

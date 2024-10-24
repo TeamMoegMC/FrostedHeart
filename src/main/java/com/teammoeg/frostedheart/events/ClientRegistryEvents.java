@@ -79,6 +79,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent.AddLayers;
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterLayerDefinitions;
+import net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
@@ -111,13 +112,13 @@ public class ClientRegistryEvents {
         {
             ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
 
-            builder.addSpecialElement(new SpecialElementData("generator", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR)));
+            builder.addSpecialElement(new SpecialElementData("generator", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.Multiblock.GENERATOR_T1)));
             builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator"));
             man.addEntry(CATEGORY, builder.create(), 0);
         }
         {
             ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
-            builder.addSpecialElement(new SpecialElementData("generator_2", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR_T2)));
+            builder.addSpecialElement(new SpecialElementData("generator_2", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.Multiblock.GENERATOR_T2)));
             builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator_t2"));
             man.addEntry(CATEGORY, builder.create(), 1);
         }
@@ -149,31 +150,34 @@ public class ClientRegistryEvents {
 			ev.register(new ResourceLocation(rl.getNamespace(),rl.getPath().substring(0,rl.getPath().lastIndexOf(".")).substring(7)));
 		});
 	}
+	@SubscribeEvent
+	public static void registerBERenders(RegisterRenderers event){
+        event.registerBlockEntityRenderer(FHMultiblocks.Logic.GENERATOR_T1.masterBE().get(), T1GeneratorRenderer::new);
+        event.registerBlockEntityRenderer(FHMultiblocks.Logic.GENERATOR_T2.masterBE().get(), T2GeneratorRenderer::new);
+        event.registerBlockEntityRenderer(FHTileTypes.MECH_CALC.get(), MechCalcRenderer::new);
+	}
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
         // Register screens
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen<T1GeneratorState, T1GeneratorLogic>::new);
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), GeneratorScreen<T2GeneratorState, T2GeneratorLogic>::new);
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "relic_chest"), RelicChestScreen::new);
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "draw_desk"), FTBScreenFactory(DrawDeskScreen::new));
+    	MenuScreens.register(FHContainer.GENERATOR_T1.getType(), GeneratorScreen<T1GeneratorState, T1GeneratorLogic>::new);
+    	MenuScreens.register(FHContainer.GENERATOR_T2.getType(), GeneratorScreen<T2GeneratorState, T2GeneratorLogic>::new);
+    	MenuScreens.register(FHContainer.RELIC_CHEST.get(), RelicChestScreen::new);
+    	registerFTBScreen(FHContainer.DRAW_DESK.get(), DrawDeskScreen::new);
         registerFTBScreen(FHContainer.TRADE_GUI.get(), TradeScreen::new);
         registerFTBScreen(FHContainer.HEAT_STAT.get(), HeatStatScreen::new);
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "sauna_vent"), SaunaScreen::new);
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "incubator"), IncubatorT1Screen::new);
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "heat_incubator"), IncubatorT2Screen::new);
+        MenuScreens.register(FHContainer.SAUNA.get(), SaunaScreen::new);
+        MenuScreens.register(FHContainer.INCUBATOR_T1.get(), IncubatorT1Screen::new);
+        MenuScreens.register(FHContainer.INCUBATOR_T2.get(), IncubatorT2Screen::new);
 
         // Register translucent render type
         //TODO: specify in model files
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.rye_block.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.white_turnip_block.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.wolfberry_bush_block.get(), RenderType.cutout());
-//        ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.generator, RenderType.cutout());
-//        ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.generator_t2, RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.drawing_desk.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.charger.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.mech_calc.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.steam_core.get(), RenderType.cutout());
-//        ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.radiator, RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.debug_heater.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.relic_chest.get(), RenderType.cutout());
 //        ItemBlockRenderTypes.setRenderLayer(FHBlocks.fluorite_ore.get(), RenderType.cutout());
@@ -187,9 +191,7 @@ public class ClientRegistryEvents {
         RenderTypeLookup.setRenderLayer(FHBlocks.pebble_block, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.odd_mark, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.wooden_box, RenderType.getCutout());*/
-        BlockEntityRenderers.register(FHTileTypes.GENERATOR_T1.get(), T1GeneratorRenderer::new);
-        BlockEntityRenderers.register(FHTileTypes.GENERATOR_T2.get(), T2GeneratorRenderer::new);
-        BlockEntityRenderers.register(FHTileTypes.MECH_CALC.get(), MechCalcRenderer::new);
+
         
         // Register layers
 

@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
-import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
 import com.teammoeg.frostedheart.base.multiblock.components.OwnerState;
 
 import net.minecraft.nbt.CompoundTag;

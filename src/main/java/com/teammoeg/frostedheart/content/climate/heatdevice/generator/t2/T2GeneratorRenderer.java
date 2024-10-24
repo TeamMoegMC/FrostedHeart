@@ -35,6 +35,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
@@ -42,7 +43,7 @@ import net.minecraft.core.BlockPos;
 public class T2GeneratorRenderer implements BlockEntityRenderer<MultiblockBlockEntityMaster<T2GeneratorState>> {
     public static DynamicBlockModelReference FUEL;
 
-    public T2GeneratorRenderer(BlockEntityRenderDispatcher rendererDispatcherIn) {
+    public T2GeneratorRenderer(BlockEntityRendererProvider.Context rendererDispatcherIn) {
     }
 
     @Override
