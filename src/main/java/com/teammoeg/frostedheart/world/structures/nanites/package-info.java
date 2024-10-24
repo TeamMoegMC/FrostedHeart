@@ -17,4 +17,4 @@
  *
  */
 
-package com.teammoeg.frostedheart.world.civilization.refuge;
+package com.teammoeg.frostedheart.world.structures.nanites;

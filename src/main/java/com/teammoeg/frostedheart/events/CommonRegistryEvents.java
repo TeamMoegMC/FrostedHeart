@@ -19,58 +19,17 @@
 
 package com.teammoeg.frostedheart.events;
 
-import javax.annotation.Nonnull;
-
 import com.teammoeg.frostedheart.FHAttributes;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.loot.AddLootModifier;
-import com.teammoeg.frostedheart.loot.ApplyDamageLootModifier;
-import com.teammoeg.frostedheart.loot.BlizzardDamageCondition;
-import com.teammoeg.frostedheart.loot.DechantLootModifier;
-import com.teammoeg.frostedheart.loot.ModLootCondition;
-import com.teammoeg.frostedheart.loot.RemoveLootModifier;
-import com.teammoeg.frostedheart.loot.ReplaceLootModifier;
-import com.teammoeg.frostedheart.loot.TagLootCondition;
-import com.teammoeg.frostedheart.loot.TemperatureLootCondition;
-import com.teammoeg.frostedheart.loot.TreasureLootCondition;
-import com.teammoeg.frostedheart.world.FHFeatures;
-import com.teammoeg.frostedheart.world.FHStructureFeatures;
-import com.teammoeg.frostedheart.world.FHStructures;
 
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.core.Registry;
-import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.IForgeRegistry;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class CommonRegistryEvents {
 
-   /* @SuppressWarnings("rawtypes")
-    @SubscribeEvent
-    public static void onDimensionRegistry(RegistryEvent.Register event) {
-        //FHDimensions.register();
-
-    }*/
-/*
-    @SubscribeEvent
-    public static void onFeatureRegistry(RegistryEvent.Register<Feature<?>> event) {
-        event.getRegistry().registerAll(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"));
-        event.getRegistry().register(FHFeatures.SPACECRAFT.setRegistryName(FHMain.MODID, "spacecraft"));
-        event.getRegistry().register(FHFeatures.FLOWER_COVERED_DEPOSIT_FEATURE.setRegistryName("flower_covered_deposit"));
-    }
-
-    @SubscribeEvent
-    public static void onStructureRegistry(RegistryEvent.Register<StructureFeature<?>> event) {
-        event.getRegistry().registerAll(FHStructures.OBSERVATORY.setRegistryName(FHMain.MODID, "observatory"));
-
-        FHStructureFeatures.registerStructureFeatures();
-    }
-*/
     @SubscribeEvent
     public static void onEntityAttributeModificationEvent(EntityAttributeModificationEvent event) {
 		event.add(EntityType.PLAYER, FHAttributes.ENV_TEMPERATURE.get());

@@ -17,4 +17,4 @@
  *
  */
 
-package com.teammoeg.frostedheart.world.civilization.federation;
+package com.teammoeg.frostedheart.world.structures.federation;

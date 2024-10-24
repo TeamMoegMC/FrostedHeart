@@ -167,13 +167,13 @@ public class ClientRegistryEvents {
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.rye_block.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.white_turnip_block.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.wolfberry_bush_block.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.generator, RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.generator_t2, RenderType.cutout());
+//        ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.generator, RenderType.cutout());
+//        ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.generator_t2, RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.drawing_desk.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.charger.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.mech_calc.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.steam_core.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.radiator, RenderType.cutout());
+//        ItemBlockRenderTypes.setRenderLayer(FHMultiblocks.radiator, RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.debug_heater.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(FHBlocks.relic_chest.get(), RenderType.cutout());
 //        ItemBlockRenderTypes.setRenderLayer(FHBlocks.fluorite_ore.get(), RenderType.cutout());
