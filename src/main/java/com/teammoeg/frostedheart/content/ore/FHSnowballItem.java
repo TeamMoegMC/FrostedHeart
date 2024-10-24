@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -17,20 +17,21 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.decoration;
+package com.teammoeg.frostedheart.content.ore;
 
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
+import net.minecraft.world.item.SnowballItem;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.Level;
+public class FHSnowballItem extends SnowballItem implements ICreativeModeTabItem {
+    public FHSnowballItem(Properties pProperties) {
+        super(pProperties);
+    }
 
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
-
-public class FHOreBlock extends FHBaseBlock {
-    public FHOreBlock(Properties blockProps) {
-        super(blockProps);
+    @Override
+    public void fillItemCategory(CreativeTabItemHelper helper) {
+        if(helper.isType(FHMain.itemGroup))
+            helper.accept(this);
     }
 }

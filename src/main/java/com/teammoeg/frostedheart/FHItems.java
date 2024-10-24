@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.base.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.foods.CannedFoodItem;
 import com.teammoeg.frostedheart.content.foods.FHSoupItem;
+import com.teammoeg.frostedheart.content.ore.FHSnowballItem;
 import com.teammoeg.frostedheart.content.research.blocks.FHBasePen;
 import com.teammoeg.frostedheart.content.research.blocks.FHReusablePen;
 import com.teammoeg.frostedheart.content.research.blocks.RubbingTool;
@@ -52,9 +53,17 @@ import net.minecraft.world.item.ArmorItem.Type;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SnowballItem;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DropExperienceBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import static net.minecraft.world.level.block.Blocks.*;
+import static net.minecraft.world.level.block.Blocks.COPPER_ORE;
 
 /**
  * All items.
@@ -170,4 +179,32 @@ public class FHItems {
         }
     }
 
+    // ADDITIONAL SOIL DROPS
+    public static RegistryObject<Item> PEAT = register("peat", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> KAOLIN = register("kaolin", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> BAUXITE = register("bauxite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> ROTTEN_WOOD = register("rotten_wood", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_KAOLIN = register("crushed_kaolin", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_BAUXITE = register("crushed_bauxite", n -> new FHBaseItem(createProps()));
+
+    // CONDENSED BALLS
+    public static RegistryObject<Item> CONDENSED_BALL_IRON_ORE = register("condensed_ball_iron_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_COPPER_ORE = register("condensed_ball_copper_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_GOLD_ORE = register("condensed_ball_gold_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_ZINC_ORE = register("condensed_ball_zinc_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_SILVER_ORE = register("condensed_ball_silver_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_CASSITERITE_ORE = register("condensed_ball_cassiterite_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_PYRITE_ORE = register("condensed_ball_pyrite_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_PENTLANDITE_ORE = register("condensed_ball_pentlandite_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_GALENA_ORE = register("condensed_ball_galena_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+
+    // CRUSHED ORES
+    public static RegistryObject<Item> CRUSHED_SILVER_ORE = register("crushed_silver_ore", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_CASSITERITE_ORE = register("crushed_cassiterite_ore", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_PYRITE_ORE = register("crushed_pyrite_ore", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_PENTLANDITE_ORE = register("crushed_pentlandite_ore", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_GALENA_ORE = register("crushed_galena_ore", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_HALITE_ORE = register("crushed_halite_ore", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_POTASH_ORE = register("crushed_potash_ore", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_MAGNESITE_ORE = register("crushed_magnesite_ore", n -> new FHBaseItem(createProps()));
 }
