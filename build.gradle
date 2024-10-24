@@ -1,27 +1,15 @@
-buildscript {
-    repositories {
 
-        maven { url = 'https://maven.neoforged.net' }
-        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
-        maven { url = 'https://maven.parchmentmc.org' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath group: 'net.neoforged.gradle', name: 'ForgeGradle', version: "${forgegradle_version}", changing: true
-        classpath group: 'org.spongepowered', name: 'mixingradle', version: "${mixingradle_version}"
-        classpath group: 'org.parchmentmc', name: 'librarian', version: "${librarian_version}"
-    }
-}
 
 plugins {
-    id 'com.matthewprenger.cursegradle' version '1.4.0'
+	id 'com.matthewprenger.cursegradle' version '1.4.0'
+    id 'net.neoforged.gradle' version "${forgegradle_version}"
+    id 'org.spongepowered.mixin' version "${mixingradle_version}"
+    id 'org.parchmentmc.librarian.forgegradle' version "${librarian_version}"
+    id 'org.jetbrains.gradle.plugin.idea-ext' version '1.1.6'
+    id 'maven-publish'
+    id 'eclipse'
+    id 'idea'
 }
-
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'org.spongepowered.mixin'
-apply plugin: 'org.parchmentmc.librarian.forgegradle'
-apply plugin: 'maven-publish'
-apply plugin: 'idea'
 //apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
 //apply from: 'https://raw.githubusercontent.com/SizableShrimp/ForgeUpdatesRemapper/main/remapper.gradle'
 
