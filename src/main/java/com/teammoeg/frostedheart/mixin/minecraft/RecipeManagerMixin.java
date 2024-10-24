@@ -46,14 +46,18 @@ public abstract class RecipeManagerMixin {
      * @reason Lock unresearched recipes
      */
     @Overwrite
-    public <C extends Container, T extends Recipe<C>> Optional<T> getRecipe(RecipeType<T> recipeTypeIn,
-                                                                              C inventoryIn, Level worldIn) {
+    public <C extends Container, T extends Recipe<C>> Optional<T> getRecipeFor(RecipeType<T> recipeTypeIn, C pInventory, Level pLevel) {
         if (recipeTypeIn == RecipeType.CRAFTING && ForgeHooks.getCraftingPlayer() != null) {
-            return this.getRecipes(recipeTypeIn).values().stream().flatMap((recipe) -> Util.toStream(recipeTypeIn.tryMatch(recipe, worldIn, inventoryIn))).filter(t -> ResearchListeners.canUseRecipe(ForgeHooks.getCraftingPlayer(), t)).findFirst();
+        	
+            return this.byType(recipeTypeIn).values().stream().filter((p_220266_) -> {
+                return p_220266_.matches(pInventory, pLevel);
+            }).filter(t -> ResearchListeners.canUseRecipe(ForgeHooks.getCraftingPlayer(), t)).findFirst();
         }
-        return this.getRecipes(recipeTypeIn).values().stream().flatMap((recipe) -> Util.toStream(recipeTypeIn.tryMatch(recipe, worldIn, inventoryIn))).findFirst();
+        return this.byType(recipeTypeIn).values().stream().filter((p_220266_) -> {
+            return p_220266_.matches(pInventory, pLevel);
+        }).findFirst();
     }
 
     @Shadow
-    abstract <C extends Container, T extends Recipe<C>> Map<ResourceLocation, Recipe<C>> getRecipes(RecipeType<T> recipeTypeIn);
+    abstract <C extends Container, T extends Recipe<C>> Map<ResourceLocation, T> byType(RecipeType<T> pRecipeType);
 }

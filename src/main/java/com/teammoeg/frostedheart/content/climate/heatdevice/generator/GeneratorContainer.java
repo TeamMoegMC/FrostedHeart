@@ -56,11 +56,12 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
     public GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<R> ctx) {
         super(type, id, inventoryPlayer.player, 2);
         R state = ctx.mbContext().getState();
+        BlockPos master=FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel());
         if (state.getOwner() == null) {
             state.setOwner(FHTeamDataManager.get(inventoryPlayer.player).getId());
-            state.regist(inventoryPlayer.player.level(), FHMultiblockHelper.getMasterPos(ctx.mbContext().getLevel()));
+            state.regist(inventoryPlayer.player.level(),master);
         }
-        Optional<GeneratorData> optdata = state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel()));
+        Optional<GeneratorData> optdata = state.getData(master);
         optdata.ifPresent(data -> {
             process.bind(() -> data.process);
             processMax.bind(() -> data.processMax);

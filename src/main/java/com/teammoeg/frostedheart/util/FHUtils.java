@@ -64,6 +64,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
@@ -90,13 +91,13 @@ public class FHUtils {
         }
     }
 
-    public static boolean canBigTreeGenerate(Level w, BlockPos p, Random r) {
+    public static boolean canBigTreeGenerate(Level w, BlockPos p, RandomSource r) {
 
         return canTreeGenerate(w, p, r, 7);
 
     }
 
-    public static void canBigTreeGenerate(Level w, BlockPos p, Random r, CallbackInfoReturnable<Boolean> cr) {
+    public static void canBigTreeGenerate(Level w, BlockPos p, RandomSource r, CallbackInfoReturnable<Boolean> cr) {
         if (!canBigTreeGenerate(w, p, r))
             cr.setReturnValue(false);
     }
@@ -116,7 +117,7 @@ public class FHUtils {
         return !(temp > 300 + WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX);
     }
 
-    public static boolean canTreeGenerate(Level w, BlockPos p, Random r, int chance) {
+    public static boolean canTreeGenerate(Level w, BlockPos p, RandomSource r, int chance) {
         return r.nextInt(chance) == 0;
 
     }

@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.util.mixin;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
@@ -52,7 +53,12 @@ public interface IOwnerTile {
             }
         }
     }
-
+    static Optional<UUID> tryGetOwner(BlockEntity te) {
+        if (te instanceof IOwnerTile ote) {
+            return Optional.ofNullable(ote.getStoredOwner());
+        }
+        return Optional.empty();
+    }
     UUID getStoredOwner();
 
     void setStoredOwner(UUID id) ;

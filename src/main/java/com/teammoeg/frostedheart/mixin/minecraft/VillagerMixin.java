@@ -58,18 +58,18 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
     @Shadow
     protected abstract void displayMerchantGui(Player pe);
 
-    @Inject(at = @At("HEAD"), method = "readAdditional")
+    @Inject(at = @At("HEAD"), method = "readAdditionalSaveData")
     public void fh$readAdditional(CompoundTag compound, CallbackInfo cbi) {
         fh$data.deserialize(compound.getCompound("fhdata"));
     }
 
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;resetCustomer()V", ordinal = 0), method = "updateAITasks", cancellable = true, require = 1)
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;stopTrading()V", ordinal = 0), method = "serverAiStep", cancellable = true, require = 1)
     public void fh$updateTask(CallbackInfo cbi) {
         super.customServerAiStep();
         cbi.cancel();
     }
 
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    @Inject(at = @At("HEAD"), method = "addAdditionalSaveData")
     public void fh$writeAdditional(CompoundTag compound, CallbackInfo cbi) {
         CompoundTag cnbt = new CompoundTag();
         fh$data.serialize(cnbt);
@@ -87,7 +87,7 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
                 && !this.isSleeping() && !playerIn.isSecondaryUseActive()) {
             if (this.isBaby()) {
                 this.shakeHead();
-                return InteractionResult.sidedSuccess(this.level.isClientSide);
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
 			/*boolean flag = this.getOffers().isEmpty();
 			if (hand == Hand.MAIN_HAND) {
@@ -100,7 +100,7 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
 			/*if (flag) {
 				return ActionResultType.sidedSuccess(this.world.isRemote);
 			}*/
-            if (!this.level.isClientSide) {
+            if (!this.level().isClientSide) {
                 //return fh$data.trade(playerIn);
             	/*fh$data.update((ServerWorld) super.world, playerIn);
             	RelationList list=fh$data.getRelationShip(playerIn);
@@ -120,7 +120,7 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
 				this.displayMerchantGui(playerIn);
 			}*/
 
-            return InteractionResult.sidedSuccess(this.level.isClientSide);
+            return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
         return super.mobInteract(playerIn, hand);
     }
