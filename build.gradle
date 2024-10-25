@@ -28,17 +28,17 @@ sourceSets {
             ]
         }
     }
-//	datagen {
-//        compileClasspath += main.compileClasspath
-//        runtimeClasspath += main.runtimeClasspath
-//        compileClasspath += main.output
-//        runtimeClasspath += main.output
-//        resources {
-//            srcDirs = [
-//                    "$rootDir/src/datagen/resources",
-//            ]
-//        }
-//    }
+	datagen {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+        compileClasspath += main.output
+        runtimeClasspath += main.output
+        resources {
+            srcDirs = [
+                    "$rootDir/src/datagen/resources",
+            ]
+        }
+    }
 }
 minecraft {
     mappings channel: 'parchment', version: "${parchment_version}-${minecraft_version}"
@@ -102,7 +102,7 @@ minecraft {
             mods {
                 frostedheart {
 					source sourceSets.main
-//                    source sourceSets.datagen
+                    source sourceSets.datagen
                 }
             }
         }

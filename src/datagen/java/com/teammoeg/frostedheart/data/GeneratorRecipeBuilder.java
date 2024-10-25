@@ -22,7 +22,7 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorR
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.api.crafting.builders.IEFinishedRecipe;
-import net.minecraft.tags.Tag;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -39,7 +39,7 @@ public class GeneratorRecipeBuilder extends IEFinishedRecipe<GeneratorRecipeBuil
         return new GeneratorRecipeBuilder().addResult(result);
     }
 
-    public static GeneratorRecipeBuilder builder(Tag<Item> result, int count) {
+    public static GeneratorRecipeBuilder builder(TagKey<Item> result, int count) {
         return new GeneratorRecipeBuilder().addResult(new IngredientWithSize(result, count));
     }
 }

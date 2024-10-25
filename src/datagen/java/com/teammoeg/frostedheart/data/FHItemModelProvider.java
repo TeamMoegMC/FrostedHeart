@@ -25,15 +25,17 @@ import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.data.DataGenerator;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraftforge.client.model.generators.ItemModelBuilder;
 import net.minecraftforge.client.model.generators.ItemModelProvider;
 import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHItemModelProvider extends ItemModelProvider {
 
-	public FHItemModelProvider(DataGenerator generator,  ExistingFileHelper existingFileHelper) {
-		super(generator,FHMain.MODID, existingFileHelper);
+	public FHItemModelProvider(DataGenerator generator, String modid, ExistingFileHelper existingFileHelper) {
+		super(generator.getPackOutput(), modid, existingFileHelper);
 	}
 	
 	@Override
@@ -42,6 +44,22 @@ public class FHItemModelProvider extends ItemModelProvider {
 			texture(s+"_thermos","flask_i/insulated_flask_i_pouch_"+s);
 			texture(s+"_advanced_thermos","flask_ii/insulated_flask_ii_pouch_"+s);
 		}
+	}
+
+	public ItemModelBuilder itemModel(Item item, String name) {
+		return super.withExistingParent(ForgeRegistries.ITEMS.getKey(item).getPath(), new ResourceLocation(FHMain.MODID, "block/" + name));
+	}
+
+	public ItemModelBuilder simpleTexture(String name, String par) {
+		return super.singleTexture(name, new ResourceLocation("minecraft", "item/generated"), "layer0",
+				new ResourceLocation(FHMain.MODID, "item/" + par + name));
+	}
+
+	public ItemModelBuilder texture(String name) {
+		return texture(name, name);
+	}
+	public ItemModelBuilder texture(Item name, String par) {
+		return texture(ForgeRegistries.ITEMS.getKey(name).getPath(),par);
 	}
 	public ItemModelBuilder texture(String name, String par) {
 		return super.singleTexture(name, new ResourceLocation("minecraft", "item/generated"), "layer0",
