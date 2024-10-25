@@ -80,15 +80,16 @@ public class FHRecipeProvider extends RecipeProvider {
 							else
 								ps.println(item+","+f.getNutrition());
 						}
-						DietValueBuilder dvb=new DietValueBuilder(id,item);
-						for(int i=0;i<6;i++) {
-							float f=Float.parseFloat(parts[i+2])*10f;
-							if(i>=4)
-								f*=1.5;
-							if(f!=0)
-								dvb.addGroup(i,f);
-						}
-						out.accept(dvb);
+						// TODO: Change to FH
+//						DietValueBuilder dvb=new DietValueBuilder(id,item);
+//						for(int i=0;i<6;i++) {
+//							float f=Float.parseFloat(parts[i+2])*10f;
+//							if(i>=4)
+//								f*=1.5;
+//							if(f!=0)
+//								dvb.addGroup(i,f);
+//						}
+//						out.accept(dvb);
 					}
 				}
 			}

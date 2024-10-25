@@ -57,8 +57,8 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 	private static final List<Vec3i> CUBE_TWO = BlockPos.betweenClosedStream(0, 0, -1, 1, 1, 0).map(BlockPos::immutable)
 			.collect(Collectors.toList());
 
-	public FHMultiblockStatesProvider(DataGenerator gen, ExistingFileHelper exFileHelper) {
-		super(gen, exFileHelper);
+	public FHMultiblockStatesProvider(DataGenerator gen, String modid, ExistingFileHelper exFileHelper) {
+		super(gen, modid, exFileHelper);
 	}
 
 	protected void registerStatesAndModels() {
