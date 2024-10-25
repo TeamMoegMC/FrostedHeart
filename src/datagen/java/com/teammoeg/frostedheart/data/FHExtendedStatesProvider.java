@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import blusunrize.immersiveengineering.data.models.NongeneratedModels;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -170,7 +171,7 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
         assertModelExists(model);
         BlockModelBuilder ret = models().withExistingParent(name, mcLoc("block"))
                 .customLoader(ObjModelBuilder::begin)
-                .detectCullableFaces(false)
+                .automaticCulling(false)
                 .modelLocation(addModelsPrefix(model))
                 .flipV(true)
                 .end();
@@ -188,7 +189,7 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
     {
         BlockModelBuilder result = models().withExistingParent(name, mcLoc("block"))
                 .customLoader(SplitModelBuilder::begin)
-                .innerModel(model)
+                .innerModel((NongeneratedModels.NongeneratedModel) model)
                 .parts(parts)
                 .dynamic(dynamic)
                 .end();
@@ -250,7 +251,7 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
         return models().withExistingParent(name, mcLoc("block"))
                 .customLoader(IEOBJBuilder::begin)
                 .modelLocation(addModelsPrefix(model))
-                .flipV(true)
+                .dynamic(true) // TODO: Was flipV, is this correct?
                 .end()
                 .texture("particle", particle);
     }
