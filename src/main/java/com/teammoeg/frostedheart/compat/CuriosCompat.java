@@ -63,8 +63,8 @@ public class CuriosCompat {
     	
         return () -> CuriosApi.getCuriosInventory(el).resolve().map(o->o.getCurios().entrySet().stream().flatMap(t->IntStream.range(0, t.getValue().getSlots()).mapToObj(i->Pair.of(CuriosApi.getSlot(t.getKey(),el.level()).get(),t.getValue().getStacks().getStackInSlot(i)))).iterator()).orElseGet(EmptyIterator::new);
     }
-    public static ItemStack getCuriosIfVisible(LivingEntity living, SlotTypePreset slot, Predicate<ItemStack> predicate) {
-        LazyOptional<ICuriosItemHandler> optional = CuriosApi.getCuriosHelper().getCuriosHandler(living);
+    public static ItemStack getCuriosIfVisible(LivingEntity living, ISlotType slot, Predicate<ItemStack> predicate) {
+        LazyOptional<ICuriosItemHandler> optional = CuriosApi.getCuriosInventory(living);
         return optional.resolve()
                 .flatMap(handler -> handler.getStacksHandler(slot.getIdentifier()))
                 .filter(ICurioStacksHandler::isVisible)
@@ -77,10 +77,6 @@ public class CuriosCompat {
                         }
                     return ItemStack.EMPTY;
                 }).orElse(ItemStack.EMPTY);
-    }
-
-    public static ItemStack getHeaterVest(LivingEntity living) {
-        return getCuriosIfVisible(living, SlotTypePreset.BACK, stack -> stack.getItem() instanceof HeaterVestItem);
     }
 
     public static void sendIMCS() {
