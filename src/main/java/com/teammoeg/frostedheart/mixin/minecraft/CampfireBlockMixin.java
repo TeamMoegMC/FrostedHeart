@@ -142,8 +142,8 @@ public abstract class CampfireBlockMixin extends BaseEntityBlock {
         return InteractionResult.PASS;
     }
 
-    @Inject(at = @At("HEAD"), method = "stepOn")
-    public void stepOn(Level worldIn, BlockPos pos, BlockState state, Entity entityIn, CallbackInfo callbackInfo) {
+    @Override
+    public void stepOn(Level worldIn, BlockPos pos, BlockState state, Entity entityIn) {
         if (entityIn instanceof ItemEntity) {
             ItemEntity item = (ItemEntity) entityIn;
             int rawBurnTime = ForgeHooks.getBurnTime(item.getItem(),RecipeType.CAMPFIRE_COOKING);

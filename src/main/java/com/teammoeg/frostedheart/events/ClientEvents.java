@@ -343,8 +343,9 @@ public class ClientEvents {
                     FrostedHud.renderHotbar(stack, anchorX, anchorY, mc, renderViewPlayer, partialTicks);
                     FrostedHud.renderScenarioAct(stack, anchorX, anchorY, mc, renderViewPlayer);
                 }
-                if(ClientScene.INSTANCE.dialog instanceof HUDDialog) {
-                	((HUDDialog)ClientScene.INSTANCE.dialog).render(stack, 0, 0, partialTicks);
+                
+                if(ClientScene.INSTANCE!=null&&ClientScene.INSTANCE.dialog instanceof HUDDialog dialog) {
+                	dialog.render(stack, 0, 0, partialTicks);
                 }
                 event.setCanceled(true);
             }

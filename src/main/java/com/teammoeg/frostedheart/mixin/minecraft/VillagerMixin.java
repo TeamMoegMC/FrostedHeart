@@ -61,8 +61,8 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
         fh$data.deserialize(compound.getCompound("fhdata"));
     }
 
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/npc/Villager;stopTrading()V", ordinal = 0), method = "serverAiStep", cancellable = true, require = 1)
-    public void fh$updateTask(CallbackInfo cbi) {
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/npc/Villager;isTrading()Z", ordinal = 0), method = "customServerAiStep", cancellable = true, require = 1)
+    public void fh$customServerAiStep(CallbackInfo cbi) {
         super.customServerAiStep();
         cbi.cancel();
     }

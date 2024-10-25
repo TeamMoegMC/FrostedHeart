@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.common.util.NonNullSupplier;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class FHCapabilities {
@@ -152,6 +153,7 @@ public class FHCapabilities {
 		capabilities.add(cap);
 		return cap;
 	}
+	@SubscribeEvent
 	public static void onRegister(RegisterCapabilitiesEvent ev) {
 		
 		for(IFHCapability cap:capabilities) {
