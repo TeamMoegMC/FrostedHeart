@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.content.nutrition.capability;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.content.nutrition.network.PlayerNutritionSyncPacket;
 import com.teammoeg.frostedheart.content.nutrition.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
@@ -150,6 +151,8 @@ public class NutritionCapability implements NBTSerializable {
                 data.addVitamin(player, wRecipe.vitamin);
             });
         }
+        if(player instanceof ServerPlayer serverPlayer)
+            FHNetwork.sendPlayer(serverPlayer, new PlayerNutritionSyncPacket(player));
     }
 
 
@@ -158,6 +161,8 @@ public class NutritionCapability implements NBTSerializable {
         addCarbohydrate(player, carbohydrate);
         addProtein(player, protein);
         addVegetable(player, vegetable);
+        if(player instanceof ServerPlayer serverPlayer)
+            FHNetwork.sendPlayer(serverPlayer, new PlayerNutritionSyncPacket(this.vitamin, this.carbohydrate, this.protein, this.vegetable));
     }
 
     public void tick(Player player) {
@@ -168,6 +173,8 @@ public class NutritionCapability implements NBTSerializable {
         addCarbohydrate(player, -getCarbohydratePercentage() * consume);
         addProtein(player, -getProteinPercentage() * consume);
         addVegetable(player, -getVegetablePercentage() * consume);
+        if(player instanceof ServerPlayer serverPlayer)
+            FHNetwork.sendPlayer(serverPlayer, new PlayerNutritionSyncPacket(this.vitamin, this.carbohydrate, this.protein, this.vegetable));
     }
 
 
