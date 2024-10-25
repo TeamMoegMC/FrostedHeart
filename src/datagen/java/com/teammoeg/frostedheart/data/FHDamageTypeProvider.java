@@ -19,18 +19,26 @@
 
 package com.teammoeg.frostedheart.data;
 
+import java.util.function.Function;
+
 import com.teammoeg.frostedheart.FHDamageSources;
 import net.minecraft.data.worldgen.BootstapContext;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.damagesource.DamageEffects;
+import net.minecraft.world.damagesource.DamageScaling;
 import net.minecraft.world.damagesource.DamageType;
 
 public class FHDamageTypeProvider {
+	public static void bootstrap(BootstapContext<DamageType> pContext) {
+		register(pContext,FHDamageSources.BLIZZARD, t->new DamageType(t, DamageScaling.NEVER, 0.1f, DamageEffects.FREEZING));
+		register(pContext,FHDamageSources.HYPERTHERMIA, t->new DamageType(t, DamageScaling.NEVER, 0, DamageEffects.BURNING));
+		register(pContext,FHDamageSources.HYPOTHERMIA, t->new DamageType(t, DamageScaling.NEVER, 0.1F, DamageEffects.FREEZING));
+		register(pContext,FHDamageSources.HYPERTHERMIA_INSTANT, t->new DamageType(t, DamageScaling.ALWAYS, 0, DamageEffects.BURNING));
+		register(pContext,FHDamageSources.HYPOTHERMIA_INSTANT, t->new DamageType(t, DamageScaling.ALWAYS, 0.1F, DamageEffects.FREEZING));
+		register(pContext,FHDamageSources.RAD, t->new DamageType(t, DamageScaling.ALWAYS, 0.1F, DamageEffects.POKING));
+	}
+	private static <T> void register(BootstapContext<T> pContext,ResourceKey<T> rk,Function<String,T> supplier) {
+		pContext.register(rk, supplier.apply(rk.location().getPath()));
+	}
 
-    public static void bootstrap(BootstapContext<DamageType> ctx) {
-        ctx.register(FHDamageSources.BLIZZARD, new DamageType("frostedheart_blizzard", 0.0F));
-        ctx.register(FHDamageSources.RAD, new DamageType("frostedheart_radiation", 0.0F));
-        ctx.register(FHDamageSources.HYPERTHERMIA, new DamageType("frostedheart_hyperthermia", 0.0F));
-        ctx.register(FHDamageSources.HYPOTHERMIA, new DamageType("frostedheart_hypothermia", 0.0F));
-        ctx.register(FHDamageSources.HYPERTHERMIA_INSTANT, new DamageType("frostedheart_hyperthermia_instant", 0.0F));
-        ctx.register(FHDamageSources.HYPOTHERMIA_INSTANT, new DamageType("frostedheart_hypothermia_instant", 0.0F));
-    }
 }
