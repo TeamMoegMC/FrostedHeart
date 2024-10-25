@@ -75,7 +75,7 @@ public class FHRecipes {
         TradePolicy.SERIALIZER = RECIPE_SERIALIZERS.register("trade", TradePolicy.Serializer::new);
         ThirstRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("thirst", ThirstRecipe.Serializer::new);
         WaterLevelAndEffectRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("water_level_and_effect", WaterLevelAndEffectRecipe.Serializer::new);
-        NutritionRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("nutrition", NutritionRecipe.Serializer::new);
+        NutritionRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("diet_override", NutritionRecipe.Serializer::new);
         GeneratorRecipe.TYPE = createRecipeType("generator");
         GeneratorSteamRecipe.TYPE = createRecipeType("steam_generator");
         ChargerRecipe.TYPE = createRecipeType("charger");
@@ -87,7 +87,7 @@ public class FHRecipes {
         TradePolicy.TYPE = createRecipeType("trade");
         ThirstRecipe.TYPE = createRecipeType("thirst");
         WaterLevelAndEffectRecipe.TYPE = createRecipeType("water_level_and_effect");
-        NutritionRecipe.TYPE = createRecipeType("nutrition");
+        NutritionRecipe.TYPE = createRecipeType("diet_override");
     }
     public static <T extends Recipe<?>> RegistryObject<RecipeType<T>> createRecipeType(String name){
     	return RECIPE_TYPES.register(name,()->RecipeType.simple(new ResourceLocation(FHMain.MODID,name)));

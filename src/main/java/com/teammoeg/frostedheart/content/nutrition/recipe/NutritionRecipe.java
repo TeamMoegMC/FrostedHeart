@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.content.nutrition.recipe;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.CriterionTriggerInstance;
@@ -11,13 +10,13 @@ import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeBuilder;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 import javax.annotation.Nullable;
@@ -35,29 +34,15 @@ public class NutritionRecipe implements Recipe<Inventory> {
 
     public static class Builder implements RecipeBuilder{
         private float vitamin,carbohydrate,protein,vegetable;
-        protected Ingredient ingredient;
-        @Nullable
-        private String group;
+        protected Item item;
         private final Advancement.Builder advancement = Advancement.Builder.recipeAdvancement();
 
         public Builder() {
         }
 
-        public Builder item(Ingredient ingredient) {
-            this.ingredient = ingredient;
-            return this;
-        }
-
-        public Builder item(ItemStack itemStack) {
-            return item(Ingredient.of(itemStack));
-        }
-
         public Builder item(Item item) {
-            return item(Ingredient.of(item));
-        }
-
-        public Builder item(TagKey<Item> item) {
-            return item(Ingredient.of(item));
+            this.item = item;
+            return this;
         }
 
         public Builder nutrition(float vitamin, float carbohydrate, float protein, float vegetable) {
@@ -95,32 +80,29 @@ public class NutritionRecipe implements Recipe<Inventory> {
         }
 
         @Override
-        public Builder group(@Nullable String s) {
-            this.group = s;
-            return this;
+        public RecipeBuilder group(@Nullable String s) {
+            return null;
         }
 
         @Override
         public Item getResult() {
-            return ingredient.getItems()[0].getItem();
+            return item;
         }
 
         @Override
         public void save(Consumer<FinishedRecipe> pFinishedRecipeConsumer, ResourceLocation pRecipeId) {
             this.advancement.parent(ROOT_RECIPE_ADVANCEMENT).addCriterion("has_the_recipe", RecipeUnlockedTrigger.unlocked(pRecipeId)).rewards(net.minecraft.advancements.AdvancementRewards.Builder.recipe(pRecipeId)).requirements(RequirementsStrategy.OR);
-            pFinishedRecipeConsumer.accept(new Result(pRecipeId,vitamin,carbohydrate,protein,vegetable,ingredient, this.group == null ? "" : this.group, this.advancement, pRecipeId.withPrefix("recipes/nutrition/")));
+            pFinishedRecipeConsumer.accept(new Result(pRecipeId,vitamin,carbohydrate,protein,vegetable,item, this.advancement, pRecipeId.withPrefix("recipes/diet_value/")));
         }
         public static class Result implements FinishedRecipe {
 
             private float vitamin,carbohydrate,protein,vegetable;
-            protected Ingredient ingredient;
-            @Nullable
-            private String group;
+            protected Item item;
             private final ResourceLocation id;
             private final Advancement.Builder advancement;
             private final ResourceLocation advancementId;
 
-            public Result(ResourceLocation id,float vitamin,float carbohydrate,float protein,float vegetable, Ingredient ingredient,String group,Advancement.Builder advancement, ResourceLocation advancementId) {
+            public Result(ResourceLocation id,float vitamin,float carbohydrate,float protein,float vegetable, Item item,Advancement.Builder advancement, ResourceLocation advancementId) {
                 this.id = id;
                 this.advancement = advancement;
                 this.advancementId = advancementId;
@@ -128,18 +110,18 @@ public class NutritionRecipe implements Recipe<Inventory> {
                 this.carbohydrate = carbohydrate;
                 this.protein = protein;
                 this.vegetable = vegetable;
-                this.ingredient = ingredient;
-                this.group = group;
+                this.item = item;
             }
 
             @Override
             public void serializeRecipeData(JsonObject json) {
-                json.addProperty("group", this.group);
-                json.addProperty("vitamin", this.vitamin);
-                json.addProperty("carbohydrate", this.carbohydrate);
-                json.addProperty("protein", this.protein);
-                json.addProperty("vegetable", this.vegetable);
-                json.add("ingredient", this.ingredient.toJson());
+                JsonObject group = new JsonObject();
+                group.addProperty("vitamin", this.vitamin);
+                group.addProperty("carbohydrate", this.carbohydrate);
+                group.addProperty("protein", this.protein);
+                group.addProperty("vegetable", this.vegetable);
+                json.add("group", group);
+                json.addProperty("item", ForgeRegistries.ITEMS.getKey(this.item).toString());
             }
 
             @Override
@@ -173,20 +155,12 @@ public class NutritionRecipe implements Recipe<Inventory> {
         @Override
         public NutritionRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
             String group = GsonHelper.getAsString(json, "group", "");
-            //ingredient
-            Ingredient ingredient = Ingredient.EMPTY;
-            if (GsonHelper.isValidNode(json,"ingredient")) {
-                JsonElement jsonelement = GsonHelper.isArrayNode(json, "ingredient") ? GsonHelper.getAsJsonArray(json, "ingredient") : GsonHelper.getAsJsonObject(json, "ingredient");
-                ingredient = Ingredient.fromJson(jsonelement);
-            }
-
-            //private final float vitamin,carbohydrate,protein,vegetable;
+            Item item = ForgeRegistries.ITEMS.getValue(ResourceLocation.tryParse(GsonHelper.getAsString(json, "item", "")));
             float vitamin = GsonHelper.getAsFloat(json, "vitamin");
             float carbohydrate = GsonHelper.getAsFloat(json, "carbohydrate");
             float protein = GsonHelper.getAsFloat(json, "protein");
             float vegetable = GsonHelper.getAsFloat(json, "vegetable");
-
-            return new NutritionRecipe(recipeId, group,vitamin,carbohydrate,protein,vegetable, ingredient);
+            return new NutritionRecipe(recipeId, group,vitamin,carbohydrate,protein,vegetable,Ingredient.of(item));
         }
 
         @Override
