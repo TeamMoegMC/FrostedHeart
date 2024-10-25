@@ -125,7 +125,7 @@ repositories {
         url = "https://dvs1.progwml6.com/files/maven/"
         content {
             excludeGroup "curse.maven"
-            excludeGroup "net.minecraftforge"
+            excludeGroup "net.neoforged"
         }
     }
     maven {
@@ -155,15 +155,15 @@ repositories {
             excludeGroup "net.minecraftforge"
         }
     }
-    // Needed for JEI
-    maven {
+    // Needed for JEI -Not accesible now, comment to speed up compile
+    /*maven {
         name = "latvian maven"
         url = "https://maven.latmod.com/"
         content {
             excludeGroup "curse.maven"
             excludeGroup "net.minecraftforge"
         }
-    }
+    }*/
     // Needed for Curios API
     maven {
         name = "theillusivec4 maven"

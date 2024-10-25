@@ -18,30 +18,16 @@ public enum EquipmentCuriosSlotType {
 	   HEAD(false),
 	   QUICKBAR(false,9),
 	   INVENTORY(false,27),
-	   CURIOS_HEAD(true),
-	   CURIOS_NECKLACE(true),
-	   CURIOS_BACK(true),
-	   CURIOS_BODY(true), 
-	   CURIOS_BRACELET(true),
-	   CURIOS_HANDS(true), 
-	   CURIOS_RING(true,2),
-	   CURIOS_BELT(true),
-	   CURIOS_CHARM(true),
-	   CURIOS_CURIO(true),
-	   CURIOS_GENERIC(true),
 	   UNKNOWN(false);
-	private final boolean isCurios;
 	private final UUID[] slotUUID;
 	private final String[] key;
 	private EquipmentCuriosSlotType(boolean isCurios) {
-		this.isCurios=isCurios;
 		slotUUID=new UUID[1];
 		key=new String[1];
 		this.key[0]		 = FHMain.rl(this.name().toLowerCase()).toString();
 		this.slotUUID[0] = UUID.nameUUIDFromBytes(key[0].getBytes(StandardCharsets.ISO_8859_1));
 	}
 	private EquipmentCuriosSlotType(boolean isCurios,int num) {
-		this.isCurios = isCurios;
 		slotUUID=new UUID[num];
 		key=new String[num];
 		int ix=Mth.ceil(Math.log10(num));
@@ -64,18 +50,6 @@ public enum EquipmentCuriosSlotType {
 		case HEAD: return HEAD;
 		}
 		return UNKNOWN;
-	}
-	public static EquipmentCuriosSlotType fromCurios(String id) {
-		SlotTypePreset stp=SlotTypePreset.findPreset(id).orElse(null);
-		if(stp==null)return CURIOS_GENERIC;
-		String curiosType="CURIOS_"+stp.name();
-		EquipmentCuriosSlotType est=EquipmentCuriosSlotType.valueOf(curiosType);
-		if(est!=null)
-			return est;
-		return CURIOS_GENERIC;
-	}
-	public boolean isCurios() {
-		return isCurios;
 	}
 	public UUID getSlotUUID(int id) {
 		return slotUUID[id];

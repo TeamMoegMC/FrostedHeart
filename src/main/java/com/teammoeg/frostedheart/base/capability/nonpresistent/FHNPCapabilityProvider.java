@@ -1,21 +1,14 @@
 package com.teammoeg.frostedheart.base.capability.nonpresistent;
 
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.common.util.NonNullSupplier;
 
 public class FHNPCapabilityProvider<C> implements ICapabilityProvider{
 	LazyOptional<C> lazyCap;
 	FHNPCapability<C> capability;
-	public FHNPCapabilityProvider(FHNPCapability<C> capability) {
-		super();
-		this.capability = capability;
-		this.lazyCap=capability.createCapability();
-	}
 	public FHNPCapabilityProvider(FHNPCapability<C> capability,NonNullSupplier<C> factory) {
 		super();
 		this.capability = capability;
