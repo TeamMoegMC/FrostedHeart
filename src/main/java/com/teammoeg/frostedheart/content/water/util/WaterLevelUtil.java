@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.water.util;
 
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHEffects;
+import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.water.recipe.IThirstRecipe;
 import com.teammoeg.frostedheart.content.water.recipe.ThirstRecipe;
@@ -10,8 +10,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.util.FakePlayer;
@@ -61,7 +59,7 @@ public class WaterLevelUtil {
     }
 
     public static void drink(Player player, Fluid fluid) {
-        ItemStack stack = new ItemStack(Items.GLASS_BOTTLE);
+        ItemStack stack = new ItemStack(FHItems.fluid_bottle.get());
         IFluidHandler fluidHandler = FluidUtil.getFluidHandler(stack).orElse(null);
         fluidHandler.fill(new FluidStack(fluid, 250), IFluidHandler.FluidAction.EXECUTE);
         WaterLevelUtil.drink(player, stack);

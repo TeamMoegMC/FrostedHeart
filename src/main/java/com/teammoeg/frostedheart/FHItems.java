@@ -45,9 +45,11 @@ import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
 
+import com.teammoeg.frostedheart.content.water.item.FluidBottleItem;
+import com.teammoeg.frostedheart.content.water.item.IronBottleItem;
+import com.teammoeg.frostedheart.content.water.item.LeatherWaterBagItem;
 import com.teammoeg.frostedheart.content.water.item.WoodenCupItem;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.food.Foods;
 import net.minecraft.world.item.ArmorItem.Type;
@@ -170,12 +172,10 @@ public class FHItems {
     public static RegistryObject<Item> handheld_core = register("handheld_core",n->new FHBaseItem( createProps()));
     //public static RegistryObject<Item> body_lamp = register("heater_vest",n->new HeaterVestItem( createProps().maxStackSize(1).setNoRepair()));
 
-
-  public final static RegistryObject<Item> WOODEN_CUP = register("wooden_cup", (s) -> new WoodenCupItem(new Item.Properties(), 250) {
-   @Override
-   public ICapabilityProvider initCapabilities(@Nonnull ItemStack stack, @Nullable CompoundTag nbt) {
-    return super.initCapabilities(new ItemStack(WOODEN_CUP_DRINK.get()), nbt);
-   }
-  });
- public final static RegistryObject<Item> WOODEN_CUP_DRINK = register("wooden_cup_drink", (s) -> new WoodenCupItem(new Item.Properties().stacksTo(1), 250));
+    //WaterSource section
+    public final static RegistryObject<Item> fluid_bottle = register("fluid_bottle", (s) -> new FluidBottleItem(new Item.Properties().stacksTo(16)));
+    public final static RegistryObject<Item> wooden_cup = register("wooden_cup", (s) -> new WoodenCupItem(new Item.Properties(), 250) {@Override public ICapabilityProvider initCapabilities(@Nonnull ItemStack stack, @Nullable CompoundTag nbt) {return super.initCapabilities(new ItemStack(wooden_cup_drink.get()), nbt);}});
+    public final static RegistryObject<Item> wooden_cup_drink = register("wooden_cup_drink", (s) -> new WoodenCupItem(new Item.Properties().stacksTo(1), 250));
+    public final static RegistryObject<Item> LEATHER_WATER_BAG = register("leather_water_bag", (s) -> new LeatherWaterBagItem(new Item.Properties().stacksTo(1).setNoRepair(), 1500));
+    public final static RegistryObject<Item> IRON_BOTTLE = register("iron_bottle", (s) -> new IronBottleItem(new Item.Properties().stacksTo(1).setNoRepair(), 1500));
 }

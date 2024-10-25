@@ -1,0 +1,7 @@
+{
+    "parent": "item/generated",
+    "textures": {
+        "layer0": "frostedheart:item/wooden_cup",
+		"layer1": "frostedheart:item/wooden_cup_overlay"
+    }
+}

@@ -1,15 +1,10 @@
 package com.teammoeg.frostedheart.content.water.item;
 
 import com.teammoeg.frostedheart.FHItems;
-import gloridifice.watersource.helper.FluidHelper;
-import gloridifice.watersource.registry.FluidRegistry;
-import gloridifice.watersource.registry.ItemRegistry;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
 public class WoodenCupItem extends DrinkContainerItem {
@@ -36,16 +31,16 @@ public class WoodenCupItem extends DrinkContainerItem {
         if (fluidStack.isEmpty()) return super.getName(stack);
 
         Component component = fluidStack.getDisplayName();
-        return component.copy().append(Component.translatable("item.watersource.wooden_cup_drink"));
+        return component.copy().append(Component.translatable("item.frostedheart.wooden_cup_drink"));
     }
 
     @Override
     public ItemStack getContainerItem(ItemStack itemStack) {
-        return new ItemStack(FHItems.WOODEN_CUP.get());
+        return new ItemStack(FHItems.wooden_cup.get());
     }
 
     @Override
     public ItemStack getDrinkItem() {
-        return new ItemStack(FHItems.WOODEN_CUP_DRINK.get());
+        return new ItemStack(FHItems.wooden_cup_drink.get());
     }
 }

@@ -156,7 +156,7 @@ public class DrinkContainerItem extends ItemFluidContainer {
     @Override
     public void appendHoverText(ItemStack itemStack, @Nullable Level level, List<Component> components, TooltipFlag tooltipFlag) {
         super.appendHoverText(itemStack, level, components, tooltipFlag);
-        MutableComponent textComponent = Component.literal(Component.translatable("tooltip.watersource.empty").getString());
+        MutableComponent textComponent = Component.literal(Component.translatable("tooltip.frostedheart.empty").getString());
         int amount = 0;
         if (itemStack.getTagElement(FLUID_NBT_KEY) != null) {
             IFluidHandlerItem fluidHandlerItem = FluidUtil.getFluidHandler(itemStack).orElse(null);
@@ -164,7 +164,7 @@ public class DrinkContainerItem extends ItemFluidContainer {
             amount = fluidHandlerItem.getFluidInTank(0).getAmount();
         }
         components.add(textComponent.copy().append(String.format(": %d / %dmB", amount, capacity)).setStyle(Style.EMPTY.applyFormat(ChatFormatting.GRAY)));
-        components.add(Component.translatable("tooltip.watersource.drink_unit").append(" : 250mB").setStyle(Style.EMPTY.applyFormat(ChatFormatting.GRAY)));
+        components.add(Component.translatable("tooltip.frostedheart.drink_unit").append(" : 250mB").setStyle(Style.EMPTY.applyFormat(ChatFormatting.GRAY)));
     }
 
     public ItemStack getDrinkItem() {
