@@ -75,8 +75,7 @@ public abstract class ChickenEntityMixin extends Animal implements IFeedStore {
         }
         return false;
     }
-
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/ChickenEntity;playSound(Lnet/minecraft/sounds/SoundEvent;FF)V"), method = "aiStep", cancellable = true)
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;playSound(Lnet/minecraft/sounds/SoundEvent;FF)V"), method = "aiStep", cancellable = true)
     public void fh$layegg(CallbackInfo cbi) {
         if (egg > 0) {
             egg--;
