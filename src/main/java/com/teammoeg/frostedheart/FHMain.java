@@ -121,6 +121,7 @@ public class FHMain {
         FHSounds.SOUNDS.register(mod);
         FHContainer.CONTAINERS.register(mod);
         FHRecipes.RECIPE_SERIALIZERS.register(mod);
+        FHRecipes.RECIPE_TYPES.register(mod);
         FHParticleTypes.REGISTER.register(mod);
         FHBiomes.BIOME_REGISTER.register(mod);
         FHAttributes.REGISTER.register(mod);
