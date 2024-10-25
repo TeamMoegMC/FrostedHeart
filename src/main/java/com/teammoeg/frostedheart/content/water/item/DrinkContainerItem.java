@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.water.item;
 
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTags;
+import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.water.util.FluidHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -132,7 +132,7 @@ public class DrinkContainerItem extends ItemFluidContainer {
         canDrink = false;
         IFluidHandlerItem fluidHandlerItem = stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
         canDrink = !fluidHandlerItem.getFluidInTank(0).isEmpty() && fluidHandlerItem.getFluidInTank(0).getAmount() >= 250;
-        playerIn.getCapability(FHCapabilities.PLAYER_WATER_LEVEL.capability()).ifPresent(data -> {
+        WaterLevelCapability.getCapability(playerIn).ifPresent(data -> {
             canDrink = canDrink && data.getWaterLevel() < 20;
         });
         return canDrink;
