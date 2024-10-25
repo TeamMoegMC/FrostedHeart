@@ -31,6 +31,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -48,7 +49,6 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 	protected void addTags(HolderLookup.Provider pProvider) {
 		tag("colored_thermos")
 				.add(FHItems.allthermos.stream().map(t->rk(t.get())).toArray(ResourceKey[]::new));
-		
 		tag("colored_advanced_thermos")
 				.add(FHItems.alladvthermos.stream().map(t->rk(t.get())).toArray(ResourceKey[]::new));
 		tag("thermos")
@@ -56,6 +56,7 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 				.add(rk(FHItems.thermos.get()))
 				.addTag(ItemTags.create(mrl("colored_advanced_thermos")))
 				.add(rk(FHItems.advanced_thermos.get()));
+		tag("chicken_feed").addTags(ftag("seeds"), ftag("breedables/chicken"));
 	}
 
 
