@@ -1,5 +1,9 @@
 {
   "variants": {
+    "facing=east": {
+      "model": "frostedheart:block/mechanical_calculator_base",
+      "y": 90
+    },
     "facing=north": {
       "model": "frostedheart:block/mechanical_calculator_base"
     },
@@ -10,10 +14,6 @@
     "facing=west": {
       "model": "frostedheart:block/mechanical_calculator_base",
       "y": 270
-    },
-    "facing=east": {
-      "model": "frostedheart:block/mechanical_calculator_base",
-      "y": 90
     }
   }
 }

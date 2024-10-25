@@ -1,8 +1,0 @@
-{
-  "type": "frostedheart:diet_override",
-  "groups": {
-    "proteins": 0.047429442,
-    "vitamin": 0.04910838
-  },
-  "item": "rankine:cooked_tuna"
-}
