@@ -36,7 +36,7 @@ import net.minecraft.world.level.storage.ServerLevelData;
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {
     @Inject(at = @At("TAIL"), method = "setInitialSpawn")
-    private static void spacecraftGenerate(ServerLevel serverWorld, ServerLevelData info, boolean hasBonusChest, boolean p_240786_3_, boolean p_240786_4_, CallbackInfo ci) {
+    private static void spacecraftGenerate(ServerLevel serverWorld, ServerLevelData info, boolean pGenerateBonusChest, boolean pDebug, CallbackInfo ci) {
         int y = 256, h;
         // store these as temporary variables to reduce procedural calls in loop
         int seaLevel = serverWorld.getSeaLevel();

@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.teammoeg.frostedheart.mixin",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_17",
   "refmap": "frostedheart.refmap.json",
   "warning": [
     "Share modified version of our modpack violates The Winter Rescue Term of Use.",

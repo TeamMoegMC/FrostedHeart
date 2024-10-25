@@ -85,7 +85,7 @@ public abstract class CampfireTileEntityMixin extends BlockEntity implements ICa
     }
 
     @Inject(at = @At("RETURN"), method = "cookTick")
-    public static void fh$cookTick(Level pLevel, BlockPos pPos, BlockState pState, CampfireBlockEntity pBlockEntity,CallbackInfo ci) {
+    private static void fh$cookTick(Level pLevel, BlockPos pPos, BlockState pState, CampfireBlockEntity pBlockEntity,CallbackInfo ci) {
     	CampfireTileEntityMixin mxi=(CampfireTileEntityMixin)(BlockEntity)pBlockEntity;
         if (mxi.lifeTime > 0)
         	mxi.lifeTime--;
