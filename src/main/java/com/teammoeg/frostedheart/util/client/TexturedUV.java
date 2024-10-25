@@ -82,23 +82,18 @@ public class TexturedUV extends UV {
 		super.blit(s,texture, targetX, targetY, direction, progress);
 	}
 	public void blitRotated(GuiGraphics graphics,int targetX, int targetY, int centerX, int centerY, float degrees) {
-		// TODO Auto-generated method stub
 		super.blitRotated(graphics, texture, targetX, targetY, centerX, centerY, degrees);
 	}
 	public void blitRotated(GuiGraphics matrixStack, int targetX, int targetY, Point loc, int centerX, int centerY, float degrees) {
-		// TODO Auto-generated method stub
 		super.blitRotated(matrixStack, texture, targetX, targetY, loc, centerX, centerY, degrees);
 	}
 	public void blitCenter(GuiGraphics s,  int centerX, int centerY) {
-		// TODO Auto-generated method stub
 		super.blitCenter(s, texture, centerX, centerY);
 	}
 	public void blitCenter(GuiGraphics s,  int centerX, int centerY, Point loc) {
-		// TODO Auto-generated method stub
 		super.blitCenter(s, texture, centerX, centerY, loc);
 	}
 	public void blit(GuiGraphics s, int targetX, int targetY, Point loc) {
-		// TODO Auto-generated method stub
 		super.blit(s, texture, targetX, targetY, loc);
 	}
     public static TexturedUV deltaWH(ResourceLocation texture,int x1, int y1, int x2, int y2,int tw,int th) {

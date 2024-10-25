@@ -75,7 +75,6 @@ public class IncubatorBlock extends FHGuiBlock {
 
 	@Override
 	public Supplier getBlock() {
-		// TODO Auto-generated method stub
 		return type;
 	}
 

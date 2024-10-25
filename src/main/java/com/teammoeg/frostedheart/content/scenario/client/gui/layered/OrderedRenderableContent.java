@@ -10,12 +10,10 @@ public abstract class OrderedRenderableContent implements RenderableContent {
 	}
 
 	public final int getZ() {
-		// TODO Auto-generated method stub
 		return z;
 	}
 
 	public final int getOrder() {
-		// TODO Auto-generated method stub
 		return order;
 	}
 

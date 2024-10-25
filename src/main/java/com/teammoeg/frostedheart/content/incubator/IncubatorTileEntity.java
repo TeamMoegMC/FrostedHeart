@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.incubator;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
@@ -162,12 +163,11 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements FHTickableB
 
     protected boolean fetchFuel() {
         ItemStack is = inventory.get(0);
-        //TODO quicklime item
-        /*if (!is.isEmpty() && is.getItem() == RankineItems.QUICKLIME.get()) {
+        if (!is.isEmpty() && is.getItem() == FHItems.QUICKLIME.get()) {
             is.shrink(1);
             fuel = fuelMax = 16000;
             return true;
-        }*/
+        }
         return false;
     }
 
@@ -234,10 +234,9 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements FHTickableB
     }
     @Override
     public boolean isStackValid(int i, ItemStack itemStack) {
-    	//TODO add quicklime
-/*
+
         if (i == 0)
-            return itemStack.getItem() == RankineItems.QUICKLIME.get();*/
+            return itemStack.getItem() == FHItems.QUICKLIME.get();
         if (i == 1)
             return canBeCatalyst(itemStack) || itemStack.getItem() == Items.ROTTEN_FLESH;
         if (i == 2)

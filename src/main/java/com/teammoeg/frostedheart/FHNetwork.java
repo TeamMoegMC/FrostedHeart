@@ -95,7 +95,7 @@ public class FHNetwork {
 				}
             },FHMessage::handle);
 		} catch (NoSuchMethodException | SecurityException e1) {
-			// TODO Auto-generated catch block
+            FHMain.LOGGER.error("Can not register message "+msg.getSimpleName());
 			e1.printStackTrace();
 		}
     }

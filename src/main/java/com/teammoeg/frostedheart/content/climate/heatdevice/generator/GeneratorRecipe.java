@@ -113,7 +113,6 @@ public class GeneratorRecipe extends IESerializableRecipe {
 
         @Override
         public GeneratorRecipe fromJson(ResourceLocation recipeId, JsonObject serializedRecipe) {
-            // TODO Auto-generated method stub
             return super.fromJson(recipeId, serializedRecipe);
         }
     }

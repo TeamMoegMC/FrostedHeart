@@ -94,7 +94,6 @@ public class SteamCoreBlock extends DirectionalKineticBlock implements FHEntityB
 
 	@Override
 	public Supplier<BlockEntityType<?>> getBlock() {
-		// TODO Auto-generated method stub
 		return FHTileTypes.STEAM_CORE::get;
 	}
 }

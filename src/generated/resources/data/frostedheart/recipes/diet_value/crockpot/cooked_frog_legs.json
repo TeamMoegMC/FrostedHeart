@@ -1,8 +1,0 @@
-{
-  "type": "frostedheart:diet_override",
-  "groups": {
-    "proteins": 0.0296434,
-    "vitamin": 0.022321995
-  },
-  "item": "crockpot:cooked_frog_legs"
-}

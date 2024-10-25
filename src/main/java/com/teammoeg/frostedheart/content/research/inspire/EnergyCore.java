@@ -181,8 +181,6 @@ public class EnergyCore implements NBTSerializable {
 
 	@Override
 	public void save(CompoundTag saved, boolean isPacket) {
-		// TODO Auto-generated method stub
-
 	    CodecUtil.encodeNBT(LEVELED_CODEC, saved, "lvl", level);
 	    CodecUtil.encodeNBT(PERSIST_LEVELED_CODEC, saved, "plvl", persistLevel);
 	    saved.putInt("lastLvl", maxLevel);

@@ -40,7 +40,6 @@ public abstract class MixinSawTileEntity extends BlockBreakingKineticBlockEntity
 
     public MixinSawTileEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Shadow(remap = false)

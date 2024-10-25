@@ -100,7 +100,7 @@ public class DebugCommand {
                                 ps.println(RegistryUtils.getRegistryName(ix) + "," + f.getNutrition());
                         }
                     } catch (Exception e) {
-                        // TODO Auto-generated catch block
+                        FHMain.LOGGER.error("Error while exporting food values");
                         e.printStackTrace();
                     }
                     ct.getSource().sendSuccess(()->TranslateUtils.str("Exported " + items.size() + " Foods"), true);
@@ -154,7 +154,6 @@ public class DebugCommand {
                     try {
                         FileUtil.transfer(gs.toJson(ja), new File(FMLPaths.GAMEDIR.get().toFile(), "quest_export.json"));
                     } catch (IOException e1) {
-                        // TODO Auto-generated catch block
                         e1.printStackTrace();
                     }
                     return Command.SINGLE_SUCCESS;
@@ -234,7 +233,7 @@ public class DebugCommand {
                         FileUtil.transfer(gs.toJson(out), new File(FMLPaths.GAMEDIR.get().toFile(), "research_export.json"));
 
                     } catch (IOException e1) {
-                        // TODO Auto-generated catch block
+                        FHMain.LOGGER.error("Error while exporting researches");
                         e1.printStackTrace();
                     }
                     return Command.SINGLE_SUCCESS;

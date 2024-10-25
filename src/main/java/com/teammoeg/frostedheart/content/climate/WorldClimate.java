@@ -655,7 +655,6 @@ public class WorldClimate implements NBTSerializable {
 
     /**
      * Grows tempEventStream to contain temp events that cover the given point of time.
-     * TODO: need clarification from @JackyWang
      *
      * @param time given in absolute seconds relative to clock source.
      */

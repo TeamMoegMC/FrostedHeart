@@ -84,8 +84,7 @@ public class GLImageContent extends GLLayerContent {
 
 	@Override
 	public void prerender(PrerenderParams params) {
-		// TODO Auto-generated method stub
-		
+
 	}
 
 }

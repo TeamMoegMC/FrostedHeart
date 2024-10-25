@@ -52,7 +52,6 @@ public class GuiClickedEvent implements GuiEventListener {
 
 	@Override
 	public boolean isFocused() {
-		// TODO Auto-generated method stub
 		return focused;
 	}
 

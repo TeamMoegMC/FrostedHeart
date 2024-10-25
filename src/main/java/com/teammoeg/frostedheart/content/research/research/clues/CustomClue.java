@@ -37,7 +37,6 @@ public class CustomClue extends Clue {
 
     public CustomClue(BaseData data) {
 		super(data);
-		// TODO Auto-generated constructor stub
 	}
 
 

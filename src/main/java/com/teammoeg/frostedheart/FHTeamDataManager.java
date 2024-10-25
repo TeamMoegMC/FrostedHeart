@@ -255,7 +255,7 @@ public class FHTeamDataManager {
         	try {
 				FileUtils.deleteDirectory(olocal.toFile());
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+                FHMain.LOGGER.error("Unable to delete old data folder, ignoring...");
 				e.printStackTrace();
 			}
         }

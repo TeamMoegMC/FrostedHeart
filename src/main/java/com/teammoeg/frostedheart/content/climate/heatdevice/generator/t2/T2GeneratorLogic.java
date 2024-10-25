@@ -221,28 +221,4 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
     }
 
 
-
-    // TODO: Disassemble is moved to MB class. What about invalidate?
-//    @Override
-//    public void disassemble() {
-//        if (manager != null)
-//            manager.invalidate();
-//        super.disassemble();
-//    }
-
-    // TODO: Check if this is implemented correctly in new getCapability method
-//    @Override
-//    protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
-//        T2GeneratorLogic master = master();
-//        if (master != null && side == this.getFacing() && this.posInMultiblock.equals(fluidIn))
-//            return new FluidTank[]{master.tank};
-//        return new FluidTank[0];
-//    }
-
-    // TODO: Is this still needed?
-//    @Override
-//    public AABB getRenderBoundingBox() {
-//        return new AABB(worldPosition.getX() - 2, worldPosition.getY() - 2, worldPosition.getZ() - 2, worldPosition.getX() + 2, worldPosition.getY() + 6,
-//                worldPosition.getZ() + 2);
-//    }
 }

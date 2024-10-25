@@ -45,7 +45,6 @@ import net.minecraft.sounds.SoundEvents;
 public abstract class CampfireTileEntityMixin extends BlockEntity implements ICampfireExtra {
     public CampfireTileEntityMixin(BlockEntityType<?> pType, BlockPos pPos, BlockState pBlockState) {
 		super(pType, pPos, pBlockState);
-		// TODO Auto-generated constructor stub
 	}
 
 	public int lifeTime = 0;

@@ -34,11 +34,9 @@ public class T1GeneratorContainer extends GeneratorContainer<T1GeneratorState, T
 
     public T1GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<T1GeneratorState> ctx) {
         super(type, id, inventoryPlayer, ctx);
-        // TODO Auto-generated constructor stub
     }
     public T1GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer) {
         super(type, id, inventoryPlayer);
-        // TODO Auto-generated constructor stub
     }
 
     @Override

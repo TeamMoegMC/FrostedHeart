@@ -51,7 +51,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-// TODO: Auto-generated Javadoc
 
 /**
  * Class TeamResearchData.

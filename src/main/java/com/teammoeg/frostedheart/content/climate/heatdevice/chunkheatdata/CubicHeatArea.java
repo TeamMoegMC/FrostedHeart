@@ -88,7 +88,6 @@ public class CubicHeatArea implements IHeatArea {
 
     @Override
     public BlockPos getCenter() {
-        // TODO Auto-generated method stub
         return center;
     }
 

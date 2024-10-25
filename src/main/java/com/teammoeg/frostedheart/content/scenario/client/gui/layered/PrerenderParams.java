@@ -90,7 +90,6 @@ public class PrerenderParams {
 				ImageIO.write(cur, "png", baos);
 				texture = NativeImage.read(bais);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				FHMain.LOGGER.error("Could not render scenario layer!");
 			}
