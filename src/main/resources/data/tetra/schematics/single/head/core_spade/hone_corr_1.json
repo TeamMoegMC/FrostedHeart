@@ -13,16 +13,26 @@
         "textureY": 32
     },
     "requirement": {
-        "type": "tetra:modular_item",
-        "modules": [
-            [
-                "single/basic_core_spade"
-            ]
-        ],
-        "improvements": {
-            "!head_hone/core_spade_corr": -1,
-            "head_hone/speed": 3
-        }
+        "type": "tetra:and",
+        "requirements": [
+            {
+                "type": "tetra:module",
+                "module": "single/basic_core_spade"
+            },
+            {
+                "type": "tetra:not",
+                "requirement": {
+                    "type": "tetra:improvement",
+                    "improvement": "head_hone/core_spade_corr",
+                    "level": -1
+                }
+            },
+            {
+                "type": "tetra:improvement",
+                "improvement": "head_hone/speed",
+                "level": 3
+            }
+        ]
     },
     "outcomes": [
         {

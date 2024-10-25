@@ -13,15 +13,18 @@
         "textureY": 32
     },
     "requirement": {
-        "type": "tetra:modular_item",
-        "modules": [
-            [
-                "single/basic_geo_hammer"
-            ]
-        ],
-        "improvements": {
-            "head_hone/geo_hammer_corr": 2
-        }
+        "type": "tetra:and",
+        "requirements": [
+            {
+                "type": "tetra:module",
+                "module": "single/basic_geo_hammer"
+            },
+            {
+                "type": "tetra:improvement",
+                "improvement": "head_hone/geo_hammer_corr",
+                "level": 2
+            }
+        ]
     },
     "outcomes": [
         {
