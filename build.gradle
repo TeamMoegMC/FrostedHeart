@@ -21,8 +21,8 @@ compileTestJava.options.encoding = "UTF-8"
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 sourceSets {
-	client{}
-	server{}
+	client{java{srcDirs=[]} resources{srcDirs=[]}}
+	server{java{srcDirs=[]} resources{srcDirs=[]}}
     main {
         resources {
             srcDirs = [
@@ -30,7 +30,7 @@ sourceSets {
             ]
         }
     }
-    noDatagen{}
+    noDatagen{java{srcDirs=[]} resources{srcDirs=[]}}
 	datagen {
         compileClasspath += main.compileClasspath
         runtimeClasspath += main.runtimeClasspath
