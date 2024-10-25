@@ -83,7 +83,7 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
      * @author khjxiaogu
      * @reason force reset contraptions for mod propose
      */
-    @Inject(at = @At("TAIL"), method = "readAdditionalSaveData", remap = false)
+    @Inject(at = @At("TAIL"), method = "readAdditional", remap = false)
     protected void readAdditional(CompoundTag compound, boolean spawnPacket, CallbackInfo cbi) {
         if (!level().isClientSide)
             if (compound.getInt("spinst") != 2) {
@@ -106,7 +106,7 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
      * @author khjxiaogu
      * @reason force reset contraptions for mod propose
      */
-    @Inject(at = @At("TAIL"), method = "addAdditionalSaveData", remap = false)
+    @Inject(at = @At("TAIL"), method = "writeAdditional", remap = false)
     protected void writeAdditional(CompoundTag compound, boolean spawnPacket, CallbackInfo cbi) {
         if (!level().isClientSide)
             compound.putInt("spinst", 2);

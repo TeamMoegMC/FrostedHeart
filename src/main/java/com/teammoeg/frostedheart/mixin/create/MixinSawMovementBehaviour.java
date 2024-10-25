@@ -35,7 +35,7 @@ import net.minecraft.core.BlockPos;
 @Mixin(SawMovementBehaviour.class)
 public abstract class MixinSawMovementBehaviour extends BlockBreakingMovementBehaviour {
     @Inject(at = @At(value = "INVOKE",
-            target = "Lcom/simibubi/create/foundation/utility/TreeCutter;findTree(Lnet/minecraft/world/IBlockReader;Lnet/minecraft/util/math/BlockPos;)Lcom/simibubi/create/foundation/utility/TreeCutter$Tree;",
+            target = "Lcom/simibubi/create/foundation/utility/TreeCutter;findTree(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lcom/simibubi/create/foundation/utility/TreeCutter$Tree;",
             ordinal = 0, remap = false),
             method = "onBlockBroken", cancellable = true, remap = false)
     private void FH$onBroken(MovementContext context, BlockPos pos, BlockState brokenState, CallbackInfo cbi) {

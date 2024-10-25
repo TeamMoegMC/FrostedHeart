@@ -39,6 +39,10 @@ import net.minecraft.world.level.biome.Biome;
  * */
 @Mixin(Biome.class)
 public abstract class BiomeMixin {
+	/**
+	 * @author khjxiaogu
+	 * @reason decide when to freeze water
+	 * */
 	@Overwrite
     public boolean shouldFreeze(LevelReader pLevel, BlockPos pWater, boolean pMustBeAtEdge) {
 	      if (this.warmEnoughToRain(pWater)) {
