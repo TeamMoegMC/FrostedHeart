@@ -101,6 +101,7 @@ public class FHConfig {
 
     public static class Common {
         public final ForgeConfigSpec.BooleanValue enablesTemperatureForecast;
+        public final ForgeConfigSpec.BooleanValue forceEnableTemperatureForecast;
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> blackmods;
         public final ForgeConfigSpec.BooleanValue enableDailyKitchen;
         public final ForgeConfigSpec.ConfigValue<Double> steamCoreMaxPower;
@@ -111,6 +112,9 @@ public class FHConfig {
             enablesTemperatureForecast = builder
                     .comment("Enables the weather forecast system. ")
                     .define("enablesTemperatureForecast", true);
+            forceEnableTemperatureForecast = builder
+                    .comment("Forces the weather forecast system to be enabled regardless of scenario. ")
+                    .define("forceEnableTemperatureForecast", true);
             blackmods = builder
                     .comment("BlackListed mods to kick player")
                     .defineList("Mod Blacklist", new ArrayList<>(), s -> true);

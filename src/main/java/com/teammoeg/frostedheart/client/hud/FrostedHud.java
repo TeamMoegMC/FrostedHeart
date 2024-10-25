@@ -864,7 +864,8 @@ public class FrostedHud {
 
         // Forecast
         boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
-        renderForecast = configAllows && ClientResearchDataAPI.getData().getVariantDouble(ResearchVariant.HAS_FORECAST)>0;
+        boolean forceEnables = FHConfig.COMMON.forceEnableTemperatureForecast.get();
+        renderForecast = forceEnables || (configAllows && ClientResearchDataAPI.getData().getVariantDouble(ResearchVariant.HAS_FORECAST)>0);
     }
 
     private static void renderTemp(GuiGraphics stack, Minecraft mc, float temp, int tlevel, int offsetX, int offsetY,

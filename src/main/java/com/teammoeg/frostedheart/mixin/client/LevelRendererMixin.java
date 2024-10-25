@@ -60,20 +60,6 @@ public abstract class LevelRendererMixin {
                 // Road-block injection to remove any Vanilla / Primal Winter weather rendering code
                 ci.cancel();
             }
-            /*
-             * if not blizzard, use primal winter's rendering
-             * @see primalwinter's LevelRendererMixin
-             */
         }
     }
-
-    /*
-    // Render the particle when precipitation hit the ground
-    // (e.g. the splash of rain drops).
-    // Not required for blizzard.
-    @Inject(method = "addRainParticles", at = @At("RETURN"))
-    public void inject$tickRain(ActiveRenderInfo renderInfo, CallbackInfo ci) {
-
-    }
-    */
 }
