@@ -1,13 +1,15 @@
-package com.teammoeg.frostedheart.content.nutrition;
+package com.teammoeg.frostedheart.content.nutrition.capability;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.content.nutrition.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.network.PacketDistributor;
 
@@ -138,9 +140,16 @@ public class NutritionCapability implements NBTSerializable {
     }
 
     public void eat(Player player, ItemStack food) {
-        //TODO
-        CompoundTag tag = food.getOrCreateTag();
-        eat(player, tag.getFloat("vitamin"), tag.getFloat("carbohydrate"), tag.getFloat("protein"), tag.getFloat("vegetable"));
+        Level level = player.level();
+        NutritionRecipe wRecipe = NutritionRecipe.getRecipeFromItem(level, food);
+        if (wRecipe != null) {
+            NutritionCapability.getCapability(player).ifPresent(data -> {
+                data.addCarbohydrate(player, wRecipe.carbohydrate);
+                data.addProtein(player, wRecipe.protein);
+                data.addVegetable(player, wRecipe.vegetable);
+                data.addVitamin(player, wRecipe.vitamin);
+            });
+        }
     }
 
 

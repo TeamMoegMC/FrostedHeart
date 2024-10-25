@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorM
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
-import com.teammoeg.frostedheart.content.nutrition.PlayerNutritionSyncPacket;
+import com.teammoeg.frostedheart.content.nutrition.network.PlayerNutritionSyncPacket;
 import com.teammoeg.frostedheart.content.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.content.research.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.content.research.network.FHDrawingDeskOperationPacket;
