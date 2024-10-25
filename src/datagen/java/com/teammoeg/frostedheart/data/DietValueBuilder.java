@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.recipes.DietGroupCodec;
-import com.teammoeg.frostedheart.recipes.DietValueRecipe;
 
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -22,11 +20,12 @@ public class DietValueBuilder implements FinishedRecipe {
 		this.rl = rl;
 	}
 	public void addGroup(int i,float v) {
-		groups.put(DietGroupCodec.groups[i],v);
+		// TODO: Change to FH
+//		groups.put(DietGroupCodec.groups[i],v);
 		
 	}
 	@Override
-	public void serialize(JsonObject json) {
+	public void serializeRecipeData(JsonObject json) {
 		JsonObject jo=new JsonObject();
 		groups.entrySet().forEach(e->jo.addProperty(e.getKey(),e.getValue()));
 		json.add("groups",jo);
@@ -34,22 +33,24 @@ public class DietValueBuilder implements FinishedRecipe {
 	}
 
 	@Override
-	public ResourceLocation getID() {
+	public ResourceLocation getId() {
 		return rl;
 	}
 
 	@Override
-	public JsonObject getAdvancementJson() {
+	public JsonObject serializeAdvancement() {
 		return null;
 	}
 
 	@Override
-	public ResourceLocation getAdvancementID() {
+	public ResourceLocation getAdvancementId() {
 		return null;
 	}
 	@Override
-	public RecipeSerializer<?> getSerializer() {
-		return DietValueRecipe.SERIALIZER.get();
+	public RecipeSerializer<?> getType() {
+		// TODO: Change to FH
+//		return DietValueRecipe.SERIALIZER.get();
+		return null;
 	}
 
 }

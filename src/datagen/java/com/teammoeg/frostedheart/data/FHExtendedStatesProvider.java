@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
-import blusunrize.immersiveengineering.common.blocks.IEBlocks;
+import blusunrize.immersiveengineering.common.register.IEBlocks;
 import blusunrize.immersiveengineering.data.DataGenUtils;
 import blusunrize.immersiveengineering.data.models.IEOBJBuilder;
 import blusunrize.immersiveengineering.data.models.SplitModelBuilder;
@@ -47,18 +47,20 @@ import net.minecraftforge.client.model.generators.BlockModelBuilder;
 import net.minecraftforge.client.model.generators.BlockStateProvider;
 import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.client.model.generators.ModelFile;
-import net.minecraftforge.client.model.generators.loaders.OBJLoaderBuilder;
+import net.minecraftforge.client.model.generators.loaders.ObjModelBuilder;
 import net.minecraftforge.common.data.ExistingFileHelper;
 
 public abstract class FHExtendedStatesProvider extends BlockStateProvider {
-    protected static final List<Vec3i> COLUMN_THREE = ImmutableList.of(BlockPos.ZERO, BlockPos.ZERO.up(), BlockPos.ZERO.up(2));
-
+    protected static final List<Vec3i> COLUMN_THREE = ImmutableList.of(BlockPos.ZERO, BlockPos.ZERO.above(), BlockPos.ZERO.above(2));
+    protected static final ExistingFileHelper.ResourceType MODEL = new ExistingFileHelper.ResourceType(PackType.CLIENT_RESOURCES, ".json", "models");
     protected static final Map<ResourceLocation, String> generatedParticleTextures = new HashMap<>();
     protected final ExistingFileHelper existingFileHelper;
 
-    public FHExtendedStatesProvider(DataGenerator gen, ExistingFileHelper exFileHelper)
-    {
-        super(gen, FHMain.MODID, exFileHelper);
+    String modid;
+
+    public FHExtendedStatesProvider(DataGenerator gen, String modid, ExistingFileHelper exFileHelper) {
+        super(gen.getPackOutput(), modid, exFileHelper);
+        this.modid = modid;
         this.existingFileHelper = exFileHelper;
     }
 
@@ -107,7 +109,7 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
 
     protected void slabFor(Block b, ResourceLocation side, ResourceLocation top, ResourceLocation bottom)
     {
-        slab(IEBlocks.toSlab.get(b), side, top, bottom);
+        slab(IEBlocks.TO_SLAB.get(b).get(), side, top, bottom);
     }
 
     protected void slab(SlabBlock b, ResourceLocation side, ResourceLocation top, ResourceLocation bottom)
@@ -132,7 +134,8 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
         ModelFile stairs = models().stairs(baseName, side, bottom, top);
         ModelFile stairsInner = models().stairsInner(baseName+"_inner", side, bottom, top);
         ModelFile stairsOuter = models().stairsOuter(baseName+"_outer", side, bottom, top);
-        StairBlock(b, stairs, stairsInner, stairsOuter);
+        // TODO: ?
+        //        StairBlock(b, stairs, stairsInner, stairsOuter);
         itemModel(b, stairs);
     }
 
@@ -166,7 +169,7 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
     {
         assertModelExists(model);
         BlockModelBuilder ret = models().withExistingParent(name, mcLoc("block"))
-                .customLoader(OBJLoaderBuilder::begin)
+                .customLoader(ObjModelBuilder::begin)
                 .detectCullableFaces(false)
                 .modelLocation(addModelsPrefix(model))
                 .flipV(true)
@@ -254,7 +257,7 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
 
     protected int getAngle(Direction dir, int offset)
     {
-        return (int)((dir.getHorizontalAngle()+offset)%360);
+        return (int)((dir.toYRot()+offset)%360);
     }
 
     protected static String getName(RenderStateShard state)

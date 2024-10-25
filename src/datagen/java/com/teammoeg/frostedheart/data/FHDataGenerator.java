@@ -18,14 +18,18 @@
 
 package com.teammoeg.frostedheart.data;
 
-import blusunrize.immersiveengineering.common.blocks.multiblocks.StaticTemplateManager;
 import com.teammoeg.frostedheart.FHMain;
+import net.minecraft.Util;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.data.tags.BlockTagsProvider;
 import net.minecraft.data.DataGenerator;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
+import net.minecraftforge.data.event.GatherDataEvent;
+
+import java.util.concurrent.CompletableFuture;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class FHDataGenerator {
@@ -33,16 +37,12 @@ public class FHDataGenerator {
     public static void gatherData(GatherDataEvent event) {
         DataGenerator gen = event.getGenerator();
         ExistingFileHelper exHelper = event.getExistingFileHelper();
-        StaticTemplateManager.EXISTING_HELPER = exHelper;
-        if (event.includeServer()) {
-            FHMain.LOGGER.info("running FHDataGenerator.gatherData");//test
-            BlockTagsProvider blockTagsProvider = new FHBlockTagProvider(gen, exHelper);
-            gen.addProvider(blockTagsProvider);
-            gen.addProvider(new FHRecipeProvider(gen));
-            gen.addProvider(new FHMultiblockStatesProvider(gen, exHelper));
-            gen.addProvider(new FHItemModelProvider(gen,exHelper));
-            gen.addProvider(new FHItemTagProvider(gen, blockTagsProvider,exHelper));
+        CompletableFuture<HolderLookup.Provider> completablefuture = CompletableFuture.supplyAsync(VanillaRegistries::createLookup, Util.backgroundExecutor());
 
-        }
+        gen.addProvider(event.includeServer(), new FHBlockTagProvider(gen, FHMain.MODID, exHelper, event.getLookupProvider()));
+        gen.addProvider(event.includeServer(), new FHRecipeProvider(gen));
+//        gen.addProvider(new FHMultiblockStatesProvider(gen, exHelper));
+        gen.addProvider(event.includeClient(), new FHItemModelProvider(gen, FHMain.MODID, exHelper));
+        gen.addProvider(event.includeServer(), new FHItemTagProvider(gen, FHMain.MODID, exHelper, completablefuture));
     }
 }
