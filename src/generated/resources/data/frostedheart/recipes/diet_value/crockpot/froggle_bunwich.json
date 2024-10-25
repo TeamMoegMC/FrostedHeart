@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.02075038,
+    "vitamin": 0.04296984,
+    "grains": 0.02075038
+  },
+  "item": "crockpot:froggle_bunwich"
+}

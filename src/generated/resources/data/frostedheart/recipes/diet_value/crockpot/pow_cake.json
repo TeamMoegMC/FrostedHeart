@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.004910835,
+    "vegetables": 0.06022804
+  },
+  "item": "crockpot:pow_cake"
+}

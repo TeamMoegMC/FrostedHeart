@@ -1,0 +1,7 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "vegetables": 0.02492219
+  },
+  "item": "crockpot:asparagus_soup"
+}

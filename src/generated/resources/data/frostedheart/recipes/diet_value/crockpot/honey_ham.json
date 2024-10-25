@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.05357278,
+    "proteins": 0.07114416,
+    "vitamin": 0.05357278
+  },
+  "item": "crockpot:honey_ham"
+}

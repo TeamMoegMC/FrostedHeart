@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.012277095,
+    "grains": 0.0296434
+  },
+  "item": "minecraft:bread"
+}

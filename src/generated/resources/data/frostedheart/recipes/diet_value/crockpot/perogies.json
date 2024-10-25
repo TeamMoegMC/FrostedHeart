@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.023714721,
+    "vegetables": 0.023714721,
+    "vitamin": 0.035715193
+  },
+  "item": "crockpot:perogies"
+}

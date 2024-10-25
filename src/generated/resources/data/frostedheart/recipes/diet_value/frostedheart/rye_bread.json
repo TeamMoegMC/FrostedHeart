@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.014732521,
+    "grains": 0.03557208
+  },
+  "item": "frostedheart:rye_bread"
+}

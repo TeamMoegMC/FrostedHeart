@@ -1,0 +1,9 @@
+{
+  "type": "watersource:water_level_fluid",
+  "ingredient": {
+    "tag": "frostedheart:thermos"
+  },
+  "waterLevel": 2,
+  "waterSaturationLevel": 2,
+  "fluid": "thermopolium:custard"
+}

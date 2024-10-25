@@ -1,0 +1,7 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "vegetables": 0.03557208
+  },
+  "item": "crockpot:flower_salad"
+}

@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.005423655,
+    "vegetables": 0.00880195
+  },
+  "item": "minecraft:sweet_berries"
+}
