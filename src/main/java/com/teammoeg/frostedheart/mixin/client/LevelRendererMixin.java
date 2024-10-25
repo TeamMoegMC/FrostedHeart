@@ -56,7 +56,7 @@ public abstract class LevelRendererMixin {
             // ClimateData data = ClimateData.get(world);
             // blizzard when vanilla 'thundering' is true, to save us from doing sync
             if (level.isThundering()) {
-                BlizzardRenderer.render(minecraft, this.level, manager, ticks, partialTicks, x, y, z);
+                BlizzardRenderer.renderBlizzard(minecraft, this.level, manager, ticks, partialTicks, x, y, z);
                 // Road-block injection to remove any Vanilla / Primal Winter weather rendering code
                 ci.cancel();
             }

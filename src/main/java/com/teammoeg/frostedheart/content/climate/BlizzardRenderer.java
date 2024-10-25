@@ -23,8 +23,10 @@ import java.util.Random;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
@@ -35,7 +37,11 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.Heightmap;
+
+import static net.minecraft.client.renderer.LevelRenderer.getLightColor;
 
 /**
  * Render cool Blizzard!
@@ -164,7 +170,7 @@ public class BlizzardRenderer {
 
                     // Light and color settings based on current world lighting
                     blockPos.set(currentlyRenderingX, posY2, currentlyRenderingZ);
-                    int k3 = LevelRenderer.getLightColor(world, blockPos);
+                    int k3 = getLightColor(world, blockPos);
                     int l3 = k3 >> 16 & '\uffff';
                     int i4 = (k3 & '\uffff') * 3;
                     int j4 = (l3 * 3 + 240) / 4;
@@ -217,6 +223,95 @@ public class BlizzardRenderer {
         RenderSystem.disableBlend();
         lightTexture.turnOffLightLayer();
     }
+
+    public static void renderBlizzard(Minecraft mc,
+                                      ClientLevel level,
+                                      LightTexture lightTexture,
+                                      int ticks,
+                                      float partialTicks,
+                                      double cameraX,
+                                      double cameraY,
+                                      double cameraZ) {
+        float snowStrength = level.getThunderLevel(partialTicks); // Blizzard intensity based on thunder level
+        lightTexture.turnOnLightLayer();
+
+        int camX = Mth.floor(cameraX);
+        int camY = Mth.floor(cameraY);
+        int camZ = Mth.floor(cameraZ);
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder bufferBuilder = tesselator.getBuilder();
+
+        RenderSystem.disableCull();
+        RenderSystem.enableBlend();
+        RenderSystem.enableDepthTest();
+        RenderSystem.setShader(GameRenderer::getParticleShader);
+
+        int renderRadius = Minecraft.useFancyGraphics() ? 10 : 5;
+        RenderSystem.depthMask(Minecraft.useShaderTransparency());
+
+        BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
+        float ticksAndPartialTicks = (float) ticks + partialTicks; // Smoothly interpolates particle position updates
+        RandomSource random = RandomSource.create();
+
+        int currentRenderingState = -1;
+
+        for (int z = camZ - renderRadius; z <= camZ + renderRadius; ++z) {
+            for (int x = camX - renderRadius; x <= camX + renderRadius; ++x) {
+                blockPos.set(x, camY, z);
+
+                Biome biome = level.getBiome(blockPos).value();
+                if (!biome.hasPrecipitation()) continue;
+
+                int groundHeight = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
+                int minY = Math.max(camY - renderRadius, groundHeight);
+                int maxY = camY + renderRadius;
+                if (minY >= maxY) continue;
+
+                if (currentRenderingState != 1) {
+                    if (currentRenderingState >= 0) tesselator.end();
+                    currentRenderingState = 1;
+                    RenderSystem.setShaderTexture(0, new ResourceLocation("minecraft:textures/environment/snow.png"));
+                    bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
+                }
+
+                // Snowflake drift and fall speed using ticksAndPartialTicks for smooth animation
+                double offsetX = Math.sin(ticksAndPartialTicks * 0.01 + x) * 0.5D;
+                double offsetZ = Math.cos(ticksAndPartialTicks * 0.01 + z) * 0.5D;
+                double fallOffset = Math.cos(ticksAndPartialTicks * 0.01 + z) * 0.2D;
+
+                // Snowflake fade based on distance from camera
+                double dx = x + 0.5D - cameraX;
+                double dz = z + 0.5D - cameraZ;
+                float distance = (float) Math.sqrt(dx * dx + dz * dz) / (float) renderRadius;
+                float alpha = ((1.0F - distance * distance) * 0.3F + 0.5F) * snowStrength;
+
+                // Light and texture offset
+                blockPos.set(x, groundHeight, z);
+                int light = getLightColor(level, blockPos);
+                int lightX = (light >> 16) & 0xFFFF;
+                int lightY = light & 0xFFFF;
+
+                // Render each vertex of the snowflake particle quad, adding smooth movement
+                bufferBuilder.vertex(x - cameraX - 0.5D + offsetX, maxY - cameraY, z - cameraZ - 0.5D + offsetZ)
+                        .uv(0.0F, minY * 0.25F).color(1.0F, 1.0F, 1.0F, alpha).uv2(lightX, lightY).endVertex();
+                bufferBuilder.vertex(x - cameraX + 0.5D + offsetX, maxY - cameraY, z - cameraZ + 0.5D + offsetZ)
+                        .uv(1.0F, minY * 0.25F).color(1.0F, 1.0F, 1.0F, alpha).uv2(lightX, lightY).endVertex();
+                bufferBuilder.vertex(x - cameraX + 0.5D + offsetX, minY - cameraY, z - cameraZ + 0.5D + offsetZ)
+                        .uv(1.0F, maxY * 0.25F).color(1.0F, 1.0F, 1.0F, alpha).uv2(lightX, lightY).endVertex();
+                bufferBuilder.vertex(x - cameraX - 0.5D + offsetX, minY - cameraY, z - cameraZ - 0.5D + offsetZ)
+                        .uv(0.0F, maxY * 0.25F).color(1.0F, 1.0F, 1.0F, alpha).uv2(lightX, lightY).endVertex();
+            }
+        }
+
+        if (currentRenderingState >= 0) {
+            tesselator.end(); // End the current rendering state
+        }
+
+        RenderSystem.enableCull();
+        RenderSystem.disableBlend();
+        lightTexture.turnOffLightLayer();
+    }
+
 
 }
 
