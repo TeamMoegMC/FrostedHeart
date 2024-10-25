@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.utility;
 
 import java.util.List;
 
+import com.mojang.datafixers.util.Either;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
@@ -48,6 +49,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import top.theillusivec4.curios.api.type.ISlotType;
 
 public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, ITempAdjustFood {
 
@@ -147,7 +149,7 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
     }
 
 	@Override
-	public float getEffectiveTempAdded(EquipmentCuriosSlotType slot, ItemStack stack, float effectiveTemp,
+	public float getEffectiveTempAdded(Either<ISlotType,EquipmentCuriosSlotType> slot, ItemStack stack, float effectiveTemp,
 			float bodyTemp) {
 		if(slot==null)return 12.5f;
 		

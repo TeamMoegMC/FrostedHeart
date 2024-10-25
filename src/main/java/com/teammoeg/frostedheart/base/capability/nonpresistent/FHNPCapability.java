@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.base.capability.nonpresistent;
 
+import org.objectweb.asm.Type;
+
 import com.teammoeg.frostedheart.base.capability.IFHCapability;
 import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
 import net.minecraft.nbt.CompoundTag;
@@ -14,25 +16,17 @@ import net.minecraftforge.common.util.NonNullSupplier;
 public class FHNPCapability<C> implements IFHCapability{
 	private Class<C> capClass;
 	private Capability<C> capability;
-	private NonNullSupplier<C> factory;
 
-	public FHNPCapability(Class<C> capClass, NonNullSupplier<C> factory) {
+	public FHNPCapability(Class<C> capClass) {
 		super();
 		this.capClass = capClass;
-		this.factory = factory;
 	}
 	@SuppressWarnings("unchecked")
 	public void register() {
-        capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(capClass.getName().intern());
-	}
-	public ICapabilityProvider provider() {
-		return new FHNPCapabilityProvider<>(this);
+        capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(Type.getInternalName(capClass).intern());
 	}
 	public ICapabilityProvider provider(NonNullSupplier<C> factory) {
 		return new FHNPCapabilityProvider<>(this,factory);
-	}
-	LazyOptional<C> createCapability(){
-		return LazyOptional.of(factory);
 	}
 	public LazyOptional<C> getCapability(Object cap) {
 		if(cap instanceof ICapabilityProvider)

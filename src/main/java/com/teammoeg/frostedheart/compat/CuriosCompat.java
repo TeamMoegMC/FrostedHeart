@@ -34,6 +34,7 @@ import net.minecraftforge.fml.InterModComms;
 import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.SlotTypeMessage;
 import top.theillusivec4.curios.api.SlotTypePreset;
+import top.theillusivec4.curios.api.type.ISlotType;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 
@@ -53,12 +54,15 @@ public class CuriosCompat {
 		
 	}
     public static Iterable<ItemStack> getAllCuriosIfVisible(LivingEntity el) {
-    	return () -> CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(o->o.getCurios().values().stream().flatMap(t->IntStream.range(0, t.getSlots()).mapToObj(i->t.getStacks().getStackInSlot(i))).iterator()).orElseGet(EmptyIterator::new);
+    	return () -> CuriosApi.getCuriosInventory(el).resolve().map(o->o.getCurios().values().stream().flatMap(t->IntStream.range(0, t.getSlots()).mapToObj(i->t.getStacks().getStackInSlot(i))).iterator()).orElseGet(EmptyIterator::new);
     }
-    public static Iterable<Pair<String, ItemStack>> getAllCuriosAndSlotsIfVisible(LivingEntity el) {
-        return () -> CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(o->o.getCurios().entrySet().stream().flatMap(t->IntStream.range(0, t.getValue().getSlots()).mapToObj(i->Pair.of(t.getKey(),t.getValue().getStacks().getStackInSlot(i)))).iterator()).orElseGet(EmptyIterator::new);
+    public static Iterable<Pair<String, ItemStack>> getAllCuriosAndSlotNamesIfVisible(LivingEntity el) {
+        return () -> CuriosApi.getCuriosInventory(el).resolve().map(o->o.getCurios().entrySet().stream().flatMap(t->IntStream.range(0, t.getValue().getSlots()).mapToObj(i->Pair.of(t.getKey(),t.getValue().getStacks().getStackInSlot(i)))).iterator()).orElseGet(EmptyIterator::new);
     }
-
+    public static Iterable<Pair<ISlotType, ItemStack>> getAllCuriosAndSlotsIfVisible(LivingEntity el) {
+    	
+        return () -> CuriosApi.getCuriosInventory(el).resolve().map(o->o.getCurios().entrySet().stream().flatMap(t->IntStream.range(0, t.getValue().getSlots()).mapToObj(i->Pair.of(CuriosApi.getSlot(t.getKey(),el.level()).get(),t.getValue().getStacks().getStackInSlot(i)))).iterator()).orElseGet(EmptyIterator::new);
+    }
     public static ItemStack getCuriosIfVisible(LivingEntity living, SlotTypePreset slot, Predicate<ItemStack> predicate) {
         LazyOptional<ICuriosItemHandler> optional = CuriosApi.getCuriosHelper().getCuriosHandler(living);
         return optional.resolve()

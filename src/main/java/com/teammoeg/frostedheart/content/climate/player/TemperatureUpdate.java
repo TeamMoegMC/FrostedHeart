@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.climate.player;
 
 import java.util.UUID;
 
+import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHAttributes;
 import com.teammoeg.frostedheart.FHConfig;
@@ -51,6 +52,7 @@ import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
+import top.theillusivec4.curios.api.type.ISlotType;
 
 @Mod.EventBusSubscriber
 public class TemperatureUpdate {
@@ -198,12 +200,12 @@ public class TemperatureUpdate {
                 
                 
                 //list of equipments to be calculated
-                for (Pair<String, ItemStack> is : CuriosCompat.getAllCuriosAndSlotsIfVisible(player)) {
+                for (Pair<ISlotType, ItemStack> is : CuriosCompat.getAllCuriosAndSlotsIfVisible(player)) {
                     if (is == null)
                         continue;
                     Item it = is.getSecond().getItem();
                     if (it instanceof IHeatingEquipment)
-                    	efftemp+=((IHeatingEquipment) it).getEffectiveTempAdded(EquipmentCuriosSlotType.fromCurios(is.getFirst()), is.getSecond(), efftemp, current);
+                    	efftemp+=((IHeatingEquipment) it).getEffectiveTempAdded(Either.left(is.getFirst()), is.getSecond(), efftemp, current);
                 }
                 for (EquipmentSlot slot : EquipmentSlot.values()) {
                 	ItemStack is=player.getItemBySlot(slot);
@@ -212,7 +214,7 @@ public class TemperatureUpdate {
                     Item it = is.getItem();
                     if (it instanceof IHeatingEquipment) {
                     	if (it instanceof IHeatingEquipment)
-                        	efftemp+=((IHeatingEquipment) it).getEffectiveTempAdded(EquipmentCuriosSlotType.fromVanilla(slot), is, efftemp, current);
+                        	efftemp+=((IHeatingEquipment) it).getEffectiveTempAdded(Either.right(EquipmentCuriosSlotType.fromVanilla(slot)), is, efftemp, current);
                     }
                     /*if (it instanceof IWarmKeepingEquipment) {
                         keepwarm += ((IWarmKeepingEquipment) it).getFactor(player, is);

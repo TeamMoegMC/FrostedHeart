@@ -195,7 +195,6 @@ public class FHGuiHelper {
 		bufferbuilder.vertex(matrix, x2, y2, blitOffset).color(1, 1, 1, opacity).uv(maxU, maxV).endVertex();
 		bufferbuilder.vertex(matrix, x2, y1, blitOffset).color(1, 1, 1, opacity).uv(maxU, minV).endVertex();
 		bufferbuilder.vertex(matrix, x1, y1, blitOffset).color(1, 1, 1, opacity).uv(minU, minV).endVertex();
-		bufferbuilder.end();
 
 		BufferUploader.drawWithShader(bufferbuilder.end());
 		RenderSystem.disableBlend();
@@ -225,7 +224,6 @@ public class FHGuiHelper {
 		bufferbuilder.vertex(matrix, x2, y2, blitOffset).color(r, g, b, opacity).uv(maxU, maxV).endVertex();
 		bufferbuilder.vertex(matrix, x2, y1, blitOffset).color(r, g, b, opacity).uv(maxU, minV).endVertex();
 		bufferbuilder.vertex(matrix, x1, y1, blitOffset).color(r, g, b, opacity).uv(minU, minV).endVertex();
-		bufferbuilder.end();
 
 		BufferUploader.drawWithShader(bufferbuilder.end());
 		RenderSystem.disableBlend();

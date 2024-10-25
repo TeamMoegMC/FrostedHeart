@@ -23,6 +23,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.mojang.datafixers.util.Either;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
@@ -47,7 +48,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
-
+import top.theillusivec4.curios.api.type.ISlotType;
 import net.minecraft.world.item.Item.Properties;
 
 public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
@@ -124,7 +125,7 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
     }
 
 	@Override
-	public float getEffectiveTempAdded(EquipmentCuriosSlotType slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
+	public float getEffectiveTempAdded(Either<ISlotType,EquipmentCuriosSlotType> slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
 		if(slot==null)
 			return 0.5f;
         if (stack.getDamageValue() > 0) {

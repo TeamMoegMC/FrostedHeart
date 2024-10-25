@@ -45,7 +45,7 @@ public abstract class MixinSawTileEntity extends BlockBreakingKineticBlockEntity
 
 	@Shadow(remap = false)
     public abstract void dropItemFromCutTree(BlockPos pos, ItemStack stack);
-
+/*
     @Inject(at = @At(value = "INVOKE",
             target = "Lcom/simibubi/create/foundation/utility/TreeCutter;findTree(Lnet/minecraft/world/IBlockReader;Lnet/minecraft/util/math/BlockPos;)Lcom/simibubi/create/foundation/utility/TreeCutter$Tree;",
             ordinal = 0, remap = false),
@@ -58,7 +58,7 @@ public abstract class MixinSawTileEntity extends BlockBreakingKineticBlockEntity
             cbi.cancel();
         if (TreeCutter.isChorus(state) && !TreeCutter.isChorus(up))
             cbi.cancel();
-    }/*
+    }*//*
 	@Overwrite(remap=false)
 	public void onBlockBroken(BlockState stateToBreak) {
 		Optional<AbstractBlockBreakQueue> dynamicTree = TreeCutter.findDynamicTree(stateToBreak.getBlock(), breakingPos);

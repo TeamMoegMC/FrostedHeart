@@ -164,13 +164,13 @@ public abstract class MixinContraption implements ISpeedContraption {
             throw AssemblyException.structureTooLarge();
     }
 */
-    @Inject(at = @At("HEAD"), method = "read", remap = false)
-    public void fh$readNBT(CompoundTag nbt, boolean client, CallbackInfo cbi) {
+    @Inject(at = @At("HEAD"), method = "readNBT", remap = false)
+    public void fh$readNBT(Level l,CompoundTag nbt, boolean client, CallbackInfo cbi) {
         sc = nbt.getFloat("speedCollected");
     }
 
-    @Inject(at = @At("RETURN"), method = "write", remap = false, locals = LocalCapture.CAPTURE_FAILHARD)
-    public void fh$writeNBT(CompoundTag cnbt,boolean client, CallbackInfoReturnable<CompoundTag> cbi) {
+    @Inject(at = @At("RETURN"), method = "writeNBT", remap = false, locals = LocalCapture.CAPTURE_FAILHARD)
+    public void fh$writeNBT(boolean client, CallbackInfoReturnable<CompoundTag> cbi,CompoundTag cnbt) {
         cnbt.putFloat("speedCollected", sc);
     }
 

@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.base.capability.codec;
 
+import org.objectweb.asm.Type;
+
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.base.capability.IFHCapability;
 import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
@@ -23,7 +25,7 @@ public class FHCodecCapability<C> implements IFHCapability{
 	}
 	@SuppressWarnings("unchecked")
 	public void register() {
-        capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(capClass.getName().intern());
+        capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(Type.getInternalName(capClass).intern());
 	}
 	public ICapabilityProvider provider() {
 		return new FHCodecCapabilityProvider<>(this);
