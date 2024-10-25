@@ -5,7 +5,7 @@ issueTrackerURL = "https://github.com/TeamMoegMC/FrostedHeart/issues"
 [[mods]] #mandatory
 modId = "frostedheart" #mandatory
 version = "${file.jarVersion}" #mandatory
-displayName = "TWR Frosted Heart" #mandatory
+displayName = "The Winter Rescue: Frosted Heart" #mandatory
 authors = "Developed by TeamMoegMC, with the help of many contributors. See description below."
 description = '''
 The Core Mod for The Winter Rescue Modpack.
