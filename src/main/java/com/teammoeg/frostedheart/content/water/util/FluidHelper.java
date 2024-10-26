@@ -1,10 +1,12 @@
 package com.teammoeg.frostedheart.content.water.util;
 
 
+import com.teammoeg.frostedheart.FHFluids;
 import com.teammoeg.frostedheart.content.water.item.FluidBottleItem;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
@@ -48,5 +50,14 @@ public class FluidHelper {
             if (fluidStack.getAmount() >= 250 && fluidStack.getFluid() == equalFluid) return true;
         }
         return false;
+    }
+    public static int getColor(Fluid type){
+        if(type== Fluids.WATER){
+            return -12618012;
+        }
+        if(type== FHFluids.PURIFIED_WATER.get()){
+            return 0x3ABDFF;
+        }
+        return -1;
     }
 }
