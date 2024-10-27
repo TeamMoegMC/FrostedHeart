@@ -456,5 +456,16 @@
 
   "tips.frostedheart.music_warning.title": "等一下!",
   "tips.frostedheart.music_warning.desc1": "将音乐关闭可能无法体验我们为冬季救援提供的音乐",
-  "tips.frostedheart.music_warning.desc2": "原版的音乐已经被禁用，如果您希望重新打开请修改配置文件: '&7$configPath$\\frostedheart-client.toml&r'"
+  "tips.frostedheart.music_warning.desc2": "原版的音乐已经被禁用，如果您希望重新打开请修改配置文件: '&7$configPath$\\frostedheart-client.toml&r'",
+
+  "fluid.frostedheart.purified_water":"净化水",
+  "item.frostedheart.iron_bottle": "金属杯",
+  "item.frostedheart.leather_water_bag": "皮水袋",
+  "item.frostedheart.wooden_cup": "木杯",
+  "item.frostedheart.wooden_cup_drink": "木杯",
+  "item.frostedheart.fluid_bottle": "瓶",
+  "effect.frostedheart.thirst": "口渴",
+  "death.attack.byThirst": "%s变成了%s干。",
+  "tooltip.frostedheart.drink_unit": "单次饮用量",
+  "tooltip.frostedheart.empty": "空"
 }

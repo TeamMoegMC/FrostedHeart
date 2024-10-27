@@ -46,13 +46,19 @@ import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
 
-import net.minecraft.world.entity.EquipmentSlot;
+import com.teammoeg.frostedheart.content.water.item.FluidBottleItem;
+import com.teammoeg.frostedheart.content.water.item.IronBottleItem;
+import com.teammoeg.frostedheart.content.water.item.LeatherWaterBagItem;
+import com.teammoeg.frostedheart.content.water.item.WoodenCupItem;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.food.Foods;
 import net.minecraft.world.item.ArmorItem.Type;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraft.world.item.SnowballItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DropExperienceBlock;
@@ -61,6 +67,9 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import static net.minecraft.world.level.block.Blocks.*;
 import static net.minecraft.world.level.block.Blocks.COPPER_ORE;
@@ -188,8 +197,10 @@ public class FHItems {
     public static RegistryObject<Item> KAOLIN = register("kaolin", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> BAUXITE = register("bauxite", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> ROTTEN_WOOD = register("rotten_wood", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_KAOLIN = register("crushed_kaolin", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_BAUXITE = register("crushed_bauxite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_KAOLIN = register("crushed_raw_kaolin", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_BAUXITE = register("crushed_raw_bauxite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> KAOLIN_DUST = register("kaolin_dust", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> BAUXITE_DUST = register("bauxite_dust", n -> new FHBaseItem(createProps()));
 
     // CONDENSED BALLS
     public static RegistryObject<Item> CONDENSED_BALL_IRON_ORE = register("condensed_ball_iron_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
@@ -203,14 +214,24 @@ public class FHItems {
     public static RegistryObject<Item> CONDENSED_BALL_GALENA_ORE = register("condensed_ball_galena_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
 
     // CRUSHED ORES
-    public static RegistryObject<Item> CRUSHED_SILVER_ORE = register("crushed_silver_ore", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_CASSITERITE_ORE = register("crushed_cassiterite_ore", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_PYRITE_ORE = register("crushed_pyrite_ore", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_PENTLANDITE_ORE = register("crushed_pentlandite_ore", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_GALENA_ORE = register("crushed_galena_ore", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_HALITE_ORE = register("crushed_halite_ore", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_POTASH_ORE = register("crushed_potash_ore", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_MAGNESITE_ORE = register("crushed_magnesite_ore", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_SILVER_ORE = register("crushed_raw_silver", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_CASSITERITE_ORE = register("crushed_raw_cassiterite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_PYRITE_ORE = register("crushed_raw_pyrite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_PENTLANDITE_ORE = register("crushed_raw_pentlandite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_GALENA_ORE = register("crushed_raw_galena", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_HALITE_ORE = register("crushed_raw_halite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_POTASH_ORE = register("crushed_raw_potash", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_MAGNESITE_ORE = register("crushed_raw_magnesite", n -> new FHBaseItem(createProps()));
+
+    // RAW ORES
+    public static RegistryObject<Item> RAW_SILVER = register("raw_silver", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> RAW_CASSITERITE = register("raw_cassiterite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> RAW_PYRITE = register("raw_pyrite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> RAW_PENTLANDITE = register("raw_pentlandite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> RAW_GALENA = register("raw_galena", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> RAW_HALITE = register("raw_halite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> RAW_POTASH = register("raw_potash", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> RAW_MAGNESITE = register("raw_magnesite", n -> new FHBaseItem(createProps()));
 
     // MATERIALS
 
@@ -231,7 +252,7 @@ public class FHItems {
     titanium
     bronze
     invar
-    tungstensteel
+    tungsten_steel
     zinc
     tin
     magnesium
@@ -255,7 +276,7 @@ public class FHItems {
     public static RegistryObject<Item> TITANIUM_DUST = register("titanium_dust");
     public static RegistryObject<Item> BRONZE_DUST = register("bronze_dust");
     public static RegistryObject<Item> INVAR_DUST = register("invar_dust");
-    public static RegistryObject<Item> TUNGSTENSTEEL_DUST = register("tungstensteel_dust");
+    public static RegistryObject<Item> TUNGSTEN_STEEL_DUST = register("tungsten_steel_dust");
     public static RegistryObject<Item> ZINC_DUST = register("zinc_dust");
     public static RegistryObject<Item> TIN_DUST = register("tin_dust");
     public static RegistryObject<Item> MAGNESIUM_DUST = register("magnesium_dust");
@@ -279,7 +300,7 @@ public class FHItems {
     public static RegistryObject<Item> TITANIUM_INGOT = register("titanium_ingot");
     public static RegistryObject<Item> BRONZE_INGOT = register("bronze_ingot");
     public static RegistryObject<Item> INVAR_INGOT = register("invar_ingot");
-    public static RegistryObject<Item> TUNGSTENSTEEL_INGOT = register("tungstensteel_ingot");
+    public static RegistryObject<Item> TUNGSTEN_STEEL_INGOT = register("tungsten_steel_ingot");
     // public static RegistryObject<Item> ZINC_INGOT = register("zinc_ingot");
     public static RegistryObject<Item> TIN_INGOT = register("tin_ingot");
     public static RegistryObject<Item> MAGNESIUM_INGOT = register("magnesium_ingot");
@@ -302,7 +323,7 @@ public class FHItems {
     public static RegistryObject<Item> TITANIUM_NUGGET = register("titanium_nugget");
     public static RegistryObject<Item> BRONZE_NUGGET = register("bronze_nugget");
     public static RegistryObject<Item> INVAR_NUGGET = register("invar_nugget");
-    public static RegistryObject<Item> TUNGSTENSTEEL_NUGGET = register("tungstensteel_nugget");
+    public static RegistryObject<Item> TUNGSTEN_STEEL_NUGGET = register("tungsten_steel_nugget");
     // public static RegistryObject<Item> ZINC_NUGGET = register("zinc_nugget");
     public static RegistryObject<Item> TIN_NUGGET = register("tin_nugget");
     public static RegistryObject<Item> MAGNESIUM_NUGGET = register("magnesium_nugget");
@@ -325,7 +346,7 @@ public class FHItems {
     public static RegistryObject<Item> TITANIUM_SHEET = register("titanium_sheet");
     public static RegistryObject<Item> BRONZE_SHEET = register("bronze_sheet");
     public static RegistryObject<Item> INVAR_SHEET = register("invar_sheet");
-    public static RegistryObject<Item> TUNGSTENSTEEL_SHEET = register("tungstensteel_sheet");
+    public static RegistryObject<Item> TUNGSTEN_STEEL_SHEET = register("tungsten_steel_sheet");
 
     // RODS
     public static RegistryObject<Item> COPPER_ROD = register("copper_rod");
@@ -417,5 +438,10 @@ public class FHItems {
     public static RegistryObject<Item> SODIUM_INGOT = register("sodium_ingot");
     public static RegistryObject<Item> REFRACTORY_BRICK = register("refractory_brick");
 
-
+    //WaterSource section
+    public final static RegistryObject<Item> fluid_bottle = register("fluid_bottle", (s) -> new FluidBottleItem(new Item.Properties().stacksTo(16)));
+    public final static RegistryObject<Item> wooden_cup = register("wooden_cup", (s) -> new WoodenCupItem(new Item.Properties(), 250) {@Override public ICapabilityProvider initCapabilities(@Nonnull ItemStack stack, @Nullable CompoundTag nbt) {return super.initCapabilities(new ItemStack(wooden_cup_drink.get()), nbt);}});
+    public final static RegistryObject<Item> wooden_cup_drink = register("wooden_cup_drink", (s) -> new WoodenCupItem(new Item.Properties().stacksTo(1), 250));
+    public final static RegistryObject<Item> LEATHER_WATER_BAG = register("leather_water_bag", (s) -> new LeatherWaterBagItem(new Item.Properties().stacksTo(1).setNoRepair(), 1500));
+    public final static RegistryObject<Item> IRON_BOTTLE = register("iron_bottle", (s) -> new IronBottleItem(new Item.Properties().stacksTo(1).setNoRepair(), 1500));
 }
