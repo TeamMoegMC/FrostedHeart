@@ -47,6 +47,7 @@ public class FHConfig {
         public final ForgeConfigSpec.IntValue autoModeInterval;
         public final ForgeConfigSpec.DoubleValue textSpeed;
         public final ForgeConfigSpec.BooleanValue renderScenario;
+        public final ForgeConfigSpec.BooleanValue renderTips;
         Client(ForgeConfigSpec.Builder builder) {
             enableUI = builder
                     .comment("Enables The Winter Rescue HUD. THIS IS MODPACK CORE FEATURE, DISABLING IS NOT RECOMMENDED. ")
@@ -97,6 +98,8 @@ public class FHConfig {
             builder.pop();
             renderScenario = builder.comment("Enables the scenario rendering. ")
                     .define("renderScenario", false); // todo: set true
+            renderTips = builder.comment("Enables the tips rendering. ")
+                    .define("renderTips", false); // todo: set true
         }
     }
 
