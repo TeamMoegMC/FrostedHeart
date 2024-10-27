@@ -178,8 +178,7 @@ public class KGlyphProvider extends SimplePreparableReloadListener<Object>{
 	}
 	@Override
 	protected void apply(Object objectIn, ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
-		// TODO Auto-generated method stub
-		
+
 	}
 	public static void addListener() {
 		if(Minecraft.getInstance()!=null&&Minecraft.getInstance().getResourceManager()!=null)

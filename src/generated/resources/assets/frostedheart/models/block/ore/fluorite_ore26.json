@@ -1,7 +1,0 @@
-{
-  "parent": "rankine:block/template_rankine_ore",
-  "textures": {
-    "background": "rankine:block/harzburgite",
-    "overlay": "frostedheart:block/fluorite_ore"
-  }
-}

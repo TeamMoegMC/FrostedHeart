@@ -27,20 +27,19 @@ public class ArmorTempCurios implements ICurio {
 	public Multimap<Attribute, AttributeModifier> getAttributeModifiers(SlotContext slotContext, UUID uuid) {
 		Multimap<Attribute, AttributeModifier> mm=HashMultimap.create();
         if(data!=null) {
-        	EquipmentCuriosSlotType slot=EquipmentCuriosSlotType.fromCurios(slotContext.getIdentifier());
+
         	if(data.getInsulation()!=0)
-        		mm.put(FHAttributes.INSULATION.get(), new AttributeModifier(uuid,slot.getKey(slotContext.getIndex()), data.getInsulation(), Operation.ADDITION));
+        		mm.put(FHAttributes.INSULATION.get(), new AttributeModifier(uuid,slotContext.identifier(), data.getInsulation(), Operation.ADDITION));
         	if(data.getColdProof()!=0)
-        		mm.put(FHAttributes.WIND_PROOF.get(), new AttributeModifier(uuid,slot.getKey(slotContext.getIndex()), data.getColdProof() , Operation.ADDITION));
+        		mm.put(FHAttributes.WIND_PROOF.get(), new AttributeModifier(uuid,slotContext.identifier(), data.getColdProof() , Operation.ADDITION));
         	if(data.getHeatProof()!=0)
-        		mm.put(FHAttributes.HEAT_PROOF.get(), new AttributeModifier(uuid,slot.getKey(slotContext.getIndex()), data.getHeatProof() , Operation.ADDITION));
+        		mm.put(FHAttributes.HEAT_PROOF.get(), new AttributeModifier(uuid,slotContext.identifier(), data.getHeatProof() , Operation.ADDITION));
         }
 		return ICurio.super.getAttributeModifiers(slotContext, uuid);
 	}
 
 	@Override
 	public ItemStack getStack() {
-		// TODO Auto-generated method stub
 		return stack;
 	}
 

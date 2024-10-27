@@ -1,8 +1,0 @@
-{
-  "type": "frostedheart:diet_override",
-  "groups": {
-    "proteins": 0.03557208,
-    "vitamin": 0.021872459
-  },
-  "item": "rankine:cooked_tofu"
-}

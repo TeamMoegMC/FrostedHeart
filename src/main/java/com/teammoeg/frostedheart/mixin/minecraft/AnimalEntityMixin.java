@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.util.mixin.BreedUtil;
 
-import net.minecraft.world.entity.AgableMob;
+import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.item.ItemStack;
@@ -38,19 +38,19 @@ import net.minecraft.world.level.Level;
  * For removal in 1.20+
  * */
 @Mixin({Animal.class})
-public abstract class AnimalEntityMixin extends AgableMob {
+public abstract class AnimalEntityMixin extends AgeableMob {
 
-    protected AnimalEntityMixin(EntityType<? extends AgableMob> type, Level worldIn) {
+    protected AnimalEntityMixin(EntityType<? extends AgeableMob> type, Level worldIn) {
         super(type, worldIn);
     }
 
-    @ModifyConstant(method = "spawnBabyAnimal", constant = @Constant(intValue = 6000))
+    @ModifyConstant(method = "spawnChildFromBreeding", constant = @Constant(intValue = 6000))
     public int getBreedCooldown(int orig) {
         return 28800;
     }
 
-    @Inject(at = @At("HEAD"), method = "isBreedingItem", cancellable = true)
-    public void isBreedingItem(ItemStack itemStack, CallbackInfoReturnable<Boolean> cbi) {
+    @Inject(at = @At("HEAD"), method = "isFood", cancellable = true)
+    public void isFood(ItemStack itemStack, CallbackInfoReturnable<Boolean> cbi) {
         EntityType<?> type = getType();
         boolean f = BreedUtil.isBreedingItem(type, itemStack);
         if (f)

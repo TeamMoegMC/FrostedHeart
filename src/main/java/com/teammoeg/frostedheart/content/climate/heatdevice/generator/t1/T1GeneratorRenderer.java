@@ -22,49 +22,47 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1;
 import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.client.model.DynamicBlockModelReference;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
+import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 
-import blusunrize.immersiveengineering.api.IEProperties.IEObjState;
-import blusunrize.immersiveengineering.api.IEProperties.Model;
-import blusunrize.immersiveengineering.api.IEProperties.VisibilityList;
-import blusunrize.immersiveengineering.api.utils.client.SinglePropertyModelData;
-import blusunrize.immersiveengineering.client.render.tile.DynamicModel;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEHelperMaster;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.registry.MultiblockBlockEntityMaster;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.util.MultiblockOrientation;
+import blusunrize.immersiveengineering.client.render.tile.BERenderUtils;
 import blusunrize.immersiveengineering.client.utils.RenderUtils;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 
-public class T1GeneratorRenderer implements BlockEntityRenderer<T1GeneratorTileEntity> {
+public class T1GeneratorRenderer implements BlockEntityRenderer<MultiblockBlockEntityMaster<T1GeneratorState>> {
     public static DynamicBlockModelReference FUEL;
-    public T1GeneratorRenderer(BlockEntityRendererProvider.Context pContext){
-    	
+
+    public T1GeneratorRenderer(BlockEntityRendererProvider.Context pContext) {
+
     }
-  
+
     @Override
-    public void render(T1GeneratorTileEntity te, float partialTicks, PoseStack matrixStack,
+    public void render(MultiblockBlockEntityMaster<T1GeneratorState> blockEntity, float partialTicks, PoseStack matrixStack,
                        MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
-        if (!te.formed || te.isDummy() || !te.getWorldNonnull().hasChunkAt(te.getBlockPos()))
-            return;
-        if (!te.hasFuel())
-        	return;
+        final IMultiblockBEHelperMaster<T1GeneratorState> helper = blockEntity.getHelper();
+        final T1GeneratorState state = helper.getState();
+        final MultiblockOrientation orientation = helper.getContext().getLevel().getOrientation();
+        BlockPos blockPos = blockEntity.getBlockPos();
 
-        BlockPos blockPos = te.getBlockPos();
-        BlockState state = te.getLevel().getBlockState(blockPos);
-        if (state.getBlock() != FHMultiblocks.generator)
-            return;
-        IEObjState objState = new IEObjState(VisibilityList.showAll());
-
-        matrixStack.pushPose();
-        List<BakedQuad> quads = FUEL.getNullQuads(te.getFacing(), state, new SinglePropertyModelData<>(objState, Model.IE_OBJ_STATE));
-        RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
-        matrixStack.popPose();
+        if (state.getData(blockPos).map(t -> !t.inventory.getStackInSlot(GeneratorData.INPUT_SLOT).isEmpty()).orElse(false)) {
+            matrixStack.pushPose();
+            bufferIn = BERenderUtils.mirror(orientation, matrixStack, bufferIn);
+            Direction facing = orientation.front();
+            matrixStack.rotateAround(FHGuiHelper.DIR_TO_FACING.apply(facing), 0.5f, 0.5f, 0.5f);
+            List<BakedQuad> quads = FUEL.getAllQuads();
+            RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
+            matrixStack.popPose();
+        }
     }
 
 }

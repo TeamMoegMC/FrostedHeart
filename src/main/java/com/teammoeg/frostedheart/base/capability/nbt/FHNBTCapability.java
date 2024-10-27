@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.base.capability.nbt;
 
+import org.objectweb.asm.Type;
+
 import com.teammoeg.frostedheart.base.capability.IFHCapability;
 import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
@@ -24,7 +26,7 @@ public class FHNBTCapability<C extends NBTSerializable> implements IFHCapability
 	}
 	@SuppressWarnings("unchecked")
 	public void register() {
-        capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(capClass.getName().intern());
+        capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(Type.getInternalName(capClass).intern());
 	}
 	public ICapabilityProvider provider() {
 		return new FHNBTCapabilityProvider<>(this);

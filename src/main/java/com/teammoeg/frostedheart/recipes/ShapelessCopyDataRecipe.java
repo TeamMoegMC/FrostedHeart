@@ -122,10 +122,6 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe{
         return ItemStack.EMPTY;
     }
 
-    @Override
-    public ResourceLocation getId() {
-        return getId();
-    }
 
     public RecipeSerializer<?> getSerializer() {
         return SERIALIZER.get();

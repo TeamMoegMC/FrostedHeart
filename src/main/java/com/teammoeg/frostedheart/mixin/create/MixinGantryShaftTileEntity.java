@@ -21,28 +21,30 @@ package com.teammoeg.frostedheart.mixin.create;
 
 import org.spongepowered.asm.mixin.Mixin;
 
-import com.simibubi.create.content.contraptions.base.KineticTileEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraption;
-import com.simibubi.create.content.contraptions.relays.advanced.GantryShaftTileEntity;
+import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
+import com.simibubi.create.content.contraptions.gantry.GantryContraption;
+import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import com.simibubi.create.content.kinetics.gantry.GantryShaftBlockEntity;
 import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
 import com.teammoeg.frostedheart.util.mixin.IGantryShaft;
 
-import net.minecraft.world.level.block.entity.TickableBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 
-@Mixin(GantryShaftTileEntity.class)
-public abstract class MixinGantryShaftTileEntity extends KineticTileEntity implements TickableBlockEntity, IGantryShaft {
-    private int fh$cooldown;
+@Mixin(GantryShaftBlockEntity.class)
+public abstract class MixinGantryShaftTileEntity extends KineticBlockEntity implements IGantryShaft {
+    public MixinGantryShaftTileEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
+		super(typeIn, pos, state);
+	}
+
+	private int fh$cooldown;
 
     public AbstractContraptionEntity currentComp;
 
-    public MixinGantryShaftTileEntity(BlockEntityType<?> typeIn) {
-        super(typeIn);
-    }
+
     @Override
     public float calculateStressApplied() {
         if (currentComp != null) {
@@ -51,7 +53,7 @@ public abstract class MixinGantryShaftTileEntity extends KineticTileEntity imple
                 //float impact = currentComp.getContraption().getBlocks().size()*4;
                 Direction facing = ((GantryContraption) currentComp.getContraption()).getFacing();
                 Vec3 currentPosition = currentComp.getAnchorVec().add(.5, .5, .5);
-                BlockPos gantryShaftPos = new BlockPos(currentPosition).relative(facing.getOpposite());
+                BlockPos gantryShaftPos = BlockPos.containing(currentPosition).relative(facing.getOpposite());
                 if (gantryShaftPos.equals(this.worldPosition)) {
                     ContraptionCostUtils.setSpeedAndCollect(currentComp, (int) speed);
                     this.lastStressApplied = ContraptionCostUtils.getCost(currentComp) + 0.5F;

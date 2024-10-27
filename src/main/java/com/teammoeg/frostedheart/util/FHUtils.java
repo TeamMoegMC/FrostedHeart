@@ -64,6 +64,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
@@ -90,13 +91,13 @@ public class FHUtils {
         }
     }
 
-    public static boolean canBigTreeGenerate(Level w, BlockPos p, Random r) {
+    public static boolean canBigTreeGenerate(Level w, BlockPos p, RandomSource r) {
 
         return canTreeGenerate(w, p, r, 7);
 
     }
 
-    public static void canBigTreeGenerate(Level w, BlockPos p, Random r, CallbackInfoReturnable<Boolean> cr) {
+    public static void canBigTreeGenerate(Level w, BlockPos p, RandomSource r, CallbackInfoReturnable<Boolean> cr) {
         if (!canBigTreeGenerate(w, p, r))
             cr.setReturnValue(false);
     }
@@ -116,7 +117,7 @@ public class FHUtils {
         return !(temp > 300 + WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX);
     }
 
-    public static boolean canTreeGenerate(Level w, BlockPos p, Random r, int chance) {
+    public static boolean canTreeGenerate(Level w, BlockPos p, RandomSource r, int chance) {
         return r.nextInt(chance) == 0;
 
     }
@@ -149,15 +150,15 @@ public class FHUtils {
     		return te.getCapability(cap,d).orElse(null);
     	return null;
     }
-    public static boolean canTreeGrow(Level w, BlockPos p, Random r) {
-        float temp = ChunkHeatData.getTemperature(w, p);
-        if (temp <= -6 || WorldClimate.isBlizzard(w))
+    public static boolean canTreeGrow(LevelAccessor worldIn, BlockPos p, RandomSource rand) {
+        float temp = ChunkHeatData.getTemperature(worldIn, p);
+        if (temp <= -6 || WorldClimate.isBlizzard(worldIn))
             return false;
         if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
             return false;
         if (temp > 0)
             return true;
-        return r.nextInt(Math.max(1, Mth.ceil(-temp / 2))) == 0;
+        return rand.nextInt(Math.max(1, Mth.ceil(-temp / 2))) == 0;
     }
     public static boolean hasItems(Player player,List<IngredientWithSize> costList) {
     	int i=0;

@@ -51,7 +51,7 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
     private IDrawableAnimated FIRE;
 
     public GeneratorFuelCategory(IGuiHelper guiHelper) {
-        this.ICON = guiHelper.createDrawableIngredient(VanillaTypes.ITEM_STACK,new ItemStack(FHMultiblocks.generator));
+        this.ICON = guiHelper.createDrawableIngredient(VanillaTypes.ITEM_STACK,new ItemStack(FHMultiblocks.Logic.GENERATOR_T1.blockItem().get()));
         ResourceLocation guiMain = new ResourceLocation(FHMain.MODID, "textures/gui/generator_t1.png");
         this.BACKGROUND = guiHelper.createDrawable(guiMain, 24, 3, 134, 72);
         IDrawableStatic tfire = guiHelper.createDrawable(guiMain, 179, 0, 9, 13);

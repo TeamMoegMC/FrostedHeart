@@ -43,18 +43,28 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class ChunkHeatData{
-	public static final MapCodec<List<IHeatArea>> LIST_CODEC=CodecUtil.optionalFieldOfs(Codec.list(
-		CodecUtil.dispatch(IHeatArea.class)
-		.type("cubic", CubicHeatArea.class,CubicHeatArea.CODEC)
-		.type("pillar", PillarHeatArea.class, PillarHeatArea.CODEC)
-		.buildByInt()
-		),o->o.emptyList(),"adjs","temperature");
-	public static final Codec<ChunkHeatData> CODEC=RecordCodecBuilder.create(t->t.group(
-		LIST_CODEC.forGetter(o->o.adjusters.values().stream().collect(Collectors.toList()))).apply(t, ChunkHeatData::new));
+public class ChunkHeatData {
+    public static final MapCodec<List<IHeatArea>> LIST_CODEC = CodecUtil.optionalFieldOfs(Codec.list(
+            CodecUtil.dispatch(IHeatArea.class)
+                    .type("cubic", CubicHeatArea.class, CubicHeatArea.CODEC)
+                    .type("pillar", PillarHeatArea.class, PillarHeatArea.CODEC)
+                    .buildByInt()
+    ), o -> o.emptyList(), "adjs", "temperature");
+    public static final Codec<ChunkHeatData> CODEC = RecordCodecBuilder.create(t -> t.group(
+            LIST_CODEC.forGetter(o -> o.adjusters.values().stream().collect(Collectors.toList()))).apply(t, ChunkHeatData::new));
 
-    private Map<BlockPos,IHeatArea> adjusters = new LinkedHashMap<>();
+    private Map<BlockPos, IHeatArea> adjusters = new LinkedHashMap<>();
 
+
+    public ChunkHeatData() {
+        reset();
+    }
+
+    public ChunkHeatData(List<IHeatArea> adjusters) {
+        super();
+        reset();
+        setAdjusters(adjusters);
+    }
 
     /**
      * Used on a ServerWorld context to add temperature in certain 3D region in a
@@ -67,7 +77,7 @@ public class ChunkHeatData{
             ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
             if (data != null) {
                 data.adjusters.remove(adjx.getCenter());
-                data.adjusters.put(adjx.getCenter(),adjx);
+                data.adjusters.put(adjx.getCenter(), adjx);
             }
         }
     }
@@ -193,7 +203,7 @@ public class ChunkHeatData{
      * provider to generate the data.
      */
     @SuppressWarnings("deprecation")
-	public static Optional<ChunkHeatData> get(LevelReader world, ChunkPos pos) {
+    public static Optional<ChunkHeatData> get(LevelReader world, ChunkPos pos) {
         // Query cache first, picking the correct cache for the current logical side
         //ChunkData data = ChunkDataCache.get(world).get(pos);
         //if (data == null) {
@@ -213,7 +223,7 @@ public class ChunkHeatData{
      * This method directly get temperature at any positions.
      */
     public static float getAdditionTemperature(LevelReader world, BlockPos pos) {
-        return get(world, new ChunkPos(pos)).map(t->t.getAdditionTemperatureAtBlock(world, pos)).orElse(0f);
+        return get(world, new ChunkPos(pos)).map(t -> t.getAdditionTemperatureAtBlock(world, pos)).orElse(0f);
     }
 
     /**
@@ -239,7 +249,7 @@ public class ChunkHeatData{
      * Helper method, since lazy optionals and instanceof checks together are ugly
      */
     public static LazyOptional<ChunkHeatData> getCapability(@Nullable ChunkAccess chunk) {
-    	return FHCapabilities.CHUNK_HEAT.getCapability(chunk);
+        return FHCapabilities.CHUNK_HEAT.getCapability(chunk);
     }
 
     /**
@@ -249,15 +259,17 @@ public class ChunkHeatData{
      * This method directly get temperature at any positions.
      */
     public static float getTemperature(LevelReader world, BlockPos pos) {
-        return get(world, new ChunkPos(pos)).map(t->t.getTemperatureAtBlock(world, pos)).orElseGet(()->WorldTemperature.getTemperature(world, pos));
+        return get(world, new ChunkPos(pos)).map(t -> t.getTemperatureAtBlock(world, pos)).orElseGet(() -> WorldTemperature.getTemperature(world, pos));
     }
+
     public static String toDisplaySoil(float temp) {
-    	temp=Math.max(temp, -20);
-    	temp=Math.min(temp, 30);
-    	temp+=20;
-    	temp*=2;
-    	return (int)temp+"%";
+        temp = Math.max(temp, -20);
+        temp = Math.min(temp, 30);
+        temp += 20;
+        temp *= 2;
+        return (int) temp + "%";
     }
+
     /**
      * Used on a ServerWorld context to set temperature in certain 3D region in a
      * ChunkData instance
@@ -286,6 +298,7 @@ public class ChunkHeatData{
                 data.adjusters.remove(adj);
         }
     }
+
     /**
      * Used on a ServerWorld context to reset a temperature area
      *
@@ -295,7 +308,7 @@ public class ChunkHeatData{
     public static void removeTempAdjust(LevelAccessor world, BlockPos heatPos) {
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
         ChunkHeatData cd = ChunkHeatData.get(world, heatPos);
-        if(cd==null)return;
+        if (cd == null) return;
         IHeatArea oadj = cd.getAdjustAt(heatPos);
         if (oadj == null) return;
         int range = oadj.getRadius();
@@ -354,12 +367,6 @@ public class ChunkHeatData{
         removeTempAdjust(world, heatPos);
     }
 
-    public ChunkHeatData() {
-        reset();
-    }
-
-
-
     /**
      * Get Temperature in a world at a location
      *
@@ -387,8 +394,10 @@ public class ChunkHeatData{
         return adjusters.values();
     }
 
-
-
+    public void setAdjusters(List<IHeatArea> adjusters) {
+        for (IHeatArea adjust : adjusters)
+            this.adjusters.put(adjust.getCenter(), adjust);
+    }
 
     /**
      * Get Temperature in a world at a location
@@ -412,16 +421,6 @@ public class ChunkHeatData{
     private void reset() {
         adjusters.clear();
 
-    }
-    public ChunkHeatData(List<IHeatArea> adjusters) {
-		super();
-		reset();
-		setAdjusters(adjusters);
-	}
-
-	public void setAdjusters(List<IHeatArea> adjusters) {
-		for(IHeatArea adjust:adjusters)
-			this.adjusters.put(adjust.getCenter(), adjust);
     }
 
 }

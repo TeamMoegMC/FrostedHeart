@@ -2,7 +2,6 @@ package com.teammoeg.frostedheart.content.steamenergy.capabilities;
 
 import net.minecraft.nbt.CompoundTag;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class HeatPowerEndpoint.
  * Basic class for heat power endpoint with power action

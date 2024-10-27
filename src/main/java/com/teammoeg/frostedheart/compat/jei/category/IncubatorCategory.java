@@ -119,7 +119,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 		if (!recipe.output_fluid.isEmpty())
 			fluidout.setFluidRenderer(recipe.output_fluid.getAmount()*5, false, 16,46).addIngredient(ForgeTypes.FLUID_STACK, recipe.output_fluid)
 			.addTooltipCallback((v,t)->{if(recipe.isFood)t.add(TranslateUtils.translateGui("per_food_value", recipe.output_fluid.getAmount()));});
-		builder.addSlot(RecipeIngredientRole.INPUT, 29, 47);//TODO add quicklime
+		builder.addSlot(RecipeIngredientRole.INPUT, 29, 47);
 		builder.addSlot(recipe.consume_catalyst?RecipeIngredientRole.INPUT:RecipeIngredientRole.CATALYST, 11, 12)
 		.addItemStacks(Arrays.asList(recipe.catalyst.getMatchingStacks()))
 		.addTooltipCallback((v,t)->{if(recipe.consume_catalyst)t.add(TranslateUtils.translateGui("not_consume"));});

@@ -26,13 +26,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.simibubi.create.content.contraptions.components.crafter.MechanicalCrafterBlock;
+import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlock;
 import com.teammoeg.frostedheart.FHTeamDataManager;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
-import blusunrize.immersiveengineering.common.blocks.IETileProviderBlock;
-import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -54,7 +52,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
  * <p>
  * */
 @SuppressWarnings("unused")
-@Mixin({IETileProviderBlock.class, MechanicalCrafterBlock.class, SaunaBlock.class})
+@Mixin({MechanicalCrafterBlock.class, SaunaBlock.class})
 public class BlockMixin extends Block {
 
 
@@ -62,13 +60,10 @@ public class BlockMixin extends Block {
         super(properties);
     }
 
-    @Inject(at = @At("HEAD"), method = "onBlockActivated(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/math/BlockRayTraceResult;)Lnet/minecraft/util/ActionResultType;")
-    public void fh$on$onBlockActivated(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit, CallbackInfoReturnable<InteractionResult> r) {
+    @Inject(at = @At("HEAD"), method = "use")
+    public void fh$use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn,BlockHitResult hit, CallbackInfoReturnable<InteractionResult> r) {
         if (!worldIn.isClientSide && !(player instanceof FakePlayer)) {
             BlockEntity te = Utils.getExistingTileEntity(worldIn, pos);
-            if (te instanceof MultiblockPartTileEntity) {
-                te = ((MultiblockPartTileEntity<?>) te).master();
-            }
             IOwnerTile.trySetOwner(te, FHTeamDataManager.get(player).getId());
         }
     }

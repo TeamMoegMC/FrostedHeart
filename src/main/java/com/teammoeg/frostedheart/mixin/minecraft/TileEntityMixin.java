@@ -41,14 +41,14 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 public class TileEntityMixin implements IOwnerTile {
     UUID id;
 
-    @Inject(at = @At("RETURN"), method = "read(Lnet/minecraft/block/BlockState;Lnet/minecraft/nbt/CompoundNBT;)V")
-    public void fh$to$read(BlockState bs, CompoundTag nbt, CallbackInfo cbi) {
+    @Inject(at = @At("RETURN"), method = "load")
+    public void fh$to$read(CompoundTag nbt, CallbackInfo cbi) {
         if (nbt.contains("fhowner"))
             id = UUID.fromString(nbt.getString("fhowner"));
     }
 
-    @Inject(at = @At("HEAD"), method = "write(Lnet/minecraft/nbt/CompoundNBT;)Lnet/minecraft/nbt/CompoundNBT;")
-    public void fh$to$write(CompoundTag nbt, CallbackInfoReturnable<CompoundTag> cbi) {
+    @Inject(at = @At("HEAD"), method = "saveAdditional")
+    public void fh$to$write(CompoundTag nbt, CallbackInfo cbi) {
         if (id != null)
             nbt.putString("fhowner", id.toString());
     }

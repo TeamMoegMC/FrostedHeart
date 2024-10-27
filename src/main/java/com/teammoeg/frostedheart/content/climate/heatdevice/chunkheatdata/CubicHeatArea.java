@@ -29,9 +29,9 @@ import net.minecraft.core.BlockPos;
  * Cubic Temperature Adjust, would adjust temperature in a cube
  */
 public class CubicHeatArea implements IHeatArea {
-	public static Codec<CubicHeatArea> CODEC=RecordCodecBuilder.create(t->t.group(CodecUtil.BLOCKPOS.fieldOf("pos").forGetter(o->o.center),
-		Codec.INT.fieldOf("r").forGetter(o->o.r),
-		Codec.INT.fieldOf("v").forGetter(o->o.value)).apply(t,CubicHeatArea::new));
+    public static Codec<CubicHeatArea> CODEC = RecordCodecBuilder.create(t -> t.group(CodecUtil.BLOCKPOS.fieldOf("pos").forGetter(o -> o.center),
+            Codec.INT.fieldOf("r").forGetter(o -> o.r),
+            Codec.INT.fieldOf("v").forGetter(o -> o.value)).apply(t, CubicHeatArea::new));
     BlockPos center;
     int r;
     int value;
@@ -72,6 +72,11 @@ public class CubicHeatArea implements IHeatArea {
     }
 
     @Override
+    public void setValue(int value) {
+        this.value = value;
+    }
+
+    @Override
     public float getValueAt(BlockPos pos) {
         return value;
     }
@@ -81,24 +86,15 @@ public class CubicHeatArea implements IHeatArea {
         return Math.abs(x - getCenterX()) <= r && Math.abs(y - getCenterY()) <= r && Math.abs(z - getCenterZ()) <= r;
     }
 
-
-
     @Override
-    public void setValue(int value) {
-        this.value = value;
+    public BlockPos getCenter() {
+        return center;
     }
 
 
-	@Override
-	public BlockPos getCenter() {
-		// TODO Auto-generated method stub
-		return center;
-	}
-
-
-	@Override
-	public String toString() {
-		return "CubicHeatArea [center=" + center + ", r=" + r + ", value=" + value + "]";
-	}
+    @Override
+    public String toString() {
+        return "CubicHeatArea [center=" + center + ", r=" + r + ", value=" + value + "]";
+    }
 
 }

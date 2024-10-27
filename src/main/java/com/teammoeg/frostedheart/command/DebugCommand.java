@@ -22,15 +22,10 @@ package com.teammoeg.frostedheart.command;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -39,7 +34,6 @@ import com.google.gson.JsonObject;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.research.Research;
@@ -49,36 +43,23 @@ import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.FileUtil;
-import com.teammoeg.frostedheart.util.utility.ReferenceValue;
-import com.teammoeg.frostedheart.world.FHFeatures;
 
-import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
-import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.data.ClaimedChunkManagerImpl;
-import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
-import dev.ftb.mods.ftbchunks.net.SendChunkPacket.SingleChunk;
-import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
-import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.api.Team;
-import dev.ftb.mods.ftbteams.data.PlayerTeam;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.level.Level;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 public class DebugCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("debug")
                 .then(Commands.literal("generate_airship").executes(ct -> {
-                    FHFeatures.spacecraft_feature.place(((ServerLevel) ct.getSource().getPlayerOrException().level()), ((ServerLevel) ct.getSource().getPlayerOrException().level()).getChunkSource().getGenerator(), ct.getSource().getPlayerOrException().level().random,
-                            ct.getSource().getPlayerOrException().blockPosition());
+                	//TODO Add spacecraft feature
+                    /*FHFeatures.spacecraft_feature.place(((ServerLevel) ct.getSource().getPlayerOrException().level()), ((ServerLevel) ct.getSource().getPlayerOrException().level()).getChunkSource().getGenerator(), ct.getSource().getPlayerOrException().level().random,
+                            ct.getSource().getPlayerOrException().blockPosition());*/
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("export_food").executes(ct -> {
                     Set<Item> items = new HashSet<>();
@@ -119,7 +100,7 @@ public class DebugCommand {
                                 ps.println(RegistryUtils.getRegistryName(ix) + "," + f.getNutrition());
                         }
                     } catch (Exception e) {
-                        // TODO Auto-generated catch block
+                        FHMain.LOGGER.error("Error while exporting food values");
                         e.printStackTrace();
                     }
                     ct.getSource().sendSuccess(()->TranslateUtils.str("Exported " + items.size() + " Foods"), true);
@@ -173,7 +154,6 @@ public class DebugCommand {
                     try {
                         FileUtil.transfer(gs.toJson(ja), new File(FMLPaths.GAMEDIR.get().toFile(), "quest_export.json"));
                     } catch (IOException e1) {
-                        // TODO Auto-generated catch block
                         e1.printStackTrace();
                     }
                     return Command.SINGLE_SUCCESS;
@@ -253,7 +233,7 @@ public class DebugCommand {
                         FileUtil.transfer(gs.toJson(out), new File(FMLPaths.GAMEDIR.get().toFile(), "research_export.json"));
 
                     } catch (IOException e1) {
-                        // TODO Auto-generated catch block
+                        FHMain.LOGGER.error("Error while exporting researches");
                         e1.printStackTrace();
                     }
                     return Command.SINGLE_SUCCESS;

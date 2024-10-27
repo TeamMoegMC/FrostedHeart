@@ -100,13 +100,11 @@ public enum FHArmorMaterial implements ArmorMaterial {
 
 	@Override
 	public int getDurabilityForType(Type pType) {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int getDefenseForType(Type pType) {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 }

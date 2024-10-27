@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
-import com.teammoeg.frostedheart.FHBaseContainer;
+import com.teammoeg.frostedheart.FHBlockEntityContainer;
 import com.teammoeg.frostedheart.FHContainer;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
 
@@ -31,7 +31,7 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-public class DrawDeskContainer extends FHBaseContainer<DrawingDeskTileEntity> {
+public class DrawDeskContainer extends FHBlockEntityContainer<DrawingDeskTileEntity> {
     interface Enabled {
         void setEnabled(boolean enabled);
     }
@@ -69,7 +69,7 @@ public class DrawDeskContainer extends FHBaseContainer<DrawingDeskTileEntity> {
     }
 
     public DrawDeskContainer(int id, Inventory inventoryPlayer, DrawingDeskTileEntity tile) {
-        super(FHContainer.DRAW_DESK.get(), tile, id, 3);
+        super(FHContainer.DRAW_DESK.get(), tile, id,inventoryPlayer.player, 3);
 
         this.addSlot(new EnableIESlot(this, inv, DrawingDeskTileEntity.PAPER_SLOT, 114, 161) {// paper
             @Override

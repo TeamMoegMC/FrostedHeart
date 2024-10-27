@@ -93,7 +93,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
     public boolean scan(){
         this.scan(256, (blockPos) -> {
             area++;
-            FHMain.LOGGER.info("Scanning pos: " + blockPos);
+            //FHMain.LOGGER.info("Scanning pos: " + blockPos);
             occupiedArea.add(toColumnPos(blockPos));
             }, BlockScanner.PREDICATE_FALSE);
         temperature /= counter_for_temperature;

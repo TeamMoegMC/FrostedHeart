@@ -1,26 +1,15 @@
-buildscript {
-    repositories {
-        maven { url = 'https://maven.minecraftforge.net' }
-        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
-        maven { url = 'https://maven.parchmentmc.org' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: "${forgegradle_version}", changing: true
-        classpath group: 'org.spongepowered', name: 'mixingradle', version: "${mixingradle_version}"
-        classpath group: 'org.parchmentmc', name: 'librarian', version: "${librarian_version}"
-    }
-}
+
 
 plugins {
-    id 'com.matthewprenger.cursegradle' version '1.4.0'
+	id 'com.matthewprenger.cursegradle' version '1.4.0'
+    id 'net.neoforged.gradle' version "${forgegradle_version}"
+    id 'org.spongepowered.mixin' version "${mixingradle_version}"
+    id 'org.parchmentmc.librarian.forgegradle' version "${librarian_version}"
+    id 'org.jetbrains.gradle.plugin.idea-ext' version '1.1.6'
+    id 'maven-publish'
+    id 'eclipse'
+    id 'idea'
 }
-
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'org.spongepowered.mixin'
-apply plugin: 'org.parchmentmc.librarian.forgegradle'
-apply plugin: 'maven-publish'
-apply plugin: 'idea'
 //apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
 //apply from: 'https://raw.githubusercontent.com/SizableShrimp/ForgeUpdatesRemapper/main/remapper.gradle'
 
@@ -32,6 +21,8 @@ compileTestJava.options.encoding = "UTF-8"
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 sourceSets {
+	client{java{srcDirs=[]} resources{srcDirs=[]}}
+	server{java{srcDirs=[]} resources{srcDirs=[]}}
     main {
         resources {
             srcDirs = [
@@ -39,18 +30,20 @@ sourceSets {
             ]
         }
     }
-//	datagen {
-//        compileClasspath += main.compileClasspath
-//        runtimeClasspath += main.runtimeClasspath
-//        compileClasspath += main.output
-//        runtimeClasspath += main.output
-//        resources {
-//            srcDirs = [
-//                    "$rootDir/src/datagen/resources",
-//            ]
-//        }
-//    }
+    noDatagen{java{srcDirs=[]} resources{srcDirs=[]}}
+	datagen {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+        compileClasspath += main.output
+        runtimeClasspath += main.output
+        resources {
+            srcDirs = [
+                    "$rootDir/src/datagen/resources",
+            ]
+        }
+    }
 }
+
 minecraft {
     mappings channel: 'parchment', version: "${parchment_version}-${minecraft_version}"
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
@@ -81,10 +74,12 @@ minecraft {
                 jvmArgs "-Dorg.lwjgl.glfw.libname=${System.env.LIBGLFW_PATH}/lib/libglfw.so"
             }
 
-//            arg "-mixin.config=" + "frostedheart.mixins.json"
+            arg "-mixin.config=" + "frostedheart.mixins.json"
             mods {
                 frostedheart {
+                	source sourceSets.noDatagen
                     source sourceSets.main
+                    source sourceSets.client
                 }
             }
         }
@@ -95,10 +90,12 @@ minecraft {
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
-//            arg "-mixin.config=" + "frostedheart.mixins.json"
+            arg "-mixin.config=" + "frostedheart.mixins.json"
             mods {
                 frostedheart {
+                	source sourceSets.noDatagen
                     source sourceSets.main
+                    source sourceSets.server
                 }
             }
         }
@@ -109,11 +106,11 @@ minecraft {
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
-            args '--mod', 'frostedheart','--all','--output', file('src/generated/resources/'), 'validate', '--existing', file('src/main/resources/'), '--existing-mod', 'immersiveengineering', '--existing-mod','rankine'
+            args "-mixin.config=" + "frostedheart.mixins.json",'--mod', 'frostedheart','--all','--output', file('src/generated/resources/'), 'validate', '--existing', file('src/main/resources/'), '--existing-mod', 'immersiveengineering', '--existing-mod','rankine'
             mods {
                 frostedheart {
 					source sourceSets.main
-//                    source sourceSets.datagen
+                    source sourceSets.datagen
                 }
             }
         }
@@ -123,10 +120,12 @@ minecraft {
 sourceSets.main.resources {
     srcDir 'src/generated/resources'
 }
-
-//mixin {
-//    add sourceSets.main, "frostedheart.refmap.json"
-//}
+tasks.processResources {
+    duplicatesStrategy = DuplicatesStrategy.WARN
+}
+mixin {
+    add sourceSets.main, "frostedheart.refmap.json"
+}
 
 repositories {
     mavenLocal()
@@ -136,7 +135,7 @@ repositories {
         url = "https://dvs1.progwml6.com/files/maven/"
         content {
             excludeGroup "curse.maven"
-            excludeGroup "net.minecraftforge"
+            excludeGroup "net.neoforged"
         }
     }
     maven {
@@ -166,15 +165,15 @@ repositories {
             excludeGroup "net.minecraftforge"
         }
     }
-    // Needed for JEI
-    maven {
+    // Needed for JEI -Not accesible now, comment to speed up compile
+    /*maven {
         name = "latvian maven"
         url = "https://maven.latmod.com/"
         content {
             excludeGroup "curse.maven"
             excludeGroup "net.minecraftforge"
         }
-    }
+    }*/
     // Needed for Curios API
     maven {
         name = "theillusivec4 maven"
@@ -229,35 +228,49 @@ repositories {
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    minecraft "net.neoforged:forge:${minecraft_version}-${forge_version}"
 //    implementation fileTree(include: ['*.jar'], dir: 'libs')
 
+    // IE
     implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}")
-    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}:datagen")
+//    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}:datagen")
 
+    // Create
     implementation fg.deobf("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }
     implementation fg.deobf("com.jozufozu.flywheel:flywheel-forge-${minecraft_version}:${flywheel_version}")
     implementation fg.deobf("com.tterrag.registrate:Registrate:${registrate_version}")
 
-    // compile against the JEI API but do not include it at runtime
+    // create maven is no up to date
+//    implementation fg.deobf("curse.maven:create-328085:5838779")
+
+    // JEI
     compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"))
     compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}"))
-    // at runtime, use the full JEI jar for Forge
     implementation(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}"))
 
+    // Curios
     compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api")
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}")
 
+    // FTB mods
     implementation fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
     implementation fg.deobf("dev.ftb.mods:ftb-library-forge:${ftb_library_version}")
     implementation fg.deobf("dev.ftb.mods:ftb-teams-forge:${ftb_teams_version}")
     implementation fg.deobf("dev.ftb.mods:ftb-chunks-forge:${ftb_chunks_version}")
-    implementation fg.deobf("dev.ftb.mods:ftb-quests-forge:${ftb_quests_version}")
+    compileOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:${ftb_quests_version}")
+    noDatagenRuntimeOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:${ftb_quests_version}")
 
-    implementation fg.deobf("curse.maven:tetra-289712:5544287")
+    // Tetra
+	compileOnly fg.deobf("curse.maven:tetra-289712:5544287")
+    noDatagenRuntimeOnly fg.deobf("curse.maven:tetra-289712:5544287")
     implementation fg.deobf("curse.maven:mutil-351914:4824501")
-    implementation fg.deobf("curse.maven:diet-443570:4813904")
-    implementation fg.deobf("curse.maven:primal-winter-393321:4575861")
+
+    // Caupona
+    implementation fg.deobf("curse.maven:caupona-656147:5116975")
+
+    // Comforts
+    implementation fg.deobf("curse.maven:comforts-276951:5503516")
+
 
     // dead mods:
 //    implementation fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
@@ -276,7 +289,8 @@ dependencies {
 //    compileOnly fg.deobf("curse.maven:supplementaries-412082:3650035")
 //    compileOnly fg.deobf("curse.maven:engineers-decor-313866:3566177")
 //    compileOnly fg.deobf("curse.maven:projecte-226410:3223221")
-
+//    implementation fg.deobf("curse.maven:diet-443570:4813904")
+//    implementation fg.deobf("curse.maven:primal-winter-393321:4575861")
 
     // FG5 requires 0.8.3
     annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
@@ -293,7 +307,7 @@ jar {
                 "Implementation-Version"  : project.version,
                 "Implementation-Vendor"   : "TeamMoeg",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-//                "MixinConfigs": "frostedheart.mixins.json"
+                "MixinConfigs": "frostedheart.mixins.json"
         ])
     }
 }
@@ -315,10 +329,10 @@ artifacts {
     archives deobfJar
 }
 jar {
-   with copySpec {
+   /*with copySpec {
       from 'src/main/resources/frostedheart.mixins.json' 
       filter{l -> l.replaceAll('"create.MixinSmartTileEntity",','')}; 
-   }
+   }*/
 } 
 String getChangelogText() {
     def changelogFile = file('changelog.txt')

@@ -56,8 +56,8 @@ import com.teammoeg.frostedheart.compat.jei.extension.FuelingExtension;
 import com.teammoeg.frostedheart.compat.jei.extension.InnerExtension;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.MasterGeneratorContainer;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.MasterGeneratorScreen;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorContainer;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorScreen;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
@@ -286,11 +286,11 @@ public class JEICompat implements IModPlugin {
 
     @Override
     public void registerGuiHandlers(IGuiHandlerRegistration registry) {
-        registry.addGenericGuiContainerHandler(MasterGeneratorScreen.class, new IGuiContainerHandler<MasterGeneratorScreen<?>>() {
+        registry.addGenericGuiContainerHandler(GeneratorScreen.class, new IGuiContainerHandler<GeneratorScreen<?,?>>() {
 			@Override
-			public Collection<IGuiClickableArea> getGuiClickableAreas(MasterGeneratorScreen<?> containerScreen, double mouseX, double mouseY) {
+			public Collection<IGuiClickableArea> getGuiClickableAreas(GeneratorScreen<?,?> containerScreen, double mouseX, double mouseY) {
 				List<IGuiClickableArea> col=new ArrayList<>(2);
-				MasterGeneratorContainer<?> container=containerScreen.getMenu();
+				GeneratorContainer<?,?> container=containerScreen.getMenu();
 				if(container.getTank()!=null)
 					col.add(IGuiClickableArea.createBasic(98, 84, 34, 4, GeneratorSteamCategory.UID));
 				Point in=container.getSlotIn();
@@ -312,8 +312,8 @@ public class JEICompat implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.generator), GeneratorFuelCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.generator_t2), GeneratorFuelCategory.UID,
+        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.Logic.GENERATOR_T1.blockItem().get()), GeneratorFuelCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.Logic.GENERATOR_T2.blockItem().get()), GeneratorFuelCategory.UID,
                 GeneratorSteamCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(FHBlocks.charger.get()), ChargerCategory.UID, ChargerCookingCategory.UID,
                 ChargerDefrostCategory.UID);

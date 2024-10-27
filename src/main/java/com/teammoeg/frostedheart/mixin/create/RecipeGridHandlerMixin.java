@@ -24,9 +24,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.simibubi.create.content.contraptions.components.crafter.MechanicalCrafterTileEntity;
-import com.simibubi.create.content.contraptions.components.crafter.RecipeGridHandler;
-import com.simibubi.create.content.contraptions.components.crafter.RecipeGridHandler.GroupedItems;
+import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlockEntity;
+import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler;
+import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler.GroupedItems;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
@@ -38,7 +38,7 @@ import net.minecraft.world.level.Level;
 @Mixin(RecipeGridHandler.class)
 public class RecipeGridHandlerMixin {
     @Inject(at = @At("HEAD"), method = "getTargetingCrafter", remap = false)
-    private static void fh$getTargetingCrafter(MechanicalCrafterTileEntity crafter, CallbackInfoReturnable<MechanicalCrafterTileEntity> cbi) {
+    private static void fh$getTargetingCrafter(MechanicalCrafterBlockEntity crafter, CallbackInfoReturnable<MechanicalCrafterBlockEntity> cbi) {
         ResearchListeners.te = IOwnerTile.getOwner(crafter);
     }
 

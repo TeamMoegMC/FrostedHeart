@@ -20,20 +20,19 @@ import com.teammoeg.frostedheart.content.robotics.logistics.RobotChunk;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
-import com.teammoeg.frostedheart.content.waypoint.capability.WaypointCapability;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.content.town.ChunkTownResourceCapability;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
+import com.teammoeg.frostedheart.content.waypoint.capability.WaypointCapability;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.common.util.NonNullSupplier;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class FHCapabilities {
 	private static List<IFHCapability> capabilities=new ArrayList<>();
-	private static final NonNullSupplier errorFactory=()->{throw new RuntimeException("Capability must be created");};
 	public static final FHNBTCapability<WorldClimate> CLIMATE_DATA=register(WorldClimate.class);
 	public static final FHNBTCapability<DeathInventoryData> DEATH_INV=register(DeathInventoryData.class);
 	public static final FHNBTCapability<PlayerTemperatureData> PLAYER_TEMP=register(PlayerTemperatureData.class);
@@ -41,7 +40,7 @@ public class FHCapabilities {
 	public static final FHNBTCapability<ScenarioConductor> SCENARIO=register(ScenarioConductor.class);
 	public static final FHCodecCapability<ChunkHeatData> CHUNK_HEAT=register(ChunkHeatData.class,ChunkHeatData.CODEC);
 	public static final FHNBTCapability<HeatEndpoint> HEAT_EP=register(HeatEndpoint.class);
-	public static final FHNPCapability<HeatStorageCapability> ITEM_HEAT=registerNotPresist(HeatStorageCapability.class,errorFactory);
+	public static final FHNPCapability<HeatStorageCapability> ITEM_HEAT=registerNotPresist(HeatStorageCapability.class);
 
 	public static final FHNBTCapability<WantedFoodCapability> WANTED_FOOD=register(WantedFoodCapability.class);
 	public static final FHNBTCapability<ChunkTownResourceCapability> CHUNK_TOWN_RESOURCE=register(ChunkTownResourceCapability.class);
@@ -85,35 +84,6 @@ public class FHCapabilities {
 	 * register capability with class, using no-arg constructor as default factory
 	 * <p>
 	 * */
-	public static <T> FHNPCapability<T> registerNotPresist(Class<T> capClass){
-		Constructor<T> ctor;
-		try {
-			try {	
-				ctor=capClass.getConstructor();
-			}catch(NoSuchMethodException ex) {
-				try {
-					ctor=capClass.getDeclaredConstructor();
-				} catch (NoSuchMethodException e) {
-					throw new IllegalArgumentException("No no-arg constructor found for capability "+capClass.getSimpleName());
-				}
-			}
-		}catch(SecurityException ex) {
-			throw new RuntimeException("Can not access capability "+capClass.getSimpleName());
-		}
-		ctor.setAccessible(true);
-		final Constructor<T> fctor=ctor;
-		return registerNotPresist(capClass,()->{
-			try {
-				return fctor.newInstance();
-			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-				throw new RuntimeException("Can not create capability "+capClass.getSimpleName(), e);
-			}
-		});
-	}
-	/**
-	 * register capability with class, using no-arg constructor as default factory
-	 * <p>
-	 * */
 	public static <T> FHCodecCapability<T> register(Class<T> capClass,Codec<T> codec){
 		Constructor<T> ctor;
 		try {
@@ -145,8 +115,8 @@ public class FHCapabilities {
 		capabilities.add(cap);
 		return cap;
 	}
-	public static <T> FHNPCapability<T> registerNotPresist(Class<T> capClass,NonNullSupplier<T> sup){
-		FHNPCapability<T> cap=new FHNPCapability<>(capClass,sup);
+	public static <T> FHNPCapability<T> registerNotPresist(Class<T> capClass){
+		FHNPCapability<T> cap=new FHNPCapability<>(capClass);
 		capabilities.add(cap);
 		return cap;
 	}
@@ -155,6 +125,7 @@ public class FHCapabilities {
 		capabilities.add(cap);
 		return cap;
 	}
+	@SubscribeEvent
 	public static void onRegister(RegisterCapabilitiesEvent ev) {
 		
 		for(IFHCapability cap:capabilities) {

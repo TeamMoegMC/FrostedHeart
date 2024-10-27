@@ -18,14 +18,27 @@
         "textureY": 32
     },
     "requirement": {
-        "type": "tetra:modular_item",
-        "modules": [
-            ["double/basic_pro_pick_right"],
-            ["double/basic_pro_pick_left"]
-        ],
-        "improvements": {
-            "head_hone/pro_pick_corr": 2
-        }
+        "type": "tetra:and",
+        "requirements": [
+            {
+                "type": "tetra:or",
+                "requirements": [
+                    {
+                        "type": "tetra:module",
+                        "module": "double/basic_pro_pick_right"
+                    },
+                    {
+                        "type": "tetra:module",
+                        "module": "double/basic_pro_pick_left"
+                    }
+                ]
+            },
+            {
+                "type": "tetra:improvement",
+                "improvement": "head_hone/pro_pick_corr",
+                "level": 2
+            }
+        ]
     },
     "outcomes": [
         {

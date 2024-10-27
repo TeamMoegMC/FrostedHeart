@@ -41,7 +41,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
         super(type, worldIn);
     }
 
-    @Inject(at = @At("HEAD"), method = "dropInventory")
+    @Inject(at = @At("HEAD"), method = "dropEquipment")
     public void fh$dropInventory(CallbackInfo cbi) {
         super.dropEquipment();
         if (((Object) this) instanceof FakePlayer)

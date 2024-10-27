@@ -18,6 +18,31 @@
 
 package com.teammoeg.frostedheart.data;
 
+import blusunrize.immersiveengineering.ImmersiveEngineering;
+import blusunrize.immersiveengineering.api.IEProperties;
+import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.FHMain;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
+import net.minecraft.data.DataGenerator;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraftforge.client.model.generators.ConfiguredModel;
+import net.minecraftforge.client.model.generators.ModelFile;
+import net.minecraftforge.client.model.generators.VariantBlockStateBuilder;
+import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.common.data.ExistingFileHelper.ResourceType;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,47 +50,15 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import blusunrize.immersiveengineering.ImmersiveEngineering;
-import com.cannolicatfish.rankine.blocks.RankineOreBlock;
-import com.cannolicatfish.rankine.util.WorldgenUtils;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-
-import blusunrize.immersiveengineering.api.IEProperties;
-import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
-import net.minecraft.block.Block;
-import net.minecraft.data.DataGenerator;
-import net.minecraft.server.packs.PackType;
-import net.minecraft.state.EnumProperty;
-import net.minecraft.state.Property;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.core.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vec3i;
-import net.minecraftforge.client.model.generators.BlockModelBuilder;
-import net.minecraftforge.client.model.generators.ConfiguredModel;
-import net.minecraftforge.client.model.generators.ModelBuilder;
-import net.minecraftforge.client.model.generators.ModelFile;
-import net.minecraftforge.client.model.generators.VariantBlockStateBuilder;
-import net.minecraftforge.common.data.ExistingFileHelper;
-import net.minecraftforge.common.data.ExistingFileHelper.ResourceType;
-
 public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 	protected static final ResourceType MODEL = new ResourceType(PackType.CLIENT_RESOURCES, ".json", "models");
-	private static final List<Vec3i> CUBE_THREE = BlockPos.getAllInBox(-1, -1, -1, 1, 1, 1)
-			.map(BlockPos::toImmutable).collect(Collectors.toList());
-	private static final List<Vec3i> CUBE_TWO = BlockPos.getAllInBox(0, 0, -1, 1, 1, 0).map(BlockPos::toImmutable)
+	private static final List<Vec3i> CUBE_THREE = BlockPos.betweenClosedStream(-1, -1, -1, 1, 1, 1)
+			.map(BlockPos::immutable).collect(Collectors.toList());
+	private static final List<Vec3i> CUBE_TWO = BlockPos.betweenClosedStream(0, 0, -1, 1, 1, 0).map(BlockPos::immutable)
 			.collect(Collectors.toList());
 
-	public FHMultiblockStatesProvider(DataGenerator gen, ExistingFileHelper exFileHelper) {
-		super(gen, exFileHelper);
+	public FHMultiblockStatesProvider(DataGenerator gen, String modid, ExistingFileHelper exFileHelper) {
+		super(gen, modid, exFileHelper);
 	}
 
 	protected void registerStatesAndModels() {
@@ -82,32 +75,11 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 		super.itemModel(FHBlocks.incubator1.get(), bmf("incubator"));
 		super.itemModel(FHBlocks.incubator2.get(), bmf("heat_incubator"));
 		super.horizontalBlock(FHBlocks.incubator2.get(),
-				s -> s.get(BlockStateProperties.LIT) ? bmf("heat_incubator_active") : bmf("heat_incubator"));
+				s -> s.getValue(BlockStateProperties.LIT) ? bmf("heat_incubator_active") : bmf("heat_incubator"));
 		// super.itemModel(FHBlocks.mech_calc,models().withExistingParent("block/mechanical_calculator",
 		// modLoc("block/mechanical_calculator")));
-		for (Block blk : new Block[] { FHBlocks.fluorite_ore.get(), FHBlocks.halite_ore.get() }) {
-			String regName = RegistryUtils.getRegistryName(blk).getPath();
-			getVariantBuilder(blk).forAllStates(state -> {
-				int i = state.get(RankineOreBlock.TYPE);
-				try {
-					List<String> backgrounds = Arrays.asList(WorldgenUtils.ORE_TEXTURES.get(i).split(":"));
-					String mod = backgrounds.get(0);
-					String background = backgrounds.get(1);
-					return ConfiguredModel.builder().modelFile(rankineOre(regName + i, mod, background, regName))
-							.build();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				return null;
-			});
-		}
 	}
-    public ModelBuilder<BlockModelBuilder> rankineOre(String name, String mod, String background, String overlay) {
-        if (WorldgenUtils.ORE_TEXTURES.contains(background)) {
-            return models().withExistingParent("block/ore/"+name, new ResourceLocation("rankine:block/template_rankine_ore")).texture("background", mod+":block/"+background).texture("overlay", "block/"+overlay);
-        }
-		return models().withExistingParent("block/ore/"+name,new ResourceLocation("rankine:block/template_rankine_ore")).texture("background", mod+":block/"+background).texture("overlay", "block/"+overlay);
-    }
+
 	@Nonnull
 	@Override
 	public String getName() {
@@ -167,11 +139,11 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 		else
 			possibleMirrorStates = new boolean[1];
 		for (boolean mirrored : possibleMirrorStates)
-			for (Direction dir : facing.getAllowedValues()) {
+			for (Direction dir : facing.getPossibleValues()) {
 				final int angleY;
 				final int angleX;
-				if (facing.getAllowedValues().contains(Direction.UP)) {
-					angleX = -90 * dir.getYOffset();
+				if (facing.getPossibleValues().contains(Direction.UP)) {
+					angleX = -90 * dir.getStepY();
 					if (dir.getAxis() != Direction.Axis.Y)
 						angleY = getAngle(dir, 180);
 					else
@@ -212,8 +184,8 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 	private ModelFile split(ModelFile name, TemplateMultiblock multiblock, UnaryOperator<BlockPos> transform,
 			boolean dynamic) {
 		final Vec3i offset = multiblock.getMasterFromOriginOffset();
-		Stream<Vec3i> partsStream = multiblock.getStructure(null).stream().filter(info -> !info.state.isAir())
-				.map(info -> info.pos).map(transform).map(p -> p.subtract(offset));
+		Stream<Vec3i> partsStream = multiblock.getStructure(null).stream().filter(info -> !info.state().isAir())
+				.map(info -> info.pos()).map(transform).map(p -> p.subtract(offset));
 		return split(name, partsStream.collect(Collectors.toList()), dynamic);
 	}
 

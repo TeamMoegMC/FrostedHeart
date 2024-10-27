@@ -21,29 +21,22 @@ package com.teammoeg.frostedheart.world;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.world.flora.FrozenForestBiome;
-import com.teammoeg.frostedheart.world.geology.volcanic.VolcanicBiome;
-
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraftforge.common.BiomeManager;
-import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHBiomes {
     public static final DeferredRegister<Biome> BIOME_REGISTER = DeferredRegister.create(ForgeRegistries.BIOMES, FHMain.MODID);
 
-    public static RegistryObject<Biome> VOLCANIC = BIOME_REGISTER.register("volcanic", () -> new VolcanicBiome().build());
-
-    public static RegistryObject<Biome> FROZEN_FOREST = BIOME_REGISTER.register("frozen_forest", () -> new FrozenForestBiome().build());
+//    public static RegistryObject<Biome> VOLCANIC = BIOME_REGISTER.register("volcanic", () -> new VolcanicBiome().build());
+//    public static RegistryObject<Biome> FROZEN_FOREST = BIOME_REGISTER.register("frozen_forest", () -> new FrozenForestBiome().build());
 //    public static RegistryObject<Biome> RELIC = BIOME_REGISTER.register("relic", () -> new VolcanicBiome().build());
 
     public static void biomes() {
-        BiomeManager.addBiome(BiomeManager.BiomeType.COOL, new BiomeManager.BiomeEntry(makeKey(VOLCANIC.get()), 5));
-        BiomeManager.addBiome(BiomeManager.BiomeType.COOL, new BiomeManager.BiomeEntry(makeKey(FROZEN_FOREST.get()), 8));
+//        BiomeManager.addBiome(BiomeManager.BiomeType.COOL, new BiomeManager.BiomeEntry(makeKey(VOLCANIC.get()), 5));
+//        BiomeManager.addBiome(BiomeManager.BiomeType.COOL, new BiomeManager.BiomeEntry(makeKey(FROZEN_FOREST.get()), 8));
     }
 
     public static ResourceKey<Biome> makeKey(Biome biome) {

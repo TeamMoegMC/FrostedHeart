@@ -24,8 +24,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.teammoeg.frostedheart.world.FHFeatures;
-
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.levelgen.Heightmap.Types;
@@ -38,7 +36,7 @@ import net.minecraft.world.level.storage.ServerLevelData;
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {
     @Inject(at = @At("TAIL"), method = "setInitialSpawn")
-    private static void spacecraftGenerate(ServerLevel serverWorld, ServerLevelData info, boolean hasBonusChest, boolean p_240786_3_, boolean p_240786_4_, CallbackInfo ci) {
+    private static void spacecraftGenerate(ServerLevel serverWorld, ServerLevelData info, boolean pGenerateBonusChest, boolean pDebug, CallbackInfo ci) {
         int y = 256, h;
         // store these as temporary variables to reduce procedural calls in loop
         int seaLevel = serverWorld.getSeaLevel();
@@ -59,8 +57,9 @@ public class MinecraftServerMixin {
         if (y == 256)
             y = seaLevel;
         info.setYSpawn(y - 1);
-        FHFeatures.spacecraft_feature.place(serverWorld, serverWorld.getChunkSource().getGenerator(), serverWorld.random,
-                new BlockPos(info.getXSpawn(), info.getYSpawn(), info.getZSpawn()));
+        //TODO Add spacecraft feature
+        //FHFeatures.spacecraft_feature.place(serverWorld, serverWorld.getChunkSource().getGenerator(), serverWorld.random,
+        //        new BlockPos(info.getXSpawn(), info.getYSpawn(), info.getZSpawn()));
         serverWorld.setDefaultSpawnPos(new BlockPos(info.getXSpawn(), y - 1, info.getZSpawn()), info.getSpawnAngle());
 
     }

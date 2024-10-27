@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.tips;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.tips.client.gui.EmptyScreen;
@@ -29,6 +30,9 @@ public class TipRenderer {
 
     @SubscribeEvent
     public static void renderOnHUD(RenderGuiEvent.Post event) {
+        if (!FHConfig.CLIENT.renderTips.get())
+            return;
+
         if (mc.player == null) {
             return;
         }
@@ -63,6 +67,9 @@ public class TipRenderer {
 
     @SubscribeEvent
     public static void renderOnGUI(ScreenEvent.Render.Post event) {
+        if (!FHConfig.CLIENT.renderTips.get())
+            return;
+
         Screen gui = event.getScreen();
         if (gui instanceof PauseScreen || gui instanceof ChatScreen || gui instanceof EmptyScreen) {
             int x = mc.getWindow().getGuiScaledWidth()-12;

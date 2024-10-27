@@ -121,7 +121,6 @@ public class TextInfo {
 	}
 
 	public FormattedCharSequence getFinished() {
-		// TODO Auto-generated method stub
 		return (text instanceof SizedReorderingProcessor) ? ((SizedReorderingProcessor) text).origin : text;
 	}
 }

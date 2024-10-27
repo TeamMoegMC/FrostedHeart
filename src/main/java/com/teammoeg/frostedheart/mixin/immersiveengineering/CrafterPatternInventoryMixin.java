@@ -21,56 +21,58 @@ package com.teammoeg.frostedheart.mixin.immersiveengineering;
 
 import java.util.UUID;
 
-import org.spongepowered.asm.mixin.Final;
+import javax.annotation.Nullable;
+
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
-import blusunrize.immersiveengineering.common.blocks.metal.AssemblerTileEntity;
-import blusunrize.immersiveengineering.common.blocks.metal.AssemblerTileEntity.CrafterPatternInventory;
-import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.world.inventory.CraftingContainer;
+import blusunrize.immersiveengineering.common.blocks.metal.CrafterPatternInventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.level.Level;
 import net.minecraft.core.NonNullList;
 
 @Mixin(CrafterPatternInventory.class)
-public class CrafterPatternInventoryMixin {
+public class CrafterPatternInventoryMixin implements IOwnerTile{
     @Shadow(remap = false)
     public NonNullList<ItemStack> inv;
     @SuppressWarnings("rawtypes")
     @Shadow(remap = false)
     public Recipe recipe;
-    @Final
-    @Shadow(remap = false)
-    AssemblerTileEntity tile;
-
+    private UUID owner;
     public CrafterPatternInventoryMixin() {
     }
+    
+    @Inject(at=@At("TAIL"),method="recalculateOutput",remap=false)
+	public void fh$recalculateOutput(@Nullable Level level,CallbackInfo cbi)
+	{
+        if (level.isClientSide) {
+            if (!ResearchListeners.canUseRecipe(recipe))
+            	removeRecipe();
+        } else if (!ResearchListeners.canUseRecipe(owner, recipe))
+        	removeRecipe();
 
-    /**
-     * @author khjxiaogu
-     * @reason add our own research pending
-     */
-    @Overwrite(remap = false)
-    public void recalculateOutput() {
-        if (tile.getLevel() != null) {
-            CraftingContainer invC = Utils.InventoryCraftingFalse.createFilledCraftingInventory(3, 3, inv);
-            this.recipe = Utils.findCraftingRecipe(invC, tile.getWorldNonnull()).orElse(null);
-            AssemblerTileEntity nte = tile;
-            if (!nte.isDummy()) {
-                UUID ow = IOwnerTile.getOwner(nte);
-                if (tile.getLevel().isClientSide) {
-                    if (!ResearchListeners.canUseRecipe(recipe))
-                        this.recipe = null;
-                } else if (!ResearchListeners.canUseRecipe(ow, recipe))
-                    this.recipe = null;
-            }
-            this.inv.set(9, recipe != null ? recipe.assemble(invC) : ItemStack.EMPTY);
-        }
-    }
+	}
+   private void removeRecipe() {
+		this.recipe = null;
+		this.inv.set(9, ItemStack.EMPTY);
+   }
+
+	@Override
+	public UUID getStoredOwner() {
+		return owner;
+	}
+	
+	@Override
+	public void setStoredOwner(UUID id) {
+		owner=id;
+		
+	}
 
 }

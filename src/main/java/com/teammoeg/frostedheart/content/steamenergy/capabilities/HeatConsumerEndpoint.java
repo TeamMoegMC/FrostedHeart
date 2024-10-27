@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.capabilities;
 
-// TODO: Auto-generated Javadoc
 /**
  * Class SteamNetworkConsumer.
  * <p>

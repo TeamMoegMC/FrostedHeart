@@ -56,24 +56,10 @@ public abstract class LevelRendererMixin {
             // ClimateData data = ClimateData.get(world);
             // blizzard when vanilla 'thundering' is true, to save us from doing sync
             if (level.isThundering()) {
-                BlizzardRenderer.render(minecraft, this.level, manager, ticks, partialTicks, x, y, z);
+                BlizzardRenderer.renderBlizzard(minecraft, this.level, manager, ticks, partialTicks, x, y, z);
                 // Road-block injection to remove any Vanilla / Primal Winter weather rendering code
                 ci.cancel();
             }
-            /*
-             * if not blizzard, use primal winter's rendering
-             * @see primalwinter's LevelRendererMixin
-             */
         }
     }
-
-    /*
-    // Render the particle when precipitation hit the ground
-    // (e.g. the splash of rain drops).
-    // Not required for blizzard.
-    @Inject(method = "addRainParticles", at = @At("RETURN"))
-    public void inject$tickRain(ActiveRenderInfo renderInfo, CallbackInfo ci) {
-
-    }
-    */
 }

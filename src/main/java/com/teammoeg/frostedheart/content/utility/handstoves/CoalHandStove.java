@@ -24,6 +24,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.mojang.datafixers.util.Either;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -47,6 +48,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.ForgeRegistries;
+import top.theillusivec4.curios.api.type.ISlotType;
 import net.minecraft.world.item.Item.Properties;
 
 public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
@@ -140,10 +142,10 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
     }
 
 	@Override
-	public float getEffectiveTempAdded(EquipmentCuriosSlotType slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
+	public float getEffectiveTempAdded(Either<ISlotType,EquipmentCuriosSlotType> slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
 		if(slot==null) {
 			return getFuelAmount(stack) > 0 ? 7 : 0;
-		}else if(slot.isHand()) {
+		}else if(slot.map(t->false, t->t.isHand())) {
 	        int fuel = getFuelAmount(stack);
 	        if (fuel >= 2) {
 	            int ash = getAshAmount(stack);

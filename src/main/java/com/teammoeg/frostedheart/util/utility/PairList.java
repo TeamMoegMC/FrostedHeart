@@ -53,6 +53,5 @@ public class PairList<K,V> extends ArrayList<Pair<K,V>> {
 	}
 	public PairList(Collection<? extends Pair<K, V>> c) {
 		super(c);
-		// TODO Auto-generated constructor stub
 	}
 }

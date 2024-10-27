@@ -34,6 +34,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 /**
@@ -44,7 +45,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 @Mixin(GrowingPlantHeadBlock.class)
 public abstract class AbstractTopPlantBlockMixin extends GrowingPlantBlock {
     @Shadow
-    private double growthChance;
+    private double growPerTickProbability;
 
     protected AbstractTopPlantBlockMixin(Properties properties, Direction growthDirection, VoxelShape shape,
                                          boolean breaksInWater) {
@@ -52,7 +53,7 @@ public abstract class AbstractTopPlantBlockMixin extends GrowingPlantBlock {
     }
 
     @Shadow
-    abstract boolean canGrowIn(BlockState state);
+    abstract boolean canGrowInto(BlockState state);
 
     /**
      *
@@ -61,12 +62,12 @@ public abstract class AbstractTopPlantBlockMixin extends GrowingPlantBlock {
      */
     @Inject(at = @At("HEAD"), method = "randomTick", cancellable = true)
 
-    public void fh$randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, Random random, CallbackInfo cbi) {
+    public void fh$randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random,CallbackInfo cbi) {
         if (state.getValue(GrowingPlantHeadBlock.AGE) < 25 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn,
                 pos, state,
-                random.nextDouble() < this.growthChance)) {
+                random.nextDouble() < this.growPerTickProbability)) {
             BlockPos blockpos = pos.relative(this.growthDirection);
-            if (this.canGrowIn(worldIn.getBlockState(blockpos))) {
+            if (this.canGrowInto(worldIn.getBlockState(blockpos))) {
                 worldIn.setBlockAndUpdate(blockpos, state.cycle(GrowingPlantHeadBlock.AGE));
                 net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, blockpos,
                         worldIn.getBlockState(blockpos));

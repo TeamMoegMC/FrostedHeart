@@ -26,7 +26,6 @@ public class FHLoot {
 	}
 
 	public FHLoot() {
-		// TODO Auto-generated constructor stub
 	}
 
 }

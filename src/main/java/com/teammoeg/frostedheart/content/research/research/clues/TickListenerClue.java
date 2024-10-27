@@ -35,7 +35,6 @@ public abstract class TickListenerClue extends ListenerClue {
 
     public TickListenerClue(BaseData data) {
 		super(data);
-		// TODO Auto-generated constructor stub
 	}
 
 

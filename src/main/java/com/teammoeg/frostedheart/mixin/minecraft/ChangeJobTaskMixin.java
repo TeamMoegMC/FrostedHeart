@@ -27,7 +27,10 @@ import org.spongepowered.asm.mixin.Overwrite;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.behavior.ResetProfession;
+import net.minecraft.world.entity.ai.behavior.declarative.BehaviorBuilder;
+import net.minecraft.world.entity.ai.behavior.declarative.Trigger;
 import net.minecraft.world.entity.ai.behavior.Behavior;
+import net.minecraft.world.entity.ai.behavior.BehaviorControl;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.server.level.ServerLevel;
 /**
@@ -35,19 +38,18 @@ import net.minecraft.server.level.ServerLevel;
  * <p>
  * */
 @Mixin(ResetProfession.class)
-public abstract class ChangeJobTaskMixin extends Behavior<Villager> {
-
-    public ChangeJobTaskMixin(Map<MemoryModuleType<?>, MemoryStatus> requiredMemoryStateIn) {
-        super(requiredMemoryStateIn);
-    }
-
+public abstract class ChangeJobTaskMixin {
     /**
      * @author khjxiaogu
      * @reason Disable vanilla profession
      */
     @Overwrite
-    protected boolean checkExtraStartConditions(ServerLevel worldIn, Villager owner) {
-        return false;
+    public static BehaviorControl<Villager> create() {
+        return BehaviorBuilder.create(t->t.point(new Trigger<Villager>() {
+			@Override
+			public boolean trigger(ServerLevel pLevel, Villager pEntity, long pGameTime) {
+				return false;
+			}}));
     }
 
 }

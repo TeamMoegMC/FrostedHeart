@@ -418,7 +418,6 @@ public class FHResearch {
 			try {
 				FHResearch.load(NbtIo.readCompressed(regfile));
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				FHMain.LOGGER.fatal("CANNOT READ RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
 
@@ -453,7 +452,6 @@ public class FHResearch {
 		try {
 			NbtIo.writeCompressed(FHResearch.save(new CompoundTag()), regfile);
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 			FHMain.LOGGER.fatal("CANNOT SAVE RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
 		}

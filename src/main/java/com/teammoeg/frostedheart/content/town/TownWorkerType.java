@@ -24,10 +24,12 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHBlocks;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseTileEntity;
+import com.teammoeg.frostedheart.content.town.mine.MineTileEntity;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.nbt.CompoundTag;
@@ -53,46 +55,29 @@ public enum TownWorkerType {
      */
     DUMMY(null, null, -1),
     HOUSE(FHBlocks.house, (town, workData) -> {
-        double residentNum = workData.getList("residents", 10).size();
+        double residentNum = workData.getCompound("tileEntity").getList("residents", 10).size();
         double actualCost = town.cost(TownResourceType.PREP_FOOD, residentNum, false);
         return Math.abs(residentNum - actualCost) < 0.001;
     }, 0),
     WAREHOUSE(FHBlocks.warehouse, null, 0),
-    MINE(FHBlocks.mine, (town, workData) -> {
-        double rating = workData.getDouble("rating");
-        ListTag list = workData.getList("resources", Tag.TAG_COMPOUND);
-        EnumMap<TownResourceType, Double> resources = new EnumMap<>(TownResourceType.class);
-        list.forEach(nbt -> {
-            CompoundTag nbt_1 = (CompoundTag) nbt;
-            String key = nbt_1.getString("type");
-            double amount = nbt_1.getDouble("amount");
-            resources.put(TownResourceType.from(key), amount);
-        });
-        Random random = new Random();
-        int add = rating > random.nextFloat() * 10 ? 1 : 0;
-        double randomDouble = random.nextDouble();
-        double counter = 0;
-        for(Map.Entry<TownResourceType, Double> entry : resources.entrySet()){
-            counter += entry.getValue();
-            if(counter >= randomDouble){
-                double actualAdd = town.add(entry.getKey(), add, false);
-                return Math.abs(add - actualAdd) < 0.001;
-            }
-        }
-        return true;
-    }, 0, true,
-            (currentResidentNum, workerData) -> {
-        if(currentResidentNum < workerData.getInt("maxResident")) return -currentResidentNum + 1.0 * currentResidentNum / workerData.getInt("maxResident") + 0.4/*the base priority of workerRype*/ + workerData.getDouble("rating");
+    MINE(FHBlocks.mine, new MineTileEntity.MineWorker(), 0, true,
+            (currentResidentNum, nbt) -> {
+        int maxResident = nbt.getCompound("tileEntity").getInt("maxResident");
+        double rating = TownWorkerData.getRating(nbt);
+        if(currentResidentNum < maxResident) return -currentResidentNum + 1.0 * currentResidentNum / maxResident + 0.4/*the base priority of workerRype*/ + rating;
         return NEGATIVE_INFINITY;
             },
             (resident) -> resident.getTrust() * 0.01),
     MINE_BASE(FHBlocks.mine_base, null, 0),
     HUNTING_CAMP(FHBlocks.hunting_camp, null, 0),
-    HUNTING_BASE(FHBlocks.hunting_base, new HuntingBaseTileEntity.HuntingBaseWorker(), -1, true, (currentResidentNum, workerData) -> {
-        if(currentResidentNum < workerData.getInt("maxResident")) return -currentResidentNum + 1.0 * currentResidentNum / workerData.getInt("maxResidnet" + 0.5 + workerData.getDouble("rating"));
+    HUNTING_BASE(FHBlocks.hunting_base, new HuntingBaseTileEntity.HuntingBaseWorker(), -1, true, (currentResidentNum, nbt) -> {
+        int maxResident = nbt.getCompound("tileEntity").getInt("maxResident");
+        if(currentResidentNum < maxResident) return -currentResidentNum + 1.0 * currentResidentNum / maxResident + 0.5 + TownWorkerData.getRating(nbt);
         return Double.NEGATIVE_INFINITY;
     }, (resident) -> resident.getTrust() * 0.01 * Resident.CalculatingFunction1(resident.getSocial()))
     ;
+
+    public static final Codec<TownWorkerType> CODEC= Codec.STRING.xmap(TownWorkerType::from,TownWorkerType::getKey);
 
     /**
      * Town block.
@@ -116,11 +101,11 @@ public enum TownWorkerType {
 
     /**
      * The function used when assigning work for resident.
-     * input number : current resident number
-     * CompoundNBT: worker data
-     * output number: priority
      * 每有一个居民在此工作，优先级应减少1左右，这样可以使居民尽可能均匀地分配在所有工作方块中
      * 当居民数量大于最大居民数时，应该返回Double.NEGATIVE_INFINITY
+     * input1 当前居民数量。
+     * input2 完整的workerData，包括town部分和tileEntity部分。详见TownWorkerData。
+     * output 分配居民时的优先级
      */
     private BiFunction<Integer, CompoundTag, Double> residentPriorityFunction;
 
@@ -137,16 +122,10 @@ public enum TownWorkerType {
      * @param internalPriority the internal priority
      */
     TownWorkerType(Supplier<Block> workerBlock, TownWorker worker, int internalPriority) {
-        this(workerBlock, worker, internalPriority, false);
-    }
-
-    //若needsResident==false，可使用上方的方法，若needsResident==true，则应使用下方的方法
-    @Deprecated
-    TownWorkerType(Supplier<Block> workerBlock, TownWorker worker, int internalPriority, boolean needsResident) {
         this.block = workerBlock;
         this.worker = worker;
         this.priority = internalPriority;
-        this.needsResident = needsResident;
+        this.needsResident = false;
     }
 
     //if needsResident is true, residentPriorityFunction must be set
@@ -189,15 +168,12 @@ public enum TownWorkerType {
      *
      * @param data TownWorkerData中的workData
      */
-    public double getResidentPriority(Integer currentResident, CompoundTag data) {
-        return this.residentPriorityFunction.apply(currentResident, data);
+    public double getResidentPriority(TownWorkerData data) {
+        return this.getResidentPriorityFunction().apply(data.getResidents().size(), data.getWorkData());
     }
 
-    public double getResidentPriority(Integer currentResident, TownWorkerData data) {
-        return this.getResidentPriority(currentResident, data.getWorkData());
-    }
-    public double getResidentPriority(Collection<?> currentResidents, TownWorkerData data) {
-        return this.getResidentPriority(currentResidents.size(), data.getWorkData());
+    public double getResidentPriority(Integer integer, CompoundTag nbt){
+        return this.getResidentPriorityFunction().apply(integer, nbt);
     }
 
 
@@ -219,7 +195,7 @@ public enum TownWorkerType {
             return residentPriorityFunction;
         } else{
             FHMain.LOGGER.error("This TownWorkerType don't need resident, but tried get residentPriorityFunction");
-            return ((a, b) -> NEGATIVE_INFINITY);
+            return ((useless1, useless2) -> NEGATIVE_INFINITY);
         }
     }
 

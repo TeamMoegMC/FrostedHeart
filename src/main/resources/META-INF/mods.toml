@@ -5,84 +5,73 @@ issueTrackerURL = "https://github.com/TeamMoegMC/FrostedHeart/issues"
 [[mods]] #mandatory
 modId = "frostedheart" #mandatory
 version = "${file.jarVersion}" #mandatory
-displayName = "TWR Frosted Heart" #mandatory
-authors = "Developed by TeamMoegMC, with the help of many contributors. See description below."
+displayName = "The Winter Rescue: Frosted Heart" #mandatory
+authors = "Developed by TeamMoeg, with the help of many contributors. See description below."
 description = '''
 The Core Mod for The Winter Rescue Modpack.
 
  (In the order of first joining, not contribution size)
 
-Development Team:
-- Technical: YueSha, duck_egg, dashuaibia, khjxiaogu
-- Art: Lyuuke, gomou_g, Fu_Yang, OEIIO(03110), Dsanilin
-- Design: alphaGem, Jacky_Wang,
-- QA: asdfghjkl, shidi
-- Operation: Evan
+Development Team (TeamMoeg):
+- Progamming: YueSha, khjxiaogu, duck_egg, dashuaibia, goumo_g, yuqijun, zombie_cute
+- Art: Lyuuke, gomou_g, Dsanilin
+- Building: Fu_Yang, OEIIO, Lanshan
+- Design: YueSha, duck_egg, dashuaibia, khjxiaogu, Lyuuke, alphaGem, JackyWangMislantiaJnirvana
+- Writing: YueSha, Lanshan
+- Quality Assurance: asdfghjkl, shidi
+- Operation: Evan, YueSha, khjxiaogu
+
+Translation Team:
+- Chinese: TeamMoeg
+- English: TeamMoeg, Jerzerak, AGmouse, sayyidyofa, alyashour, collin-marando
+- Russian: Whitealbum0, EvilToasterDBU
 
 Contributors:
-LetterN, collin-marando, sayyidyofa, Whitealbum0, alyashour, AGmouse, Jerzerak,
-nekocrane, Huaji_Qinmi, Heitao, ceary741, Gugusb, Winged-Hussars,
-IBlessus, GuardianWorld(Mixxs), Keisari, ewoudjie, ZXCZST
+- Programming: LetterN, Huaji_Qinmi, ceary741, Gugusb, Winged-Hussars, ewoudje, IBlessus
+- Art: Heitao
+- Building: nekocrane, GuardianWorld, Keisari
+- Writing: ZXCZST
+
+Special Thanks:
+- OpenGameArt (opengameart.org) for sound effects.
+- Matthew Pablo (www.matthewpablo.com) for music.
+- DALL-E (openai.com) for the opening CG art.
+- The TeamMoeg Community (www.teammoeg.com) for support and feedback.
+- The NeoForge Team for the modding platform.
+- The Mojang Team for the game itself.
 '''
 [[dependencies.frostedheart]]
     modId = "forge"
     mandatory = true
-    versionRange = "[36,)"
+    versionRange = "[37,)"
     ordering = "NONE"
     side = "BOTH"
 
 [[dependencies.frostedheart]]
     modId = "minecraft"
     mandatory = true
-    versionRange = "[1.16.5,1.17)"
+    versionRange = "[1.20.1,1.20.4)"
     ordering = "NONE"
     side = "BOTH"
 
 [[dependencies.frostedheart]]
     modId="immersiveengineering"
     mandatory=true
-    versionRange="[1.16.5-5.0.0,)"
-    ordering="BEFORE"
-    side="BOTH"
-
-[[dependencies.frostedheart]]
-    modId="primalwinter"
-    mandatory=true
-    versionRange="[1.16.4-2.0.5,)"
-    ordering="BEFORE"
-    side="BOTH"
-
-[[dependencies.frostedheart]]
-    modId="watersource"
-    mandatory=true
-    versionRange="[1.1.33-beta-1.16.5,)"
-    ordering="BEFORE"
-    side="BOTH"
-    
-[[dependencies.frostedheart]]
-    modId="thermopolium"
-    mandatory=true
-    versionRange="[0.2.12,)"
+    versionRange="[1.20.1-10.1.0,)"
     ordering="BEFORE"
     side="BOTH"
 
 [[dependencies.frostedheart]]
     modId="create"
     mandatory=true
-    versionRange="[v0.3.2d,)"
-    ordering="AFTER"
+    versionRange="[0.5.1.j,)"
+    ordering="BEFORE"
     side="BOTH"
 
 [[dependencies.frostedheart]]
     modId="flywheel"
     mandatory=true
-    versionRange="[1.16-0.2.3,1.16-0.3)"
-    ordering="AFTER"
+    versionRange="[0.6.10-7,)"
+    ordering="BEFORE"
     side="BOTH"
 
-[[dependencies.frostedheart]]
-    modId="rankine"
-    mandatory=true
-    versionRange="[1.2,1.4)"
-    ordering="AFTER"
-    side="BOTH"

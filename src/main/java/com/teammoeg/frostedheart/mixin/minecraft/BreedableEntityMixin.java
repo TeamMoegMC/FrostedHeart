@@ -39,7 +39,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 /**
  * Add more breeding cooldown and set breading item to tag items
- * For removal in 1.20+
+ * For removal in 1.20.4+
  * */
 @Mixin({Pig.class, Chicken.class, Fox.class, Rabbit.class, Cat.class, Llama.class, AbstractHorse.class})
 public abstract class BreedableEntityMixin extends Animal {
@@ -48,8 +48,8 @@ public abstract class BreedableEntityMixin extends Animal {
         super(type, worldIn);
     }
 
-    @Inject(at = @At("HEAD"), method = "isBreedingItem", cancellable = true)
-    public void isBreedingItem(ItemStack itemStack, CallbackInfoReturnable<Boolean> cbi) {
+    @Inject(at = @At("HEAD"), method = "isFood", cancellable = true)
+    public void isFood(ItemStack itemStack, CallbackInfoReturnable<Boolean> cbi) {
         EntityType<?> type = getType();
         boolean f = BreedUtil.isBreedingItem(type, itemStack);
         if (f)

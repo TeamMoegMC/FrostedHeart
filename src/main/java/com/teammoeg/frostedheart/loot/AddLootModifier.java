@@ -70,7 +70,6 @@ public class AddLootModifier extends LootModifier {
 
 	@Override
 	public Codec<? extends IGlobalLootModifier> codec() {
-		// TODO Auto-generated method stub
 		return CODEC;
 	}
 }

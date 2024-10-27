@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Iterators;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
@@ -94,7 +95,7 @@ public class SelectItemStackDialog extends EditDialog {
                     try {
                         nbt.put("ForgeCaps", TagParser.parseTag(s));
                     } catch (CommandSyntaxException e) {
-                        // TODO Auto-generated catch block
+                        FHMain.LOGGER.error("Error parsing NBT when setting ForgeCaps in SelectItemStackDialog");
                         e.printStackTrace();
                     }
                 }
@@ -137,7 +138,7 @@ public class SelectItemStackDialog extends EditDialog {
                 try {
                     current = ItemStack.of(TagParser.parseTag(s));
                 } catch (CommandSyntaxException e) {
-                    // TODO Auto-generated catch block
+                    FHMain.LOGGER.error("Error parsing NBT when setting ItemStack in SelectItemStackDialog");
                     e.printStackTrace();
                 }
             });
@@ -156,7 +157,7 @@ public class SelectItemStackDialog extends EditDialog {
                 try {
                     current.setTag(TagParser.parseTag(s));
                 } catch (CommandSyntaxException e) {
-                    // TODO Auto-generated catch block
+                    FHMain.LOGGER.error("Error parsing NBT when setting NBT in SelectItemStackDialog");
                     e.printStackTrace();
                 }
             });

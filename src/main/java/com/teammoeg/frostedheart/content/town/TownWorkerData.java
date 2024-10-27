@@ -24,12 +24,16 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import net.minecraft.nbt.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Data for a worker (town block) in the town.
@@ -40,6 +44,8 @@ import java.util.Objects;
  * The work data is especially important, as it stores additional data that
  * should be synced with the entire town. It is an interface between the town
  * and the worker.
+ * Work data consist of 2 parts: tileEntity and town. tileEntity stores the
+ * data from the tile entity, and town stores the data from the town.
  * <p>
  * There can be multiple worker data with the same worker type.
  */
@@ -50,6 +56,7 @@ public class TownWorkerData {
 		CompoundTag.CODEC.fieldOf("data").forGetter(o->o.workData),
 		Codec.INT.fieldOf("priority").forGetter(o->o.priority)
 		).apply(t,TownWorkerData::new));
+    public static final String KEY_IS_OVERLAPPED = "isOverlapped";
     private TownWorkerType type;
     private BlockPos pos;
     private CompoundTag workData;
@@ -91,8 +98,45 @@ public class TownWorkerData {
 
     public void fromTileEntity(TownTileEntity te) {
         type = te.getWorkerType();
-        workData = te.getWorkData();
+        workData = new CompoundTag();
+        workData.put("tileEntity", te.getWorkData());
         priority = te.getPriority();
+    }
+
+    public void toTileEntity(TownTileEntity te){
+        te.setWorkData(workData.getCompound("town"));
+    }
+
+    public void updateFromTileEntity(ServerLevel world){
+        if(loaded){
+            TownTileEntity te = (TownTileEntity) world.getBlockEntity(pos);
+            if(te != null){
+                workData.put("tileEntity", te.getWorkData());
+            }
+        }
+    }
+
+    public void updateFromTileEntity(TownTileEntity te){
+        workData.put("tileEntity", te.getWorkData());
+    }
+
+    public void toTileEntity(ServerLevel world){
+        if(loaded){
+            TownTileEntity te = (TownTileEntity) world.getBlockEntity(pos);
+            if(te != null){
+                te.setWorkData(workData.getCompound("town"));
+            }
+        }
+    }
+
+    public void setDataFromTown(String key, Tag nbt){
+        CompoundTag nbt0 = workData.getCompound("town");
+        nbt0.put(key, nbt);
+        workData.put("town", nbt0);
+    }
+
+    public void setOverlappingState(boolean b){
+        this.setDataFromTown(KEY_IS_OVERLAPPED, b? ByteTag.ONE: ByteTag.ZERO);
     }
 
     public BlockPos getPos() {
@@ -124,6 +168,7 @@ public class TownWorkerData {
         return data;
     }
 
+    @Deprecated
     public void setData(ServerLevel w) {
         if (loaded) {
             BlockEntity te = Utils.getExistingTileEntity(w, pos);
@@ -156,5 +201,53 @@ public class TownWorkerData {
         return Objects.hash(type, pos, priority);
     }
 
+
+    /**
+     * Get the residents of this worker.
+     * Should ONLY be used if the worker holds residents, like house, mine, etc.
+     */
+    public ListTag getResidents(){
+        return workData.getCompound("town").getList("residents", Tag.TAG_COMPOUND);
+    }
+
+    /**
+     * Get the max resident of this worker.
+     * Should ONLY be used if the worker holds residents, like house, mine, etc.
+     */
+    public int getMaxResident(){
+        return workData.getCompound("tileEntity").getInt("maxResident");
+    }
+
+    /**
+     * Add a resident to this worker.
+     * Should ONLY be used if the worker holds residents, like house, mine, etc.
+     */
+    public void addResident(UUID uuid){
+        CompoundTag dataFromTown = workData.getCompound("town");
+        ListTag list = dataFromTown.getList("residents", Tag.TAG_STRING);
+        list.add(StringTag.valueOf(uuid.toString()));
+        dataFromTown.put("residents", list);
+        workData.put("town", dataFromTown);
+    }
+
+    /**
+     * Get priority when assigning work
+     * Should ONLY be used if the worker holds residents, like house, mine, etc.
+     */
+    public double getResidentPriority(){
+        return type.getResidentPriority(this);
+    }
+
+    public double getResidentPriority(int residentNum){
+        return type.getResidentPriority(residentNum, this.getWorkData());
+    }
+
+    /**
+     * @param nbt 完整的nbt，包含town和tileEntity部分
+     * @return rating
+     */
+    public static Double getRating(CompoundTag nbt){
+        return nbt.getCompound("tileEntity").getDouble("rating");
+    }
 
 }

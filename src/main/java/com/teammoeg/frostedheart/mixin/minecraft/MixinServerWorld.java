@@ -22,6 +22,9 @@ package com.teammoeg.frostedheart.mixin.minecraft;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
+import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -33,6 +36,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.core.Holder;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.GameRules;
@@ -47,21 +52,26 @@ import net.minecraft.world.level.storage.WritableLevelData;
 @Mixin(ServerLevel.class)
 public abstract class MixinServerWorld extends Level {
 
+    protected MixinServerWorld(WritableLevelData pLevelData, ResourceKey<Level> pDimension, RegistryAccess pRegistryAccess, Holder<DimensionType> pDimensionTypeRegistration,
+		Supplier<ProfilerFiller> pProfiler, boolean pIsClientSide, boolean pIsDebug, long pBiomeZoomSeed, int pMaxChainedNeighborUpdates) {
+		super(pLevelData, pDimension, pRegistryAccess, pDimensionTypeRegistration, pProfiler, pIsClientSide, pIsDebug, pBiomeZoomSeed, pMaxChainedNeighborUpdates);
+	}
+
+	@Shadow
+    @Final
+    public ServerLevelData serverLevelData;
+
     @Shadow
     @Final
-    public ServerLevelData serverWorldInfo;
+    private MinecraftServer server;
 
-    protected MixinServerWorld(WritableLevelData worldInfo, ResourceKey<Level> dimension, DimensionType dimensionType,
-                               Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed) {
-        super(worldInfo, dimension, dimensionType, profiler, isRemote, isDebug, seed);
-    }
 
     /**
      * @author khjxiaogu
      * @reason Not allow sleep over weather
      */
     @Overwrite
-    private void resetRainAndThunder() {
+    private void resetWeatherCycle() {
 
     }
     
@@ -70,54 +80,102 @@ public abstract class MixinServerWorld extends Level {
      * @reason this allows us to add our own weather logic since we disabled it
      * @see GameRulesMixin#disableWeatherCycle
      */
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/DimensionType;hasSkyLight()Z"))
-    private void tick(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
-        if (!((BooleanValue)(((GameRuleAccessor)this.getGameRules()).getRules().get(GameRules.RULE_WEATHER_CYCLE))).get())//vanilla rules
+    @Overwrite
+    private void advanceWeatherCycle() {
+        // Vanilla game rule logic
+        if (!((BooleanValue)(((GameRuleAccessor)this.getGameRules()).getRules().get(GameRules.RULE_WEATHER_CYCLE))).get())
             return;
 
-        // ignore nether and end etc.
+        // Only in overworld
         if (!this.dimensionType().hasSkyLight())
             return;
-        // get hourly temp data
-        //float currentTemp = WorldTemperature.getClimateTemperature(this);
-        // System.out.println("Current Temp: " + currentTemp);
 
-        // vanilla weather params
-        int clearTime = this.serverWorldInfo.getClearWeatherTime();
-        int rainTime = this.serverWorldInfo.getRainTime();
-        int thunderTime = this.serverWorldInfo.getThunderTime();
-        boolean isRaining = this.serverWorldInfo.isRaining();
-        boolean isThundering = this.serverWorldInfo.isThundering();
+        boolean flag = this.serverLevelData.isRaining();
+
+        // vanilla weather params: these are only possible to set with vanilla weather commands,
+        // as we disable vanilla weather logic and use our own from WorldClimate!
+        int clearTime = this.serverLevelData.getClearWeatherTime();
+        /*
+            rainTime and thunderTime are the same if set by vanilla weather command:
+            /weather rain <time> or /weather thunder <time>
+            See ServerLevel#setWeatherParameters
+         */
+        int rainTime = this.serverLevelData.getRainTime();
+        int thunderTime = this.serverLevelData.getThunderTime();
+        // if you use /weather rain <time>
+        boolean isRaining = this.serverLevelData.isRaining();
+        // if you use /weather thunder <time>
+        boolean isThundering = this.serverLevelData.isThundering();
 
         // calculate raining status and blizzard status based on our temp system
         // 'thundering' is replaced by our BlizzardRenderer
-        isThundering = WorldClimate.isBlizzard(this);
-        isRaining = WorldClimate.isSnowing(this) || isThundering;
+        boolean climateBlizzard = WorldClimate.isBlizzard(this);
+        boolean climateSnowing = WorldClimate.isSnowing(this) || climateBlizzard;
 
 
         // To make vanilla weather commands work, we still implement the following
-        // This overrides the previous calculation on isRaining and isThundering
+        // This overrides the previous calculation from WorldClimate
+        // to create temporary weather periods
         if (clearTime > 0) {
             --clearTime;
-            isRaining = false;
-            isThundering = false;
+            climateBlizzard = false;
+            climateSnowing = false;
         }
-        if (rainTime > 0) {
+        if (rainTime > 0 && isRaining) {
             --rainTime;
-            isRaining = true;
-            isThundering = false;
+            climateSnowing = true;
+            climateBlizzard = false;
         }
-        if (thunderTime > 0) {
+        if (thunderTime > 0 && isThundering) {
             --thunderTime;
-            isRaining = true;
-            isThundering = true;
+            climateSnowing = true; // Note we must set climate snowing to be true here to make thundering work
+            climateBlizzard = true;
         }
 
-        this.serverWorldInfo.setThunderTime(thunderTime);
-        this.serverWorldInfo.setRainTime(rainTime);
-        this.serverWorldInfo.setClearWeatherTime(clearTime);
-        this.serverWorldInfo.setThundering(isThundering);
-        this.serverWorldInfo.setRaining(isRaining);
+        this.serverLevelData.setThunderTime(thunderTime);
+        this.serverLevelData.setRainTime(rainTime);
+        this.serverLevelData.setClearWeatherTime(clearTime);
+        this.serverLevelData.setThundering(climateBlizzard);
+        this.serverLevelData.setRaining(climateSnowing);
+
+        // Vanilla 1.20 Code Start
+        this.oThunderLevel = this.thunderLevel;
+        if (this.levelData.isThundering()) {
+            this.thunderLevel += 0.01F;
+        } else {
+            this.thunderLevel -= 0.01F;
+        }
+
+        this.thunderLevel = Mth.clamp(this.thunderLevel, 0.0F, 1.0F);
+        this.oRainLevel = this.rainLevel;
+        if (this.levelData.isRaining()) {
+            this.rainLevel += 0.01F;
+        } else {
+            this.rainLevel -= 0.01F;
+        }
+
+        this.rainLevel = Mth.clamp(this.rainLevel, 0.0F, 1.0F);
+
+        if (this.oRainLevel != this.rainLevel) {
+            this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(ClientboundGameEventPacket.RAIN_LEVEL_CHANGE, this.rainLevel), this.dimension());
+        }
+
+        if (this.oThunderLevel != this.thunderLevel) {
+            this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(ClientboundGameEventPacket.THUNDER_LEVEL_CHANGE, this.thunderLevel), this.dimension());
+        }
+
+        if (flag != this.isRaining()) {
+            if (flag) {
+                this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(ClientboundGameEventPacket.STOP_RAINING, 0.0F), this.dimension());
+            } else {
+                this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(ClientboundGameEventPacket.START_RAINING, 0.0F), this.dimension());
+            }
+
+            this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(ClientboundGameEventPacket.RAIN_LEVEL_CHANGE, this.rainLevel), this.dimension());
+            this.server.getPlayerList().broadcastAll(new ClientboundGameEventPacket(ClientboundGameEventPacket.THUNDER_LEVEL_CHANGE, this.thunderLevel), this.dimension());
+        }
+
+        // Vanilla 1.20 Code End
     }
 
 }

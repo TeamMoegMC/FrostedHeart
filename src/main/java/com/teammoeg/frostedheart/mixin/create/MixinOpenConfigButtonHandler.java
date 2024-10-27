@@ -24,10 +24,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.simibubi.create.foundation.config.ui.OpenCreateMenuButton;
+import com.simibubi.create.infrastructure.gui.OpenCreateMenuButton;
 
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 
 @Mixin(OpenCreateMenuButton.OpenConfigButtonHandler.class)
 public class MixinOpenConfigButtonHandler {
@@ -36,8 +36,8 @@ public class MixinOpenConfigButtonHandler {
      * @reason remove from main menu
      */
     @Inject(at = @At("HEAD"), method = "onGuiInit", remap = false, cancellable = true)
-    private static void fh$disableMainMenuButton(GuiScreenEvent.InitGuiEvent event, CallbackInfo cbi) {
-        if (event.getGui() instanceof TitleScreen) cbi.cancel();
+    private static void fh$disableMainMenuButton(ScreenEvent.Init event, CallbackInfo cbi) {
+        if (event.getScreen() instanceof TitleScreen) cbi.cancel();
 
     }
 }

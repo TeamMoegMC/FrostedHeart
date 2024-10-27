@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
+import com.mojang.datafixers.util.Either;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
@@ -46,6 +47,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import top.theillusivec4.curios.api.type.ISlotType;
 
 /**
  * Heater Vest: wear it to warm yourself from the coldness.
@@ -109,7 +111,7 @@ public class HeaterVestItem extends FHBaseItem implements IHeatingEquipment, ICh
     }
 
 	@Override
-	public float getEffectiveTempAdded(EquipmentCuriosSlotType slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
+	public float getEffectiveTempAdded(Either<ISlotType,EquipmentCuriosSlotType> slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
 		if(slot==null) {
 			return 50;
 		}

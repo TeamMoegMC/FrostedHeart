@@ -68,8 +68,8 @@ public class BreathParticle extends GasParticle {
     public void render(VertexConsumer worldRendererIn, Camera entityIn, float pt) {
         float age = (this.age + pt) / lifetime * 32.0F;
         age = Mth.clamp(age, 0.0F, 1.0F);
-        float alpha = 0.3F * (1 - (this.age + pt) / lifetime);
-        super.alpha = Mth.clamp(alpha, 0.0F, 0.3F);
+        float alpha = 0.1F * (1 - (this.age + pt) / lifetime);
+        super.alpha = Mth.clamp(alpha, 0.0F, 0.1F);
         super.quadSize = initialScale * (age + this.age * 0.0375F) * 0.5F;
         super.render(worldRendererIn, entityIn, pt);
     }

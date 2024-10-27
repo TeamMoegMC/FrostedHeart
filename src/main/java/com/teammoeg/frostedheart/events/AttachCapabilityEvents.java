@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.capability.CurioCapabilityProvider;
 import com.teammoeg.frostedheart.content.climate.ArmorTempCurios;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
+import com.teammoeg.frostedheart.content.robotics.logistics.RobotChunk;
 
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerPlayer;
@@ -79,7 +80,7 @@ public class AttachCapabilityEvents {
         // only attach to dimension with skylight (i.e. overworld)
         if (!event.getObject().dimensionType().hasFixedTime()) {
             event.addCapability(new ResourceLocation(FHMain.MODID, "climate_data"),FHCapabilities.CLIMATE_DATA.provider());
-            event.addCapability(new ResourceLocation(FHMain.MODID, "logistic_data"),FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.provider());
+            event.addCapability(new ResourceLocation(FHMain.MODID, "logistic_data"),FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.provider(RobotChunk::new));
         }
     }
 

@@ -14,7 +14,6 @@ public class HalfShaftRenderer extends KineticBlockEntityRenderer<KineticBlockEn
 
 	public HalfShaftRenderer(Context context) {
 		super(context);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override

@@ -40,7 +40,10 @@ import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 
 /**
@@ -62,7 +65,7 @@ public class HouseTileEntity extends AbstractTownWorkerTileEntity{
 
     /** Work data, stored in town. */
     private int maxResident = -1; // how many resident can live here
-    //public List<Resident> residents = new ArrayList<>();
+    //public List<UUID> residents = new ArrayList<>();
     private int volume = -1;
     //private int decoration = -1;
     private int area = -1;
@@ -114,17 +117,8 @@ public class HouseTileEntity extends AbstractTownWorkerTileEntity{
         CompoundTag data = getBasicWorkData();
         if(this.isValid()) {
             ListTag residentList = new ListTag();
-            //for (Resident resident : residents) {
-            //    residentList.add(resident.serialize());
-            //}
-            data.put("residents", residentList);
             data.putInt("maxResident", maxResident);
-            data.putDouble("temperature", temperature);
-            data.putInt("volume", volume);
-            data.putInt("area", area);
-            //data.putInt("decoration", decoration);
             data.putDouble("rating", rating);
-            data.putDouble("temperatureModifier", temperatureModifier);
         }
         return data;
     }
@@ -132,20 +126,6 @@ public class HouseTileEntity extends AbstractTownWorkerTileEntity{
     @Override
     public void setWorkData(CompoundTag data) {
         setBasicWorkData(data);
-        if(this.isValid()) {
-            //residents = new ArrayList<>();
-            //ListNBT residentList = data.getList("residents", Tag.TAG_COMPOUND);
-            //for (int i = 0; i < residentList.size(); i++) {
-            //    residents.add(new Resident(residentList.getCompound(i)));
-            //}
-            maxResident = data.getInt("maxResident");
-            temperature = data.getDouble("temperature");
-            volume = data.getInt("volume");
-            area = data.getInt("area");
-            //decoration = data.getInt("decoration");
-            rating = data.getDouble("rating");
-            temperatureModifier = data.getDouble("temperatureModifier");
-        }
     }
 
     public int getMaxResident() {

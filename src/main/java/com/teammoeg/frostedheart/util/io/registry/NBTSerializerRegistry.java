@@ -53,15 +53,12 @@ public class NBTSerializerRegistry<U extends Writeable> extends PacketBufferSeri
 	}
 	@Override
 	protected String readType(CompoundTag obj) {
-		// TODO Auto-generated method stub
 		return obj.getString("type");
 	}
 	public void register(Class<? extends U> cls, String type, Function<CompoundTag, U> json, Function<U, CompoundTag> obj, Function<FriendlyByteBuf, U> packet) {
-		// TODO Auto-generated method stub
 		super.register(cls, type, json, (t,c)->obj.apply(t), packet);
 	}
 	public CompoundTag write(U fromObj) {
-		// TODO Auto-generated method stub
 		return super.write(fromObj, null);
 	}
 }

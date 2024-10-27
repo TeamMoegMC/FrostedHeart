@@ -19,17 +19,17 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
-import com.teammoeg.frostedheart.FHBaseContainer;
+import com.teammoeg.frostedheart.FHBlockEntityContainer;
 import com.teammoeg.frostedheart.FHContainer;
 
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-public class SaunaContainer extends FHBaseContainer<SaunaTileEntity> {
+public class SaunaContainer extends FHBlockEntityContainer<SaunaTileEntity> {
 
     public SaunaContainer(int id, Inventory inventoryPlayer, SaunaTileEntity tile) {
-        super(FHContainer.SAUNA.get(), tile, id, 1);
+        super(FHContainer.SAUNA.get(), tile, id,inventoryPlayer.player, 1);
   
         // medicine slot
         addSlot(new Slot(this.inv, 0, 98, 26) {

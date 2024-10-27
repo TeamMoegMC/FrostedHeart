@@ -52,7 +52,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-// TODO: Auto-generated Javadoc
 
 /**
  * "Effect" of research: how would it become when research is completed ?.

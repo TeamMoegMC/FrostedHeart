@@ -19,36 +19,24 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.FHMultiblocks.Logic;
 import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.world.item.ItemStack;
+import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.util.FHMultiblockHelper;
+import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.world.level.Level;
 
 public class T2GeneratorMultiblock extends FHBaseMultiblock {
-    @OnlyIn(Dist.CLIENT)
-    private static ItemStack renderStack;
 
     public T2GeneratorMultiblock() {
+
         super(new ResourceLocation(FHMain.MODID, "multiblocks/generator_t2"),
-                new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 7, 3),
-                () -> FHMultiblocks.generator_t2.defaultBlockState());
+                new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 7, 3), Logic.GENERATOR_T2);
     }
 
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public boolean canRenderFormedStructure() {
-        return true;
-    }
 
     @Override
     public float getManualScale() {
@@ -56,16 +44,17 @@ public class T2GeneratorMultiblock extends FHBaseMultiblock {
     }
 
     @Override
-    @OnlyIn(Dist.CLIENT)
-    public void renderFormedStructure(PoseStack transform, MultiBufferSource buffer) {
-        if (renderStack == null)
-            renderStack = new ItemStack(FHMultiblocks.generator_t2);
-        transform.translate(1.5D, 1.5D, 1.5D);
-        ClientUtils.mc().getItemRenderer().renderStatic(
-                renderStack,
-                ItemTransforms.TransformType.NONE,
-                0xf000f0,
-                OverlayTexture.NO_OVERLAY,
-                transform, buffer);
+    public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
+        BlockPos master = this.getMasterFromOriginOffset();
+        ChunkHeatData.removeTempAdjust(world, origin.offset(master));
+        FHMultiblockHelper.getBEHelper(world, origin.offset(master)).ifPresent(te -> {
+            T2GeneratorState state = (T2GeneratorState) te.getState();
+            if (state != null)
+                state.manager.invalidate();
+            else
+                FHMain.LOGGER.error("T2GeneratorState is null when disassembling T2GeneratorMultiblock.");
+        });
+        super.disassemble(world, origin, mirrored, clickDirectionAtCreation);
     }
+
 }

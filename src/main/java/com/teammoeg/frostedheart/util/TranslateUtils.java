@@ -125,7 +125,6 @@ public class TranslateUtils {
     }
 
 	public static Component empty() {
-		// TODO Auto-generated method stub
 		return MutableComponent.create(LiteralContents.EMPTY);
 	}
 }

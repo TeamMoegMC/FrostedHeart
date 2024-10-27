@@ -34,7 +34,7 @@ public abstract class PistonBlockMixin extends DirectionalBlock {
         super(builder);
     }
 
-    @ModifyConstant(method = "doMove", constant = @Constant(intValue = 68, ordinal = 0))
+    @ModifyConstant(method = "moveBlocks", constant = @Constant(intValue = 68, ordinal = 0))
     public int getFlag(int in) {
         return in | 16;
     }

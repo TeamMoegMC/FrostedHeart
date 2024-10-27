@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.research.events;
 
 import net.minecraftforge.eventbus.api.Event;
 
-// TODO: Auto-generated Javadoc
 
 /**
  * Class ResearchLoadEvent.

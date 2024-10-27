@@ -47,12 +47,12 @@ public class CoolableAnimals extends Mob {
         super(type, worldIn);
     }
 
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    @Inject(at = @At("HEAD"), method = "readAdditionalSaveData")
     public void fh$readAdditional(CompoundTag compound, CallbackInfo cbi) {
         hxteTimer = compound.getShort("hxthermia");
     }
 
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    @Inject(at = @At("HEAD"), method = "addAdditionalSaveData")
     public void fh$writeAdditional(CompoundTag compound, CallbackInfo cbi) {
         compound.putShort("hxthermia", hxteTimer);
 
@@ -61,13 +61,13 @@ public class CoolableAnimals extends Mob {
     @Override
     public void tick() {
         super.tick();
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
 
-            if (FHUtils.isBlizzardHarming(level, this.blockPosition())) {
+            if (FHUtils.isBlizzardHarming(level(), this.blockPosition())) {
                 if (hxteTimer < 20) {
                     hxteTimer++;
                 } else {
-                    this.hurt(FHDamageSources.BLIZZARD, 1);
+                    this.hurt(FHDamageSources.createSource(level(), FHDamageSources.BLIZZARD, this), 1);
                 }
             } else {
                 float temp = ChunkHeatData.getTemperature(this.getCommandSenderWorld(), this.blockPosition());
@@ -84,7 +84,7 @@ public class CoolableAnimals extends Mob {
                                 }
                             }
                         hxteTimer = 0;
-                        this.hurt(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
+                        this.hurt(FHDamageSources.createSource(level(), temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, this), 2);
                     }
                 } else if (hxteTimer > 0)
                     hxteTimer--;

@@ -1,9 +1,0 @@
-{
-  "type": "frostedheart:diet_override",
-  "groups": {
-    "plant_oil": 0.0072908197,
-    "vitamin": 0.01841565,
-    "grains": 0.00889302
-  },
-  "item": "frozenup:mug_of_truffle_hot_chocolate"
-}

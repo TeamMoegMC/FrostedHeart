@@ -29,25 +29,59 @@ import com.teammoeg.frostedheart.FHMultiblocks;
 
 import blusunrize.immersiveengineering.api.crafting.FluidTagInput;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.item.crafting.RecipeType;
+import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.util.GsonHelper;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
 import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.registries.RegistryObject;
 
 public class GeneratorSteamRecipe extends IESerializableRecipe {
+    public static RegistryObject<RecipeType<GeneratorSteamRecipe>> TYPE;
+    public static RegistryObject<IERecipeSerializer<GeneratorSteamRecipe>> SERIALIZER;
+    public static Lazy<TypeWithClass<GeneratorSteamRecipe>> IEType = Lazy.of(() -> new TypeWithClass<>(TYPE, GeneratorSteamRecipe.class));
+    // Initialized by reload listener
+    public static Map<ResourceLocation, GeneratorSteamRecipe> recipeList = Collections.emptyMap();
+    public final FluidTagInput input;
+    public final float power;
+    public final float level;
+
+
+    public GeneratorSteamRecipe(ResourceLocation id, FluidTagInput input,
+                                float power, float tempMod) {
+        super(Lazy.of(() -> ItemStack.EMPTY), IEType.get(), id);
+        this.input = input;
+        this.power = power;
+        this.level = tempMod;
+    }
+
+    public static GeneratorSteamRecipe findRecipe(FluidStack input) {
+        for (GeneratorSteamRecipe recipe : recipeList.values())
+            if (recipe.input.testIgnoringAmount(input))
+                return recipe;
+        return null;
+    }
+
+    @Override
+    protected IERecipeSerializer<GeneratorSteamRecipe> getIESerializer() {
+        return SERIALIZER.get();
+    }
+
+    @Override
+    public ItemStack getResultItem(RegistryAccess pRegistryAccess) {
+        return super.outputDummy.get();
+    }
+
     public static class Serializer extends IERecipeSerializer<GeneratorSteamRecipe> {
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHMultiblocks.generator);
+            return new ItemStack(FHMultiblocks.Logic.GENERATOR_T1.block().get());
         }
 
         @Nullable
@@ -60,7 +94,7 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public GeneratorSteamRecipe readFromJson(ResourceLocation recipeId, JsonObject json,IContext ctx) {
+        public GeneratorSteamRecipe readFromJson(ResourceLocation recipeId, JsonObject json, IContext ctx) {
             FluidTagInput input = FluidTagInput.deserialize(GsonHelper.getAsJsonObject(json, "input"));
             float power = GsonHelper.getAsFloat(json, "energy");
             float tempMod = GsonHelper.getAsFloat(json, "level");
@@ -73,41 +107,5 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
             buffer.writeFloat(recipe.power);
             buffer.writeFloat(recipe.level);
         }
-    }
-    public static RegistryObject<RecipeType<GeneratorSteamRecipe>> TYPE;
-
-    public static RegistryObject<IERecipeSerializer<GeneratorSteamRecipe>> SERIALIZER;
-    public static Lazy<TypeWithClass<GeneratorSteamRecipe>> IEType=Lazy.of(()->new TypeWithClass<>(TYPE, GeneratorSteamRecipe.class));
-    // Initialized by reload listener
-    public static Map<ResourceLocation, GeneratorSteamRecipe> recipeList = Collections.emptyMap();
-    public final FluidTagInput input;
-    public final float power;
-
-
-    public final float level;
-
-    public static GeneratorSteamRecipe findRecipe(FluidStack input) {
-        for (GeneratorSteamRecipe recipe : recipeList.values())
-            if (recipe.input.testIgnoringAmount(input))
-                return recipe;
-        return null;
-    }
-
-    public GeneratorSteamRecipe(ResourceLocation id, FluidTagInput input,
-                                float power, float tempMod) {
-        super(Lazy.of(()->ItemStack.EMPTY), IEType.get(), id);
-        this.input = input;
-        this.power = power;
-        this.level = tempMod;
-    }
-
-    @Override
-    protected IERecipeSerializer<GeneratorSteamRecipe> getIESerializer() {
-        return SERIALIZER.get();
-    }
-
-	@Override
-    public ItemStack getResultItem(RegistryAccess pRegistryAccess) {
-        return super.outputDummy.get();
     }
 }

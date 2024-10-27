@@ -4,7 +4,7 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.FHSounds;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.MasterGeneratorScreen;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorScreen;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
@@ -29,8 +29,8 @@ public class ClientEvents {
         if (event.side == LogicalSide.CLIENT && FHConfig.CLIENT.enableBreathParticle.get() && event.phase == TickEvent.Phase.START
                 && event.player instanceof LocalPlayer) {
             LocalPlayer player = (LocalPlayer) event.player;
-            if(ClientUtils.mc().screen instanceof MasterGeneratorScreen&&player.tickCount%20==0) {
-            	((MasterGeneratorScreen)ClientUtils.mc().screen).fullInit();
+            if(ClientUtils.mc().screen instanceof GeneratorScreen &&player.tickCount%20==0) {
+            	((GeneratorScreen)ClientUtils.mc().screen).fullInit();
             }
             if (!player.isSpectator() && !player.isCreative() && player.level() != null) {
                 if (player.tickCount % 60 <= 3) {
