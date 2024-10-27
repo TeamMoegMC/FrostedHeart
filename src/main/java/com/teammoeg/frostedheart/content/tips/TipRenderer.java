@@ -74,7 +74,7 @@ public class TipRenderer {
         if (gui instanceof PauseScreen || gui instanceof ChatScreen || gui instanceof EmptyScreen) {
             int x = mc.getWindow().getGuiScaledWidth()-12;
             int y = mc.getWindow().getGuiScaledHeight()-26;
-            if (IconButton.renderIconButton(event.getGuiGraphics(), IconButton.ICON_HISTORY, RawMouseHelper.getScaledX(), RawMouseHelper.getScaledY(), x, y, 0xFFFFFFFF, 0x80000000)) {
+            if (IconButton.renderIconButton(event.getGuiGraphics(), IconButton.Icon.HISTORY, RawMouseHelper.getScaledX(), RawMouseHelper.getScaledY(), x, y, 0xFFFFFFFF, 0x80000000)) {
                 mc.setScreen(new TipListScreen(gui instanceof PauseScreen));
             }
         }

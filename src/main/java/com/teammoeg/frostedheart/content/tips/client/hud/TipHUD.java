@@ -6,10 +6,7 @@ import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.gui.EmptyScreen;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.client.AnimationUtil;
-import com.teammoeg.frostedheart.util.client.FHGuiHelper;
-import com.teammoeg.frostedheart.util.client.Point;
-import com.teammoeg.frostedheart.util.client.RawMouseHelper;
+import com.teammoeg.frostedheart.util.client.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -34,6 +31,7 @@ public class TipHUD {
     public boolean visible = true;
 
     public TipHUD(TipElement element) {
+        resetAnimation();
         this.element = element;
         this.alwaysVisible = element.alwaysVisible;
     }
@@ -113,7 +111,7 @@ public class TipHUD {
         }
 
         graphics.pose().pushPose();
-        graphics.pose().translate(-yaw*0.1F + fadeProgress*16 - 16, -pitch*0.1F, 1000);
+        graphics.pose().translate(-yaw*0.05F + fadeProgress*16 - 16, -pitch*0.05F, 1000);
 
         renderContent(graphics, element.contents, x, y, fontColor, renderPos2, BGColor);
 
@@ -174,23 +172,22 @@ public class TipHUD {
     private void renderButton(GuiGraphics graphics, int x, int y, int color) {
         //TODO 按键绑定
         if (!isFading() && (MC.screen != null || InputConstants.isKeyDown(MC.getWindow().getWindow(), 258))) {
-            if (MC.screen == null) MC.setScreen(new EmptyScreen());
+            if (MC.screen == null)
+                MC.setScreen(new EmptyScreen());
 
-            if (IconButton.renderIconButton(graphics, IconButton.ICON_CROSS, RawMouseHelper.getScaledX(), RawMouseHelper.getScaledY(), x, y, color, 0)) {
-                if (!isFading()) {
-                    fadeOut = true;
-                }
+            if (IconButton.renderIconButton(graphics, IconButton.Icon.CROSS, RawMouseHelper.getScaledX(), RawMouseHelper.getScaledY(), x, y, color, 0)) {
+                fadeOut = true;
             }
             //标题超过 1 行时把锁定按钮从左边移动到下面
             if (titleLines > 1){
-                if (!isAlwaysVisible() && IconButton.renderIconButton(graphics, IconButton.ICON_LOCK, RawMouseHelper.getScaledX(), RawMouseHelper.getScaledY(), x, y+10, color, 0))
+                if (!isAlwaysVisible() && IconButton.renderIconButton(graphics, IconButton.Icon.LOCK, RawMouseHelper.getScaledX(), RawMouseHelper.getScaledY(), x, y+10, color, 0))
                     alwaysVisibleOverride = true;
             } else {
-                if (!isAlwaysVisible() && IconButton.renderIconButton(graphics, IconButton.ICON_LOCK, RawMouseHelper.getScaledX(), RawMouseHelper.getScaledY(), x-15, y, color, 0))
+                if (!isAlwaysVisible() && IconButton.renderIconButton(graphics, IconButton.Icon.LOCK, RawMouseHelper.getScaledX(), RawMouseHelper.getScaledY(), x-15, y, color, 0))
                     alwaysVisibleOverride = true;
             }
         } else {
-            IconButton.renderIcon(graphics.pose(), IconButton.ICON_CROSS, x, y, color);
+            IconButton.renderIcon(graphics.pose(), IconButton.Icon.CROSS, x, y, color);
         }
     }
 
@@ -200,5 +197,11 @@ public class TipHUD {
 
     public boolean isFading() {
         return fadeIn || fadeOut;
+    }
+
+    public static void resetAnimation() {
+        AnimationUtil.remove("TipFadeIn");
+        AnimationUtil.remove("TipFadeOut");
+        AnimationUtil.remove("TipVisibleTime");
     }
 }

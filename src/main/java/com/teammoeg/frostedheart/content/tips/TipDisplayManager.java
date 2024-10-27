@@ -2,8 +2,8 @@ package com.teammoeg.frostedheart.content.tips;
 
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
+import com.teammoeg.frostedheart.content.tips.client.hud.TipHUD;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.client.AnimationUtil;
 import net.minecraft.client.Minecraft;
 
 import java.util.HashMap;
@@ -65,9 +65,8 @@ public class TipDisplayManager {
 
         if (visibleTime == -1) {
             ele.alwaysVisible = true;
-        } else {
-            ele.visibleTime = visibleTime;
         }
+        ele.visibleTime = visibleTime;
 
         displayTip(ele, false);
     }
@@ -110,7 +109,7 @@ public class TipDisplayManager {
      */
     public static void removeCurrent() {
         TipRenderer.renderQueue.remove(0);
-        resetTipAnimation();
+        TipHUD.resetAnimation();
         TipRenderer.currentTip = null;
     }
 
@@ -147,21 +146,15 @@ public class TipDisplayManager {
                 TipRenderer.renderQueue.remove(i);
                 TipRenderer.renderQueue.add(0, ele);
                 TipRenderer.currentTip = null;
-                resetTipAnimation();
+                TipHUD.resetAnimation();
                 return;
             }
         }
     }
 
-    public static void resetTipAnimation() {
-        AnimationUtil.remove("TipFadeIn");
-        AnimationUtil.remove("TipFadeOut");
-        AnimationUtil.remove("TipVisibleTime");
-    }
-
     public static void clearRenderQueue() {
         TipRenderer.renderQueue.clear();
-        resetTipAnimation();
+        TipHUD.resetAnimation();
         TipRenderer.currentTip = null;
     }
 
