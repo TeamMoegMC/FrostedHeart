@@ -36,23 +36,24 @@ import net.minecraft.util.Mth;
 
 @Mixin(DeployerMovementBehaviour.class)
 public abstract class MixinDeployerMovementBehaviour implements MovementBehaviour {
-    @Inject(method = "tick(Lcom/simibubi/create/content/contraptions/behaviour/MovementContext;)V",
-            at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/nbt/CompoundTag;putInt(Ljava/lang/String;I)V",
-                    ordinal = 0
-            ), cancellable = true,remap=false)
-
-    public void doTimer(MovementContext m, CallbackInfo cbi) {
-        Contraption c = m.contraption;
-        if (c instanceof ISpeedContraption) {
-            int timer = m.data.getInt("Timer");
-            timer += (int) Mth.clamp(Math.abs(((ISpeedContraption) c).getSpeed()) * 10, 1, 2560);
-            m.data.putInt("Timer", timer);
-            cbi.cancel();
-        }
-
-    }
-
+    // TODO for some reason fails to inject when loaded in mc environment outside
+//    @Inject(method = "tick(Lcom/simibubi/create/content/contraptions/behaviour/MovementContext;)V",
+//            at = @At(value = "INVOKE",
+//                    target = "Lnet/minecraft/nbt/CompoundTag;putInt(Ljava/lang/String;I)V",
+//                    ordinal = 0
+//            ), cancellable = true,remap=false)
+//
+//    public void doTimer(MovementContext m, CallbackInfo cbi) {
+//        Contraption c = m.contraption;
+//        if (c instanceof ISpeedContraption) {
+//            int timer = m.data.getInt("Timer");
+//            timer += (int) Mth.clamp(Math.abs(((ISpeedContraption) c).getSpeed()) * 10, 1, 2560);
+//            m.data.putInt("Timer", timer);
+//            cbi.cancel();
+//        }
+//
+//    }
+//
     @ModifyConstant(method = "tick(Lcom/simibubi/create/content/contraptions/behaviour/MovementContext;)V", remap = false, constant = @Constant(intValue = 20, ordinal = 0))
     public int getTimerTick(int in) {
         return 10000;
