@@ -233,7 +233,7 @@ dependencies {
 
     // IE
     implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}")
-//    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}:datagen")
+    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}:datagen")
 
     // Create
     implementation fg.deobf("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }
