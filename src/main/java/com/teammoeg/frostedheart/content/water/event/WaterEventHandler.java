@@ -8,7 +8,10 @@ import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.water.network.PlayerDrinkWaterMessage;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.content.water.util.WaterLevelUtil;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.EmptyByteBuf;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -54,7 +57,7 @@ public class WaterEventHandler {
         ItemStack stack = event.getItem();
         if (entity instanceof ServerPlayer player) {
             WaterLevelUtil.drink(player, stack);
-            FHNetwork.sendPlayer(player, new PlayerDrinkWaterMessage());
+            //FHNetwork.sendPlayer(player, new PlayerDrinkWaterMessage());
         }
     }
 

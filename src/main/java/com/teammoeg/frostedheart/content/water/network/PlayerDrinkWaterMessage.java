@@ -5,6 +5,7 @@ import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.water.event.WaterEventHandler;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -13,7 +14,15 @@ import net.minecraftforge.network.PacketDistributor;
 
 import java.util.function.Supplier;
 
-public class PlayerDrinkWaterMessage implements FHMessage {
+public class PlayerDrinkWaterMessage extends NBTMessage {
+
+
+    public PlayerDrinkWaterMessage(FriendlyByteBuf buffer) {
+        super(buffer);
+    }
+    public PlayerDrinkWaterMessage() {
+        super(new CompoundTag());
+    }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {

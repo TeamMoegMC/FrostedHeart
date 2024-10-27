@@ -42,8 +42,6 @@ public class FHFluids {
     public static final ResourceLocation PROTEIN_FLUID_TEXTURE = new ResourceLocation(FHMain.MODID,
             "block/protein_fluid");
     public static final ResourceLocation FLOWING_FLUID_TEXTURE = new ResourceLocation("block/water_flow");
-	public static final ResourceLocation PURIFIED_WATER_STILL_FLUID_TEXTURE = new ResourceLocation(FHMain.MODID, "block/fluid/purified_water_still");
-	public static final ResourceLocation PURIFIED_WATER_FLOWING_FLUID_TEXTURE = new ResourceLocation(FHMain.MODID, "block/fluid/purified_water_flow");
     static final DeferredRegister<Fluid> FLUIDS = DeferredRegister.create(ForgeRegistries.FLUIDS, FHMain.MODID);
 	static final DeferredRegister<FluidType> FLUID_TYPES = DeferredRegister.create(Keys.FLUID_TYPES, FHMain.MODID);
 	public static RegistryObject<Fluid> WOLFBERRY_TEA =

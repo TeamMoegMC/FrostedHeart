@@ -5,6 +5,7 @@ import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
@@ -14,6 +15,13 @@ import java.util.function.Supplier;
 public class PlayerWaterLevelSyncPacket extends NBTMessage {
     int waterLevel, waterSaturationLevel;
     float waterExhaustionLevel;
+
+    public PlayerWaterLevelSyncPacket(FriendlyByteBuf buffer) {
+        super(buffer);
+        waterLevel = buffer.readInt();
+        waterSaturationLevel = buffer.readInt();
+        waterExhaustionLevel = buffer.readFloat();
+    }
 
     public PlayerWaterLevelSyncPacket(int waterLevel, int waterSaturationLevel, float waterExhaustionLevel) {
         super(toTag(waterLevel, waterSaturationLevel, waterExhaustionLevel));
