@@ -302,7 +302,7 @@ public class ClientEvents {
     public static void fireLogin(PlayerLoggedInEvent event) {
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClientTeamDataManager.INSTANCE::reset);
         // TODO: temporary fix for client not sending ready packet
-//        ClientScene.INSTANCE=new ClientScene();
+//      ClientScene.INSTANCE=new ClientScene();
 //    	ClientScene.INSTANCE.sendClientReady();
     }
 
@@ -342,7 +342,8 @@ public class ClientEvents {
                     if (FrostedHud.renderForecast)
                         FrostedHud.renderForecast(stack, anchorX, anchorY, mc, renderViewPlayer);
                     FrostedHud.renderHotbar(stack, anchorX, anchorY, mc, renderViewPlayer, partialTicks);
-                    FrostedHud.renderScenarioAct(stack, anchorX, anchorY, mc, renderViewPlayer);
+                    if (FHConfig.CLIENT.renderScenario.get())
+                        FrostedHud.renderScenarioAct(stack, anchorX, anchorY, mc, renderViewPlayer);
                 }
                 
                 if(ClientScene.INSTANCE!=null&&ClientScene.INSTANCE.dialog instanceof HUDDialog dialog) {

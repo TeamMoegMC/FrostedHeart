@@ -46,6 +46,7 @@ public class FHConfig {
         public final ForgeConfigSpec.BooleanValue autoMode;
         public final ForgeConfigSpec.IntValue autoModeInterval;
         public final ForgeConfigSpec.DoubleValue textSpeed;
+        public final ForgeConfigSpec.BooleanValue renderScenario;
         Client(ForgeConfigSpec.Builder builder) {
             enableUI = builder
                     .comment("Enables The Winter Rescue HUD. THIS IS MODPACK CORE FEATURE, DISABLING IS NOT RECOMMENDED. ")
@@ -94,8 +95,8 @@ public class FHConfig {
             textSpeed=builder.comment("Base text appear speed, actual speed may change by scenario if necessary, speed 1 is 0.5 character per tick.")
             	.defineInRange("textSpeed", 1d, 0.000001, 100000);
             builder.pop();
-
-
+            renderScenario = builder.comment("Enables the scenario rendering. ")
+                    .define("renderScenario", false); // todo: set true
         }
     }
 
@@ -114,7 +115,7 @@ public class FHConfig {
                     .define("enablesTemperatureForecast", true);
             forceEnableTemperatureForecast = builder
                     .comment("Forces the weather forecast system to be enabled regardless of scenario. ")
-                    .define("forceEnableTemperatureForecast", true);
+                    .define("forceEnableTemperatureForecast", true); // TODO: set false
             blackmods = builder
                     .comment("BlackListed mods to kick player")
                     .defineList("Mod Blacklist", new ArrayList<>(), s -> true);
