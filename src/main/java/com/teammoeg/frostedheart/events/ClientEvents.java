@@ -301,8 +301,9 @@ public class ClientEvents {
     @SubscribeEvent
     public static void fireLogin(PlayerLoggedInEvent event) {
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClientTeamDataManager.INSTANCE::reset);
-        ClientScene.INSTANCE=new ClientScene();
-    	ClientScene.INSTANCE.sendClientReady();
+        // TODO: temporary fix for client not sending ready packet
+//        ClientScene.INSTANCE=new ClientScene();
+//    	ClientScene.INSTANCE.sendClientReady();
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
