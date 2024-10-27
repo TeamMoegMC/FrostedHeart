@@ -145,6 +145,9 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Double> tempSpeed;
         public final ForgeConfigSpec.BooleanValue keepEquipments;
         public final ForgeConfigSpec.ConfigValue<Double> taskPerTick;
+        public final ForgeConfigSpec.ConfigValue<Double> waterReducingRate;
+        public final ForgeConfigSpec.IntValue weaknessEffectAmplifier;
+        public final ForgeConfigSpec.BooleanValue resetWaterLevelInDeath;
 
 
         Server(ForgeConfigSpec.Builder builder) {
@@ -165,7 +168,12 @@ public class FHConfig {
                     .defineEnum("temperatureDifficulty", FHTemperatureDifficulty.Normal);
             tempSpeed = builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
                     .defineInRange("temperatureChangeRate", 0.5, 0, 20);
-
+            waterReducingRate = builder.comment("finalReducingValue = basicValue * waterReducingRate.(DoubleValue)")
+                    .defineInRange("waterReducingRate", 1.0D, 0d, 1000D);
+            weaknessEffectAmplifier = builder.comment("It is the weakness effect amplifier of the effect punishment when player's water level is too low. -1 means canceling this effect. Default:0")
+                    .defineInRange("weaknessEffectAmplifier", 0, -1, 999999);
+            resetWaterLevelInDeath = builder.comment("It decides if players' water level would reset in death.")
+                    .define("resetWaterLevelInDeath", true);
         }
     }
 

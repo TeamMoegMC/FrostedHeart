@@ -82,6 +82,7 @@ public class FHFluids {
 	public static RegistryObject<Fluid> LATEX = registerSimpleLiquid("latex", 0xFFD700);
 	public static RegistryObject<Fluid> RESIN = registerSimpleLiquid("resin", 0x8B4513);
 
+	public static RegistryObject<Fluid> PURIFIED_WATER = registerSimpleLiquid("purified_water",0xCC3ABDFF);
 
     public static RegistryObject<Fluid> registerFluid(String name,ResourceLocation still,ResourceLocation flowing, int color,FluidType.Properties properties,UnaryOperator<ForgeFlowingFluid.Properties> blockProperties) {
     	RegistryObject<FluidType> GAS=FLUID_TYPES.register(name,()->new FluidType(properties) {

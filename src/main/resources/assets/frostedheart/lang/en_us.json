@@ -497,6 +497,16 @@
 
   "tips.frostedheart.music_warning.title": "Wait!",
   "tips.frostedheart.music_warning.desc1": "Turning off the music may affect your experience of the music we provide for The Winter Rescue.",
-  "tips.frostedheart.music_warning.desc2": "The vanilla music has already been disabled, If you want to re-enable it, please change it in the configuration file: '&7$configPath$\\frostedheart-client.toml&r'"
+  "tips.frostedheart.music_warning.desc2": "The vanilla music has already been disabled, If you want to re-enable it, please change it in the configuration file: '&7$configPath$\\frostedheart-client.toml&r'",
 
+  "fluid.frostedheart.purified_water":"Purified Water",
+  "item.frostedheart.iron_bottle": "Iron Bottle",
+  "item.frostedheart.leather_water_bag": "Leather Water Bag",
+  "item.frostedheart.wooden_cup_drink": " Wooden Cup",
+  "item.frostedheart.wooden_cup": "Wooden Cup",
+  "item.frostedheart.fluid_bottle": " Bottle",
+  "death.attack.byThirst": "%s turned into Dried %s.",
+  "effect.frostedheart.thirst": "Thirst",
+  "tooltip.frostedheart.drink_unit": "Drink Unit",
+  "tooltip.frostedheart.empty": "Empty"
 }

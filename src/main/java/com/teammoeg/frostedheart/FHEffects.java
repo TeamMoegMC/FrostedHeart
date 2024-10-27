@@ -52,6 +52,8 @@ public class FHEffects {
     });
     public static final RegistryObject<MobEffect> SAUNA = register("sauna",()-> new SaunaEffect(MobEffectCategory.BENEFICIAL, 816760296) {
     });
+    public static final RegistryObject<MobEffect> THIRST = register("thirst",() -> new BaseEffect(MobEffectCategory.BENEFICIAL, 0xE4D49F));
+    public static final RegistryObject<MobEffect> WATER_RESTORING = register("water_restoring",() -> new BaseEffect(MobEffectCategory.BENEFICIAL, 0x379AD6));
 
     public static <T extends MobEffect> RegistryObject<T> register(String name, Supplier<T> effect) {
     	return EFFECTS.register(name, effect);

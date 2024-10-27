@@ -46,13 +46,19 @@ import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
 
-import net.minecraft.world.entity.EquipmentSlot;
+import com.teammoeg.frostedheart.content.water.item.FluidBottleItem;
+import com.teammoeg.frostedheart.content.water.item.IronBottleItem;
+import com.teammoeg.frostedheart.content.water.item.LeatherWaterBagItem;
+import com.teammoeg.frostedheart.content.water.item.WoodenCupItem;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.food.Foods;
 import net.minecraft.world.item.ArmorItem.Type;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraft.world.item.SnowballItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DropExperienceBlock;
@@ -61,6 +67,9 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import static net.minecraft.world.level.block.Blocks.*;
 import static net.minecraft.world.level.block.Blocks.COPPER_ORE;
@@ -429,5 +438,10 @@ public class FHItems {
     public static RegistryObject<Item> SODIUM_INGOT = register("sodium_ingot");
     public static RegistryObject<Item> REFRACTORY_BRICK = register("refractory_brick");
 
-
+    //WaterSource section
+    public final static RegistryObject<Item> fluid_bottle = register("fluid_bottle", (s) -> new FluidBottleItem(new Item.Properties().stacksTo(16)));
+    public final static RegistryObject<Item> wooden_cup = register("wooden_cup", (s) -> new WoodenCupItem(new Item.Properties(), 250) {@Override public ICapabilityProvider initCapabilities(@Nonnull ItemStack stack, @Nullable CompoundTag nbt) {return super.initCapabilities(new ItemStack(wooden_cup_drink.get()), nbt);}});
+    public final static RegistryObject<Item> wooden_cup_drink = register("wooden_cup_drink", (s) -> new WoodenCupItem(new Item.Properties().stacksTo(1), 250));
+    public final static RegistryObject<Item> LEATHER_WATER_BAG = register("leather_water_bag", (s) -> new LeatherWaterBagItem(new Item.Properties().stacksTo(1).setNoRepair(), 1500));
+    public final static RegistryObject<Item> IRON_BOTTLE = register("iron_bottle", (s) -> new IronBottleItem(new Item.Properties().stacksTo(1).setNoRepair(), 1500));
 }

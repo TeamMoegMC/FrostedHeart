@@ -22,6 +22,9 @@ package com.teammoeg.frostedheart;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
+import com.teammoeg.frostedheart.content.nutrition.recipe.NutritionRecipe;
+import com.teammoeg.frostedheart.content.water.recipe.ThirstRecipe;
+import com.teammoeg.frostedheart.content.water.recipe.WaterLevelAndEffectRecipe;
 import com.teammoeg.frostedheart.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.recipes.DismantleInnerRecipe;
 import com.teammoeg.frostedheart.recipes.InspireRecipe;
@@ -70,6 +73,9 @@ public class FHRecipes {
         InspireRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("inspire", InspireRecipe.Serializer::new);
         ShapelessCopyDataRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("shapless_copy_data", ShapelessCopyDataRecipe.Serializer::new);
         TradePolicy.SERIALIZER = RECIPE_SERIALIZERS.register("trade", TradePolicy.Serializer::new);
+        ThirstRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("thirst", ThirstRecipe.Serializer::new);
+        WaterLevelAndEffectRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("water_level_and_effect", WaterLevelAndEffectRecipe.Serializer::new);
+        NutritionRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("diet_override", NutritionRecipe.Serializer::new);
         GeneratorRecipe.TYPE = createRecipeType("generator");
         GeneratorSteamRecipe.TYPE = createRecipeType("steam_generator");
         ChargerRecipe.TYPE = createRecipeType("charger");
@@ -79,6 +85,9 @@ public class FHRecipes {
         SaunaRecipe.TYPE = createRecipeType("sauna");
         InspireRecipe.TYPE = createRecipeType("inspire");
         TradePolicy.TYPE = createRecipeType("trade");
+        ThirstRecipe.TYPE = createRecipeType("thirst");
+        WaterLevelAndEffectRecipe.TYPE = createRecipeType("water_level_and_effect");
+        NutritionRecipe.TYPE = createRecipeType("diet_override");
     }
     public static <T extends Recipe<?>> RegistryObject<RecipeType<T>> createRecipeType(String name){
     	return RECIPE_TYPES.register(name,()->RecipeType.simple(new ResourceLocation(FHMain.MODID,name)));
