@@ -48,14 +48,14 @@ IBlessus, GuardianWorld(Mixxs), Keisari, ewoudjie, ZXCZST, Lanshan
 [[dependencies.frostedheart]]
     modId="create"
     mandatory=true
-    versionRange="[0.5.1.f-26,)"
-    ordering="AFTER"
+    versionRange="[0.5.1.j,)"
+    ordering="BEFORE"
     side="BOTH"
 
 [[dependencies.frostedheart]]
     modId="flywheel"
     mandatory=true
     versionRange="[0.6.10-7,)"
-    ordering="AFTER"
+    ordering="BEFORE"
     side="BOTH"
 
