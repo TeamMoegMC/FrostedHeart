@@ -24,7 +24,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 public class NutritionRecipe implements Recipe<Inventory> {
-    public final float vitamin,carbohydrate,protein,vegetable;
+    public final float fat,carbohydrate,protein,vegetable;
     protected final ResourceLocation id;
     protected final String group;
     protected final Ingredient ingredient;
@@ -33,7 +33,7 @@ public class NutritionRecipe implements Recipe<Inventory> {
     public static RegistryObject<RecipeType<NutritionRecipe>> TYPE;
 
     public static class Builder implements RecipeBuilder{
-        private float vitamin,carbohydrate,protein,vegetable;
+        private float fat,carbohydrate,protein,vegetable;
         protected Item item;
         private final Advancement.Builder advancement = Advancement.Builder.recipeAdvancement();
 
@@ -45,16 +45,16 @@ public class NutritionRecipe implements Recipe<Inventory> {
             return this;
         }
 
-        public Builder nutrition(float vitamin, float carbohydrate, float protein, float vegetable) {
-            this.vitamin = vitamin;
+        public Builder nutrition(float fat, float carbohydrate, float protein, float vegetable) {
+            this.fat = fat;
             this.carbohydrate = carbohydrate;
             this.protein = protein;
             this.vegetable = vegetable;
             return this;
         }
 
-        public Builder vitamin(float vitamin) {
-            this.vitamin = vitamin;
+        public Builder fat(float fat) {
+            this.fat = fat;
             return this;
         }
 
@@ -80,7 +80,7 @@ public class NutritionRecipe implements Recipe<Inventory> {
         }
 
         @Override
-        public RecipeBuilder group(@Nullable String s) {
+        public Builder group(@Nullable String s) {
             return null;
         }
 
@@ -92,21 +92,21 @@ public class NutritionRecipe implements Recipe<Inventory> {
         @Override
         public void save(Consumer<FinishedRecipe> pFinishedRecipeConsumer, ResourceLocation pRecipeId) {
             this.advancement.parent(ROOT_RECIPE_ADVANCEMENT).addCriterion("has_the_recipe", RecipeUnlockedTrigger.unlocked(pRecipeId)).rewards(net.minecraft.advancements.AdvancementRewards.Builder.recipe(pRecipeId)).requirements(RequirementsStrategy.OR);
-            pFinishedRecipeConsumer.accept(new Result(pRecipeId,vitamin,carbohydrate,protein,vegetable,item, this.advancement, pRecipeId.withPrefix("recipes/diet_value/")));
+            pFinishedRecipeConsumer.accept(new Result(pRecipeId,fat,carbohydrate,protein,vegetable,item, this.advancement, pRecipeId.withPrefix("recipes/diet_value/")));
         }
         public static class Result implements FinishedRecipe {
 
-            private float vitamin,carbohydrate,protein,vegetable;
+            private float fat,carbohydrate,protein,vegetable;
             protected Item item;
             private final ResourceLocation id;
             private final Advancement.Builder advancement;
             private final ResourceLocation advancementId;
 
-            public Result(ResourceLocation id,float vitamin,float carbohydrate,float protein,float vegetable, Item item,Advancement.Builder advancement, ResourceLocation advancementId) {
+            public Result(ResourceLocation id,float fat,float carbohydrate,float protein,float vegetable, Item item,Advancement.Builder advancement, ResourceLocation advancementId) {
                 this.id = id;
                 this.advancement = advancement;
                 this.advancementId = advancementId;
-                this.vitamin = vitamin;
+                this.fat = fat;
                 this.carbohydrate = carbohydrate;
                 this.protein = protein;
                 this.vegetable = vegetable;
@@ -116,7 +116,7 @@ public class NutritionRecipe implements Recipe<Inventory> {
             @Override
             public void serializeRecipeData(JsonObject json) {
                 JsonObject group = new JsonObject();
-                group.addProperty("vitamin", this.vitamin);
+                group.addProperty("fat", this.fat);
                 group.addProperty("carbohydrate", this.carbohydrate);
                 group.addProperty("protein", this.protein);
                 group.addProperty("vegetable", this.vegetable);
@@ -156,18 +156,18 @@ public class NutritionRecipe implements Recipe<Inventory> {
         public NutritionRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
             String group = GsonHelper.getAsString(json, "group", "");
             Item item = ForgeRegistries.ITEMS.getValue(ResourceLocation.tryParse(GsonHelper.getAsString(json, "item", "")));
-            float vitamin = GsonHelper.getAsFloat(json, "vitamin");
+            float fat = GsonHelper.getAsFloat(json, "fat");
             float carbohydrate = GsonHelper.getAsFloat(json, "carbohydrate");
             float protein = GsonHelper.getAsFloat(json, "protein");
             float vegetable = GsonHelper.getAsFloat(json, "vegetable");
-            return new NutritionRecipe(recipeId, group,vitamin,carbohydrate,protein,vegetable,Ingredient.of(item));
+            return new NutritionRecipe(recipeId, group,fat,carbohydrate,protein,vegetable,Ingredient.of(item));
         }
 
         @Override
         public void toNetwork(FriendlyByteBuf buffer, NutritionRecipe recipe) {
             buffer.writeUtf(recipe.getGroup());
             recipe.getIngredient().toNetwork(buffer);
-            buffer.writeFloat(recipe.vitamin);
+            buffer.writeFloat(recipe.fat);
             buffer.writeFloat(recipe.carbohydrate);
             buffer.writeFloat(recipe.protein);
             buffer.writeFloat(recipe.vegetable);
@@ -178,18 +178,18 @@ public class NutritionRecipe implements Recipe<Inventory> {
         public NutritionRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf byteBuf) {
             String group = byteBuf.readUtf();
             Ingredient ingredient = Ingredient.fromNetwork(byteBuf);
-            float vitamin = byteBuf.readFloat();
+            float fat = byteBuf.readFloat();
             float carbohydrate = byteBuf.readFloat();
             float protein = byteBuf.readFloat();
             float vegetable = byteBuf.readFloat();
-            return new NutritionRecipe(recipeId, group,vitamin,carbohydrate,protein,vegetable,  ingredient);
+            return new NutritionRecipe(recipeId, group,fat,carbohydrate,protein,vegetable,  ingredient);
         }
 
     }
 
-    public NutritionRecipe(ResourceLocation id, String group, float vitamin, float carbohydrate, float protein, float vegetable, Ingredient ingredient) {
+    public NutritionRecipe(ResourceLocation id, String group, float fat, float carbohydrate, float protein, float vegetable, Ingredient ingredient) {
         super();
-        this.vitamin = vitamin;
+        this.fat = fat;
         this.carbohydrate = carbohydrate;
         this.protein = protein;
         this.vegetable = vegetable;
