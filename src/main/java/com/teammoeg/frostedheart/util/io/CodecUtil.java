@@ -166,6 +166,7 @@ public class CodecUtil {
 	public static final Codec<BlockPos> BLOCKPOS = alternative(BlockPos.class).add(BlockPos.CODEC).add(Codec.LONG.xmap(BlockPos::of, BlockPos::asLong)).build();
 	
 	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(JsonOps.INSTANCE,Ingredient::toJson,Ingredient::fromJson,Ingredient::toNetwork,Ingredient::fromNetwork);
+	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=new PacketOrSchemaCodec<>(JsonOps.INSTANCE,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
 	public static final Codec<MobEffectInstance> MOB_EFFECT_CODEC = COMPOUND_TAG_CODEC.xmap(o->MobEffectInstance.load(o),t->t.save(new CompoundTag()));
 	static final Function<DynamicOps<?>, Codec<?>> schCodec=SerializeUtil.cached(CodecUtil::scCodec);
 	public static final Codec<boolean[]> BOOLEANS = Codec.BYTE.xmap(SerializeUtil::readBooleans, SerializeUtil::writeBooleans);
