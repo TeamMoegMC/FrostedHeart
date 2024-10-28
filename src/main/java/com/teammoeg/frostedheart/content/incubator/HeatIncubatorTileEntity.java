@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.incubator;
 
 import javax.annotation.Nonnull;
 
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 
 import net.minecraft.world.item.ItemStack;
@@ -37,7 +37,7 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity{
     HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 80, 5);
 
     public HeatIncubatorTileEntity(BlockPos bp,BlockState bs) {
-        super(FHTileTypes.INCUBATOR2.get(),bp,bs);
+        super(FHBlockEntityTypes.INCUBATOR2.get(),bp,bs);
     }
 
 

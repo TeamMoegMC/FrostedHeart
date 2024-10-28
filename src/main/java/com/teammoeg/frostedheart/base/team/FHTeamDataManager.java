@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.base.team;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,14 +35,11 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.FHMain;
 import org.apache.commons.io.FileUtils;
 
 import com.mojang.authlib.GameProfile;
-import com.teammoeg.frostedheart.base.team.SpecialData;
-import com.teammoeg.frostedheart.base.team.SpecialDataType;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;

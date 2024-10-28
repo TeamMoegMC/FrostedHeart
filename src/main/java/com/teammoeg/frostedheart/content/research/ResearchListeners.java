@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;

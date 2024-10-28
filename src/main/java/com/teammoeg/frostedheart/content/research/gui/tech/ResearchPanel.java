@@ -20,8 +20,6 @@
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import net.minecraft.client.gui.GuiGraphics;
-import com.teammoeg.frostedheart.FHRegistrate;
-import com.teammoeg.frostedheart.content.research.FHRegistry;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ClientResearchData;

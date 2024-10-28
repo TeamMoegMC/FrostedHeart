@@ -23,12 +23,12 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.FHAttributes;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHDamageSources;
-import com.teammoeg.frostedheart.FHDataManager;
+import com.teammoeg.frostedheart.FHDamageTypes;
+import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.FHTeamDataManager;
-import com.teammoeg.frostedheart.FHDataManager.DataType;
+import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
+import com.teammoeg.frostedheart.data.FHDataManager.DataType;
 import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
@@ -214,9 +214,9 @@ public class CommonEvents {
                 float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayer) event.getEntity()).map(PlayerTemperatureData::getEnvTemp).orElse(0f));
                 
                 if (heat > 1) {
-                    event.getEntity().hurt(FHDamageSources.createSource(event.getEntity().level(), FHDamageSources.HYPERTHERMIA_INSTANT, event.getEntity()), (heat) * 2);
+                    event.getEntity().hurt(FHDamageTypes.createSource(event.getEntity().level(), FHDamageTypes.HYPERTHERMIA_INSTANT, event.getEntity()), (heat) * 2);
                 } else if (heat < -1)
-                    event.getEntity().hurt(FHDamageSources.createSource(event.getEntity().level(), FHDamageSources.HYPOTHERMIA_INSTANT, event.getEntity()), (heat) * 2);
+                    event.getEntity().hurt(FHDamageTypes.createSource(event.getEntity().level(), FHDamageTypes.HYPOTHERMIA_INSTANT, event.getEntity()), (heat) * 2);
                 if (heat > 0) {
                     if (current >= max)
                         return;

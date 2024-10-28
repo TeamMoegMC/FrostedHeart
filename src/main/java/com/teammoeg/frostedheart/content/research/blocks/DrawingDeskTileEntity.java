@@ -22,8 +22,7 @@ package com.teammoeg.frostedheart.content.research.blocks;
 import java.util.Optional;
 import java.util.Random;
 
-import com.teammoeg.frostedheart.FHContainer;
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.recipes.ResearchPaperRecipe;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskContainer;
@@ -36,18 +35,14 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
-import blusunrize.immersiveengineering.common.register.IEMenuTypes.ArgContainer;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -66,7 +61,7 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
     ResearchGame game = new ResearchGame();
 
     public DrawingDeskTileEntity(BlockPos pos,BlockState state) {
-        super(FHTileTypes.DRAWING_DESK.get(), pos, state);
+        super(FHBlockEntityTypes.DRAWING_DESK.get(), pos, state);
     }
 
 

@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.teammoeg.frostedheart.FHContainer;
+import com.teammoeg.frostedheart.FHMenuTypes;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.trade.ClientTradeHandler;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
@@ -145,7 +145,7 @@ public class TradeContainer extends AbstractContainerMenu {
 
     public TradeContainer(int id, Inventory inventoryPlayer,
                           Villager ve /* ,PlayerRelationData prd,RelationList rel */) {
-        super(FHContainer.TRADE_GUI.get(), id);
+        super(FHMenuTypes.TRADE_GUI.get(), id);
         // Server does not need such data as server always have access to all data.
         /*
          * this.pld=prd;

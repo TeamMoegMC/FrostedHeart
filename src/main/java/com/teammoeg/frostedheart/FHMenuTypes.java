@@ -52,7 +52,7 @@ import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
-public class FHContainer {
+public class FHMenuTypes {
 	@FunctionalInterface
 	public interface BEMenuFactory<T extends AbstractContainerMenu, BE extends BlockEntity> {
 		T get(int id, Inventory inventoryPlayer, BE tile);

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.content.scenario.Param;

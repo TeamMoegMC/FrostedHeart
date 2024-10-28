@@ -55,7 +55,7 @@ public class ArmorTempData {
             base += this.getFloatOrDefault("fire", 0F);
         if (pe.isInWater())//does not apply twice
             base += this.getFloatOrDefault("water", 0F);
-        else if (pe.isPotionActive(FHEffects.WET.get())) {
+        else if (pe.isPotionActive(FHMobEffects.WET.get())) {
             base += this.getFloatOrDefault("wet", 0F);
         }
         if (FHUtils.isRainingAt(pe.getPosition(), pe.world)) {

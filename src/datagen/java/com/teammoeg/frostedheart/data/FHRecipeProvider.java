@@ -20,6 +20,7 @@ package com.teammoeg.frostedheart.data;
 
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.function.Consumer;
@@ -27,6 +28,7 @@ import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 
 import blusunrize.immersiveengineering.api.IETags;
+import com.teammoeg.caupona.CPFluids;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.recipes.ShapelessCopyDataRecipe;
@@ -80,37 +82,34 @@ public class FHRecipeProvider extends RecipeProvider {
 							else
 								ps.println(item+","+f.getNutrition());
 						}
-						// TODO: Change to FH
-//						DietValueBuilder dvb=new DietValueBuilder(id,item);
-//						for(int i=0;i<6;i++) {
-//							float f=Float.parseFloat(parts[i+2])*10f;
-//							if(i>=4)
-//								f*=1.5;
-//							if(f!=0)
-//								dvb.addGroup(i,f);
-//						}
-//						out.accept(dvb);
+						DietValueBuilder dvb=new DietValueBuilder(id,item);
+						for(int i=0;i<6;i++) {
+							float f=Float.parseFloat(parts[i+2])*10f;
+							if(i>=4)
+								f*=1.5;
+							if(f!=0)
+								dvb.addGroup(i,f);
+						}
+						out.accept(dvb);
 					}
 				}
 			}
-			// TODO fix ShapelessCopyDataRecipe not FinishedRecipe
-//			out.accept(new ShapelessCopyDataRecipe(toRL("thermos_from_dyed"),new ItemStack(FHItems.thermos.get()),NonNullList.of(Ingredient.EMPTY,Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"colored_thermos"))))));
-//			out.accept(new ShapelessCopyDataRecipe(toRL("advanced_thermos_from_dyed"),new ItemStack(FHItems.advanced_thermos.get()),NonNullList.of(Ingredient.EMPTY,Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"colored_advanced_thermos"))))));
-//			for(String i:FHItems.colors) {
-//				Item thermos=RegistryUtils.getItem(new ResourceLocation(FHMain.MODID,i+"_thermos"));
-//				out.accept(new ShapelessCopyDataRecipe(toRL(RegistryUtils.getRegistryName(thermos).getPath()+"_from_other"),new ItemStack(thermos),NonNullList.of(Ingredient.EMPTY,Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"colored_thermos"))),Ingredient.of(RegistryUtils.getItem(new ResourceLocation(i+"_dye"))))));
-//				out.accept(new ShapelessCopyDataRecipe(toRL(RegistryUtils.getRegistryName(thermos).getPath()),new ItemStack(thermos),NonNullList.of(Ingredient.EMPTY,Ingredient.of(FHItems.thermos.get()),Ingredient.of(Items.STRING),Ingredient.of(Items.STRING),Ingredient.of(RegistryUtils.getItem(new ResourceLocation(i+"_dye"))))));
-//				thermos=RegistryUtils.getItem(new ResourceLocation(FHMain.MODID,i+"_advanced_thermos"));
-//				out.accept(new ShapelessCopyDataRecipe(toRL(RegistryUtils.getRegistryName(thermos).getPath()+"_from_other"),new ItemStack(thermos),NonNullList.of(Ingredient.EMPTY,Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"colored_advanced_thermos"))),Ingredient.of(RegistryUtils.getItem(new ResourceLocation(i+"_dye"))))));
-//				out.accept(new ShapelessCopyDataRecipe(toRL(RegistryUtils.getRegistryName(thermos).getPath()),new ItemStack(thermos),NonNullList.of(Ingredient.EMPTY,Ingredient.of(FHItems.advanced_thermos.get()),Ingredient.of(Items.STRING),Ingredient.of(Items.STRING),Ingredient.of(RegistryUtils.getItem(new ResourceLocation(i+"_dye"))))));
-//			}
 		}
-		
 		// recipesGenerator(out);
 		catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+		CPFluids.getAll().filter(o->!Arrays.stream(ovride).anyMatch(RegistryUtils.getRegistryName(o).getPath()::equals)).forEach(f-> {
+
+				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+RegistryUtils.getRegistryName(f).getPath()+"_thermos"),Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"thermos"))),f,2,2));
+		});
+		CPFluids.getAll().filter(o->RegistryUtils.getRegistryName(o).getPath().equals("dilute_soup")).forEach(f-> {
+
+				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+RegistryUtils.getRegistryName(f).getPath()+"_thermos"),Ingredient.of(ItemTags.create(new ResourceLocation(FHMain.MODID,"thermos"))),f,3,2));
+		});
+		
+
 		recipeTrade(out);
 	}
 	private void recipeTrade(@Nonnull Consumer<FinishedRecipe> out) {
@@ -144,23 +143,10 @@ public class FHRecipeProvider extends RecipeProvider {
 		return new ResourceLocation(FHMain.MODID, s);
 	}
 
-	// TODO: Change to Caupona
+	String[] ovride=new String[] {
+			"dilute_soup",
+			"nail_soup"
+	};
 
-//	String[] ovride=new String[] {
-//			"dilute_soup",
-//			"nail_soup"
-//	};
-//		THPFluids.getAll().filter(o->!Arrays.stream(ovride).anyMatch(RegistryUtils.getRegistryName(o).getPath()::equals)).forEach(f-> {
-//
-//				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+RegistryUtils.getRegistryName(f).getPath()+"_thermos"),Ingredient.of(ItemTags.createOptional(new ResourceLocation(FHMain.MODID,"thermos"))),f,2,2));
-//		});
-//		THPFluids.getAll().filter(o->RegistryUtils.getRegistryName(o).getPath().equals("dilute_soup")).forEach(f-> {
-//
-//				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+RegistryUtils.getRegistryName(f).getPath()+"_thermos"),Ingredient.of(ItemTags.createOptional(new ResourceLocation(FHMain.MODID,"thermos"))),f,3,2));
-//		});
-	// TODO: Add our mushrooms
-//		for(Block i:RankineLists.MUSHROOM_BLOCKS) {
-//			Item mi=i.asItem();
-//			out.accept(new FoodValueRecipe(new ResourceLocation(FHMain.MODID,"food_values/"+RegistryUtils.getRegistryName(mi).getPath()),3,.5f,new ItemStack(mi),mi));
-//		}
+
 }

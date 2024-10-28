@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.town.hunting;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 import com.teammoeg.frostedheart.util.TranslateUtils;
@@ -40,6 +40,6 @@ public class HuntingCampBlock extends AbstractTownWorkerBlock implements FHEntit
 
 	@Override
 	public Supplier<BlockEntityType<HuntingCampTileEntity>> getBlock() {
-		return FHTileTypes.HUNTING_CAMP;
+		return FHBlockEntityTypes.HUNTING_CAMP;
 	}
 }

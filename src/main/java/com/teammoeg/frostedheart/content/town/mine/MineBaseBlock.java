@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.town.mine;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 import com.teammoeg.frostedheart.util.TranslateUtils;
@@ -45,6 +45,6 @@ public class MineBaseBlock extends AbstractTownWorkerBlock implements FHEntityBl
 
 	@Override
 	public Supplier<BlockEntityType<MineBaseTileEntity>> getBlock() {
-		return FHTileTypes.MINE_BASE;
+		return FHBlockEntityTypes.MINE_BASE;
 	}
 }

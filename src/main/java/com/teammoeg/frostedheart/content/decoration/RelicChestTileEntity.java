@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.decoration;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
@@ -48,7 +48,7 @@ public class RelicChestTileEntity extends RandomizableContainerBlockEntity imple
     private LazyOptional<IItemHandler> insertionCap;
 
     public RelicChestTileEntity(BlockPos bp,BlockState bs) {
-        super(FHTileTypes.RELIC_CHEST.get(),bp,bs);
+        super(FHBlockEntityTypes.RELIC_CHEST.get(),bp,bs);
         this.inventory = NonNullList.withSize(15, ItemStack.EMPTY);
         this.insertionCap = LazyOptional.of(() -> new IEInventoryHandler(15, this));
 

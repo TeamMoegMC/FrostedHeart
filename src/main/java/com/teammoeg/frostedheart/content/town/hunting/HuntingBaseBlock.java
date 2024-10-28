@@ -1,30 +1,22 @@
 package com.teammoeg.frostedheart.content.town.hunting;
 
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
-import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
-import com.teammoeg.frostedheart.content.town.mine.MineBaseTileEntity;
 import com.teammoeg.frostedheart.util.MathUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 
-import javax.annotation.Nonnull;
-import java.util.Random;
 import java.util.function.Supplier;
-
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public class HuntingBaseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<HuntingBaseTileEntity>{
     public HuntingBaseBlock(Properties blockProps) {
@@ -72,6 +64,6 @@ public class HuntingBaseBlock extends AbstractTownWorkerBlock implements FHEntit
 
 	@Override
 	public Supplier<BlockEntityType<HuntingBaseTileEntity>> getBlock() {
-		return FHTileTypes.HUNTING_BASE;
+		return FHBlockEntityTypes.HUNTING_BASE;
 	}
 }

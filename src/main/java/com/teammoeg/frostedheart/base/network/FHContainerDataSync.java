@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.FHBaseContainer;
+import com.teammoeg.frostedheart.base.menu.FHBaseContainer;
 import com.teammoeg.frostedheart.util.FHContainerData;
 import com.teammoeg.frostedheart.util.FHContainerData.OtherDataSlotEncoder;
 import com.teammoeg.frostedheart.util.client.ClientUtils;

@@ -20,12 +20,11 @@
 package com.teammoeg.frostedheart.content.town.house;
 
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerTileEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
-import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -36,7 +35,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nonnull;
@@ -78,7 +76,7 @@ public class HouseTileEntity extends AbstractTownWorkerTileEntity{
     HeatConsumerEndpoint endpoint = new HeatConsumerEndpoint(99,10,1);
 
     public HouseTileEntity(BlockPos pos,BlockState state) {
-        super(FHTileTypes.HOUSE.get(),pos,state);
+        super(FHBlockEntityTypes.HOUSE.get(),pos,state);
     }
 
     @Override

@@ -24,8 +24,8 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHTeamDataManager;
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -33,7 +33,6 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -88,7 +87,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
         super.setLightOpacity(0);
     }
 	public Supplier<BlockEntityType<DrawingDeskTileEntity>> getBlock(){
-		return FHTileTypes.DRAWING_DESK;
+		return FHBlockEntityTypes.DRAWING_DESK;
 	};
 
     @Override

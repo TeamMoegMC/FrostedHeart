@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.town;
 import java.util.*;
 import java.util.Map.Entry;
 
-import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 

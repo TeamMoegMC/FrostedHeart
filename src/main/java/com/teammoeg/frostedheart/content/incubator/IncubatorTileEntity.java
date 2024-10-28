@@ -22,9 +22,9 @@ package com.teammoeg.frostedheart.content.incubator;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
@@ -148,7 +148,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements FHTickableB
     }
 
     public IncubatorTileEntity(BlockPos bp,BlockState bs) {
-        super(FHTileTypes.INCUBATOR.get(),bp,bs);
+        super(FHBlockEntityTypes.INCUBATOR.get(),bp,bs);
         this.inventory = NonNullList.withSize(4, ItemStack.EMPTY);
     }
 

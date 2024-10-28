@@ -23,8 +23,8 @@ import java.util.List;
 
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import com.teammoeg.frostedheart.FHSounds;
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.FHSoundEvents;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
@@ -57,7 +57,7 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
     int ticsSlp;//ticks since last sound play
 
     public MechCalcTileEntity(BlockPos pos,BlockState state) {
-        super(FHTileTypes.MECH_CALC.get(), pos, state);
+        super(FHBlockEntityTypes.MECH_CALC.get(), pos, state);
     }
 
     @Override
@@ -145,7 +145,7 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
                 int curact = process / 1067;
                 if (lastact != curact) {
                     lastact = curact;
-                    level.playSound(null, worldPosition, FHSounds.MC_BELL.get(), SoundSource.BLOCKS, 0.1f, 1f);
+                    level.playSound(null, worldPosition, FHSoundEvents.MC_BELL.get(), SoundSource.BLOCKS, 0.1f, 1f);
                 }
                 if (process >= processMax) {
                     process = 0;
@@ -158,7 +158,7 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
 
                 if (ticsSlp <= 0) {
                     float pitch = Mth.clamp((spd / 32f) + 0.5f, 0.5f, 2f);
-                    level.playSound(null, worldPosition, FHSounds.MC_ROLL.get(), SoundSource.BLOCKS, 0.3f, pitch);
+                    level.playSound(null, worldPosition, FHSoundEvents.MC_ROLL.get(), SoundSource.BLOCKS, 0.3f, pitch);
                     ticsSlp = Mth.ceil(20 / pitch);
                 } else ticsSlp--;
                 this.notifyUpdate();

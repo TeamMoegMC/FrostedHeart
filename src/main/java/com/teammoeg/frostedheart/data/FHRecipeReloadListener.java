@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.events;
+package com.teammoeg.frostedheart.data;
 
 import java.util.Collection;
 import java.util.Map;

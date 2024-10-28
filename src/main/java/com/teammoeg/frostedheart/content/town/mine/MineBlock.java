@@ -4,11 +4,10 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 import com.teammoeg.frostedheart.content.town.TeamTown;
-import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -65,6 +64,6 @@ public class MineBlock extends AbstractTownWorkerBlock implements FHEntityBlock<
 
 	@Override
 	public Supplier<BlockEntityType<MineTileEntity>> getBlock() {
-		return FHTileTypes.MINE;
+		return FHBlockEntityTypes.MINE;
 	}
 }

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
 import com.teammoeg.frostedheart.base.block.PipeTileEntity;
@@ -34,7 +34,7 @@ public class HeatPipeTileEntity extends PipeTileEntity implements FHTickableBloc
 	HeatEnergyNetwork ntwk;
 	int cnt=1;
 	public HeatPipeTileEntity(BlockPos l,BlockState state) {
-        super(FHTileTypes.HEATPIPE.get(), l, state);
+        super(FHBlockEntityTypes.HEATPIPE.get(), l, state);
     }
 
     @Override

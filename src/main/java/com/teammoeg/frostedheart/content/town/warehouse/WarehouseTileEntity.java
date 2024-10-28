@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.town.warehouse;
 
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerTileEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
@@ -22,7 +22,7 @@ public class WarehouseTileEntity extends AbstractTownWorkerTileEntity{
     private boolean addedToSchedulerQueue = false;
 
     public WarehouseTileEntity(BlockPos pos,BlockState state) {
-        super(FHTileTypes.WAREHOUSE.get(),pos,state);
+        super(FHBlockEntityTypes.WAREHOUSE.get(),pos,state);
     }
 
     public boolean isStructureValid(){

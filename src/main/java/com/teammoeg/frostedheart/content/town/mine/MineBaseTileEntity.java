@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.content.town.mine;
 
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerTileEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
@@ -15,12 +14,10 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.Tag;
 
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.lang.Math.exp;
 
@@ -34,7 +31,7 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
     private double rating;
 
     public MineBaseTileEntity(BlockPos pos,BlockState state){
-        super(FHTileTypes.MINE_BASE.get(),pos,state);
+        super(FHBlockEntityTypes.MINE_BASE.get(),pos,state);
     }
 
     public boolean isStructureValid(){

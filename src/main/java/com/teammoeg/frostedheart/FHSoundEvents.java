@@ -25,12 +25,12 @@ import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
-public class FHSounds {
+public class FHSoundEvents {
     public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, FHMain.MODID);
     public static final RegistryObject<SoundEvent> MC_BELL = SOUNDS.register("mc_bell", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(FHMain.MODID, "mc_bell")));
     public static final RegistryObject<SoundEvent> MC_ROLL = SOUNDS.register("mc_roll", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(FHMain.MODID, "mc_roll")));
     public static final RegistryObject<SoundEvent> ICE_CRACKING = SOUNDS.register("ice_cracking", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(FHMain.MODID, "ice_cracking")));
-    public FHSounds() {
+    public FHSoundEvents() {
     }
 
 }

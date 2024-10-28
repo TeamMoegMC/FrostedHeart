@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.*;
+import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
@@ -38,6 +39,7 @@ import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
 import com.teammoeg.frostedheart.content.tips.TipLockManager;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.waypoint.WaypointRenderer;
+import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
@@ -474,7 +476,7 @@ public class ClientEvents {
             	t.smoothedBody=t.smoothedBody*.9f+t.getBodyTemp()*.1f;
             });
             
-            if (pe != null && pe.getEffect(FHEffects.NYCTALOPIA.get()) != null) {
+            if (pe != null && pe.getEffect(FHMobEffects.NYCTALOPIA.get()) != null) {
                 ClientUtils.applyspg = true;
                 ClientUtils.spgamma = Mth.clamp((float)(double) (ClientUtils.mc().options.gamma().get()), 0f, 1f) * 0.1f
                         - 1f;

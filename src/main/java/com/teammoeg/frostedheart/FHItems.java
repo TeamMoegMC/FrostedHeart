@@ -59,20 +59,12 @@ import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraft.world.item.SnowballItem;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.DropExperienceBlock;
-import net.minecraft.world.level.block.SnowLayerBlock;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
-import static net.minecraft.world.level.block.Blocks.*;
-import static net.minecraft.world.level.block.Blocks.COPPER_ORE;
 
 /**
  * All items.
@@ -109,18 +101,18 @@ public class FHItems {
     public static RegistryObject<Item> energy_core = register("energy_core", n -> new FHBaseItem(createProps()));
 
     // Foods and plants
-    public static RegistryObject<Item> dried_wolfberries = register("dried_wolfberries", n -> new FHBaseItem(createProps().food(FHFoods.DRIED_WOLFBERRIES)));
+    public static RegistryObject<Item> dried_wolfberries = register("dried_wolfberries", n -> new FHBaseItem(createProps().food(FHFoodProperties.DRIED_WOLFBERRIES)));
     public static RegistryObject<Item> rye = register("rye", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> frozen_seeds = register("frozen_seeds", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> rye_flour = register("rye_flour", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> raw_rye_bread = register("raw_rye_bread", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> random_seeds = register("random_seeds", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> rye_bread = register("rye_bread", n -> new FHBaseItem(createProps().food(FHFoods.RYE_BREAD)));
-    public static RegistryObject<Item> black_bread = register("black_bread", n -> new FHBaseItem(createProps().food(FHFoods.BLACK_BREAD)));
-    public static RegistryObject<Item> vegetable_sawdust_soup = register("vegetable_sawdust_soup", n -> new FHSoupItem(createProps().stacksTo(1).food(FHFoods.VEGETABLE_SAWDUST_SOUP), true));
-    public static RegistryObject<Item> rye_sawdust_porridge = register("rye_sawdust_porridge", n -> new FHSoupItem(createProps().stacksTo(1).food(FHFoods.RYE_SAWDUST_PORRIDGE), true));
-    public static RegistryObject<Item> rye_porridge = register("rye_porridge", n -> new FHSoupItem(createProps().stacksTo(1).food(FHFoods.RYE_SAWDUST_PORRIDGE), false));
-    public static RegistryObject<Item> vegetable_soup = register("vegetable_soup", n -> new FHSoupItem(createProps().stacksTo(1).food(FHFoods.VEGETABLE_SAWDUST_SOUP), false));
+    public static RegistryObject<Item> rye_bread = register("rye_bread", n -> new FHBaseItem(createProps().food(FHFoodProperties.RYE_BREAD)));
+    public static RegistryObject<Item> black_bread = register("black_bread", n -> new FHBaseItem(createProps().food(FHFoodProperties.BLACK_BREAD)));
+    public static RegistryObject<Item> vegetable_sawdust_soup = register("vegetable_sawdust_soup", n -> new FHSoupItem(createProps().stacksTo(1).food(FHFoodProperties.VEGETABLE_SAWDUST_SOUP), true));
+    public static RegistryObject<Item> rye_sawdust_porridge = register("rye_sawdust_porridge", n -> new FHSoupItem(createProps().stacksTo(1).food(FHFoodProperties.RYE_SAWDUST_PORRIDGE), true));
+    public static RegistryObject<Item> rye_porridge = register("rye_porridge", n -> new FHSoupItem(createProps().stacksTo(1).food(FHFoodProperties.RYE_SAWDUST_PORRIDGE), false));
+    public static RegistryObject<Item> vegetable_soup = register("vegetable_soup", n -> new FHSoupItem(createProps().stacksTo(1).food(FHFoodProperties.VEGETABLE_SAWDUST_SOUP), false));
     public static RegistryObject<Item> military_rations = register("military_rations", n -> new CannedFoodItem(createProps().food(new FoodProperties.Builder().nutrition(6).saturationMod(0.6f).build())));
     public static RegistryObject<Item> compressed_biscuits_pack = register("compressed_biscuits_pack", n -> new CannedFoodItem(createProps().food(Foods.BREAD)));
     public static RegistryObject<Item> compressed_biscuits = register("compressed_biscuits", n -> new CannedFoodItem(createProps().food(Foods.BREAD)));

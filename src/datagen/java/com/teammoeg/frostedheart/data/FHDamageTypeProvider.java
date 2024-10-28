@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.data;
 
 import java.util.function.Function;
 
-import com.teammoeg.frostedheart.FHDamageSources;
+import com.teammoeg.frostedheart.FHDamageTypes;
 import net.minecraft.data.worldgen.BootstapContext;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.damagesource.DamageEffects;
@@ -30,12 +30,12 @@ import net.minecraft.world.damagesource.DamageType;
 
 public class FHDamageTypeProvider {
 	public static void bootstrap(BootstapContext<DamageType> pContext) {
-		register(pContext,FHDamageSources.BLIZZARD, t->new DamageType(t, DamageScaling.NEVER, 0.1f, DamageEffects.FREEZING));
-		register(pContext,FHDamageSources.HYPERTHERMIA, t->new DamageType(t, DamageScaling.NEVER, 0, DamageEffects.BURNING));
-		register(pContext,FHDamageSources.HYPOTHERMIA, t->new DamageType(t, DamageScaling.NEVER, 0.1F, DamageEffects.FREEZING));
-		register(pContext,FHDamageSources.HYPERTHERMIA_INSTANT, t->new DamageType(t, DamageScaling.ALWAYS, 0, DamageEffects.BURNING));
-		register(pContext,FHDamageSources.HYPOTHERMIA_INSTANT, t->new DamageType(t, DamageScaling.ALWAYS, 0.1F, DamageEffects.FREEZING));
-		register(pContext,FHDamageSources.RAD, t->new DamageType(t, DamageScaling.ALWAYS, 0.1F, DamageEffects.POKING));
+		register(pContext, FHDamageTypes.BLIZZARD, t->new DamageType(t, DamageScaling.NEVER, 0.1f, DamageEffects.FREEZING));
+		register(pContext, FHDamageTypes.HYPERTHERMIA, t->new DamageType(t, DamageScaling.NEVER, 0, DamageEffects.BURNING));
+		register(pContext, FHDamageTypes.HYPOTHERMIA, t->new DamageType(t, DamageScaling.NEVER, 0.1F, DamageEffects.FREEZING));
+		register(pContext, FHDamageTypes.HYPERTHERMIA_INSTANT, t->new DamageType(t, DamageScaling.ALWAYS, 0, DamageEffects.BURNING));
+		register(pContext, FHDamageTypes.HYPOTHERMIA_INSTANT, t->new DamageType(t, DamageScaling.ALWAYS, 0.1F, DamageEffects.FREEZING));
+		register(pContext, FHDamageTypes.RAD, t->new DamageType(t, DamageScaling.ALWAYS, 0.1F, DamageEffects.POKING));
 	}
 	private static <T> void register(BootstapContext<T> pContext,ResourceKey<T> rk,Function<String,T> supplier) {
 		pContext.register(rk, supplier.apply(rk.location().getPath()));

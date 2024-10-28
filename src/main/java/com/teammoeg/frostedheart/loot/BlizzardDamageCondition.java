@@ -24,7 +24,7 @@ import javax.annotation.Nonnull;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.teammoeg.frostedheart.FHDamageSources;
+import com.teammoeg.frostedheart.FHDamageTypes;
 
 import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
 import net.minecraftforge.registries.RegistryObject;
@@ -60,7 +60,7 @@ public class BlizzardDamageCondition implements LootItemCondition {
     @Override
     public boolean test(LootContext t) {
         if (t.getResolver().getLootTable(t.getQueriedLootTableId()).getParamSet() == LootContextParamSets.ENTITY) {
-            return t.getParamOrNull(LootContextParams.DAMAGE_SOURCE).is(FHDamageSources.BLIZZARD);
+            return t.getParamOrNull(LootContextParams.DAMAGE_SOURCE).is(FHDamageTypes.BLIZZARD);
         }
         return false;
     }

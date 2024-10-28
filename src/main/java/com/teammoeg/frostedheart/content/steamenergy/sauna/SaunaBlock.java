@@ -19,13 +19,9 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
-import java.util.Random;
 import java.util.function.Supplier;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -45,10 +41,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public class SaunaBlock extends FHBaseBlock implements FHEntityBlock<SaunaTileEntity>{
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
@@ -90,6 +83,6 @@ public class SaunaBlock extends FHBaseBlock implements FHEntityBlock<SaunaTileEn
 
 	@Override
 	public Supplier<BlockEntityType<SaunaTileEntity>> getBlock() {
-		return FHTileTypes.SAUNA;
+		return FHBlockEntityTypes.SAUNA;
 	}
 }

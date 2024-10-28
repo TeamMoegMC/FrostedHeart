@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.simibubi.create.foundation.utility.VoxelShaper;
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.base.block.FHKineticBlock;
 import com.teammoeg.frostedheart.util.TranslateUtils;
@@ -136,7 +136,7 @@ public class MechCalcBlock extends FHKineticBlock implements FHEntityBlock<MechC
 
 	@Override
 	public Supplier<BlockEntityType<MechCalcTileEntity>> getBlock() {
-		return FHTileTypes.MECH_CALC;
+		return FHBlockEntityTypes.MECH_CALC;
 	}
 
 

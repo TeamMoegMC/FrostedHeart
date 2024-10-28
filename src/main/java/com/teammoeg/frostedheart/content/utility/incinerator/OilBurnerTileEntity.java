@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.utility.incinerator;
 
 import com.simibubi.create.foundation.fluid.FluidHelper;
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
 import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
@@ -50,7 +50,7 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
     private LazyOptional<IFluidHandler> holder = LazyOptional.empty();
 
     public OilBurnerTileEntity(BlockPos bp,BlockState bs) {
-        super(FHTileTypes.OIL_BURNER.get(),bp,bs);
+        super(FHBlockEntityTypes.OIL_BURNER.get(),bp,bs);
     }
 
     @Override

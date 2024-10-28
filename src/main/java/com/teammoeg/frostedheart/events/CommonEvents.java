@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.events;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -29,7 +27,7 @@ import com.google.common.collect.Sets;
 import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHEffects;
+import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.FHTags;
@@ -51,6 +49,8 @@ import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
+import com.teammoeg.frostedheart.data.FHRecipeCachingReloadListener;
+import com.teammoeg.frostedheart.data.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
@@ -60,7 +60,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Entity.RemovalReason;
-import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
@@ -78,10 +77,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.world.level.GameRules;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.server.level.ServerLevel;
@@ -101,7 +97,6 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerXpEvent.PickupXp;
 import net.minecraftforge.event.entity.player.SleepingTimeCheckEvent;
 import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.level.SaplingGrowTreeEvent;
 import net.minecraftforge.eventbus.api.Event.Result;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -299,7 +294,7 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void onHeal(LivingHealEvent event) {
-        MobEffectInstance ei = event.getEntity().getEffect(FHEffects.SCURVY.get());
+        MobEffectInstance ei = event.getEntity().getEffect(FHMobEffects.SCURVY.get());
         if (ei != null)
             event.setAmount(event.getAmount() * (0.2f / (ei.getAmplifier() + 1)));
     }
@@ -346,7 +341,7 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void onPotionRemove(MobEffectEvent.Remove event) {
-        if (event.getEffect() == FHEffects.ION.get())
+        if (event.getEffect() == FHMobEffects.ION.get())
             event.setCanceled(true);
 
     }

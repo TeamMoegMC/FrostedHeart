@@ -20,14 +20,16 @@
 package com.teammoeg.frostedheart;
 
 import com.simibubi.create.foundation.data.CreateRegistrate;
+import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.client.model.DynamicModelSetup;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
-import com.teammoeg.frostedheart.events.FHRecipeReloadListener;
+import com.teammoeg.frostedheart.data.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.loot.FHLoot;
 import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
@@ -116,16 +118,17 @@ public class FHMain {
         FHBlocks.registry.register(mod);
         FHBlocks.init();
         FHMultiblocks.Multiblock.init();
-        FHTileTypes.REGISTER.register(mod);
+        FHBlockEntityTypes.REGISTER.register(mod);
         FHFluids.FLUIDS.register(mod);
-        FHSounds.SOUNDS.register(mod);
-        FHContainer.CONTAINERS.register(mod);
+        FHMain.TABS.register(mod);
+        FHSoundEvents.SOUNDS.register(mod);
+        FHMenuTypes.CONTAINERS.register(mod);
         FHRecipes.RECIPE_SERIALIZERS.register(mod);
         FHRecipes.RECIPE_TYPES.register(mod);
         FHParticleTypes.REGISTER.register(mod);
         FHBiomes.BIOME_REGISTER.register(mod);
         FHAttributes.REGISTER.register(mod);
-        FHEffects.EFFECTS.register(mod);
+        FHMobEffects.EFFECTS.register(mod);
         FHLoot.LC_REGISTRY.register(mod);
         FHLoot.LM_REGISTRY.register(mod);
         TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
@@ -160,7 +163,7 @@ public class FHMain {
         if (FHTeamDataManager.INSTANCE != null) {
         	FHResearch.save();
             FHTeamDataManager.INSTANCE.save();
-            //FHScenario.save();
+            //FHScenario.save(); // TODO: Scenrario save
         }
     }
 

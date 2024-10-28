@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.water.capability;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHEffects;
+import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
@@ -64,7 +64,7 @@ public class WaterLevelCapability implements NBTSerializable {
         //float moisturizingRate = WaterLevelUtil.getMoisturizingRate(player);
         float moisturizingRate =1;
         float finalValue = (float) ((double) add * FHConfig.SERVER.waterReducingRate.get()) * moisturizingRate;
-        MobEffectInstance effect = player.getEffect(FHEffects.THIRST.get());
+        MobEffectInstance effect = player.getEffect(FHMobEffects.THIRST.get());
         if (effect != null) {
             addExhaustion(finalValue * (4 + effect.getAmplifier()) / 2);
         } else addExhaustion(finalValue);

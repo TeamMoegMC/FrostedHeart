@@ -1,17 +1,14 @@
 package com.teammoeg.frostedheart.content.water.event;
 
 import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHEffects;
+import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.water.network.PlayerDrinkWaterMessage;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.content.water.util.WaterLevelUtil;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.EmptyByteBuf;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -137,7 +134,7 @@ public class WaterEventHandler {
 
             if (tick % 10 == 0) {
                 //WaterRestoring effect
-                MobEffectInstance effectInstance1 = player.getEffect(FHEffects.WATER_RESTORING.get());
+                MobEffectInstance effectInstance1 = player.getEffect(FHMobEffects.WATER_RESTORING.get());
                 if (effectInstance1 != null) {
                     WaterLevelCapability.getCapability(player).ifPresent(data -> {
                         data.restoreWater(player, 1);
@@ -159,7 +156,7 @@ public class WaterEventHandler {
                 }
                 //}
                 //Thirty State
-                MobEffectInstance effectInstance = player.getEffect(FHEffects.THIRST.get());
+                MobEffectInstance effectInstance = player.getEffect(FHMobEffects.THIRST.get());
                 if (effectInstance != null) {
                     WaterLevelCapability.getCapability(player).ifPresent(data -> {
                         data.addExhaustion(player, 0.07f + 0.05f * effectInstance.getAmplifier());
@@ -234,7 +231,7 @@ public class WaterEventHandler {
                 double d1 = random.nextDouble();
                 double d2 = random.nextDouble();
                 if (d1 <= 0.05D) player.addEffect(new MobEffectInstance(MobEffects.POISON, 300, 0));
-                if (d2 <= 0.8D) player.addEffect(new MobEffectInstance(FHEffects.THIRST.get(), 900, 0));
+                if (d2 <= 0.8D) player.addEffect(new MobEffectInstance(FHMobEffects.THIRST.get(), 900, 0));
             }
         });
     }

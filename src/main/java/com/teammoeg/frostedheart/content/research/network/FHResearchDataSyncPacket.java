@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.FHClientTeamDataManager;
+import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;

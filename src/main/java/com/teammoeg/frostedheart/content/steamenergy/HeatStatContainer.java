@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.steamenergy;
 
 import java.util.Collection;
 
-import com.teammoeg.frostedheart.FHContainer;
+import com.teammoeg.frostedheart.FHMenuTypes;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -45,10 +45,10 @@ public class HeatStatContainer extends AbstractContainerMenu {
     }
 
     public HeatStatContainer(int id) {
-        super(FHContainer.HEAT_STAT.get(), id);
+        super(FHMenuTypes.HEAT_STAT.get(), id);
     }
     public HeatStatContainer(int id,Player opener,HeatEnergyNetwork mng) {
-        super(FHContainer.HEAT_STAT.get(), id);
+        super(FHMenuTypes.HEAT_STAT.get(), id);
         network=mng;
         if(opener instanceof ServerPlayer)
         	openedPlayer=(ServerPlayer) opener;

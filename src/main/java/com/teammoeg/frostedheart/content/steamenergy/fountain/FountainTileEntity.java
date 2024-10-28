@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.steamenergy.fountain;
 import com.teammoeg.frostedheart.FHAttributes;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
@@ -32,7 +32,6 @@ import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 
 import net.minecraft.world.level.block.Block;
@@ -45,7 +44,6 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 import javax.annotation.Nonnull;
 import java.util.UUID;
@@ -69,7 +67,7 @@ public class FountainTileEntity extends IEBaseBlockEntity implements
     HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 10, 1);
 
     public FountainTileEntity(BlockPos pos,BlockState state) {
-        super(FHTileTypes.FOUNTAIN.get(),pos,state);
+        super(FHBlockEntityTypes.FOUNTAIN.get(),pos,state);
     }
 
     LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.data;
 
-import com.teammoeg.frostedheart.FHDamageSources;
+import com.teammoeg.frostedheart.FHDamageTypes;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
@@ -41,7 +41,7 @@ public class FHDamageTypeTagProvider  extends TagsProvider<DamageType> {
 
     @Override
     protected void addTags(HolderLookup.Provider pProvider) {
-        tag(DamageTypeTags.BYPASSES_ARMOR).add(FHDamageSources.BLIZZARD, FHDamageSources.RAD,
-                FHDamageSources.HYPERTHERMIA, FHDamageSources.HYPOTHERMIA);
+        tag(DamageTypeTags.BYPASSES_ARMOR).add(FHDamageTypes.BLIZZARD, FHDamageTypes.RAD,
+                FHDamageTypes.HYPERTHERMIA, FHDamageTypes.HYPOTHERMIA);
     }
 }

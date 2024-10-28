@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.steamenergy.charger;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -99,7 +99,7 @@ public class ChargerBlock extends FHBaseBlock implements FHEntityBlock<ChargerTi
 
 	@Override
 	public Supplier<BlockEntityType<ChargerTileEntity>> getBlock() {
-		return FHTileTypes.CHARGER;
+		return FHBlockEntityTypes.CHARGER;
 	}
 
 

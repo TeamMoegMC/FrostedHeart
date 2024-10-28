@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.kinetics.base.HorizontalHalfShaftInstance;
-import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.teammoeg.frostedheart.client.renderer.HalfShaftRenderer;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
@@ -59,7 +58,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import static com.teammoeg.frostedheart.FHMain.FH_REGISTRATE;
 
-public class FHTileTypes {
+public class FHBlockEntityTypes {
     public static final DeferredRegister<BlockEntityType<?>> REGISTER = DeferredRegister.create(
             ForgeRegistries.BLOCK_ENTITY_TYPES, FHMain.MODID);
     public static final RegistryObject<BlockEntityType<HeatPipeTileEntity>> HEATPIPE = REGISTER.register(

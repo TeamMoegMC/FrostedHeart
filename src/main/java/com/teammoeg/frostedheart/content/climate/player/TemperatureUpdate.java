@@ -23,11 +23,8 @@ import java.util.UUID;
 
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.frostedheart.FHAttributes;
-import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHDamageSources;
-import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.*;
+import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
@@ -74,41 +71,41 @@ public class TemperatureUpdate {
             double calculatedTarget = PlayerTemperatureData.getCapability(event.player).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
             if (!(player.isCreative() || player.isSpectator())) {
                 if (calculatedTarget > 1 || calculatedTarget < -1) {
-                    if (!player.hasEffect(FHEffects.HYPERTHERMIA.get())
-                            && !player.hasEffect(FHEffects.HYPOTHERMIA.get())) {
+                    if (!player.hasEffect(FHMobEffects.HYPERTHERMIA.get())
+                            && !player.hasEffect(FHMobEffects.HYPOTHERMIA.get())) {
                         if (calculatedTarget > 1) { // too hot
                             if (calculatedTarget <= 2) {
-                                player.addEffect(new MobEffectInstance(FHEffects.HYPERTHERMIA.get(), 100, 0));
+                                player.addEffect(new MobEffectInstance(FHMobEffects.HYPERTHERMIA.get(), 100, 0));
                                 player.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
                             } else if (calculatedTarget <= 3) {
-                                player.addEffect(new MobEffectInstance(FHEffects.HYPERTHERMIA.get(), 100, 1));
+                                player.addEffect(new MobEffectInstance(FHMobEffects.HYPERTHERMIA.get(), 100, 1));
                                 player.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
                                 player.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
                             } else if (calculatedTarget <= 5) {
-                                player.addEffect(new MobEffectInstance(FHEffects.HYPERTHERMIA.get(), 100, 2));
+                                player.addEffect(new MobEffectInstance(FHMobEffects.HYPERTHERMIA.get(), 100, 2));
                                 player.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
                                 player.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
                             } else {
                                 player.addEffect(
-                                        new MobEffectInstance(FHEffects.HYPERTHERMIA.get(), 100, (int) (calculatedTarget - 2)));
+                                        new MobEffectInstance(FHMobEffects.HYPERTHERMIA.get(), 100, (int) (calculatedTarget - 2)));
                                 player.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
                                 player.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
                             }
                         } else { // too cold
                             if (calculatedTarget >= -2) {
-                                player.addEffect(new MobEffectInstance(FHEffects.HYPOTHERMIA.get(), 100, 0));
+                                player.addEffect(new MobEffectInstance(FHMobEffects.HYPOTHERMIA.get(), 100, 0));
                                 player.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
                             } else if (calculatedTarget >= -3) {
-                                player.addEffect(new MobEffectInstance(FHEffects.HYPOTHERMIA.get(), 100, 1));
+                                player.addEffect(new MobEffectInstance(FHMobEffects.HYPOTHERMIA.get(), 100, 1));
                                 player.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
                                 player.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
                             } else if (calculatedTarget >= -5) {
-                                player.addEffect(new MobEffectInstance(FHEffects.HYPOTHERMIA.get(), 100, 2));
+                                player.addEffect(new MobEffectInstance(FHMobEffects.HYPOTHERMIA.get(), 100, 2));
                                 player.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
                                 player.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
                             } else {
                                 player.addEffect(
-                                        new MobEffectInstance(FHEffects.HYPOTHERMIA.get(), 100, (int) (-calculatedTarget - 2)));
+                                        new MobEffectInstance(FHMobEffects.HYPOTHERMIA.get(), 100, (int) (-calculatedTarget - 2)));
                                 player.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.CONFUSION, 100, 2)));
                                 player.addEffect(FHUtils.noHeal(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0)));
                             }
@@ -146,11 +143,11 @@ public class TemperatureUpdate {
                             break;
                         }
                     }
-                    MobEffectInstance current = player.getEffect(FHEffects.WET.get());
+                    MobEffectInstance current = player.getEffect(FHMobEffects.WET.get());
                     if (hasArmor)
-                        player.addEffect(new MobEffectInstance(FHEffects.WET.get(), 400, 0));// punish for wet clothes
+                        player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(), 400, 0));// punish for wet clothes
                     else if (current == null || current.getDuration() < 100)
-                        player.addEffect(new MobEffectInstance(FHEffects.WET.get(), 100, 0));
+                        player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(), 100, 0));
                 }
                 //load current data
                 float current = PlayerTemperatureData.getCapability(event.player).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
@@ -234,9 +231,9 @@ public class TemperatureUpdate {
                 float dheat = HEAT_EXCHANGE_CONSTANT * ((efftemp-37F) - current);
                 //Attack player if temperature changes too much
                 if (dheat > 0.1)
-                    player.hurt(FHDamageSources.createSource(world, FHDamageSources.HYPERTHERMIA_INSTANT, player), (dheat) * 10);
+                    player.hurt(FHDamageTypes.createSource(world, FHDamageTypes.HYPERTHERMIA_INSTANT, player), (dheat) * 10);
                 else if (dheat < -0.1)
-                    player.hurt(FHDamageSources.createSource(world, FHDamageSources.HYPOTHERMIA_INSTANT, player), (-dheat) * 10);
+                    player.hurt(FHDamageTypes.createSource(world, FHDamageTypes.HYPOTHERMIA_INSTANT, player), (-dheat) * 10);
                 if (!player.isCreative()&&!player.isSpectator())//no modify body temp when creative or spectator
                 	current += (float) (dheat * tspeed);
                 if (current < -10)

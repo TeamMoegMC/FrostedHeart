@@ -23,7 +23,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.simibubi.create.AllTags;
-import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
@@ -230,8 +229,8 @@ public class FHBlocks {
 
     // Crop Blocks
     public static RegistryObject<Block> rye_block = register("rye_block", () -> new RyeBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps));
-    public static RegistryObject<Block> wolfberry_bush_block = register("wolfberry_bush_block", () -> new WolfBerryBushBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.berryBushBlocks, 2), "wolfberries", t -> new FoodBlockItem(t, FHItems.createProps(), FHFoods.WOLFBERRIES));
-    public static RegistryObject<Block> white_turnip_block = register("white_turnip_block", () -> new WhiteTurnipBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps), (block) -> new FoodBlockItem(block, new Item.Properties(), FHFoods.WHITE_TURNIP));
+    public static RegistryObject<Block> wolfberry_bush_block = register("wolfberry_bush_block", () -> new WolfBerryBushBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.berryBushBlocks, 2), "wolfberries", t -> new FoodBlockItem(t, FHItems.createProps(), FHFoodProperties.WOLFBERRIES));
+    public static RegistryObject<Block> white_turnip_block = register("white_turnip_block", () -> new WhiteTurnipBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps), (block) -> new FoodBlockItem(block, new Item.Properties(), FHFoodProperties.WHITE_TURNIP));
 
     // Building Blocks
     public static RegistryObject<Block> generator_brick = register("generator_brick", () -> new FHBaseBlock(FHProps.stoneDecoProps));
@@ -261,8 +260,8 @@ public class FHBlocks {
 
     // Machine Blocks
     public static RegistryObject<Block> relic_chest = register("relic_chest", RelicChestBlock::new);
-    public static RegistryObject<Block> incubator1 = register("incubator", () -> new IncubatorBlock(FHProps.stoneDecoProps, FHTileTypes.INCUBATOR));
-    public static RegistryObject<Block> incubator2 = register("heat_incubator", () -> new HeatIncubatorBlock(FHProps.metalDecoProps, FHTileTypes.INCUBATOR2));
+    public static RegistryObject<Block> incubator1 = register("incubator", () -> new IncubatorBlock(FHProps.stoneDecoProps, FHBlockEntityTypes.INCUBATOR));
+    public static RegistryObject<Block> incubator2 = register("heat_incubator", () -> new HeatIncubatorBlock(FHProps.metalDecoProps, FHBlockEntityTypes.INCUBATOR2));
     public static RegistryObject<Block> heat_pipe = register("heat_pipe", () -> new HeatPipeBlock(Block.Properties
             .of().mapColor(MapColor.STONE).sound(SoundType.WOOD)
             .strength(1, 5)

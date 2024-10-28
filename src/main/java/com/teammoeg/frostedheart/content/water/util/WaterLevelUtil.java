@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.water.util;
 
-import com.teammoeg.frostedheart.FHEffects;
+import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.water.recipe.WaterLevelAndEffectRecipe;
@@ -50,7 +50,7 @@ public class WaterLevelUtil {
             }
             if (wRecipe.getProbability() != 0) {
                 if (rand.nextDouble() < wRecipe.getProbability()) {
-                    player.addEffect(new MobEffectInstance(FHEffects.THIRST.get(), wRecipe.getDuration(), wRecipe.getAmplifier()));
+                    player.addEffect(new MobEffectInstance(FHMobEffects.THIRST.get(), wRecipe.getDuration(), wRecipe.getAmplifier()));
                 }
             }
         }

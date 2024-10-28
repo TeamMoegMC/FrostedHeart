@@ -1,14 +1,10 @@
 package com.teammoeg.frostedheart.content.steamenergy.steamcore;
 
-import java.util.Random;
 import java.util.function.Supplier;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import com.simibubi.create.content.kinetics.base.DirectionalKineticBlock;
 import com.simibubi.create.foundation.utility.VoxelShaper;
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
@@ -19,7 +15,6 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.core.Direction;
@@ -33,8 +28,6 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.Level;
-
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public class SteamCoreBlock extends DirectionalKineticBlock implements FHEntityBlock{
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
@@ -94,6 +87,6 @@ public class SteamCoreBlock extends DirectionalKineticBlock implements FHEntityB
 
 	@Override
 	public Supplier<BlockEntityType<?>> getBlock() {
-		return FHTileTypes.STEAM_CORE::get;
+		return FHBlockEntityTypes.STEAM_CORE::get;
 	}
 }

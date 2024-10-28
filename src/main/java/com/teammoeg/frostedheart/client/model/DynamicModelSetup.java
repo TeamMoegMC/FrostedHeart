@@ -17,8 +17,9 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.client.model;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.model.DynamicBlockModelReference;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorRenderer;

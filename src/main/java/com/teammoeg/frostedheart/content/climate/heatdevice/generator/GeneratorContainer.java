@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import java.util.Optional;
 
-import com.teammoeg.frostedheart.FHBaseContainer;
-import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.menu.FHBaseContainer;
+import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.util.FHContainerData;
 import com.teammoeg.frostedheart.util.FHContainerData.FHDataSlot;
 import com.teammoeg.frostedheart.util.FHMultiblockHelper;

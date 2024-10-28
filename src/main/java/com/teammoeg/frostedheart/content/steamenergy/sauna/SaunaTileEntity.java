@@ -26,11 +26,11 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.FHTeamDataManager;
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHMobEffects;
+import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
@@ -41,8 +41,6 @@ import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
-import blusunrize.immersiveengineering.common.register.IEMenuTypes.ArgContainer;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.world.level.block.state.BlockState;
@@ -95,7 +93,7 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBloc
     private LazyOptional<IItemHandler> insertionCap;
 
     public SaunaTileEntity(BlockPos pos,BlockState state) {
-        super(FHTileTypes.SAUNA.get(),pos,state);
+        super(FHBlockEntityTypes.SAUNA.get(),pos,state);
         this.inventory = NonNullList.withSize(1, ItemStack.EMPTY);
         this.insertionCap = LazyOptional.of(() -> new IEInventoryHandler(1, this));
     }
@@ -177,15 +175,15 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBloc
         if (t == null || !t.equals(owner)) return;
         // add wet effect
         if (level.getGameTime() % 200L == 0L) {
-            p.addEffect(new MobEffectInstance(FHEffects.WET.get(), 200, 0, true, false));
+            p.addEffect(new MobEffectInstance(FHMobEffects.WET.get(), 200, 0, true, false));
         }
 
         // add sauna effect
-        if (level.getGameTime() % 1000L == 0L && !p.hasEffect(FHEffects.SAUNA.get())) {
+        if (level.getGameTime() % 1000L == 0L && !p.hasEffect(FHMobEffects.SAUNA.get())) {
             // initial reward
             EnergyCore.addEnergy(p, 1000);
             // whole day reward
-            p.addEffect(new MobEffectInstance(FHEffects.SAUNA.get(), 23000, 0, true, false));
+            p.addEffect(new MobEffectInstance(FHMobEffects.SAUNA.get(), 23000, 0, true, false));
         }
         
         // add medical effect

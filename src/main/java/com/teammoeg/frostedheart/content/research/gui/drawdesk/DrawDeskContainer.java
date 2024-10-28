@@ -19,15 +19,14 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
-import com.teammoeg.frostedheart.FHBlockEntityContainer;
-import com.teammoeg.frostedheart.FHContainer;
+import com.teammoeg.frostedheart.base.menu.FHBlockEntityContainer;
+import com.teammoeg.frostedheart.FHMenuTypes;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
 
 import blusunrize.immersiveengineering.common.gui.IESlot;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.Container;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -69,7 +68,7 @@ public class DrawDeskContainer extends FHBlockEntityContainer<DrawingDeskTileEnt
     }
 
     public DrawDeskContainer(int id, Inventory inventoryPlayer, DrawingDeskTileEntity tile) {
-        super(FHContainer.DRAW_DESK.get(), tile, id,inventoryPlayer.player, 3);
+        super(FHMenuTypes.DRAW_DESK.get(), tile, id,inventoryPlayer.player, 3);
 
         this.addSlot(new EnableIESlot(this, inv, DrawingDeskTileEntity.PAPER_SLOT, 114, 161) {// paper
             @Override

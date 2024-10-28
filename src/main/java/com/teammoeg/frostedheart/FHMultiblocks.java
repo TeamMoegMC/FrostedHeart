@@ -58,12 +58,12 @@ public class FHMultiblocks {
 		public static final MultiblockRegistration<T1GeneratorState> GENERATOR_T1 = stone(new T1GeneratorLogic(), "generator_t1",false)
 			.structure(() -> FHMultiblocks.Multiblock.GENERATOR_T1)
 			.notMirrored()
-			.component(FHContainer.GENERATOR_T1.createComponent())
+			.component(FHMenuTypes.GENERATOR_T1.createComponent())
 			.build();
 		public static final MultiblockRegistration<T2GeneratorState> GENERATOR_T2 = metal(new T2GeneratorLogic(), "generator_t2")
 			.structure(() -> FHMultiblocks.Multiblock.GENERATOR_T1)
 			.notMirrored()
-			.component(FHContainer.GENERATOR_T2.createComponent())
+			.component(FHMenuTypes.GENERATOR_T2.createComponent())
 			.build();
 		public static final MultiblockRegistration<RadiatorState> RADIATOR = metal(new RadiatorLogic(), "radiator")
 			.structure(() -> FHMultiblocks.Multiblock.RADIATOR)
@@ -84,12 +84,12 @@ public class FHMultiblocks {
 					FHBlocks.registry, FHItems.registry,
 					r -> new NonMirrorableWithActiveBlock<>(properties, r),
 					MultiblockItem::new)
-				.defaultBEs(FHTileTypes.REGISTER);
+				.defaultBEs(FHBlockEntityTypes.REGISTER);
 		}
 
 		private static <S extends IMultiblockState> IEMultiblockBuilder<S> metal(IMultiblockLogic<S> logic, String name) {
 			return new IEMultiblockBuilder<>(logic, name)
-				.defaultBEs(FHTileTypes.REGISTER)
+				.defaultBEs(FHBlockEntityTypes.REGISTER)
 				.customBlock(
 					FHBlocks.registry, FHItems.registry,
 					r -> new NonMirrorableWithActiveBlock<>(IEBlocks.METAL_PROPERTIES_NO_OCCLUSION.get(), r),

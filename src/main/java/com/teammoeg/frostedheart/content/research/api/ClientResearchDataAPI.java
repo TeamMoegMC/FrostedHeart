@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.api;
 
-import com.teammoeg.frostedheart.FHClientTeamDataManager;
+import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 

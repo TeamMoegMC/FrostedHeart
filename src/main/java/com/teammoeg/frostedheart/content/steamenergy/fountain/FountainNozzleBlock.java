@@ -19,13 +19,9 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
-import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.FHParticleTypes;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
@@ -36,12 +32,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Random;
-
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public class FountainNozzleBlock extends FHBaseBlock {
     public static final IntegerProperty HEIGHT =

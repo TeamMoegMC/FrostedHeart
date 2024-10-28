@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.town.mine;
 
 import com.google.common.util.concurrent.AtomicDouble;
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
@@ -26,7 +26,7 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
     private double rating;
 
     public MineTileEntity(BlockPos pos,BlockState state){
-        super(FHTileTypes.MINE.get(),pos,state);
+        super(FHBlockEntityTypes.MINE.get(),pos,state);
     }
 
     public boolean isStructureValid(){

@@ -27,7 +27,7 @@ import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-public class FHDamageSources {
+public class FHDamageTypes {
     public static final ResourceKey<DamageType> HYPOTHERMIA = create("hypothermia");
     public static final ResourceKey<DamageType> HYPERTHERMIA = create("hyperthermia");
     public static final ResourceKey<DamageType> BLIZZARD = create("blizzard");

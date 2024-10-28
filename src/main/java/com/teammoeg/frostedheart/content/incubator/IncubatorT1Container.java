@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import com.teammoeg.frostedheart.FHBlockEntityContainer;
-import com.teammoeg.frostedheart.FHContainer;
+import com.teammoeg.frostedheart.base.menu.FHBlockEntityContainer;
+import com.teammoeg.frostedheart.FHMenuTypes;
 
 import blusunrize.immersiveengineering.common.gui.IESlot;
 import net.minecraft.world.entity.player.Inventory;
@@ -29,7 +29,7 @@ import net.minecraft.world.item.ItemStack;
 public class IncubatorT1Container extends FHBlockEntityContainer<IncubatorTileEntity> {
 
     public IncubatorT1Container(int id, Inventory inventoryPlayer, IncubatorTileEntity tile) {
-        super(FHContainer.INCUBATOR_T1.get(), tile, id,inventoryPlayer.player, 4);
+        super(FHMenuTypes.INCUBATOR_T1.get(), tile, id,inventoryPlayer.player, 4);
 
         this.addSlot(new IESlot(this, this.inv, 0, 34, 52) {
             @Override

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.teammoeg.frostedheart.FHMobEffects;
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -31,11 +32,8 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.ClientClimateData;
-import com.teammoeg.frostedheart.client.hud.FrostedHud.Atlases;
-import com.teammoeg.frostedheart.client.hud.FrostedHud.BarPos;
 import com.teammoeg.frostedheart.content.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.content.climate.TemperatureFrame.FrameType;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -55,7 +53,6 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import net.minecraft.client.AttackIndicatorStatus;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
@@ -643,9 +640,9 @@ public class FrostedHud {
                 heart = HUDElements.icon_health_hardcore_abnormal_black;
             } else if (player.hasEffect(MobEffects.POISON)) {
                 heart = HUDElements.icon_health_hardcore_abnormal_green;
-            } else if (player.hasEffect(FHEffects.HYPOTHERMIA.get())) {
+            } else if (player.hasEffect(FHMobEffects.HYPOTHERMIA.get())) {
                 heart = HUDElements.icon_health_hardcore_abnormal_cyan;
-            } else if (player.hasEffect(FHEffects.HYPERTHERMIA.get())) {
+            } else if (player.hasEffect(FHMobEffects.HYPERTHERMIA.get())) {
                 heart = HUDElements.icon_health_hardcore_abnormal_orange;
             } else
                 heart = HUDElements.icon_health_hardcore_normal;
@@ -654,9 +651,9 @@ public class FrostedHud {
                 heart = HUDElements.icon_health_abnormal_black;
             } else if (player.hasEffect(MobEffects.POISON)) {
                 heart = HUDElements.icon_health_abnormal_green;
-            } else if (player.hasEffect(FHEffects.HYPOTHERMIA.get())) {
+            } else if (player.hasEffect(FHMobEffects.HYPOTHERMIA.get())) {
                 heart = HUDElements.icon_health_abnormal_cyan;
-            } else if (player.hasEffect(FHEffects.HYPERTHERMIA.get())) {
+            } else if (player.hasEffect(FHMobEffects.HYPERTHERMIA.get())) {
                 heart = HUDElements.icon_health_abnormal_orange;
             } else
                 heart = HUDElements.icon_health_normal;

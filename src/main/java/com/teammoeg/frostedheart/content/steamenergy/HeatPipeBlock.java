@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.steamenergy;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
@@ -58,7 +58,7 @@ public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements FHEn
 
 	@Override
 	public Supplier<BlockEntityType<HeatPipeTileEntity>> getBlock() {
-		return FHTileTypes.HEATPIPE;
+		return FHBlockEntityTypes.HEATPIPE;
 	}
 
 

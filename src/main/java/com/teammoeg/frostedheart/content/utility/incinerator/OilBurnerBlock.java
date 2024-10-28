@@ -19,10 +19,9 @@
 
 package com.teammoeg.frostedheart.content.utility.incinerator;
 
-import java.util.Random;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -36,18 +35,14 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.fluids.FluidUtil;
-
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public class OilBurnerBlock extends FHBaseBlock implements FHEntityBlock<OilBurnerTileEntity>{
 
@@ -92,7 +87,7 @@ public class OilBurnerBlock extends FHBaseBlock implements FHEntityBlock<OilBurn
 
 	@Override
 	public Supplier<BlockEntityType<OilBurnerTileEntity>> getBlock() {
-		return FHTileTypes.OIL_BURNER;
+		return FHBlockEntityTypes.OIL_BURNER;
 	}
 
 }

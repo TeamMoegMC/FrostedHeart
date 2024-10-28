@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.climate.event;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHParticleTypes;
-import com.teammoeg.frostedheart.FHSounds;
+import com.teammoeg.frostedheart.FHSoundEvents;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorScreen;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -73,7 +73,7 @@ public class ClientEvents {
                 float currTemp = ptd.smoothedBody;
                 // play sound if currTemp transitions across integer threshold
                 if (currTemp <= 0.5F && Mth.floor(prevTemp - 0.5F) != Mth.floor(currTemp - 0.5F)) {
-                    player.level().playSound(player, player.blockPosition(), FHSounds.ICE_CRACKING.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+                    player.level().playSound(player, player.blockPosition(), FHSoundEvents.ICE_CRACKING.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
                     forstedSoundCd=20;
                 }
             }

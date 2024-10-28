@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart;
 
 import net.minecraft.world.food.FoodProperties;
 
-public class FHFoods {
+public class FHFoodProperties {
     public static final FoodProperties VEGETABLE_SAWDUST_SOUP = buildStew(6, 0.3F);
     public static final FoodProperties RYE_SAWDUST_PORRIDGE = buildStew(6, 0.4F);
     public static final FoodProperties RYE_BREAD = buildStew(6);

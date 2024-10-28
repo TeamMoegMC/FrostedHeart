@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.events;
 import java.util.UUID;
 
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
 
@@ -32,9 +32,7 @@ import dev.ftb.mods.ftbteams.api.event.PlayerChangedTeamEvent;
 import dev.ftb.mods.ftbteams.api.event.PlayerTransferredTeamOwnershipEvent;
 import dev.ftb.mods.ftbteams.api.event.TeamCreatedEvent;
 import dev.ftb.mods.ftbteams.api.event.TeamEvent;
-import dev.ftb.mods.ftbteams.data.PlayerTeam;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.PacketDistributor;
 
 public class FTBTeamsEvents {
 

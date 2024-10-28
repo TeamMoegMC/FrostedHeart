@@ -6,7 +6,7 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 import com.google.common.base.Objects;
-import com.teammoeg.frostedheart.FHBaseContainer;
+import com.teammoeg.frostedheart.base.menu.FHBaseContainer;
 import com.teammoeg.frostedheart.util.io.registry.IdRegistry;
 
 import net.minecraft.core.BlockPos;

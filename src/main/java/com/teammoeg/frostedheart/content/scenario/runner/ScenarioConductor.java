@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElement;
@@ -42,7 +42,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 
 /**

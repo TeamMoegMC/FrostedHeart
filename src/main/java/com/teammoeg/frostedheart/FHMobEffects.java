@@ -34,7 +34,7 @@ import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
-public class FHEffects {
+public class FHMobEffects {
     public static final DeferredRegister<MobEffect> EFFECTS=DeferredRegister.create(ForgeRegistries.MOB_EFFECTS, FHMain.MODID);
     public static final RegistryObject<MobEffect> HYPOTHERMIA = register("hypothermia",()->  new HypothermiaEffect(MobEffectCategory.HARMFUL, 0x57BDE8));
     public static final RegistryObject<MobEffect> HYPERTHERMIA = register("hyperthermia",()->  new HyperthermiaEffect(MobEffectCategory.HARMFUL, 0xFF9800));

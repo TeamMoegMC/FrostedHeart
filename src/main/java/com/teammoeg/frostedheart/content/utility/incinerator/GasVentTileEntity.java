@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.utility.incinerator;
 
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
 import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
@@ -41,7 +41,7 @@ public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState,
     private LazyOptional<IFluidHandler> holder = LazyOptional.empty();
 
     public GasVentTileEntity(BlockPos bp,BlockState bs) {
-        super(FHTileTypes.GAS_VENT.get(),bp,bs);
+        super(FHBlockEntityTypes.GAS_VENT.get(),bp,bs);
     }
 
     @Override

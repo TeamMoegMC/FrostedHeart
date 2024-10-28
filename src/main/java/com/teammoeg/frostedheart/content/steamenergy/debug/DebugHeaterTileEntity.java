@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.debug;
 
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
@@ -42,7 +42,7 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements  FHTicka
     });
     HeatProviderEndPoint endpoint=new HeatProviderEndPoint(-1, Integer.MAX_VALUE, Integer.MAX_VALUE);
     public DebugHeaterTileEntity(BlockPos pos,BlockState state) {
-        super(FHTileTypes.DEBUGHEATER.get(),pos,state);
+        super(FHBlockEntityTypes.DEBUGHEATER.get(),pos,state);
     }
 
 

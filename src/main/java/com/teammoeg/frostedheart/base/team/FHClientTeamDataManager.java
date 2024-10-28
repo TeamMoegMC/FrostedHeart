@@ -17,11 +17,10 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.base.team;
 
 import java.util.UUID;
 
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 /**

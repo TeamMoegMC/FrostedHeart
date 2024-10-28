@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.mixin.minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-import com.teammoeg.frostedheart.FHDamageSources;
+import com.teammoeg.frostedheart.FHDamageTypes;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
@@ -200,7 +200,7 @@ public abstract class CowEntityMixin extends Animal implements IMilkable, IFeedS
                 if (hxteTimer < 20) {
                     hxteTimer++;
                 } else {
-                	 this.hurt(FHDamageSources.createSource(level(), FHDamageSources.BLIZZARD, this), 1);
+                	 this.hurt(FHDamageTypes.createSource(level(), FHDamageTypes.BLIZZARD, this), 1);
                 }
             } else {
                 float temp = ChunkHeatData.getTemperature(this.getCommandSenderWorld(), this.blockPosition());
@@ -216,7 +216,7 @@ public abstract class CowEntityMixin extends Animal implements IMilkable, IFeedS
                             }
 
                         hxteTimer = 0;
-                        this.hurt(FHDamageSources.createSource(level(), temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, this), 2);
+                        this.hurt(FHDamageTypes.createSource(level(), temp > 0 ? FHDamageTypes.HYPERTHERMIA : FHDamageTypes.HYPOTHERMIA, this), 2);
                     }
                 } else if (hxteTimer > 0)
                     hxteTimer--;

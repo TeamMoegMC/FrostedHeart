@@ -29,11 +29,11 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2Gener
 import org.lwjgl.glfw.GLFW;
 
 import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.FHContainer;
+import com.teammoeg.frostedheart.FHMenuTypes;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHParticleTypes;
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.client.model.DynamicBlockModelReference;
 import com.teammoeg.frostedheart.client.model.LiningModel;
 import com.teammoeg.frostedheart.client.particles.BreathParticle;
@@ -67,7 +67,6 @@ import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
@@ -154,20 +153,20 @@ public class ClientRegistryEvents {
 	public static void registerBERenders(RegisterRenderers event){
         event.registerBlockEntityRenderer(FHMultiblocks.Logic.GENERATOR_T1.masterBE().get(), T1GeneratorRenderer::new);
         event.registerBlockEntityRenderer(FHMultiblocks.Logic.GENERATOR_T2.masterBE().get(), T2GeneratorRenderer::new);
-        event.registerBlockEntityRenderer(FHTileTypes.MECH_CALC.get(), MechCalcRenderer::new);
+        event.registerBlockEntityRenderer(FHBlockEntityTypes.MECH_CALC.get(), MechCalcRenderer::new);
 	}
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
         // Register screens
-    	MenuScreens.register(FHContainer.GENERATOR_T1.getType(), GeneratorScreen<T1GeneratorState, T1GeneratorLogic>::new);
-    	MenuScreens.register(FHContainer.GENERATOR_T2.getType(), GeneratorScreen<T2GeneratorState, T2GeneratorLogic>::new);
-    	MenuScreens.register(FHContainer.RELIC_CHEST.get(), RelicChestScreen::new);
-    	registerFTBScreen(FHContainer.DRAW_DESK.get(), DrawDeskScreen::new);
-        registerFTBScreen(FHContainer.TRADE_GUI.get(), TradeScreen::new);
-        registerFTBScreen(FHContainer.HEAT_STAT.get(), HeatStatScreen::new);
-        MenuScreens.register(FHContainer.SAUNA.get(), SaunaScreen::new);
-        MenuScreens.register(FHContainer.INCUBATOR_T1.get(), IncubatorT1Screen::new);
-        MenuScreens.register(FHContainer.INCUBATOR_T2.get(), IncubatorT2Screen::new);
+    	MenuScreens.register(FHMenuTypes.GENERATOR_T1.getType(), GeneratorScreen<T1GeneratorState, T1GeneratorLogic>::new);
+    	MenuScreens.register(FHMenuTypes.GENERATOR_T2.getType(), GeneratorScreen<T2GeneratorState, T2GeneratorLogic>::new);
+    	MenuScreens.register(FHMenuTypes.RELIC_CHEST.get(), RelicChestScreen::new);
+    	registerFTBScreen(FHMenuTypes.DRAW_DESK.get(), DrawDeskScreen::new);
+        registerFTBScreen(FHMenuTypes.TRADE_GUI.get(), TradeScreen::new);
+        registerFTBScreen(FHMenuTypes.HEAT_STAT.get(), HeatStatScreen::new);
+        MenuScreens.register(FHMenuTypes.SAUNA.get(), SaunaScreen::new);
+        MenuScreens.register(FHMenuTypes.INCUBATOR_T1.get(), IncubatorT1Screen::new);
+        MenuScreens.register(FHMenuTypes.INCUBATOR_T2.get(), IncubatorT2Screen::new);
 
         // Register translucent render type
         //TODO: specify in model files

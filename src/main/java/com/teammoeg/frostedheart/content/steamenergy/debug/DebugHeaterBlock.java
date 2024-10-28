@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.steamenergy.debug;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.util.TranslateUtils;
@@ -69,6 +69,6 @@ public class DebugHeaterBlock extends FHBaseBlock implements FHEntityBlock<Debug
 
 	@Override
 	public Supplier<BlockEntityType<DebugHeaterTileEntity>> getBlock() {
-		return FHTileTypes.DEBUGHEATER;
+		return FHBlockEntityTypes.DEBUGHEATER;
 	}
 }

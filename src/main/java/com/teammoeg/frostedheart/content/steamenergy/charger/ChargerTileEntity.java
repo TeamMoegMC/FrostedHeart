@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.steamenergy.charger;
 import java.util.Collection;
 import java.util.List;
 
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.recipes.CampfireDefrostRecipe;
@@ -73,7 +73,7 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements FHTickableBl
 
 
     public ChargerTileEntity(BlockPos pos,BlockState state) {
-        super(FHTileTypes.CHARGER.get(), pos, state);
+        super(FHBlockEntityTypes.CHARGER.get(), pos, state);
     }
 
     LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);

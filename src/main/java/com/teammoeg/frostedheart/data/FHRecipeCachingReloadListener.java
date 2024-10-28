@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.events;
+package com.teammoeg.frostedheart.data;
 
 import javax.annotation.Nonnull;
 

@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.town.hunting;
 
+import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockScanner;
@@ -20,8 +20,6 @@ import net.minecraftforge.common.util.LazyOptional;
 import javax.annotation.Nonnull;
 import java.util.*;
 
-import static java.util.AbstractMap.SimpleEntry;
-
 import java.util.AbstractMap.SimpleEntry;
 
 public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
@@ -39,7 +37,7 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
     private int maxResident;
 
     public HuntingBaseTileEntity(BlockPos pos,BlockState state) {
-        super(FHTileTypes.HUNTING_BASE.get(),pos,state);
+        super(FHBlockEntityTypes.HUNTING_BASE.get(),pos,state);
     }
 
     public double getRating(){

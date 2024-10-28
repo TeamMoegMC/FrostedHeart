@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.base.multiblock.components;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.teammoeg.frostedheart.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;

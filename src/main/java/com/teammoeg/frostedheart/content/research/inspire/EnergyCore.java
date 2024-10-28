@@ -19,13 +19,11 @@
 
 package com.teammoeg.frostedheart.content.research.inspire;
 
-import java.util.Map.Entry;
-
 import javax.annotation.Nullable;
 
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHEffects;
+import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
@@ -114,7 +112,7 @@ public class EnergyCore implements NBTSerializable {
     }
 
     public float getModifier(ServerPlayer player) {
-    	boolean isBodyNotWell = player.getEffect(FHEffects.HYPERTHERMIA.get()) != null || player.getEffect(FHEffects.HYPOTHERMIA.get()) != null;
+    	boolean isBodyNotWell = player.getEffect(FHMobEffects.HYPERTHERMIA.get()) != null || player.getEffect(FHMobEffects.HYPOTHERMIA.get()) != null;
     	if(isBodyNotWell)return 0;
     	TeamResearchData trd = ResearchDataAPI.getData(player);
     	double initValue=(1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
