@@ -1,5 +1,5 @@
 {
-    "type": "watersource:thirst_fluid",
+    "type": "frostedheart:thirst",
     "ingredient": {
         "item": "frostedheart:thermos"
     },
