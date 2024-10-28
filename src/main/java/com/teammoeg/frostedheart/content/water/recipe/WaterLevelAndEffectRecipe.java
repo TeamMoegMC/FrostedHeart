@@ -40,6 +40,8 @@ public class WaterLevelAndEffectRecipe implements Recipe<Inventory>, Comparable<
     protected final Fluid fluid;
     protected final CompoundTag compoundTag;
     protected float priority = 0;
+    protected final int duration, amplifier;
+    protected float probability;
 
 
     public static RegistryObject<RecipeSerializer<WaterLevelAndEffectRecipe>> SERIALIZER;
@@ -55,6 +57,9 @@ public class WaterLevelAndEffectRecipe implements Recipe<Inventory>, Comparable<
              * ingredient Ingredient.EMPTY
              * waterLevel 0
              * waterSaturationLevel 0
+             * duration  0
+             * amplifier 0
+             * probability 0
              * */
             int waterLevel = 0;
             int waterSaturationLevel = 0;
@@ -106,12 +111,15 @@ public class WaterLevelAndEffectRecipe implements Recipe<Inventory>, Comparable<
                 String fluidName = GsonHelper.getAsString(json, "fluid", "");
                 fluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(fluidName));
             }
-
+            //thrist
+            int duration = GsonHelper.getAsInt(json, "duration", 0);
+            int amplifier = GsonHelper.getAsInt(json, "amplifier", 0);
+            float probability = GsonHelper.getAsFloat(json, "probability", 0);
             //water level
             waterLevel = GsonHelper.getAsInt(json, "water_level", 0);
             waterSaturationLevel = GsonHelper.getAsInt(json, "water_saturation_level", 0);
 
-            return (WaterLevelAndEffectRecipe) new WaterLevelAndEffectRecipe(recipeId, group, ingredient, waterLevel, waterSaturationLevel, effectInstances, fluid, compoundTag);
+            return (WaterLevelAndEffectRecipe) new WaterLevelAndEffectRecipe(recipeId, group, ingredient, waterLevel, waterSaturationLevel, effectInstances, fluid, compoundTag,duration ,amplifier,probability );
         }
 
         @Override
@@ -123,15 +131,19 @@ public class WaterLevelAndEffectRecipe implements Recipe<Inventory>, Comparable<
             int waterSaturationLevel = packetBuffer.readVarInt();//4
             Fluid fluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(packetBuffer.readUtf()));//5
             CompoundTag compoundTag = packetBuffer.readNbt();//6
+            int duration = packetBuffer.readVarInt();
+            int amplifier = packetBuffer.readVarInt();
+            float probability = packetBuffer.readFloat();
+
             for (int i = 0; i < packetBuffer.readByte(); i++) {
                 String mobEffectName = packetBuffer.readUtf();
-                int duration = packetBuffer.readVarInt();
-                int amplifier = packetBuffer.readVarInt();
+                int duratione = packetBuffer.readVarInt();
+                int amplifiere = packetBuffer.readVarInt();
 
                 MobEffect mobEffect = ForgeRegistries.MOB_EFFECTS.getValue(ResourceLocation.tryParse(mobEffectName));
-                mobEffectInstances.add(new MobEffectInstance(mobEffect, duration, amplifier));
+                mobEffectInstances.add(new MobEffectInstance(mobEffect, duratione, amplifiere));
             }
-            return (WaterLevelAndEffectRecipe) new WaterLevelAndEffectRecipe(recipeId, group, ingredient, waterLevel, waterSaturationLevel, mobEffectInstances, fluid, compoundTag);
+            return new WaterLevelAndEffectRecipe(recipeId, group, ingredient, waterLevel, waterSaturationLevel, mobEffectInstances, fluid, compoundTag,duration ,amplifier,probability);
         }
 
         @Override
@@ -142,6 +154,11 @@ public class WaterLevelAndEffectRecipe implements Recipe<Inventory>, Comparable<
             buffer.writeVarInt(recipe.getWaterSaturationLevel());
             buffer.writeUtf(recipe.getFluid() == null ? "" : ForgeRegistries.FLUIDS.getKey(recipe.getFluid()).toString());
             buffer.writeNbt(recipe.getCompoundTag());
+            buffer.writeInt(recipe.getDuration());
+            buffer.writeInt(recipe.getAmplifier());
+            buffer.writeFloat(recipe.getProbability());
+
+
             buffer.writeByte(recipe.getMobEffectInstances().size());
             for (MobEffectInstance mobEffectInstance : recipe.getMobEffectInstances()) {
                 buffer.writeUtf(ForgeRegistries.MOB_EFFECTS.getKey(mobEffectInstance.getEffect()).toString());
@@ -151,7 +168,7 @@ public class WaterLevelAndEffectRecipe implements Recipe<Inventory>, Comparable<
         }
     }
 
-    public WaterLevelAndEffectRecipe(ResourceLocation idIn, String groupIn, Ingredient ingredient, int waterLevel, int waterSaturationLevel, List<MobEffectInstance> effectInstances, Fluid fluid, CompoundTag compoundTag) {
+    public WaterLevelAndEffectRecipe(ResourceLocation idIn, String groupIn, Ingredient ingredient, int waterLevel, int waterSaturationLevel, List<MobEffectInstance> effectInstances, Fluid fluid, CompoundTag compoundTag, int duration, int amplifier,float probability) {
         this.id = idIn;
         this.group = groupIn;
         this.waterLevel = waterLevel;
@@ -160,6 +177,9 @@ public class WaterLevelAndEffectRecipe implements Recipe<Inventory>, Comparable<
         this.mobEffectInstances = effectInstances;
         this.fluid = fluid;
         this.compoundTag = compoundTag;
+        this.duration = duration;
+        this.amplifier = amplifier;
+        this.probability = probability;
 
         float priority = 0;
         if (!ingredient.isEmpty()) priority += 1.5F;
@@ -169,6 +189,16 @@ public class WaterLevelAndEffectRecipe implements Recipe<Inventory>, Comparable<
 
         this.priority = priority;
     }
+
+    public int getAmplifier() {
+        return amplifier;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public float getProbability() {return probability;}
 
     public int getWaterSaturationLevel() {
         return waterSaturationLevel;

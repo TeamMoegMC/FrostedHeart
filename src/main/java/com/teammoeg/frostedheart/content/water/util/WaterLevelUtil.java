@@ -3,8 +3,6 @@ package com.teammoeg.frostedheart.content.water.util;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
-import com.teammoeg.frostedheart.content.water.recipe.IThirstRecipe;
-import com.teammoeg.frostedheart.content.water.recipe.ThirstRecipe;
 import com.teammoeg.frostedheart.content.water.recipe.WaterLevelAndEffectRecipe;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -28,32 +26,32 @@ public class WaterLevelUtil {
         Random rand = new Random();
 
         WaterLevelAndEffectRecipe wRecipe = WaterLevelAndEffectRecipe.getRecipeFromItem(level, stack);
-        IThirstRecipe tRecipe = ThirstRecipe.getRecipeFromItem(level, stack);
+        //IThirstRecipe tRecipe = ThirstRecipe.getRecipeFromItem(level, stack);
         if (wRecipe != null) {
             WaterLevelCapability.getCapability(player).ifPresent(data -> {
                 if (player.getRemainingFireTicks() > 0 && wRecipe.getWaterLevel() >= 4) {//extinguish player
                     if (!level.isClientSide()) {
                         data.addWaterLevel(player, wRecipe.getWaterLevel() - 4);
-                        if (tRecipe == null) {
-                            data.addWaterSaturationLevel(player, Math.max(wRecipe.getWaterSaturationLevel() - 4, 0));
-                        }
+//                        if (tRecipe == null) {
+//                            data.addWaterSaturationLevel(player, Math.max(wRecipe.getWaterSaturationLevel() - 4, 0));
+//                        }
                     }
                     player.playSound(SoundEvents.FIRE_EXTINGUISH, 1.0F, 1.0F);
                     player.clearFire();
                 } else {//add water level
                     data.addWaterLevel(player, wRecipe.getWaterLevel());
-                    if (tRecipe == null) {
-                        data.addWaterSaturationLevel(player, wRecipe.getWaterSaturationLevel());
-                    }
+//                    if (tRecipe == null) {
+//                        data.addWaterSaturationLevel(player, wRecipe.getWaterSaturationLevel());
+//                    }
                 }
             });
             for (MobEffectInstance mobEffectInstance : wRecipe.getMobEffectInstances()) {
                 player.addEffect(mobEffectInstance);
             }
-        }
-        if (tRecipe != null) {
-            if (rand.nextDouble() < tRecipe.getProbability()) {
-                player.addEffect(new MobEffectInstance(FHEffects.THIRST.get(), tRecipe.getDuration(), tRecipe.getAmplifier()));
+            if (wRecipe.getProbability() != 0) {
+                if (rand.nextDouble() < wRecipe.getProbability()) {
+                    player.addEffect(new MobEffectInstance(FHEffects.THIRST.get(), wRecipe.getDuration(), wRecipe.getAmplifier()));
+                }
             }
         }
     }
