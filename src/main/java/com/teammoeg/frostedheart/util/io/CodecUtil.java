@@ -68,7 +68,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.MappedRegistry;
 
 public class CodecUtil {
-
+	static final Function<DynamicOps<?>, Codec<?>> schCodec=SerializeUtil.cached(CodecUtil::scCodec);
 	public static class DispatchNameCodecBuilder<A>{
 		Map<Class<? extends A>,String> classes=new LinkedHashMap<>();
 		Map<String,Codec<? extends A>> codecs=new LinkedHashMap<>();
@@ -168,7 +168,6 @@ public class CodecUtil {
 	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(JsonOps.INSTANCE,Ingredient::toJson,Ingredient::fromJson,Ingredient::toNetwork,Ingredient::fromNetwork);
 	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=new PacketOrSchemaCodec<>(JsonOps.INSTANCE,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
 	public static final Codec<MobEffectInstance> MOB_EFFECT_CODEC = COMPOUND_TAG_CODEC.xmap(o->MobEffectInstance.load(o),t->t.save(new CompoundTag()));
-	static final Function<DynamicOps<?>, Codec<?>> schCodec=SerializeUtil.cached(CodecUtil::scCodec);
 	public static final Codec<boolean[]> BOOLEANS = Codec.BYTE.xmap(SerializeUtil::readBooleans, SerializeUtil::writeBooleans);
 
 	public static <A> DefaultValueCodec<A> defaultValue(Codec<A> val, A def) {
