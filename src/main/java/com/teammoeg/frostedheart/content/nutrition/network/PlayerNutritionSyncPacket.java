@@ -12,10 +12,10 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public class PlayerNutritionSyncPacket extends NBTMessage {
-    private float vitamin , carbohydrate, protein,vegetable;
+    private float fat , carbohydrate, protein,vegetable;
 
-     public PlayerNutritionSyncPacket(float vitamin ,float carbohydrate ,float portein,float vegetable) {
-         super(toTag(vitamin, carbohydrate, portein, vegetable));
+     public PlayerNutritionSyncPacket(float fat ,float carbohydrate ,float portein,float vegetable) {
+         super(toTag(fat, carbohydrate, portein, vegetable));
      }
 
 
@@ -23,9 +23,9 @@ public class PlayerNutritionSyncPacket extends NBTMessage {
         super(NutritionCapability.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundTag::new));
     }
 
-    public static CompoundTag toTag(float vitamin ,float carbohydrate ,float portein,float vegetable) {
+    public static CompoundTag toTag(float fat ,float carbohydrate ,float portein,float vegetable) {
         CompoundTag compound = new CompoundTag();
-        compound.putFloat("vitamin", vitamin);
+        compound.putFloat("fat", fat);
         compound.putFloat("carbohydrate", carbohydrate);
         compound.putFloat("protein", portein);
         compound.putFloat("vegetable", vegetable);
@@ -39,7 +39,7 @@ public class PlayerNutritionSyncPacket extends NBTMessage {
                 date.setCarbohydrate(carbohydrate);
                 date.setProtein(protein);
                 date.setVegetable(vegetable);
-                date.setVitamin(vitamin);
+                date.setFat(fat);
             }));
         }
     }

@@ -21,7 +21,7 @@ public class NutritionCapability implements NBTSerializable {
     @Override
     public void save(CompoundTag nbt, boolean isPacket) {
         CompoundTag compound = new CompoundTag();
-        compound.putFloat("vitamin", this.vitamin);
+        compound.putFloat("fat", this.fat);
         compound.putFloat("carbohydrate", this.carbohydrate);
         compound.putFloat("protein", this.protein);
         compound.putFloat("vegetable", this.vegetable);
@@ -29,19 +29,19 @@ public class NutritionCapability implements NBTSerializable {
 
     @Override
     public void load(CompoundTag nbt, boolean isPacket) {
-        setVitamin(nbt.getFloat("vitamin"));
+        setFat(nbt.getFloat("fat"));
         setCarbohydrate(nbt.getFloat("carbohydrate"));
         setProtein(nbt.getFloat("protein"));
         setVegetable(nbt.getFloat("vegetable"));
     }
 
-    private float vitamin = 10000.0f;
+    private float fat = 10000.0f;
     private float carbohydrate = 10000.0f;
     private float protein = 10000.0f;
     private float vegetable = 10000.0f;
 
-    public void addVitamin(Player player, float add) {
-        this.vitamin += add;
+    public void addFat(Player player, float add) {
+        this.fat += add;
         syncToClientOnRestore(player);
     }
 
@@ -60,8 +60,8 @@ public class NutritionCapability implements NBTSerializable {
         syncToClientOnRestore(player);
     }
 
-    public void setVitamin(float temp) {
-        this.vitamin = temp;
+    public void setFat(float temp) {
+        this.fat = temp;
     }
 
     public void setCarbohydrate(float temp) {
@@ -76,8 +76,8 @@ public class NutritionCapability implements NBTSerializable {
         this.vegetable = temp;
     }
 
-    public float getVitamin() {
-        return vitamin;
+    public float getFat() {
+        return fat;
     }
 
     public float getCarbohydrate() {
@@ -93,11 +93,11 @@ public class NutritionCapability implements NBTSerializable {
     }
 
     public float getNutritionValue() {
-        return vitamin + carbohydrate + protein + vegetable;
+        return fat + carbohydrate + protein + vegetable;
     }
 
-    public float getVitaminPercentage() {
-        return vitamin / getNutritionValue();
+    public float getFatPercentage() {
+        return fat / getNutritionValue();
     }
 
     public float getCarbohydratePercentage() {
@@ -112,8 +112,8 @@ public class NutritionCapability implements NBTSerializable {
         return vegetable / getNutritionValue();
     }
 
-    public float getVitaminValue() {
-        return vitamin / (getNutritionValue() / 4);
+    public float getFatValue() {
+        return fat / (getNutritionValue() / 4);
     }
 
     public float getCarbohydrateValue() {
@@ -148,7 +148,7 @@ public class NutritionCapability implements NBTSerializable {
                 data.addCarbohydrate(player, wRecipe.carbohydrate);
                 data.addProtein(player, wRecipe.protein);
                 data.addVegetable(player, wRecipe.vegetable);
-                data.addVitamin(player, wRecipe.vitamin);
+                data.addFat(player, wRecipe.fat);
             });
         }
         if(player instanceof ServerPlayer serverPlayer)
@@ -156,25 +156,25 @@ public class NutritionCapability implements NBTSerializable {
     }
 
 
-    public void eat(Player player, float vitamin, float carbohydrate, float protein, float vegetable) {
-        addVitamin(player, vitamin);
+    public void eat(Player player, float fat, float carbohydrate, float protein, float vegetable) {
+        addFat(player, fat);
         addCarbohydrate(player, carbohydrate);
         addProtein(player, protein);
         addVegetable(player, vegetable);
         if(player instanceof ServerPlayer serverPlayer)
-            FHNetwork.sendPlayer(serverPlayer, new PlayerNutritionSyncPacket(this.vitamin, this.carbohydrate, this.protein, this.vegetable));
+            FHNetwork.sendPlayer(serverPlayer, new PlayerNutritionSyncPacket(this.fat, this.carbohydrate, this.protein, this.vegetable));
     }
 
     public void tick(Player player) {
         //TODO
         float consume = 0.1f;
 
-        addVitamin(player, -getVitaminPercentage() * consume);
+        addFat(player, -getFatPercentage() * consume);
         addCarbohydrate(player, -getCarbohydratePercentage() * consume);
         addProtein(player, -getProteinPercentage() * consume);
         addVegetable(player, -getVegetablePercentage() * consume);
         if(player instanceof ServerPlayer serverPlayer)
-            FHNetwork.sendPlayer(serverPlayer, new PlayerNutritionSyncPacket(this.vitamin, this.carbohydrate, this.protein, this.vegetable));
+            FHNetwork.sendPlayer(serverPlayer, new PlayerNutritionSyncPacket(this.fat, this.carbohydrate, this.protein, this.vegetable));
     }
 
 
