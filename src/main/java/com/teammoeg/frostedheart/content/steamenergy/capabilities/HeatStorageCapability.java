@@ -10,11 +10,14 @@ public class HeatStorageCapability{
 	private static final String STEAM_KEY="steam";
 	public HeatStorageCapability(ItemStack stack,int maxstorage) {
 	}
+
+	// TODO: Check
 	protected void setEnergy(float energy) {
-		container.getOrCreateTag().putFloat(FHMain.MODID+":"+STEAM_KEY,energy);
+		if (container != null)
+			container.getOrCreateTag().putFloat(FHMain.MODID+":"+STEAM_KEY,energy);
 	}
 	protected float getEnergy() {
-		return container.getOrCreateTag().getFloat(FHMain.MODID+":"+STEAM_KEY);
+		return container != null ? container.getOrCreateTag().getFloat(FHMain.MODID+":"+STEAM_KEY) : 0;
 	}
 	public float getEnergyStored() {
 		return getEnergy();
