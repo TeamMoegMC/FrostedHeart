@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -52,6 +53,7 @@ import com.teammoeg.frostedheart.util.io.codec.StreamCodec;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -155,11 +157,16 @@ public class CodecUtil {
 			tag.ifPresent(n->out.setTag(n));
 			return out;
 		}));
+	public static final Codec<CompoundTag> COMPOUND_TAG_CODEC=CodecUtil.convertSchema(NbtOps.INSTANCE).comapFlatMap(t->{
+		if(t instanceof CompoundTag)
+			return DataResult.success((CompoundTag)t);
+		return DataResult.error(()->"Cannot cast "+t+" to Compound Tag.");
+	}, UnaryOperator.identity());
 	public static final Codec<Integer> POSITIVE_INT = Codec.intRange(0, Integer.MAX_VALUE);
 	public static final Codec<BlockPos> BLOCKPOS = alternative(BlockPos.class).add(BlockPos.CODEC).add(Codec.LONG.xmap(BlockPos::of, BlockPos::asLong)).build();
 	
 	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(JsonOps.INSTANCE,Ingredient::toJson,Ingredient::fromJson,Ingredient::toNetwork,Ingredient::fromNetwork);
-	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=new PacketOrSchemaCodec<>(JsonOps.INSTANCE,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
+	public static final Codec<MobEffectInstance> MOB_EFFECT_CODEC = COMPOUND_TAG_CODEC.xmap(o->MobEffectInstance.load(o),t->t.save(new CompoundTag()));
 	static final Function<DynamicOps<?>, Codec<?>> schCodec=SerializeUtil.cached(CodecUtil::scCodec);
 	public static final Codec<boolean[]> BOOLEANS = Codec.BYTE.xmap(SerializeUtil::readBooleans, SerializeUtil::writeBooleans);
 
@@ -220,6 +227,7 @@ public class CodecUtil {
 	public static <I> Codec<I> convertSchema(DynamicOps<I> op){
 		return (Codec<I>) schCodec.apply(op);
 	}
+	
 	public static <S> AlternativeCodecBuilder<S> alternative(Class<S> type){
 		return new AlternativeCodecBuilder<>(type);
 	}
