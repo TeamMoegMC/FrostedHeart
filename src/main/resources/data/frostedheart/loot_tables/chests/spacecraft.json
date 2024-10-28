@@ -66,7 +66,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "rankine:bandage",
+          "name": "minecraft:apple",
           "functions": [
             {
               "function": "minecraft:set_count",

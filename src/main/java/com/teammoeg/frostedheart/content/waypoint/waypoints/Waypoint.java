@@ -35,11 +35,11 @@ public class Waypoint extends AbstractWaypoint {
     /**
      * 路径点显示的图标
      */
-    public Point icon = IconButton.ICON_BOX;
+    public IconButton.Icon icon = IconButton.Icon.BOX;
     /**
      * {@link #focus} 为 {@code true} 时使用的图标
      */
-    public Point focusIcon = IconButton.ICON_BOX_ON;
+    public IconButton.Icon focusIcon = IconButton.Icon.BOX_ON;
     /**
      * 悬浮文本中最长文本的长度，用于显示背景
      */

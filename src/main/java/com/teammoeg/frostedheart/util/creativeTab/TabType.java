@@ -23,9 +23,9 @@ package com.teammoeg.frostedheart.util.creativeTab;
 
 import java.util.function.Predicate;
 
-import dev.architectury.registry.registries.RegistrySupplier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraftforge.registries.RegistryObject;
 
 public class TabType implements Predicate<ResourceKey<CreativeModeTab>>{
 	public static final TabType HIDDEN=new TabType(e->false);
@@ -34,7 +34,7 @@ public class TabType implements Predicate<ResourceKey<CreativeModeTab>>{
 	public TabType(Predicate<ResourceKey<CreativeModeTab>> predicate) {
 		this.predicate = predicate;
 	}
-	public TabType(RegistrySupplier<CreativeModeTab> predicate) {
+	public TabType(RegistryObject<CreativeModeTab> predicate) {
 		this.predicate = e->e.equals(predicate.getKey());
 	}
 

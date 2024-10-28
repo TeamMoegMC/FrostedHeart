@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
 import com.teammoeg.frostedheart.content.tips.TipLockManager;
@@ -9,13 +8,10 @@ import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.*;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.util.Mth;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,7 +33,6 @@ public class TipListScreen extends Screen {
     private double textScroll = 0;
     private double displayListScroll = 0;
     private double displayTextScroll = 0;
-    public List<Button> buttons;
     public static String select = "";
 
     public TipListScreen(boolean background) {
@@ -45,21 +40,12 @@ public class TipListScreen extends Screen {
         this.background = background;
     }
 
-    @Override
-	protected <T extends GuiEventListener & Renderable & NarratableEntry> T addRenderableWidget(T pWidget) {
-		if(pWidget instanceof Button) {
-			buttons.add((Button) pWidget);
-		}
-		return super.addRenderableWidget(pWidget);
-	}
-
 	@Override
     public void init() {
-
-        this.addRenderableWidget(new IconButton(0, 0, IconButton.ICON_CROSS, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.close"), (button) -> {
+        this.addRenderableWidget(new IconButton(0, 0, IconButton.Icon.CROSS, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.close"), (button) -> {
             onClose();
         }));
-        this.addRenderableWidget(new IconButton(0, 0, IconButton.ICON_LOCK, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.pin"), (button) -> {
+        this.addRenderableWidget(new IconButton(0, 0, IconButton.Icon.LOCK, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.pin"), (button) -> {
             TipDisplayManager.forceAdd(selectEle, true);
         }));
 
@@ -101,18 +87,18 @@ public class TipListScreen extends Screen {
             renderTipContent(graphics, lx, y);
         }
 
-        IconButton closeButton = (IconButton)this.buttons.get(0);
+        IconButton closeButton = (IconButton)this.renderables.get(0);
         closeButton.setAlpha(fadeIn);
         closeButton.setXY(lx-12, y-14);
 
-        IconButton lockButton = (IconButton)this.buttons.get(1);
+        IconButton lockButton = (IconButton)this.renderables.get(1);
         lockButton.setAlpha(fadeIn);
         lockButton.setXY(lx-27, y-14);
 
         if (fadeIn > 0.5F && !tipList.isEmpty()) {
             graphics.pose().pushPose();
             graphics.pose().translate(0, displayListScroll, 0);
-            graphics.enableScissor(0, height/10, width, ((GuiHeight +16)));
+            graphics.enableScissor(0, height/10-16, width, ((GuiHeight +24)));
             renderList(graphics, tipList, (int)(width*0.05F), (int)(height*0.1F)-16, mouseX, mouseY);
             graphics.disableScissor();
             graphics.pose().popPose();
@@ -221,6 +207,7 @@ public class TipListScreen extends Screen {
                     for (int i = 2; i < customTipList.get(select).size(); i++) {
                         ele.contents.add(TranslateUtils.str(customTipList.get(select).get(i)));
                     }
+                    ele.alwaysVisible = ele.visibleTime < 0;
                     selectEle = ele;
                 } catch (Exception e) {
                     //移除有问题的自定义提示
@@ -244,31 +231,33 @@ public class TipListScreen extends Screen {
         int boxWidth = (int)(width*0.4F);
 
         graphics.pose().pushPose();
+        int textMinY = height/10+4;
         if (font.width(selectEle.contents.get(0).getString()) > x-32 - boxWidth) {
             graphics.pose().translate(0, displayTextScroll, 0);
-            graphics.enableScissor(0, height/10+4, width, GuiHeight -8);
+            graphics.enableScissor(0, textMinY, width, GuiHeight+textMinY -8);
             int line = 0;
             for (int i = 0; i < selectEle.contents.size(); i++) {
                 line += 1 + FHGuiHelper.drawSplitTexts(graphics, selectEle.contents.get(i), boxWidth + 4, y+4 + line*12,
-                        x-8 - boxWidth, textColor, 12, false);
+                        textColor, x-8 - boxWidth, 12, false);
             }
             textHeight = line*12;
+            graphics.disableScissor();
 
         } else if (selectEle.contents.size() > 1) {
-        	graphics.drawString(minecraft.font, selectEle.contents.get(0), boxWidth + 4, y - 12, textColor);
+            graphics.drawString(minecraft.font, selectEle.contents.get(0), boxWidth + 4, y - 12, textColor);
             graphics.pose().translate(0, displayTextScroll, 0);
-            graphics.enableScissor(0, height/10+4, width, GuiHeight -8);
+            graphics.enableScissor(0, textMinY, width, GuiHeight+textMinY -8);
             int line = 0;
             for (int i = 1; i < selectEle.contents.size(); i++) {
                 line += 1 + FHGuiHelper.drawSplitTexts(graphics, selectEle.contents.get(i), boxWidth + 4, y+4 + line*12,
-                        x-8 - boxWidth, textColor, 12, false);
+                        textColor, x-8 - boxWidth, 12, false);
             }
             textHeight = line*12;
+            graphics.disableScissor();
 
         } else {
-        	graphics.drawString(minecraft.font, selectEle.contents.get(0), boxWidth + 4, y - 12, textColor);
+            graphics.drawString(minecraft.font, selectEle.contents.get(0), boxWidth + 4, y - 12, textColor);
         }
-        RenderSystem.disableScissor();
         graphics.pose().popPose();
 
         //文本高度超出屏幕时渲染箭头
@@ -276,7 +265,7 @@ public class TipListScreen extends Screen {
             float animation = AnimationUtil.bounce(1000, "TipListDownArrow", true)*2;
             graphics.pose().pushPose();
             graphics.pose().translate(width*0.99F-14, height*0.9F-16-animation, 0);
-            IconButton.renderIcon(graphics.pose(), IconButton.ICON_DOWN, 0, 0, 0xFFC6FCFF);
+            IconButton.renderIcon(graphics.pose(), IconButton.Icon.DOWN, 0, 0, 0xFFC6FCFF);
             graphics.pose().popPose();
         }
     }
@@ -286,8 +275,8 @@ public class TipListScreen extends Screen {
         int barHeight = (int)Math.max(32, h/(maxHeight+h) * h);
         float barY = (float)((-(displayListScroll-1)/maxHeight)*(h-barHeight));
 
-        if (isDragging() || RawMouseHelper.isMouseIn(mouseX, mouseY, x, y+(int)barY, w, barHeight) && RawMouseHelper.isLeftClicked()) {
-            setDragging(ClientUtils.mc().mouseHandler.isLeftPressed());
+        if (isDragging() || RawMouseHelper.isMouseIn(mouseX, mouseY, x, y+(int)barY, w, barHeight) && RawMouseHelper.isLeftPressed()) {
+            setDragging(RawMouseHelper.isLeftPressed());
             if (RawMouseHelper.isMouseIn(mouseX, mouseY, 0, y, width, h)) {
                 setListScroll(listScroll - (mouseY-lastMouseY)*(maxHeight/(h-barHeight)));
             }
@@ -318,7 +307,7 @@ public class TipListScreen extends Screen {
         select = s;
         setTextScroll(0);
 
-        IconButton button = (IconButton)this.buttons.get(1);
+        IconButton button = (IconButton)renderables.get(1);
         button.visible = !select.isEmpty();
     }
 
@@ -359,40 +348,40 @@ public class TipListScreen extends Screen {
             return super.keyPressed(keyCode, scanCode, modifiers);
         }
 
-        int sel = tipList.indexOf(select);
+        int index = tipList.indexOf(select);
         switch (keyCode) {
-            case 258:
+            case GLFW.GLFW_KEY_TAB:
                 if (modifiers == 1) {
-                    if (sel > 0) {
-                        setSelect(tipList.get(sel-1));
+                    if (index > 0) {
+                        setSelect(tipList.get(index-1));
                     } else {
                         setSelect(tipList.get(tipList.size()-1));
                     }
                 } else {
-                    if (sel < tipList.size()-1) {
-                        setSelect(tipList.get(sel+1));
+                    if (index < tipList.size()-1) {
+                        setSelect(tipList.get(index+1));
                     } else {
                         setSelect(tipList.get(0));
                     }
                 }
                 return true;
-            case 83:
-            case 264:
-                if (sel < tipList.size()-1) {
-                    setSelect(tipList.get(sel+1));
+            case GLFW.GLFW_KEY_S:
+            case GLFW.GLFW_KEY_DOWN:
+                if (index < tipList.size()-1) {
+                    setSelect(tipList.get(index+1));
                 } else {
                     setSelect(tipList.get(0));
                 }
                 return true;
-            case 87:
-            case 265:
-                if (sel > 0) {
-                    setSelect(tipList.get(sel-1));
+            case GLFW.GLFW_KEY_W:
+            case GLFW.GLFW_KEY_UP:
+                if (index > 0) {
+                    setSelect(tipList.get(index-1));
                 } else {
                     setSelect(tipList.get(tipList.size()-1));
                 }
                 return true;
-            case 69:
+            case GLFW.GLFW_KEY_E:
                 onClose();
                 return true;
             default:
@@ -411,8 +400,6 @@ public class TipListScreen extends Screen {
             AnimationUtil.remove("TipListListSel" + name);
             AnimationUtil.remove("TipListListSelD" + name);
         });
-
-        TipDisplayManager.resetTipAnimation();
     }
 
     @Override

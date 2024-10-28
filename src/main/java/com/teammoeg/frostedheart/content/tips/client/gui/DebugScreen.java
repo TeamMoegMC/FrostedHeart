@@ -15,14 +15,17 @@ public class DebugScreen extends Screen {
 
     @Override
     public void init() {
-        this.addRenderableWidget(new IconButton((int) (this.width*0.5-45), (int) (this.height*0.4), IconButton.ICON_TRASH_CAN, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.clear_cache"), (b) -> {
+        this.addRenderableWidget(new IconButton((int) (this.width*0.5-45), (int) (this.height*0.4), IconButton.Icon.TRASH_CAN, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.clear_cache"), (b) -> {
             TipDisplayManager.clearCache();
         }));
-        this.addRenderableWidget(new IconButton((int) (this.width*0.5-25), (int) (this.height*0.4), IconButton.ICON_CROSS, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.clear_queue"), (b) -> {
+        this.addRenderableWidget(new IconButton((int) (this.width*0.5-25), (int) (this.height*0.4), IconButton.Icon.CROSS, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.clear_queue"), (b) -> {
             TipDisplayManager.clearRenderQueue();
         }));
-        this.addRenderableWidget(new IconButton((int) (this.width*0.5-5), (int) (this.height*0.4), IconButton.ICON_HISTORY, 0xFFFF5340, TranslateUtils.translate(FHMain.MODID + ".tips.gui.reset_unlock"), (b) -> {
+        this.addRenderableWidget(new IconButton((int) (this.width*0.5-5), (int) (this.height*0.4), IconButton.Icon.HISTORY, 0xFFFF5340, TranslateUtils.translate(FHMain.MODID + ".tips.gui.reset_unlock"), (b) -> {
             TipLockManager.manager.createFile();
+        }));
+        this.addRenderableWidget(new IconButton((int) (this.width*0.5+15), (int) (this.height*0.4), IconButton.Icon.HISTORY, 0xFFFF5340, TranslateUtils.translate(FHMain.MODID + ".tips.gui.reset_unlock"), (b) -> {
+            TipLockManager.TIPS.mkdirs();
         }));
     }
 

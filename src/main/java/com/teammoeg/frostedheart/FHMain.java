@@ -39,8 +39,6 @@ import com.teammoeg.frostedheart.util.utility.BlackListPredicate;
 import com.teammoeg.frostedheart.util.version.FHRemote;
 import com.teammoeg.frostedheart.util.version.FHVersion;
 import com.teammoeg.frostedheart.world.FHBiomes;
-import dev.architectury.registry.registries.DeferredRegister;
-import dev.architectury.registry.registries.RegistrySupplier;
 import dev.ftb.mods.ftbteams.api.event.TeamEvent;
 import net.minecraft.advancements.critereon.ItemPredicate;
 import net.minecraft.core.registries.Registries;
@@ -64,6 +62,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.RegistryObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -83,8 +83,8 @@ public class FHMain {
     public static File lastServerConfig;
     public static boolean saveNeedUpdate;
     public static final CreateRegistrate FH_REGISTRATE = CreateRegistrate.create(MODID);
-	public static final DeferredRegister<CreativeModeTab> TABS=DeferredRegister.create(MODID,Registries.CREATIVE_MODE_TAB);
-	public static final RegistrySupplier<CreativeModeTab> main=TABS.register("frostedheart_main",()->CreativeModeTab.builder().withTabsBefore(CreativeModeTabs.SPAWN_EGGS).icon(()->new ItemStack(FHItems.energy_core.get())).title(TranslateUtils.translate("itemGroup.frostedheart")).build());
+	public static final DeferredRegister<CreativeModeTab> TABS=DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
+	public static final RegistryObject<CreativeModeTab> main=TABS.register("frostedheart_main",()->CreativeModeTab.builder().withTabsBefore(CreativeModeTabs.SPAWN_EGGS).icon(()->new ItemStack(FHItems.energy_core.get())).title(TranslateUtils.translate("itemGroup.frostedheart")).build());
     public static final TabType itemGroup = new TabType(main);
 
     public static ResourceLocation rl(String path) {

@@ -31,7 +31,7 @@ public class TipLockManager {
     public static String errorType = "";
 
     static {
-        if (TIPS.mkdir()) {
+        if (TIPS.mkdirs()) {
             LOGGER.info("Config path created: '{}'", TIPS);
         }
         manager.loadFromFile();

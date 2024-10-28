@@ -22,7 +22,7 @@ public class AnimationUtil {
             add(animationLength, id);
         }
 
-        float progress = animations.get(id).getProgress(System.currentTimeMillis());
+        float progress = animations.get(id).getProgress(Util.getMillis());
         if (loop && progress >= 1.0F) {
             remove(id);}
         return Math.min(progress, 1.0F);

@@ -85,6 +85,10 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import org.lwjgl.glfw.GLFW;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -582,9 +586,24 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        // write a default tip with form { "contents": ["Default Tip."] } in config/fhtips/tips/default.json
+        File filePath = new File(TipLockManager.TIPS, "default.json");
+        if (!filePath.exists()) {
+
+            // Write the file to the file system as a json file
+            String content = "{\"contents\": [\"Default Tip.\"]}";
+            // Write the file to the file system as a json file
+            // Use raw java methods
+            try {
+                Files.write(Paths.get(filePath.getAbsolutePath()), content.getBytes());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
         TipDisplayManager.clearRenderQueue();
         TipDisplayManager.displayTip("default", false);
-        TipDisplayManager.displayTip("default2", false);
+//        TipDisplayManager.displayTip("default2", false);
 //        if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) == 0) {
 //            TipDisplayManager.displayTip("music_warning", false);
 //        }

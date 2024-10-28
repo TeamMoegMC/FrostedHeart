@@ -10,6 +10,6 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 
 @Mixin(CapabilityManager.class)
 public interface CapabilityManagerAccess {
-	@Accessor(remap=false)
+	@Accessor(value="providers", remap=false)
 	IdentityHashMap<String, Capability<?>> getProviders();
 }
