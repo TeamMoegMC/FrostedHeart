@@ -271,6 +271,9 @@ dependencies {
     // Comforts
     implementation fg.deobf("curse.maven:comforts-276951:5503516")
 
+    // Terralith
+    implementation "curse.maven:terralith-513688:5512076"
+
 
     // dead mods:
 //    implementation fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")

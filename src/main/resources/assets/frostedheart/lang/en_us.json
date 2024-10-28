@@ -1,4 +1,8 @@
 {
+  "world_preset.frostedheart.snowy_tundra": "TWR - Snowy Tundra",
+  "world_preset.frostedheart.vanilla": "TWR - Vanilla",
+  "world_preset.frostedheart.twr": "TWR - Main",
+  "world_preset.frostedheart.twr_terralith": "TWR - Terralith",
   "attribute.frostedheart.insulation": "Insulation",
   "attribute.frostedheart.windproof": "Water Proof",
   "attribute.frostedheart.heatproof": "Heat Proof",
