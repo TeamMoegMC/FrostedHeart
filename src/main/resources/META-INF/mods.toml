@@ -455,3 +455,45 @@ Evan
     ordering="BEFORE"
     side="BOTH"
 
+[[dependencies.frostedheart]]
+    modId="terralith"
+    mandatory=false
+    versionRange="[2.5.4,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="caupona"
+    mandatory=true
+    versionRange="[1.20.1-0.4.9,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="crockpot"
+    mandatory=false
+    versionRange="[1.0.1,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="stone_age"
+    mandatory=false
+    versionRange="[1.4.8,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="charcoal_pit"
+    mandatory=false
+    versionRange="[3.10,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="curios"
+    mandatory=true
+    versionRange="[5.9.1+1.20.1,)"
+    ordering="BEFORE"
+    side="BOTH"
+
