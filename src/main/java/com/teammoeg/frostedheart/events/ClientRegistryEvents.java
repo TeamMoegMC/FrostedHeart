@@ -21,19 +21,17 @@ package com.teammoeg.frostedheart.events;
 
 import java.util.function.Function;
 
+import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.client.particles.WetSteamParticle;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorState;
+import com.teammoeg.frostedheart.world.entities.CuriosityEntityModel;
+import com.teammoeg.frostedheart.world.entities.CuriosityEntityRenderer;
+import net.minecraftforge.client.event.*;
 import org.lwjgl.glfw.GLFW;
 
-import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.FHMenuTypes;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHMultiblocks;
-import com.teammoeg.frostedheart.FHParticleTypes;
-import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.client.model.DynamicBlockModelReference;
 import com.teammoeg.frostedheart.client.model.LiningModel;
 import com.teammoeg.frostedheart.client.particles.BreathParticle;
@@ -79,10 +77,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent.AddLayers;
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterLayerDefinitions;
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers;
-import net.minecraftforge.client.event.ModelEvent;
-import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
-import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
-import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -274,6 +268,16 @@ public class ClientRegistryEvents {
     	event.registerSpriteSet(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);
     	event.registerSpriteSet(FHParticleTypes.BREATH.get(), BreathParticle.Factory::new);
     	event.registerSpriteSet(FHParticleTypes.WET_STEAM.get(), WetSteamParticle.Factory::new);
+    }
+
+    @SubscribeEvent
+    public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(FHEntities.EXAMPLE_ENTITY.get(), CuriosityEntityRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(CuriosityEntityModel.LAYER_LOCATION, CuriosityEntityModel::createBodyLayer);
     }
 
 }

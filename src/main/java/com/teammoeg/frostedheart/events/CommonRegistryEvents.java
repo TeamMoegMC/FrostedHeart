@@ -19,11 +19,18 @@
 
 package com.teammoeg.frostedheart.events;
 
+import com.simibubi.create.compat.curios.Curios;
 import com.teammoeg.frostedheart.FHAttributes;
+import com.teammoeg.frostedheart.FHEntities;
 import com.teammoeg.frostedheart.FHMain;
 
+import com.teammoeg.frostedheart.world.entities.CuriosityEntity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.SpawnPlacements;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
+import net.minecraftforge.event.entity.SpawnPlacementRegisterEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -52,4 +59,20 @@ public class CommonRegistryEvents {
         ModLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "modids"), new LootItemConditionType(new ModLootCondition.Serializer()));
         BlizzardDamageCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "blizzard_damage"), new LootItemConditionType(new BlizzardDamageCondition.Serializer()));
     }*/
+
+	@SubscribeEvent
+	public static void entityAttributes(EntityAttributeCreationEvent event) {
+		event.put(FHEntities.EXAMPLE_ENTITY.get(), CuriosityEntity.createAttributes().build());
+	}
+
+	@SubscribeEvent
+	public static void registerSpawnPlacements(SpawnPlacementRegisterEvent event) {
+		event.register(
+				FHEntities.EXAMPLE_ENTITY.get(),
+				SpawnPlacements.Type.ON_GROUND,
+				Heightmap.Types.WORLD_SURFACE,
+				CuriosityEntity::canSpawn,
+				SpawnPlacementRegisterEvent.Operation.OR
+		);
+	}
 }

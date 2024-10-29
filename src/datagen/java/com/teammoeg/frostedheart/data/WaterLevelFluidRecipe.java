@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.data;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.content.water.recipe.ThirstRecipe;
+import com.teammoeg.frostedheart.content.water.recipe.WaterLevelAndEffectRecipe;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import net.minecraft.data.recipes.FinishedRecipe;
@@ -42,7 +42,7 @@ public class WaterLevelFluidRecipe implements FinishedRecipe {
 
 	@Override
 	public RecipeSerializer<?> getType() {
-		return ThirstRecipe.SERIALIZER.get();
+		return WaterLevelAndEffectRecipe.SERIALIZER.get();
 	}
 
 	@Override
