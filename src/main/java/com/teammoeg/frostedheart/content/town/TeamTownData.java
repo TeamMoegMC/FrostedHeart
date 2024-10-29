@@ -110,8 +110,9 @@ public class TeamTownData implements SpecialData{
     public void tick(ServerLevel world) {
         removeNonTownBlocks(world);
         PriorityQueue<TownWorkerData> pq = new PriorityQueue<>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
+        this.resources.put(TownResourceType.STORAGE, 0);//每次工作都重置城镇总资源容量，从Warehouse处重新获取
         for(TownWorkerData workerData : blocks.values()){
-            if(world.isAreaLoaded(workerData.getPos(), 1)){
+            if(world.isLoaded(workerData.getPos())){
                 workerData.toTileEntity(world);
                 workerData.updateFromTileEntity(world);
             }

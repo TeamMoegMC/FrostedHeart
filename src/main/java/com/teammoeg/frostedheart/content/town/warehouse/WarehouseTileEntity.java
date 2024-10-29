@@ -43,6 +43,7 @@ public class WarehouseTileEntity extends AbstractTownWorkerTileEntity{
             if(scanner.scan()){
                 this.area = scanner.getArea();
                 this.volume = scanner.getVolume();
+                //容量与体积相似，但是在随着房间高度增高略有衰减
                 this.capacity = area*Math.pow((volume*0.02/area), 0.9)*37;
                 this.occupiedArea = scanner.getOccupiedArea();
                 return true;

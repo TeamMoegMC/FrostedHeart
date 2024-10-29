@@ -30,7 +30,9 @@ import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseTileEntity;
 import com.teammoeg.frostedheart.content.town.mine.MineTileEntity;
+import com.teammoeg.frostedheart.content.town.mine.MineWorker;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.warehouse.WarehouseWorker;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -59,8 +61,8 @@ public enum TownWorkerType {
         double actualCost = town.cost(TownResourceType.PREP_FOOD, residentNum, false);
         return Math.abs(residentNum - actualCost) < 0.001;
     }, 0),
-    WAREHOUSE(FHBlocks.warehouse, null, 0),
-    MINE(FHBlocks.mine, new MineTileEntity.MineWorker(), 0, true,
+    WAREHOUSE(FHBlocks.warehouse, new WarehouseWorker(), 0),
+    MINE(FHBlocks.mine, new MineWorker(), 0, true,
             (currentResidentNum, nbt) -> {
         int maxResident = nbt.getCompound("tileEntity").getInt("maxResident");
         double rating = TownWorkerData.getRating(nbt);
