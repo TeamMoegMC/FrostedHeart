@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -29,14 +28,11 @@ import com.teammoeg.frostedheart.FHBlocks;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseTileEntity;
-import com.teammoeg.frostedheart.content.town.mine.MineTileEntity;
 import com.teammoeg.frostedheart.content.town.mine.MineWorker;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseWorker;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 
 import static java.lang.Double.NEGATIVE_INFINITY;
 

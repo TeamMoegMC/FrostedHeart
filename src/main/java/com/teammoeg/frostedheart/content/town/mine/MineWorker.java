@@ -31,7 +31,7 @@ public class MineWorker implements TownWorker {
                     .map(teamTown::getResident)
                     .map(optional -> optional.orElse(null))
                     .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+                    .toList();
             for(Resident resident : residents){
                 double add = rating * resident.getWorkScore(TownWorkerType.MINE);
                 double randomDouble = MathUtils.RANDOM.nextDouble();

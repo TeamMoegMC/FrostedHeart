@@ -149,9 +149,9 @@ public class TeamTownData implements SpecialData{
 
     public void tickMorning(ServerLevel world){
         this.updateAllBlocks(world);
-        this.checkOccupiedAreaOverlap(world);
+        this.checkOccupiedAreaOverlap();
         this.connectMineAndBase();
-        this.residentAllocatingCheck(world);
+        this.residentAllocatingCheck();
         this.allocateHouse();
         this.assignWork();
     }
@@ -213,7 +213,7 @@ public class TeamTownData implements SpecialData{
 
 	}
 
-    private void checkOccupiedAreaOverlap(ServerLevel world){
+    private void checkOccupiedAreaOverlap(){
         //removeNonTownBlocks(world);
         Collection<TownWorkerData> workerDataCollection =  new ArrayList<>(blocks.values());
         List<TownWorkerData> workerDataList = new ArrayList<>(workerDataCollection);
@@ -252,7 +252,7 @@ public class TeamTownData implements SpecialData{
         }
     }
 
-    private void residentAllocatingCheck(ServerLevel world){
+    private void residentAllocatingCheck(){
         //清空residents里所有居民存储的的house和work位置，之后再加回来，以刷新居民的工作和房屋
         residents.values().forEach(resident -> {
             resident.setHousePos(null);
@@ -361,7 +361,7 @@ public class TeamTownData implements SpecialData{
                 .map(TempDataHolder::new)
                 .sorted(Comparator.comparingDouble(o -> -o.residentPriority))//降序排列
                 .collect(Collectors.toList());
-        if(availableWorkers.size() == 0) return;
+        if(availableWorkers.isEmpty()) return;
         for(int i=0;i<1024;i++){//无意义，仅用于限制循环次数
             TempDataHolder topPriorityWorker = availableWorkers.get(0);//由于已经降序排列，取集合最靠前的为最高优先级
             if(topPriorityWorker.residentPriority == Double.NEGATIVE_INFINITY || availableResidents.isEmpty()){
