@@ -48,6 +48,7 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHRecipeProvider extends RecipeProvider {
 	private final HashMap<String, Integer> PATH_COUNT = new HashMap<>();
@@ -69,7 +70,7 @@ public class FHRecipeProvider extends RecipeProvider {
 					if(!line.isEmpty()) {
 						String[] parts=line.split(",");
 						if(parts.length==0)break;
-						ResourceLocation id=new ResourceLocation(FHMain.MODID,"diet_value/"+parts[0].replaceAll(":","/"));
+						//ResourceLocation id=new ResourceLocation(FHMain.MODID,"diet_value/"+parts[0].replaceAll(":","/"));
 						ResourceLocation item=new ResourceLocation(parts[0]);
 						Item it=RegistryUtils.getItem(item);
 						if(it==null||it==Items.AIR) {
@@ -82,15 +83,13 @@ public class FHRecipeProvider extends RecipeProvider {
 							else
 								ps.println(item+","+f.getNutrition());
 						}
-						DietValueBuilder dvb=new DietValueBuilder(id,item);
-						for(int i=0;i<6;i++) {
-							float f=Float.parseFloat(parts[i+2])*10f;
-							if(i>=4)
-								f*=1.5;
-							if(f!=0)
-								dvb.addGroup(i,f);
-						}
-						out.accept(dvb);
+						NutritionRecipeBuilder dvb=new NutritionRecipeBuilder().item(it);
+						float f1=Float.parseFloat(parts[2])*10f;
+						float f2=Float.parseFloat(parts[3])*10f;
+						float f3=Float.parseFloat(parts[4])*10f;
+						float f4=Float.parseFloat(parts[5])*10f;
+						dvb.nutrition(f1,f2,f3,f4);
+						dvb.save(out);
 					}
 				}
 			}
