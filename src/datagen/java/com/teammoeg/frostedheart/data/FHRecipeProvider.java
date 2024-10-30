@@ -70,7 +70,7 @@ public class FHRecipeProvider extends RecipeProvider {
 					if(!line.isEmpty()) {
 						String[] parts=line.split(",");
 						if(parts.length==0)break;
-						//ResourceLocation id=new ResourceLocation(FHMain.MODID,"diet_value/"+parts[0].replaceAll(":","/"));
+						ResourceLocation id=new ResourceLocation(FHMain.MODID,"diet_value/"+parts[0].replaceAll(":","/"));
 						ResourceLocation item=new ResourceLocation(parts[0]);
 						Item it=RegistryUtils.getItem(item);
 						if(it==null||it==Items.AIR) {
@@ -89,7 +89,7 @@ public class FHRecipeProvider extends RecipeProvider {
 						float f3=Float.parseFloat(parts[4])*10f;
 						float f4=Float.parseFloat(parts[5])*10f;
 						dvb.nutrition(f1,f2,f3,f4);
-						dvb.save(out);
+						dvb.save(out,id);
 					}
 				}
 			}
