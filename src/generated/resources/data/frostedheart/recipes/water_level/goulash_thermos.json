@@ -1,9 +1,9 @@
 {
-  "type": "watersource:water_level_fluid",
+  "type": "frostedheart:water_level_and_effect",
+  "fluid": "caupona:goulash",
   "ingredient": {
     "tag": "frostedheart:thermos"
   },
   "waterLevel": 2,
-  "waterSaturationLevel": 2,
-  "fluid": "thermopolium:goulash"
+  "waterSaturationLevel": 2
 }
