@@ -25,15 +25,6 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "watersource:coconut_milk_bottle"
-        }
-      ]
-    },
-    {
-      "rolls":1,
-      "entries": [
-        {
-          "type": "minecraft:item",
           "name": "frostedheart:weather_radar"
         },
         {
