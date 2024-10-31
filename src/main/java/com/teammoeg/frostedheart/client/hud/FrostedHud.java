@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.teammoeg.frostedheart.FHMobEffects;
+import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -559,9 +560,9 @@ public class FrostedHud {
         }
         unit.blit(stack, x, 0, BasePos.forecast_unit);
         // day render
-        BasePos.forecast_date.drawText(stack,"" + date,x,y,0xe6e6f2);
+        BasePos.forecast_date.drawText(stack,"" + date,x,0,0xe6e6f2);
 
-        BasePos.forecast_temp.drawText(stack,"" + Math.round(temperature),x,y,0xe6e6f2);
+        BasePos.forecast_temp.drawText(stack,"" + Math.round(temperature),x,0,0xe6e6f2);
 
 
         RenderSystem.disableBlend();
@@ -933,10 +934,10 @@ public class FrostedHud {
     }
 
     public static void renderThirst(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
-      /*  mc.getProfiler().push("frostedheart_thirst");
+        mc.getProfiler().push("frostedheart_thirst");
         RenderSystem.enableBlend();
 
-        MobEffectInstance effectInstance = mc.player.getEffect(EffectRegistry.THIRST);
+        MobEffectInstance effectInstance = mc.player.getEffect(FHMobEffects.THIRST.get());
         boolean isThirsty = effectInstance != null;
         HUDElements.right_half_frame.blitAt(stack, x, y, BasePos.right_half_2);
         if (isThirsty) {
@@ -944,13 +945,13 @@ public class FrostedHud {
         } else {
             HUDElements.icon_thirst_normal.blitAt(stack, x, y, IconPos.right_half_2);
         }
-        player.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(data -> {
+        WaterLevelCapability.getCapability(player).ifPresent(data -> {
             int waterLevel = data.getWaterLevel();
             int waterLevelState = Mth.ceil(waterLevel / 20.0F * 100) - 1;
             Atlases.thirst_bar.blitAtlasVH(stack, x, y, BarPos.right_half_2, waterLevelState);
         });
 
         RenderSystem.disableBlend();
-        mc.getProfiler().pop();*/
+        mc.getProfiler().pop();
     }
 }
