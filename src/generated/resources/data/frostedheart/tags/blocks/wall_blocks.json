@@ -1,0 +1,10 @@
+{
+  "values": [
+    "#minecraft:doors",
+    "#minecraft:walls",
+    "#forge:fences",
+    "#forge:fence_gates",
+    "#forge:glass_panes",
+    "minecraft:iron_bars"
+  ]
+}
