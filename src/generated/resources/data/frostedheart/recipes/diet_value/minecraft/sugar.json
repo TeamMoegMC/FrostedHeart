@@ -1,7 +1,10 @@
 {
   "type": "frostedheart:diet_override",
-  "groups": {
-    "sugars": 0.01841565
+  "group": {
+    "carbohydrate": 0.0,
+    "fat": 0.0,
+    "protein": 0.0,
+    "vegetable": 0.0
   },
   "item": "minecraft:sugar"
 }

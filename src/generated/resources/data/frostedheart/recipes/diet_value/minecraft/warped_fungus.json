@@ -1,7 +1,10 @@
 {
   "type": "frostedheart:diet_override",
-  "groups": {
-    "vegetables": 0.011857361
+  "group": {
+    "carbohydrate": 0.0,
+    "fat": 0.0,
+    "protein": 0.0,
+    "vegetable": 0.011857361
   },
   "item": "minecraft:warped_fungus"
 }

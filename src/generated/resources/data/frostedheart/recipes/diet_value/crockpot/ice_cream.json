@@ -1,9 +1,10 @@
 {
   "type": "frostedheart:diet_override",
-  "groups": {
-    "sugars": 0.02455419,
-    "proteins": 0.023714721,
-    "vitamin": 0.02455419
+  "group": {
+    "carbohydrate": 0.0,
+    "fat": 0.0,
+    "protein": 0.023714721,
+    "vegetable": 0.0
   },
   "item": "crockpot:ice_cream"
 }

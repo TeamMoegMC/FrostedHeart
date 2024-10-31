@@ -1,8 +1,10 @@
 {
   "type": "frostedheart:diet_override",
-  "groups": {
-    "sugars": 0.012277095,
-    "grains": 0.02892616
+  "group": {
+    "carbohydrate": 0.02892616,
+    "fat": 0.0,
+    "protein": 0.0,
+    "vegetable": 0.0
   },
   "item": "frostedheart:compressed_biscuits_pack"
 }

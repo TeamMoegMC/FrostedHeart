@@ -1,8 +1,10 @@
 {
   "type": "frostedheart:diet_override",
-  "groups": {
-    "proteins": 0.031946782,
-    "vitamin": 0.014030969
+  "group": {
+    "carbohydrate": 0.0,
+    "fat": 0.0,
+    "protein": 0.031946782,
+    "vegetable": 0.0
   },
   "item": "frostedheart:chocolate"
 }

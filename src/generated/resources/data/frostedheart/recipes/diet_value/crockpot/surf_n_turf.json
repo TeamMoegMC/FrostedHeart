@@ -1,8 +1,10 @@
 {
   "type": "frostedheart:diet_override",
-  "groups": {
-    "proteins": 0.02492219,
-    "vitamin": 0.035715193
+  "group": {
+    "carbohydrate": 0.0,
+    "fat": 0.0,
+    "protein": 0.02492219,
+    "vegetable": 0.0
   },
   "item": "crockpot:surf_n_turf"
 }

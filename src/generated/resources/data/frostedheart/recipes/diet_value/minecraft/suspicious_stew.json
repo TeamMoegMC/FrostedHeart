@@ -1,9 +1,10 @@
 {
   "type": "frostedheart:diet_override",
-  "groups": {
-    "proteins": 0.01082424,
-    "vegetables": 0.01082424,
-    "vitamin": 0.032672852
+  "group": {
+    "carbohydrate": 0.0,
+    "fat": 0.0,
+    "protein": 0.01082424,
+    "vegetable": 0.01082424
   },
   "item": "minecraft:suspicious_stew"
 }
