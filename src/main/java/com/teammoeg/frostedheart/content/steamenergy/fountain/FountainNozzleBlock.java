@@ -111,8 +111,8 @@ public class FountainNozzleBlock extends FHBaseBlock {
                 invalid = world.getBlockState(pos.below()).getValue(HEIGHT) != height - 1;
 
             if (!invalid)
-                invalid = world.getBlockState(pos.below(height)).getBlock() != FHBlocks.fountain.get() &&
-                          world.getBlockState(pos.below(height)).getBlock() != FHBlocks.fountain_nozzle.get();
+                invalid = world.getBlockState(pos.below(height)).getBlock() != FHBlocks.FOUNTAIN_BASE.get() &&
+                          world.getBlockState(pos.below(height)).getBlock() != FHBlocks.FOUNTAIN_NOZZLE.get();
 
             if (invalid) {
                 world.setBlockAndUpdate(pos, state.setValue(HEIGHT, 0));
@@ -138,9 +138,9 @@ public class FountainNozzleBlock extends FHBaseBlock {
         BlockState below = world.getBlockState(pos.below());
 
         if (height > 0) {
-            if (below.getBlock() == FHBlocks.fountain.get()) {
+            if (below.getBlock() == FHBlocks.FOUNTAIN_BASE.get()) {
                 if (height != 1) world.setBlockAndUpdate(pos, state.setValue(HEIGHT, 1));
-            } else if (below.getBlock() == FHBlocks.fountain_nozzle.get()) {
+            } else if (below.getBlock() == FHBlocks.FOUNTAIN_NOZZLE.get()) {
                 if (below.getValue(HEIGHT) != height - 1)
                     world.setBlockAndUpdate(pos, state.setValue(HEIGHT, below.getValue(HEIGHT) + 1));
             } else {

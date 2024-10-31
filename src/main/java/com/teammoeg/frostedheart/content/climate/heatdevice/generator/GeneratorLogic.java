@@ -197,7 +197,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
                         materials.add(picked.copy());
                 }
                 if (materials.isEmpty()) return null;
-                upgrade = materials.stream().filter(Ingredient.of(FHBlocks.generator_core_t1.get()).negate()).map(IngredientWithSize::of).collect(Collectors.toList());
+                upgrade = materials.stream().filter(Ingredient.of(FHBlocks.GENERATOR_CORE_T1.get()).negate()).map(IngredientWithSize::of).collect(Collectors.toList());
             }
             return upgrade;
         }

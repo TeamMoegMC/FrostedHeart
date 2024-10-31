@@ -170,15 +170,15 @@ public class ClientRegistryEvents {
 
         // Register translucent render type
         //TODO: specify in model files
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.rye_block.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.white_turnip_block.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.wolfberry_bush_block.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.drawing_desk.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.charger.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.mech_calc.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.steam_core.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.debug_heater.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.relic_chest.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.RYE_BLOCK.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.WHITE_TURNIP_BLOCK.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.WOLFBERRY_BUSH_BLOCK.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.DRAWING_DESK.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.CHARGER.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.MECHANICAL_CALCULATOR.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.STEAM_CORE.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.DEBUG_HEATER.get(), RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(FHBlocks.RELIC_CHEST.get(), RenderType.cutout());
 //        ItemBlockRenderTypes.setRenderLayer(FHBlocks.fluorite_ore.get(), RenderType.cutout());
 //        ItemBlockRenderTypes.setRenderLayer(FHBlocks.halite_ore.get(), RenderType.cutout());
 /*

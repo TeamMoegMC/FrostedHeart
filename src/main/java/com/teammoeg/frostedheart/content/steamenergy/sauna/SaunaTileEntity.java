@@ -115,7 +115,7 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBloc
                 for (Direction dir : HORIZONTALS) {
                     BlockPos act = crn.relative(dir);
                     // if crn connected to plank
-                    if (l.isLoaded(act) && (l.getBlockState(act).is(BlockTags.PLANKS) || l.getBlockState(act).is(FHBlocks.sauna.get()))) {
+                    if (l.isLoaded(act) && (l.getBlockState(act).is(BlockTags.PLANKS) || l.getBlockState(act).is(FHBlocks.SAUNA_VENT.get()))) {
                         findNext(l, act, orig, poss, edges);
                     }
                     // otherwise, crn is an edge block

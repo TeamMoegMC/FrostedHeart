@@ -10,14 +10,11 @@ import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.data.ExistingFileHelper;
-import net.minecraftforge.common.data.ForgeBlockTagsProvider;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
@@ -180,9 +177,9 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
 
         // crops
         tag(BlockTags.CROPS)
-                .add(rk(FHBlocks.rye_block))
-                .add(rk(FHBlocks.white_turnip_block))
-                .add(rk(FHBlocks.wolfberry_bush_block));
+                .add(rk(FHBlocks.RYE_BLOCK))
+                .add(rk(FHBlocks.WHITE_TURNIP_BLOCK))
+                .add(rk(FHBlocks.WOLFBERRY_BUSH_BLOCK));
 
         // beacon
         tag(BlockTags.BEACON_BASE_BLOCKS)
@@ -216,9 +213,9 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.ROTTEN_WOOD))
                 .add(rk(FHBlocks.ROTTEN_WOOD_PERMAFROST))
                 // deco
-                .add(rk(FHBlocks.wooden_box))
-                .add(rk(FHBlocks.small_garage))
-                .add(rk(FHBlocks.package_block));
+                .add(rk(FHBlocks.WOODEN_BOX))
+                .add(rk(FHBlocks.SMALL_GARAGE))
+                .add(rk(FHBlocks.PACKAGE_BLOCK));
 
         tag(BlockTags.MINEABLE_WITH_HOE);
 
@@ -266,13 +263,15 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.MAGNESITE_BLOCK))
                 .add(rk(FHBlocks.MAGNESIA_BLOCK))
                 // building
-                .add(rk(FHBlocks.generator_core_t1))
-                .add(rk(FHBlocks.generator_brick))
-                .add(rk(FHBlocks.generator_amplifier_r1))
+                .add(rk(FHBlocks.GENERATOR_CORE_T1))
+                .add(rk(FHBlocks.GENERATOR_BRICK))
+                .add(rk(FHBlocks.GENERATOR_AMPLIFIER_T1))
                 .add(rk(FHBlocks.DURALUMIN_SHEETMETAL))
                 // deco
-                .add(rk(FHBlocks.pebble_block))
-                .add(rk(FHBlocks.odd_mark));
+                .add(rk(FHBlocks.PEBBLE_BLOCK))
+                .add(rk(FHBlocks.ODD_MARK))
+                .add(rk(FHBlocks.MAKESHIFT_GENERATOR_BROKEN))
+                .add(rk(FHBlocks.BROKEN_PLATE));
 
         tag(BlockTags.MINEABLE_WITH_SHOVEL)
                 // condensed snow ores
@@ -300,7 +299,7 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.BAUXITE))
                 .add(rk(FHBlocks.BURIED_PODZOL))
                 .add(rk(FHBlocks.BURIED_MYCELIUM))
-                .add(rk(FHBlocks.copper_gravel))
+                .add(rk(FHBlocks.COPPER_GRAVEL))
                 // permafrost
                 .add(rk(FHBlocks.DIRT_PERMAFROST))
                 .add(rk(FHBlocks.MYCELIUM_PERMAFROST))
@@ -319,8 +318,8 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.PACKED_SNOW))
                 .add(rk(FHBlocks.PACKED_SNOW_SLAB))
                 // deco
-                .add(rk(FHBlocks.blood_block))
-                .add(rk(FHBlocks.bone_block));
+                .add(rk(FHBlocks.BLOOD_BLOCK))
+                .add(rk(FHBlocks.BONE_BLOCK));
 
         tag(BlockTags.SWORD_EFFICIENT);
 

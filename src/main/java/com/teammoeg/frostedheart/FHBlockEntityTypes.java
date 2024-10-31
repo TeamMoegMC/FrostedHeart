@@ -62,31 +62,31 @@ public class FHBlockEntityTypes {
     public static final DeferredRegister<BlockEntityType<?>> REGISTER = DeferredRegister.create(
             ForgeRegistries.BLOCK_ENTITY_TYPES, FHMain.MODID);
     public static final RegistryObject<BlockEntityType<HeatPipeTileEntity>> HEATPIPE = REGISTER.register(
-            "heat_pipe", makeType(HeatPipeTileEntity::new, FHBlocks.heat_pipe)
+            "heat_pipe", makeType(HeatPipeTileEntity::new, FHBlocks.HEAT_PIPE)
     );
     public static final RegistryObject<BlockEntityType<DebugHeaterTileEntity>> DEBUGHEATER = REGISTER.register(
-            "debug_heater", makeType(DebugHeaterTileEntity::new,  FHBlocks.debug_heater)
+            "debug_heater", makeType(DebugHeaterTileEntity::new,  FHBlocks.DEBUG_HEATER)
     );
     public static final RegistryObject<BlockEntityType<ChargerTileEntity>> CHARGER = REGISTER.register(
-            "charger", makeType(ChargerTileEntity::new, FHBlocks.charger)
+            "charger", makeType(ChargerTileEntity::new, FHBlocks.CHARGER)
     );
 
     public static final RegistryObject<BlockEntityType<OilBurnerTileEntity>> OIL_BURNER = REGISTER.register(
-            "oil_burner", makeType(OilBurnerTileEntity::new, FHBlocks.oilburner)
+            "oil_burner", makeType(OilBurnerTileEntity::new, FHBlocks.OIL_BURNER)
     );
     public static final RegistryObject<BlockEntityType<GasVentTileEntity>> GAS_VENT = REGISTER.register(
-            "gas_vent", makeType(GasVentTileEntity::new, FHBlocks.gasvent)
+            "gas_vent", makeType(GasVentTileEntity::new, FHBlocks.GAS_VENT)
     );
 
     public static final RegistryObject<BlockEntityType<DrawingDeskTileEntity>> DRAWING_DESK = REGISTER.register(
-            "drawing_desk", makeType(DrawingDeskTileEntity::new, FHBlocks.drawing_desk)
+            "drawing_desk", makeType(DrawingDeskTileEntity::new, FHBlocks.DRAWING_DESK)
     );
     public static final RegistryObject<BlockEntityType<RelicChestTileEntity>> RELIC_CHEST = REGISTER.register(
-            "relic_chest", makeType(RelicChestTileEntity::new, FHBlocks.relic_chest)
+            "relic_chest", makeType(RelicChestTileEntity::new, FHBlocks.RELIC_CHEST)
     );
 
     public static final RegistryObject<BlockEntityType<MechCalcTileEntity>> MECH_CALC = REGISTER.register(
-            "mechanical_calculator", makeType(MechCalcTileEntity::new, FHBlocks.mech_calc)
+            "mechanical_calculator", makeType(MechCalcTileEntity::new, FHBlocks.MECHANICAL_CALCULATOR)
     );
 
     /*public static final RegistryObject<TileEntityType<SteamCoreTileEntity>> STEAM_CORE = REGISTER.register(
@@ -95,40 +95,40 @@ public class FHBlockEntityTypes {
     public static final BlockEntityEntry<SteamCoreTileEntity> STEAM_CORE = FH_REGISTRATE
         .blockEntity("steam_core", SteamCoreTileEntity::new)
         .instance(() -> HorizontalHalfShaftInstance::new)
-        .validBlocks(FHBlocks.steam_core)
+        .validBlocks(FHBlocks.STEAM_CORE)
         .renderer(() -> HalfShaftRenderer::new)
         .register();
 
     public static final RegistryObject<BlockEntityType<FountainTileEntity>> FOUNTAIN = REGISTER.register(
-            "fountain", makeType(FountainTileEntity::new, FHBlocks.fountain)
+            "fountain", makeType(FountainTileEntity::new, FHBlocks.FOUNTAIN_BASE)
     );
 
     public static final RegistryObject<BlockEntityType<SaunaTileEntity>> SAUNA = REGISTER.register(
-            "sauna", makeType(SaunaTileEntity::new, FHBlocks.sauna)
+            "sauna", makeType(SaunaTileEntity::new, FHBlocks.SAUNA_VENT)
     );
     public static final RegistryObject<BlockEntityType<?>> INCUBATOR = REGISTER.register(
-            "incubator", makeType(IncubatorTileEntity::new, FHBlocks.incubator1)
+            "incubator", makeType(IncubatorTileEntity::new, FHBlocks.INCUBATOR)
     );
     public static final RegistryObject<BlockEntityType<?>> INCUBATOR2 = REGISTER.register(
-            "heat_incubator", makeType(HeatIncubatorTileEntity::new, FHBlocks.incubator2)
+            "heat_incubator", makeType(HeatIncubatorTileEntity::new, FHBlocks.HEAT_INCUBATOR)
     );
     public static final RegistryObject<BlockEntityType<HouseTileEntity>> HOUSE = REGISTER.register(
-            "house", makeType(HouseTileEntity::new, FHBlocks.house)
+            "house", makeType(HouseTileEntity::new, FHBlocks.HOUSE)
     );
     public static final RegistryObject<BlockEntityType<WarehouseTileEntity>> WAREHOUSE = REGISTER.register(
-            "warehouse", makeType(WarehouseTileEntity::new, FHBlocks.warehouse)
+            "warehouse", makeType(WarehouseTileEntity::new, FHBlocks.WAREHOUSE)
     );
     public static final RegistryObject<BlockEntityType<MineTileEntity>> MINE = REGISTER.register(
-            "mine", makeType(MineTileEntity::new, FHBlocks.mine)
+            "mine", makeType(MineTileEntity::new, FHBlocks.MINE)
     );
     public static final RegistryObject<BlockEntityType<MineBaseTileEntity>> MINE_BASE = REGISTER.register(
-            "mine_base", makeType(MineBaseTileEntity::new, FHBlocks.mine_base)
+            "mine_base", makeType(MineBaseTileEntity::new, FHBlocks.MINE_BASE)
     );
     public static final RegistryObject<BlockEntityType<HuntingCampTileEntity>> HUNTING_CAMP = REGISTER.register(
-            "hunting_camp", makeType(HuntingCampTileEntity::new, FHBlocks.hunting_camp)
+            "hunting_camp", makeType(HuntingCampTileEntity::new, FHBlocks.HUNTING_CAMP)
     );
     public static final RegistryObject<BlockEntityType<HuntingBaseTileEntity>> HUNTING_BASE = REGISTER.register(
-            "hunting_base", makeType(HuntingBaseTileEntity::new, FHBlocks.hunting_base)
+            "hunting_base", makeType(HuntingBaseTileEntity::new, FHBlocks.HUNTING_BASE)
     );
     private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(BlockEntitySupplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));

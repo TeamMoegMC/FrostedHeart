@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
@@ -30,7 +29,6 @@ import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -47,7 +45,7 @@ public class SaunaRecipe extends IESerializableRecipe {
 
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHBlocks.sauna.get().asItem());
+            return new ItemStack(FHBlocks.SAUNA_VENT.get().asItem());
         }
 
         @Override

@@ -57,7 +57,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 
     public IncubatorCategory(IGuiHelper guiHelper) {
         ResourceLocation guiMain = new ResourceLocation(FHMain.MODID, "textures/gui/incubator.png");
-        this.ICON = guiHelper.createDrawableItemStack(new ItemStack(FHBlocks.incubator1.get()));
+        this.ICON = guiHelper.createDrawableItemStack(new ItemStack(FHBlocks.INCUBATOR.get()));
         this.BACKGROUND = guiHelper.createDrawable(guiMain, 4, 4, 164, 72);
         IDrawableStatic tfire = guiHelper.createDrawable(guiMain, 198, 64, 14, 14);
         this.FIRE = guiHelper.createAnimatedDrawable(tfire, 80, IDrawableAnimated.StartDirection.TOP, true);

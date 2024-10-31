@@ -60,7 +60,7 @@ public class WhiteTurnipBlock extends FHCropBlock {
     }
 
     protected ItemLike getBaseSeedId() {
-        return FHBlocks.white_turnip_block.get().asItem();
+        return FHBlocks.WHITE_TURNIP_BLOCK.get().asItem();
     }
 
     public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {

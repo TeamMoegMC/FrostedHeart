@@ -26,7 +26,6 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -40,7 +39,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.ItemLike;
@@ -55,7 +53,7 @@ public class IncubateRecipe extends IESerializableRecipe {
     public static class Serializer extends IERecipeSerializer<IncubateRecipe> {
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHBlocks.incubator1.get());
+            return new ItemStack(FHBlocks.INCUBATOR.get());
         }
 
         @Nullable

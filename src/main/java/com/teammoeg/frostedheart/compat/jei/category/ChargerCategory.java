@@ -47,10 +47,10 @@ public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
     public static RecipeType<ChargerRecipe> UID = RecipeType.create(FHMain.MODID, "charge", ChargerRecipe.class);
     private IDrawable BACKGROUND;
     private IDrawable ICON;
-    private StaticBlock charger = new StaticBlock(FHBlocks.charger.get().defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
+    private StaticBlock charger = new StaticBlock(FHBlocks.CHARGER.get().defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
 
     public ChargerCategory(IGuiHelper guiHelper) {
-        this.ICON = guiHelper.createDrawableItemStack(new ItemStack(FHBlocks.charger.get()));
+        this.ICON = guiHelper.createDrawableItemStack(new ItemStack(FHBlocks.CHARGER.get()));
         this.BACKGROUND = new EmptyBackground(177, 70);
     }
 

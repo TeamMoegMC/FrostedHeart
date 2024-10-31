@@ -41,7 +41,7 @@ public class ChargerRecipe extends IESerializableRecipe {
     public static class Serializer extends IERecipeSerializer<ChargerRecipe> {
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHBlocks.charger.get());
+            return new ItemStack(FHBlocks.CHARGER.get());
         }
 
         @Nullable

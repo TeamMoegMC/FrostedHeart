@@ -27,11 +27,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.client.model.DynamicBlockModelReference;
 
-import blusunrize.immersiveengineering.api.IEProperties.IEObjState;
-import blusunrize.immersiveengineering.api.IEProperties.Model;
 import blusunrize.immersiveengineering.api.IEProperties.VisibilityList;
 import blusunrize.immersiveengineering.client.models.obj.callback.DynamicSubmodelCallbacks;
-import blusunrize.immersiveengineering.client.render.tile.DynamicModel;
 import blusunrize.immersiveengineering.client.utils.RenderUtils;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.model.data.ModelData;
@@ -40,7 +37,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.core.BlockPos;
@@ -58,7 +54,7 @@ public class MechCalcRenderer implements BlockEntityRenderer<MechCalcTileEntity>
                        MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
         BlockPos blockPos = te.getBlockPos();
         BlockState state = te.getLevel().getBlockState(blockPos);
-        if (state.getBlock() != FHBlocks.mech_calc.get())
+        if (state.getBlock() != FHBlocks.MECHANICAL_CALCULATOR.get())
             return;
         Direction rd = te.getDirection().getClockWise();
        

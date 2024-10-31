@@ -315,13 +315,13 @@ public class JEICompat implements IModPlugin {
         registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.Logic.GENERATOR_T1.blockItem().get()), GeneratorFuelCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.Logic.GENERATOR_T2.blockItem().get()), GeneratorFuelCategory.UID,
                 GeneratorSteamCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHBlocks.charger.get()), ChargerCategory.UID, ChargerCookingCategory.UID,
+        registration.addRecipeCatalyst(new ItemStack(FHBlocks.CHARGER.get()), ChargerCategory.UID, ChargerCookingCategory.UID,
                 ChargerDefrostCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(Blocks.CAMPFIRE), CampfireDefrostCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(Blocks.SMOKER), SmokingDefrostCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHBlocks.sauna.get()), SaunaCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHBlocks.incubator1.get()), IncubatorCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHBlocks.incubator2.get()), IncubatorCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHBlocks.SAUNA_VENT.get()), SaunaCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHBlocks.INCUBATOR.get()), IncubatorCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHBlocks.HEAT_INCUBATOR.get()), IncubatorCategory.UID);
     }
 
     @Override

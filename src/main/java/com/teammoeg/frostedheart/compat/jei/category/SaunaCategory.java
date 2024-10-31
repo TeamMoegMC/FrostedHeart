@@ -48,10 +48,10 @@ public class SaunaCategory implements IRecipeCategory<SaunaRecipe> {
     public static RecipeType<SaunaRecipe> UID = RecipeType.create(FHMain.MODID, "sauna",SaunaRecipe.class);
     private IDrawable BACKGROUND;
     private IDrawable ICON;
-    private StaticBlock sauna = new StaticBlock(FHBlocks.sauna.get().defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
+    private StaticBlock sauna = new StaticBlock(FHBlocks.SAUNA_VENT.get().defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
 
     public SaunaCategory(IGuiHelper guiHelper) {
-        this.ICON = guiHelper.createDrawableItemStack(new ItemStack(FHBlocks.sauna.get()));
+        this.ICON = guiHelper.createDrawableItemStack(new ItemStack(FHBlocks.SAUNA_VENT.get()));
         this.BACKGROUND = new EmptyBackground(177, 70);
     }
 

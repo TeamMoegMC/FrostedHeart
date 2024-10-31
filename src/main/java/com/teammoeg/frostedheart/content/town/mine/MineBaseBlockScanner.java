@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
@@ -114,7 +113,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
         public boolean isValidFloor(BlockPos pos){
             if(world.getBlockState(pos).is(BlockTags.RAILS)){
                 return NetherVines.isValidGrowthState(world.getBlockState(pos.above()));
-            } else if(world.getBlockState(pos).getBlock().equals(FHBlocks.mine.get())){
+            } else if(world.getBlockState(pos).getBlock().equals(FHBlocks.MINE.get())){
                 linkedMines.add(pos);
             }
             return false;

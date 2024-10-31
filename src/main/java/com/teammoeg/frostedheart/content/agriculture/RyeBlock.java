@@ -60,7 +60,7 @@ public class RyeBlock extends FHCropBlock {
     }
 
     protected ItemLike getBaseSeedId() {
-        return FHBlocks.rye_block.get().asItem();
+        return FHBlocks.RYE_BLOCK.get().asItem();
     }
 
     public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {

@@ -133,7 +133,7 @@ public class FountainTileEntity extends IEBaseBlockEntity implements
                             for (int i = 0; i < height; i++) {
                                 BlockPos nozzle = worldPosition.relative(Direction.UP, i + 1);
                                 level.setBlock(nozzle,
-                                        FHBlocks.fountain_nozzle.get().defaultBlockState()
+                                        FHBlocks.FOUNTAIN_NOZZLE.get().defaultBlockState()
                                                 .setValue(FountainNozzleBlock.HEIGHT, i + 1),
                                         Block.UPDATE_ALL_IMMEDIATE
                                 );
@@ -227,7 +227,7 @@ public class FountainTileEntity extends IEBaseBlockEntity implements
 
         for (int i = 0; i < MAX_HEIGHT; i++) {
             BlockPos nozzle = worldPosition.relative(Direction.UP, i + 1);
-            if (level.getBlockState(nozzle).getBlock() != FHBlocks.fountain_nozzle.get())
+            if (level.getBlockState(nozzle).getBlock() != FHBlocks.FOUNTAIN_NOZZLE.get())
                 return i;
         }
 
@@ -265,9 +265,9 @@ public class FountainTileEntity extends IEBaseBlockEntity implements
 
         for (int i = 0; i < MAX_HEIGHT; i++) {
             BlockPos nozzle = worldPosition.relative(Direction.UP, i + 1);
-            if (level.getBlockState(nozzle).getBlock() == FHBlocks.fountain_nozzle.get()) {
+            if (level.getBlockState(nozzle).getBlock() == FHBlocks.FOUNTAIN_NOZZLE.get()) {
                 level.setBlock(nozzle,
-                        FHBlocks.fountain_nozzle.get().defaultBlockState()
+                        FHBlocks.FOUNTAIN_NOZZLE.get().defaultBlockState()
                                 .setValue(FountainNozzleBlock.HEIGHT, 0),
                         Block.UPDATE_ALL_IMMEDIATE
                 );

@@ -233,116 +233,114 @@ public class FHBlocks {
     殷钢块invar_block
      */
 
-    public static RegistryObject<Block> QUICKLIME_BLOCK = register("quicklime_block", () -> new Block(BlockBehaviour.Properties.copy(CALCITE)));
-    public static RegistryObject<Block> REFRACTORY_BRICKS = register("refractory_bricks", () -> new Block(BlockBehaviour.Properties.copy(BRICKS)));
-    public static RegistryObject<Block> HIGH_REFRACTORY_BRICKS = register("high_refractory_bricks", () -> new Block(BlockBehaviour.Properties.copy(BRICKS)));
+    // Resource Blocks
     public static RegistryObject<Block> MAGNESITE_BLOCK = register("magnesite_block", () -> new Block(BlockBehaviour.Properties.copy(CALCITE)));
     public static RegistryObject<Block> MAGNESIA_BLOCK = register("magnesia_block", () -> new Block(BlockBehaviour.Properties.copy(CALCITE)));
+    public static RegistryObject<Block> QUICKLIME_BLOCK = register("quicklime_block", () -> new Block(BlockBehaviour.Properties.copy(CALCITE)));
+    public static RegistryObject<Block> COPPER_GRAVEL = register("copper_gravel", () -> new FHBaseBlock(FHProps.ore_gravel));
+
+    // Crop Blocks
+    public static RegistryObject<Block> RYE_BLOCK = register("rye_block", () -> new RyeBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps));
+    public static RegistryObject<Block> WOLFBERRY_BUSH_BLOCK = register("wolfberry_bush_block", () -> new WolfBerryBushBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.berryBushBlocks, 2), "wolfberries", t -> new FoodBlockItem(t, FHItems.createProps(), FHFoodProperties.WOLFBERRIES));
+    public static RegistryObject<Block> WHITE_TURNIP_BLOCK = register("white_turnip_block", () -> new WhiteTurnipBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps), (block) -> new FoodBlockItem(block, new Item.Properties(), FHFoodProperties.WHITE_TURNIP));
+
+    // Building Blocks
+    public static RegistryObject<Block> GENERATOR_BRICK = register("generator_brick", () -> new FHBaseBlock(FHProps.stoneDecoProps));
+    public static RegistryObject<Block> GENERATOR_CORE_T1 = register("generator_core_t1", () -> new FHBaseBlock(FHProps.stoneDecoProps));
+    public static RegistryObject<Block> GENERATOR_AMPLIFIER_T1 = register("generator_amplifier_r1", () -> new FHBaseBlock(FHProps.stoneDecoProps));
+    public static RegistryObject<Block> DURALUMIN_SHEETMETAL = register("sheetmetal_duralumin", () -> new FHBaseBlock(FHProps.metalDecoProps));
+    public static RegistryObject<Block> REFRACTORY_BRICKS = register("refractory_bricks", () -> new Block(BlockBehaviour.Properties.copy(BRICKS)));
+    public static RegistryObject<Block> HIGH_REFRACTORY_BRICKS = register("high_refractory_bricks", () -> new Block(BlockBehaviour.Properties.copy(BRICKS)));
     public static RegistryObject<Block> PACKED_SNOW = register("packed_snow", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK).strength(1.0F)));
     public static RegistryObject<Block> PACKED_SNOW_SLAB = register("packed_snow_slab", () -> new SlabBlock(BlockBehaviour.Properties.copy(SNOW_BLOCK).strength(1.0F)));
 
-
-    // Resource Blocks
-    public static RegistryObject<Block> copper_gravel = register("copper_gravel", () -> new FHBaseBlock(FHProps.ore_gravel));
-
-    // Crop Blocks
-    public static RegistryObject<Block> rye_block = register("rye_block", () -> new RyeBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps));
-    public static RegistryObject<Block> wolfberry_bush_block = register("wolfberry_bush_block", () -> new WolfBerryBushBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.berryBushBlocks, 2), "wolfberries", t -> new FoodBlockItem(t, FHItems.createProps(), FHFoodProperties.WOLFBERRIES));
-    public static RegistryObject<Block> white_turnip_block = register("white_turnip_block", () -> new WhiteTurnipBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps), (block) -> new FoodBlockItem(block, new Item.Properties(), FHFoodProperties.WHITE_TURNIP));
-
-    // Building Blocks
-    public static RegistryObject<Block> generator_brick = register("generator_brick", () -> new FHBaseBlock(FHProps.stoneDecoProps));
-    public static RegistryObject<Block> generator_core_t1 = register("generator_core_t1", () -> new FHBaseBlock(FHProps.stoneDecoProps));
-    public static RegistryObject<Block> generator_amplifier_r1 = register("generator_amplifier_r1", () -> new FHBaseBlock(FHProps.stoneDecoProps));
-    public static RegistryObject<Block> DURALUMIN_SHEETMETAL = register("sheetmetal_duralumin", () -> new FHBaseBlock(FHProps.metalDecoProps));
-
     // Decoration Blocks
-    public static RegistryObject<Block> blood_block = register("blood_block", () -> new bloodBlock(FHProps.stoneProps));
-    public static RegistryObject<Block> bone_block = register("bone_block", () -> new BoneBlock(FHProps.grassProps));
-    public static RegistryObject<Block> small_garage = register("small_garage", () -> new SmallGarage(FHProps.grassProps));
-    public static RegistryObject<Block> package_block = register("package_block", () -> new PackageBlock(FHProps.woodenProps));
-    public static RegistryObject<Block> pebble_block = register("pebble_block", () -> new PebbleBlock(FHProps.stoneProps));
-    public static RegistryObject<Block> odd_mark = register("odd_mark", () -> new OddMark(FHProps.redStoneProps));
-    public static RegistryObject<Block> wooden_box = register("wooden_box", () -> new WoodenBox(FHProps.woodenProps));
-    public static RegistryObject<Block> makeshift_generator_broken = register("makeshift_generator_broken", () -> new FHBaseBlock(Block.Properties
+    public static RegistryObject<Block> BLOOD_BLOCK = register("blood_block", () -> new bloodBlock(FHProps.stoneProps));
+    public static RegistryObject<Block> BONE_BLOCK = register("bone_block", () -> new BoneBlock(FHProps.grassProps));
+    public static RegistryObject<Block> SMALL_GARAGE = register("small_garage", () -> new SmallGarage(FHProps.grassProps));
+    public static RegistryObject<Block> PACKAGE_BLOCK = register("package_block", () -> new PackageBlock(FHProps.woodenProps));
+    public static RegistryObject<Block> PEBBLE_BLOCK = register("pebble_block", () -> new PebbleBlock(FHProps.stoneProps));
+    public static RegistryObject<Block> ODD_MARK = register("odd_mark", () -> new OddMark(FHProps.redStoneProps));
+    public static RegistryObject<Block> WOODEN_BOX = register("wooden_box", () -> new WoodenBox(FHProps.woodenProps));
+    public static RegistryObject<Block> MAKESHIFT_GENERATOR_BROKEN = register("makeshift_generator_broken", () -> new FHBaseBlock(Block.Properties
             .of().mapColor(MapColor.STONE)
             .sound(SoundType.STONE)
             .requiresCorrectToolForDrops()
             .strength(45, 800)));
 
-    public static RegistryObject<Block> broken_plate = register("broken_plate", () -> new FHBaseBlock(Block.Properties
+    public static RegistryObject<Block> BROKEN_PLATE = register("broken_plate", () -> new FHBaseBlock(Block.Properties
             .of().mapColor(MapColor.METAL)
             .sound(SoundType.METAL)
             .requiresCorrectToolForDrops()
             .strength(45, 800)));
 
     // Machine Blocks
-    public static RegistryObject<Block> relic_chest = register("relic_chest", RelicChestBlock::new);
-    public static RegistryObject<Block> incubator1 = register("incubator", () -> new IncubatorBlock(FHProps.stoneDecoProps, FHBlockEntityTypes.INCUBATOR));
-    public static RegistryObject<Block> incubator2 = register("heat_incubator", () -> new HeatIncubatorBlock(FHProps.metalDecoProps, FHBlockEntityTypes.INCUBATOR2));
-    public static RegistryObject<Block> heat_pipe = register("heat_pipe", () -> new HeatPipeBlock(Block.Properties
+    public static RegistryObject<Block> RELIC_CHEST = register("relic_chest", RelicChestBlock::new);
+    public static RegistryObject<Block> INCUBATOR = register("incubator", () -> new IncubatorBlock(FHProps.stoneDecoProps, FHBlockEntityTypes.INCUBATOR));
+    public static RegistryObject<Block> HEAT_INCUBATOR = register("heat_incubator", () -> new HeatIncubatorBlock(FHProps.metalDecoProps, FHBlockEntityTypes.INCUBATOR2));
+    public static RegistryObject<Block> HEAT_PIPE = register("heat_pipe", () -> new HeatPipeBlock(Block.Properties
             .of().mapColor(MapColor.STONE).sound(SoundType.WOOD)
             .strength(1, 5)
             .noOcclusion()));
-    public static RegistryObject<Block> debug_heater = register("debug_heater", () -> new DebugHeaterBlock(Block.Properties
+    public static RegistryObject<Block> DEBUG_HEATER = register("debug_heater", () -> new DebugHeaterBlock(Block.Properties
             .of().mapColor(MapColor.STONE).sound(SoundType.STONE)
             .requiresCorrectToolForDrops()
             .strength(2, 10)
             .noOcclusion()));
-    public static RegistryObject<Block> charger = register("charger", () -> new ChargerBlock(Block.Properties
+    public static RegistryObject<Block> CHARGER = register("charger", () -> new ChargerBlock(Block.Properties
             .of().mapColor(MapColor.STONE)
             .sound(SoundType.METAL)
             .requiresCorrectToolForDrops()
             .strength(2, 10)
             .noOcclusion()));
-    public static RegistryObject<Block> oilburner = register("oil_burner", () -> new OilBurnerBlock(Block.Properties
+    public static RegistryObject<Block> OIL_BURNER = register("oil_burner", () -> new OilBurnerBlock(Block.Properties
             .of().mapColor(MapColor.STONE)
             .sound(SoundType.STONE)
             .requiresCorrectToolForDrops()
             .strength(2, 10)
             .noOcclusion()));
-    public static RegistryObject<Block> gasvent = register("gas_vent", () -> new GasVentBlock(Block.Properties
+    public static RegistryObject<Block> GAS_VENT = register("gas_vent", () -> new GasVentBlock(Block.Properties
             .of().mapColor(MapColor.METAL)
             .sound(SoundType.METAL)
             .requiresCorrectToolForDrops()
             .strength(2, 10)
             .noOcclusion()));
-    public static RegistryObject<Block> drawing_desk = register("drawing_desk", () -> new DrawingDeskBlock(Block.Properties
+    public static RegistryObject<Block> DRAWING_DESK = register("drawing_desk", () -> new DrawingDeskBlock(Block.Properties
             .of().mapColor(MapColor.WOOD)
             .sound(SoundType.WOOD)
             .strength(2, 6)
             .noOcclusion()));
-    public static RegistryObject<Block> smoket1 = register("smoke_block_t1", () -> new SmokeBlockT1(Block.Properties
+    public static RegistryObject<Block> SMOKE_BLOCK_T1 = register("smoke_block_t1", () -> new SmokeBlockT1(Block.Properties
             .of().mapColor(MapColor.STONE)
             .sound(SoundType.STONE)
             .requiresCorrectToolForDrops()
             .strength(2, 10)
             .noOcclusion()));
-    public static RegistryObject<Block> mech_calc = register("mechanical_calculator", () -> new MechCalcBlock(Block.Properties
+    public static RegistryObject<Block> MECHANICAL_CALCULATOR = register("mechanical_calculator", () -> new MechCalcBlock(Block.Properties
             .of().mapColor(MapColor.METAL)
             .sound(SoundType.METAL)
             .requiresCorrectToolForDrops()
             .strength(2, 10)
             .noOcclusion()));
-    public static RegistryObject<Block> sauna = register("sauna_vent", () -> new SaunaBlock(Block.Properties
+    public static RegistryObject<Block> SAUNA_VENT = register("sauna_vent", () -> new SaunaBlock(Block.Properties
             .of().mapColor(MapColor.STONE)
             .sound(SoundType.METAL)
             .requiresCorrectToolForDrops()
             .strength(2, 10)
             .noOcclusion()));
-    public static RegistryObject<Block> fountain = register("fountain_base", () -> new FountainBlock(Block.Properties
+    public static RegistryObject<Block> FOUNTAIN_BASE = register("fountain_base", () -> new FountainBlock(Block.Properties
             .of().mapColor(MapColor.STONE)
             .sound(SoundType.METAL)
             .requiresCorrectToolForDrops()
             .strength(2, 10)
             .noOcclusion()));
-    public static RegistryObject<Block> fountain_nozzle = register("fountain_nozzle", () -> new FountainNozzleBlock(Block.Properties
+    public static RegistryObject<Block> FOUNTAIN_NOZZLE = register("fountain_nozzle", () -> new FountainNozzleBlock(Block.Properties
             .of().mapColor(MapColor.METAL)
             .sound(SoundType.METAL)
             .requiresCorrectToolForDrops()
             .strength(2, 10)
             .noOcclusion()));
-    public static final BlockEntry<SteamCoreBlock> steam_core = FH_REGISTRATE.block("steam_core", SteamCoreBlock::new)
+    public static final BlockEntry<SteamCoreBlock> STEAM_CORE = FH_REGISTRATE.block("steam_core", SteamCoreBlock::new)
             .properties(t -> t.sound(SoundType.METAL)
                     .requiresCorrectToolForDrops()
                     .strength(2, 10)
@@ -353,10 +351,10 @@ public class FHBlocks {
             .register();
 
     // Town Building Blocks
-    public static RegistryObject<Block> house = register("house", () -> new HouseBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
-    public static RegistryObject<Block> warehouse = register("warehouse", () -> new WarehouseBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
-    public static RegistryObject<Block> mine = register("mine", () -> new MineBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
-    public static RegistryObject<Block> mine_base = register("mine_base", () -> new MineBaseBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
-    public static RegistryObject<Block> hunting_camp = register("hunting_camp", () -> new HuntingCampBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
-    public static RegistryObject<Block> hunting_base = register("hunting_base", () -> new HuntingBaseBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
+    public static RegistryObject<Block> HOUSE = register("house", () -> new HouseBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
+    public static RegistryObject<Block> WAREHOUSE = register("warehouse", () -> new WarehouseBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
+    public static RegistryObject<Block> MINE = register("mine", () -> new MineBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
+    public static RegistryObject<Block> MINE_BASE = register("mine_base", () -> new MineBaseBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
+    public static RegistryObject<Block> HUNTING_CAMP = register("hunting_camp", () -> new HuntingCampBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
+    public static RegistryObject<Block> HUNTING_BASE = register("hunting_base", () -> new HuntingBaseBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
 }
