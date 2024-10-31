@@ -31,7 +31,7 @@ public class  NutritionRecipeBuilder  implements RecipeBuilder {
 		return this;
 	}
 
-	public  NutritionRecipeBuilder  nutrition(float fat, float carbohydrate, float protein, float vegetable) {
+	public  NutritionRecipeBuilder  nutrition(float carbohydrate, float vegetable, float fat, float protein) {
 		this.fat = fat;
 		this.carbohydrate = carbohydrate;
 		this.protein = protein;

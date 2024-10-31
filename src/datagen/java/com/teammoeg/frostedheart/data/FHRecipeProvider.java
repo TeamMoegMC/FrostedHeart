@@ -84,11 +84,11 @@ public class FHRecipeProvider extends RecipeProvider {
 								ps.println(item+","+f.getNutrition());
 						}
 						NutritionRecipeBuilder dvb=new NutritionRecipeBuilder().item(it);
-						float f1=Float.parseFloat(parts[2])*10f;
-						float f2=Float.parseFloat(parts[3])*10f;
-						float f3=Float.parseFloat(parts[4])*10f;
-						float f4=Float.parseFloat(parts[5])*10f;
-						dvb.nutrition(f1,f2,f3,f4);
+						float grain=Float.parseFloat(parts[2])*10f;
+						float veg=Float.parseFloat(parts[3])*10f;
+						float oil=Float.parseFloat(parts[4])*10f;
+						float protein=Float.parseFloat(parts[5])*10f;
+						dvb.nutrition(grain,veg,oil,protein);
 						dvb.save(out,id);
 					}
 				}
