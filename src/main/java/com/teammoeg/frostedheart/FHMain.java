@@ -21,6 +21,9 @@ package com.teammoeg.frostedheart;
 
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.item.rankine.KnifeItem;
+import com.teammoeg.frostedheart.base.item.rankine.init.RankineEnchantments;
+import com.teammoeg.frostedheart.base.item.rankine.init.RankineItems;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.client.model.DynamicModelSetup;
 import com.teammoeg.frostedheart.compat.CreateCompat;
@@ -131,6 +134,10 @@ public class FHMain {
         FHMobEffects.EFFECTS.register(mod);
         FHLoot.LC_REGISTRY.register(mod);
         FHLoot.LM_REGISTRY.register(mod);
+        //rankine
+        RankineItems.ITEMS.register(mod);
+        RankineEnchantments.ENCHANTMENTS.register(mod);
+
         TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
         TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
         TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);
