@@ -28,9 +28,9 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
     @Override
     protected void addTags(HolderLookup.Provider pProvider) {
         // FH deco and walls
-        TagAppender<Block> deco = tag(FHTags.Blocks.DECORATIONS);
+        TagAppender<Block> deco = tag(FHTags.Blocks.TOWN_DECORATIONS);
         deco.add(rk(Blocks.FLOWER_POT), rk(Blocks.LANTERN), rk(Blocks.SOUL_LANTERN), rk(Blocks.CAMPFIRE), rk(Blocks.SOUL_CAMPFIRE), rk(Blocks.ENCHANTING_TABLE), rk(Blocks.ANVIL), rk(Blocks.CHIPPED_ANVIL), rk(Blocks.DAMAGED_ANVIL), rk(Blocks.STONECUTTER), rk(Blocks.GRINDSTONE));
-        TagAppender<Block> wall = tag(FHTags.Blocks.WALL_BLOCKS);
+        TagAppender<Block> wall = tag(FHTags.Blocks.TOWN_WALLS);
         wall.addTag(BlockTags.DOORS).addTag(BlockTags.WALLS).addTag(Tags.Blocks.FENCES).addTag(Tags.Blocks.FENCE_GATES).addTag(Tags.Blocks.GLASS_PANES).add(rk(Blocks.IRON_BARS));
 
         // Vanilla ores
@@ -163,6 +163,35 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.BAUXITE_PERMAFROST))
                 .add(rk(FHBlocks.KAOLIN_PERMAFROST));
 
+        // Town blocks
+        tag(FHTags.Blocks.TOWN_BLOCKS)
+                .add(rk(FHBlocks.HOUSE))
+                .add(rk(FHBlocks.WAREHOUSE))
+                .add(rk(FHBlocks.MINE))
+                .add(rk(FHBlocks.MINE_BASE))
+                .add(rk(FHBlocks.HUNTING_BASE))
+                .add(rk(FHBlocks.HUNTING_CAMP));
+
+        // Metal machines
+        tag(FHTags.Blocks.METAL_MACHINES)
+                .add(rk(FHBlocks.RELIC_CHEST))
+                .add(rk(FHBlocks.HEAT_INCUBATOR))
+                .add(rk(FHBlocks.DEBUG_HEATER))
+                .add(rk(FHBlocks.CHARGER))
+                .add(rk(FHBlocks.OIL_BURNER))
+                .add(rk(FHBlocks.GAS_VENT))
+                .add(rk(FHBlocks.SMOKE_BLOCK_T1))
+                .add(rk(FHBlocks.MECHANICAL_CALCULATOR))
+                .add(rk(FHBlocks.SAUNA_VENT))
+                .add(rk(FHBlocks.FOUNTAIN_BASE))
+                .add(rk(FHBlocks.FOUNTAIN_NOZZLE));
+
+        // Wood machines
+        tag(FHTags.Blocks.WOODEN_MACHINES)
+                .add(rk(FHBlocks.HEAT_PIPE))
+                .add(rk(FHBlocks.DRAWING_DESK))
+                .add(rk(FHBlocks.INCUBATOR));
+
         // carver
         tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES)
                 .addTag(FHTags.Blocks.PERMAFROST)
@@ -208,8 +237,10 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.ROTTEN_WOOD))
                 .add(rk(FHBlocks.ROTTEN_WOOD_PERMAFROST));
 
-        // minable
+        // Mining tool
         tag(BlockTags.MINEABLE_WITH_AXE)
+                .addTag(FHTags.Blocks.TOWN_BLOCKS)
+                .addTag(FHTags.Blocks.WOODEN_MACHINES)
                 .add(rk(FHBlocks.ROTTEN_WOOD))
                 .add(rk(FHBlocks.ROTTEN_WOOD_PERMAFROST))
                 // deco
@@ -220,6 +251,7 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
         tag(BlockTags.MINEABLE_WITH_HOE);
 
         tag(BlockTags.MINEABLE_WITH_PICKAXE)
+                .addTag(FHTags.Blocks.METAL_MACHINES)
                 // ores
                 .add(rk(FHBlocks.SILVER_ORE))
                 .add(rk(FHBlocks.CASSITERITE_ORE))
@@ -323,6 +355,7 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
 
         tag(BlockTags.SWORD_EFFICIENT);
 
+        // Mining level
         tag(BlockTags.NEEDS_DIAMOND_TOOL)
                 .add(rk(FHBlocks.TUNGSTENSTEEL_BLOCK))
                 .add(rk(FHBlocks.TUNGSTEN_BLOCK));

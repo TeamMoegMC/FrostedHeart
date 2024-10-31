@@ -31,10 +31,13 @@ import net.minecraft.world.level.material.Fluid;
 public class FHTags {
 	public static final class Blocks {
 //        public static final ITag.INamedTag<Block> ALWAYS_BREAKABLE = create("always_breakable");
-		public static final TagKey<Block> DECORATIONS = tag("decorations");
-		public static final TagKey<Block> WALL_BLOCKS = tag("wall_blocks");
+		public static final TagKey<Block> TOWN_DECORATIONS = tag("town/decorations");
+		public static final TagKey<Block> TOWN_WALLS = tag("town/walls");
 		public static final TagKey<Block> CONDENSED_ORES = tag("condensed_ores");
 		public static final TagKey<Block> PERMAFROST = tag("permafrost");
+		public static final TagKey<Block> TOWN_BLOCKS = tag("town/blocks");
+		public static final TagKey<Block> METAL_MACHINES = tag("machines/metal");
+		public static final TagKey<Block> WOODEN_MACHINES = tag("machines/wooden");
 
 		private static TagKey<Block> tag(String name) {
 			return BlockTags.create(new ResourceLocation(FHMain.MODID, name));

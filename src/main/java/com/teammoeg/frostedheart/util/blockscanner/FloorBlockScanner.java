@@ -39,7 +39,7 @@ public class FloorBlockScanner extends BlockScanner{
 
     public static boolean isWallBlock(Level world, BlockPos pos) {
         BlockState blockState = world.getBlockState(pos);
-        return (blockState.isRedstoneConductor(world, pos) || blockState.is(FHTags.Blocks.WALL_BLOCKS) || blockState.is(BlockTags.DOORS) || blockState.is(BlockTags.WALLS) || blockState.is(Tags.Blocks.GLASS_PANES) || blockState.is(Tags.Blocks.FENCE_GATES) || blockState.is(Tags.Blocks.FENCES));
+        return (blockState.isRedstoneConductor(world, pos) || blockState.is(FHTags.Blocks.TOWN_WALLS) || blockState.is(BlockTags.DOORS) || blockState.is(BlockTags.WALLS) || blockState.is(Tags.Blocks.GLASS_PANES) || blockState.is(Tags.Blocks.FENCE_GATES) || blockState.is(Tags.Blocks.FENCES));
     }
     protected boolean isWallBlock(BlockPos pos) {
         return isWallBlock(this.world, pos);

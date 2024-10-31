@@ -96,7 +96,7 @@ public class HouseBlockScanner extends BlockScanner {
     protected void addDecoration(BlockPos pos) {
         BlockState blockState = getBlockState(pos);
         Block block = blockState.getBlock();
-        if (blockState.is(FHTags.Blocks.DECORATIONS) || Objects.requireNonNull(RegistryUtils.getRegistryName(block)).getNamespace().equals("cfm")) {
+        if (blockState.is(FHTags.Blocks.TOWN_DECORATIONS) || Objects.requireNonNull(RegistryUtils.getRegistryName(block)).getNamespace().equals("cfm")) {
             String name = block.toString();
             decorations.merge(name, 1, Integer::sum);
         }
