@@ -31,6 +31,7 @@ import net.minecraftforge.client.model.generators.ItemModelBuilder;
 import net.minecraftforge.client.model.generators.ItemModelProvider;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 public class FHItemModelProvider extends ItemModelProvider {
 
@@ -44,7 +45,167 @@ public class FHItemModelProvider extends ItemModelProvider {
 			texture(s+"_thermos","flask_i/insulated_flask_i_pouch_"+s);
 			texture(s+"_advanced_thermos","flask_ii/insulated_flask_ii_pouch_"+s);
 		}
+
+		// add everything using texture(RegistryObject<Item> name)
+		// TODO: uncomment when textures are ready
+		/*
+		texture(FHItems.PEAT);
+		texture(FHItems.KAOLIN);
+		texture(FHItems.BAUXITE);
+		texture(FHItems.ROTTEN_WOOD);
+		texture(FHItems.CRUSHED_KAOLIN);
+		texture(FHItems.CRUSHED_BAUXITE);
+		texture(FHItems.KAOLIN_DUST);
+		texture(FHItems.BAUXITE_DUST);
+
+		texture(FHItems.CONDENSED_BALL_IRON_ORE);
+		texture(FHItems.CONDENSED_BALL_COPPER_ORE);
+		texture(FHItems.CONDENSED_BALL_GOLD_ORE);
+		texture(FHItems.CONDENSED_BALL_ZINC_ORE);
+		texture(FHItems.CONDENSED_BALL_SILVER_ORE);
+		texture(FHItems.CONDENSED_BALL_CASSITERITE_ORE);
+		texture(FHItems.CONDENSED_BALL_PYRITE_ORE);
+		texture(FHItems.CONDENSED_BALL_PENTLANDITE_ORE);
+
+		texture(FHItems.CRUSHED_RAW_SILVER);
+		texture(FHItems.CRUSHED_RAW_CASSITERITE);
+		texture(FHItems.CRUSHED_RAW_PYRITE);
+		texture(FHItems.CRUSHED_RAW_PENTLANDITE);
+		texture(FHItems.CRUSHED_RAW_GALENA);
+		texture(FHItems.CRUSHED_RAW_HALITE);
+		texture(FHItems.CRUSHED_RAW_POTASH);
+		texture(FHItems.CRUSHED_RAW_MAGNESITE);
+
+		texture(FHItems.RAW_SILVER);
+		texture(FHItems.RAW_CASSITERITE);
+		texture(FHItems.RAW_PYRITE);
+		texture(FHItems.RAW_PENTLANDITE);
+		texture(FHItems.RAW_GALENA);
+		texture(FHItems.RAW_HALITE);
+		texture(FHItems.RAW_POTASH);
+		texture(FHItems.RAW_MAGNESITE);
+
+		texture(FHItems.COPPER_DUST);
+		texture(FHItems.ALUMINUM_DUST);
+		texture(FHItems.STEEL_DUST);
+		texture(FHItems.ELECTRUM_DUST);
+		texture(FHItems.CONSTANTAN_DUST);
+		texture(FHItems.IRON_DUST);
+		texture(FHItems.CAST_IRON_DUST);
+		texture(FHItems.BRASS_DUST);
+		texture(FHItems.DURALUMIN_DUST);
+		texture(FHItems.GOLD_DUST);
+		texture(FHItems.SILVER_DUST);
+		texture(FHItems.NICKEL_DUST);
+		texture(FHItems.LEAD_DUST);
+		texture(FHItems.TITANIUM_DUST);
+		texture(FHItems.BRONZE_DUST);
+		texture(FHItems.INVAR_DUST);
+		texture(FHItems.TUNGSTEN_STEEL_DUST);
+		texture(FHItems.ZINC_DUST);
+		texture(FHItems.TIN_DUST);
+		texture(FHItems.MAGNESIUM_DUST);
+		texture(FHItems.TUNGSTEN_DUST);
+
+		texture(FHItems.ALUMINUM_INGOT);
+		texture(FHItems.STEEL_INGOT);
+		texture(FHItems.ELECTRUM_INGOT);
+		texture(FHItems.CONSTANTAN_INGOT);
+		texture(FHItems.CAST_IRON_INGOT);
+		texture(FHItems.DURALUMIN_INGOT);
+		texture(FHItems.SILVER_INGOT);
+		texture(FHItems.NICKEL_INGOT);
+		texture(FHItems.LEAD_INGOT);
+		texture(FHItems.TITANIUM_INGOT);
+		texture(FHItems.BRONZE_INGOT);
+		texture(FHItems.INVAR_INGOT);
+		texture(FHItems.TUNGSTEN_STEEL_INGOT);
+		texture(FHItems.TIN_INGOT);
+		texture(FHItems.MAGNESIUM_INGOT);
+		texture(FHItems.TUNGSTEN_INGOT);
+
+		texture(FHItems.ALUMINUM_NUGGET);
+		texture(FHItems.STEEL_NUGGET);
+		texture(FHItems.ELECTRUM_NUGGET);
+		texture(FHItems.CONSTANTAN_NUGGET);
+		texture(FHItems.CAST_IRON_NUGGET);
+		texture(FHItems.DURALUMIN_NUGGET);
+		texture(FHItems.SILVER_NUGGET);
+		texture(FHItems.NICKEL_NUGGET);
+		texture(FHItems.LEAD_NUGGET);
+		texture(FHItems.TITANIUM_NUGGET);
+		texture(FHItems.BRONZE_NUGGET);
+		texture(FHItems.INVAR_NUGGET);
+		texture(FHItems.TUNGSTEN_STEEL_NUGGET);
+		texture(FHItems.TIN_NUGGET);
+		texture(FHItems.MAGNESIUM_NUGGET);
+		texture(FHItems.TUNGSTEN_NUGGET);
+
+		texture(FHItems.ALUMINUM_SHEET);
+		texture(FHItems.STEEL_SHEET);
+		texture(FHItems.ELECTRUM_SHEET);
+		texture(FHItems.CONSTANTAN_SHEET);
+		texture(FHItems.CAST_IRON_SHEET);
+		texture(FHItems.DURALUMIN_SHEET);
+		texture(FHItems.SILVER_SHEET);
+		texture(FHItems.NICKEL_SHEET);
+		texture(FHItems.LEAD_SHEET);
+		texture(FHItems.TITANIUM_SHEET);
+		texture(FHItems.BRONZE_SHEET);
+		texture(FHItems.INVAR_SHEET);
+		texture(FHItems.TUNGSTEN_STEEL_SHEET);
+
+		texture(FHItems.COPPER_ROD);
+		texture(FHItems.ALUMINUM_ROD);
+		texture(FHItems.STEEL_ROD);
+		texture(FHItems.ELECTRUM_ROD);
+		texture(FHItems.CONSTANTAN_ROD);
+		texture(FHItems.IRON_ROD);
+		texture(FHItems.CAST_IRON_ROD);
+
+		texture(FHItems.COPPER_WIRE);
+		texture(FHItems.ALUMINUM_WIRE);
+		texture(FHItems.STEEL_WIRE);
+		texture(FHItems.ELECTRUM_WIRE);
+		texture(FHItems.CONSTANTAN_WIRE);
+
+		texture(FHItems.RUSTED_IRON_INGOT);
+		texture(FHItems.RUSTED_COPPER_INGOT);
+		texture(FHItems.GRAY_TIN_INGOT);
+
+		texture(FHItems.IRON_SLUG);
+		texture(FHItems.NICKEL_SLUG);
+
+		texture(FHItems.COPPER_OXIDE_DUST);
+		texture(FHItems.ZINC_OXIDE_DUST);
+		texture(FHItems.TIN_OXIDE_DUST);
+		texture(FHItems.ALUMINA_DUST);
+		texture(FHItems.MAGNESIA_DUST);
+		texture(FHItems.LEAD_OXIDE_DUST);
+		texture(FHItems.ALUMINIUM_HYDROXIDE_DUST);
+		texture(FHItems.SODIUM_HYDROXIDE_DUST);
+		texture(FHItems.SODIUM_SULFIDE_DUST);
+		texture(FHItems.SODIUM_CHLORIDE_DUST);
+		texture(FHItems.POTASSIUM_CHLORIDE_DUST);
+		texture(FHItems.SULFUR_DUST);
+		texture(FHItems.GRAPHITE_DUST);
+		texture(FHItems.CRYOLITE_DUST);
+
+		texture(FHItems.MORTAR);
+		texture(FHItems.VULCANIZED_RUBBER);
+		texture(FHItems.PULP);
+		texture(FHItems.FIRE_CLAY_BALL);
+		texture(FHItems.HIGH_REFRACTORY_BRICK);
+		texture(FHItems.SAWDUST);
+		texture(FHItems.BIOMASS);
+		texture(FHItems.SYNTHETIC_LEATHER);
+		texture(FHItems.QUICKLIME);
+		texture(FHItems.SODIUM_INGOT);
+		texture(FHItems.REFRACTORY_BRICK);
+		 */
 	}
+
+
 
 	public ItemModelBuilder itemModel(Item item, String name) {
 		return super.withExistingParent(ForgeRegistries.ITEMS.getKey(item).getPath(), new ResourceLocation(FHMain.MODID, "block/" + name));
@@ -58,6 +219,11 @@ public class FHItemModelProvider extends ItemModelProvider {
 	public ItemModelBuilder texture(String name) {
 		return texture(name, name);
 	}
+
+	public ItemModelBuilder texture(RegistryObject<Item> name) {
+		return texture(name.getId().getPath());
+	}
+
 	public ItemModelBuilder texture(Item name, String par) {
 		return texture(ForgeRegistries.ITEMS.getKey(name).getPath(),par);
 	}
