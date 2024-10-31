@@ -66,6 +66,8 @@ public class AttachCapabilityEvents {
         //Common capabilities
         event.addCapability(new ResourceLocation(FHMain.MODID, "temperature"), FHCapabilities.PLAYER_TEMP.provider());
         event.addCapability(new ResourceLocation(FHMain.MODID, "rsenergy"   ), FHCapabilities.ENERGY.provider());
+        event.addCapability(new ResourceLocation(FHMain.MODID, "water_level"), FHCapabilities.PLAYER_WATER_LEVEL.provider());
+        event.addCapability(new ResourceLocation(FHMain.MODID, "nutrition"  ), FHCapabilities.PLAYER_NUTRITION.provider());
 
     }
     @SubscribeEvent
