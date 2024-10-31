@@ -33,6 +33,8 @@ public class FHTags {
 //        public static final ITag.INamedTag<Block> ALWAYS_BREAKABLE = create("always_breakable");
 		public static final TagKey<Block> DECORATIONS = tag("decorations");
 		public static final TagKey<Block> WALL_BLOCKS = tag("wall_blocks");
+		public static final TagKey<Block> CONDENSED_ORES = tag("condensed_ores");
+		public static final TagKey<Block> PERMAFROST = tag("permafrost");
 
 		private static TagKey<Block> tag(String name) {
 			return BlockTags.create(new ResourceLocation(FHMain.MODID, name));

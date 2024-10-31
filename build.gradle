@@ -274,7 +274,11 @@ dependencies {
     // Terralith
 //    implementation "curse.maven:terralith-513688:5512076"
 
-
+    // Datagen only
+    datagenImplementation fg.deobf("curse.maven:supplementaries-412082:5676069")
+    datagenImplementation fg.deobf("curse.maven:crock-pot-404523:5458905")
+    datagenImplementation fg.deobf("curse.maven:charcoal-pit-reloaded-534602:5861935")
+    datagenImplementation fg.deobf("curse.maven:selene-499980:5854670") // supp api
     // dead mods:
 //    implementation fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
 //    implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5-TWR')
