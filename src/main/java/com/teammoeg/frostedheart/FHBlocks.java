@@ -208,8 +208,8 @@ public class FHBlocks {
     public static RegistryObject<Block> TITANIUM_BLOCK = register("titanium_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
     public static RegistryObject<Block> BRONZE_BLOCK = register("bronze_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
     public static RegistryObject<Block> INVAR_BLOCK = register("invar_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
-    public static RegistryObject<Block> TUNGSTENSTEEL_BLOCK = register("tungstensteel_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
-    public static RegistryObject<Block> ZINC_BLOCK = register("zinc_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+    public static RegistryObject<Block> TUNGSTEN_STEEL_BLOCK = register("tungstensteel_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
+//    public static RegistryObject<Block> ZINC_BLOCK = register("zinc_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
     public static RegistryObject<Block> TIN_BLOCK = register("tin_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
     public static RegistryObject<Block> MAGNESIUM_BLOCK = register("magnesium_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));
     public static RegistryObject<Block> TUNGSTEN_BLOCK = register("tungsten_block", () -> new Block(BlockBehaviour.Properties.copy(IRON_BLOCK)));

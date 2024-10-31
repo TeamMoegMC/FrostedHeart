@@ -115,9 +115,7 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
         tag("forge:storage_blocks/invar")
                 .add(rk(FHBlocks.INVAR_BLOCK));
         tag("forge:storage_blocks/tungstensteel")
-                .add(rk(FHBlocks.TUNGSTENSTEEL_BLOCK));
-        tag("forge:storage_blocks/zinc")
-                .add(rk(FHBlocks.ZINC_BLOCK));
+                .add(rk(FHBlocks.TUNGSTEN_STEEL_BLOCK));
         tag("forge:storage_blocks/tin")
                 .add(rk(FHBlocks.TIN_BLOCK));
         tag("forge:storage_blocks/magnesium")
@@ -224,8 +222,7 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.TITANIUM_BLOCK))
                 .add(rk(FHBlocks.BRONZE_BLOCK))
                 .add(rk(FHBlocks.INVAR_BLOCK))
-                .add(rk(FHBlocks.TUNGSTENSTEEL_BLOCK))
-                .add(rk(FHBlocks.ZINC_BLOCK))
+                .add(rk(FHBlocks.TUNGSTEN_STEEL_BLOCK))
                 .add(rk(FHBlocks.TIN_BLOCK))
                 .add(rk(FHBlocks.MAGNESIUM_BLOCK))
                 .add(rk(FHBlocks.TUNGSTEN_BLOCK));
@@ -283,8 +280,7 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.TITANIUM_BLOCK))
                 .add(rk(FHBlocks.BRONZE_BLOCK))
                 .add(rk(FHBlocks.INVAR_BLOCK))
-                .add(rk(FHBlocks.TUNGSTENSTEEL_BLOCK))
-                .add(rk(FHBlocks.ZINC_BLOCK))
+                .add(rk(FHBlocks.TUNGSTEN_STEEL_BLOCK))
                 .add(rk(FHBlocks.TIN_BLOCK))
                 .add(rk(FHBlocks.MAGNESIUM_BLOCK))
                 .add(rk(FHBlocks.TUNGSTEN_BLOCK))
@@ -357,7 +353,7 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
 
         // Mining level
         tag(BlockTags.NEEDS_DIAMOND_TOOL)
-                .add(rk(FHBlocks.TUNGSTENSTEEL_BLOCK))
+                .add(rk(FHBlocks.TUNGSTEN_STEEL_BLOCK))
                 .add(rk(FHBlocks.TUNGSTEN_BLOCK));
 
         tag(BlockTags.NEEDS_IRON_TOOL)
@@ -384,7 +380,6 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.CONSTANTAN_BLOCK))
                 .add(rk(FHBlocks.LEAD_BLOCK))
                 .add(rk(FHBlocks.BRONZE_BLOCK))
-                .add(rk(FHBlocks.ZINC_BLOCK))
                 .add(rk(FHBlocks.TIN_BLOCK))
                 .add(rk(FHBlocks.MAGNESIUM_BLOCK));
 

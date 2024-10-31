@@ -206,14 +206,14 @@ public class FHItems {
     public static RegistryObject<Item> CONDENSED_BALL_GALENA_ORE = register("condensed_ball_galena", n -> new FHSnowballItem(createProps().stacksTo(16)));
 
     // CRUSHED ORES
-    public static RegistryObject<Item> CRUSHED_SILVER_ORE = register("crushed_raw_silver", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_CASSITERITE_ORE = register("crushed_raw_cassiterite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_PYRITE_ORE = register("crushed_raw_pyrite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_PENTLANDITE_ORE = register("crushed_raw_pentlandite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_GALENA_ORE = register("crushed_raw_galena", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_HALITE_ORE = register("crushed_raw_halite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_POTASH_ORE = register("crushed_raw_potash", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_MAGNESITE_ORE = register("crushed_raw_magnesite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_RAW_SILVER = register("crushed_raw_silver", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_RAW_CASSITERITE = register("crushed_raw_cassiterite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_RAW_PYRITE = register("crushed_raw_pyrite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_RAW_PENTLANDITE = register("crushed_raw_pentlandite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_RAW_GALENA = register("crushed_raw_galena", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_RAW_HALITE = register("crushed_raw_halite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_RAW_POTASH = register("crushed_raw_potash", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_RAW_MAGNESITE = register("crushed_raw_magnesite", n -> new FHBaseItem(createProps()));
 
     // RAW ORES
     public static RegistryObject<Item> RAW_SILVER = register("raw_silver", n -> new FHBaseItem(createProps()));
