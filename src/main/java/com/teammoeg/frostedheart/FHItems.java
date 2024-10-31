@@ -195,15 +195,15 @@ public class FHItems {
     public static RegistryObject<Item> BAUXITE_DUST = register("bauxite_dust", n -> new FHBaseItem(createProps()));
 
     // CONDENSED BALLS
-    public static RegistryObject<Item> CONDENSED_BALL_IRON_ORE = register("condensed_ball_iron_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_COPPER_ORE = register("condensed_ball_copper_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_GOLD_ORE = register("condensed_ball_gold_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_ZINC_ORE = register("condensed_ball_zinc_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_SILVER_ORE = register("condensed_ball_silver_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_CASSITERITE_ORE = register("condensed_ball_cassiterite_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_PYRITE_ORE = register("condensed_ball_pyrite_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_PENTLANDITE_ORE = register("condensed_ball_pentlandite_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_GALENA_ORE = register("condensed_ball_galena_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_IRON_ORE = register("condensed_ball_iron", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_COPPER_ORE = register("condensed_ball_copper", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_GOLD_ORE = register("condensed_ball_gold", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_ZINC_ORE = register("condensed_ball_zinc", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_SILVER_ORE = register("condensed_ball_silver", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_CASSITERITE_ORE = register("condensed_ball_cassiterite", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_PYRITE_ORE = register("condensed_ball_pyrite", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_PENTLANDITE_ORE = register("condensed_ball_pentlandite", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_GALENA_ORE = register("condensed_ball_galena", n -> new FHSnowballItem(createProps().stacksTo(16)));
 
     // CRUSHED ORES
     public static RegistryObject<Item> CRUSHED_SILVER_ORE = register("crushed_raw_silver", n -> new FHBaseItem(createProps()));

@@ -1,5 +1,6 @@
 {
   "values": [
+    "#frostedheart:machines/metal",
     "frostedheart:silver_ore",
     "frostedheart:cassiterite_ore",
     "frostedheart:pyrite_ore",
@@ -43,6 +44,8 @@
     "frostedheart:generator_amplifier_r1",
     "frostedheart:sheetmetal_duralumin",
     "frostedheart:pebble_block",
-    "frostedheart:odd_mark"
+    "frostedheart:odd_mark",
+    "frostedheart:makeshift_generator_broken",
+    "frostedheart:broken_plate"
   ]
 }
