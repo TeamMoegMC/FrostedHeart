@@ -6,6 +6,9 @@ issueTrackerURL = "https://github.com/TeamMoegMC/FrostedHeart/issues"
 modId = "frostedheart" #mandatory
 version = "${file.jarVersion}" #mandatory
 displayName = "The Winter Rescue: Frosted Heart" #mandatory
+itemIcon="frostedheart:energy_core"
+displayURL="https://www.curseforge.com/minecraft/mc-mods/frosted-heart"
+logoFile="logo.png"
 authors = "Developed by TeamMoeg, with the help of many contributors. See description below."
 description = '''
 The Core Mod for The Winter Rescue Modpack.

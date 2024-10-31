@@ -269,10 +269,10 @@ dependencies {
     implementation fg.deobf("curse.maven:caupona-656147:5116975")
 
     // Comforts
-    implementation fg.deobf("curse.maven:comforts-276951:5503516")
+//    implementation fg.deobf("curse.maven:comforts-276951:5503516")
 
     // Terralith
-    implementation "curse.maven:terralith-513688:5512076"
+//    implementation "curse.maven:terralith-513688:5512076"
 
 
     // dead mods:
