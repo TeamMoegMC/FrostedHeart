@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-public class MineBaseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<MineBaseTileEntity>{
+public class MineBaseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<MineBaseBlockEntity>{
 
     public MineBaseBlock(Properties blockProps) {
         super(blockProps);
@@ -26,7 +26,7 @@ public class MineBaseBlock extends AbstractTownWorkerBlock implements FHEntityBl
     //test
     public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
         if (!worldIn.isClientSide && handIn == InteractionHand.MAIN_HAND) {
-            MineBaseTileEntity te = (MineBaseTileEntity) worldIn.getBlockEntity(pos);
+            MineBaseBlockEntity te = (MineBaseBlockEntity) worldIn.getBlockEntity(pos);
             if (te == null) {
                 return InteractionResult.FAIL;
             }
@@ -44,7 +44,7 @@ public class MineBaseBlock extends AbstractTownWorkerBlock implements FHEntityBl
 
 
 	@Override
-	public Supplier<BlockEntityType<MineBaseTileEntity>> getBlock() {
+	public Supplier<BlockEntityType<MineBaseBlockEntity>> getBlock() {
 		return FHBlockEntityTypes.MINE_BASE;
 	}
 }

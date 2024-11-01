@@ -1,10 +1,10 @@
 package com.teammoeg.frostedheart.content.town.mine;
 
 import com.teammoeg.frostedheart.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerTileEntity;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
-import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
+import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import net.minecraft.nbt.CompoundTag;
@@ -21,7 +21,7 @@ import java.util.Set;
 
 import static java.lang.Math.exp;
 
-public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
+public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity {
     public Set<BlockPos> linkedMines = new HashSet<>();
     private int volume;
     private int area;
@@ -30,7 +30,7 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
     private double temperature;
     private double rating;
 
-    public MineBaseTileEntity(BlockPos pos,BlockState state){
+    public MineBaseBlockEntity(BlockPos pos, BlockState state){
         super(FHBlockEntityTypes.MINE_BASE.get(),pos,state);
     }
 
@@ -66,8 +66,8 @@ public class MineBaseTileEntity extends AbstractTownWorkerTileEntity {
     public double computeRating() {
         double rackRating = 1 - exp(-this.rack);
         double chestRating = 1 - exp(-this.chest * 0.4);
-        double spaceRating = HouseTileEntity.calculateSpaceRating(this.volume, this.area);
-        double temperatureRating = HouseTileEntity.calculateTemperatureRating(this.temperature);
+        double spaceRating = HouseBlockEntity.calculateSpaceRating(this.volume, this.area);
+        double temperatureRating = HouseBlockEntity.calculateTemperatureRating(this.temperature);
         return this.rating = spaceRating*0.15 + temperatureRating*0.15 + chestRating*0.35 + rackRating*0.35;
     }
 

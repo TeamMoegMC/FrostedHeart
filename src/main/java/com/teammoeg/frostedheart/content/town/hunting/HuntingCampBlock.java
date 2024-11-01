@@ -16,7 +16,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.Level;
 
-public class HuntingCampBlock extends AbstractTownWorkerBlock implements FHEntityBlock<HuntingCampTileEntity>{
+public class HuntingCampBlock extends AbstractTownWorkerBlock implements FHEntityBlock<HuntingCampBlockEntity>{
     public HuntingCampBlock(Properties blockProps) {
         super(blockProps);
     }
@@ -26,7 +26,7 @@ public class HuntingCampBlock extends AbstractTownWorkerBlock implements FHEntit
     @Override
     public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
         if (!worldIn.isClientSide && handIn == InteractionHand.MAIN_HAND) {
-            HuntingCampTileEntity te = (HuntingCampTileEntity) worldIn.getBlockEntity(pos);
+            HuntingCampBlockEntity te = (HuntingCampBlockEntity) worldIn.getBlockEntity(pos);
             if (te == null) {
                 return InteractionResult.FAIL;
             }
@@ -39,7 +39,7 @@ public class HuntingCampBlock extends AbstractTownWorkerBlock implements FHEntit
 
 
 	@Override
-	public Supplier<BlockEntityType<HuntingCampTileEntity>> getBlock() {
+	public Supplier<BlockEntityType<HuntingCampBlockEntity>> getBlock() {
 		return FHBlockEntityTypes.HUNTING_CAMP;
 	}
 }

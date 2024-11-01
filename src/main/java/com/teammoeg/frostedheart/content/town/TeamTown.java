@@ -278,7 +278,7 @@ public class TeamTown implements Town, TownWithResident {
      * @param pos position of the block
      * @param tile the tile entity associated with the block
      */
-    public void addTownBlock(BlockPos pos, TownTileEntity tile) {
+    public void addTownBlock(BlockPos pos, TownBlockEntity tile) {
         TownWorkerData workerData = data.blocks.computeIfAbsent(pos, TownWorkerData::new);
         workerData.fromTileEntity(tile);
     }

@@ -4,7 +4,7 @@ import com.google.common.util.concurrent.AtomicDouble;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.*;
-import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
+import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.core.BlockPos;
@@ -14,14 +14,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class MineTileEntity extends AbstractTownWorkerTileEntity{
+public class MineBlockEntity extends AbstractTownWorkerBlockEntity {
     private int avgLightLevel;
     private int validStoneOrOre;
     private Map<TownResourceType, Double> resources;
     private double temperature;
     private double rating;
 
-    public MineTileEntity(BlockPos pos,BlockState state){
+    public MineBlockEntity(BlockPos pos, BlockState state){
         super(FHBlockEntityTypes.MINE.get(),pos,state);
     }
 
@@ -53,7 +53,7 @@ public class MineTileEntity extends AbstractTownWorkerTileEntity{
     public void computeRating(){
         double lightRating = 1 - Math.exp(-this.avgLightLevel);
         double stoneRating = Math.min(this.validStoneOrOre / 255.0F, 1);
-        double temperatureRating = HouseTileEntity.calculateTemperatureRating(this.temperature);
+        double temperatureRating = HouseBlockEntity.calculateTemperatureRating(this.temperature);
         this.rating = (lightRating * 0.3 + stoneRating * 0.3 + temperatureRating * 0.4) /* * (1 + 4 * this.linkedBaseRating)*/;
     }
 

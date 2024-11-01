@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.town.hunting;
 
 import com.teammoeg.frostedheart.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerTileEntity;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
@@ -11,8 +11,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class HuntingCampTileEntity extends AbstractTownWorkerTileEntity {
-    public HuntingCampTileEntity(BlockPos pos,BlockState state) {
+public class HuntingCampBlockEntity extends AbstractTownWorkerBlockEntity {
+    public HuntingCampBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.HUNTING_CAMP.get(),pos,state);
     }
 

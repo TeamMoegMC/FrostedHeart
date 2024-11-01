@@ -27,7 +27,7 @@ import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHBlocks;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseTileEntity;
+import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.mine.MineWorker;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseWorker;
@@ -68,7 +68,7 @@ public enum TownWorkerType {
             (resident) -> resident.getTrust() * 0.01),
     MINE_BASE(FHBlocks.MINE_BASE, null, 0),
     HUNTING_CAMP(FHBlocks.HUNTING_CAMP, null, 0),
-    HUNTING_BASE(FHBlocks.HUNTING_BASE, new HuntingBaseTileEntity.HuntingBaseWorker(), -1, true, (currentResidentNum, nbt) -> {
+    HUNTING_BASE(FHBlocks.HUNTING_BASE, new HuntingBaseBlockEntity.HuntingBaseWorker(), -1, true, (currentResidentNum, nbt) -> {
         int maxResident = nbt.getCompound("tileEntity").getInt("maxResident");
         if(currentResidentNum < maxResident) return -currentResidentNum + 1.0 * currentResidentNum / maxResident + 0.5 + TownWorkerData.getRating(nbt);
         return Double.NEGATIVE_INFINITY;

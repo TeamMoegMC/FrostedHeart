@@ -26,7 +26,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.SpecialData;
 import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
-import com.teammoeg.frostedheart.content.town.mine.MineTileEntity;
+import com.teammoeg.frostedheart.content.town.mine.MineBlockEntity;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
@@ -116,7 +116,7 @@ public class TeamTownData implements SpecialData{
                 workerData.toTileEntity(world);
                 workerData.updateFromTileEntity(world);
             }
-            if(AbstractTownWorkerTileEntity.isValid(workerData)){
+            if(AbstractTownWorkerBlockEntity.isValid(workerData)){
                 //由于已经使用了自动刷新城镇方块的功能，已经不需要通过isWorkValid来在获取合法性信息时刷新。
                 //在抽象类AbstractTownWorkerTileEntity中已经定义了townWorkerState来确定和保存合法性，因此可以直接使用静态方法isValid判断是否是合法的数据
                 // 不再使用isWorkValid，从而减少获取TileEntity的次数
@@ -165,7 +165,7 @@ public class TeamTownData implements SpecialData{
                 BlockState bs = world.getBlockState(pos);
                 BlockEntity te = Utils.getExistingTileEntity(world, pos);
                 TownWorkerType twt = v.getType();
-                return twt.getBlock() != bs.getBlock() || !(te instanceof TownTileEntity);
+                return twt.getBlock() != bs.getBlock() || !(te instanceof TownBlockEntity);
             }
             return false;
         });
@@ -182,10 +182,10 @@ public class TeamTownData implements SpecialData{
                 BlockState bs = world.getBlockState(pos);
                 BlockEntity te = Utils.getExistingTileEntity(world, pos);
                 TownWorkerType type = data.getType();
-                if(type.getBlock() != bs.getBlock() || !(te instanceof TownTileEntity)){
+                if(type.getBlock() != bs.getBlock() || !(te instanceof TownBlockEntity)){
                     iterator.remove();
                 } else{
-                    data.updateFromTileEntity((TownTileEntity)te);
+                    data.updateFromTileEntity((TownBlockEntity)te);
                 }
             }
         }
@@ -202,7 +202,7 @@ public class TeamTownData implements SpecialData{
                 BlockState bs = world.getBlockState(pos);
                 BlockEntity te = Utils.getExistingTileEntity(world, pos);
                 TownWorkerType twt = v.getType();
-                return twt.getBlock() != bs.getBlock() || !(te instanceof TownTileEntity) || !(((TownTileEntity)te).isWorkValid());
+                return twt.getBlock() != bs.getBlock() || !(te instanceof TownBlockEntity) || !(((TownBlockEntity)te).isWorkValid());
             }
             return false;
         });
@@ -226,8 +226,8 @@ public class TeamTownData implements SpecialData{
             }
             while (subIterator.hasNext()) {
                 TownWorkerData comparingWorkerData = subIterator.next();
-                OccupiedArea comparingWorkerOccupiedArea = AbstractTownWorkerTileEntity.getOccupiedArea(comparingWorkerData);
-                OccupiedArea workerOccupiedArea = AbstractTownWorkerTileEntity.getOccupiedArea(workerData);
+                OccupiedArea comparingWorkerOccupiedArea = AbstractTownWorkerBlockEntity.getOccupiedArea(comparingWorkerData);
+                OccupiedArea workerOccupiedArea = AbstractTownWorkerBlockEntity.getOccupiedArea(workerData);
                 if (workerOccupiedArea.doRectanglesIntersect(comparingWorkerOccupiedArea)) {
                     workersMightOverlap.put(workerData, workerOccupiedArea);
                     workersMightOverlap.put(comparingWorkerData, comparingWorkerOccupiedArea);
@@ -281,7 +281,7 @@ public class TeamTownData implements SpecialData{
         ArrayList<TownWorkerData> mineBases = new ArrayList<>();
         HashMap<TownWorkerData, BlockPos> mineMap = new HashMap<>();        //TownWorkerData: mine, BlockPos: basePos
         for(TownWorkerData data : blocks.values()){
-            if(data.getType() == TownWorkerType.MINE_BASE && AbstractTownWorkerTileEntity.isValid(data)){
+            if(data.getType() == TownWorkerType.MINE_BASE && AbstractTownWorkerBlockEntity.isValid(data)){
                 mineBases.add(data);
             }
             if(data.getType() == TownWorkerType.MINE){
@@ -293,7 +293,7 @@ public class TeamTownData implements SpecialData{
                     .map(nbt -> BlockPos.of(((LongTag)nbt).getAsLong()))
                     .forEach(pos -> mineMap.put(blocks.get(pos), mineBase.getPos()));
         }
-        mineMap.forEach(MineTileEntity::setLinkedBase);
+        mineMap.forEach(MineBlockEntity::setLinkedBase);
     }
 
     //distribute homeless residents to house

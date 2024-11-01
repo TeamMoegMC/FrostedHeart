@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.town.house;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerTileEntity;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
@@ -54,7 +54,7 @@ import java.util.Objects;
  * - Check if the house structure is valid
  * - Compute comfort rating based on the house structure
  */
-public class HouseTileEntity extends AbstractTownWorkerTileEntity{
+public class HouseBlockEntity extends AbstractTownWorkerBlockEntity {
 
     /** The temperature at which the house is comfortable. */
     public static final double COMFORTABLE_TEMP_HOUSE = 24;
@@ -75,7 +75,7 @@ public class HouseTileEntity extends AbstractTownWorkerTileEntity{
     /** Tile data, stored in tile entity. */
     HeatConsumerEndpoint endpoint = new HeatConsumerEndpoint(99,10,1);
 
-    public HouseTileEntity(BlockPos pos,BlockState state) {
+    public HouseBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.HOUSE.get(),pos,state);
     }
 

@@ -20,14 +20,13 @@
 package com.teammoeg.frostedheart.content.town;
 
 import net.minecraft.nbt.CompoundTag;
-import java.util.Collection;
 
 /**
  * A town block's tile entity.
  * <p>
  * Should be implemented by tile entities that are associated with town blocks.
  */
-public interface TownTileEntity {
+public interface TownBlockEntity {
     /**
      * Get the priority of the worker.
      *

@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.town.warehouse;
 
 import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerTileEntity;
+import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
@@ -15,13 +15,13 @@ import net.minecraft.core.BlockPos;
 
 import java.util.Objects;
 
-public class WarehouseTileEntity extends AbstractTownWorkerTileEntity{
+public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity {
     private int volume;//有效体积
     private int area;//占地面积
     private double capacity;//最大容量
     private boolean addedToSchedulerQueue = false;
 
-    public WarehouseTileEntity(BlockPos pos,BlockState state) {
+    public WarehouseBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.WAREHOUSE.get(),pos,state);
     }
 

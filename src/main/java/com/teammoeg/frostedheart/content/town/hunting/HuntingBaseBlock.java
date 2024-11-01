@@ -18,7 +18,7 @@ import net.minecraft.world.level.Level;
 
 import java.util.function.Supplier;
 
-public class HuntingBaseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<HuntingBaseTileEntity>{
+public class HuntingBaseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<HuntingBaseBlockEntity>{
     public HuntingBaseBlock(Properties blockProps) {
         super(blockProps);
     }
@@ -35,7 +35,7 @@ public class HuntingBaseBlock extends AbstractTownWorkerBlock implements FHEntit
     @Override
     public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
         if (!worldIn.isClientSide && handIn == InteractionHand.MAIN_HAND) {
-            HuntingBaseTileEntity te = (HuntingBaseTileEntity) worldIn.getBlockEntity(pos);
+            HuntingBaseBlockEntity te = (HuntingBaseBlockEntity) worldIn.getBlockEntity(pos);
             if (te == null) {
                 return InteractionResult.FAIL;
             }
@@ -63,7 +63,7 @@ public class HuntingBaseBlock extends AbstractTownWorkerBlock implements FHEntit
 
 
 	@Override
-	public Supplier<BlockEntityType<HuntingBaseTileEntity>> getBlock() {
+	public Supplier<BlockEntityType<HuntingBaseBlockEntity>> getBlock() {
 		return FHBlockEntityTypes.HUNTING_BASE;
 	}
 }

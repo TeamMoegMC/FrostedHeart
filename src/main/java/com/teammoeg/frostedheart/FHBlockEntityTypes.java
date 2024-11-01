@@ -38,12 +38,12 @@ import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainTileEntity
 import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEntity;
-import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
-import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseTileEntity;
-import com.teammoeg.frostedheart.content.town.hunting.HuntingCampTileEntity;
-import com.teammoeg.frostedheart.content.town.mine.MineBaseTileEntity;
-import com.teammoeg.frostedheart.content.town.mine.MineTileEntity;
-import com.teammoeg.frostedheart.content.town.warehouse.WarehouseTileEntity;
+import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
+import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseBlockEntity;
+import com.teammoeg.frostedheart.content.town.hunting.HuntingCampBlockEntity;
+import com.teammoeg.frostedheart.content.town.mine.MineBaseBlockEntity;
+import com.teammoeg.frostedheart.content.town.mine.MineBlockEntity;
+import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlockEntity;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentTileEntity;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerTileEntity;
 import com.tterrag.registrate.util.entry.BlockEntityEntry;
@@ -112,23 +112,23 @@ public class FHBlockEntityTypes {
     public static final RegistryObject<BlockEntityType<?>> INCUBATOR2 = REGISTER.register(
             "heat_incubator", makeType(HeatIncubatorTileEntity::new, FHBlocks.HEAT_INCUBATOR)
     );
-    public static final RegistryObject<BlockEntityType<HouseTileEntity>> HOUSE = REGISTER.register(
-            "house", makeType(HouseTileEntity::new, FHBlocks.HOUSE)
+    public static final RegistryObject<BlockEntityType<HouseBlockEntity>> HOUSE = REGISTER.register(
+            "house", makeType(HouseBlockEntity::new, FHBlocks.HOUSE)
     );
-    public static final RegistryObject<BlockEntityType<WarehouseTileEntity>> WAREHOUSE = REGISTER.register(
-            "warehouse", makeType(WarehouseTileEntity::new, FHBlocks.WAREHOUSE)
+    public static final RegistryObject<BlockEntityType<WarehouseBlockEntity>> WAREHOUSE = REGISTER.register(
+            "warehouse", makeType(WarehouseBlockEntity::new, FHBlocks.WAREHOUSE)
     );
-    public static final RegistryObject<BlockEntityType<MineTileEntity>> MINE = REGISTER.register(
-            "mine", makeType(MineTileEntity::new, FHBlocks.MINE)
+    public static final RegistryObject<BlockEntityType<MineBlockEntity>> MINE = REGISTER.register(
+            "mine", makeType(MineBlockEntity::new, FHBlocks.MINE)
     );
-    public static final RegistryObject<BlockEntityType<MineBaseTileEntity>> MINE_BASE = REGISTER.register(
-            "mine_base", makeType(MineBaseTileEntity::new, FHBlocks.MINE_BASE)
+    public static final RegistryObject<BlockEntityType<MineBaseBlockEntity>> MINE_BASE = REGISTER.register(
+            "mine_base", makeType(MineBaseBlockEntity::new, FHBlocks.MINE_BASE)
     );
-    public static final RegistryObject<BlockEntityType<HuntingCampTileEntity>> HUNTING_CAMP = REGISTER.register(
-            "hunting_camp", makeType(HuntingCampTileEntity::new, FHBlocks.HUNTING_CAMP)
+    public static final RegistryObject<BlockEntityType<HuntingCampBlockEntity>> HUNTING_CAMP = REGISTER.register(
+            "hunting_camp", makeType(HuntingCampBlockEntity::new, FHBlocks.HUNTING_CAMP)
     );
-    public static final RegistryObject<BlockEntityType<HuntingBaseTileEntity>> HUNTING_BASE = REGISTER.register(
-            "hunting_base", makeType(HuntingBaseTileEntity::new, FHBlocks.HUNTING_BASE)
+    public static final RegistryObject<BlockEntityType<HuntingBaseBlockEntity>> HUNTING_BASE = REGISTER.register(
+            "hunting_base", makeType(HuntingBaseBlockEntity::new, FHBlocks.HUNTING_BASE)
     );
     private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(BlockEntitySupplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));

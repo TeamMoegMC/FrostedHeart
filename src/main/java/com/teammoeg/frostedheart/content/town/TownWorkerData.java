@@ -30,7 +30,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.server.level.ServerLevel;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -96,33 +95,33 @@ public class TownWorkerData {
         return type.getWorker().firstWork(resource, workData);
     }
 
-    public void fromTileEntity(TownTileEntity te) {
+    public void fromTileEntity(TownBlockEntity te) {
         type = te.getWorkerType();
         workData = new CompoundTag();
         workData.put("tileEntity", te.getWorkData());
         priority = te.getPriority();
     }
 
-    public void toTileEntity(TownTileEntity te){
+    public void toTileEntity(TownBlockEntity te){
         te.setWorkData(workData.getCompound("town"));
     }
 
     public void updateFromTileEntity(ServerLevel world){
         if(loaded){
-            TownTileEntity te = (TownTileEntity) world.getBlockEntity(pos);
+            TownBlockEntity te = (TownBlockEntity) world.getBlockEntity(pos);
             if(te != null){
                 workData.put("tileEntity", te.getWorkData());
             }
         }
     }
 
-    public void updateFromTileEntity(TownTileEntity te){
+    public void updateFromTileEntity(TownBlockEntity te){
         workData.put("tileEntity", te.getWorkData());
     }
 
     public void toTileEntity(ServerLevel world){
         if(loaded){
-            TownTileEntity te = (TownTileEntity) world.getBlockEntity(pos);
+            TownBlockEntity te = (TownBlockEntity) world.getBlockEntity(pos);
             if(te != null){
                 te.setWorkData(workData.getCompound("town"));
             }
@@ -172,8 +171,8 @@ public class TownWorkerData {
     public void setData(ServerLevel w) {
         if (loaded) {
             BlockEntity te = Utils.getExistingTileEntity(w, pos);
-            if (te instanceof TownTileEntity) {
-                ((TownTileEntity) te).setWorkData(workData);
+            if (te instanceof TownBlockEntity) {
+                ((TownBlockEntity) te).setWorkData(workData);
             }
         }
     }

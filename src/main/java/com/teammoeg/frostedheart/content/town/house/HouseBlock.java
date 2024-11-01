@@ -40,7 +40,7 @@ import java.util.function.Supplier;
 /**
  * A house in the town.
  */
-public class HouseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<HouseTileEntity>{
+public class HouseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<HouseBlockEntity>{
     public HouseBlock(Properties blockProps) {
         super(blockProps);
     }
@@ -56,7 +56,7 @@ public class HouseBlock extends AbstractTownWorkerBlock implements FHEntityBlock
     @Override
     public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
         if (!worldIn.isClientSide && handIn == InteractionHand.MAIN_HAND) {
-            HouseTileEntity te = (HouseTileEntity) worldIn.getBlockEntity(pos);
+            HouseBlockEntity te = (HouseBlockEntity) worldIn.getBlockEntity(pos);
             if (te == null) {
                 return InteractionResult.FAIL;
             }
@@ -80,7 +80,7 @@ public class HouseBlock extends AbstractTownWorkerBlock implements FHEntityBlock
     }
 
 	@Override
-	public Supplier<BlockEntityType<HouseTileEntity>> getBlock() {
+	public Supplier<BlockEntityType<HouseBlockEntity>> getBlock() {
 		return FHBlockEntityTypes.HOUSE;
 	}
 }

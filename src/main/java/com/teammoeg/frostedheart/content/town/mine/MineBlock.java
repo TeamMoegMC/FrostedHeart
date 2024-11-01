@@ -23,7 +23,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-public class MineBlock extends AbstractTownWorkerBlock implements FHEntityBlock<MineTileEntity>{
+public class MineBlock extends AbstractTownWorkerBlock implements FHEntityBlock<MineBlockEntity>{
 
     public MineBlock(Properties blockProps){
         super(blockProps);
@@ -34,7 +34,7 @@ public class MineBlock extends AbstractTownWorkerBlock implements FHEntityBlock<
     //test
     public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
         if (!worldIn.isClientSide && handIn == InteractionHand.MAIN_HAND) {
-            MineTileEntity te = (MineTileEntity) worldIn.getBlockEntity(pos);
+            MineBlockEntity te = (MineBlockEntity) worldIn.getBlockEntity(pos);
             if (te == null) {
                 return InteractionResult.FAIL;
             }
@@ -51,7 +51,7 @@ public class MineBlock extends AbstractTownWorkerBlock implements FHEntityBlock<
     @Override
     public void setPlacedBy(Level world, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(world, pos, state, entity, stack);
-        MineTileEntity te = (MineTileEntity) Utils.getExistingTileEntity(world, pos);
+        MineBlockEntity te = (MineBlockEntity) Utils.getExistingTileEntity(world, pos);
         if (te != null) {
             if (entity instanceof ServerPlayer) {
                 //if (ChunkHeatData.hasAdjust(world, pos)) { 矿坑的工作不强制要求能量塔在附近
@@ -63,7 +63,7 @@ public class MineBlock extends AbstractTownWorkerBlock implements FHEntityBlock<
 
 
 	@Override
-	public Supplier<BlockEntityType<MineTileEntity>> getBlock() {
+	public Supplier<BlockEntityType<MineBlockEntity>> getBlock() {
 		return FHBlockEntityTypes.MINE;
 	}
 }

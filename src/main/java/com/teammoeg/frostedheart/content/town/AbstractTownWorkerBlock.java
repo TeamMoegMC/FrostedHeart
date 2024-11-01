@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.content.town;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
@@ -18,12 +17,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public abstract class AbstractTownWorkerBlock extends FHBaseBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
@@ -48,7 +44,7 @@ public abstract class AbstractTownWorkerBlock extends FHBaseBlock {
     @Override
     public void setPlacedBy(Level world, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(world, pos, state, entity, stack);
-        TownTileEntity te = (TownTileEntity) Utils.getExistingTileEntity(world, pos);    //这玩意原本是写在HouseBlock里面的，这里的强制转型原本转为了HouseTileEntity，现在改成TownTileEntity不知道是否可行
+        TownBlockEntity te = (TownBlockEntity) Utils.getExistingTileEntity(world, pos);    //这玩意原本是写在HouseBlock里面的，这里的强制转型原本转为了HouseTileEntity，现在改成TownTileEntity不知道是否可行
         if (te != null) {
             // register the house to the town
             if (entity instanceof ServerPlayer) {

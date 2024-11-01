@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.function.Supplier;
 
-public class WarehouseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<WarehouseTileEntity>{
+public class WarehouseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<WarehouseBlockEntity>{
     public WarehouseBlock(Properties blockProps) {
         super(blockProps);
     }
@@ -27,7 +27,7 @@ public class WarehouseBlock extends AbstractTownWorkerBlock implements FHEntityB
     //test
     public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
         if (!worldIn.isClientSide && handIn == InteractionHand.MAIN_HAND) {
-            WarehouseTileEntity te = (WarehouseTileEntity) worldIn.getBlockEntity(pos);
+            WarehouseBlockEntity te = (WarehouseBlockEntity) worldIn.getBlockEntity(pos);
             if (te == null) {
                 return InteractionResult.FAIL;
             }
@@ -43,7 +43,7 @@ public class WarehouseBlock extends AbstractTownWorkerBlock implements FHEntityB
     }
 
 	@Override
-	public Supplier<BlockEntityType<WarehouseTileEntity>> getBlock() {
+	public Supplier<BlockEntityType<WarehouseBlockEntity>> getBlock() {
 
 		return FHBlockEntityTypes.WAREHOUSE;
 	}

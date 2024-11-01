@@ -5,7 +5,7 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockScanner;
-import com.teammoeg.frostedheart.content.town.house.HouseTileEntity;
+import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -22,7 +22,7 @@ import java.util.*;
 
 import java.util.AbstractMap.SimpleEntry;
 
-public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
+public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity {
     private double rating = 0;
     private int volume;
     private int area;
@@ -36,7 +36,7 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
     private double temperatureModifier = 0;
     private int maxResident;
 
-    public HuntingBaseTileEntity(BlockPos pos,BlockState state) {
+    public HuntingBaseBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.HUNTING_BASE.get(),pos,state);
     }
 
@@ -107,7 +107,7 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
 
     public boolean isTemperatureValid(){
         double effective = temperature + temperatureModifier;
-        return effective >= HouseTileEntity.MIN_TEMP_HOUSE && effective <= HouseTileEntity.MAX_TEMP_HOUSE;
+        return effective >= HouseBlockEntity.MIN_TEMP_HOUSE && effective <= HouseBlockEntity.MAX_TEMP_HOUSE;
     }
 
     public double getTemperatureModifier() {
@@ -120,8 +120,8 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
 
     private double computeRating() {
         if(this.isValid()){
-            return (HouseTileEntity.calculateSpaceRating(this.volume, this.area) * (2 + HouseTileEntity.calculateDecorationRating(this.decorations, this.area))
-                    + 2 * HouseTileEntity.calculateTemperatureRating(this.temperature + this.temperatureModifier) +
+            return (HouseBlockEntity.calculateSpaceRating(this.volume, this.area) * (2 + HouseBlockEntity.calculateDecorationRating(this.decorations, this.area))
+                    + 2 * HouseBlockEntity.calculateTemperatureRating(this.temperature + this.temperatureModifier) +
                     (1-Math.exp(-this.maxResident - chestNum)) ) / 6;
         }
         else return 0;
@@ -129,7 +129,7 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
 
     private int calculateMaxResidents(){
         if(this.isValid()){
-            return Math.min((int)(HouseTileEntity.calculateSpaceRating(this.volume, this.area) / 16 * this.area), Math.min(this.tanningRackNum, this.bedNum));
+            return Math.min((int)(HouseBlockEntity.calculateSpaceRating(this.volume, this.area) / 16 * this.area), Math.min(this.tanningRackNum, this.bedNum));
         }
         else return 0;
     }
@@ -139,7 +139,7 @@ public class HuntingBaseTileEntity extends AbstractTownWorkerTileEntity {
         assert level != null;
         if (!level.isClientSide) {
             if (endpoint.tryDrainHeat(1)) {
-                temperatureModifier = Math.max(endpoint.getTemperatureLevel() * 10, HouseTileEntity.COMFORTABLE_TEMP_HOUSE);
+                temperatureModifier = Math.max(endpoint.getTemperatureLevel() * 10, HouseBlockEntity.COMFORTABLE_TEMP_HOUSE);
                 if (setActive(true)) {
                     setChanged();
                 }
