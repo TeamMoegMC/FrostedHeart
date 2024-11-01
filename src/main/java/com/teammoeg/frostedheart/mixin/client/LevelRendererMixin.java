@@ -75,7 +75,7 @@ import java.util.Random;
  */
 @OnlyIn(Dist.CLIENT)
 @Mixin(value = LevelRenderer.class, priority = 1)
-public abstract class LevelRendererMixin {
+public abstract class  LevelRendererMixin {
     @Shadow @Final private static ResourceLocation SNOW_LOCATION;
 
     @Shadow @Final private Minecraft minecraft;

@@ -38,6 +38,8 @@ public class FHTags {
 		public static final TagKey<Block> TOWN_BLOCKS = tag("town/blocks");
 		public static final TagKey<Block> METAL_MACHINES = tag("machines/metal");
 		public static final TagKey<Block> WOODEN_MACHINES = tag("machines/wooden");
+		public static final TagKey<Block> SOIL = tag("soil");
+
 
 		private static TagKey<Block> tag(String name) {
 			return BlockTags.create(new ResourceLocation(FHMain.MODID, name));

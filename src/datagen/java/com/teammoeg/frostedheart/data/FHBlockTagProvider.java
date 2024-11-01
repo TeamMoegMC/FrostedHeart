@@ -161,6 +161,26 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.BAUXITE_PERMAFROST))
                 .add(rk(FHBlocks.KAOLIN_PERMAFROST));
 
+        tag(FHTags.Blocks.SOIL)
+                .add(rk(Blocks.DIRT))
+                .add(rk(Blocks.GRASS_BLOCK))
+                .add(rk(Blocks.COARSE_DIRT))
+                .add(rk(Blocks.PODZOL))
+                .add(rk(FHBlocks.BURIED_PODZOL))
+                .add(rk(Blocks.MYCELIUM))
+                .add(rk(FHBlocks.BURIED_MYCELIUM))
+                .add(rk(Blocks.ROOTED_DIRT))
+                .add(rk(Blocks.MUD))
+                .add(rk(Blocks.GRAVEL))
+                .add(rk(Blocks.SAND))
+                .add(rk(Blocks.RED_SAND))
+                .add(rk(Blocks.CLAY))
+                .add(rk(FHBlocks.PEAT))
+                .add(rk(FHBlocks.KAOLIN))
+                .add(rk(FHBlocks.BAUXITE))
+                .add(rk(FHBlocks.ROTTEN_WOOD));
+
+
         // Town blocks
         tag(FHTags.Blocks.TOWN_BLOCKS)
                 .add(rk(FHBlocks.HOUSE))

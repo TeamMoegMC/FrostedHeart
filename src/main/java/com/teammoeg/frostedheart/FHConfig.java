@@ -20,12 +20,16 @@
 package com.teammoeg.frostedheart;
 
 import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.biome.Biomes;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class FHConfig {
 
@@ -150,6 +154,7 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Double> steamCorePowerIntake;
         public final ForgeConfigSpec.ConfigValue<Double> steamCoreGeneratedSpeed;
         public final ForgeConfigSpec.ConfigValue<Double> steamCoreCapacity;
+        public final ForgeConfigSpec.BooleanValue enableSnowAccumulationDuringWorldgen;
         Common(ForgeConfigSpec.Builder builder) {
             enablesTemperatureForecast = builder
                     .comment("Enables the weather forecast system. ")
@@ -171,6 +176,8 @@ public class FHConfig {
                     .defineInRange("steamCoreGeneratedSpeed", 32f, 0f, 256f);
             steamCoreCapacity = builder.comment("The capacity which steam core can provide.")
                     .defineInRange("steamCoreCapacity", 32, 0f, 256f);
+            enableSnowAccumulationDuringWorldgen = builder.comment("Enables snow accumulation during world generation.")
+                    .define("enableSnowAccumulationDuringWorldgen", false);
 
         }
     }
@@ -188,7 +195,8 @@ public class FHConfig {
         public final ForgeConfigSpec.BooleanValue resetWaterLevelInDeath;
         public final ForgeConfigSpec.BooleanValue enableSnowAccumulationDuringWeather;
         public final ForgeConfigSpec.IntValue snowAccumulationDifficulty;
-
+        public final ForgeConfigSpec.ConfigValue<List<? extends String>> nonWinterBiomes;
+        public final ForgeConfigSpec.BooleanValue invertNonWinterBiomes;
 
         Server(ForgeConfigSpec.Builder builder) {
             alwaysKeepInventory = builder
@@ -218,6 +226,24 @@ public class FHConfig {
                     .define("enableSnowAccumulationDuringWeather", true);
             snowAccumulationDifficulty = builder.comment("The the inverse of this value is the probability of snow adding one layer during each tick.")
                     .defineInRange("snowAccumulationDifficulty", 16, 1, Integer.MAX_VALUE);
+            nonWinterBiomes = builder.comment("Biomes that are not considered winter biomes.")
+                    .define("nonWinterBiomes", List.of(
+                            Biomes.NETHER_WASTES.location().toString(),
+                            Biomes.CRIMSON_FOREST.location().toString(),
+                            Biomes.WARPED_FOREST.location().toString(),
+                            Biomes.BASALT_DELTAS.location().toString(),
+                            Biomes.SOUL_SAND_VALLEY.location().toString(),
+                            Biomes.END_BARRENS.location().toString(),
+                            Biomes.END_HIGHLANDS.location().toString(),
+                            Biomes.END_MIDLANDS.location().toString(),
+                            Biomes.THE_END.location().toString(),
+                            Biomes.THE_VOID.location().toString(),
+                            "terralith:yellowstone",
+                            "terralith:volcanic_crater",
+                            "terralith:volcanic_peaks"
+                    ));
+            invertNonWinterBiomes = builder.comment("If true, the 'nonWinterBiomes' config option will be interpreted as a list of winter biomes, and all others will be ignored.")
+                    .define("invertNonWinterBiomes", false);
         }
     }
 
@@ -259,5 +285,15 @@ public class FHConfig {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, FHConfig.CLIENT_CONFIG);
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, FHConfig.COMMON_CONFIG);
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, FHConfig.SERVER_CONFIG);
+    }
+
+    public static boolean isWinterBiome(ResourceLocation name)
+    {
+        if (name != null)
+        {
+            final Stream<ResourceLocation> stream = FHConfig.SERVER.nonWinterBiomes.get().stream().map(ResourceLocation::new);
+            return FHConfig.SERVER.invertNonWinterBiomes.get() ? stream.anyMatch(name::equals) : stream.noneMatch(name::equals);
+        }
+        return false;
     }
 }

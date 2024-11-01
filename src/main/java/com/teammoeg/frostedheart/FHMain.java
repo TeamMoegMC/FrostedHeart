@@ -38,7 +38,9 @@ import com.teammoeg.frostedheart.util.creativeTab.TabType;
 import com.teammoeg.frostedheart.util.utility.BlackListPredicate;
 import com.teammoeg.frostedheart.util.version.FHRemote;
 import com.teammoeg.frostedheart.util.version.FHVersion;
+import com.teammoeg.frostedheart.world.FHBiomeModifiers;
 import com.teammoeg.frostedheart.world.FHBiomes;
+import com.teammoeg.frostedheart.world.FHFeatures;
 import dev.ftb.mods.ftbteams.api.event.TeamEvent;
 import net.minecraft.advancements.critereon.ItemPredicate;
 import net.minecraft.core.registries.Registries;
@@ -71,7 +73,6 @@ import java.io.File;
 
 @Mod(FHMain.MODID)
 public class FHMain {
-   
 
     public static final String MODID = "frostedheart";
     public static final String MODNAME = "Frosted Heart";
@@ -143,7 +144,9 @@ public class FHMain {
         FHRecipes.RECIPE_SERIALIZERS.register(mod);
         FHRecipes.RECIPE_TYPES.register(mod);
         FHParticleTypes.REGISTER.register(mod);
+        FHFeatures.FEATURES.register(mod);
         FHBiomes.BIOME_REGISTER.register(mod);
+        FHBiomeModifiers.BIOME_MODIFIERS.register(mod);
         FHAttributes.REGISTER.register(mod);
         FHMobEffects.EFFECTS.register(mod);
         FHLoot.LC_REGISTRY.register(mod);
