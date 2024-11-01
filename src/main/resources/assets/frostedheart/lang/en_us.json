@@ -508,5 +508,7 @@
   "death.attack.byThirst": "%s turned into Dried %s.",
   "effect.frostedheart.thirst": "Thirst",
   "tooltip.frostedheart.drink_unit": "Drink Unit",
-  "tooltip.frostedheart.empty": "Empty"
+  "tooltip.frostedheart.empty": "Empty",
+
+  "subtitle.frostedheart.wind": "Wind"
 }

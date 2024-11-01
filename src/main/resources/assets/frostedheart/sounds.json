@@ -15,5 +15,12 @@
     "sounds": [
       "frostedheart:ice_cracking"
     ]
+  },
+  "wind": {
+    "category": "weather",
+    "subtitle": "subtitle.frostedheart.wind",
+    "sounds": [
+      "frostedheart:wind"
+    ]
   }
 }

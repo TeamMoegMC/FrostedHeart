@@ -62,6 +62,7 @@
     "minecraft.RabbitEntityMixin",
     "minecraft.RecipeManagerMixin",
     "minecraft.SaplingBlockMixin",
+    "minecraft.ServerLevelMixin",
     "minecraft.ServerPlayNetHandlerMixin",
     "minecraft.SheepEntityMixin",
     "minecraft.TileEntityMixin",

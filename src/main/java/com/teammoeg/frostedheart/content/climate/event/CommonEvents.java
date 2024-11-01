@@ -19,20 +19,15 @@
 
 package com.teammoeg.frostedheart.content.climate.event;
 
+import blusunrize.immersiveengineering.common.register.IEBlocks;
 import com.mojang.brigadier.CommandDispatcher;
-import com.teammoeg.frostedheart.FHAttributes;
-import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHDamageTypes;
-import com.teammoeg.frostedheart.data.FHDataManager;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.data.FHDataManager.DataType;
+import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
+import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
-import com.teammoeg.frostedheart.command.*;
+import com.teammoeg.frostedheart.command.AddTempCommand;
+import com.teammoeg.frostedheart.command.ClimateCommand;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
@@ -44,40 +39,45 @@ import com.teammoeg.frostedheart.content.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.foods.dailykitchen.DailyKitchen;
-import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
-import com.teammoeg.frostedheart.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
+import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
+import com.teammoeg.frostedheart.data.FHDataManager;
+import com.teammoeg.frostedheart.data.FHDataManager.DataType;
+import com.teammoeg.frostedheart.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
-
-import blusunrize.immersiveengineering.common.register.IEBlocks;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.BonemealableBlock;
-import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.item.enchantment.DigDurabilityEnchantment;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.DamageTypeTags;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.enchantment.DigDurabilityEnchantment;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.BonemealableBlock;
+import net.minecraft.world.level.block.SaplingBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.ItemAttributeModifierEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -453,5 +453,39 @@ public class CommonEvents {
             FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity()),
                     new FHClimatePacket(WorldClimate.get(serverWorld)));
         }
+    }
+
+    /**
+     * Places extra snow layer on top of existing snow blocks during snowfall.
+     *
+     * Entry point is {@link com.teammoeg.frostedheart.mixin.minecraft.ServerLevelMixin#placeExtraSnow}
+     *
+     * @author AlcatrazEscapee
+     */
+    public static void placeExtraSnow(ServerLevel level, ChunkAccess chunk) {
+        if (FHConfig.SERVER.enableSnowAccumulationDuringWeather.get() && level.random.nextInt(FHConfig.SERVER.snowAccumulationDifficulty.get()) == 0) {
+            int blockX = chunk.getPos().getMinBlockX();
+            int blockZ = chunk.getPos().getMinBlockZ();
+            BlockPos pos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(blockX, 0, blockZ, 15));
+            BlockState state = level.getBlockState(pos);
+            Biome biome = level.getBiome(pos).value();
+            if (level.isRaining() && biome.coldEnoughToSnow(pos) && level.getBrightness(LightLayer.BLOCK, pos) < 10 && state.getBlock() == Blocks.SNOW) {
+                int layers = state.getValue(BlockStateProperties.LAYERS);
+                if (layers < 5) {
+                    level.setBlockAndUpdate(pos, state.setValue(BlockStateProperties.LAYERS, 1 + layers));
+                }
+
+                // Replacing terrain. Do not use for now.
+//                BlockPos belowPos = pos.below();
+//                BlockState belowState = level.getBlockState(belowPos);
+//                Block replacementBlock = (Block)((Supplier) PrimalWinterBlocks.SNOWY_TERRAIN_BLOCKS.getOrDefault(belowState.getBlock(), () -> {
+//                    return null;
+//                })).get();
+//                if (replacementBlock != null) {
+//                    level.setBlockAndUpdate(belowPos, replacementBlock.defaultBlockState());
+//                }
+            }
+        }
+
     }
 }

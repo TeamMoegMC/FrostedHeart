@@ -19,17 +19,13 @@
 
 package com.teammoeg.frostedheart;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.alcatrazescapee.primalwinter.epsilon.ParseError;
-import com.alcatrazescapee.primalwinter.epsilon.Type;
-import com.alcatrazescapee.primalwinter.epsilon.value.IntValue;
 import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
-
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class FHConfig {
 
@@ -54,27 +50,34 @@ public class FHConfig {
         public final ForgeConfigSpec.DoubleValue fogDensity;
         public final ForgeConfigSpec.IntValue fogColorDay;
         public final ForgeConfigSpec.IntValue fogColorNight;
+        public final ForgeConfigSpec.BooleanValue weatherRenderChanges;
+        public final ForgeConfigSpec.IntValue snowDensity;
+        public final ForgeConfigSpec.BooleanValue snowSounds;
+        public final ForgeConfigSpec.BooleanValue windSounds;
+        public final ForgeConfigSpec.BooleanValue skyRenderChanges;
+
         Client(ForgeConfigSpec.Builder builder) {
+            builder.push("Frosted HUD");
             enableUI = builder
                     .comment("Enables The Winter Rescue HUD. THIS IS MODPACK CORE FEATURE, DISABLING IS NOT RECOMMENDED. ")
                     .define("enableHUD", true);
             enablesTemperatureOrb = builder
                     .comment("Enables the temperature orb overlay. ")
                     .define("enableTemperatureOrb", true);
-
             useFahrenheit = builder.comment("Use Fahrenheit temperature instead of celsus.")
                     .define("useFahrenheit", false);
             tempOrbPosition = builder
                     .comment("Position of the temperature orb in game screen. ")
                     .defineEnum("renderTempOrbAtCenter", TempOrbPos.MIDDLE);
-
             tempOrbOffsetX = builder
                     .comment("X Offset of the temperature orb. The anchor point is defined by the tempOrbPosition value. Only when you set tempOrbPosition to value other than MIDDLE will this value be used. ")
                     .defineInRange("tempOrbOffsetX", 0, -4096, 4096);
-
             tempOrbOffsetY = builder
                     .comment("Y Offset of the temperature orb. The anchor point is defined by the tempOrbPosition value. Only when you set tempOrbPosition to value other than MIDDLE will this value be used.  ")
                     .defineInRange("tempOrbOffsetY", 0, -4096, 4096);
+            builder.pop();
+
+            builder.push("Frozen Effects");
             enableFrozenOverlay = builder
                     .comment("Enables the frozen overlay when player is freezing. ")
                     .define("enableFrozenOverlay", true);
@@ -84,34 +87,57 @@ public class FHConfig {
             enableHeatVignette = builder
                     .comment("Enables the vignette when player is too hot. ")
                     .define("enableHeatVignette", true);
-            enableFrozenSound = builder
-                    .comment("Enables the frozen sound when player is freezing. ")
-                    .define("enableFrozenSound", true);
             enableBreathParticle = builder
                     .comment("Enables the breath particle when environment is cold. ")
                     .define("enableBreathParticle", true);
-            enableWaypoint = builder
-                    .comment("Enables the waypoints rendering. ")
-                    .define("enableWaypoint", true);
-
-            builder.push("scenario");
-            autoMode=builder.comment("Enables Auto click when scenario requires")
-            	.define("autoMode", true);
-            autoModeInterval=builder.comment("Tick before click when a click is required to progress")
-            	.defineInRange("autoModeInterval",40,0,500);
-            textSpeed=builder.comment("Base text appear speed, actual speed may change by scenario if necessary, speed 1 is 0.5 character per tick.")
-            	.defineInRange("textSpeed", 1d, 0.000001, 100000);
+            enableFrozenSound = builder
+                    .comment("Enables the frozen sound when player is freezing. ")
+                    .define("enableFrozenSound", true);
             builder.pop();
-            renderScenario = builder.comment("Enables the scenario rendering. ")
-                    .define("renderScenario", false); // todo: set true
-            renderTips = builder.comment("Enables the tips rendering. ")
-                    .define("renderTips", false); // todo: set true
+
+            builder.push("Weather");
+            weatherRenderChanges = builder.comment("Enables weather rendering changes.")
+                    .define("weatherRenderChanges", true);
             fogDensity = builder.comment("How dense the fog effect during a snowstorm is.")
                     .defineInRange("fogDensity", 0.1, 0, 1);
             fogColorDay = builder.comment("This is the fog color during the day. It must be an RGB hex string.")
                     .defineInRange("fogColorDay", 12566488, 0, 99999999);
             fogColorNight = builder.comment("This is the fog color during the night. It must be an RGB hex string.")
                     .defineInRange("fogColorNight", 789529, 0, 99999999);
+            snowDensity = builder
+                    .comment("How visually dense the snow weather effect is. Normally, vanilla sets this to 5 with fast graphics, and 10 with fancy graphics.")
+                    .defineInRange("snowDensity", 15, 1, 15);
+            snowSounds = builder
+                    .comment("Enable snow weather sounds.")
+                    .define("snowSounds", true);
+            windSounds = builder
+                    .comment("Enable blizzard wind weather sounds.")
+                    .define("windSounds", true);
+            skyRenderChanges = builder
+                    .comment("Changes the sky renderer to one which does not render sunrise or sunset effects during a snowstorm.")
+                    .define("skyRenderChanges", true);
+            builder.pop();
+
+            builder.push("Tips and Waypoints");
+            enableWaypoint = builder
+                    .comment("Enables the waypoints rendering. ")
+                    .define("enableWaypoint", true);
+            renderTips = builder.comment("Enables the tips rendering. ")
+                    .define("renderTips", false); // todo: set true
+            builder.pop();
+
+            builder.push("Scenario");
+            renderScenario = builder.comment("Enables the scenario rendering. ")
+                    .define("renderScenario", false); // todo: set true
+            autoMode=builder.comment("Enables Auto click when scenario requires")
+                    .define("autoMode", true);
+            autoModeInterval=builder.comment("Tick before click when a click is required to progress")
+                    .defineInRange("autoModeInterval",40,0,500);
+            textSpeed=builder.comment("Base text appear speed, actual speed may change by scenario if necessary, speed 1 is 0.5 character per tick.")
+                    .defineInRange("textSpeed", 1d, 0.000001, 100000);
+            builder.pop();
+
+
         }
     }
 
@@ -160,6 +186,8 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Double> waterReducingRate;
         public final ForgeConfigSpec.IntValue weaknessEffectAmplifier;
         public final ForgeConfigSpec.BooleanValue resetWaterLevelInDeath;
+        public final ForgeConfigSpec.BooleanValue enableSnowAccumulationDuringWeather;
+        public final ForgeConfigSpec.IntValue snowAccumulationDifficulty;
 
 
         Server(ForgeConfigSpec.Builder builder) {
@@ -186,6 +214,10 @@ public class FHConfig {
                     .defineInRange("weaknessEffectAmplifier", 0, -1, 999999);
             resetWaterLevelInDeath = builder.comment("It decides if players' water level would reset in death.")
                     .define("resetWaterLevelInDeath", true);
+            enableSnowAccumulationDuringWeather = builder.comment("Enables snow accumulation during snow weather.")
+                    .define("enableSnowAccumulationDuringWeather", true);
+            snowAccumulationDifficulty = builder.comment("The the inverse of this value is the probability of snow adding one layer during each tick.")
+                    .defineInRange("snowAccumulationDifficulty", 16, 1, Integer.MAX_VALUE);
         }
     }
 

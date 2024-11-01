@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.climate.client;
 
-import com.alcatrazescapee.primalwinter.util.Config;
 import com.teammoeg.frostedheart.FHConfig;
 import net.minecraft.Util;
 import net.minecraft.client.Camera;
@@ -97,9 +96,9 @@ public class FogModification {
 
             if (prevFogDensity > 0.0F) {
                 float scaledDelta = 1.0F - (1.0F - prevFogDensity) * (1.0F - prevFogDensity);
-                float fogDensity = Config.INSTANCE.fogDensity.getAsFloat();
-                float farPlaneScale = Mth.lerp(scaledDelta, 1.0F, fogDensity);
-                float nearPlaneScale = Mth.lerp(scaledDelta, 1.0F, 0.3F * fogDensity);
+                Double fogDensity = FHConfig.CLIENT.fogDensity.get();
+                float farPlaneScale = (float) Mth.lerp(scaledDelta, 1.0F, fogDensity);
+                float nearPlaneScale = (float) Mth.lerp(scaledDelta, 1.0F, 0.3F * fogDensity);
                 event.scaleNearPlaneDistance(nearPlaneScale);
                 event.scaleFarPlaneDistance(farPlaneScale);
                 event.setCanceled(true);
