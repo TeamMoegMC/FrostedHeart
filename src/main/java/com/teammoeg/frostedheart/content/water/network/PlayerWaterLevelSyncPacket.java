@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.water.network;
 
+import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
@@ -12,32 +13,38 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class PlayerWaterLevelSyncPacket extends NBTMessage {
+public class PlayerWaterLevelSyncPacket implements FHMessage {
     int waterLevel, waterSaturationLevel;
     float waterExhaustionLevel;
 
     public PlayerWaterLevelSyncPacket(FriendlyByteBuf buffer) {
-        super(buffer);
         waterLevel = buffer.readInt();
         waterSaturationLevel = buffer.readInt();
         waterExhaustionLevel = buffer.readFloat();
     }
 
     public PlayerWaterLevelSyncPacket(int waterLevel, int waterSaturationLevel, float waterExhaustionLevel) {
-        super(toTag(waterLevel, waterSaturationLevel, waterExhaustionLevel));
+        this.waterLevel = waterLevel;
+        this.waterSaturationLevel = waterSaturationLevel;
+        this.waterExhaustionLevel = waterExhaustionLevel;
     }
 
 
     public PlayerWaterLevelSyncPacket(Player pe) {
-        super(WaterLevelCapability.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundTag::new));
+        this(WaterLevelCapability.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundTag::new));
     }
 
-    public static CompoundTag toTag(int waterLevel, int waterSaturationLevel, float waterExhaustionLevel) {
-        CompoundTag compound = new CompoundTag();
-        compound.putInt("PlayerWaterLevel", waterLevel);
-        compound.putInt("PlayerWaterSaturationLevel", waterSaturationLevel);
-        compound.putFloat("PlayerWaterExhaustionLevel", waterExhaustionLevel);
-        return compound;
+    public PlayerWaterLevelSyncPacket(CompoundTag compoundTag) {
+        waterLevel = compoundTag.getInt("PlayerWaterLevel");
+        waterSaturationLevel = compoundTag.getInt("PlayerWaterSaturationLevel");
+        waterExhaustionLevel = compoundTag.getFloat("PlayerWaterExhaustionLevel");
+    }
+
+    @Override
+    public void encode(FriendlyByteBuf buffer) {
+        buffer.writeInt(waterLevel);
+        buffer.writeInt(waterSaturationLevel);
+        buffer.writeFloat(waterExhaustionLevel);
     }
 
     @Override
