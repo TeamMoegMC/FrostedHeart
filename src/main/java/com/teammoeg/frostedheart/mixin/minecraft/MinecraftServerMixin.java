@@ -59,10 +59,10 @@ public class MinecraftServerMixin {
         // this case should not happen because there is no known features that does so.
         if (y == 256)
             y = seaLevel;
-        info.setYSpawn(y - 1);
+        info.setYSpawn(y - 3);
         FHFeatures.SPACECRAFT.get().place(NoneFeatureConfiguration.INSTANCE, serverWorld, serverWorld.getChunkSource().getGenerator(), serverWorld.random,
                 new BlockPos(info.getXSpawn(), info.getYSpawn(), info.getZSpawn()));
-        serverWorld.setDefaultSpawnPos(new BlockPos(info.getXSpawn(), y - 1, info.getZSpawn()), info.getSpawnAngle());
+        serverWorld.setDefaultSpawnPos(new BlockPos(info.getXSpawn(), info.getYSpawn(), info.getZSpawn()), info.getSpawnAngle());
 
     }
 }

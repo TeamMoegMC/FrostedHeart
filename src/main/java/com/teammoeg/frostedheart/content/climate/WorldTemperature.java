@@ -90,6 +90,10 @@ public class WorldTemperature {
      */
     public static final float SNOW_TEMPERATURE = -13;
     /**
+     * The temperature when snow layer melts.
+     */
+    public static final float SNOW_MELT_TEMPERATURE = 0.5F;
+    /**
      * The temperature when snow becomes blizzard.
      */
     public static final float BLIZZARD_TEMPERATURE = -30;

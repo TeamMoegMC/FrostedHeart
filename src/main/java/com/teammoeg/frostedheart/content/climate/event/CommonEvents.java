@@ -96,6 +96,8 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.PacketDistributor.PacketTarget;
 
+import static com.teammoeg.frostedheart.content.climate.WorldTemperature.SNOW_TEMPERATURE;
+
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class CommonEvents {
     @SubscribeEvent
@@ -469,7 +471,7 @@ public class CommonEvents {
             BlockPos pos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(blockX, 0, blockZ, 15));
             BlockState state = level.getBlockState(pos);
             Biome biome = level.getBiome(pos).value();
-            if (level.isRaining() && biome.coldEnoughToSnow(pos) && level.getBrightness(LightLayer.BLOCK, pos) < 10 && state.getBlock() == Blocks.SNOW) {
+            if (level.isRaining() && biome.coldEnoughToSnow(pos) && WorldTemperature.getTemperature(level, pos) <= SNOW_TEMPERATURE && level.getBrightness(LightLayer.BLOCK, pos) < 10 && state.getBlock() == Blocks.SNOW) {
                 int layers = state.getValue(BlockStateProperties.LAYERS);
                 if (layers < 5) {
                     level.setBlockAndUpdate(pos, state.setValue(BlockStateProperties.LAYERS, 1 + layers));

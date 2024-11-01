@@ -65,6 +65,7 @@
     "minecraft.ServerLevelMixin",
     "minecraft.ServerPlayNetHandlerMixin",
     "minecraft.SheepEntityMixin",
+    "minecraft.SnowLayerBlockMixin",
     "minecraft.TileEntityMixin",
     "minecraft.VillagerMixin"
   ],

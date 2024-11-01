@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -45,7 +46,7 @@ public abstract class IceMixin {
      */
     @Overwrite
     public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
-        if (worldIn.getBrightness(LightLayer.BLOCK, pos) > 11 - state.getLightBlock(worldIn, pos) || ChunkHeatData.getTemperature(worldIn, pos) > 0.5) {
+        if (worldIn.getBrightness(LightLayer.BLOCK, pos) > 11 - state.getLightBlock(worldIn, pos) || ChunkHeatData.getTemperature(worldIn, pos) > WorldTemperature.SNOW_MELT_TEMPERATURE) {
             this.melt(state, worldIn, pos);
         }
 
