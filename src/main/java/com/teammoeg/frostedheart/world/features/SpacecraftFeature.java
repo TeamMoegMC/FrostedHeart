@@ -190,8 +190,8 @@ public class SpacecraftFeature extends Feature<NoneFeatureConfiguration> {
 
         // Clear sky above the crater and trench for open air
         for (int y = maxY; y < maxY + 50; y++) {
-            for (int x = trenchStartX - 5; x <= centerX + craterRadius + 5; x++) {
-                for (int z = centerZ - trenchWidth / 2 - 5; z <= centerZ + trenchWidth / 2 + 5; z++) {
+            for (int x = trenchStartX; x <= centerX + craterRadius; x++) {
+                for (int z = centerZ - trenchWidth / 2; z <= centerZ + trenchWidth / 2; z++) {
                     level.setBlock(new BlockPos(x, y, z), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 2);
                 }
             }
