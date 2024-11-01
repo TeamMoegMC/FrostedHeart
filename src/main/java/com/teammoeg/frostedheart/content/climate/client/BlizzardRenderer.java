@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.climate;
+package com.teammoeg.frostedheart.content.climate.client;
 
 import java.util.Random;
 

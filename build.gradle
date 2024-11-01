@@ -274,6 +274,10 @@ dependencies {
     // Terralith
 //    implementation "curse.maven:terralith-513688:5512076"
 
+    // Primal Winter
+//    implementation fg.deobf("curse.maven:primal-winter-393321:4575861")
+
+
     // Datagen only
     datagenImplementation fg.deobf("curse.maven:supplementaries-412082:5676069")
     datagenImplementation fg.deobf("curse.maven:crock-pot-404523:5458905")
@@ -297,7 +301,6 @@ dependencies {
 //    compileOnly fg.deobf("curse.maven:engineers-decor-313866:3566177")
 //    compileOnly fg.deobf("curse.maven:projecte-226410:3223221")
 //    implementation fg.deobf("curse.maven:diet-443570:4813904")
-//    implementation fg.deobf("curse.maven:primal-winter-393321:4575861")
 
     // FG5 requires 0.8.3
     annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"

@@ -22,13 +22,11 @@ package com.teammoeg.frostedheart;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.client.model.DynamicModelSetup;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.research.FHResearch;
-import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.data.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.loot.FHLoot;
@@ -94,33 +92,52 @@ public class FHMain {
     }
 
     public FHMain() {
+        // Config
+        FHConfig.register();
+
+        IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
+        IEventBus forge = MinecraftForge.EVENT_BUS;
+
+        // FH Remote Version Check
         local = new FHRemote.FHLocal();
         remote = new FHRemote();
         if (local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal().contains("pre"))
             pre = new FHRemote.FHPreRemote();
         FHMain.LOGGER.info("TWR Version: " + local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
-        CreateCompat.init();
 
-        IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
+        // Registrate
         FH_REGISTRATE.registerEventListeners(mod);
 
+        // Forge bus
+        forge.addListener(this::serverStart);
+        forge.addListener(this::serverSave);
+        forge.addListener(this::serverStop);
+        forge.register(new FHRecipeReloadListener(null));
+
+        // Mod bus
         mod.addListener(this::setup);
         mod.addListener(this::processIMC);
         mod.addListener(this::enqueueIMC);
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> DynamicModelSetup::setup);
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> KGlyphProvider::addListener);
-        mod.addListener(this::modification);
-        FHConfig.register();
+        mod.addListener(this::loadComplete);
+
+        // Compat init
+        CreateCompat.init();
         TetraCompat.init();
-        FHProps.init();
         SpecialDataTypes.init();
+
+        // Early init
+        FHProps.init();
+        FHItems.init();
+        FHBlocks.init();
+        FHBiomes.init();
+        FHMultiblocks.Multiblock.init();
+
+        // Registration
+        FHMain.TABS.register(mod);
         FHItems.registry.register(mod);
         FHBlocks.registry.register(mod);
-        FHBlocks.init();
-        FHMultiblocks.Multiblock.init();
         FHBlockEntityTypes.REGISTER.register(mod);
         FHFluids.FLUIDS.register(mod);
-        FHMain.TABS.register(mod);
         FHSoundEvents.SOUNDS.register(mod);
         FHMenuTypes.CONTAINERS.register(mod);
         FHRecipes.RECIPE_SERIALIZERS.register(mod);
@@ -131,19 +148,54 @@ public class FHMain {
         FHMobEffects.EFFECTS.register(mod);
         FHLoot.LC_REGISTRY.register(mod);
         FHLoot.LM_REGISTRY.register(mod);
+
+        // Event registration
         TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
         TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
         TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);
         TeamEvent.OWNERSHIP_TRANSFERRED.register(FTBTeamsEvents::syncDataWhenTeamTransfer);
         ItemPredicate.register(new ResourceLocation(MODID, "blacklist"), BlackListPredicate::new);
+
+        // Client setup
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClient::setupClient);
     }
 
-    @SuppressWarnings("unused")
+    /**
+     * Where miscellaneous setup is done
+     * @param event
+     */
+    private void setup(final FMLCommonSetupEvent event) {
+        FHNetwork.register();
+        FHCapabilities.setup();
+        SurroundingTemperatureSimulator.init();
+        // modify default value
+        GameRules.GAME_RULE_TYPES.put(GameRules.RULE_SPAWN_RADIUS, IntegerValue.create(0));
+    }
+
+    public void serverSave(final LevelEvent.Save event) {
+        if (FHTeamDataManager.INSTANCE != null) {
+            FHResearch.save();
+            FHTeamDataManager.INSTANCE.save();
+            //FHScenario.save(); // TODO: Scenrario save
+        }
+    }
+
+    public void serverStart(final ServerAboutToStartEvent event) {
+        new FHTeamDataManager(event.getServer());
+        FHResearch.load();
+        FHTeamDataManager.INSTANCE.load();
+
+    }
+
+    public void serverStop(final ServerStoppedEvent event) {
+        FHTeamDataManager.INSTANCE = null;
+    }
+
     private void enqueueIMC(final InterModEnqueueEvent event) {
         CuriosCompat.sendIMCS();
     }
 
-    public void modification(FMLLoadCompleteEvent event) {
+    private void loadComplete(FMLLoadCompleteEvent event) {
         for (Item i : RegistryUtils.getItems()) {
             if (i.isEdible()) {
                 if (RegistryUtils.getRegistryName(i).getNamespace().equals("crockpot")) {
@@ -153,46 +205,7 @@ public class FHMain {
         }
     }
 
-    @SuppressWarnings("unused")
     private void processIMC(final InterModProcessEvent event) {
-
-    }
-
-    @SuppressWarnings("unused")
-    private void serverSave(final LevelEvent.Save event) {
-        if (FHTeamDataManager.INSTANCE != null) {
-        	FHResearch.save();
-            FHTeamDataManager.INSTANCE.save();
-            //FHScenario.save(); // TODO: Scenrario save
-        }
-    }
-
-    private void serverStart(final ServerAboutToStartEvent event) {
-        new FHTeamDataManager(event.getServer());
-        FHResearch.load();
-        FHTeamDataManager.INSTANCE.load();
-
-    }
-
-    @SuppressWarnings("unused")
-    private void serverStop(final ServerStoppedEvent event) {
-        FHTeamDataManager.INSTANCE = null;
-    }
-
-    @SuppressWarnings("unused")
-    public void setup(final FMLCommonSetupEvent event) {
-
-        MinecraftForge.EVENT_BUS.addListener(this::serverStart);
-        MinecraftForge.EVENT_BUS.addListener(this::serverSave);
-        MinecraftForge.EVENT_BUS.addListener(this::serverStop);
-        MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
-
-        FHNetwork.register();
-        FHCapabilities.setup();
-        FHBiomes.biomes();
-        SurroundingTemperatureSimulator.init();
-        // modify default value
-        GameRules.GAME_RULE_TYPES.put(GameRules.RULE_SPAWN_RADIUS, IntegerValue.create(0));
 
     }
 }

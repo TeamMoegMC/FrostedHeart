@@ -22,6 +22,9 @@ package com.teammoeg.frostedheart;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.alcatrazescapee.primalwinter.epsilon.ParseError;
+import com.alcatrazescapee.primalwinter.epsilon.Type;
+import com.alcatrazescapee.primalwinter.epsilon.value.IntValue;
 import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
 
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -48,6 +51,9 @@ public class FHConfig {
         public final ForgeConfigSpec.DoubleValue textSpeed;
         public final ForgeConfigSpec.BooleanValue renderScenario;
         public final ForgeConfigSpec.BooleanValue renderTips;
+        public final ForgeConfigSpec.DoubleValue fogDensity;
+        public final ForgeConfigSpec.IntValue fogColorDay;
+        public final ForgeConfigSpec.IntValue fogColorNight;
         Client(ForgeConfigSpec.Builder builder) {
             enableUI = builder
                     .comment("Enables The Winter Rescue HUD. THIS IS MODPACK CORE FEATURE, DISABLING IS NOT RECOMMENDED. ")
@@ -100,6 +106,12 @@ public class FHConfig {
                     .define("renderScenario", false); // todo: set true
             renderTips = builder.comment("Enables the tips rendering. ")
                     .define("renderTips", false); // todo: set true
+            fogDensity = builder.comment("How dense the fog effect during a snowstorm is.")
+                    .defineInRange("fogDensity", 0.1, 0, 1);
+            fogColorDay = builder.comment("This is the fog color during the day. It must be an RGB hex string.")
+                    .defineInRange("fogColorDay", 12566488, 0, 99999999);
+            fogColorNight = builder.comment("This is the fog color during the night. It must be an RGB hex string.")
+                    .defineInRange("fogColorNight", 789529, 0, 99999999);
         }
     }
 

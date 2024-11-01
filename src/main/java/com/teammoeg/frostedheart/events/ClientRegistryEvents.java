@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.events;
 import java.util.function.Function;
 
 import com.teammoeg.frostedheart.client.particles.WetSteamParticle;
+import com.teammoeg.frostedheart.content.climate.client.SnowParticle;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorLogic;
@@ -274,6 +275,7 @@ public class ClientRegistryEvents {
     	event.registerSpriteSet(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);
     	event.registerSpriteSet(FHParticleTypes.BREATH.get(), BreathParticle.Factory::new);
     	event.registerSpriteSet(FHParticleTypes.WET_STEAM.get(), WetSteamParticle.Factory::new);
+        event.registerSpriteSet(FHParticleTypes.SNOW.get(), SnowParticle.Provider::new);
     }
 
 }
