@@ -23,6 +23,7 @@ import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.world.features.ImprovedFreezeTopLayerFeature;
 import com.teammoeg.frostedheart.world.features.ImprovedIceSpikeFeature;
+import com.teammoeg.frostedheart.world.features.SpacecraftFeature;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.levelgen.feature.DiskFeature;
@@ -43,6 +44,7 @@ public class FHFeatures {
     public static final RegistryObject<ImprovedFreezeTopLayerFeature> FREEZE_TOP_LAYER = register("freeze_top_layer", ImprovedFreezeTopLayerFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<ImprovedIceSpikeFeature> ICE_SPIKES = register("ice_spikes", ImprovedIceSpikeFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<DiskFeature> DISK = register("disk", DiskFeature::new, DiskConfiguration.CODEC);
+    public static final RegistryObject<SpacecraftFeature> SPACECRAFT = register("spacecraft", SpacecraftFeature::new, NoneFeatureConfiguration.CODEC);
 
     private static <C extends FeatureConfiguration, F extends Feature<C>> RegistryObject<F> register(String name, Function<Codec<C>, F> feature, Codec<C> codec)
     {
@@ -56,6 +58,9 @@ public class FHFeatures {
         public static final ResourceKey<PlacedFeature> ICE_PATCH = key("ice_patch");
         public static final ResourceKey<PlacedFeature> SNOW_PATCH = key("snow_patch");
         public static final ResourceKey<PlacedFeature> POWDER_SNOW_PATCH = key("powder_snow_patch");
+        public static final ResourceKey<PlacedFeature> CLAY_PERMAFROST_PATCH = key("clay_permafrost_patch");
+        public static final ResourceKey<PlacedFeature> GRAVEL_PERMAFROST_PATCH = key("gravel_permafrost_patch");
+        public static final ResourceKey<PlacedFeature> SPACECRAFT = key("spacecraft");
 
         private static ResourceKey<PlacedFeature> key(String name)
         {

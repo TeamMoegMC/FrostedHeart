@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import com.teammoeg.frostedheart.world.FHFeatures;
+import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -57,9 +60,8 @@ public class MinecraftServerMixin {
         if (y == 256)
             y = seaLevel;
         info.setYSpawn(y - 1);
-        //TODO Add spacecraft feature
-        //FHFeatures.spacecraft_feature.place(serverWorld, serverWorld.getChunkSource().getGenerator(), serverWorld.random,
-        //        new BlockPos(info.getXSpawn(), info.getYSpawn(), info.getZSpawn()));
+        FHFeatures.SPACECRAFT.get().place(NoneFeatureConfiguration.INSTANCE, serverWorld, serverWorld.getChunkSource().getGenerator(), serverWorld.random,
+                new BlockPos(info.getXSpawn(), info.getYSpawn(), info.getZSpawn()));
         serverWorld.setDefaultSpawnPos(new BlockPos(info.getXSpawn(), y - 1, info.getZSpawn()), info.getSpawnAngle());
 
     }
