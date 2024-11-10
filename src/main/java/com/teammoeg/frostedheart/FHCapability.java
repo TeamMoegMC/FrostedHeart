@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart;
 
 import com.teammoeg.frostedheart.base.FHCapabilityProvider;
 
+import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.util.Direction;
@@ -35,7 +36,7 @@ public class FHCapability<C extends INBTSerializable<CompoundNBT>> {
                 return instance.serializeNBT();
             }
         }, ()->factory.get());
-        capability=(Capability<C>) CapabilityManager.INSTANCE.providers.get(capClass.getName().intern());
+        capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(capClass.getName().intern());
     }
 	public ICapabilityProvider create() {
 		return new FHCapabilityProvider<C>(capability,factory);
