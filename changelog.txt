@@ -1,3 +1,1 @@
-
-Fix steam network
-Fix inventory drops
+Fix village causing crash on server when interacted.
