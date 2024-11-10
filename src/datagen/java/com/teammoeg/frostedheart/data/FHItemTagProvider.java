@@ -158,18 +158,18 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 				.add(rk(FHItems.COPPER_DUST));
 		tag(frl("dusts/aluminum"))
 				.add(rk(FHItems.ALUMINUM_DUST));
-		tag(frl("dusts/steel"))
-				.add(rk(FHItems.STEEL_DUST));
-		tag(frl("dusts/electrum"))
-				.add(rk(FHItems.ELECTRUM_DUST));
-		tag(frl("dusts/constantan"))
-				.add(rk(FHItems.CONSTANTAN_DUST));
-		tag(frl("dusts/iron"))
-				.add(rk(FHItems.IRON_DUST));
-		tag(frl("dusts/cast_iron"))
-				.add(rk(FHItems.CAST_IRON_DUST));
-		tag(frl("dusts/brass"))
-				.add(rk(FHItems.BRASS_DUST));
+//		tag(frl("dusts/steel"))
+//				.add(rk(FHItems.STEEL_DUST));
+//		tag(frl("dusts/electrum"))
+//				.add(rk(FHItems.ELECTRUM_DUST));
+//		tag(frl("dusts/constantan"))
+//				.add(rk(FHItems.CONSTANTAN_DUST));
+//		tag(frl("dusts/iron"))
+//				.add(rk(FHItems.IRON_DUST));
+//		tag(frl("dusts/cast_iron"))
+//				.add(rk(FHItems.CAST_IRON_DUST));
+//		tag(frl("dusts/brass"))
+//				.add(rk(FHItems.BRASS_DUST));
 		tag(frl("dusts/duralumin"))
 				.add(rk(FHItems.DURALUMIN_DUST));
 		tag(frl("dusts/gold"))
@@ -182,12 +182,12 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 				.add(rk(FHItems.LEAD_DUST));
 		tag(frl("dusts/titanium"))
 				.add(rk(FHItems.TITANIUM_DUST));
-		tag(frl("dusts/bronze"))
-				.add(rk(FHItems.BRONZE_DUST));
-		tag(frl("dusts/invar"))
-				.add(rk(FHItems.INVAR_DUST));
-		tag(frl("dusts/tungsten_steel"))
-				.add(rk(FHItems.TUNGSTEN_STEEL_DUST));
+//		tag(frl("dusts/bronze"))
+//				.add(rk(FHItems.BRONZE_DUST));
+//		tag(frl("dusts/invar"))
+//				.add(rk(FHItems.INVAR_DUST));
+//		tag(frl("dusts/tungsten_steel"))
+//				.add(rk(FHItems.TUNGSTEN_STEEL_DUST));
 		tag(frl("dusts/zinc"))
 				.add(rk(FHItems.ZINC_DUST));
 		tag(frl("dusts/tin"))
