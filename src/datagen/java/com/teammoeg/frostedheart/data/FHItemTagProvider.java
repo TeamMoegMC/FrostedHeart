@@ -96,12 +96,12 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 		 */
 		tag(Tags.Items.RAW_MATERIALS)
 				.add(rk(FHItems.RAW_SILVER))
-				.add(rk(FHItems.RAW_CASSITERITE))
+				.add(rk(FHItems.RAW_TIN))
 				.add(rk(FHItems.RAW_PYRITE))
-				.add(rk(FHItems.RAW_PENTLANDITE))
-				.add(rk(FHItems.RAW_GALENA))
+				.add(rk(FHItems.RAW_NICKEL))
+				.add(rk(FHItems.RAW_LEAD))
 				.add(rk(FHItems.RAW_HALITE))
-				.add(rk(FHItems.RAW_POTASH))
+				.add(rk(FHItems.RAW_SYLVITE))
 				.add(rk(FHItems.RAW_MAGNESITE));
 
 		tag(frl("raw_materials/copper"))
@@ -109,21 +109,21 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 		tag(frl("raw_materials/iron"))
 				.add(rk(FHItems.RUSTED_IRON_INGOT))
 				.add(rk(FHItems.RAW_PYRITE))
-				.add(rk(FHItems.IRON_SLUG));
+				.add(rk(FHItems.IRON_SLAG));
 		tag(frl("raw_materials/tin"))
 				.add(rk(FHItems.GRAY_TIN_INGOT))
-				.add(rk(FHItems.RAW_CASSITERITE));
+				.add(rk(FHItems.RAW_TIN));
 		tag(frl("raw_materials/silver"))
 				.add(rk(FHItems.RAW_SILVER));
 		tag(frl("raw_materials/nickel"))
-				.add(rk(FHItems.RAW_PENTLANDITE))
-				.add(rk(FHItems.NICKEL_SLUG));
+				.add(rk(FHItems.RAW_NICKEL))
+				.add(rk(FHItems.NICKEL_MATTE));
 		tag(frl("raw_materials/lead"))
-				.add(rk(FHItems.RAW_GALENA));
+				.add(rk(FHItems.RAW_LEAD));
 		tag(frl("raw_materials/salt"))
 				.add(rk(FHItems.RAW_HALITE));
 		tag(frl("raw_materials/potash"))
-				.add(rk(FHItems.RAW_POTASH));
+				.add(rk(FHItems.RAW_SYLVITE));
 		tag(frl("raw_materials/magnesite"))
 				.add(rk(FHItems.RAW_MAGNESITE));
 
@@ -138,17 +138,17 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 		tag(frl("crushed_raw_materials/silver"))
 				.add(rk(FHItems.CRUSHED_RAW_SILVER));
 		tag(frl("crushed_raw_materials/tin"))
-				.add(rk(FHItems.CRUSHED_RAW_CASSITERITE));
+				.add(rk(FHItems.CRUSHED_RAW_TIN));
 		tag(frl("crushed_raw_materials/iron"))
 				.add(rk(FHItems.CRUSHED_RAW_PYRITE));
 		tag(frl("crushed_raw_materials/nickel"))
-				.add(rk(FHItems.CRUSHED_RAW_PENTLANDITE));
+				.add(rk(FHItems.CRUSHED_RAW_NICKEL));
 		tag(frl("crushed_raw_materials/lead"))
-				.add(rk(FHItems.CRUSHED_RAW_GALENA));
+				.add(rk(FHItems.CRUSHED_RAW_LEAD));
 		tag(frl("crushed_raw_materials/salt"))
 				.add(rk(FHItems.CRUSHED_RAW_HALITE));
 		tag(frl("crushed_raw_materials/potash"))
-				.add(rk(FHItems.CRUSHED_RAW_POTASH));
+				.add(rk(FHItems.CRUSHED_RAW_SYLVITE));
 		tag(frl("crushed_raw_materials/magnesite"))
 				.add(rk(FHItems.CRUSHED_RAW_MAGNESITE));
 
@@ -392,10 +392,10 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 				.add(rk(FHItems.CONDENSED_BALL_GOLD_ORE))
 				.add(rk(FHItems.CONDENSED_BALL_ZINC_ORE))
 				.add(rk(FHItems.CONDENSED_BALL_SILVER_ORE))
-				.add(rk(FHItems.CONDENSED_BALL_CASSITERITE_ORE))
+				.add(rk(FHItems.CONDENSED_BALL_TIN_ORE))
 				.add(rk(FHItems.CONDENSED_BALL_PYRITE_ORE))
-				.add(rk(FHItems.CONDENSED_BALL_PENTLANDITE_ORE))
-				.add(rk(FHItems.CONDENSED_BALL_GALENA_ORE));
+				.add(rk(FHItems.CONDENSED_BALL_NICKEL_ORE))
+				.add(rk(FHItems.CONDENSED_BALL_LEAD_ORE));
 
 		// permafrost
 		tag(FHTags.Items.PERMAFROST)

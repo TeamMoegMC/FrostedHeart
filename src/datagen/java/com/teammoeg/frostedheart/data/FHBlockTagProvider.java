@@ -37,20 +37,20 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
         TagAppender<Block> ores = tag(Tags.Blocks.ORES);
         ores.add(
                 rk(FHBlocks.SILVER_ORE),
-                rk(FHBlocks.CASSITERITE_ORE),
+                rk(FHBlocks.TIN_ORE),
                 rk(FHBlocks.PYRITE_ORE),
-                rk(FHBlocks.PENTLANDITE_ORE),
-                rk(FHBlocks.GALENA_ORE),
+                rk(FHBlocks.NICKEL_ORE),
+                rk(FHBlocks.LEAD_ORE),
                 rk(FHBlocks.HALITE_ORE),
-                rk(FHBlocks.POTASH_ORE),
+                rk(FHBlocks.SYLVITE_ORE),
                 rk(FHBlocks.MAGNESITE_ORE),
                 rk(FHBlocks.DEEPSLATE_SILVER_ORE),
-                rk(FHBlocks.DEEPSLATE_CASSITERITE_ORE),
+                rk(FHBlocks.DEEPSLATE_TIN_ORE),
                 rk(FHBlocks.DEEPSLATE_PYRITE_ORE),
-                rk(FHBlocks.DEEPSLATE_PENTLANDITE_ORE),
-                rk(FHBlocks.DEEPSLATE_GALENA_ORE),
+                rk(FHBlocks.DEEPSLATE_NICKEL_ORE),
+                rk(FHBlocks.DEEPSLATE_LEAD_ORE),
                 rk(FHBlocks.DEEPSLATE_HALITE_ORE),
-                rk(FHBlocks.DEEPSLATE_POTASH_ORE),
+                rk(FHBlocks.DEEPSLATE_SYLVITE_ORE),
                 rk(FHBlocks.DEEPSLATE_MAGNESITE_ORE),
                 rk(FHBlocks.PEAT),
                 rk(FHBlocks.KAOLIN),
@@ -62,23 +62,23 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.SILVER_ORE))
                 .add(rk(FHBlocks.DEEPSLATE_SILVER_ORE));
         tag("forge:ores/tin")
-                .add(rk(FHBlocks.CASSITERITE_ORE))
-                .add(rk(FHBlocks.DEEPSLATE_CASSITERITE_ORE));
+                .add(rk(FHBlocks.TIN_ORE))
+                .add(rk(FHBlocks.DEEPSLATE_TIN_ORE));
         tag("forge:ores/iron")
                 .add(rk(FHBlocks.PYRITE_ORE))
                 .add(rk(FHBlocks.DEEPSLATE_PYRITE_ORE));
         tag("forge:ores/nickel")
-                .add(rk(FHBlocks.PENTLANDITE_ORE))
-                .add(rk(FHBlocks.DEEPSLATE_PENTLANDITE_ORE));
+                .add(rk(FHBlocks.NICKEL_ORE))
+                .add(rk(FHBlocks.DEEPSLATE_NICKEL_ORE));
         tag("forge:ores/lead")
-                .add(rk(FHBlocks.GALENA_ORE))
-                .add(rk(FHBlocks.DEEPSLATE_GALENA_ORE));
+                .add(rk(FHBlocks.LEAD_ORE))
+                .add(rk(FHBlocks.DEEPSLATE_LEAD_ORE));
         tag("forge:ores/salt")
                 .add(rk(FHBlocks.HALITE_ORE))
                 .add(rk(FHBlocks.DEEPSLATE_HALITE_ORE));
         tag("forge:ores/potash")
-                .add(rk(FHBlocks.POTASH_ORE))
-                .add(rk(FHBlocks.DEEPSLATE_POTASH_ORE));
+                .add(rk(FHBlocks.SYLVITE_ORE))
+                .add(rk(FHBlocks.DEEPSLATE_SYLVITE_ORE));
         tag("forge:ores/peat")
                 .add(rk(FHBlocks.PEAT))
                 .add(rk(FHBlocks.PEAT_PERMAFROST));
@@ -125,18 +125,18 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
 
         // Snow condensed ores
         tag(FHTags.Blocks.CONDENSED_ORES)
-                .add(rk(FHBlocks.CONDENSED_CASSITERITE_ORE))
-                .add(rk(FHBlocks.CONDENSED_PENTLANDITE_ORE))
-                .add(rk(FHBlocks.CONDENSED_GALENA_ORE))
+                .add(rk(FHBlocks.CONDENSED_TIN_ORE))
+                .add(rk(FHBlocks.CONDENSED_NICKEL_ORE))
+                .add(rk(FHBlocks.CONDENSED_LEAD_ORE))
                 .add(rk(FHBlocks.CONDENSED_COPPER_ORE))
                 .add(rk(FHBlocks.CONDENSED_IRON_ORE))
                 .add(rk(FHBlocks.CONDENSED_SILVER_ORE))
                 .add(rk(FHBlocks.CONDENSED_GOLD_ORE))
                 .add(rk(FHBlocks.CONDENSED_ZINC_ORE))
                 .add(rk(FHBlocks.CONDENSED_PYRITE_ORE))
-                .add(rk(FHBlocks.CONDENSED_CASSITERITE_ORE_BLOCK))
-                .add(rk(FHBlocks.CONDENSED_PENTLANDITE_ORE_BLOCK))
-                .add(rk(FHBlocks.CONDENSED_GALENA_ORE_BLOCK))
+                .add(rk(FHBlocks.CONDENSED_TIN_ORE_BLOCK))
+                .add(rk(FHBlocks.CONDENSED_NICKEL_ORE_BLOCK))
+                .add(rk(FHBlocks.CONDENSED_LEAD_ORE_BLOCK))
                 .add(rk(FHBlocks.CONDENSED_COPPER_ORE_BLOCK))
                 .add(rk(FHBlocks.CONDENSED_IRON_ORE_BLOCK))
                 .add(rk(FHBlocks.CONDENSED_SILVER_ORE_BLOCK))
@@ -271,21 +271,21 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .addTag(FHTags.Blocks.METAL_MACHINES)
                 // ores
                 .add(rk(FHBlocks.SILVER_ORE))
-                .add(rk(FHBlocks.CASSITERITE_ORE))
+                .add(rk(FHBlocks.TIN_ORE))
                 .add(rk(FHBlocks.PYRITE_ORE))
-                .add(rk(FHBlocks.PENTLANDITE_ORE))
-                .add(rk(FHBlocks.GALENA_ORE))
+                .add(rk(FHBlocks.NICKEL_ORE))
+                .add(rk(FHBlocks.LEAD_ORE))
                 .add(rk(FHBlocks.HALITE_ORE))
-                .add(rk(FHBlocks.POTASH_ORE))
+                .add(rk(FHBlocks.SYLVITE_ORE))
                 .add(rk(FHBlocks.MAGNESITE_ORE))
                 // deepslate
                 .add(rk(FHBlocks.DEEPSLATE_SILVER_ORE))
-                .add(rk(FHBlocks.DEEPSLATE_CASSITERITE_ORE))
+                .add(rk(FHBlocks.DEEPSLATE_TIN_ORE))
                 .add(rk(FHBlocks.DEEPSLATE_PYRITE_ORE))
-                .add(rk(FHBlocks.DEEPSLATE_PENTLANDITE_ORE))
-                .add(rk(FHBlocks.DEEPSLATE_GALENA_ORE))
+                .add(rk(FHBlocks.DEEPSLATE_NICKEL_ORE))
+                .add(rk(FHBlocks.DEEPSLATE_LEAD_ORE))
                 .add(rk(FHBlocks.DEEPSLATE_HALITE_ORE))
-                .add(rk(FHBlocks.DEEPSLATE_POTASH_ORE))
+                .add(rk(FHBlocks.DEEPSLATE_SYLVITE_ORE))
                 .add(rk(FHBlocks.DEEPSLATE_MAGNESITE_ORE))
                 // storage blocks
                 .add(rk(FHBlocks.ALUMINUM_BLOCK))
@@ -323,18 +323,18 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
 
         tag(BlockTags.MINEABLE_WITH_SHOVEL)
                 // condensed snow ores
-                .add(rk(FHBlocks.CONDENSED_CASSITERITE_ORE))
-                .add(rk(FHBlocks.CONDENSED_PENTLANDITE_ORE))
-                .add(rk(FHBlocks.CONDENSED_GALENA_ORE))
+                .add(rk(FHBlocks.CONDENSED_TIN_ORE))
+                .add(rk(FHBlocks.CONDENSED_NICKEL_ORE))
+                .add(rk(FHBlocks.CONDENSED_LEAD_ORE))
                 .add(rk(FHBlocks.CONDENSED_COPPER_ORE))
                 .add(rk(FHBlocks.CONDENSED_IRON_ORE))
                 .add(rk(FHBlocks.CONDENSED_SILVER_ORE))
                 .add(rk(FHBlocks.CONDENSED_GOLD_ORE))
                 .add(rk(FHBlocks.CONDENSED_ZINC_ORE))
                 .add(rk(FHBlocks.CONDENSED_PYRITE_ORE))
-                .add(rk(FHBlocks.CONDENSED_CASSITERITE_ORE_BLOCK))
-                .add(rk(FHBlocks.CONDENSED_PENTLANDITE_ORE_BLOCK))
-                .add(rk(FHBlocks.CONDENSED_GALENA_ORE_BLOCK))
+                .add(rk(FHBlocks.CONDENSED_TIN_ORE_BLOCK))
+                .add(rk(FHBlocks.CONDENSED_NICKEL_ORE_BLOCK))
+                .add(rk(FHBlocks.CONDENSED_LEAD_ORE_BLOCK))
                 .add(rk(FHBlocks.CONDENSED_COPPER_ORE_BLOCK))
                 .add(rk(FHBlocks.CONDENSED_IRON_ORE_BLOCK))
                 .add(rk(FHBlocks.CONDENSED_SILVER_ORE_BLOCK))
@@ -379,7 +379,7 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
         tag(BlockTags.NEEDS_IRON_TOOL)
                 .addTag(FHTags.Blocks.PERMAFROST) // permafrost needs iron/bronze level tool!
                 .add(rk(FHBlocks.SILVER_ORE))
-                .add(rk(FHBlocks.PENTLANDITE_ORE))
+                .add(rk(FHBlocks.NICKEL_ORE))
                 .add(rk(FHBlocks.STEEL_BLOCK))
                 .add(rk(FHBlocks.ELECTRUM_BLOCK))
                 .add(rk(FHBlocks.CAST_IRON_BLOCK))
@@ -390,11 +390,11 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.INVAR_BLOCK));
 
         tag(BlockTags.NEEDS_STONE_TOOL)
-                .add(rk(FHBlocks.CASSITERITE_ORE))
+                .add(rk(FHBlocks.TIN_ORE))
                 .add(rk(FHBlocks.PYRITE_ORE))
-                .add(rk(FHBlocks.GALENA_ORE))
+                .add(rk(FHBlocks.LEAD_ORE))
                 .add(rk(FHBlocks.HALITE_ORE))
-                .add(rk(FHBlocks.POTASH_ORE))
+                .add(rk(FHBlocks.SYLVITE_ORE))
                 .add(rk(FHBlocks.MAGNESITE_ORE))
                 .add(rk(FHBlocks.ALUMINUM_BLOCK))
                 .add(rk(FHBlocks.CONSTANTAN_BLOCK))
