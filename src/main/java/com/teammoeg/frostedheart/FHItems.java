@@ -205,6 +205,17 @@ public class FHItems {
     public static RegistryObject<Item> CONDENSED_BALL_NICKEL_ORE = register("condensed_ball_nickel_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
     public static RegistryObject<Item> CONDENSED_BALL_LEAD_ORE = register("condensed_ball_lead_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
 
+    // SLURRY
+    public static RegistryObject<Item> IRON_SLURRY = register("iron_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> COPPER_SLURRY = register("copper_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> GOLD_SLURRY = register("gold_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> ZINC_SLURRY = register("zinc_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> SILVER_SLURRY = register("silver_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> TIN_SLURRY = register("tin_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> PYRITE_SLURRY = register("pyrite_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> NICKEL_SLURRY = register("nickel_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> LEAD_SLURRY = register("lead_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+
     // CRUSHED ORES
     public static RegistryObject<Item> CRUSHED_RAW_SILVER = register("crushed_raw_silver", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> CRUSHED_RAW_TIN = register("crushed_raw_tin", n -> new FHBaseItem(createProps()));
