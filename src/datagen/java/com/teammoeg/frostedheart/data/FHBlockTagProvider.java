@@ -76,7 +76,7 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
         tag("forge:ores/salt")
                 .add(rk(FHBlocks.HALITE_ORE))
                 .add(rk(FHBlocks.DEEPSLATE_HALITE_ORE));
-        tag("forge:ores/potash")
+        tag("forge:ores/sylvite")
                 .add(rk(FHBlocks.SYLVITE_ORE))
                 .add(rk(FHBlocks.DEEPSLATE_SYLVITE_ORE));
         tag("forge:ores/peat")
@@ -85,7 +85,7 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
         tag("forge:ores/kaolin")
                 .add(rk(FHBlocks.KAOLIN))
                 .add(rk(FHBlocks.KAOLIN_PERMAFROST));
-        tag("forge:ores/bauxite")
+        tag("forge:ores/aluminum")
                 .add(rk(FHBlocks.BAUXITE))
                 .add(rk(FHBlocks.BAUXITE_PERMAFROST));
 
@@ -341,6 +341,25 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.CONDENSED_GOLD_ORE_BLOCK))
                 .add(rk(FHBlocks.CONDENSED_ZINC_ORE_BLOCK))
                 .add(rk(FHBlocks.CONDENSED_PYRITE_ORE_BLOCK))
+                // slude
+                .add(rk(FHBlocks.IRON_SLUDGE))
+                .add(rk(FHBlocks.GOLD_SLUDGE))
+                .add(rk(FHBlocks.COPPER_SLUDGE))
+                .add(rk(FHBlocks.TIN_SLUDGE))
+                .add(rk(FHBlocks.LEAD_SLUDGE))
+                .add(rk(FHBlocks.SILVER_SLUDGE))
+                .add(rk(FHBlocks.NICKEL_SLUDGE))
+                .add(rk(FHBlocks.ZINC_SLUDGE))
+                .add(rk(FHBlocks.PYRITE_SLUDGE))
+                .add(rk(FHBlocks.IRON_SLUDGE_BLOCK))
+                .add(rk(FHBlocks.GOLD_SLUDGE_BLOCK))
+                .add(rk(FHBlocks.COPPER_SLUDGE_BLOCK))
+                .add(rk(FHBlocks.TIN_SLUDGE_BLOCK))
+                .add(rk(FHBlocks.LEAD_SLUDGE_BLOCK))
+                .add(rk(FHBlocks.SILVER_SLUDGE_BLOCK))
+                .add(rk(FHBlocks.NICKEL_SLUDGE_BLOCK))
+                .add(rk(FHBlocks.ZINC_SLUDGE_BLOCK))
+                .add(rk(FHBlocks.PYRITE_SLUDGE_BLOCK))
                 // minerals
                 .add(rk(FHBlocks.PEAT))
                 .add(rk(FHBlocks.KAOLIN))
