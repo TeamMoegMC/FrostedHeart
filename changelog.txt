@@ -1,1 +1,2 @@
 Fix village causing crash on server when interacted.
+Fix render crash on MacOS due to .DS_Store files: I ran: find . -name '.DS_Store' -type f -delete
