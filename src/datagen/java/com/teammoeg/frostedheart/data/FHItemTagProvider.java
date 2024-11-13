@@ -436,11 +436,18 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 				.add(rk(FHItems.RUSTED_IRON_INGOT))
 				.add(rk(FHItems.STEEL_INGOT))
 				.add(rk(FHItems.STEEL_NUGGET))
+				.add(rk(FHItems.STEEL_ROD))
 				.add(rk(Items.IRON_INGOT))
 				.add(rk(Items.IRON_NUGGET))
+				.add(rk(FHItems.IRON_ROD))
+				.add(rk(FHItems.CAST_IRON_INGOT))
+				.add(rk(FHItems.CAST_IRON_NUGGET))
+				.add(rk(FHItems.CAST_IRON_ROD))
 				.add(rk(FHItems.RAW_PYRITE))
 				.add(rk(FHItems.MAGNESIUM_INGOT))
-				.add(rk(FHItems.MAGNESIUM_NUGGET));
+				.add(rk(FHItems.MAGNESIUM_NUGGET))
+				.add(rk(FHItems.DURALUMIN_INGOT))
+				.add(rk(FHItems.DURALUMIN_NUGGET));
 
 	}
 

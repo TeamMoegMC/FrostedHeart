@@ -459,6 +459,13 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.SAND_PERMAFROST))
                 .add(rk(FHBlocks.RED_SAND_PERMAFROST));
 
+        tag(FHTags.Blocks.SNOW_MOVEMENT)
+                .add(rk(FHBlocks.PACKED_SNOW))
+                .add(rk(FHBlocks.PACKED_SNOW_SLAB))
+                .addTag(BlockTags.SNOW);
+
+        tag(FHTags.Blocks.ICE_MOVEMENT)
+                .addTag(BlockTags.ICE);
 
     }
 

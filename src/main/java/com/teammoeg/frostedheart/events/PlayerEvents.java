@@ -20,8 +20,7 @@
 package com.teammoeg.frostedheart.events;
 
 
-import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.foods.dailykitchen.DailyKitchen;
@@ -29,8 +28,19 @@ import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.ChatFormatting;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -158,6 +168,64 @@ public class PlayerEvents {
 
             if (serverPlayer.level().getDayTime() % 24000 == 41 && FHConfig.COMMON.enableDailyKitchen.get())
                 DailyKitchen.generateWantedFood(serverPlayer);//This is daily kitchen thing,not forecast message.
+        }
+    }
+
+    /*
+     * Movement modifiers for snowshoes and ice skates
+     */
+    @SubscribeEvent
+    public static void movementModifier(TickEvent.PlayerTickEvent event) {
+        Level world = event.player.level();
+        Player player = event.player;
+        BlockPos pos;
+        if (player.getY() % 1 < 0.5) {
+            pos = player.blockPosition().below();
+        } else {
+            pos = player.blockPosition();
+        }
+        Block ground = world.getBlockState(pos).getBlock();
+
+        AttributeInstance movementSpeed = player.getAttribute(Attributes.MOVEMENT_SPEED);
+        AttributeInstance swimSpeed = player.getAttribute(ForgeMod.SWIM_SPEED.get());
+        Item feetEquipment = player.getItemBySlot(EquipmentSlot.FEET).getItem();
+        Item headEquipment = player.getItemBySlot(EquipmentSlot.HEAD).getItem();
+
+        if (movementSpeed == null || swimSpeed == null) {
+            return;
+        }
+
+        // check if match FHTags.Blocks.SNOW_MOVEMENT
+        boolean isSnowBlock = world.getBlockState(player.blockPosition()).getTags().anyMatch(t -> t == FHTags.Blocks.SNOW_MOVEMENT);
+        boolean isSnowBlockBelow = world.getBlockState(player.blockPosition().below()).getTags().anyMatch(t -> t == FHTags.Blocks.SNOW_MOVEMENT);
+        boolean isIceBlock = world.getBlockState(player.blockPosition()).getTags().anyMatch(t -> t == FHTags.Blocks.ICE_MOVEMENT);
+        boolean isIceBlockBelow = world.getBlockState(player.blockPosition().below()).getTags().anyMatch(t -> t == FHTags.Blocks.ICE_MOVEMENT);
+
+        if (feetEquipment == FHItems.SNOWSHOES.get()) {
+            if ((isSnowBlock || isSnowBlockBelow) && !movementSpeed.hasModifier(FHAttributes.SNOW_DRIFTER)) {
+                movementSpeed.addTransientModifier(FHAttributes.SNOW_DRIFTER);
+                player.setMaxUpStep(1.0f);
+            }
+        } else if (feetEquipment != FHItems.SNOWSHOES.get() && movementSpeed.hasModifier(FHAttributes.SNOW_DRIFTER)) {
+            movementSpeed.removeModifier(FHAttributes.SNOW_DRIFTER);
+            player.setMaxUpStep(0.5f);
+        }
+        if ((!isSnowBlock && !isSnowBlockBelow) && ground != Blocks.AIR && movementSpeed.hasModifier(FHAttributes.SNOW_DRIFTER)) {
+            movementSpeed.removeModifier(FHAttributes.SNOW_DRIFTER);
+            player.setMaxUpStep(0.5f);
+        }
+        if (feetEquipment == FHItems.ICE_SKATES.get()) {
+            if ((isIceBlock || isIceBlockBelow) && !movementSpeed.hasModifier(FHAttributes.SPEED_SKATER)) {
+                movementSpeed.addTransientModifier(FHAttributes.SPEED_SKATER);
+                player.setMaxUpStep(1.0f);
+            }
+        } else if (feetEquipment != FHItems.ICE_SKATES.get() && movementSpeed.hasModifier(FHAttributes.SPEED_SKATER)) {
+            movementSpeed.removeModifier(FHAttributes.SPEED_SKATER);
+            player.setMaxUpStep(0.5f);
+        }
+        if ((!isIceBlock && !isIceBlockBelow) && ground != Blocks.AIR && movementSpeed.hasModifier(FHAttributes.SPEED_SKATER)) {
+            movementSpeed.removeModifier(FHAttributes.SPEED_SKATER);
+            player.setMaxUpStep(0.5f);
         }
     }
 }

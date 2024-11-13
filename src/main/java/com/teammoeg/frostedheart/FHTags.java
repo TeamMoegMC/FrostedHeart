@@ -39,6 +39,8 @@ public class FHTags {
 		public static final TagKey<Block> METAL_MACHINES = tag("machines/metal");
 		public static final TagKey<Block> WOODEN_MACHINES = tag("machines/wooden");
 		public static final TagKey<Block> SOIL = tag("soil");
+		public static final TagKey<Block> SNOW_MOVEMENT = tag("movement_modifiers/snow");
+		public static final TagKey<Block> ICE_MOVEMENT = tag("movement_modifiers/ice");
 
 
 		private static TagKey<Block> tag(String name) {

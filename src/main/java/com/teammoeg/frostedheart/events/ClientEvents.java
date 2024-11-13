@@ -227,7 +227,7 @@ public class ClientEvents {
             // append the localized names of ignition materials from the tag
             // get all items in the tag
             List<Item> materials = ForgeRegistries.ITEMS.getValues().stream()
-                    .filter(item -> item.builtInRegistryHolder().is(FHTags.Items.IGNITION_METAL))
+                    .filter(item -> item.builtInRegistryHolder().is(FHTags.Items.IGNITION_MATERIAL))
                     .toList();
             for (Item item : materials) {
                 event.getToolTip().add(item.getDescription().copy().withStyle(ChatFormatting.GRAY));

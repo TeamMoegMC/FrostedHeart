@@ -47,6 +47,7 @@ import com.teammoeg.frostedheart.content.water.item.LeatherWaterBagItem;
 import com.teammoeg.frostedheart.content.water.item.WoodenCupItem;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.food.Foods;
 import net.minecraft.world.item.*;
@@ -86,6 +87,11 @@ public class FHItems {
     public static void init() {
 
     }
+
+    // Equipment
+    public static final RegistryObject<Item> SNOWSHOES = register("snowshoes", n -> new ArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> ICE_SKATES = register("ice_skates", n -> new ArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)));
+
 
     // Tools
     public static final RegistryObject<Item> MAKESHIFT_KNIFE = register("makeshift_knife", n -> new KnifeItem(FHToolMaterials.FLINT, 1, -1.5F, new Item.Properties()));
