@@ -38,7 +38,7 @@ import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacke
 import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
 import com.teammoeg.frostedheart.content.tips.TipLockManager;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
-import com.teammoeg.frostedheart.content.waypoint.WaypointRenderer;
+import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -58,20 +58,15 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.tags.TagKey;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
@@ -99,8 +94,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEvents {
@@ -365,7 +358,7 @@ public class ClientEvents {
                 if (FrostedHud.renderHeatVignette)
                     FrostedHud.renderHeatVignette(stack, anchorX, anchorY, mc, renderViewPlayer);
                 if (FrostedHud.renderWaypoint)
-                    WaypointRenderer.render(stack);
+                    ClientWaypointManager.renderAll(stack);
 
 
             }
@@ -606,9 +599,10 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void onWorldRender(RenderLevelStageEvent event) {
-        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_LEVEL) {
+        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_WEATHER) {
             //获取渲染信息
             RenderHelper.projectionMatrix = event.getProjectionMatrix();
+            RenderHelper.poseStack = event.getPoseStack();
             RenderHelper.frustum = event.getFrustum();
             RenderHelper.camera = event.getCamera();
         }
@@ -642,7 +636,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         TipDisplayManager.clearRenderQueue();
-        WaypointRenderer.clear();
+        ClientWaypointManager.clear();
     }
 
     @SubscribeEvent

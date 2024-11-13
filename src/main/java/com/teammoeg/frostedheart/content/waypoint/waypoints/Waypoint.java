@@ -2,13 +2,12 @@ package com.teammoeg.frostedheart.content.waypoint.waypoints;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
+import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.AnimationUtil;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.FHGuiHelper;
-import com.teammoeg.frostedheart.util.client.Point;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
@@ -16,13 +15,10 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
 
@@ -63,11 +59,12 @@ public class Waypoint extends AbstractWaypoint {
 
     @Override
     public void renderMain(GuiGraphics graphics) {
-        graphics.pose().popPose();
-        graphics.pose().mulPose(new Quaternionf().rotateZ(Mth.PI/4));
+        PoseStack pose = graphics.pose();
+        pose.pushPose();
+        pose.mulPose(new Quaternionf().rotateZ(Mth.PI/4));
         if (focus) {
-            graphics.pose().scale(1.5F, 1.5F, 1.5F);
-            IconButton.renderIcon(graphics.pose(), focusIcon, -5, -5, color);
+            pose.scale(1.5F, 1.5F, 1.5F);
+            IconButton.renderIcon(pose, focusIcon, -5, -5, color);
             //focus的动画效果
             float progress = AnimationUtil.fadeIn(750, "waypoints" + id, false);
             if (progress == 1 && AnimationUtil.progress(750, "waypoint2" + id, false) == 1) {
@@ -75,15 +72,12 @@ public class Waypoint extends AbstractWaypoint {
                 AnimationUtil.remove("waypoint2" + id);
             }
             int fadeColor = (int)((1-progress) * 255.0F) << 24 | color & 0x00FFFFFF;
-            //让不透明度可以低于0.1
-            graphics.pose().scale(progress+0.25F, progress+0.25F, progress+0.25F);
-//            RenderSystem.disableAlphaTest();
+            pose.scale(progress+0.25F, progress+0.25F, progress+0.25F);
             graphics.fill(-5, -5, 5, 5, fadeColor);
-//            RenderSystem.enableAlphaTest();
         } else {
-            IconButton.renderIcon(graphics.pose(), icon, -5, -5, color);
+            IconButton.renderIcon(pose, icon, -5, -5, color);
         }
-        graphics.pose().popPose();
+        pose.popPose();
     }
 
     @Override
@@ -99,9 +93,11 @@ public class Waypoint extends AbstractWaypoint {
             Object line = infoLines.get(i);
             if (line == null) continue;
             if (line instanceof Component) {
-                graphics.drawString(ClientUtils.font(), (Component)line, 0, i*10, color);
+                graphics.drawString(ClientUtils.font(), (Component)line, 0, i*10, color, false);
+            } else if (line instanceof FormattedCharSequence) {
+                graphics.drawString(ClientUtils.font(), (FormattedCharSequence)line, 0, i*10, color, false);
             } else {
-                graphics.drawString(ClientUtils.font(), line.toString(), 0, i*10, color);
+                graphics.drawString(ClientUtils.font(), line.toString(), 0, i*10, color, false);
             }
         }
         graphics.pose().popPose();
@@ -112,7 +108,7 @@ public class Waypoint extends AbstractWaypoint {
         maxTextWidth = 0;
 
         //潜行时显示额外信息
-        if (ClientUtils.getPlayer().isShiftKeyDown()) {
+        if (ClientWaypointManager.shouldShowExtra) {
             addInfoLine(null, -1);
             addInfoLine(distanceTranslation(), -1);
             addInfoLine(posTranslation(), -1);
@@ -134,8 +130,7 @@ public class Waypoint extends AbstractWaypoint {
         if (line == null) {
             infoLines.add(null);
 
-        } else if (line instanceof Collection) {
-            Collection<?> collection = (Collection<?>) line;
+        } else if (line instanceof Collection<?> collection) {
             if (!collection.isEmpty()) {
                 //防止添加时顺序乱掉
                 List<Object> linesToAdd = new ArrayList<>(collection);
@@ -152,10 +147,10 @@ public class Waypoint extends AbstractWaypoint {
                 infoLines.add(line);
             }
 
-            if (line instanceof Component) {
-                maxTextWidth = Math.max(maxTextWidth, ClientUtils.font().width((Component)line));
-            } else if (line instanceof FormattedCharSequence) {
-                maxTextWidth = Math.max(maxTextWidth, ClientUtils.font().width((FormattedCharSequence)line));
+            if (line instanceof Component c) {
+                maxTextWidth = Math.max(maxTextWidth, ClientUtils.font().width(c));
+            } else if (line instanceof FormattedCharSequence f) {
+                maxTextWidth = Math.max(maxTextWidth, ClientUtils.font().width(f));
             } else {
                 maxTextWidth = Math.max(maxTextWidth, ClientUtils.font().width(line.toString()));
             }
@@ -176,8 +171,8 @@ public class Waypoint extends AbstractWaypoint {
     public JsonElement serialize() {
         JsonObject json = new JsonObject();
         json.addProperty("id", id);
-        if (displayName instanceof TranslatableContents) {
-            json.addProperty("display_name", ((TranslatableContents)displayName).getKey());
+        if (displayName instanceof TranslatableContents name) {
+            json.addProperty("display_name", name.getKey());
         } else {
             json.addProperty("display_name", displayName.getString());
         }
@@ -201,8 +196,8 @@ public class Waypoint extends AbstractWaypoint {
     public CompoundTag serializeNBT() {
         CompoundTag nbt = new CompoundTag();
         nbt.putString("id", id);
-        if (displayName instanceof TranslatableContents) {
-            nbt.putString("display_name", ((TranslatableContents)displayName).getKey());
+        if (displayName instanceof TranslatableContents name) {
+            nbt.putString("display_name", name.getKey());
         } else {
             nbt.putString("display_name", displayName.getString());
         }
@@ -226,7 +221,7 @@ public class Waypoint extends AbstractWaypoint {
         } else {
             this.displayName = TranslateUtils.str(displayName);
         }
-        this.dimension = Level.RESOURCE_KEY_CODEC.parse(NbtOps.INSTANCE, nbt.get("dimension")).resultOrPartial(LOGGER::error).orElse(Level.OVERWORLD);
+        this.dimension = Level.RESOURCE_KEY_CODEC.parse(NbtOps.INSTANCE, nbt.get("dimension")).resultOrPartial(LOGGER::error).orElse(Level.OVERWORLD).location();
         this.target = new Vec3(nbt.getDouble("x"), nbt.getDouble("y"), nbt.getDouble("z"));
         this.focus = nbt.getBoolean("focus");
         this.enable = nbt.getBoolean("enable");

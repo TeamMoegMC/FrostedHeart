@@ -8,7 +8,6 @@ import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.client.RawMouseHelper;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
@@ -26,11 +25,10 @@ public class IconButton extends Button {
      */
     public IconButton(int x, int y, Icon icon, int color, Component title, OnPress pressedAction) {
         super(x, y, 10, 10, title, pressedAction, Button.DEFAULT_NARRATION);
+        builder(title,pressedAction).build();
         this.color = color;
         this.currentIcon = icon;
     }
-
-
 
     public void setXY(int x, int y) {
         this.setX(x);
@@ -39,9 +37,9 @@ public class IconButton extends Button {
 
     @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        if (isHovered()) {
+        if (isHoveredOrFocused()) {
         	graphics.fill(getX(), getY(), getX()+width, getY()+height, FHColorHelper.setAlpha(color, 50));
-            if (!getMessage().getString().isEmpty()) {
+            if (!getMessage().getString().isEmpty() && isHovered()) {
                 int textWidth = ClientUtils.font().width(getMessage());
                 int renderX = getX()-textWidth+8;
                 if (renderX < 0) {

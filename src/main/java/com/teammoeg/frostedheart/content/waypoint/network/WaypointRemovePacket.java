@@ -3,36 +3,35 @@ package com.teammoeg.frostedheart.content.waypoint.network;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.WaypointManager;
-import com.teammoeg.frostedheart.content.waypoint.waypoints.AbstractWaypoint;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class WaypointSyncPacket implements FHMessage {
-    private final AbstractWaypoint waypoint;
+public class WaypointRemovePacket implements FHMessage {
+    String id;
 
-    public WaypointSyncPacket(AbstractWaypoint waypoint) {
-        this.waypoint = waypoint;
+    public WaypointRemovePacket(String id) {
+        this.id = id;
     }
 
-    public WaypointSyncPacket(FriendlyByteBuf buffer) {
-        this.waypoint = WaypointManager.registry.read(buffer);
+    public WaypointRemovePacket(FriendlyByteBuf buffer) {
+        this.id = buffer.readUtf();
     }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
-        WaypointManager.registry.write(buffer, waypoint);
+        buffer.writeUtf(id);
     }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             if (context.get().getDirection() == NetworkDirection.PLAY_TO_CLIENT) {
-                ClientWaypointManager.putWaypointWithoutSendingPacket(waypoint);
+                ClientWaypointManager.removeWaypointWithoutSendingPacket(id);
             } else {
-                WaypointManager.getManager(context.get().getSender()).putWaypointWithoutSendingPacket(waypoint);
+                WaypointManager.getManager(context.get().getSender()).removeWaypointWithoutSendingPacket(id);
             }
         });
         context.get().setPacketHandled(true);

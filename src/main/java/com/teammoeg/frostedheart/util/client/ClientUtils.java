@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.util.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.content.research.gui.ResearchGui;
 
@@ -35,7 +36,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.client.DimensionSpecialEffectsManager;
 
 /**
  * Rendering not related client functions, used for get/set client data, spawning particles
@@ -139,11 +139,15 @@ public class ClientUtils {
     }
 
     public static int screenWidth() {
-        return mc().getWindow().getGuiScaledHeight();
+        return mc().getWindow().getGuiScaledWidth();
     }
 
     public static int screenHeight() {
         return mc().getWindow().getGuiScaledHeight();
+    }
+
+    public static boolean isKeyDown(int key) {
+        return InputConstants.isKeyDown(mc().getWindow().getWindow(), key);
     }
 
     public static ResourceLocation getDimLocation() {

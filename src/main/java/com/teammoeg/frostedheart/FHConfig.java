@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart;
 
 import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -127,7 +126,7 @@ public class FHConfig {
                     .comment("Enables the waypoints rendering. ")
                     .define("enableWaypoint", true);
             renderTips = builder.comment("Enables the tips rendering. ")
-                    .define("renderTips", false); // todo: set true
+                    .define("renderTips", true);
             builder.pop();
 
             builder.push("Scenario");

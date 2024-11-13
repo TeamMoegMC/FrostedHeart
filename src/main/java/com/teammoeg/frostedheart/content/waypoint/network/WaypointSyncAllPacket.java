@@ -2,8 +2,8 @@ package com.teammoeg.frostedheart.content.waypoint.network;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.WaypointManager;
-import com.teammoeg.frostedheart.content.waypoint.WaypointRenderer;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.AbstractWaypoint;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -47,7 +47,7 @@ public class WaypointSyncAllPacket implements FHMessage {
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            context.get().enqueueWork(() -> WaypointRenderer.setWaypoints(waypoints));
+            context.get().enqueueWork(() -> ClientWaypointManager.setWaypoints(waypoints));
         });
         context.get().setPacketHandled(true);
     }
