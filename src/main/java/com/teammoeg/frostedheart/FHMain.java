@@ -138,6 +138,7 @@ public class FHMain {
         FHItems.registry.register(mod);
         FHBlocks.registry.register(mod);
         FHBlockEntityTypes.REGISTER.register(mod);
+        FHEntityTypes.ENTITY_TYPES.register(mod);
         FHFluids.FLUIDS.register(mod);
         FHSoundEvents.SOUNDS.register(mod);
         FHMenuTypes.CONTAINERS.register(mod);

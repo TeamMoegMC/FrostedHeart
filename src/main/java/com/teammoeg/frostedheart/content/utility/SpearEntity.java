@@ -1,7 +1,25 @@
-package com.teammoeg.frostedheart.base.item.rankine.entities;
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 
-import com.teammoeg.frostedheart.base.item.rankine.init.RankineEnchantments;
-import com.teammoeg.frostedheart.base.item.rankine.init.RankineItems;
+package com.teammoeg.frostedheart.content.utility;
+
+import com.teammoeg.frostedheart.FHItems;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
@@ -35,7 +53,7 @@ import javax.annotation.Nullable;
 public class SpearEntity extends AbstractArrow {
     private static final EntityDataAccessor<Byte> LOYALTY_LEVEL = SynchedEntityData.defineId(SpearEntity.class, EntityDataSerializers.BYTE);
     private static final EntityDataAccessor<Byte> TELEPORT_LEVEL = SynchedEntityData.defineId(SpearEntity.class, EntityDataSerializers.BYTE);
-    private ItemStack thrownStack = new ItemStack(RankineItems.BRONZE_SPEAR.get());
+    private ItemStack thrownStack = new ItemStack(FHItems.BRONZE_SPEAR.get());
     public ResourceLocation type;
     private boolean dealtDamage;
     private float attackDamage;
@@ -50,7 +68,6 @@ public class SpearEntity extends AbstractArrow {
     public SpearEntity(Level worldIn, LivingEntity thrower, ItemStack thrownStackIn, EntityType<SpearEntity> e, ResourceLocation type, float damage) {
         super(e, thrower, worldIn);
         this.thrownStack = thrownStackIn.copy();
-        this.entityData.set(TELEPORT_LEVEL, (byte) EnchantmentHelper.getItemEnchantmentLevel(RankineEnchantments.ENDPOINT.get(),thrownStackIn));
         this.entityData.set(LOYALTY_LEVEL, (byte) EnchantmentHelper.getLoyalty(thrownStackIn));
         this.type = type;
         this.attackDamage = damage;
@@ -83,11 +100,11 @@ public class SpearEntity extends AbstractArrow {
         if (this.inGroundTime > 4) {
             this.dealtDamage = true;
         }
-        int r = EnchantmentHelper.getItemEnchantmentLevel(RankineEnchantments.IMPACT.get(), this.thrownStack);
-
-        if (r > 0) {
-            this.setKnockback(r * 2);
-        }
+//        int r = EnchantmentHelper.getItemEnchantmentLevel(RankineEnchantments.IMPACT.get(), this.thrownStack);
+//
+//        if (r > 0) {
+//            this.setKnockback(r * 2);
+//        }
 
         Entity entity = this.getOwner();
         if (this.inGroundTime == 4 && entity instanceof Player && this.entityData.get(TELEPORT_LEVEL) > 0) {

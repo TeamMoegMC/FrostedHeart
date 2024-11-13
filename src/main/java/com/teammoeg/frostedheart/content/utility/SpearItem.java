@@ -1,9 +1,27 @@
-package com.teammoeg.frostedheart.base.item.rankine;
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+package com.teammoeg.frostedheart.content.utility;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.teammoeg.frostedheart.base.item.rankine.entities.SpearEntity;
-import com.teammoeg.frostedheart.base.item.rankine.init.RankineEntityTypes;
+import com.teammoeg.frostedheart.FHEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
@@ -16,7 +34,6 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -28,7 +45,6 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
 
 public class SpearItem extends Item implements Vanishable {
     private final float attackDamage;
@@ -87,7 +103,7 @@ public class SpearItem extends Item implements Vanishable {
                         });
                         if (j == 0) {
                             SpearEntity spearentity;
-                            spearentity = new SpearEntity(worldIn, playerentity, stack, RankineEntityTypes.ALLOY_SPEAR.get(), type, this.attackDamage);
+                            spearentity = new SpearEntity(worldIn, playerentity, stack, FHEntityTypes.ALLOY_SPEAR.get(), type, this.attackDamage);
                             spearentity.shootFromRotation(playerentity, playerentity.getXRot(), playerentity.getYRot(), 0.0F, 2.5F + (float)j * 0.5F, 1.0F);
                             if (playerentity.getAbilities().instabuild) {
                                 spearentity.pickup = AbstractArrow.Pickup.CREATIVE_ONLY;

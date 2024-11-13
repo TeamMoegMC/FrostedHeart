@@ -26,6 +26,7 @@ import java.util.function.Function;
 import com.teammoeg.frostedheart.base.item.FHArmorMaterial;
 import com.teammoeg.frostedheart.base.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.base.item.FHToolMaterials;
 import com.teammoeg.frostedheart.content.foods.CannedFoodItem;
 import com.teammoeg.frostedheart.content.foods.FHSoupItem;
 import com.teammoeg.frostedheart.content.ore.FHSnowballItem;
@@ -33,13 +34,7 @@ import com.teammoeg.frostedheart.content.research.blocks.FHBasePen;
 import com.teammoeg.frostedheart.content.research.blocks.FHReusablePen;
 import com.teammoeg.frostedheart.content.research.blocks.RubbingTool;
 import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
-import com.teammoeg.frostedheart.content.utility.DebugItem;
-import com.teammoeg.frostedheart.content.utility.CeramicBucket;
-import com.teammoeg.frostedheart.content.utility.MushroomBed;
-import com.teammoeg.frostedheart.content.utility.SoilThermometer;
-import com.teammoeg.frostedheart.content.utility.SteamBottleItem;
-import com.teammoeg.frostedheart.content.utility.ThermometerItem;
-import com.teammoeg.frostedheart.content.utility.ThermosItem;
+import com.teammoeg.frostedheart.content.utility.*;
 import com.teammoeg.frostedheart.content.utility.handstoves.CoalHandStove;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestItem;
 import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
@@ -51,13 +46,12 @@ import com.teammoeg.frostedheart.content.water.item.IronBottleItem;
 import com.teammoeg.frostedheart.content.water.item.LeatherWaterBagItem;
 import com.teammoeg.frostedheart.content.water.item.WoodenCupItem;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.food.Foods;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.ArmorItem.Type;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
@@ -92,6 +86,17 @@ public class FHItems {
     public static void init() {
 
     }
+
+    // Tools
+    public static final RegistryObject<Item> FLINT_KNIFE = register("flint_knife", n -> new KnifeItem(FHToolMaterials.FLINT, 1, -1.5F, new Item.Properties()));
+    public static final RegistryObject<Item> FLINT_PICKAXE = register("flint_pickaxe", n -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()));
+    public static final RegistryObject<Item> FLINT_AXE = register("flint_axe", n -> new AxeItem(FHToolMaterials.FLINT, 4.0F, -3.2F, new Item.Properties()));
+    public static final RegistryObject<Item> FLINT_SHOVEL = register("flint_shovel", n -> new ShovelItem(FHToolMaterials.FLINT, 1.5F, -3.0F, new Item.Properties()));
+    public static final RegistryObject<Item> FLINT_HOE = register("flint_hoe", n -> new HoeItem(FHToolMaterials.FLINT, 0, -3.0F, new Item.Properties()));
+    public static final RegistryObject<Item> FLINT_SPEAR = register("flint_spear", n -> new SpearItem(FHToolMaterials.FLINT, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/rankine/entity/flint_spear.png"),new Item.Properties()));
+
+    public static final RegistryObject<Item> BRONZE_SPEAR = register("bronze_spear", n -> new SpearItem(FHToolMaterials.ALLOY, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/rankine/entity/bronze_spear.png"), new Item.Properties()));
+
 
     // Materials
     public static RegistryObject<Item> generator_ash = register("generator_ash", n -> new FHBaseItem(createProps()));
