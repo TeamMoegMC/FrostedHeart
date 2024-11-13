@@ -88,15 +88,20 @@ public class FHItems {
     }
 
     // Tools
-    public static final RegistryObject<Item> FLINT_KNIFE = register("flint_knife", n -> new KnifeItem(FHToolMaterials.FLINT, 1, -1.5F, new Item.Properties()));
-    public static final RegistryObject<Item> FLINT_PICKAXE = register("flint_pickaxe", n -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()));
-    public static final RegistryObject<Item> FLINT_AXE = register("flint_axe", n -> new AxeItem(FHToolMaterials.FLINT, 4.0F, -3.2F, new Item.Properties()));
-    public static final RegistryObject<Item> FLINT_SHOVEL = register("flint_shovel", n -> new ShovelItem(FHToolMaterials.FLINT, 1.5F, -3.0F, new Item.Properties()));
-    public static final RegistryObject<Item> FLINT_HOE = register("flint_hoe", n -> new HoeItem(FHToolMaterials.FLINT, 0, -3.0F, new Item.Properties()));
-    public static final RegistryObject<Item> FLINT_SPEAR = register("flint_spear", n -> new SpearItem(FHToolMaterials.FLINT, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/rankine/entity/flint_spear.png"),new Item.Properties()));
+    public static final RegistryObject<Item> MAKESHIFT_KNIFE = register("makeshift_knife", n -> new KnifeItem(FHToolMaterials.FLINT, 1, -1.5F, new Item.Properties()));
+    public static final RegistryObject<Item> MAKESHIFT_PICKAXE = register("makeshift_pickaxe", n -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()));
+    public static final RegistryObject<Item> MAKESHIFT_AXE = register("makeshift_axe", n -> new AxeItem(FHToolMaterials.FLINT, 4.0F, -3.2F, new Item.Properties()));
+    public static final RegistryObject<Item> MAKESHIFT_SHOVEL = register("makeshift_shovel", n -> new ShovelItem(FHToolMaterials.FLINT, 1.5F, -3.0F, new Item.Properties()));
+    public static final RegistryObject<Item> MAKESHIFT_HOE = register("makeshift_hoe", n -> new HoeItem(FHToolMaterials.FLINT, 0, -3.0F, new Item.Properties()));
+    public static final RegistryObject<Item> MAKESHIFT_SPEAR = register("makeshift_spear", n -> new SpearItem(FHToolMaterials.FLINT, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/makeshift_spear.png"),new Item.Properties()));
 
-    public static final RegistryObject<Item> BRONZE_SPEAR = register("bronze_spear", n -> new SpearItem(FHToolMaterials.ALLOY, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/rankine/entity/bronze_spear.png"), new Item.Properties()));
-
+    public static final RegistryObject<Item> BRONZE_KNIFE = register("bronze_knife", n -> new KnifeItem(FHToolMaterials.ALLOY, 1, -1.5F, new Item.Properties()));
+    public static final RegistryObject<Item> BRONZE_PICKAXE = register("bronze_pickaxe", n -> new PickaxeItem(FHToolMaterials.ALLOY, 1, -2.8F, new Item.Properties()));
+    public static final RegistryObject<Item> BRONZE_AXE = register("bronze_axe", n -> new AxeItem(FHToolMaterials.ALLOY, 4.0F, -3.2F, new Item.Properties()));
+    public static final RegistryObject<Item> BRONZE_SHOVEL = register("bronze_shovel", n -> new ShovelItem(FHToolMaterials.ALLOY, 1.5F, -3.0F, new Item.Properties()));
+    public static final RegistryObject<Item> BRONZE_HOE = register("bronze_hoe", n -> new HoeItem(FHToolMaterials.ALLOY, 0, -3.0F, new Item.Properties()));
+    public static final RegistryObject<Item> BRONZE_SPEAR = register("bronze_spear", n -> new SpearItem(FHToolMaterials.ALLOY, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/bronze_spear.png"), new Item.Properties()));
+    public static final RegistryObject<Item> BRONZE_SWORD = register("bronze_sword", n -> new SwordItem(FHToolMaterials.ALLOY, 3, -2.4F, new Item.Properties()));
 
     // Materials
     public static RegistryObject<Item> generator_ash = register("generator_ash", n -> new FHBaseItem(createProps()));

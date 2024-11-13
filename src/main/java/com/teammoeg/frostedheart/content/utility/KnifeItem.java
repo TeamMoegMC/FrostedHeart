@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.utility;
 
-import com.teammoeg.frostedheart.base.item.rankine.enchantment.PoisonAspectEnchantment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
@@ -94,23 +93,23 @@ public class KnifeItem extends SwordItem {
 
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        applyHitEffects(stack,target,attacker);
+//        applyHitEffects(stack,target,attacker);
         return super.hurtEnemy(stack, target, attacker);
     }
 
-    protected void applyHitEffects(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-
-
-        int i = EnchantmentHelper.getItemEnchantmentLevel(RankineEnchantments.POISON_ASPECT.get(),stack);
-        if (i > 0) {
-            if (target.getMobType() == MobType.UNDEAD) {
-                target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,i * 60));
-            } else {
-                target.addEffect(new MobEffectInstance(MobEffects.POISON,i * 60));
-            }
-
-        }
-    }
+//    protected void applyHitEffects(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+//
+//
+//        int i = EnchantmentHelper.getItemEnchantmentLevel(RankineEnchantments.POISON_ASPECT.get(),stack);
+//        if (i > 0) {
+//            if (target.getMobType() == MobType.UNDEAD) {
+//                target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,i * 60));
+//            } else {
+//                target.addEffect(new MobEffectInstance(MobEffects.POISON,i * 60));
+//            }
+//
+//        }
+//    }
 
     @Override
     public net.minecraft.world.InteractionResult interactLivingEntity(ItemStack stack, Player playerIn, LivingEntity entity, InteractionHand hand) {
@@ -136,7 +135,7 @@ public class KnifeItem extends SwordItem {
 
     @Override
     public boolean mineBlock(ItemStack stack, Level worldIn, BlockState state, BlockPos pos, LivingEntity entityLiving) {
-        if(worldIn.getBlockState(pos).getBlock() instanceof LeavesBlock && EnchantmentHelper.getItemEnchantmentLevel(RankineEnchantments.GRAFTING.get(),stack) >= 1 && !worldIn.isClientSide && worldIn.getGameRules().getBoolean(GameRules.RULE_DOBLOCKDROPS)
+        if(worldIn.getBlockState(pos).getBlock() instanceof LeavesBlock && !worldIn.isClientSide && worldIn.getGameRules().getBoolean(GameRules.RULE_DOBLOCKDROPS)
                 && !worldIn.restoringBlockSnapshots) {
             ResourceLocation orig = ForgeRegistries.BLOCKS.getKey(worldIn.getBlockState(pos).getBlock());
             if (orig != null) {

@@ -46,9 +46,6 @@ public class FHItemModelProvider extends ItemModelProvider {
 			texture(s+"_advanced_thermos","flask_ii/insulated_flask_ii_pouch_"+s);
 		}
 
-		// add everything using texture(RegistryObject<Item> name)
-		// TODO: uncomment when textures are ready
-
 		texture(FHItems.PEAT);
 		texture(FHItems.KAOLIN);
 		texture(FHItems.BAUXITE);
@@ -58,6 +55,7 @@ public class FHItemModelProvider extends ItemModelProvider {
 		texture(FHItems.KAOLIN_DUST);
 		texture(FHItems.BAUXITE_DUST);
 
+		// TODO
 //		texture(FHItems.CONDENSED_BALL_IRON_ORE);
 //		texture(FHItems.CONDENSED_BALL_COPPER_ORE);
 //		texture(FHItems.CONDENSED_BALL_GOLD_ORE);
@@ -211,6 +209,21 @@ public class FHItemModelProvider extends ItemModelProvider {
 		texture(FHItems.QUICKLIME);
 		texture(FHItems.SODIUM_INGOT);
 		texture(FHItems.REFRACTORY_BRICK);
+
+		texture(FHItems.MAKESHIFT_KNIFE);
+		texture(FHItems.MAKESHIFT_PICKAXE);
+		texture(FHItems.MAKESHIFT_AXE);
+		texture(FHItems.MAKESHIFT_SHOVEL);
+		texture(FHItems.MAKESHIFT_HOE);
+		texture(FHItems.MAKESHIFT_SPEAR);
+
+		texture(FHItems.BRONZE_KNIFE);
+		texture(FHItems.BRONZE_PICKAXE);
+		texture(FHItems.BRONZE_AXE);
+		texture(FHItems.BRONZE_SHOVEL);
+		texture(FHItems.BRONZE_HOE);
+		texture(FHItems.BRONZE_SPEAR);
+		texture(FHItems.BRONZE_SWORD);
 
 	}
 

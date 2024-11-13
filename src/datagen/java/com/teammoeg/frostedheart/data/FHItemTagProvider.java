@@ -415,6 +415,19 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 				.add(rk(FHBlocks.KAOLIN_PERMAFROST.get().asItem()));
 
 
+		tag(ItemTags.PICKAXES).add(rk(FHItems.MAKESHIFT_PICKAXE)).add(rk(FHItems.BRONZE_PICKAXE));
+		tag(ItemTags.AXES).add(rk(FHItems.MAKESHIFT_AXE)).add(rk(FHItems.BRONZE_AXE));
+		tag(ItemTags.SHOVELS).add(rk(FHItems.MAKESHIFT_SHOVEL)).add(rk(FHItems.BRONZE_SHOVEL));
+		tag(ItemTags.HOES).add(rk(FHItems.MAKESHIFT_HOE)).add(rk(FHItems.BRONZE_HOE));
+		tag(ItemTags.SWORDS).add(rk(FHItems.MAKESHIFT_KNIFE)).add(rk(FHItems.BRONZE_KNIFE)).add(rk(FHItems.BRONZE_SWORD));
+
+		tag(frl("pickaxes/bronze")).add(rk(FHItems.BRONZE_PICKAXE));
+		tag(frl("axes/bronze")).add(rk(FHItems.BRONZE_AXE));
+		tag(frl("shovels/bronze")).add(rk(FHItems.BRONZE_SHOVEL));
+		tag(frl("hoes/bronze")).add(rk(FHItems.BRONZE_HOE));
+		tag(frl("swords/bronze")).add(rk(FHItems.BRONZE_SWORD));
+		tag(frl("knives/bronze")).add(rk(FHItems.BRONZE_KNIFE));
+
 	}
 
 
