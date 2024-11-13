@@ -187,7 +187,7 @@ public class FHConfig {
             stickIgnitionChance = builder.comment("The chance of igniting igniting when using a stick.")
                     .defineInRange("stickIgnitionChance", 0.05, 0, 1);
             consumeChanceWhenIgnited = builder.comment("The chance of consuming the item when ignited.")
-                    .defineInRange("consumeChanceWhenIgnited", 0.5, 0, 1);
+                    .defineInRange("consumeChanceWhenIgnited", 0.1, 0, 1);
 
         }
     }

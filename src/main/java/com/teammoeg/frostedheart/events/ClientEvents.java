@@ -58,10 +58,14 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -73,6 +77,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -84,6 +89,7 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import org.lwjgl.glfw.GLFW;
 
@@ -93,6 +99,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEvents {
@@ -202,8 +210,28 @@ public class ClientEvents {
     public static void addNormalItemTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
         Item i = stack.getItem();
-        if (i == Items.FLINT) {
-            event.getToolTip().add(TranslateUtils.translateTooltip("double_flint_ignition").withStyle(ChatFormatting.GRAY));
+        if (stack.is(Tags.Items.RODS_WOODEN)) {
+            event.getToolTip().add(TranslateUtils.translateTooltip("double_stick_ignition").withStyle(ChatFormatting.GRAY));
+        } else if (stack.is(FHTags.Items.IGNITION_MATERIAL)) {
+            event.getToolTip().add(TranslateUtils.translateTooltip("ignition_material").withStyle(ChatFormatting.GRAY));
+            event.getToolTip().add(TranslateUtils.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
+            List<Item> metals = ForgeRegistries.ITEMS.getValues().stream()
+                    .filter(item -> item.builtInRegistryHolder().is(FHTags.Items.IGNITION_METAL))
+                    .toList();
+            for (Item item : metals) {
+                event.getToolTip().add(item.getDescription().copy().withStyle(ChatFormatting.GRAY));
+            }
+        } else if (stack.is(FHTags.Items.IGNITION_METAL)) {
+            event.getToolTip().add(TranslateUtils.translateTooltip("ignition_metal").withStyle(ChatFormatting.GRAY));
+            event.getToolTip().add(TranslateUtils.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
+            // append the localized names of ignition materials from the tag
+            // get all items in the tag
+            List<Item> materials = ForgeRegistries.ITEMS.getValues().stream()
+                    .filter(item -> item.builtInRegistryHolder().is(FHTags.Items.IGNITION_METAL))
+                    .toList();
+            for (Item item : materials) {
+                event.getToolTip().add(item.getDescription().copy().withStyle(ChatFormatting.GRAY));
+            }
         }
     }
 
