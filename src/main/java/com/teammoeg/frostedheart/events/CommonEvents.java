@@ -55,8 +55,14 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
+import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Entity.RemovalReason;
@@ -77,10 +83,14 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AnvilUpdateEvent;
@@ -221,6 +231,79 @@ public class CommonEvents {
     		FHScenario.trigVar(ite.getEntity(), EventTriggerType.PLAYER_INTERACT);
     	}
     }
+
+    /**
+     * Lights the block on fire if it can be lit, otherwise places a fire block.
+     * @param event
+     */
+    @SubscribeEvent
+    public static void lightingFire(PlayerInteractEvent.RightClickBlock event) {
+        ItemStack handStack = event.getEntity().getMainHandItem();
+        ItemStack offHandStack = event.getEntity().getOffhandItem();
+        Player player = event.getEntity();
+        Level level = event.getLevel();
+        RandomSource rand = level.random;
+        BlockPos blockpos = event.getPos();
+        BlockState blockstate = level.getBlockState(blockpos);
+
+        if (!handStack.isEmpty() && !offHandStack.isEmpty() && !handStack.is(ItemTags.CREEPER_IGNITERS) &&
+                (handStack.is(Tags.Items.RODS_WOODEN) && offHandStack.is(Tags.Items.RODS_WOODEN) ||
+                        handStack.is(FHTags.Items.IGNITION_METAL) && offHandStack.is(FHTags.Items.IGNITION_MATERIAL) ||
+                        handStack.is(FHTags.Items.IGNITION_MATERIAL) && offHandStack.is(FHTags.Items.IGNITION_METAL))) {
+            // place fire block
+            if (!CampfireBlock.canLight(blockstate) && !CandleBlock.canLight(blockstate) && !CandleCakeBlock.canLight(blockstate)) {
+                BlockPos blockpos1 = blockpos.relative(event.getHitVec().getDirection());
+                if (BaseFireBlock.canBePlacedAt(level, blockpos1, player.getDirection())) {
+                    player.swing(InteractionHand.MAIN_HAND);
+                    level.playSound(player, blockpos1, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 1.0F, level.getRandom().nextFloat() * 0.4F + 0.8F);
+                    if (level.isClientSide()) {
+                        for (int i = 0; i < 5; i++) {
+                            level.addParticle(ParticleTypes.SMOKE, player.getX() + player.getLookAngle().x() + rand.nextFloat() * 0.25, player.getY() + 0.5f + rand.nextFloat() * 0.25, player.getZ() + player.getLookAngle().z() + rand.nextFloat() * 0.25, 0, 0.01, 0);
+                        }
+                        level.addParticle(ParticleTypes.FLAME, player.getX() + player.getLookAngle().x() + rand.nextFloat() * 0.25, player.getY() + 0.5f + rand.nextFloat() * 0.25, player.getZ() + player.getLookAngle().z() + rand.nextFloat() * 0.25, 0, 0.01, 0);
+                    }
+                    if (FHUtils.tryIgnition(rand, handStack, offHandStack)) {
+                        BlockState blockstate1 = BaseFireBlock.getState(level, blockpos1);
+                        level.setBlock(blockpos1, blockstate1, 11);
+                        level.gameEvent(player, GameEvent.BLOCK_PLACE, blockpos);
+                        event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide()));
+                    } else {
+                        event.setCancellationResult(InteractionResult.PASS);
+                        event.setCanceled(true);
+                    }
+
+                } else {
+                    event.setCancellationResult(InteractionResult.FAIL);
+                    event.setCanceled(true);
+                }
+            }
+            // light the block
+            else {
+                player.swing(InteractionHand.MAIN_HAND);
+                level.playSound(player, blockpos, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 1.0F, level.getRandom().nextFloat() * 0.4F + 0.8F);
+
+                if (level.isClientSide()) {
+                    for (int i = 0; i < 5; i++) {
+                        level.addParticle(ParticleTypes.SMOKE, player.getX() + player.getLookAngle().x() + rand.nextFloat() * 0.25, player.getY() + 0.5f + rand.nextFloat() * 0.25, player.getZ() + player.getLookAngle().z() + rand.nextFloat() * 0.25, 0, 0.01, 0);
+                    }
+                    level.addParticle(ParticleTypes.FLAME, player.getX() + player.getLookAngle().x() + rand.nextFloat() * 0.25, player.getY() + 0.5f + rand.nextFloat() * 0.25, player.getZ() + player.getLookAngle().z() + rand.nextFloat() * 0.25, 0, 0.01, 0);
+                }
+
+                if (FHUtils.tryIgnition(rand, handStack, offHandStack)) {
+                    level.setBlock(blockpos, blockstate.setValue(BlockStateProperties.LIT, true), 11);
+                    level.gameEvent(player, GameEvent.BLOCK_CHANGE, blockpos);
+                    event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide()));
+                    event.setCanceled(true);
+                } else {
+                    event.setCancellationResult(InteractionResult.PASS);
+                    event.setCanceled(true);
+                }
+
+            }
+        }
+
+    }
+
     @SubscribeEvent
     public static void canUseBlock(PlayerInteractEvent.RightClickBlock event) {
         if (event.getItemStack().getItem() instanceof IModularItem) {

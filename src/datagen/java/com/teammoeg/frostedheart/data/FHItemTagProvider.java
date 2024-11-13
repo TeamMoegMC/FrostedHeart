@@ -34,6 +34,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -427,6 +428,19 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 		tag(frl("hoes/bronze")).add(rk(FHItems.BRONZE_HOE));
 		tag(frl("swords/bronze")).add(rk(FHItems.BRONZE_SWORD));
 		tag(frl("knives/bronze")).add(rk(FHItems.BRONZE_KNIFE));
+
+		tag(FHTags.Items.IGNITION_MATERIAL)
+				.add(rk(Items.FLINT));
+
+		tag(FHTags.Items.IGNITION_METAL)
+				.add(rk(FHItems.RUSTED_IRON_INGOT))
+				.add(rk(FHItems.STEEL_INGOT))
+				.add(rk(FHItems.STEEL_NUGGET))
+				.add(rk(Items.IRON_INGOT))
+				.add(rk(Items.IRON_NUGGET))
+				.add(rk(FHItems.RAW_PYRITE))
+				.add(rk(FHItems.MAGNESIUM_INGOT))
+				.add(rk(FHItems.MAGNESIUM_NUGGET));
 
 	}
 

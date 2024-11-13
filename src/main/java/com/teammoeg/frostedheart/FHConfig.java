@@ -155,6 +155,10 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Double> steamCoreGeneratedSpeed;
         public final ForgeConfigSpec.ConfigValue<Double> steamCoreCapacity;
         public final ForgeConfigSpec.BooleanValue enableSnowAccumulationDuringWorldgen;
+        public final ForgeConfigSpec.ConfigValue<Double> flintIgnitionChance;
+        public final ForgeConfigSpec.ConfigValue<Double> stickIgnitionChance;
+        public final ForgeConfigSpec.ConfigValue<Double> consumeChanceWhenIgnited;
+
         Common(ForgeConfigSpec.Builder builder) {
             enablesTemperatureForecast = builder
                     .comment("Enables the weather forecast system. ")
@@ -178,6 +182,12 @@ public class FHConfig {
                     .defineInRange("steamCoreCapacity", 32, 0f, 256f);
             enableSnowAccumulationDuringWorldgen = builder.comment("Enables snow accumulation during world generation.")
                     .define("enableSnowAccumulationDuringWorldgen", false);
+            flintIgnitionChance = builder.comment("The chance of igniting when using a flint and metal.")
+                    .defineInRange("flintIgnitionChance", 0.1, 0, 1);
+            stickIgnitionChance = builder.comment("The chance of igniting igniting when using a stick.")
+                    .defineInRange("stickIgnitionChance", 0.05, 0, 1);
+            consumeChanceWhenIgnited = builder.comment("The chance of consuming the item when ignited.")
+                    .defineInRange("consumeChanceWhenIgnited", 0.5, 0, 1);
 
         }
     }
