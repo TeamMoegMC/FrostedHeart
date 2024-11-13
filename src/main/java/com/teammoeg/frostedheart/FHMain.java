@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.constants.FHProps;
+import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.util.creativeTab.TabType;
 import com.teammoeg.frostedheart.util.utility.BlackListPredicate;
 import com.teammoeg.frostedheart.util.version.FHRemote;
@@ -85,13 +86,30 @@ public class FHMain {
     public static boolean saveNeedUpdate;
     public static final CreateRegistrate FH_REGISTRATE = CreateRegistrate.create(MODID);
 	public static final DeferredRegister<CreativeModeTab> TABS=DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
-	public static final RegistryObject<CreativeModeTab> main=TABS.register("frostedheart_main",()->CreativeModeTab.builder().withTabsBefore(CreativeModeTabs.SPAWN_EGGS).icon(()->new ItemStack(FHItems.energy_core.get())).title(TranslateUtils.translate("itemGroup.frostedheart")).build());
+	public static final RegistryObject<CreativeModeTab> main = TABS.register("frostedheart_main",
+            ()->CreativeModeTab
+                    .builder()
+                    .withTabsBefore(CreativeModeTabs.SPAWN_EGGS)
+                    .icon(()->new ItemStack(FHItems.energy_core.get()))
+                    .title(TranslateUtils.translate("itemGroup.frostedheart"))
+                    .displayItems(FHMain::fillFHTab)
+                    .build());
     public static final TabType itemGroup = new TabType(main);
 
     public static ResourceLocation rl(String path) {
         return new ResourceLocation(MODID, path);
     }
 
+    public static void fillFHTab(CreativeModeTab.ItemDisplayParameters parms, CreativeModeTab.Output out) {
+        for (final RegistryObject<Item> itemRef : FHItems.registry.getEntries()) {
+            final Item item = itemRef.get();
+            if (item instanceof ICreativeModeTabItem) {
+                continue;
+            }
+            else
+                out.accept(itemRef.get());
+        }
+    }
     public FHMain() {
         // Config
         FHConfig.register();

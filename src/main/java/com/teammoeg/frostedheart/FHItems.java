@@ -89,8 +89,8 @@ public class FHItems {
     }
 
     // Equipment
-    public static final RegistryObject<Item> SNOWSHOES = register("snowshoes", n -> new ArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)));
-    public static final RegistryObject<Item> ICE_SKATES = register("ice_skates", n -> new ArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> SNOWSHOES = register("snowshoes", n -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> ICE_SKATES = register("ice_skates", n -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)));
 
 
     // Tools

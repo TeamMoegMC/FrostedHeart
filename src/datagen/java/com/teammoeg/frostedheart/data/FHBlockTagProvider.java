@@ -388,7 +388,9 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.BLOOD_BLOCK))
                 .add(rk(FHBlocks.BONE_BLOCK));
 
-        tag(BlockTags.SWORD_EFFICIENT);
+        tag(BlockTags.SWORD_EFFICIENT)
+                .add(rk(FHBlocks.WHALE_BLOCK))
+                .add(rk(FHBlocks.WHALE_BELLY_BLOCK));
 
         // Mining level
         tag(BlockTags.NEEDS_DIAMOND_TOOL)

@@ -295,6 +295,16 @@ public class FHBlocks {
             .sound(SoundType.METAL)
             .requiresCorrectToolForDrops()
             .strength(45, 800)));
+    public static RegistryObject<Block> WHALE_BLOCK = register("whale_block", () -> new FHBaseBlock(Block.Properties
+            .of().mapColor(MapColor.COLOR_GRAY)
+            .sound(SoundType.MUD)
+            .requiresCorrectToolForDrops()
+            .strength(45, 800)));
+    public static RegistryObject<Block> WHALE_BELLY_BLOCK = register("whale_belly_block", () -> new FHBaseBlock(Block.Properties
+            .of().mapColor(MapColor.COLOR_YELLOW)
+            .sound(SoundType.SLIME_BLOCK)
+            .requiresCorrectToolForDrops()
+            .strength(45, 800)));
 
     // Machine Blocks
     public static RegistryObject<Block> RELIC_CHEST = register("relic_chest", RelicChestBlock::new);
