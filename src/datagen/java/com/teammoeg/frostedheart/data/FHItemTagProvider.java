@@ -449,6 +449,35 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 				.add(rk(FHItems.DURALUMIN_INGOT))
 				.add(rk(FHItems.DURALUMIN_NUGGET));
 
+		tag(FHTags.Items.REFUGEE_NEEDS)
+				.add(rk(FHItems.military_rations))
+				.add(rk(FHItems.compressed_biscuits_pack))
+				.add(rk(FHItems.compressed_biscuits))
+				.add(rk(FHItems.packed_nuts))
+				.add(rk(FHItems.dried_vegetables))
+				.add(rk(FHItems.chocolate))
+				.add(rk(FHItems.black_bread))
+				.add(rk(FHItems.rye_bread))
+				.add(rk(FHItems.rye_porridge))
+				.add(rk(FHItems.rye_sawdust_porridge))
+				.add(rk(FHItems.vegetable_sawdust_soup))
+				.add(rk(FHItems.vegetable_soup))
+				.add(rk(Items.COOKED_PORKCHOP))
+				.add(rk(Items.COOKED_BEEF))
+				.add(rk(Items.COOKED_CHICKEN))
+				.add(rk(Items.COOKED_COD))
+				.add(rk(Items.COOKED_SALMON))
+				.add(rk(Items.COOKED_RABBIT))
+				.add(rk(Items.COOKED_MUTTON))
+				.add(rk(Items.BAKED_POTATO))
+				.add(rk(Items.BREAD))
+				.add(rk(Items.APPLE))
+				.add(rk(Items.BEETROOT_SOUP))
+				.add(rk(Items.MUSHROOM_STEW))
+				.add(rk(Items.RABBIT_STEW))
+				.add(rk(Items.PUMPKIN_PIE))
+				.addTag(ItemTags.create(new ResourceLocation("caupona:stews")));
+
 	}
 
 

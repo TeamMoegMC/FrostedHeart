@@ -55,6 +55,7 @@ public class FHTags {
 		public static final TagKey<Item> PERMAFROST = tag("permafrost");
 		public static final TagKey<Item> IGNITION_MATERIAL = tag("ignition_material");
 		public static final TagKey<Item> IGNITION_METAL = tag("ignition_metal");
+		public static final TagKey<Item> REFUGEE_NEEDS = tag("refugee_needs");
 
 		private static TagKey<Item> tag(String name) {
 			return ItemTags.create(new ResourceLocation(FHMain.MODID, name));

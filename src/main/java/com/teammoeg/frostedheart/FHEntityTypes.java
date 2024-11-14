@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart;
 
+import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import com.teammoeg.frostedheart.content.utility.SpearEntity;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
@@ -39,5 +40,10 @@ public class FHEntityTypes {
             () -> EntityType.Builder.<SpearEntity>of(SpearEntity::new, MobCategory.MISC)
                     .sized(0.5F, 0.5F)
                     .build(new ResourceLocation(FHMain.MODID, "alloy_spear").toString()));
+
+    public static final RegistryObject<EntityType<WanderingRefugee>> WANDERING_REFUGEE = ENTITY_TYPES.register("wandering_refugee",
+            () -> EntityType.Builder.of(WanderingRefugee::new, MobCategory.CREATURE)
+                    .sized(0.6F, 1.95F).clientTrackingRange(10)
+                    .build(new ResourceLocation(FHMain.MODID, "wandering_refugee").toString()));
 
 }
