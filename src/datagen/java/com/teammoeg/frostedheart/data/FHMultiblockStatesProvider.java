@@ -32,6 +32,8 @@ import net.minecraft.data.DataGenerator;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -78,6 +80,57 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 				s -> s.getValue(BlockStateProperties.LIT) ? bmf("heat_incubator_active") : bmf("heat_incubator"));
 		// super.itemModel(FHBlocks.mech_calc,models().withExistingParent("block/mechanical_calculator",
 		// modLoc("block/mechanical_calculator")));
+
+//		super.cubeAll(FHBlocks.IRON_SLUDGE.get(), modLoc("block/ore/iron_sludge"));
+
+		super.layered((SnowLayerBlock) FHBlocks.CONDENSED_COPPER_ORE.get(), FHBlocks.CONDENSED_COPPER_ORE_BLOCK.get(), modLoc("block/ore/condensed_copper_ore"));
+		super.layered((SnowLayerBlock) FHBlocks.CONDENSED_IRON_ORE.get(), FHBlocks.CONDENSED_IRON_ORE_BLOCK.get(), modLoc("block/ore/condensed_iron_ore"));
+		super.layered((SnowLayerBlock) FHBlocks.CONDENSED_GOLD_ORE.get(), FHBlocks.CONDENSED_GOLD_ORE_BLOCK.get(), modLoc("block/ore/condensed_gold_ore"));
+		super.layered((SnowLayerBlock) FHBlocks.CONDENSED_ZINC_ORE.get(), FHBlocks.CONDENSED_ZINC_ORE_BLOCK.get(), modLoc("block/ore/condensed_zinc_ore"));
+		super.layered((SnowLayerBlock) FHBlocks.CONDENSED_SILVER_ORE.get(), FHBlocks.CONDENSED_SILVER_ORE_BLOCK.get(), modLoc("block/ore/condensed_silver_ore"));
+		super.layered((SnowLayerBlock) FHBlocks.CONDENSED_TIN_ORE.get(), FHBlocks.CONDENSED_TIN_ORE_BLOCK.get(), modLoc("block/ore/condensed_tin_ore"));
+		super.layered((SnowLayerBlock) FHBlocks.CONDENSED_PYRITE_ORE.get(), FHBlocks.CONDENSED_PYRITE_ORE_BLOCK.get(), modLoc("block/ore/condensed_pyrite_ore"));
+		super.layered((SnowLayerBlock) FHBlocks.CONDENSED_NICKEL_ORE.get(), FHBlocks.CONDENSED_NICKEL_ORE_BLOCK.get(), modLoc("block/ore/condensed_nickel_ore"));
+		super.layered((SnowLayerBlock) FHBlocks.CONDENSED_LEAD_ORE.get(), FHBlocks.CONDENSED_LEAD_ORE_BLOCK.get(), modLoc("block/ore/condensed_lead_ore"));
+
+		super.layered((SnowLayerBlock) FHBlocks.COPPER_SLUDGE.get(), FHBlocks.COPPER_SLUDGE_BLOCK.get(), modLoc("block/ore/copper_sludge"));
+		super.layered((SnowLayerBlock) FHBlocks.IRON_SLUDGE.get(), FHBlocks.IRON_SLUDGE_BLOCK.get(), modLoc("block/ore/iron_sludge"));
+		super.layered((SnowLayerBlock) FHBlocks.GOLD_SLUDGE.get(), FHBlocks.GOLD_SLUDGE_BLOCK.get(), modLoc("block/ore/gold_sludge"));
+		super.layered((SnowLayerBlock) FHBlocks.ZINC_SLUDGE.get(), FHBlocks.ZINC_SLUDGE_BLOCK.get(), modLoc("block/ore/zinc_sludge"));
+		super.layered((SnowLayerBlock) FHBlocks.SILVER_SLUDGE.get(), FHBlocks.SILVER_SLUDGE_BLOCK.get(), modLoc("block/ore/silver_sludge"));
+		super.layered((SnowLayerBlock) FHBlocks.TIN_SLUDGE.get(), FHBlocks.TIN_SLUDGE_BLOCK.get(), modLoc("block/ore/tin_sludge"));
+		super.layered((SnowLayerBlock) FHBlocks.PYRITE_SLUDGE.get(), FHBlocks.PYRITE_SLUDGE_BLOCK.get(), modLoc("block/ore/pyrite_sludge"));
+		super.layered((SnowLayerBlock) FHBlocks.NICKEL_SLUDGE.get(), FHBlocks.NICKEL_SLUDGE_BLOCK.get(), modLoc("block/ore/nickel_sludge"));
+		super.layered((SnowLayerBlock) FHBlocks.LEAD_SLUDGE.get(), FHBlocks.LEAD_SLUDGE_BLOCK.get(), modLoc("block/ore/lead_sludge"));
+
+		super.cubeAll(FHBlocks.SILVER_ORE.get(), modLoc("block/ore/silver_ore"));
+		super.cubeAll(FHBlocks.TIN_ORE.get(), modLoc("block/ore/tin_ore"));
+		super.cubeAll(FHBlocks.PYRITE_ORE.get(), modLoc("block/ore/pyrite_ore"));
+		super.cubeAll(FHBlocks.NICKEL_ORE.get(), modLoc("block/ore/nickel_ore"));
+		super.cubeAll(FHBlocks.LEAD_ORE.get(), modLoc("block/ore/lead_ore"));
+		super.cubeAll(FHBlocks.HALITE_ORE.get(), modLoc("block/ore/halite_ore"));
+		super.cubeAll(FHBlocks.SYLVITE_ORE.get(), modLoc("block/ore/sylvite_ore"));
+		super.cubeAll(FHBlocks.MAGNESITE_ORE.get(), modLoc("block/ore/magnesite_ore"));
+
+		super.cubeAll(FHBlocks.DEEPSLATE_SILVER_ORE.get(), modLoc("block/ore/deepslate_silver_ore"));
+		super.cubeAll(FHBlocks.DEEPSLATE_TIN_ORE.get(), modLoc("block/ore/deepslate_tin_ore"));
+		super.cubeAll(FHBlocks.DEEPSLATE_PYRITE_ORE.get(), modLoc("block/ore/deepslate_pyrite_ore"));
+		super.cubeAll(FHBlocks.DEEPSLATE_NICKEL_ORE.get(), modLoc("block/ore/deepslate_nickel_ore"));
+		super.cubeAll(FHBlocks.DEEPSLATE_LEAD_ORE.get(), modLoc("block/ore/deepslate_lead_ore"));
+		super.cubeAll(FHBlocks.DEEPSLATE_HALITE_ORE.get(), modLoc("block/ore/deepslate_halite_ore"));
+		super.cubeAll(FHBlocks.DEEPSLATE_SYLVITE_ORE.get(), modLoc("block/ore/deepslate_sylvite_ore"));
+		super.cubeAll(FHBlocks.DEEPSLATE_MAGNESITE_ORE.get(), modLoc("block/ore/deepslate_magnesite_ore"));
+
+		super.cubeAll(FHBlocks.MAGNESITE_BLOCK.get(), modLoc("block/magnesite_block"));
+		super.cubeAll(FHBlocks.MAGNESIA_BLOCK.get(), modLoc("block/magnesia_block"));
+		super.cubeAll(FHBlocks.QUICKLIME_BLOCK.get(), modLoc("block/quicklime_block"));
+		super.cubeAll(FHBlocks.DURALUMIN_SHEETMETAL.get(), modLoc("block/duralumin_sheetmetal"));
+		super.cubeAll(FHBlocks.REFRACTORY_BRICKS.get(), modLoc("block/refractory_bricks"));
+		super.cubeAll(FHBlocks.HIGH_REFRACTORY_BRICKS.get(), modLoc("block/high_refractory_bricks"));
+		super.cubeAll(FHBlocks.PACKED_SNOW.get(), modLoc("block/packed_snow"));
+		super.slab((SlabBlock) FHBlocks.PACKED_SNOW_SLAB.get(), modLoc("block/packed_snow"));
+
+
 	}
 
 	@Nonnull

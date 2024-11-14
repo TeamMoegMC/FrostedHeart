@@ -39,6 +39,8 @@ public class FHTags {
 		public static final TagKey<Block> METAL_MACHINES = tag("machines/metal");
 		public static final TagKey<Block> WOODEN_MACHINES = tag("machines/wooden");
 		public static final TagKey<Block> SOIL = tag("soil");
+		public static final TagKey<Block> SNOW_MOVEMENT = tag("movement_modifiers/snow");
+		public static final TagKey<Block> ICE_MOVEMENT = tag("movement_modifiers/ice");
 
 
 		private static TagKey<Block> tag(String name) {
@@ -51,6 +53,9 @@ public class FHTags {
 		public static final TagKey<Item> RAW_FOOD = tag("raw_food");
 		public static final TagKey<Item> CONDENSED_BALLS = tag("condensed_balls");
 		public static final TagKey<Item> PERMAFROST = tag("permafrost");
+		public static final TagKey<Item> IGNITION_MATERIAL = tag("ignition_material");
+		public static final TagKey<Item> IGNITION_METAL = tag("ignition_metal");
+		public static final TagKey<Item> REFUGEE_NEEDS = tag("refugee_needs");
 
 		private static TagKey<Item> tag(String name) {
 			return ItemTags.create(new ResourceLocation(FHMain.MODID, name));

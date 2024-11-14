@@ -121,7 +121,7 @@ public class TranslateUtils {
     }
 
     public static MutableComponent translateWaypoint(String name, Object... args) {
-        return translate("Waypoint." + FHMain.MODID + "." + name, args);
+        return translate("waypoint." + FHMain.MODID + "." + name, args);
     }
 
 	public static Component empty() {

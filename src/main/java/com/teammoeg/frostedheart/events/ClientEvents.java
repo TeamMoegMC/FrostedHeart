@@ -38,7 +38,7 @@ import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacke
 import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
 import com.teammoeg.frostedheart.content.tips.TipLockManager;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
-import com.teammoeg.frostedheart.content.waypoint.WaypointRenderer;
+import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -67,12 +67,12 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -84,6 +84,7 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import org.lwjgl.glfw.GLFW;
 
@@ -202,8 +203,28 @@ public class ClientEvents {
     public static void addNormalItemTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
         Item i = stack.getItem();
-        if (i == Items.FLINT) {
-            event.getToolTip().add(TranslateUtils.translateTooltip("double_flint_ignition").withStyle(ChatFormatting.GRAY));
+        if (stack.is(Tags.Items.RODS_WOODEN)) {
+            event.getToolTip().add(TranslateUtils.translateTooltip("double_stick_ignition").withStyle(ChatFormatting.GRAY));
+        } else if (stack.is(FHTags.Items.IGNITION_MATERIAL)) {
+            event.getToolTip().add(TranslateUtils.translateTooltip("ignition_material").withStyle(ChatFormatting.GRAY));
+            event.getToolTip().add(TranslateUtils.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
+            List<Item> metals = ForgeRegistries.ITEMS.getValues().stream()
+                    .filter(item -> item.builtInRegistryHolder().is(FHTags.Items.IGNITION_METAL))
+                    .toList();
+            for (Item item : metals) {
+                event.getToolTip().add(item.getDescription().copy().withStyle(ChatFormatting.GRAY));
+            }
+        } else if (stack.is(FHTags.Items.IGNITION_METAL)) {
+            event.getToolTip().add(TranslateUtils.translateTooltip("ignition_metal").withStyle(ChatFormatting.GRAY));
+            event.getToolTip().add(TranslateUtils.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
+            // append the localized names of ignition materials from the tag
+            // get all items in the tag
+            List<Item> materials = ForgeRegistries.ITEMS.getValues().stream()
+                    .filter(item -> item.builtInRegistryHolder().is(FHTags.Items.IGNITION_MATERIAL))
+                    .toList();
+            for (Item item : materials) {
+                event.getToolTip().add(item.getDescription().copy().withStyle(ChatFormatting.GRAY));
+            }
         }
     }
 
@@ -337,7 +358,7 @@ public class ClientEvents {
                 if (FrostedHud.renderHeatVignette)
                     FrostedHud.renderHeatVignette(stack, anchorX, anchorY, mc, renderViewPlayer);
                 if (FrostedHud.renderWaypoint)
-                    WaypointRenderer.render(stack);
+                    ClientWaypointManager.renderAll(stack);
 
 
             }
@@ -578,9 +599,10 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void onWorldRender(RenderLevelStageEvent event) {
-        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_LEVEL) {
+        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_WEATHER) {
             //获取渲染信息
             RenderHelper.projectionMatrix = event.getProjectionMatrix();
+            RenderHelper.poseStack = event.getPoseStack();
             RenderHelper.frustum = event.getFrustum();
             RenderHelper.camera = event.getCamera();
         }
@@ -614,7 +636,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         TipDisplayManager.clearRenderQueue();
-        WaypointRenderer.clear();
+        ClientWaypointManager.clear();
     }
 
     @SubscribeEvent

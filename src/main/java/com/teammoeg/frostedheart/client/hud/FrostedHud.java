@@ -25,6 +25,7 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
+import com.teammoeg.frostedheart.mixin.client.BossHealthOverlayAccess;
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -863,7 +864,9 @@ public class FrostedHud {
         // Forecast
         boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
         boolean forceEnables = FHConfig.COMMON.forceEnableTemperatureForecast.get();
-        renderForecast = forceEnables || (configAllows && ClientResearchDataAPI.getData().getVariantDouble(ResearchVariant.HAS_FORECAST)>0);
+        renderForecast = (forceEnables
+                || (configAllows && ClientResearchDataAPI.getData().getVariantDouble(ResearchVariant.HAS_FORECAST)>0))
+        && ((BossHealthOverlayAccess) Minecraft.getInstance().gui.getBossOverlay()).getEvents().isEmpty(); // check if not boss fight
     }
 
     private static void renderTemp(GuiGraphics stack, Minecraft mc, float temp, int tlevel, int offsetX, int offsetY,

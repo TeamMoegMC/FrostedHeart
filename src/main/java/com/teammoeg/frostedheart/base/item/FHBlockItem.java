@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.base.item;
 
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.util.creativeTab.TabType;
@@ -31,11 +31,11 @@ import net.minecraft.world.level.block.Block;
 public class FHBlockItem extends BlockItem implements ICreativeModeTabItem{
 	TabType tab;
     public FHBlockItem(Block block) {
-        this(block, new Item.Properties(),FHMain.itemGroup);
+        this(block, new Item.Properties(), FHTabs.itemGroup);
         
     }
     public FHBlockItem(Block block, Item.Properties props) {
-    	this(block, props,FHMain.itemGroup);
+    	this(block, props, FHTabs.itemGroup);
     }
     public FHBlockItem(Block block, Item.Properties props,TabType tab) {
         super(block, props);

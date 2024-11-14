@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "frostedheart:block/packed_snow",
+    "side": "frostedheart:block/packed_snow",
+    "top": "frostedheart:block/packed_snow"
+  }
+}

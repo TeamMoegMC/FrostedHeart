@@ -46,62 +46,69 @@ public class FHItemModelProvider extends ItemModelProvider {
 			texture(s+"_advanced_thermos","flask_ii/insulated_flask_ii_pouch_"+s);
 		}
 
-		// add everything using texture(RegistryObject<Item> name)
-		// TODO: uncomment when textures are ready
-		/*
 		texture(FHItems.PEAT);
 		texture(FHItems.KAOLIN);
 		texture(FHItems.BAUXITE);
 		texture(FHItems.ROTTEN_WOOD);
-		texture(FHItems.CRUSHED_KAOLIN);
-		texture(FHItems.CRUSHED_BAUXITE);
+//		texture(FHItems.CRUSHED_KAOLIN);
+		texture(FHItems.CRUSHED_RAW_BAUXITE);
 		texture(FHItems.KAOLIN_DUST);
 		texture(FHItems.BAUXITE_DUST);
 
-		texture(FHItems.CONDENSED_BALL_IRON_ORE);
-		texture(FHItems.CONDENSED_BALL_COPPER_ORE);
-		texture(FHItems.CONDENSED_BALL_GOLD_ORE);
-		texture(FHItems.CONDENSED_BALL_ZINC_ORE);
-		texture(FHItems.CONDENSED_BALL_SILVER_ORE);
-		texture(FHItems.CONDENSED_BALL_CASSITERITE_ORE);
-		texture(FHItems.CONDENSED_BALL_PYRITE_ORE);
-		texture(FHItems.CONDENSED_BALL_PENTLANDITE_ORE);
+		// TODO
+//		texture(FHItems.CONDENSED_BALL_IRON_ORE);
+//		texture(FHItems.CONDENSED_BALL_COPPER_ORE);
+//		texture(FHItems.CONDENSED_BALL_GOLD_ORE);
+//		texture(FHItems.CONDENSED_BALL_ZINC_ORE);
+//		texture(FHItems.CONDENSED_BALL_SILVER_ORE);
+//		texture(FHItems.CONDENSED_BALL_TIN_ORE);
+//		texture(FHItems.CONDENSED_BALL_PYRITE_ORE);
+//		texture(FHItems.CONDENSED_BALL_NICKEL_ORE);
+
+//		texture(FHItems.IRON_SLURRY);
+//		texture(FHItems.COPPER_SLURRY);
+//		texture(FHItems.GOLD_SLURRY);
+//		texture(FHItems.ZINC_SLURRY);
+//		texture(FHItems.SILVER_SLURRY);
+//		texture(FHItems.TIN_SLURRY);
+//		texture(FHItems.PYRITE_SLURRY);
+//		texture(FHItems.NICKEL_SLURRY);
 
 		texture(FHItems.CRUSHED_RAW_SILVER);
-		texture(FHItems.CRUSHED_RAW_CASSITERITE);
+		texture(FHItems.CRUSHED_RAW_TIN);
 		texture(FHItems.CRUSHED_RAW_PYRITE);
-		texture(FHItems.CRUSHED_RAW_PENTLANDITE);
-		texture(FHItems.CRUSHED_RAW_GALENA);
+		texture(FHItems.CRUSHED_RAW_NICKEL);
+		texture(FHItems.CRUSHED_RAW_LEAD);
 		texture(FHItems.CRUSHED_RAW_HALITE);
-		texture(FHItems.CRUSHED_RAW_POTASH);
+//		texture(FHItems.CRUSHED_RAW_SYLVITE);
 		texture(FHItems.CRUSHED_RAW_MAGNESITE);
 
 		texture(FHItems.RAW_SILVER);
-		texture(FHItems.RAW_CASSITERITE);
+		texture(FHItems.RAW_TIN);
 		texture(FHItems.RAW_PYRITE);
-		texture(FHItems.RAW_PENTLANDITE);
-		texture(FHItems.RAW_GALENA);
+		texture(FHItems.RAW_NICKEL);
+		texture(FHItems.RAW_LEAD);
 		texture(FHItems.RAW_HALITE);
-		texture(FHItems.RAW_POTASH);
+		texture(FHItems.RAW_SYLVITE);
 		texture(FHItems.RAW_MAGNESITE);
 
 		texture(FHItems.COPPER_DUST);
 		texture(FHItems.ALUMINUM_DUST);
-		texture(FHItems.STEEL_DUST);
-		texture(FHItems.ELECTRUM_DUST);
-		texture(FHItems.CONSTANTAN_DUST);
-		texture(FHItems.IRON_DUST);
-		texture(FHItems.CAST_IRON_DUST);
-		texture(FHItems.BRASS_DUST);
+//		texture(FHItems.STEEL_DUST);
+//		texture(FHItems.ELECTRUM_DUST);
+//		texture(FHItems.CONSTANTAN_DUST);
+//		texture(FHItems.IRON_DUST);
+//		texture(FHItems.CAST_IRON_DUST);
+//		texture(FHItems.BRASS_DUST);
 		texture(FHItems.DURALUMIN_DUST);
 		texture(FHItems.GOLD_DUST);
 		texture(FHItems.SILVER_DUST);
 		texture(FHItems.NICKEL_DUST);
 		texture(FHItems.LEAD_DUST);
 		texture(FHItems.TITANIUM_DUST);
-		texture(FHItems.BRONZE_DUST);
-		texture(FHItems.INVAR_DUST);
-		texture(FHItems.TUNGSTEN_STEEL_DUST);
+//		texture(FHItems.BRONZE_DUST);
+//		texture(FHItems.INVAR_DUST);
+//		texture(FHItems.TUNGSTEN_STEEL_DUST);
 		texture(FHItems.ZINC_DUST);
 		texture(FHItems.TIN_DUST);
 		texture(FHItems.MAGNESIUM_DUST);
@@ -173,12 +180,12 @@ public class FHItemModelProvider extends ItemModelProvider {
 		texture(FHItems.RUSTED_COPPER_INGOT);
 		texture(FHItems.GRAY_TIN_INGOT);
 
-		texture(FHItems.IRON_SLUG);
-		texture(FHItems.NICKEL_SLUG);
+		texture(FHItems.IRON_SLAG);
+		texture(FHItems.NICKEL_MATTE);
 
 		texture(FHItems.COPPER_OXIDE_DUST);
 		texture(FHItems.ZINC_OXIDE_DUST);
-		texture(FHItems.TIN_OXIDE_DUST);
+//		texture(FHItems.TIN_OXIDE_DUST);
 		texture(FHItems.ALUMINA_DUST);
 		texture(FHItems.MAGNESIA_DUST);
 		texture(FHItems.LEAD_OXIDE_DUST);
@@ -186,9 +193,9 @@ public class FHItemModelProvider extends ItemModelProvider {
 		texture(FHItems.SODIUM_HYDROXIDE_DUST);
 		texture(FHItems.SODIUM_SULFIDE_DUST);
 		texture(FHItems.SODIUM_CHLORIDE_DUST);
-		texture(FHItems.POTASSIUM_CHLORIDE_DUST);
-		texture(FHItems.SULFUR_DUST);
-		texture(FHItems.GRAPHITE_DUST);
+//		texture(FHItems.POTASSIUM_CHLORIDE_DUST);
+//		texture(FHItems.SULFUR_DUST);
+//		texture(FHItems.GRAPHITE_DUST);
 		texture(FHItems.CRYOLITE_DUST);
 
 		texture(FHItems.MORTAR);
@@ -202,7 +209,28 @@ public class FHItemModelProvider extends ItemModelProvider {
 		texture(FHItems.QUICKLIME);
 		texture(FHItems.SODIUM_INGOT);
 		texture(FHItems.REFRACTORY_BRICK);
-		 */
+
+		texture(FHItems.MAKESHIFT_KNIFE);
+		texture(FHItems.MAKESHIFT_PICKAXE);
+		texture(FHItems.MAKESHIFT_AXE);
+		texture(FHItems.MAKESHIFT_SHOVEL);
+		texture(FHItems.MAKESHIFT_HOE);
+		texture(FHItems.MAKESHIFT_SPEAR);
+
+		texture(FHItems.BRONZE_KNIFE);
+		texture(FHItems.BRONZE_PICKAXE);
+		texture(FHItems.BRONZE_AXE);
+		texture(FHItems.BRONZE_SHOVEL);
+		texture(FHItems.BRONZE_HOE);
+		texture(FHItems.BRONZE_SPEAR);
+		texture(FHItems.BRONZE_SWORD);
+
+		texture(FHItems.SNOWSHOES);
+		texture(FHItems.ICE_SKATES);
+
+//		texture(FHItems.CURIOSITY_SPAWN_EGG);
+//		texture(FHItems.WANDERING_REFUGEE_SPAWN_EGG);
+
 	}
 
 

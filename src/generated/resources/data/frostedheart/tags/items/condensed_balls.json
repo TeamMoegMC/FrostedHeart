@@ -1,13 +1,13 @@
 {
   "values": [
-    "frostedheart:condensed_ball_iron",
-    "frostedheart:condensed_ball_copper",
-    "frostedheart:condensed_ball_gold",
-    "frostedheart:condensed_ball_zinc",
-    "frostedheart:condensed_ball_silver",
-    "frostedheart:condensed_ball_cassiterite",
-    "frostedheart:condensed_ball_pyrite",
-    "frostedheart:condensed_ball_pentlandite",
-    "frostedheart:condensed_ball_galena"
+    "frostedheart:condensed_ball_iron_ore",
+    "frostedheart:condensed_ball_copper_ore",
+    "frostedheart:condensed_ball_gold_ore",
+    "frostedheart:condensed_ball_zinc_ore",
+    "frostedheart:condensed_ball_silver_ore",
+    "frostedheart:condensed_ball_tin_ore",
+    "frostedheart:condensed_ball_pyrite_ore",
+    "frostedheart:condensed_ball_nickel_ore",
+    "frostedheart:condensed_ball_lead_ore"
   ]
 }

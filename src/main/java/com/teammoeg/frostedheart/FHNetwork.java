@@ -57,6 +57,7 @@ import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
+import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.content.town.TeamTownDataS2CPacket;
 import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
@@ -180,6 +181,7 @@ public class FHNetwork {
         registerMessage("custom_tip", DisplayCustomTipPacket.class);
 
         // Waypoint Messages
+        registerMessage("waypoint_remove", WaypointRemovePacket.class);
         registerMessage("waypoint_sync", WaypointSyncPacket.class);
         registerMessage("waypoint_sync_all", WaypointSyncAllPacket.class);
 

@@ -27,6 +27,10 @@ import java.util.function.ToIntFunction;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.FHTags;
+import net.minecraft.world.item.Items;
+import net.minecraftforge.common.Tags;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.google.common.collect.ImmutableList;
@@ -401,5 +405,36 @@ public class FHUtils {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static boolean tryIgnition(RandomSource rand, ItemStack handStack, ItemStack offHandStack) {
+        if (handStack.is(Tags.Items.RODS_WOODEN) && offHandStack.is(Tags.Items.RODS_WOODEN)) {
+            if (rand.nextFloat() < FHConfig.COMMON.stickIgnitionChance.get()) {
+                handStack.shrink(1);
+                offHandStack.shrink(1);
+                return true;
+            } else if (rand.nextFloat() < FHConfig.COMMON.consumeChanceWhenIgnited.get()) {
+                handStack.shrink(1);
+                offHandStack.shrink(1);
+                return false;
+            }
+        } else if (handStack.is(FHTags.Items.IGNITION_METAL) && offHandStack.is(FHTags.Items.IGNITION_MATERIAL)) {
+            if (rand.nextFloat() < FHConfig.COMMON.flintIgnitionChance.get()) {
+                offHandStack.shrink(1);
+                if (rand.nextFloat() < FHConfig.COMMON.consumeChanceWhenIgnited.get()) {
+                    handStack.shrink(1);
+                }
+                return true;
+            }
+        } else if (handStack.is(FHTags.Items.IGNITION_MATERIAL) && offHandStack.is(FHTags.Items.IGNITION_METAL)) {
+            if (rand.nextFloat() < FHConfig.COMMON.flintIgnitionChance.get()) {
+                handStack.shrink(1);
+                if (rand.nextFloat() < FHConfig.COMMON.consumeChanceWhenIgnited.get()) {
+                    offHandStack.shrink(1);
+                }
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -98,46 +98,68 @@ public class FHBlocks {
 
     // SNOW ORES
     // layered snow
-    public static RegistryObject<Block> CONDENSED_IRON_ORE = register("condensed_iron", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_COPPER_ORE = register("condensed_copper", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_GOLD_ORE = register("condensed_gold", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_ZINC_ORE = register("condensed_zinc", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_SILVER_ORE = register("condensed_silver", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_CASSITERITE_ORE = register("condensed_cassiterite", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_PYRITE_ORE = register("condensed_pyrite", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_PENTLANDITE_ORE = register("condensed_pentlandite", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_GALENA_ORE = register("condensed_galena", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_IRON_ORE = register("condensed_iron_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_COPPER_ORE = register("condensed_copper_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_GOLD_ORE = register("condensed_gold_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_ZINC_ORE = register("condensed_zinc_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_SILVER_ORE = register("condensed_silver_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_TIN_ORE = register("condensed_tin_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_PYRITE_ORE = register("condensed_pyrite_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_NICKEL_ORE = register("condensed_nickel_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_LEAD_ORE = register("condensed_lead_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
 
     // snow block
-    public static RegistryObject<Block> CONDENSED_IRON_ORE_BLOCK = register("condensed_iron_block", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_COPPER_ORE_BLOCK = register("condensed_copper_block", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_GOLD_ORE_BLOCK = register("condensed_gold_block", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_ZINC_ORE_BLOCK = register("condensed_zinc_block", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_SILVER_ORE_BLOCK = register("condensed_silver_block", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_CASSITERITE_ORE_BLOCK = register("condensed_cassiterite_block", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_PYRITE_ORE_BLOCK = register("condensed_pyrite_block", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_PENTLANDITE_ORE_BLOCK = register("condensed_pentlandite_block", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_GALENA_ORE_BLOCK = register("condensed_galena_block", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_IRON_ORE_BLOCK = register("condensed_iron_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> CONDENSED_COPPER_ORE_BLOCK = register("condensed_copper_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> CONDENSED_GOLD_ORE_BLOCK = register("condensed_gold_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> CONDENSED_ZINC_ORE_BLOCK = register("condensed_zinc_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> CONDENSED_SILVER_ORE_BLOCK = register("condensed_silver_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> CONDENSED_TIN_ORE_BLOCK = register("condensed_tin_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> CONDENSED_PYRITE_ORE_BLOCK = register("condensed_pyrite_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> CONDENSED_NICKEL_ORE_BLOCK = register("condensed_nickel_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> CONDENSED_LEAD_ORE_BLOCK = register("condensed_lead_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+
+    // sludge layer
+    public static RegistryObject<Block> IRON_SLUDGE = register("iron_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> COPPER_SLUDGE = register("copper_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> GOLD_SLUDGE = register("gold_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> ZINC_SLUDGE = register("zinc_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> SILVER_SLUDGE = register("silver_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> TIN_SLUDGE = register("tin_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> PYRITE_SLUDGE = register("pyrite_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> NICKEL_SLUDGE = register("nickel_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> LEAD_SLUDGE = register("lead_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+
+    // sludge block
+    public static RegistryObject<Block> IRON_SLUDGE_BLOCK = register("iron_sludge_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> COPPER_SLUDGE_BLOCK = register("copper_sludge_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> GOLD_SLUDGE_BLOCK = register("gold_sludge_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> ZINC_SLUDGE_BLOCK = register("zinc_sludge_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> SILVER_SLUDGE_BLOCK = register("silver_sludge_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> TIN_SLUDGE_BLOCK = register("tin_sludge_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> PYRITE_SLUDGE_BLOCK = register("pyrite_sludge_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> NICKEL_SLUDGE_BLOCK = register("nickel_sludge_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+    public static RegistryObject<Block> LEAD_SLUDGE_BLOCK = register("lead_sludge_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
 
 
     // STONE ORES
     public static RegistryObject<Block> SILVER_ORE = register("silver_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(GOLD_ORE)));
-    public static RegistryObject<Block> CASSITERITE_ORE = register("cassiterite_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(COPPER_ORE)));
+    public static RegistryObject<Block> TIN_ORE = register("tin_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(COPPER_ORE)));
     public static RegistryObject<Block> PYRITE_ORE = register("pyrite_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(IRON_ORE)));
-    public static RegistryObject<Block> PENTLANDITE_ORE = register("pentlandite_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(IRON_ORE)));
-    public static RegistryObject<Block> GALENA_ORE = register("galena_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(COPPER_ORE)));
+    public static RegistryObject<Block> NICKEL_ORE = register("nickel_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(IRON_ORE)));
+    public static RegistryObject<Block> LEAD_ORE = register("lead_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(COPPER_ORE)));
     public static RegistryObject<Block> HALITE_ORE = register("halite_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(COPPER_ORE)));
-    public static RegistryObject<Block> POTASH_ORE = register("potash_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(COPPER_ORE)));
+    public static RegistryObject<Block> SYLVITE_ORE = register("sylvite_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(COPPER_ORE)));
     public static RegistryObject<Block> MAGNESITE_ORE = register("magnesite_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(COPPER_ORE)));
 
     // DEEPSLATE ORES
     public static RegistryObject<Block> DEEPSLATE_SILVER_ORE = register("deepslate_silver_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(DEEPSLATE_GOLD_ORE)));
-    public static RegistryObject<Block> DEEPSLATE_CASSITERITE_ORE = register("deepslate_cassiterite_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(DEEPSLATE_COPPER_ORE)));
+    public static RegistryObject<Block> DEEPSLATE_TIN_ORE = register("deepslate_tin_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(DEEPSLATE_COPPER_ORE)));
     public static RegistryObject<Block> DEEPSLATE_PYRITE_ORE = register("deepslate_pyrite_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(DEEPSLATE_IRON_ORE)));
-    public static RegistryObject<Block> DEEPSLATE_PENTLANDITE_ORE = register("deepslate_pentlandite_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(DEEPSLATE_IRON_ORE)));
-    public static RegistryObject<Block> DEEPSLATE_GALENA_ORE = register("deepslate_galena_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(DEEPSLATE_COPPER_ORE)));
+    public static RegistryObject<Block> DEEPSLATE_NICKEL_ORE = register("deepslate_nickel_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(DEEPSLATE_IRON_ORE)));
+    public static RegistryObject<Block> DEEPSLATE_LEAD_ORE = register("deepslate_lead_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(DEEPSLATE_COPPER_ORE)));
     public static RegistryObject<Block> DEEPSLATE_HALITE_ORE = register("deepslate_halite_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(DEEPSLATE_COPPER_ORE)));
-    public static RegistryObject<Block> DEEPSLATE_POTASH_ORE = register("deepslate_potash_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(DEEPSLATE_COPPER_ORE)));
+    public static RegistryObject<Block> DEEPSLATE_SYLVITE_ORE = register("deepslate_sylvite_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(DEEPSLATE_COPPER_ORE)));
     public static RegistryObject<Block> DEEPSLATE_MAGNESITE_ORE = register("deepslate_magnesite_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(DEEPSLATE_COPPER_ORE)));
 
     // ADDITIONAL SOILS
@@ -248,7 +270,7 @@ public class FHBlocks {
     public static RegistryObject<Block> GENERATOR_BRICK = register("generator_brick", () -> new FHBaseBlock(FHProps.stoneDecoProps));
     public static RegistryObject<Block> GENERATOR_CORE_T1 = register("generator_core_t1", () -> new FHBaseBlock(FHProps.stoneDecoProps));
     public static RegistryObject<Block> GENERATOR_AMPLIFIER_T1 = register("generator_amplifier_r1", () -> new FHBaseBlock(FHProps.stoneDecoProps));
-    public static RegistryObject<Block> DURALUMIN_SHEETMETAL = register("sheetmetal_duralumin", () -> new FHBaseBlock(FHProps.metalDecoProps));
+    public static RegistryObject<Block> DURALUMIN_SHEETMETAL = register("duralumin_sheetmetal", () -> new FHBaseBlock(FHProps.metalDecoProps));
     public static RegistryObject<Block> REFRACTORY_BRICKS = register("refractory_bricks", () -> new Block(BlockBehaviour.Properties.copy(BRICKS)));
     public static RegistryObject<Block> HIGH_REFRACTORY_BRICKS = register("high_refractory_bricks", () -> new Block(BlockBehaviour.Properties.copy(BRICKS)));
     public static RegistryObject<Block> PACKED_SNOW = register("packed_snow", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK).strength(1.0F)));
@@ -271,6 +293,16 @@ public class FHBlocks {
     public static RegistryObject<Block> BROKEN_PLATE = register("broken_plate", () -> new FHBaseBlock(Block.Properties
             .of().mapColor(MapColor.METAL)
             .sound(SoundType.METAL)
+            .requiresCorrectToolForDrops()
+            .strength(45, 800)));
+    public static RegistryObject<Block> WHALE_BLOCK = register("whale_block", () -> new FHBaseBlock(Block.Properties
+            .of().mapColor(MapColor.COLOR_GRAY)
+            .sound(SoundType.MUD)
+            .requiresCorrectToolForDrops()
+            .strength(45, 800)));
+    public static RegistryObject<Block> WHALE_BELLY_BLOCK = register("whale_belly_block", () -> new FHBaseBlock(Block.Properties
+            .of().mapColor(MapColor.COLOR_YELLOW)
+            .sound(SoundType.SLIME_BLOCK)
             .requiresCorrectToolForDrops()
             .strength(45, 800)));
 

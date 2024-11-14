@@ -35,6 +35,7 @@ import blusunrize.immersiveengineering.data.DataGenUtils;
 import blusunrize.immersiveengineering.data.models.IEOBJBuilder;
 import blusunrize.immersiveengineering.data.models.SplitModelBuilder;
 import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.core.BlockPos;
@@ -92,6 +93,67 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
         simpleBlockItem(b, models().cubeAll(name(b), texture));
     }
 
+    public void layeredBlock(SnowLayerBlock block, ModelFile... models) {
+        getVariantBuilder(block)
+                .partialState().with(SnowLayerBlock.LAYERS, 1)
+                .modelForState().modelFile(models[0]).addModel()
+                .partialState().with(SnowLayerBlock.LAYERS, 2)
+                .modelForState().modelFile(models[1]).addModel()
+                .partialState().with(SnowLayerBlock.LAYERS, 3)
+                .modelForState().modelFile(models[2]).addModel()
+                .partialState().with(SnowLayerBlock.LAYERS, 4)
+                .modelForState().modelFile(models[3]).addModel()
+                .partialState().with(SnowLayerBlock.LAYERS, 5)
+                .modelForState().modelFile(models[4]).addModel()
+                .partialState().with(SnowLayerBlock.LAYERS, 6)
+                .modelForState().modelFile(models[5]).addModel()
+                .partialState().with(SnowLayerBlock.LAYERS, 7)
+                .modelForState().modelFile(models[6]).addModel()
+                .partialState().with(SnowLayerBlock.LAYERS, 8)
+                .modelForState().modelFile(models[7]).addModel();
+    }
+
+    protected void layered(SnowLayerBlock layer, Block block, ResourceLocation texture)
+    {
+        layeredBlock(
+                layer,
+                models().withExistingParent(name(layer) + "_height2", mcLoc("block/snow_height2"))
+                        .texture("particle", texture)
+                        .texture("texture", texture),
+                models().withExistingParent(name(layer) + "_height4", mcLoc("block/snow_height4"))
+                        .texture("particle", texture)
+                        .texture("texture", texture),
+                models().withExistingParent(name(layer) + "_height6", mcLoc("block/snow_height6"))
+                        .texture("particle", texture)
+                        .texture("texture", texture),
+                models().withExistingParent(name(layer) + "_height8", mcLoc("block/snow_height8"))
+                        .texture("particle", texture)
+                        .texture("texture", texture),
+                models().withExistingParent(name(layer) + "_height10", mcLoc("block/snow_height10"))
+                        .texture("particle", texture)
+                        .texture("texture", texture),
+                models().withExistingParent(name(layer) + "_height12", mcLoc("block/snow_height12"))
+                        .texture("particle", texture)
+                        .texture("texture", texture),
+                models().withExistingParent(name(layer) + "_height14", mcLoc("block/snow_height14"))
+                        .texture("particle", texture)
+                        .texture("texture", texture),
+                models().withExistingParent(name(block), mcLoc("block/cube_all"))
+                        .texture("all", texture)
+        );
+
+        // one layer item model
+        itemModel(
+                layer,
+                models().withExistingParent(name(layer) + "_height2", mcLoc("block/snow_height2"))
+                        .texture("particle", texture)
+                        .texture("texture", texture)
+        );
+
+        // block item model
+        simpleBlockItem(block, models().cubeAll(name(block), texture));
+    }
+
     protected void scaffold(Block b, ResourceLocation others, ResourceLocation top)
     {
         simpleBlockItem(
@@ -102,15 +164,9 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
                         .texture("top", top)
         );
     }
-
-    protected void slabFor(Block b, ResourceLocation texture)
+    protected void slab(SlabBlock b, ResourceLocation texture)
     {
-        slabFor(b, texture, texture, texture);
-    }
-
-    protected void slabFor(Block b, ResourceLocation side, ResourceLocation top, ResourceLocation bottom)
-    {
-        slab(IEBlocks.TO_SLAB.get(b).get(), side, top, bottom);
+        slab(b, texture, texture, texture);
     }
 
     protected void slab(SlabBlock b, ResourceLocation side, ResourceLocation top, ResourceLocation bottom)

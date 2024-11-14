@@ -36,15 +36,13 @@ public class SteamCoreBlock extends DirectionalKineticBlock implements FHEntityB
 
     public SteamCoreBlock( Properties blockProps) {
         super(blockProps);
-        this.registerDefaultState(this.stateDefinition.any().setValue(LIT, Boolean.FALSE).setValue(BlockStateProperties.FACING, Direction.SOUTH));
+        this.registerDefaultState(this.stateDefinition.any().setValue(LIT, Boolean.FALSE));
     }
-
-
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        super.createBlockStateDefinition(builder);
         builder.add(LIT);
+        super.createBlockStateDefinition(builder);
     }
 
     @Override

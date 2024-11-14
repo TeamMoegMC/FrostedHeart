@@ -404,6 +404,10 @@
   "message.frostedheart.escape_count": "Press ESC %s more to close",
   "message.frostedheart.wanted_foods": "Today I wants to eat...",
   "message.frostedheart.eat_wanted_food": "Yummy! You feel good.",
+  "message.frostedheart.refugee.needs": "Hello, my name is %s %s. I need some hot, warm foods...",
+  "message.frostedheart.refugee.satisfied": "Thank you, you saved me. I will now join your town.",
+  "message.frostedheart.refugee.unsatisfied": "I'm still hungry...",
+  "message.frostedheart.refugee.hired": "How are you doing, %s? Let's work together in your town.",
   "key.frostedheart.skip_dialog": "Skip dialog",
   "key.categories.frostedheart": "Frosted Heart",
   "research.category.desc.frostedheart.ars": "Techniques and artistry",
@@ -424,7 +428,10 @@
   "tooltip.frostedheart.block_temp": "Temperature change:%s",
   "tooltip.frostedheart.canned_food": "Suggests cook with water",
   "tooltip.frostedheart.charger.heat_vest": "Use on Steam Charger to recharge",
-  "tooltip.frostedheart.double_flint_ignition": "Hold two flints on each hand to use them as a fire starter",
+  "tooltip.frostedheart.double_stick_ignition": "Hold two sticks on each hand to use them as a fire starter.",
+  "tooltip.frostedheart.ignition_material": "A piece of material to light fire, but you need a metal to complete the ignition.",
+  "tooltip.frostedheart.ignition_metal": "A piece of metal to light fire, but you need a material to complete the ignition.",
+  "tooltip.frostedheart.ignition_tutorial": "Hold this item and either of the following items on each hand to use them as a fire starter:",
   "tooltip.frostedheart.f3_average_temperature": "Average Temperature: %s",
   "tooltip.frostedheart.f3_invalid_chunk_data": "Invalid Chunk Data",
   "tooltip.frostedheart.food_temp": "Temperature apply:%s",
@@ -460,6 +467,7 @@
   "manual.frostedheart.main": "Generators",
 
   "waypoint.frostedheart.sun_station": "Sun Station",
+  "waypoint.frostedheart.columbiat": "Columbiat",
   "waypoint.frostedheart.distance": "Distance: %d blocks",
   "waypoint.frostedheart.position": "[X: %s, Y: %s, Z: %s]",
   "waypoint.frostedheart.entity_health": "❤ %s / %s",
@@ -509,6 +517,8 @@
   "effect.frostedheart.thirst": "Thirst",
   "tooltip.frostedheart.drink_unit": "Drink Unit",
   "tooltip.frostedheart.empty": "Empty",
+  "subtitle.frostedheart.wind": "Wind",
+  "entity.frostedheart.curiosity_entity": "Curiosity of the Deep Frostland",
+  "entity.frostedheart.wandering_refugee": "Wandering Refugee"
 
-  "subtitle.frostedheart.wind": "Wind"
 }

@@ -4,10 +4,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.FHColorHelper;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec2;
@@ -62,7 +62,7 @@ public class EntityWaypoint extends Waypoint {
     public void readEntity(Entity target) {
         this.entityTarget = target;
         this.displayName = target.getDisplayName();
-        this.dimension = target.level().dimension();
+        this.dimension = target.level().dimension().location();
         this.targetUUID = entityTarget.getUUID();
         entityUUIDs.add(entityTarget.getUUID());
     }
@@ -75,7 +75,7 @@ public class EntityWaypoint extends Waypoint {
     public void render(GuiGraphics graphics) {
         super.render(graphics);
         focus = getDistance() <= 32;
-        color = FHColorHelper.blendColor(originalColor, approachColor, (float)(getDistance()-8)/24F);
+        color = FastColor.ARGB32.lerp((float)(getDistance()-8)/24F, originalColor, approachColor);
         if (entityTarget != null) {
             displayName = entityTarget.getDisplayName();
             //实体死亡时无效化路径点

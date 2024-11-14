@@ -1,11 +1,11 @@
 package com.teammoeg.frostedheart.content.waypoint.waypoints;
 
 import com.google.gson.JsonElement;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
-import com.teammoeg.frostedheart.content.waypoint.WaypointRenderer;
+import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.RawMouseHelper;
 import com.teammoeg.frostedheart.util.client.RenderHelper;
 import com.teammoeg.frostedheart.util.io.Writeable;
 import net.minecraft.client.gui.GuiGraphics;
@@ -14,7 +14,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec2;
@@ -32,7 +32,7 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     /**
      * 路径点的 ID
      */
-    protected String id;
+    public String id;
     /**
      * 路径点的显示名称
      */
@@ -44,7 +44,7 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     /**
      * 路径点记录的是否为方块坐标
      */
-    protected boolean blockPos;
+    public boolean blockPos;
     /**
      * 路径点被聚焦/锁定
      */
@@ -64,13 +64,12 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     /**
      * 路径点所处的维度
      */
-    public ResourceKey<Level> dimension;
+    public ResourceLocation dimension;
 
     /**
      * 路径点在屏幕中的坐标
      */
-    protected Vec2 screenPos;
-
+    public Vec2 screenPos = Vec2.ZERO;
     /**
      * 路径点的悬停信息
      */
@@ -86,9 +85,9 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
         this.valid = true;
 
         if (ClientUtils.getWorld() != null) {
-            this.dimension = ClientUtils.getWorld().dimension();
+            this.dimension = ClientUtils.getWorld().dimension().location();
         } else {
-            this.dimension = Level.OVERWORLD;
+            this.dimension = Level.OVERWORLD.location();
         }
     }
 
@@ -107,22 +106,26 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
 
     public void render(GuiGraphics graphics) {
         screenPos = getScreenPos();
+        PoseStack pose = graphics.pose();
 
-        graphics.pose().pushPose();
-        graphics.pose().translate(screenPos.x, screenPos.y, 1);
+        pose.pushPose();
+        pose.translate(screenPos.x, screenPos.y, -1);
         renderMain(graphics);
-        if (isHovered()) {
-            if (WaypointRenderer.shouldUpdate()) {
+        if (ClientWaypointManager.hoveredWaypoint == this) {
+            if (ClientWaypointManager.shouldUpdate()) {
                 infoLines.clear();
                 updateInfos();
             }
             if (!infoLines.isEmpty()) {
+                //确保悬停信息始终显示在其他路径点上面 TODO 修复半透明背景剔除其他HUD元素
+                pose.translate(0, 0, 1);
                 renderHoverInfo(graphics);
+                pose.translate(0, 0, -1);
             }
         } else {
             infoLines.clear();
         }
-        graphics.pose().popPose();
+        pose.popPose();
     }
 
     /**
@@ -136,7 +139,7 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     public abstract void renderHoverInfo(GuiGraphics graphics);
 
     /**
-     * 更新悬停信息，每 50 毫秒更新一次
+     * 更新悬停信息，每 2 tick 更新一次
      */
     protected abstract void updateInfos();
 
@@ -149,8 +152,7 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
         if (line == null) {
             this.infoLines.add(null);
 
-        } else if (line instanceof Collection) {
-            Collection<?> collection = (Collection<?>) line;
+        } else if (line instanceof Collection<?> collection) {
             if (!collection.isEmpty()) {
                 //防止添加时顺序乱掉
                 List<Object> linesToAdd = new ArrayList<>(collection);
@@ -170,22 +172,6 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     }
 
     /**
-     * 玩家是否注视或鼠标是否悬停在路径点上
-     */
-    public boolean isHovered() {
-        boolean hovered = false;
-        if (!ClientUtils.mc().mouseHandler.isMouseGrabbed()) {
-            hovered = RawMouseHelper.isMouseIn(RawMouseHelper.getScaledX(), RawMouseHelper.getScaledY(), (int)(screenPos.x-5), (int)(screenPos.y-5), 10, 10);
-        }
-        if (!hovered) {
-            double xP = screenPos.x / ClientUtils.screenWidth();
-            double yP = screenPos.y / ClientUtils.screenHeight();
-            hovered = xP >= 0.45 && xP <= 0.55 && yP >= 0.45 && yP <= 0.55;
-        }
-        return hovered;
-    }
-
-    /**
      * 当路径点在客户端被删除时调用
      */
     public abstract void onClientRemove();
@@ -199,11 +185,11 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
      * 获取路径点的屏幕坐标
      */
     public Vec2 getScreenPos() {
-        if (target == null) {
+        if (getTarget() == null) {
             return Vec2.ZERO;
         }
-        Vec2 pos = RenderHelper.worldPosToScreenPos(target);
-        //将坐标限制在屏幕中心区域里
+        Vec2 pos = RenderHelper.worldPosToScreenPos(getTarget());
+        //限制区域避免覆盖其他HUD元素
         float x = Mth.clamp(pos.x, 10, ClientUtils.screenWidth() -10);
         float y = Mth.clamp(pos.y, 25, ClientUtils.screenHeight()-25);
         return new Vec2(x, y);
@@ -213,21 +199,22 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
      * 获取玩家距离路径点的距离
      */
     public double getDistance() {
-        if (target == null) {
+        if (getTarget() == null) {
             return -1;
         }
-        return target.distanceTo(ClientUtils.getPlayer().getLookAngle());
+        return getTarget().distanceTo(ClientUtils.getPlayer().getEyePosition(ClientUtils.partialTicks()));
     }
 
     public Vec3 getTarget() {
-        if (blockPos) {
-            return target.add(0.5F, 0.5F, 0.5F);
-        }
-        return target;
+        return blockPos ? target.add(0.5F, 0.5F, 0.5F) : target;
     }
 
     public String getID() {
         return id;
+    }
+
+    public void setInvalid() {
+        valid = false;
     }
 
     protected MutableComponent distanceTranslation() {
@@ -235,7 +222,7 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     }
 
     protected MutableComponent posTranslation() {
-        return TranslateUtils.translateWaypoint("position", String.format("%.2f", target.x), String.format("%.2f", target.y), String.format("%.2f", target.z));
+        return TranslateUtils.translateWaypoint("position", String.format("%.2f", getTarget().x), String.format("%.2f", getTarget().y), String.format("%.2f", getTarget().z));
     }
 
     @Override
@@ -252,6 +239,6 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
 
     @Override
     public String toString() {
-        return "ID: '" + id + "' [" + target.x + ", " + target.y + ", " + target.z + "]";
+        return "ID: '" + id + "' [" + getTarget().x + ", " + getTarget().y + ", " + getTarget().z + "]";
     }
 }

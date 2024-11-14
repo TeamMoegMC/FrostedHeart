@@ -26,6 +26,7 @@ import java.util.function.Function;
 import com.teammoeg.frostedheart.base.item.FHArmorMaterial;
 import com.teammoeg.frostedheart.base.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.base.item.FHToolMaterials;
 import com.teammoeg.frostedheart.content.foods.CannedFoodItem;
 import com.teammoeg.frostedheart.content.foods.FHSoupItem;
 import com.teammoeg.frostedheart.content.ore.FHSnowballItem;
@@ -33,13 +34,7 @@ import com.teammoeg.frostedheart.content.research.blocks.FHBasePen;
 import com.teammoeg.frostedheart.content.research.blocks.FHReusablePen;
 import com.teammoeg.frostedheart.content.research.blocks.RubbingTool;
 import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
-import com.teammoeg.frostedheart.content.utility.DebugItem;
-import com.teammoeg.frostedheart.content.utility.CeramicBucket;
-import com.teammoeg.frostedheart.content.utility.MushroomBed;
-import com.teammoeg.frostedheart.content.utility.SoilThermometer;
-import com.teammoeg.frostedheart.content.utility.SteamBottleItem;
-import com.teammoeg.frostedheart.content.utility.ThermometerItem;
-import com.teammoeg.frostedheart.content.utility.ThermosItem;
+import com.teammoeg.frostedheart.content.utility.*;
 import com.teammoeg.frostedheart.content.utility.handstoves.CoalHandStove;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestItem;
 import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
@@ -51,13 +46,14 @@ import com.teammoeg.frostedheart.content.water.item.IronBottleItem;
 import com.teammoeg.frostedheart.content.water.item.LeatherWaterBagItem;
 import com.teammoeg.frostedheart.content.water.item.WoodenCupItem;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.food.Foods;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.ArmorItem.Type;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
@@ -92,6 +88,33 @@ public class FHItems {
     public static void init() {
 
     }
+
+    // Spawn Eggs
+    // Well, you MUST use ForgeSpawnEggItem, to take in the RegistryObject Supplier, instead of the EntityType itself,
+    // because ITEMS always register before ENTITY_TYPES. I wasted 2 hours on this.
+    public static final RegistryObject<Item> CURIOSITY_SPAWN_EGG = register("curiosity_spawn_egg", n -> new ForgeSpawnEggItem(FHEntityTypes.CURIOSITY, 0xfffeff, 0xafbdc0, createProps()));
+    public static final RegistryObject<Item> WANDERING_REFUGEE_SPAWN_EGG = register("wandering_refugee_spawn_egg", n -> new ForgeSpawnEggItem(FHEntityTypes.WANDERING_REFUGEE, 0xfffeff, 0x11374f, createProps()));
+
+    // Equipment
+    public static final RegistryObject<Item> SNOWSHOES = register("snowshoes", n -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> ICE_SKATES = register("ice_skates", n -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)));
+
+
+    // Tools
+    public static final RegistryObject<Item> MAKESHIFT_KNIFE = register("makeshift_knife", n -> new KnifeItem(FHToolMaterials.FLINT, 1, -1.5F, new Item.Properties()));
+    public static final RegistryObject<Item> MAKESHIFT_PICKAXE = register("makeshift_pickaxe", n -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()));
+    public static final RegistryObject<Item> MAKESHIFT_AXE = register("makeshift_axe", n -> new AxeItem(FHToolMaterials.FLINT, 4.0F, -3.2F, new Item.Properties()));
+    public static final RegistryObject<Item> MAKESHIFT_SHOVEL = register("makeshift_shovel", n -> new ShovelItem(FHToolMaterials.FLINT, 1.5F, -3.0F, new Item.Properties()));
+    public static final RegistryObject<Item> MAKESHIFT_HOE = register("makeshift_hoe", n -> new HoeItem(FHToolMaterials.FLINT, 0, -3.0F, new Item.Properties()));
+    public static final RegistryObject<Item> MAKESHIFT_SPEAR = register("makeshift_spear", n -> new SpearItem(FHToolMaterials.FLINT, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/makeshift_spear.png"),new Item.Properties()));
+
+    public static final RegistryObject<Item> BRONZE_KNIFE = register("bronze_knife", n -> new KnifeItem(FHToolMaterials.ALLOY, 1, -1.5F, new Item.Properties()));
+    public static final RegistryObject<Item> BRONZE_PICKAXE = register("bronze_pickaxe", n -> new PickaxeItem(FHToolMaterials.ALLOY, 1, -2.8F, new Item.Properties()));
+    public static final RegistryObject<Item> BRONZE_AXE = register("bronze_axe", n -> new AxeItem(FHToolMaterials.ALLOY, 4.0F, -3.2F, new Item.Properties()));
+    public static final RegistryObject<Item> BRONZE_SHOVEL = register("bronze_shovel", n -> new ShovelItem(FHToolMaterials.ALLOY, 1.5F, -3.0F, new Item.Properties()));
+    public static final RegistryObject<Item> BRONZE_HOE = register("bronze_hoe", n -> new HoeItem(FHToolMaterials.ALLOY, 0, -3.0F, new Item.Properties()));
+    public static final RegistryObject<Item> BRONZE_SPEAR = register("bronze_spear", n -> new SpearItem(FHToolMaterials.ALLOY, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/bronze_spear.png"), new Item.Properties()));
+    public static final RegistryObject<Item> BRONZE_SWORD = register("bronze_sword", n -> new SwordItem(FHToolMaterials.ALLOY, 3, -2.4F, new Item.Properties()));
 
     // Materials
     public static RegistryObject<Item> generator_ash = register("generator_ash", n -> new FHBaseItem(createProps()));
@@ -141,11 +164,11 @@ public class FHItems {
     public static RegistryObject<Item> wool_boots = register("wool_boots", n -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.BOOTS, createProps()));
     public static RegistryObject<Item> wool_hat = register("wool_hat", n -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.HELMET, createProps()));
     public static RegistryObject<Item> wool_jacket = register("wool_jacket", n -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.CHESTPLATE, createProps()));
-    public static RegistryObject<Item> wool_pants = register("wool_pants", n -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.BOOTS, createProps()));
+    public static RegistryObject<Item> wool_pants = register("wool_pants", n -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.LEGGINGS, createProps()));
     public static RegistryObject<Item> hide_boots = register("hide_boots", n -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.BOOTS, createProps()));
     public static RegistryObject<Item> hide_hat = register("hide_hat", n -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.HELMET, createProps()));
     public static RegistryObject<Item> hide_jacket = register("hide_jacket", n -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.CHESTPLATE, createProps()));
-    public static RegistryObject<Item> hide_pants = register("hide_pants", n -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.BOOTS, createProps()));
+    public static RegistryObject<Item> hide_pants = register("hide_pants", n -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.LEGGINGS, createProps()));
     public static RegistryObject<HeaterVestItem> heater_vest = register("heater_vest", n -> new HeaterVestItem(createProps().stacksTo(1).setNoRepair()));
     public static RegistryObject<Item> copper_pro_pick = register("copper_pro_pick", n -> new ProspectorPick(1, createProps().defaultDurability(128)));
     public static RegistryObject<Item> iron_pro_pick = register("iron_pro_pick", n -> new ProspectorPick(2, createProps().defaultDurability(192)));
@@ -189,40 +212,51 @@ public class FHItems {
     public static RegistryObject<Item> KAOLIN = register("kaolin", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> BAUXITE = register("bauxite", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> ROTTEN_WOOD = register("rotten_wood", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_KAOLIN = register("crushed_raw_kaolin", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_BAUXITE = register("crushed_raw_bauxite", n -> new FHBaseItem(createProps()));
+//    public static RegistryObject<Item> CRUSHED_KAOLIN = register("crushed_raw_kaolin", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_RAW_BAUXITE = register("crushed_raw_bauxite", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> KAOLIN_DUST = register("kaolin_dust", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> BAUXITE_DUST = register("bauxite_dust", n -> new FHBaseItem(createProps()));
 
     // CONDENSED BALLS
-    public static RegistryObject<Item> CONDENSED_BALL_IRON_ORE = register("condensed_ball_iron", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_COPPER_ORE = register("condensed_ball_copper", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_GOLD_ORE = register("condensed_ball_gold", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_ZINC_ORE = register("condensed_ball_zinc", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_SILVER_ORE = register("condensed_ball_silver", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_CASSITERITE_ORE = register("condensed_ball_cassiterite", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_PYRITE_ORE = register("condensed_ball_pyrite", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_PENTLANDITE_ORE = register("condensed_ball_pentlandite", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_GALENA_ORE = register("condensed_ball_galena", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_IRON_ORE = register("condensed_ball_iron_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_COPPER_ORE = register("condensed_ball_copper_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_GOLD_ORE = register("condensed_ball_gold_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_ZINC_ORE = register("condensed_ball_zinc_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_SILVER_ORE = register("condensed_ball_silver_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_TIN_ORE = register("condensed_ball_tin_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_PYRITE_ORE = register("condensed_ball_pyrite_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_NICKEL_ORE = register("condensed_ball_nickel_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> CONDENSED_BALL_LEAD_ORE = register("condensed_ball_lead_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
+
+    // SLURRY
+    public static RegistryObject<Item> IRON_SLURRY = register("iron_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> COPPER_SLURRY = register("copper_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> GOLD_SLURRY = register("gold_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> ZINC_SLURRY = register("zinc_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> SILVER_SLURRY = register("silver_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> TIN_SLURRY = register("tin_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> PYRITE_SLURRY = register("pyrite_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> NICKEL_SLURRY = register("nickel_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
+    public static RegistryObject<Item> LEAD_SLURRY = register("lead_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
 
     // CRUSHED ORES
     public static RegistryObject<Item> CRUSHED_RAW_SILVER = register("crushed_raw_silver", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_RAW_CASSITERITE = register("crushed_raw_cassiterite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_RAW_TIN = register("crushed_raw_tin", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> CRUSHED_RAW_PYRITE = register("crushed_raw_pyrite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_RAW_PENTLANDITE = register("crushed_raw_pentlandite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_RAW_GALENA = register("crushed_raw_galena", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_RAW_NICKEL = register("crushed_raw_nickel", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_RAW_LEAD = register("crushed_raw_lead", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> CRUSHED_RAW_HALITE = register("crushed_raw_halite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_RAW_POTASH = register("crushed_raw_potash", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> CRUSHED_RAW_SYLVITE = register("crushed_raw_sylvite", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> CRUSHED_RAW_MAGNESITE = register("crushed_raw_magnesite", n -> new FHBaseItem(createProps()));
 
     // RAW ORES
     public static RegistryObject<Item> RAW_SILVER = register("raw_silver", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> RAW_CASSITERITE = register("raw_cassiterite", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> RAW_TIN = register("raw_tin", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> RAW_PYRITE = register("raw_pyrite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> RAW_PENTLANDITE = register("raw_pentlandite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> RAW_GALENA = register("raw_galena", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> RAW_NICKEL = register("raw_nickel", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> RAW_LEAD = register("raw_lead", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> RAW_HALITE = register("raw_halite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> RAW_POTASH = register("raw_potash", n -> new FHBaseItem(createProps()));
+    public static RegistryObject<Item> RAW_SYLVITE = register("raw_sylvite", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> RAW_MAGNESITE = register("raw_magnesite", n -> new FHBaseItem(createProps()));
 
     // MATERIALS
@@ -254,21 +288,21 @@ public class FHItems {
     // DUSTS
     public static RegistryObject<Item> COPPER_DUST = register("copper_dust");
     public static RegistryObject<Item> ALUMINUM_DUST = register("aluminum_dust");
-    public static RegistryObject<Item> STEEL_DUST = register("steel_dust");
-    public static RegistryObject<Item> ELECTRUM_DUST = register("electrum_dust");
-    public static RegistryObject<Item> CONSTANTAN_DUST = register("constantan_dust");
-    public static RegistryObject<Item> IRON_DUST = register("iron_dust");
-    public static RegistryObject<Item> CAST_IRON_DUST = register("cast_iron_dust");
-    public static RegistryObject<Item> BRASS_DUST = register("brass_dust");
+//    public static RegistryObject<Item> STEEL_DUST = register("steel_dust");
+//    public static RegistryObject<Item> ELECTRUM_DUST = register("electrum_dust");
+//    public static RegistryObject<Item> CONSTANTAN_DUST = register("constantan_dust");
+//    public static RegistryObject<Item> IRON_DUST = register("iron_dust");
+//    public static RegistryObject<Item> CAST_IRON_DUST = register("cast_iron_dust");
+//    public static RegistryObject<Item> BRASS_DUST = register("brass_dust");
     public static RegistryObject<Item> DURALUMIN_DUST = register("duralumin_dust");
     public static RegistryObject<Item> GOLD_DUST = register("gold_dust");
     public static RegistryObject<Item> SILVER_DUST = register("silver_dust");
     public static RegistryObject<Item> NICKEL_DUST = register("nickel_dust");
     public static RegistryObject<Item> LEAD_DUST = register("lead_dust");
     public static RegistryObject<Item> TITANIUM_DUST = register("titanium_dust");
-    public static RegistryObject<Item> BRONZE_DUST = register("bronze_dust");
-    public static RegistryObject<Item> INVAR_DUST = register("invar_dust");
-    public static RegistryObject<Item> TUNGSTEN_STEEL_DUST = register("tungsten_steel_dust");
+//    public static RegistryObject<Item> BRONZE_DUST = register("bronze_dust");
+//    public static RegistryObject<Item> INVAR_DUST = register("invar_dust");
+//    public static RegistryObject<Item> TUNGSTEN_STEEL_DUST = register("tungsten_steel_dust");
     public static RegistryObject<Item> ZINC_DUST = register("zinc_dust");
     public static RegistryObject<Item> TIN_DUST = register("tin_dust");
     public static RegistryObject<Item> MAGNESIUM_DUST = register("magnesium_dust");
@@ -362,8 +396,8 @@ public class FHItems {
     public static RegistryObject<Item> GRAY_TIN_INGOT = register("gray_tin_ingot");
 
     // SLUGS
-    public static RegistryObject<Item> IRON_SLUG = register("iron_slug");
-    public static RegistryObject<Item> NICKEL_SLUG = register("nickel_slug");
+    public static RegistryObject<Item> IRON_SLAG = register("iron_slag");
+    public static RegistryObject<Item> NICKEL_MATTE = register("nickel_matte");
 
     // CHEMICALS in dust
     /*

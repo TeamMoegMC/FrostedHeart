@@ -19,50 +19,44 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import java.util.Optional;
-import java.util.Random;
-
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
-
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.CampfireBlock;
-import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.stats.Stats;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.Containers;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Entity.RemovalReason;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.Containers;
-import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.crafting.CampfireCookingRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.stats.Stats;
-import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.block.entity.CampfireBlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.CampfireBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.items.ItemHandlerHelper;
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.Optional;
 
 /**
  * Add time limit for campfire
@@ -93,18 +87,19 @@ public abstract class CampfireBlockMixin extends BaseEntityBlock {
                 RandomSource rand = worldIn.random;
                 if (!worldIn.isClientSide) {
                     if (!player.getMainHandItem().isEmpty()) {
-                        if (CampfireBlock.canLight(state)) {
-                            if (itemstack.getItem() == Items.FLINT && player.getOffhandItem().getItem() == Items.FLINT) {
-                                player.swing(InteractionHand.MAIN_HAND);
-                                if (rand.nextFloat() < 0.33) {
-                                    worldIn.setBlock(pos, state.setValue(BlockStateProperties.LIT, Boolean.TRUE), 3);
-                                }
-
-                                worldIn.playSound(null, pos, SoundEvents.STONE_STEP, SoundSource.BLOCKS, 1.0F, 2F + rand.nextFloat() * 0.4F);
-
-                                return InteractionResult.SUCCESS;
-                            }
-                        }
+                        // moved to events
+//                        if (CampfireBlock.canLight(state)) {
+//                            if (itemstack.getItem() == Items.FLINT && player.getOffhandItem().getItem() == Items.FLINT) {
+//                                player.swing(InteractionHand.MAIN_HAND);
+//                                if (rand.nextFloat() < 0.33) {
+//                                    worldIn.setBlock(pos, state.setValue(BlockStateProperties.LIT, Boolean.TRUE), 3);
+//                                }
+//
+//                                worldIn.playSound(null, pos, SoundEvents.STONE_STEP, SoundSource.BLOCKS, 1.0F, 2F + rand.nextFloat() * 0.4F);
+//
+//                                return InteractionResult.SUCCESS;
+//                            }
+//                        }
                         Optional<CampfireCookingRecipe> optional = campfiretileentity.getCookableRecipe(itemstack);
                         if (optional.isPresent()) {
                             if (ResearchListeners.canUseRecipe(player, optional.get()) && campfiretileentity.placeFood(player,player.getAbilities().instabuild ? itemstack.copy() : itemstack, optional.get().getCookingTime())) {
@@ -124,7 +119,10 @@ public abstract class CampfireBlockMixin extends BaseEntityBlock {
                         }
                         return InteractionResult.SUCCESS;
                     }
-                } else {
+                }
+                // moved to events
+                /*
+                else {
                     if (!player.getMainHandItem().isEmpty()) {
                         if (CampfireBlock.canLight(state)) {
                             if (itemstack.getItem() == Items.FLINT && player.getOffhandItem().getItem() == Items.FLINT) {
@@ -137,6 +135,7 @@ public abstract class CampfireBlockMixin extends BaseEntityBlock {
                         }
                     }
                 }
+                 */
             }
         }
         return InteractionResult.PASS;

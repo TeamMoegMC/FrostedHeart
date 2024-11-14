@@ -70,6 +70,7 @@
     "minecraft.VillagerMixin"
   ],
   "client": [
+    "client.BossHealthOverlayAccess",
     "client.ForgeGuiMixin",
     "client.GuiMixin",
     "client.IngameGuiAccess",

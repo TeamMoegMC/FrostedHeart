@@ -1,0 +1,19 @@
+{
+  "values": [
+    "frostedheart:rusted_iron_ingot",
+    "frostedheart:steel_ingot",
+    "frostedheart:steel_nugget",
+    "frostedheart:steel_rod",
+    "minecraft:iron_ingot",
+    "minecraft:iron_nugget",
+    "frostedheart:iron_rod",
+    "frostedheart:cast_iron_ingot",
+    "frostedheart:cast_iron_nugget",
+    "frostedheart:cast_iron_rod",
+    "frostedheart:raw_pyrite",
+    "frostedheart:magnesium_ingot",
+    "frostedheart:magnesium_nugget",
+    "frostedheart:duralumin_ingot",
+    "frostedheart:duralumin_nugget"
+  ]
+}

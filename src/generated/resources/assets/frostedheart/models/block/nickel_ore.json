@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "frostedheart:block/ore/nickel_ore"
+  }
+}

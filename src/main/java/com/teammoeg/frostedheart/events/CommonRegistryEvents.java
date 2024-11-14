@@ -20,10 +20,19 @@
 package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.FHAttributes;
+import com.teammoeg.frostedheart.FHEntityTypes;
 import com.teammoeg.frostedheart.FHMain;
 
+import com.teammoeg.frostedheart.world.entities.CuriosityEntity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.SpawnPlacements;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
+import net.minecraftforge.event.entity.SpawnPlacementRegisterEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -52,4 +61,34 @@ public class CommonRegistryEvents {
         ModLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "modids"), new LootItemConditionType(new ModLootCondition.Serializer()));
         BlizzardDamageCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "blizzard_damage"), new LootItemConditionType(new BlizzardDamageCondition.Serializer()));
     }*/
+
+	@SubscribeEvent
+	public static void entityAttributes(EntityAttributeCreationEvent event) {
+		event.put(FHEntityTypes.CURIOSITY.get(), CuriosityEntity.createAttributes().build());
+		event.put(FHEntityTypes.WANDERING_REFUGEE.get(), PathfinderMob.createMobAttributes()
+				.add(Attributes.MAX_HEALTH, 20.0D)
+				.add(Attributes.ARMOR, 2.0F)
+				.add(Attributes.MOVEMENT_SPEED, 0.2F)
+				.add(Attributes.ATTACK_DAMAGE, 2.0D)
+				.build());
+	}
+
+	@SubscribeEvent
+	public static void registerSpawnPlacements(SpawnPlacementRegisterEvent event) {
+		event.register(
+				FHEntityTypes.CURIOSITY.get(),
+				SpawnPlacements.Type.ON_GROUND,
+				Heightmap.Types.WORLD_SURFACE,
+				CuriosityEntity::canSpawn,
+				SpawnPlacementRegisterEvent.Operation.OR
+		);
+
+		event.register(
+				FHEntityTypes.WANDERING_REFUGEE.get(),
+				SpawnPlacements.Type.NO_RESTRICTIONS,
+				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+				Mob::checkMobSpawnRules,
+				SpawnPlacementRegisterEvent.Operation.OR
+		);
+	}
 }

@@ -24,14 +24,14 @@ public class SunStationWaypoint extends Waypoint {
 
     @Override
     public void render(GuiGraphics graphics) {
-        float dayTime = 0;
+        float sunAngle = 0;
         if (ClientUtils.getWorld() != null) {
-            dayTime = (float)Math.toRadians(ClientUtils.getWorld().getSunAngle(ClientUtils.mc().getPartialTick())*360F);
+            sunAngle = ClientUtils.getWorld().getSunAngle(ClientUtils.mc().getPartialTick());
         }
-        float x = (float) Math.sin(dayTime)*200000000;
-        float y = (float) Math.cos(dayTime)*200000000;
-        float z = (float) Math.cos(Math.toRadians((dayTime*8 % 1)*360F))*19000000;
-        target = new Vec3(-x, y, z);
+        float x = (float) Math.sin(sunAngle);
+        float y = (float) Math.cos(sunAngle);
+        float z = (float) Math.cos(sunAngle*24);
+        target = new Vec3(-x*200000000, y*200000000, z*19000000);
         super.render(graphics);
     }
 

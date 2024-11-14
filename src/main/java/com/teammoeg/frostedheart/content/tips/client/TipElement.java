@@ -6,6 +6,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.TipLockManager;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.FHColorHelper;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 
@@ -58,8 +59,12 @@ public class TipElement implements Cloneable {
             if (jsonObject.has("contents")) {
                 JsonArray JContents = jsonObject.getAsJsonArray("contents");
                 for (int i = 0; i < JContents.size(); i++) {
-                    String raw = JContents.get(i).toString();
-                    contents.add(TranslateUtils.translate(raw.substring(1, raw.length() - 1)));
+                    String s = JContents.get(i).toString();
+                    if (I18n.exists(s)) {
+                        contents.add(Component.translatable(s.substring(1, s.length() - 1)));
+                    } else {
+                        contents.add(Component.literal(s));
+                    }
                 }
             }
             if (contents.isEmpty()) {

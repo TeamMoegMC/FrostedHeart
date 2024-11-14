@@ -32,9 +32,7 @@ import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.loot.FHLoot;
 import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.constants.FHProps;
-import com.teammoeg.frostedheart.util.creativeTab.TabType;
 import com.teammoeg.frostedheart.util.utility.BlackListPredicate;
 import com.teammoeg.frostedheart.util.version.FHRemote;
 import com.teammoeg.frostedheart.util.version.FHVersion;
@@ -43,12 +41,8 @@ import com.teammoeg.frostedheart.world.FHBiomes;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import dev.ftb.mods.ftbteams.api.event.TeamEvent;
 import net.minecraft.advancements.critereon.ItemPredicate;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameRules.IntegerValue;
 import net.minecraftforge.api.distmarker.Dist;
@@ -64,8 +58,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.RegistryObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -84,9 +76,6 @@ public class FHMain {
     public static File lastServerConfig;
     public static boolean saveNeedUpdate;
     public static final CreateRegistrate FH_REGISTRATE = CreateRegistrate.create(MODID);
-	public static final DeferredRegister<CreativeModeTab> TABS=DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
-	public static final RegistryObject<CreativeModeTab> main=TABS.register("frostedheart_main",()->CreativeModeTab.builder().withTabsBefore(CreativeModeTabs.SPAWN_EGGS).icon(()->new ItemStack(FHItems.energy_core.get())).title(TranslateUtils.translate("itemGroup.frostedheart")).build());
-    public static final TabType itemGroup = new TabType(main);
 
     public static ResourceLocation rl(String path) {
         return new ResourceLocation(MODID, path);
@@ -106,6 +95,45 @@ public class FHMain {
             pre = new FHRemote.FHPreRemote();
         FHMain.LOGGER.info("TWR Version: " + local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
 
+        // Registration
+        FHEntityTypes.ENTITY_TYPES.register(mod);
+        FHFluids.FLUIDS.register(mod);
+        FHMobEffects.EFFECTS.register(mod);
+        FHParticleTypes.REGISTER.register(mod);
+        FHBlockEntityTypes.REGISTER.register(mod);
+        FHMenuTypes.CONTAINERS.register(mod);
+        FHTabs.TABS.register(mod);
+        FHItems.registry.register(mod);
+        FHBlocks.registry.register(mod);
+
+        FHSoundEvents.SOUNDS.register(mod);
+        FHRecipes.RECIPE_SERIALIZERS.register(mod);
+        FHRecipes.RECIPE_TYPES.register(mod);
+        FHFeatures.FEATURES.register(mod);
+        FHBiomes.BIOME_REGISTER.register(mod);
+        FHBiomeModifiers.BIOME_MODIFIERS.register(mod);
+        FHAttributes.REGISTER.register(mod);
+        FHLoot.LC_REGISTRY.register(mod);
+        FHLoot.LM_REGISTRY.register(mod);
+
+        FHItems.init();
+        FHProps.init();
+        FHBlocks.init();
+        FHBiomes.init();
+        FHMultiblocks.Multiblock.init();
+
+        // Compat init
+        CreateCompat.init();
+        TetraCompat.init();
+        SpecialDataTypes.init();
+
+        // Event registration
+        TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
+        TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
+        TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);
+        TeamEvent.OWNERSHIP_TRANSFERRED.register(FTBTeamsEvents::syncDataWhenTeamTransfer);
+        ItemPredicate.register(new ResourceLocation(MODID, "blacklist"), BlackListPredicate::new);
+
         // Registrate
         FH_REGISTRATE.registerEventListeners(mod);
 
@@ -121,44 +149,6 @@ public class FHMain {
         mod.addListener(this::enqueueIMC);
         mod.addListener(this::loadComplete);
 
-        // Compat init
-        CreateCompat.init();
-        TetraCompat.init();
-        SpecialDataTypes.init();
-
-        // Early init
-        FHProps.init();
-        FHItems.init();
-        FHBlocks.init();
-        FHBiomes.init();
-        FHMultiblocks.Multiblock.init();
-
-        // Registration
-        FHMain.TABS.register(mod);
-        FHItems.registry.register(mod);
-        FHBlocks.registry.register(mod);
-        FHBlockEntityTypes.REGISTER.register(mod);
-        FHFluids.FLUIDS.register(mod);
-        FHSoundEvents.SOUNDS.register(mod);
-        FHMenuTypes.CONTAINERS.register(mod);
-        FHRecipes.RECIPE_SERIALIZERS.register(mod);
-        FHRecipes.RECIPE_TYPES.register(mod);
-        FHParticleTypes.REGISTER.register(mod);
-        FHFeatures.FEATURES.register(mod);
-        FHBiomes.BIOME_REGISTER.register(mod);
-        FHBiomeModifiers.BIOME_MODIFIERS.register(mod);
-        FHAttributes.REGISTER.register(mod);
-        FHMobEffects.EFFECTS.register(mod);
-        FHLoot.LC_REGISTRY.register(mod);
-        FHLoot.LM_REGISTRY.register(mod);
-
-        // Event registration
-        TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
-        TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
-        TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);
-        TeamEvent.OWNERSHIP_TRANSFERRED.register(FTBTeamsEvents::syncDataWhenTeamTransfer);
-        ItemPredicate.register(new ResourceLocation(MODID, "blacklist"), BlackListPredicate::new);
-
         // Client setup
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClient::setupClient);
     }
@@ -173,6 +163,7 @@ public class FHMain {
         SurroundingTemperatureSimulator.init();
         // modify default value
         GameRules.GAME_RULE_TYPES.put(GameRules.RULE_SPAWN_RADIUS, IntegerValue.create(0));
+
     }
 
     public void serverSave(final LevelEvent.Save event) {

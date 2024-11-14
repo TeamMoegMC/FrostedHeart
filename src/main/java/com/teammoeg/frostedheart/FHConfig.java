@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart;
 
 import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -127,7 +126,7 @@ public class FHConfig {
                     .comment("Enables the waypoints rendering. ")
                     .define("enableWaypoint", true);
             renderTips = builder.comment("Enables the tips rendering. ")
-                    .define("renderTips", false); // todo: set true
+                    .define("renderTips", true);
             builder.pop();
 
             builder.push("Scenario");
@@ -155,6 +154,10 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Double> steamCoreGeneratedSpeed;
         public final ForgeConfigSpec.ConfigValue<Double> steamCoreCapacity;
         public final ForgeConfigSpec.BooleanValue enableSnowAccumulationDuringWorldgen;
+        public final ForgeConfigSpec.ConfigValue<Double> flintIgnitionChance;
+        public final ForgeConfigSpec.ConfigValue<Double> stickIgnitionChance;
+        public final ForgeConfigSpec.ConfigValue<Double> consumeChanceWhenIgnited;
+
         Common(ForgeConfigSpec.Builder builder) {
             enablesTemperatureForecast = builder
                     .comment("Enables the weather forecast system. ")
@@ -178,6 +181,12 @@ public class FHConfig {
                     .defineInRange("steamCoreCapacity", 32, 0f, 256f);
             enableSnowAccumulationDuringWorldgen = builder.comment("Enables snow accumulation during world generation.")
                     .define("enableSnowAccumulationDuringWorldgen", false);
+            flintIgnitionChance = builder.comment("The chance of igniting when using a flint and metal.")
+                    .defineInRange("flintIgnitionChance", 0.1, 0, 1);
+            stickIgnitionChance = builder.comment("The chance of igniting igniting when using a stick.")
+                    .defineInRange("stickIgnitionChance", 0.05, 0, 1);
+            consumeChanceWhenIgnited = builder.comment("The chance of consuming the item when ignited.")
+                    .defineInRange("consumeChanceWhenIgnited", 0.1, 0, 1);
 
         }
     }
@@ -240,7 +249,8 @@ public class FHConfig {
                             Biomes.THE_VOID.location().toString(),
                             "terralith:yellowstone",
                             "terralith:volcanic_crater",
-                            "terralith:volcanic_peaks"
+                            "terralith:volcanic_peaks",
+                            "terralith:caldera"
                     ));
             invertNonWinterBiomes = builder.comment("If true, the 'nonWinterBiomes' config option will be interpreted as a list of winter biomes, and all others will be ignored.")
                     .define("invertNonWinterBiomes", false);

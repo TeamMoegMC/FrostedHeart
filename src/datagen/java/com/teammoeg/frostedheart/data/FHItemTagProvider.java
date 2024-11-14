@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.data;
 
 import com.simibubi.create.AllItems;
+import com.teammoeg.caupona.CPItems;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
@@ -34,6 +35,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -96,12 +98,12 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 		 */
 		tag(Tags.Items.RAW_MATERIALS)
 				.add(rk(FHItems.RAW_SILVER))
-				.add(rk(FHItems.RAW_CASSITERITE))
+				.add(rk(FHItems.RAW_TIN))
 				.add(rk(FHItems.RAW_PYRITE))
-				.add(rk(FHItems.RAW_PENTLANDITE))
-				.add(rk(FHItems.RAW_GALENA))
+				.add(rk(FHItems.RAW_NICKEL))
+				.add(rk(FHItems.RAW_LEAD))
 				.add(rk(FHItems.RAW_HALITE))
-				.add(rk(FHItems.RAW_POTASH))
+				.add(rk(FHItems.RAW_SYLVITE))
 				.add(rk(FHItems.RAW_MAGNESITE));
 
 		tag(frl("raw_materials/copper"))
@@ -109,21 +111,21 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 		tag(frl("raw_materials/iron"))
 				.add(rk(FHItems.RUSTED_IRON_INGOT))
 				.add(rk(FHItems.RAW_PYRITE))
-				.add(rk(FHItems.IRON_SLUG));
+				.add(rk(FHItems.IRON_SLAG));
 		tag(frl("raw_materials/tin"))
 				.add(rk(FHItems.GRAY_TIN_INGOT))
-				.add(rk(FHItems.RAW_CASSITERITE));
+				.add(rk(FHItems.RAW_TIN));
 		tag(frl("raw_materials/silver"))
 				.add(rk(FHItems.RAW_SILVER));
 		tag(frl("raw_materials/nickel"))
-				.add(rk(FHItems.RAW_PENTLANDITE))
-				.add(rk(FHItems.NICKEL_SLUG));
+				.add(rk(FHItems.RAW_NICKEL))
+				.add(rk(FHItems.NICKEL_MATTE));
 		tag(frl("raw_materials/lead"))
-				.add(rk(FHItems.RAW_GALENA));
+				.add(rk(FHItems.RAW_LEAD));
 		tag(frl("raw_materials/salt"))
 				.add(rk(FHItems.RAW_HALITE));
 		tag(frl("raw_materials/potash"))
-				.add(rk(FHItems.RAW_POTASH));
+				.add(rk(FHItems.RAW_SYLVITE));
 		tag(frl("raw_materials/magnesite"))
 				.add(rk(FHItems.RAW_MAGNESITE));
 
@@ -138,17 +140,17 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 		tag(frl("crushed_raw_materials/silver"))
 				.add(rk(FHItems.CRUSHED_RAW_SILVER));
 		tag(frl("crushed_raw_materials/tin"))
-				.add(rk(FHItems.CRUSHED_RAW_CASSITERITE));
+				.add(rk(FHItems.CRUSHED_RAW_TIN));
 		tag(frl("crushed_raw_materials/iron"))
 				.add(rk(FHItems.CRUSHED_RAW_PYRITE));
 		tag(frl("crushed_raw_materials/nickel"))
-				.add(rk(FHItems.CRUSHED_RAW_PENTLANDITE));
+				.add(rk(FHItems.CRUSHED_RAW_NICKEL));
 		tag(frl("crushed_raw_materials/lead"))
-				.add(rk(FHItems.CRUSHED_RAW_GALENA));
+				.add(rk(FHItems.CRUSHED_RAW_LEAD));
 		tag(frl("crushed_raw_materials/salt"))
 				.add(rk(FHItems.CRUSHED_RAW_HALITE));
 		tag(frl("crushed_raw_materials/potash"))
-				.add(rk(FHItems.CRUSHED_RAW_POTASH));
+				.add(rk(FHItems.CRUSHED_RAW_SYLVITE));
 		tag(frl("crushed_raw_materials/magnesite"))
 				.add(rk(FHItems.CRUSHED_RAW_MAGNESITE));
 
@@ -158,18 +160,18 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 				.add(rk(FHItems.COPPER_DUST));
 		tag(frl("dusts/aluminum"))
 				.add(rk(FHItems.ALUMINUM_DUST));
-		tag(frl("dusts/steel"))
-				.add(rk(FHItems.STEEL_DUST));
-		tag(frl("dusts/electrum"))
-				.add(rk(FHItems.ELECTRUM_DUST));
-		tag(frl("dusts/constantan"))
-				.add(rk(FHItems.CONSTANTAN_DUST));
-		tag(frl("dusts/iron"))
-				.add(rk(FHItems.IRON_DUST));
-		tag(frl("dusts/cast_iron"))
-				.add(rk(FHItems.CAST_IRON_DUST));
-		tag(frl("dusts/brass"))
-				.add(rk(FHItems.BRASS_DUST));
+//		tag(frl("dusts/steel"))
+//				.add(rk(FHItems.STEEL_DUST));
+//		tag(frl("dusts/electrum"))
+//				.add(rk(FHItems.ELECTRUM_DUST));
+//		tag(frl("dusts/constantan"))
+//				.add(rk(FHItems.CONSTANTAN_DUST));
+//		tag(frl("dusts/iron"))
+//				.add(rk(FHItems.IRON_DUST));
+//		tag(frl("dusts/cast_iron"))
+//				.add(rk(FHItems.CAST_IRON_DUST));
+//		tag(frl("dusts/brass"))
+//				.add(rk(FHItems.BRASS_DUST));
 		tag(frl("dusts/duralumin"))
 				.add(rk(FHItems.DURALUMIN_DUST));
 		tag(frl("dusts/gold"))
@@ -182,12 +184,12 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 				.add(rk(FHItems.LEAD_DUST));
 		tag(frl("dusts/titanium"))
 				.add(rk(FHItems.TITANIUM_DUST));
-		tag(frl("dusts/bronze"))
-				.add(rk(FHItems.BRONZE_DUST));
-		tag(frl("dusts/invar"))
-				.add(rk(FHItems.INVAR_DUST));
-		tag(frl("dusts/tungsten_steel"))
-				.add(rk(FHItems.TUNGSTEN_STEEL_DUST));
+//		tag(frl("dusts/bronze"))
+//				.add(rk(FHItems.BRONZE_DUST));
+//		tag(frl("dusts/invar"))
+//				.add(rk(FHItems.INVAR_DUST));
+//		tag(frl("dusts/tungsten_steel"))
+//				.add(rk(FHItems.TUNGSTEN_STEEL_DUST));
 		tag(frl("dusts/zinc"))
 				.add(rk(FHItems.ZINC_DUST));
 		tag(frl("dusts/tin"))
@@ -392,10 +394,10 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 				.add(rk(FHItems.CONDENSED_BALL_GOLD_ORE))
 				.add(rk(FHItems.CONDENSED_BALL_ZINC_ORE))
 				.add(rk(FHItems.CONDENSED_BALL_SILVER_ORE))
-				.add(rk(FHItems.CONDENSED_BALL_CASSITERITE_ORE))
+				.add(rk(FHItems.CONDENSED_BALL_TIN_ORE))
 				.add(rk(FHItems.CONDENSED_BALL_PYRITE_ORE))
-				.add(rk(FHItems.CONDENSED_BALL_PENTLANDITE_ORE))
-				.add(rk(FHItems.CONDENSED_BALL_GALENA_ORE));
+				.add(rk(FHItems.CONDENSED_BALL_NICKEL_ORE))
+				.add(rk(FHItems.CONDENSED_BALL_LEAD_ORE));
 
 		// permafrost
 		tag(FHTags.Items.PERMAFROST)
@@ -414,6 +416,67 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 				.add(rk(FHBlocks.BAUXITE_PERMAFROST.get().asItem()))
 				.add(rk(FHBlocks.KAOLIN_PERMAFROST.get().asItem()));
 
+
+		tag(ItemTags.PICKAXES).add(rk(FHItems.MAKESHIFT_PICKAXE)).add(rk(FHItems.BRONZE_PICKAXE));
+		tag(ItemTags.AXES).add(rk(FHItems.MAKESHIFT_AXE)).add(rk(FHItems.BRONZE_AXE));
+		tag(ItemTags.SHOVELS).add(rk(FHItems.MAKESHIFT_SHOVEL)).add(rk(FHItems.BRONZE_SHOVEL));
+		tag(ItemTags.HOES).add(rk(FHItems.MAKESHIFT_HOE)).add(rk(FHItems.BRONZE_HOE));
+		tag(ItemTags.SWORDS).add(rk(FHItems.MAKESHIFT_KNIFE)).add(rk(FHItems.BRONZE_KNIFE)).add(rk(FHItems.BRONZE_SWORD));
+
+		tag(frl("pickaxes/bronze")).add(rk(FHItems.BRONZE_PICKAXE));
+		tag(frl("axes/bronze")).add(rk(FHItems.BRONZE_AXE));
+		tag(frl("shovels/bronze")).add(rk(FHItems.BRONZE_SHOVEL));
+		tag(frl("hoes/bronze")).add(rk(FHItems.BRONZE_HOE));
+		tag(frl("swords/bronze")).add(rk(FHItems.BRONZE_SWORD));
+		tag(frl("knives/bronze")).add(rk(FHItems.BRONZE_KNIFE));
+
+		tag(FHTags.Items.IGNITION_MATERIAL)
+				.add(rk(Items.FLINT));
+
+		tag(FHTags.Items.IGNITION_METAL)
+				.add(rk(FHItems.RUSTED_IRON_INGOT))
+				.add(rk(FHItems.STEEL_INGOT))
+				.add(rk(FHItems.STEEL_NUGGET))
+				.add(rk(FHItems.STEEL_ROD))
+				.add(rk(Items.IRON_INGOT))
+				.add(rk(Items.IRON_NUGGET))
+				.add(rk(FHItems.IRON_ROD))
+				.add(rk(FHItems.CAST_IRON_INGOT))
+				.add(rk(FHItems.CAST_IRON_NUGGET))
+				.add(rk(FHItems.CAST_IRON_ROD))
+				.add(rk(FHItems.RAW_PYRITE))
+				.add(rk(FHItems.MAGNESIUM_INGOT))
+				.add(rk(FHItems.MAGNESIUM_NUGGET))
+				.add(rk(FHItems.DURALUMIN_INGOT))
+				.add(rk(FHItems.DURALUMIN_NUGGET));
+
+		tag(FHTags.Items.REFUGEE_NEEDS)
+				.add(rk(FHItems.military_rations))
+				.add(rk(FHItems.compressed_biscuits_pack))
+				.add(rk(FHItems.compressed_biscuits))
+				.add(rk(FHItems.packed_nuts))
+				.add(rk(FHItems.dried_vegetables))
+				.add(rk(FHItems.chocolate))
+				.add(rk(FHItems.black_bread))
+				.add(rk(FHItems.rye_bread))
+				.add(rk(FHItems.rye_porridge))
+				.add(rk(FHItems.rye_sawdust_porridge))
+				.add(rk(FHItems.vegetable_sawdust_soup))
+				.add(rk(FHItems.vegetable_soup))
+				.add(rk(Items.COOKED_PORKCHOP))
+				.add(rk(Items.COOKED_BEEF))
+				.add(rk(Items.COOKED_CHICKEN))
+				.add(rk(Items.COOKED_COD))
+				.add(rk(Items.COOKED_SALMON))
+				.add(rk(Items.COOKED_RABBIT))
+				.add(rk(Items.COOKED_MUTTON))
+				.add(rk(Items.BAKED_POTATO))
+				.add(rk(Items.BREAD))
+				.add(rk(Items.APPLE))
+				.add(rk(Items.BEETROOT_SOUP))
+				.add(rk(Items.MUSHROOM_STEW))
+				.add(rk(Items.RABBIT_STEW))
+				.add(rk(Items.PUMPKIN_PIE));
 
 	}
 
