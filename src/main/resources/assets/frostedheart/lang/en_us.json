@@ -517,5 +517,7 @@
   "tooltip.frostedheart.drink_unit": "Drink Unit",
   "tooltip.frostedheart.empty": "Empty",
   "subtitle.frostedheart.wind": "Wind",
-  "entity.frostedheart.curiosity_entity": "Curiosity of the Deep Frostland"
+  "entity.frostedheart.curiosity_entity": "Curiosity of the Deep Frostland",
+  "entity.frostedheart.wandering_refugee": "Wandering Refugee"
+
 }

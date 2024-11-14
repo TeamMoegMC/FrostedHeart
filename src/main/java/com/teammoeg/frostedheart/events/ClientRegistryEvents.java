@@ -274,7 +274,7 @@ public class ClientRegistryEvents {
 
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(FHEntities.EXAMPLE_ENTITY.get(), CuriosityEntityRenderer::new);
+        event.registerEntityRenderer(FHEntityTypes.CURIOSITY.get(), CuriosityEntityRenderer::new);
     }
 
     @SubscribeEvent

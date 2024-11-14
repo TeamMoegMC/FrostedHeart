@@ -19,9 +19,8 @@
 
 package com.teammoeg.frostedheart.events;
 
-import com.simibubi.create.compat.curios.Curios;
 import com.teammoeg.frostedheart.FHAttributes;
-import com.teammoeg.frostedheart.FHEntities;
+import com.teammoeg.frostedheart.FHEntityTypes;
 import com.teammoeg.frostedheart.FHMain;
 
 import com.teammoeg.frostedheart.world.entities.CuriosityEntity;
@@ -62,13 +61,13 @@ public class CommonRegistryEvents {
 
 	@SubscribeEvent
 	public static void entityAttributes(EntityAttributeCreationEvent event) {
-		event.put(FHEntities.EXAMPLE_ENTITY.get(), CuriosityEntity.createAttributes().build());
+		event.put(FHEntityTypes.CURIOSITY.get(), CuriosityEntity.createAttributes().build());
 	}
 
 	@SubscribeEvent
 	public static void registerSpawnPlacements(SpawnPlacementRegisterEvent event) {
 		event.register(
-				FHEntities.EXAMPLE_ENTITY.get(),
+				FHEntityTypes.CURIOSITY.get(),
 				SpawnPlacements.Type.ON_GROUND,
 				Heightmap.Types.WORLD_SURFACE,
 				CuriosityEntity::canSpawn,
