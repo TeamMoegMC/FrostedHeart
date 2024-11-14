@@ -34,6 +34,7 @@ import net.minecraft.world.entity.npc.Npc;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 
 public class WanderingRefugee extends PathfinderMob implements Npc {
     private static final EntityDataAccessor<Boolean> HIRED = SynchedEntityData.defineId(WanderingRefugee.class, EntityDataSerializers.BOOLEAN);
@@ -74,34 +75,38 @@ public class WanderingRefugee extends PathfinderMob implements Npc {
     }
 
     @Override
-    protected InteractionResult mobInteract(Player player, InteractionHand hand) {
-        ItemStack itemStack = player.getItemInHand(hand);
-        if (itemStack.is(FHTags.Items.REFUGEE_NEEDS)) {
-            // try shrink stack and decrement amount needed
-            int amountNeeded = this.entityData.get(AMOUNT_NEEDED);
-            if (amountNeeded > 0) {
-                amountNeeded--;
-                this.entityData.set(AMOUNT_NEEDED, amountNeeded);
-                itemStack.shrink(1);
+    protected @NotNull InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (level().isClientSide()) {
+            return InteractionResult.CONSUME;
+        } else {
+            ItemStack itemStack = player.getItemInHand(hand);
+            if (!this.entityData.get(HIRED) && itemStack.is(FHTags.Items.REFUGEE_NEEDS)) {
+                // try shrink stack and decrement amount needed
+                int amountNeeded = this.entityData.get(AMOUNT_NEEDED);
                 if (amountNeeded > 0) {
-                    player.sendSystemMessage(TranslateUtils.translateMessage("refugee.unsatisfied"));
-                    return InteractionResult.SUCCESS;
-                } else {
-                    player.sendSystemMessage(TranslateUtils.translateMessage("refugee.satisfied"));
-                    // Get town of player
-                    TeamTown town = TeamTown.from(player);
-                    // Add resident
-                    Resident resident = new Resident(firstName, lastName);
-                    town.addResident(resident);
-                    // hire
-                    this.entityData.set(HIRED, true);
-                    return InteractionResult.SUCCESS;
+                    amountNeeded--;
+                    this.entityData.set(AMOUNT_NEEDED, amountNeeded);
+                    itemStack.shrink(1);
+                    if (amountNeeded > 0) {
+                        player.sendSystemMessage(TranslateUtils.translateMessage("refugee.unsatisfied"));
+                        return InteractionResult.SUCCESS;
+                    } else {
+                        player.sendSystemMessage(TranslateUtils.translateMessage("refugee.satisfied"));
+                        // Get town of player
+                        TeamTown town = TeamTown.from(player);
+                        // Add resident
+                        Resident resident = new Resident(firstName, lastName);
+                        town.addResident(resident);
+                        // hire
+                        this.entityData.set(HIRED, true);
+                        return InteractionResult.SUCCESS;
+                    }
                 }
             }
+            // tell player they need to give the refugee something
+            player.sendSystemMessage(TranslateUtils.translateMessage("refugee.needs", this.firstName, this.lastName));
+            return InteractionResult.CONSUME;
         }
-        // tell player they need to give the refugee something
-        player.sendSystemMessage(TranslateUtils.translateMessage("refugee.needs", this.firstName, this.lastName));
-        return super.mobInteract(player, hand);
     }
 
     @Override

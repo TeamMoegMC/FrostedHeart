@@ -1,0 +1,30 @@
+{
+  "values": [
+    "frostedheart:military_rations",
+    "frostedheart:compressed_biscuits_pack",
+    "frostedheart:compressed_biscuits",
+    "frostedheart:packed_nuts",
+    "frostedheart:dried_vegetables",
+    "frostedheart:chocolate",
+    "frostedheart:black_bread",
+    "frostedheart:rye_bread",
+    "frostedheart:rye_porridge",
+    "frostedheart:rye_sawdust_porridge",
+    "frostedheart:vegetable_sawdust_soup",
+    "frostedheart:vegetable_soup",
+    "minecraft:cooked_porkchop",
+    "minecraft:cooked_beef",
+    "minecraft:cooked_chicken",
+    "minecraft:cooked_cod",
+    "minecraft:cooked_salmon",
+    "minecraft:cooked_rabbit",
+    "minecraft:cooked_mutton",
+    "minecraft:baked_potato",
+    "minecraft:bread",
+    "minecraft:apple",
+    "minecraft:beetroot_soup",
+    "minecraft:mushroom_stew",
+    "minecraft:rabbit_stew",
+    "minecraft:pumpkin_pie"
+  ]
+}

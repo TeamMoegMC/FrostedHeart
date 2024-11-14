@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.base.item;
 
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
 
@@ -33,7 +33,7 @@ public class FHBaseArmorItem extends ArmorItem implements ICreativeModeTabItem{
 
 	@Override
 	public void fillItemCategory(CreativeTabItemHelper helper) {
-		if(helper.isType(FHMain.itemGroup))
+		if(helper.isType(FHTabs.itemGroup))
 			helper.accept(this);
 	}
 

@@ -43,12 +43,12 @@ public class FHEntityTypes {
                     .build(new ResourceLocation(FHMain.MODID, "alloy_spear").toString()));
 
     public static final RegistryObject<EntityType<WanderingRefugee>> WANDERING_REFUGEE = ENTITY_TYPES.register("wandering_refugee",
-            () -> EntityType.Builder.of(WanderingRefugee::new, MobCategory.CREATURE)
+            () -> EntityType.Builder.<WanderingRefugee>of(WanderingRefugee::new, MobCategory.CREATURE)
                     .sized(0.6F, 1.95F).clientTrackingRange(10)
                     .build(new ResourceLocation(FHMain.MODID, "wandering_refugee").toString()));
 
     public static final RegistryObject<EntityType<CuriosityEntity>> CURIOSITY = ENTITY_TYPES.register("curiosity_entity",
-            () -> EntityType.Builder.of(CuriosityEntity::new, MobCategory.CREATURE)
+            () -> EntityType.Builder.<CuriosityEntity>of(CuriosityEntity::new, MobCategory.CREATURE)
                     .sized(1.0f, 1.0f)
                     .build(new ResourceLocation(FHMain.MODID, "curiosity_entity").toString())
     );

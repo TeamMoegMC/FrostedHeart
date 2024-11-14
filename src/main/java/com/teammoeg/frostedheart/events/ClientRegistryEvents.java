@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1Gener
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorState;
+import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
 import com.teammoeg.frostedheart.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.world.entities.CuriosityEntityRenderer;
 import net.minecraftforge.client.event.*;
@@ -275,6 +276,7 @@ public class ClientRegistryEvents {
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(FHEntityTypes.CURIOSITY.get(), CuriosityEntityRenderer::new);
+        event.registerEntityRenderer(FHEntityTypes.WANDERING_REFUGEE.get(), WanderingRefugeeRenderer::new);
     }
 
     @SubscribeEvent
