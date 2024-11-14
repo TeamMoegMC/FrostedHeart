@@ -164,11 +164,11 @@ public class FHItems {
     public static RegistryObject<Item> wool_boots = register("wool_boots", n -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.BOOTS, createProps()));
     public static RegistryObject<Item> wool_hat = register("wool_hat", n -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.HELMET, createProps()));
     public static RegistryObject<Item> wool_jacket = register("wool_jacket", n -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.CHESTPLATE, createProps()));
-    public static RegistryObject<Item> wool_pants = register("wool_pants", n -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.BOOTS, createProps()));
+    public static RegistryObject<Item> wool_pants = register("wool_pants", n -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.LEGGINGS, createProps()));
     public static RegistryObject<Item> hide_boots = register("hide_boots", n -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.BOOTS, createProps()));
     public static RegistryObject<Item> hide_hat = register("hide_hat", n -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.HELMET, createProps()));
     public static RegistryObject<Item> hide_jacket = register("hide_jacket", n -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.CHESTPLATE, createProps()));
-    public static RegistryObject<Item> hide_pants = register("hide_pants", n -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.BOOTS, createProps()));
+    public static RegistryObject<Item> hide_pants = register("hide_pants", n -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.LEGGINGS, createProps()));
     public static RegistryObject<HeaterVestItem> heater_vest = register("heater_vest", n -> new HeaterVestItem(createProps().stacksTo(1).setNoRepair()));
     public static RegistryObject<Item> copper_pro_pick = register("copper_pro_pick", n -> new ProspectorPick(1, createProps().defaultDurability(128)));
     public static RegistryObject<Item> iron_pro_pick = register("iron_pro_pick", n -> new ProspectorPick(2, createProps().defaultDurability(192)));

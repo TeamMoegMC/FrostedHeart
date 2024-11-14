@@ -28,6 +28,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.SpawnPlacements;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
@@ -64,7 +65,12 @@ public class CommonRegistryEvents {
 	@SubscribeEvent
 	public static void entityAttributes(EntityAttributeCreationEvent event) {
 		event.put(FHEntityTypes.CURIOSITY.get(), CuriosityEntity.createAttributes().build());
-		event.put(FHEntityTypes.WANDERING_REFUGEE.get(), PathfinderMob.createMobAttributes().build());
+		event.put(FHEntityTypes.WANDERING_REFUGEE.get(), PathfinderMob.createMobAttributes()
+				.add(Attributes.MAX_HEALTH, 20.0D)
+				.add(Attributes.ARMOR, 2.0F)
+				.add(Attributes.MOVEMENT_SPEED, 0.2F)
+				.add(Attributes.ATTACK_DAMAGE, 2.0D)
+				.build());
 	}
 
 	@SubscribeEvent

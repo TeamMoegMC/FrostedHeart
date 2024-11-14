@@ -19,25 +19,41 @@
 
 package com.teammoeg.frostedheart.content.town.resident;
 
+import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHTags;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.util.TimeUtil;
+import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.ResetUniversalAngerTargetGoal;
+import net.minecraft.world.entity.monster.*;
 import net.minecraft.world.entity.npc.Npc;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class WanderingRefugee extends PathfinderMob implements Npc {
+import java.util.UUID;
+
+public class WanderingRefugee extends PathfinderMob implements Npc, NeutralMob {
 //    private static final EntityDataAccessor<Boolean> HIRED = SynchedEntityData.defineId(WanderingRefugee.class, EntityDataSerializers.BOOLEAN);
 //    private static final EntityDataAccessor<Integer> AMOUNT_NEEDED = SynchedEntityData.defineId(WanderingRefugee.class, EntityDataSerializers.INT);
 //
@@ -70,7 +86,10 @@ public class WanderingRefugee extends PathfinderMob implements Npc {
         "Carl", "Keith", "Roger", "Gerald", "Christian", "Terry", "Sean", "Arthur", "Austin", "Noah", "Lawrence",
         "Jesse", "Joe", "Bryan", "Billy", "Jordan", "Albert", "Dylan", "Bruce", "Willie", "Gabriel", "Alan", "Juan",
     };
+    private static final UniformInt PERSISTENT_ANGER_TIME = TimeUtil.rangeOfSeconds(20, 39);
 
+    private int remainingPersistentAngerTime;
+    private UUID persistentAngerTarget;
     private boolean hired = false;
     private int amountNeeded = 3 + (int) (getRandom().nextFloat() * 5);
     private String lastName = LAST_NAMES[(int) (Math.random() * LAST_NAMES.length)];
@@ -151,5 +170,66 @@ public class WanderingRefugee extends PathfinderMob implements Npc {
         if ((pCompound.contains("hired", Tag.TAG_BYTE))) {
             hired = pCompound.getBoolean("hired");
         }
+    }
+
+    @Override
+    public void registerGoals() {
+        // todo: add move toward higher temperature goal
+        this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Zombie.class, 8.0F, 0.5D, 0.5D));
+        this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Evoker.class, 12.0F, 0.5D, 0.5D));
+        this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Vindicator.class, 8.0F, 0.5D, 0.5D));
+        this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Vex.class, 8.0F, 0.5D, 0.5D));
+        this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Pillager.class, 15.0F, 0.5D, 0.5D));
+        this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Illusioner.class, 12.0F, 0.5D, 0.5D));
+        this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Zoglin.class, 10.0F, 0.5D, 0.5D));
+//        this.goalSelector.addGoal(1, new PanicGoal(this, 0.5D));
+        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.25D, true));
+        this.goalSelector.addGoal(3, new MoveTowardsTargetGoal(this, 1.25D, 16.0F));
+        this.goalSelector.addGoal(4, new TemptGoal(this, 1.25D, Ingredient.of(FHTags.Items.REFUGEE_NEEDS), false));
+        this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 1.0D));
+        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 6.0F));
+        this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
+        this.targetSelector.addGoal(1, (new HurtByTargetGoal(this)).setAlertOthers());
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false, this::isAngryAt));
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Mob.class, 5, true, false, (entity) -> {
+            return entity instanceof Enemy && !(entity instanceof Creeper);
+        }));
+        // todo: add hunting goal
+        this.targetSelector.addGoal(3, new ResetUniversalAngerTargetGoal<>(this, true));
+    }
+
+    @Override
+    public Component getDisplayName() {
+        if (hired) {
+            return TranslateUtils.str(this.firstName + " " + this.lastName);
+        }
+        return super.getDisplayName();
+    }
+
+    @Override
+    public int getRemainingPersistentAngerTime() {
+        return this.remainingPersistentAngerTime;
+    }
+
+    @Override
+    public void setRemainingPersistentAngerTime(int pRemainingPersistentAngerTime) {
+        this.remainingPersistentAngerTime = pRemainingPersistentAngerTime;
+    }
+
+    @Nullable
+    @Override
+    public UUID getPersistentAngerTarget() {
+        return this.persistentAngerTarget;
+    }
+
+    @Override
+    public void setPersistentAngerTarget(@Nullable UUID pPersistentAngerTarget) {
+        this.persistentAngerTarget = pPersistentAngerTarget;
+    }
+
+    @Override
+    public void startPersistentAngerTimer() {
+        this.setRemainingPersistentAngerTime(PERSISTENT_ANGER_TIME.sample(this.random));
     }
 }
