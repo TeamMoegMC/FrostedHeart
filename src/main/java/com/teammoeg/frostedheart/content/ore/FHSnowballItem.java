@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.ore;
 
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
 import net.minecraft.world.item.SnowballItem;
@@ -31,7 +31,7 @@ public class FHSnowballItem extends SnowballItem implements ICreativeModeTabItem
 
     @Override
     public void fillItemCategory(CreativeTabItemHelper helper) {
-        if(helper.isType(FHMain.itemGroup))
+        if(helper.isType(FHTabs.itemGroup))
             helper.accept(this);
     }
 }

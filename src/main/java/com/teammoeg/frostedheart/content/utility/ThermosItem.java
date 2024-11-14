@@ -25,6 +25,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.simibubi.create.content.fluids.potion.PotionFluidHandler;
+import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
@@ -126,7 +127,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood,I
 
     @Override
     public void fillItemCategory(CreativeTabItemHelper helper) {
-        if (helper.isType(FHMain.itemGroup)) {
+        if (helper.isType(FHTabs.itemGroup)) {
        
             ITag<Fluid> tag = ForgeRegistries.FLUIDS.tags().getTag(availableFluid);
             

@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 
 import com.mojang.datafixers.util.Either;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.util.TranslateUtils;
@@ -35,13 +36,11 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
@@ -49,7 +48,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
 import top.theillusivec4.curios.api.type.ISlotType;
-import net.minecraft.world.item.Item.Properties;
 
 public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
     public static final TagKey<Item> ktag = ItemTags.create(new ResourceLocation(FHMain.MODID, "knife"));
@@ -73,7 +71,7 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
 
     @Override
     public void fillItemCategory(CreativeTabItemHelper helper) {
-        if (helper.isType(FHMain.itemGroup)) {
+        if (helper.isType(FHTabs.itemGroup)) {
             ItemStack is = new ItemStack(this);
             helper.accept(is);
             is.setDamageValue(is.getMaxDamage());

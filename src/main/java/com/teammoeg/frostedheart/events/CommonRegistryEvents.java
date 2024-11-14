@@ -25,6 +25,8 @@ import com.teammoeg.frostedheart.FHMain;
 
 import com.teammoeg.frostedheart.world.entities.CuriosityEntity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
@@ -62,6 +64,7 @@ public class CommonRegistryEvents {
 	@SubscribeEvent
 	public static void entityAttributes(EntityAttributeCreationEvent event) {
 		event.put(FHEntityTypes.CURIOSITY.get(), CuriosityEntity.createAttributes().build());
+		event.put(FHEntityTypes.WANDERING_REFUGEE.get(), PathfinderMob.createMobAttributes().build());
 	}
 
 	@SubscribeEvent
@@ -71,6 +74,14 @@ public class CommonRegistryEvents {
 				SpawnPlacements.Type.ON_GROUND,
 				Heightmap.Types.WORLD_SURFACE,
 				CuriosityEntity::canSpawn,
+				SpawnPlacementRegisterEvent.Operation.OR
+		);
+
+		event.register(
+				FHEntityTypes.WANDERING_REFUGEE.get(),
+				SpawnPlacements.Type.NO_RESTRICTIONS,
+				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+				Mob::checkMobSpawnRules,
 				SpawnPlacementRegisterEvent.Operation.OR
 		);
 	}

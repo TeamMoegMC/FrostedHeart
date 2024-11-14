@@ -53,6 +53,7 @@ import net.minecraft.world.food.Foods;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.ArmorItem.Type;
 import net.minecraft.world.item.Item.Properties;
+import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
@@ -87,6 +88,12 @@ public class FHItems {
     public static void init() {
 
     }
+
+    // Spawn Eggs
+    // Well, you MUST use ForgeSpawnEggItem, to take in the RegistryObject Supplier, instead of the EntityType itself,
+    // because ITEMS always register before ENTITY_TYPES. I wasted 2 hours on this.
+    public static final RegistryObject<Item> CURIOSITY_SPAWN_EGG = register("curiosity_spawn_egg", n -> new ForgeSpawnEggItem(FHEntityTypes.CURIOSITY, 0xfffeff, 0xafbdc0, createProps()));
+    public static final RegistryObject<Item> WANDERING_REFUGEE_SPAWN_EGG = register("wandering_refugee_spawn_egg", n -> new ForgeSpawnEggItem(FHEntityTypes.WANDERING_REFUGEE, 0xfffeff, 0x11374f, createProps()));
 
     // Equipment
     public static final RegistryObject<Item> SNOWSHOES = register("snowshoes", n -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)));

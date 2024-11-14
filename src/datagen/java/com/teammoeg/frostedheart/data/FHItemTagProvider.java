@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.data;
 
 import com.simibubi.create.AllItems;
+import com.teammoeg.caupona.CPItems;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
@@ -475,8 +476,7 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 				.add(rk(Items.BEETROOT_SOUP))
 				.add(rk(Items.MUSHROOM_STEW))
 				.add(rk(Items.RABBIT_STEW))
-				.add(rk(Items.PUMPKIN_PIE))
-				.addTag(ItemTags.create(new ResourceLocation("caupona:stews")));
+				.add(rk(Items.PUMPKIN_PIE));
 
 	}
 

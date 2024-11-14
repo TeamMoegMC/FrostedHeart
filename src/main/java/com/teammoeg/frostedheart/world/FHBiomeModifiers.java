@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.world;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.FHEntityTypes;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
@@ -87,8 +88,10 @@ public class FHBiomeModifiers {
             final MobSpawnSettingsBuilder spawns = builder.getMobSpawnSettings();
 
             // TODO: spawn rates
-            spawns.addSpawn(MobCategory.CREATURE, new MobSpawnSettings.SpawnerData(EntityType.POLAR_BEAR, 1, 1, 3));
-            spawns.addSpawn(MobCategory.MONSTER, new MobSpawnSettings.SpawnerData(EntityType.STRAY, 80, 1, 3));
+            spawns.addSpawn(MobCategory.CREATURE, new MobSpawnSettings.SpawnerData(EntityType.POLAR_BEAR, 5, 1, 3));
+            spawns.addSpawn(MobCategory.MONSTER, new MobSpawnSettings.SpawnerData(EntityType.STRAY, 20, 1, 3));
+            spawns.addSpawn(MobCategory.CREATURE, new MobSpawnSettings.SpawnerData(FHEntityTypes.WANDERING_REFUGEE.get(), 100, 1, 1));
+
         }
 
         @Override

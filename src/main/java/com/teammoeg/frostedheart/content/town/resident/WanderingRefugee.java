@@ -23,6 +23,7 @@ import com.teammoeg.frostedheart.FHTags;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -34,10 +35,15 @@ import net.minecraft.world.entity.npc.Npc;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 
 public class WanderingRefugee extends PathfinderMob implements Npc {
     private static final EntityDataAccessor<Boolean> HIRED = SynchedEntityData.defineId(WanderingRefugee.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> AMOUNT_NEEDED = SynchedEntityData.defineId(WanderingRefugee.class, EntityDataSerializers.INT);
+
+    // first and last names
+    private static final EntityDataAccessor<String> FIRST_NAME = SynchedEntityData.defineId(WanderingRefugee.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> LAST_NAME = SynchedEntityData.defineId(WanderingRefugee.class, EntityDataSerializers.STRING);
 
     // Random pool of last names
     public static final String[] LAST_NAMES = new String[] {
@@ -65,43 +71,46 @@ public class WanderingRefugee extends PathfinderMob implements Npc {
         "Jesse", "Joe", "Bryan", "Billy", "Jordan", "Albert", "Dylan", "Bruce", "Willie", "Gabriel", "Alan", "Juan",
     };
 
-    private String lastName;
-    private String firstName;
     public WanderingRefugee(EntityType<? extends PathfinderMob> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
-        this.lastName = LAST_NAMES[(int) (Math.random() * LAST_NAMES.length)];
-        this.firstName = FIRST_NAMES[(int) (Math.random() * FIRST_NAMES.length)];
     }
 
     @Override
-    protected InteractionResult mobInteract(Player player, InteractionHand hand) {
-        ItemStack itemStack = player.getItemInHand(hand);
-        if (itemStack.is(FHTags.Items.REFUGEE_NEEDS)) {
-            // try shrink stack and decrement amount needed
-            int amountNeeded = this.entityData.get(AMOUNT_NEEDED);
-            if (amountNeeded > 0) {
-                amountNeeded--;
-                this.entityData.set(AMOUNT_NEEDED, amountNeeded);
-                itemStack.shrink(1);
+    protected @NotNull InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (level().isClientSide()) {
+            return InteractionResult.SUCCESS;
+        } else {
+            ItemStack itemStack = player.getItemInHand(hand);
+            if (this.entityData.get(HIRED)) {
+                player.displayClientMessage(TranslateUtils.translateMessage("refugee.hired", player.getName().getString()), false);
+                return InteractionResult.CONSUME;
+            } else if (itemStack.is(FHTags.Items.REFUGEE_NEEDS)) {
+                // try shrink stack and decrement amount needed
+                int amountNeeded = this.entityData.get(AMOUNT_NEEDED);
                 if (amountNeeded > 0) {
-                    player.sendSystemMessage(TranslateUtils.translateMessage("refugee.unsatisfied"));
-                    return InteractionResult.SUCCESS;
-                } else {
-                    player.sendSystemMessage(TranslateUtils.translateMessage("refugee.satisfied"));
-                    // Get town of player
-                    TeamTown town = TeamTown.from(player);
-                    // Add resident
-                    Resident resident = new Resident(firstName, lastName);
-                    town.addResident(resident);
-                    // hire
-                    this.entityData.set(HIRED, true);
-                    return InteractionResult.SUCCESS;
+                    amountNeeded--;
+                    this.entityData.set(AMOUNT_NEEDED, amountNeeded);
+                    itemStack.shrink(1);
+                    if (amountNeeded > 0) {
+                        player.displayClientMessage(TranslateUtils.translateMessage("refugee.unsatisfied"), false);
+                        return InteractionResult.CONSUME;
+                    } else {
+                        player.displayClientMessage(TranslateUtils.translateMessage("refugee.satisfied"), false);
+                        // Get town of player
+                        TeamTown town = TeamTown.from(player);
+                        // Add resident
+                        Resident resident = new Resident(entityData.get(FIRST_NAME), entityData.get(LAST_NAME));
+                        town.addResident(resident);
+                        // hire
+                        this.entityData.set(HIRED, true);
+                        return InteractionResult.CONSUME;
+                    }
                 }
             }
+            // tell player they need to give the refugee something
+            player.displayClientMessage(TranslateUtils.translateMessage("refugee.needs", entityData.get(FIRST_NAME), entityData.get(LAST_NAME)), false);
+            return InteractionResult.CONSUME;
         }
-        // tell player they need to give the refugee something
-        player.sendSystemMessage(TranslateUtils.translateMessage("refugee.needs", this.firstName, this.lastName));
-        return super.mobInteract(player, hand);
     }
 
     @Override
@@ -109,19 +118,33 @@ public class WanderingRefugee extends PathfinderMob implements Npc {
         super.defineSynchedData();
         this.entityData.define(HIRED, false);
         this.entityData.define(AMOUNT_NEEDED,  3 + (int) (getRandom().nextFloat() * 5));
+        this.entityData.define(LAST_NAME, LAST_NAMES[(int) (Math.random() * LAST_NAMES.length)]);
+        this.entityData.define(FIRST_NAME, FIRST_NAMES[(int) (Math.random() * FIRST_NAMES.length)]);
     }
 
-    @Override
-    public void addAdditionalSaveData(CompoundTag pCompound) {
-        super.addAdditionalSaveData(pCompound);
-        pCompound.putString("first_name", this.firstName);
-        pCompound.putString("last_name", this.lastName);
-    }
-
-    @Override
-    public void readAdditionalSaveData(CompoundTag pCompound) {
-        super.readAdditionalSaveData(pCompound);
-        this.firstName = pCompound.getString("first_name");
-        this.lastName = pCompound.getString("last_name");
-    }
+//    @Override
+//    public void addAdditionalSaveData(CompoundTag pCompound) {
+//        super.addAdditionalSaveData(pCompound);
+//        pCompound.putBoolean("hired", this.entityData.get(HIRED));
+//        pCompound.putInt("amountNeeded", this.entityData.get(AMOUNT_NEEDED));
+//        pCompound.putString("lastName", this.entityData.get(LAST_NAME));
+//        pCompound.putString("firstName", this.entityData.get(FIRST_NAME));
+//    }
+//
+//    @Override
+//    public void readAdditionalSaveData(CompoundTag pCompound) {
+//        super.readAdditionalSaveData(pCompound);
+//        if ((pCompound.contains("amountNeeded", Tag.TAG_INT))) {
+//            this.entityData.set(AMOUNT_NEEDED, pCompound.getInt("amountNeeded"));
+//        }
+//        if ((pCompound.contains("lastName", Tag.TAG_STRING))) {
+//            this.entityData.set(LAST_NAME, pCompound.getString("lastName"));
+//        }
+//        if ((pCompound.contains("firstName", Tag.TAG_STRING))) {
+//            this.entityData.set(FIRST_NAME, pCompound.getString("firstName"));
+//        }
+//        if ((pCompound.contains("hired", Tag.TAG_BYTE))) {
+//            this.entityData.set(HIRED, pCompound.getBoolean("hired"));
+//        }
+//    }
 }

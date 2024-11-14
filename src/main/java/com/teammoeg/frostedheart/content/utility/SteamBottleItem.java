@@ -23,7 +23,7 @@ import java.util.List;
 
 import com.mojang.datafixers.util.Either;
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
@@ -67,7 +67,7 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
 
     @Override
 	public void fillItemCategory(CreativeTabItemHelper helper) {
-        if (helper.isType(FHMain.itemGroup)) {
+        if (helper.isType(FHTabs.itemGroup)) {
             ItemStack is = new ItemStack(this);
             helper.accept(this);
             FHCapabilities.ITEM_HEAT.getCapability(is).ifPresent(t->t.receiveEnergy(240, false));

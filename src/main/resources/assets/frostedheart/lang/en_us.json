@@ -407,6 +407,7 @@
   "message.frostedheart.refugee.needs": "Hello, my name is %s %s. I need some hot, warm foods...",
   "message.frostedheart.refugee.satisfied": "Thank you, you saved me. I will now join your town.",
   "message.frostedheart.refugee.unsatisfied": "I'm still hungry...",
+  "message.frostedheart.refugee.hired": "How are you doing, %s? Let's work together in your town.",
   "key.frostedheart.skip_dialog": "Skip dialog",
   "key.categories.frostedheart": "Frosted Heart",
   "research.category.desc.frostedheart.ars": "Techniques and artistry",
