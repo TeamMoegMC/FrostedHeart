@@ -4,6 +4,7 @@ import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
 import com.teammoeg.frostedheart.content.tips.TipLockManager;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
+import com.teammoeg.frostedheart.content.waypoint.waypoints.ColumbiatWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.SunStationWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.Waypoint;
 import com.teammoeg.frostedheart.util.TranslateUtils;
@@ -45,6 +46,9 @@ public class DebugScreen extends Screen {
         });
         addButton(IconButton.Icon.BOX_ON, 0xFFFFDA64, "Create Sun Station Waypoint", (b) -> {
             ClientWaypointManager.putWaypoint(new SunStationWaypoint());
+        });
+        addButton(IconButton.Icon.BOX_ON, 0xF6F1D5, "Create Columbiat Waypoint", (b) -> {
+            ClientWaypointManager.putWaypoint(new ColumbiatWaypoint());
         });
         addButton(IconButton.Icon.BOX, FHColorHelper.CYAN, "Remove The Waypoint You Are Looking At", (b) -> {
             if (ClientWaypointManager.hoveredWaypoint != null) {

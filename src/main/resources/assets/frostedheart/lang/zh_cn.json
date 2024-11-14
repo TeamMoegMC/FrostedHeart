@@ -422,6 +422,7 @@
   "manual.frostedheart.main": "能量塔",
 
   "waypoint.frostedheart.sun_station": "太阳站",
+  "waypoint.frostedheart.columbiat": "哥伦比亚特",
   "waypoint.frostedheart.distance": "距离: %s 格",
   "waypoint.frostedheart.position": "[X: %s, Y: %s, Z: %s]",
   "waypoint.frostedheart.entity_health": "❤ %s / %s",

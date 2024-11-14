@@ -463,6 +463,7 @@
   "manual.frostedheart.main": "Generators",
 
   "waypoint.frostedheart.sun_station": "Sun Station",
+  "waypoint.frostedheart.columbiat": "Columbiat",
   "waypoint.frostedheart.distance": "Distance: %d blocks",
   "waypoint.frostedheart.position": "[X: %s, Y: %s, Z: %s]",
   "waypoint.frostedheart.entity_health": "❤ %s / %s",

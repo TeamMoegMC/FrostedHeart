@@ -5,10 +5,7 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.waypoint.capability.WaypointCapability;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
-import com.teammoeg.frostedheart.content.waypoint.waypoints.AbstractWaypoint;
-import com.teammoeg.frostedheart.content.waypoint.waypoints.EntityWaypoint;
-import com.teammoeg.frostedheart.content.waypoint.waypoints.SunStationWaypoint;
-import com.teammoeg.frostedheart.content.waypoint.waypoints.Waypoint;
+import com.teammoeg.frostedheart.content.waypoint.waypoints.*;
 import com.teammoeg.frostedheart.util.io.registry.NBTSerializerRegistry;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.util.LazyOptional;
@@ -25,6 +22,7 @@ public class WaypointManager {
         registry.register(Waypoint.class, "default", Waypoint::new, AbstractWaypoint::serializeNBT, Waypoint::new);
         registry.register(EntityWaypoint.class, "entity", EntityWaypoint::new, AbstractWaypoint::serializeNBT, EntityWaypoint::new);
         registry.register(SunStationWaypoint.class, "sun_station", SunStationWaypoint::new, AbstractWaypoint::serializeNBT, SunStationWaypoint::new);
+        registry.register(ColumbiatWaypoint.class, "columbiat", ColumbiatWaypoint::new, AbstractWaypoint::serializeNBT, ColumbiatWaypoint::new);
     }
 
     private final ServerPlayer player;
