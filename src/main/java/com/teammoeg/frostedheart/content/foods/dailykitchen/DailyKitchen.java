@@ -48,6 +48,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 
 public class DailyKitchen {
     /**
@@ -82,9 +83,12 @@ public class DailyKitchen {
     }
 
 
-    public static void tryGiveBenefits(ServerPlayer player, ItemStack foodItemStack){
-        Benefits benefits = new Benefits(player);
-        benefits.tryGive(foodItemStack);
+    public static void tryGiveBenefits(LivingEntityUseItemEvent.Finish event){
+        if (event.getEntity() != null && !event.getEntity().level().isClientSide && event.getEntity() instanceof ServerPlayer) {
+            Benefits benefits = new Benefits((ServerPlayer) event.getEntity());
+            benefits.tryGive(event.getItem());
+        }
+
     }
 }
 

@@ -408,6 +408,10 @@
   "message.frostedheart.refugee.satisfied": "Thank you, you saved me. I will now join your town.",
   "message.frostedheart.refugee.unsatisfied": "I'm still hungry...",
   "message.frostedheart.refugee.hired": "How are you doing, %s? Let's work together in your town.",
+  "message.frostedheart.food.cold": "Eating cold food is not a good idea.",
+  "message.frostedheart.food.frozen": "It's hard as ice! I should warm it up.",
+  "message.frostedheart.food.hot": "Warmth is pouring into my body.",
+
   "key.frostedheart.skip_dialog": "Skip dialog",
   "key.categories.frostedheart": "Frosted Heart",
   "research.category.desc.frostedheart.ars": "Techniques and artistry",
@@ -464,6 +468,11 @@
   "tooltip.frostedheart.rubbing.points": "Points: %s",
   "tooltip.frostedheart.rubbing.points.hint": "Examine in drawing desk to obtain research points",
   "tooltip.frostedheart.research_unlockable": "Required Research: %s",
+  "tooltip.frostedheart.food.temperature.frozen": "Frozen",
+  "tooltip.frostedheart.food.temperature.cold": "Cold",
+  "tooltip.frostedheart.food.temperature.hot": "Freshly Cooked",
+  "tooltip.frostedheart.food.dry": "Dry",
+  "tooltip.frostedheart.food.insulated": "Insulated",
   "manual.frostedheart.main": "Generators",
 
   "waypoint.frostedheart.sun_station": "Sun Station",

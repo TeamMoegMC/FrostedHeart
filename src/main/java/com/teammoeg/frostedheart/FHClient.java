@@ -39,5 +39,6 @@ public class FHClient {
         KGlyphProvider.addListener();
         forgeBus.addListener(FogModification::renderFogColors);
         forgeBus.addListener(FogModification::renderFogDensity);
+        forgeBus.addListener(FHTooltips::onItemTooltip);
     }
 }

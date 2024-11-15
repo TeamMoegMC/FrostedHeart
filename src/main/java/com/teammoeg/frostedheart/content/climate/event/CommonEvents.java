@@ -195,50 +195,6 @@ public class CommonEvents {
         		event.setResult(Event.Result.DENY);
         }
     }
-    @SubscribeEvent
-    public static void finishedEatingFood(LivingEntityUseItemEvent.Finish event) {
-        if (event.getEntity() != null && !event.getEntity().level().isClientSide
-                && event.getEntity() instanceof ServerPlayer) {
-            ItemStack is = event.getItem();
-            Item it = event.getItem().getItem();
-            ITempAdjustFood adj = null;
-            // System.out.println(it.getRegistryName());
-            double tspeed = FHConfig.SERVER.tempSpeed.get();
-            if (it instanceof ITempAdjustFood) {
-                adj = (ITempAdjustFood) it;
-            } else {
-                adj = FHDataManager.getFood(is);
-            }
-            if (adj != null) {
-                float current = PlayerTemperatureData.getCapability((ServerPlayer) event.getEntity()).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
-                float max = adj.getMaxTemp(event.getItem());
-                float min = adj.getMinTemp(event.getItem());
-                float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayer) event.getEntity()).map(PlayerTemperatureData::getEnvTemp).orElse(0f));
-                
-                if (heat > 1) {
-                    event.getEntity().hurt(FHDamageTypes.createSource(event.getEntity().level(), FHDamageTypes.HYPERTHERMIA_INSTANT, event.getEntity()), (heat) * 2);
-                } else if (heat < -1)
-                    event.getEntity().hurt(FHDamageTypes.createSource(event.getEntity().level(), FHDamageTypes.HYPOTHERMIA_INSTANT, event.getEntity()), (heat) * 2);
-                if (heat > 0) {
-                    if (current >= max)
-                        return;
-                    current += (float) (heat * tspeed);
-                    if (current > max)
-                        current = max;
-                } else {
-                    if (current <= min)
-                        return;
-                    current += (float) (heat * tspeed);
-                    if (current <= min)
-                        return;
-                }
-                final float toset=current;
-                PlayerTemperatureData.getCapability((ServerPlayer) event.getEntity()).ifPresent(t->t.setBodyTemp(toset));
-            }
-
-            DailyKitchen.tryGiveBenefits((ServerPlayer) event.getEntity(), is);
-        }
-    }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onArmorDamage(LivingHurtEvent event) {

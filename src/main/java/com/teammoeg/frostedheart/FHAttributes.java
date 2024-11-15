@@ -20,7 +20,8 @@ public class FHAttributes {
 
 	public static final AttributeModifier SNOW_DRIFTER = new AttributeModifier(UUID.fromString("3c4a1c57-ed5a-482e-946e-eb0b00fe5fb0"), "frostedheart:snowshoes", 0.05, AttributeModifier.Operation.ADDITION);
 	public static final AttributeModifier SPEED_SKATER = new AttributeModifier(UUID.fromString("3c4a1c57-ed5a-482e-946e-eb0b00fe5fb1"), "frostedheart:speed_skater", 0.1, AttributeModifier.Operation.ADDITION);
-
+	public static final AttributeModifier HOT_FOOD = new AttributeModifier(UUID.fromString("3c4a1c57-ed5a-482e-946e-eb0b00fe5fb2"), "frostedheart:hot_food", 20F, AttributeModifier.Operation.ADDITION);
+	public static final AttributeModifier COLD_FOOD = new AttributeModifier(UUID.fromString("3c4a1c57-ed5a-482e-946e-eb0b00fe5fb3"), "frostedheart:cold_food", -5F, AttributeModifier.Operation.ADDITION);
 	public static RegistryObject<Attribute> register(String name,Function<String,Attribute> provider){
 		return REGISTER.register(name, ()->provider.apply("attribute."+FHMain.MODID+"."+name));
 		

@@ -41,7 +41,9 @@ import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 public class FHItemTagProvider extends TagsProvider<Item> {
 
@@ -477,6 +479,21 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 				.add(rk(Items.MUSHROOM_STEW))
 				.add(rk(Items.RABBIT_STEW))
 				.add(rk(Items.PUMPKIN_PIE));
+
+		tag(FHTags.Items.DRY_FOOD)
+				.add(rk(FHItems.compressed_biscuits_pack))
+				.add(rk(FHItems.compressed_biscuits))
+				.add(rk(FHItems.packed_nuts))
+				.add(rk(FHItems.dried_vegetables))
+				.add(rk(FHItems.chocolate));
+
+		tag(FHTags.Items.INSULATED_FOOD)
+				.add(rk(FHItems.military_rations))
+				.add(rk(FHItems.thermos))
+				.add(rk(FHItems.advanced_thermos));
+
+		FHItems.alladvthermos.stream().forEach(t->tag(FHTags.Items.INSULATED_FOOD).add(rk(t.get())));
+		FHItems.allthermos.stream().forEach(t->tag(FHTags.Items.INSULATED_FOOD).add(rk(t.get())));
 
 	}
 
