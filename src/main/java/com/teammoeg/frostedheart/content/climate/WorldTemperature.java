@@ -79,6 +79,8 @@ public class WorldTemperature {
             COLD_PERIOD_BOTTOM_T9,
             COLD_PERIOD_BOTTOM_T10
     };
+
+    public static final float WATER_FREEZE_TEMP = 0;
     public static final float CO2_FREEZE_TEMP = -78;
     public static final float O2_FREEZE_TEMP = -218;
     public static final float O2_LIQUID_TEMP = -182;
@@ -110,7 +112,7 @@ public class WorldTemperature {
      */
     public static final float VANILLA_PLANT_GROW_TEMPERATURE = -10;
     public static final int BONEMEAL_TEMPERATURE = 5;
-
+    public static final float FOOD_FROZEN_TEMPERATURE = -5;
 
     public static final float ANIMAL_ALIVE_TEMPERATURE = -9f;
 

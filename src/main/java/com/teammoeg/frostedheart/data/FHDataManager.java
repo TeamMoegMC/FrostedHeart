@@ -61,6 +61,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nullable;
+
 public class FHDataManager implements ResourceManagerReloadListener {
 	public static class ResourceMap<T> extends HashMap<ResourceLocation, T> {
 		private static final long serialVersionUID = 1564047056157250446L;
@@ -199,13 +201,22 @@ public class FHDataManager implements ResourceManagerReloadListener {
 		return -0.3f;
 	}
 
-	public static ITempAdjustFood getFood(ItemStack is) {
-		CupData data = FHDataManager.get(Cup).get(RegistryUtils.getRegistryName(is.getItem()));
+	/**
+	 * Get the temperature adjuster for the food item.
+	 * If stack is a cup, return the cup's temperature adjuster.
+	 * If stack has food temp data, return the food's temperature adjuster.
+	 * Otherwise, return null.
+	 *
+	 * @param stack the item stack
+	 * @return the temperature adjuster
+	 */
+	public static @Nullable ITempAdjustFood getFood(ItemStack stack) {
+		CupData data = FHDataManager.get(Cup).get(RegistryUtils.getRegistryName(stack.getItem()));
 		ResourceMap<FoodTempData> foodData = FHDataManager.get(Food);
 		if (data != null) {
-			return new CupTempAdjustProxy(data.getEfficiency(), foodData.get(RegistryUtils.getRegistryName(is.getItem())));
+			return new CupTempAdjustProxy(data.getEfficiency(), foodData.get(RegistryUtils.getRegistryName(stack.getItem())));
 		}
-		return foodData.get(RegistryUtils.getRegistryName(is.getItem()));
+        return foodData.get(RegistryUtils.getRegistryName(stack.getItem()));
 	}
 
 	public static Float getWorldTemp(Level w) {

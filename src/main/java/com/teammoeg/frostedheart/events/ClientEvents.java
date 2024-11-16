@@ -23,9 +23,6 @@ import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
-import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
-import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
-import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.gui.ResearchToast;
@@ -39,10 +36,6 @@ import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
 import com.teammoeg.frostedheart.content.tips.TipLockManager;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
-import com.teammoeg.frostedheart.data.FHDataManager;
-import com.teammoeg.frostedheart.recipes.InspireRecipe;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;
@@ -59,24 +52,19 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.ClickEvent;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.event.level.LevelEvent;
@@ -84,7 +72,6 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import org.lwjgl.glfw.GLFW;
 
@@ -93,154 +80,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEvents {
-
-    @SubscribeEvent
-    public static void addItemTooltip(ItemTooltipEvent event) {
-        ItemStack stack = event.getItemStack();
-        Item i = stack.getItem();
-        ITempAdjustFood itf = null;
-        //IWarmKeepingEquipment iwe = null;
-        for (InspireRecipe ir : FHUtils.filterRecipes(null, InspireRecipe.TYPE)) {
-            if (ir.item.test(stack)) {
-                event.getToolTip().add(TranslateUtils.translateTooltip("inspire_item").withStyle(ChatFormatting.GRAY));
-                break;
-            }
-        }
-        float tspeed = (float) (double) FHConfig.SERVER.tempSpeed.get();
-        if (i instanceof ITempAdjustFood) {
-            itf = (ITempAdjustFood) i;
-        } else {
-            itf = FHDataManager.getFood(stack);
-        }
-       /* if (i instanceof IWarmKeepingEquipment) {
-            iwe = (IWarmKeepingEquipment) i;
-        } else {
-            String s = ItemNBTHelper.getString(stack, "inner_cover");
-            EquipmentSlotType aes = MobEntity.getSlotForItemStack(stack);
-            if (s.length() > 0 && aes != null) {
-                event.getToolTip().add(GuiUtils.translateTooltip("inner").mergeStyle(TextFormatting.GREEN)
-                        .appendSibling(TranslateUtils.translate("item." + s.replaceFirst(":", "."))));
-                if (!ItemNBTHelper.getBoolean(stack, "inner_bounded")) {
-                    if (stack.hasTag() && stack.getTag().contains("inner_cover_tag")) {
-                        CompoundNBT cn = stack.getTag().getCompound("inner_cover_tag");
-                        int damage = cn.getInt("Damage");
-                        if (damage != 0) {
-                            InstallInnerRecipe ri = InstallInnerRecipe.recipeList.get(new ResourceLocation(s));
-                            if (ri != null) {
-                                int maxDmg = ri.getDurability();
-                                float temp = damage * 1.0F / maxDmg;
-                                String temps = Integer.toString((Math.round(temp * 100)));
-                                event.getToolTip().add(GuiUtils.translateTooltip("inner_damage", temps));
-                            }
-                        }
-                        if (cn.contains("Enchantments")) {
-                            ListNBT ln = cn.getList("Enchantments", 10);
-                            if (!ln.isEmpty()) {
-                                event.getToolTip().add(
-                                        GuiUtils.translateTooltip("inner_enchantment").mergeStyle(TextFormatting.GRAY));
-                                ItemStack.addEnchantmentTooltips(event.getToolTip(), ln);
-                            }
-                        }
-
-                    }
-                }
-                iwe = FHDataManager.getArmor(s + "_" + aes.getName());
-            } else
-                iwe = FHDataManager.getArmor(stack);
-        }*/
-        BlockTempData btd = FHDataManager.getBlockData(stack);
-        if (btd != null) {
-            float temp = btd.getTemp();
-            temp = (Math.round(temp * 100)) / 100.0F;// round
-            if (temp != 0)
-                if (temp > 0)
-                    event.getToolTip()
-                            .add(TranslateUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).withStyle(ChatFormatting.GOLD));
-                else
-                    event.getToolTip()
-                            .add(TranslateUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).withStyle(ChatFormatting.AQUA));
-        }
-        if (itf != null) {
-            float temp = itf.getHeat(stack,
-                    event.getEntity() == null ? 37 :PlayerTemperatureData.getCapability(event.getEntity()).map(PlayerTemperatureData::getEnvTemp).orElse(0f)) * tspeed;
-            temp = (Math.round(temp * 1000)) / 1000.0F;// round
-            if (temp != 0)
-                if (temp > 0) 
-                    event.getToolTip()
-                            .add(TranslateUtils.translateTooltip("food_temp", "+" + TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.GOLD));
-                else
-                    event.getToolTip()
-                            .add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.AQUA));
-        }
-      /*  if (iwe != null) {
-            float temp = iwe.getFactor(null, stack);
-            temp = Math.round(temp * 100);
-            String temps = Float.toString(temp);
-            if (temp != 0)
-                event.getToolTip().add(GuiUtils.translateTooltip("armor_warm", temps).mergeStyle(TextFormatting.GOLD));
-        }*/
-        if (i instanceof IHeatingEquipment) {
-            float temp = ((IHeatingEquipment) i).getEffectiveTempAdded(null, stack,0, 0);
-            temp = (Math.round(temp * 2000)) / 1000.0F;
-            if (temp != 0)
-                if (temp > 0)
-                    event.getToolTip().add(
-                            TranslateUtils.translateTooltip("armor_heating", "+" + TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.GOLD));
-                else
-                    event.getToolTip()
-                            .add(TranslateUtils.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.AQUA));
-        }
-        Map<String,Component> rstooltip=JEICompat.research.get(i);
-        if(rstooltip!=null)
-        	event.getToolTip().addAll(rstooltip.values());
-    }
-
-    @SubscribeEvent
-    public static void addNormalItemTooltip(ItemTooltipEvent event) {
-        ItemStack stack = event.getItemStack();
-        Item i = stack.getItem();
-        if (stack.is(Tags.Items.RODS_WOODEN)) {
-            event.getToolTip().add(TranslateUtils.translateTooltip("double_stick_ignition").withStyle(ChatFormatting.GRAY));
-        } else if (stack.is(FHTags.Items.IGNITION_MATERIAL)) {
-            event.getToolTip().add(TranslateUtils.translateTooltip("ignition_material").withStyle(ChatFormatting.GRAY));
-            event.getToolTip().add(TranslateUtils.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
-            List<Item> metals = ForgeRegistries.ITEMS.getValues().stream()
-                    .filter(item -> item.builtInRegistryHolder().is(FHTags.Items.IGNITION_METAL))
-                    .toList();
-            for (Item item : metals) {
-                event.getToolTip().add(item.getDescription().copy().withStyle(ChatFormatting.GRAY));
-            }
-        } else if (stack.is(FHTags.Items.IGNITION_METAL)) {
-            event.getToolTip().add(TranslateUtils.translateTooltip("ignition_metal").withStyle(ChatFormatting.GRAY));
-            event.getToolTip().add(TranslateUtils.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
-            // append the localized names of ignition materials from the tag
-            // get all items in the tag
-            List<Item> materials = ForgeRegistries.ITEMS.getValues().stream()
-                    .filter(item -> item.builtInRegistryHolder().is(FHTags.Items.IGNITION_MATERIAL))
-                    .toList();
-            for (Item item : materials) {
-                event.getToolTip().add(item.getDescription().copy().withStyle(ChatFormatting.GRAY));
-            }
-        }
-    }
-
-    /*@SubscribeEvent
-    public static void addWeatherItemTooltips(ItemTooltipEvent event) {
-        ItemStack stack = event.getItemStack();
-        if (stack.getItem() == FHItems.temperatureProbe.get()) {
-            event.getToolTip().add(TranslateUtils.translateTooltip("temperature_probe").mergeStyle(TextFormatting.GRAY));
-        }
-        if (stack.getItem() == FHItems.weatherRadar.get()) {
-            event.getToolTip().add(TranslateUtils.translateTooltip("weather_radar").mergeStyle(TextFormatting.GRAY));
-        }
-        if (stack.getItem() == FHItems.weatherHelmet.get()) {
-            event.getToolTip().add(TranslateUtils.translateTooltip("weather_helmet").mergeStyle(TextFormatting.GRAY));
-        }
-    }*/
 
     @SuppressWarnings({"unchecked"})
     @SubscribeEvent
@@ -512,19 +354,20 @@ public class ClientEvents {
     public static void unloadWorld(LevelEvent.Unload event) {
         ClientUtils.applyspg = false;
     }
-/*
-    @SuppressWarnings({"resource", "unchecked", "rawtypes"})
-    @SubscribeEvent
-    public void onWorldLoad(LevelEvent.Load event) {
-        if (!HeaterVestRenderer.rendersAssigned) {
-            for (Object render : ClientUtils.mc().getEntityRenderDispatcher().renderers.values())
-                if (HumanoidMobRenderer.class.isAssignableFrom(render.getClass()))
-                    ((HumanoidMobRenderer) render).addLayer(new HeaterVestRenderer<>((HumanoidMobRenderer) render));
-                else if (ArmorStandRenderer.class.isAssignableFrom(render.getClass()))
-                    ((ArmorStandRenderer) render).addLayer(new HeaterVestRenderer<>((ArmorStandRenderer) render));
-            HeaterVestRenderer.rendersAssigned = true;
-        }
-    }*/
+
+    /*
+        @SuppressWarnings({"resource", "unchecked", "rawtypes"})
+        @SubscribeEvent
+        public void onWorldLoad(LevelEvent.Load event) {
+            if (!HeaterVestRenderer.rendersAssigned) {
+                for (Object render : ClientUtils.mc().getEntityRenderDispatcher().renderers.values())
+                    if (HumanoidMobRenderer.class.isAssignableFrom(render.getClass()))
+                        ((HumanoidMobRenderer) render).addLayer(new HeaterVestRenderer<>((HumanoidMobRenderer) render));
+                    else if (ArmorStandRenderer.class.isAssignableFrom(render.getClass()))
+                        ((ArmorStandRenderer) render).addLayer(new HeaterVestRenderer<>((ArmorStandRenderer) render));
+                HeaterVestRenderer.rendersAssigned = true;
+            }
+        }*/
     @SuppressWarnings({"resource", "unchecked", "rawtypes"})
 
     
@@ -659,4 +502,6 @@ public class ClientEvents {
 //            }
 //        }
 //    }
+
+
 }
