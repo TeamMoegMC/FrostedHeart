@@ -24,15 +24,12 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageTypes;
 import com.teammoeg.frostedheart.FHTags;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.water.item.DrinkContainerItem;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.NonNullList;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -40,7 +37,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 
 import java.util.List;
 
@@ -53,6 +49,8 @@ public class FoodTemperatureHandler {
     public static final double UPDATE_CHANCE = 1.0;
     public static final float HOT_FOOD_EAT_DURATION_MODIFIER = 0.8F;
     public static final float COLD_FOOD_EAT_DURATION_MODIFIER = 2;
+    public static final float DEFAULT_COLD_FOOD_HEAT = -0.5F;
+    public static final float DEFAULT_HOT_FOOD_HEAT = 0.5F;
 
     // Called in PlayerEvents
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
@@ -143,10 +141,10 @@ public class FoodTemperatureHandler {
             byte temperature = FoodTemperatureHandler.getTemperature(stack);
             if (temperature == FoodTemperatureHandler.COLD) {
                 player.displayClientMessage(TranslateUtils.translateMessage("food.cold"), true);
-                heat = -0.5F;
+                heat = DEFAULT_COLD_FOOD_HEAT;
             } else if (temperature == FoodTemperatureHandler.HOT) {
                 player.displayClientMessage(TranslateUtils.translateMessage("food.hot"), true);
-                heat = 0.5F;
+                heat = DEFAULT_HOT_FOOD_HEAT;
             }
 
             // Get the current body temperature

@@ -125,6 +125,8 @@ public class FHTooltips {
             } else {
                 itf = FHDataManager.getFood(stack);
             }
+
+            // Handle ITF first
             if (itf != null) {
                 float temp = itf.getHeat(stack,
                         event.getEntity() == null ? 37 : PlayerTemperatureData.getCapability(event.getEntity()).map(PlayerTemperatureData::getEnvTemp).orElse(0f)) * tspeed;
@@ -136,6 +138,19 @@ public class FHTooltips {
                     else
                         event.getToolTip()
                                 .add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.AQUA));
+            }
+            // If not ITF, apply the default temp modifier through temp status
+            else {
+                if (canChangeTemperatureFood(stack)) {
+                    byte temperature = getTemperature(stack);
+                    if (temperature != -1) {
+                        if (temperature == HOT) {
+                            text.add(TranslateUtils.translateTooltip("food_temp", "+" + TemperatureDisplayHelper.toTemperatureDeltaFloatString(DEFAULT_HOT_FOOD_HEAT)).withStyle(ChatFormatting.GOLD));
+                        } else if (temperature == COLD) {
+                            text.add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(DEFAULT_COLD_FOOD_HEAT)).withStyle(ChatFormatting.AQUA));
+                        }
+                    }
+                }
             }
 
             // Equipment temperature
