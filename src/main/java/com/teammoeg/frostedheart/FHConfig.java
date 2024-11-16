@@ -55,6 +55,7 @@ public class FHConfig {
         public final ForgeConfigSpec.IntValue fogColorNight;
         public final ForgeConfigSpec.BooleanValue weatherRenderChanges;
         public final ForgeConfigSpec.IntValue snowDensity;
+        public final ForgeConfigSpec.IntValue blizzardDensity;
         public final ForgeConfigSpec.BooleanValue snowSounds;
         public final ForgeConfigSpec.BooleanValue windSounds;
         public final ForgeConfigSpec.BooleanValue skyRenderChanges;
@@ -104,10 +105,13 @@ public class FHConfig {
             fogDensity = builder.comment("How dense the fog effect during a snowstorm is.")
                     .defineInRange("fogDensity", 0.1, 0, 1);
             fogColorDay = builder.comment("This is the fog color during the day. It must be an RGB hex string.")
-                    .defineInRange("fogColorDay", 12566488, 0, 99999999);
+                    .defineInRange("fogColorDay", 0xbfbfd8, 0x000000, 0xffffff);
             fogColorNight = builder.comment("This is the fog color during the night. It must be an RGB hex string.")
-                    .defineInRange("fogColorNight", 789529, 0, 99999999);
+                    .defineInRange("fogColorNight", 0x0c0c19, 0x000000, 0xffffff);
             snowDensity = builder
+                    .comment("How visually dense the snow weather effect is. Normally, vanilla sets this to 5 with fast graphics, and 10 with fancy graphics.")
+                    .defineInRange("snowDensity", 10, 1, 15);
+            blizzardDensity = builder
                     .comment("How visually dense the snow weather effect is. Normally, vanilla sets this to 5 with fast graphics, and 10 with fancy graphics.")
                     .defineInRange("snowDensity", 15, 1, 15);
             snowSounds = builder
