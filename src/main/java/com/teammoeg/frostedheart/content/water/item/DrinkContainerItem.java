@@ -127,6 +127,22 @@ public class DrinkContainerItem extends ItemFluidContainer {
         }
     }
 
+    /**
+     * Check if the item has fluid and fluid amount is greater than 250mB
+     * @param stack
+     * @return
+     */
+    public boolean isDrinkable(ItemStack stack) {
+        IFluidHandlerItem fluidHandlerItem = stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
+        return !fluidHandlerItem.getFluidInTank(0).isEmpty() && fluidHandlerItem.getFluidInTank(0).getAmount() >= 250;
+    }
+
+    /**
+     * Check if player can drink
+     * @param playerIn
+     * @param stack
+     * @return
+     */
     public boolean canDrink(Player playerIn, ItemStack stack) {
         if (playerIn.isOnFire()) return true;
         canDrink = false;

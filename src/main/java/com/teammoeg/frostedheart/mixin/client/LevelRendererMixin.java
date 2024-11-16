@@ -85,20 +85,20 @@ public abstract class  LevelRendererMixin {
     private int windSoundTime;
 
     /**
-     * Render blizzard.
+     * Render blizzard. TODO: Implement directly using primal winter code
      */
-    @Inject(method = "renderSnowAndRain", at = @At("HEAD"), cancellable = true)
-    public void inject$renderWeather(LightTexture manager, float partialTicks, double x, double y, double z, CallbackInfo ci) {
-        if (this.minecraft != null && this.minecraft.gameRenderer != null) {
-            // ClimateData data = ClimateData.get(world);
-            // blizzard when vanilla 'thundering' is true, to save us from doing sync
-            if (level.isThundering()) {
-                BlizzardRenderer.renderBlizzard(minecraft, this.level, manager, ticks, partialTicks, x, y, z);
-                // Road-block injection to remove any Vanilla / Primal Winter weather rendering code
-                ci.cancel();
-            }
-        }
-    }
+//    @Inject(method = "renderSnowAndRain", at = @At("HEAD"), cancellable = true)
+//    public void inject$renderWeather(LightTexture manager, float partialTicks, double x, double y, double z, CallbackInfo ci) {
+//        if (this.minecraft != null && this.minecraft.gameRenderer != null) {
+//            // ClimateData data = ClimateData.get(world);
+//            // blizzard when vanilla 'thundering' is true, to save us from doing sync
+//            if (level.isThundering()) {
+//                BlizzardRenderer.renderBlizzard(minecraft, this.level, manager, ticks, partialTicks, x, y, z);
+//                // Road-block injection to remove any Vanilla / Primal Winter weather rendering code
+//                ci.cancel();
+//            }
+//        }
+//    }
 
     /**
      * Always use rain rendering.
@@ -160,7 +160,9 @@ public abstract class  LevelRendererMixin {
     private int modifySnowAmount(int constant)
     {
         // This constant is used to control how much snow is rendered - 5 with default, 10 with fancy graphics. By default, we bump this all the way to 15.
-        return FHConfig.CLIENT.snowDensity.get();
+        int density = FHConfig.CLIENT.snowDensity.get();
+        int blizzardDensity = FHConfig.CLIENT.blizzardDensity.get();
+        return level.isThundering() ? blizzardDensity : density;
     }
 
     /**
@@ -186,7 +188,10 @@ public abstract class  LevelRendererMixin {
             final BlockPos cameraPos = BlockPos.containing(camera.getPosition());
             BlockPos pos = null;
 
-            final int particleCount = (int) (100.0F * rain * rain) / (minecraft.options.particles().get() == ParticleStatus.DECREASED ? 2 : 1);
+            // Normal snow
+            int particleCount = (int) (100.0F * rain * rain) / (minecraft.options.particles().get() == ParticleStatus.DECREASED ? 2 : 1);
+            // Snow storm
+            particleCount *= 2;
             for (int i = 0; i < particleCount; ++i)
             {
                 final BlockPos randomPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, cameraPos.offset(random.nextInt(21) - 10, 0, random.nextInt(21) - 10));
@@ -233,12 +238,21 @@ public abstract class  LevelRendererMixin {
                 {
                     // In a windy location, play wind sounds
                     float volumeModifier = 0.2f + (light - 3) * 0.01f;
+                    // In snow storm, increase volume, added by yuesha-yc
+                    if (level.isThundering()) {
+                        volumeModifier *= 2;
+                    }
                     float pitchModifier = 0.7f;
                     if (camera.getFluidInCamera() != FogType.NONE)
                     {
                         pitchModifier = 0.3f;
                     }
-                    windSoundTime = 20 * 3 + random.nextInt(30);
+                    // In normal snow
+                    windSoundTime = 20 * 6 + random.nextInt(30);
+                    // In snow storm, added by yuesha-yc
+                    if (level.isThundering()) {
+                        windSoundTime = 20 * 3 + random.nextInt(20);
+                    }
                     level.playLocalSound(playerPos, FHSoundEvents.WIND.get(), SoundSource.WEATHER, volumeModifier, pitchModifier, false);
                 }
                 else

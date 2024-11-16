@@ -85,7 +85,8 @@ public class TranslateUtils {
     }
 
     public static MutableComponent translate(String string, Object... args) {
-        return MutableComponent.create(new TranslatableContents(string,"", args));
+        return Component.translatable(string, args);
+//        return MutableComponent.create(new TranslatableContents(string,"", args));
     }
 
     public static MutableComponent translateGui(String name, Object... args) {

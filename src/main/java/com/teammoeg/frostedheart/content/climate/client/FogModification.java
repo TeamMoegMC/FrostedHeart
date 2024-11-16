@@ -54,8 +54,8 @@ public class FogModification {
                 float angle = player.level().getSunAngle((float) partialTick);
                 float height = Mth.cos(angle);
                 float delta = Mth.clamp((height + 0.4F) / 0.8F, 0.0F, 1.0F);
-                int colorDay = Integer.parseInt(FHConfig.CLIENT.fogColorDay.get().toString(), 16);
-                int colorNight = Integer.parseInt(FHConfig.CLIENT.fogColorNight.get().toString(), 16);
+                int colorDay = FHConfig.CLIENT.fogColorDay.get();
+                int colorNight = FHConfig.CLIENT.fogColorNight.get();
                 float red = (float)(colorDay >> 16 & 255) * delta + (float)(colorNight >> 16 & 255) * (1.0F - delta);
                 float green = (float)(colorDay >> 8 & 255) * delta + (float)(colorNight >> 8 & 255) * (1.0F - delta);
                 float blue = (float)(colorDay & 255) * delta + (float)(colorNight & 255) * (1.0F - delta);
@@ -80,7 +80,10 @@ public class FogModification {
             Biome biome = (Biome)level.getBiome(camera.getBlockPosition()).value();
             if (level.isRaining() && biome.coldEnoughToSnow(camera.getBlockPosition())) {
                 int light = level.getBrightness(LightLayer.SKY, BlockPos.containing(player.getEyePosition()));
-                expectedFogDensity = Mth.clampedMap((float)light, 0.0F, 15.0F, 0.0F, 1.0F);
+                expectedFogDensity = Mth.clampedMap((float)light, 0.0F, 15.0F, 0.0F, 0.5F);
+                if (level.isThundering()) {
+                    expectedFogDensity *= 2F;
+                }
             }
 
             if (expectedFogDensity > prevFogDensity) {

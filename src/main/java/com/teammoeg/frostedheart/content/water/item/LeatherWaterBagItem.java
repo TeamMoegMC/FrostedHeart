@@ -12,4 +12,9 @@ public class LeatherWaterBagItem extends DurableDrinkContainerItem{
     public ItemStack getContainerItem(ItemStack itemStack) {
         return new ItemStack(FHItems.LEATHER_WATER_BAG.get());
     }
+
+    @Override
+    public ItemStack getDrinkItem() {
+        return new ItemStack(FHItems.LEATHER_WATER_BAG.get());
+    }
 }
