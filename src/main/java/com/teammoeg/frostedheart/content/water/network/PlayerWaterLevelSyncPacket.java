@@ -1,13 +1,9 @@
 package com.teammoeg.frostedheart.content.water.network;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.client.Minecraft;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -27,17 +23,6 @@ public class PlayerWaterLevelSyncPacket implements FHMessage {
         this.waterLevel = waterLevel;
         this.waterSaturationLevel = waterSaturationLevel;
         this.waterExhaustionLevel = waterExhaustionLevel;
-    }
-
-
-    public PlayerWaterLevelSyncPacket(Player pe) {
-        this(WaterLevelCapability.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundTag::new));
-    }
-
-    public PlayerWaterLevelSyncPacket(CompoundTag compoundTag) {
-        waterLevel = compoundTag.getInt("PlayerWaterLevel");
-        waterSaturationLevel = compoundTag.getInt("PlayerWaterSaturationLevel");
-        waterExhaustionLevel = compoundTag.getFloat("PlayerWaterExhaustionLevel");
     }
 
     @Override

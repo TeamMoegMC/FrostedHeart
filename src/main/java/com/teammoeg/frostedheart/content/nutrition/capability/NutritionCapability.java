@@ -151,8 +151,11 @@ public class NutritionCapability implements NBTSerializable {
                 data.addFat(player, wRecipe.fat);
             });
         }
-        if(player instanceof ServerPlayer serverPlayer)
-            FHNetwork.sendPlayer(serverPlayer, new PlayerNutritionSyncPacket(player));
+        if(player instanceof ServerPlayer serverPlayer){
+            NutritionCapability.getCapability(serverPlayer).ifPresent(data -> {
+                FHNetwork.sendPlayer(serverPlayer, new PlayerNutritionSyncPacket(data.fat, data.carbohydrate, data.protein, data.vegetable));
+            });
+        }
     }
 
 

@@ -1,13 +1,9 @@
 package com.teammoeg.frostedheart.content.nutrition.network;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.content.nutrition.capability.NutritionCapability;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.client.Minecraft;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -29,18 +25,6 @@ public class PlayerNutritionSyncPacket implements FHMessage {
         this.protein = portein;
         this.vegetable = vegetable;
      }
-
-    public PlayerNutritionSyncPacket(CompoundTag tag) {
-        fat = tag.getFloat("fat");
-        carbohydrate = tag.getFloat("carbohydrate");
-        protein = tag.getFloat("protein");
-        vegetable = tag.getFloat("vegetable");
-    }
-
-
-    public PlayerNutritionSyncPacket(Player pe) {
-        this(NutritionCapability.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundTag::new));
-    }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
