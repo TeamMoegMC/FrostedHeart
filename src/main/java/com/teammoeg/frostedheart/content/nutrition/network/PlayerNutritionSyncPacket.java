@@ -1,35 +1,53 @@
 package com.teammoeg.frostedheart.content.nutrition.network;
 
+import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.content.nutrition.capability.NutritionCapability;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class PlayerNutritionSyncPacket extends NBTMessage {
+public class PlayerNutritionSyncPacket implements FHMessage {
     private float fat , carbohydrate, protein,vegetable;
 
+    public PlayerNutritionSyncPacket(FriendlyByteBuf buffer) {
+        fat = buffer.readFloat();
+        carbohydrate = buffer.readFloat();
+        protein = buffer.readFloat();
+        vegetable = buffer.readFloat();
+    }
+
      public PlayerNutritionSyncPacket(float fat ,float carbohydrate ,float portein,float vegetable) {
-         super(toTag(fat, carbohydrate, portein, vegetable));
+        this.fat = fat;
+        this.carbohydrate = carbohydrate;
+        this.protein = portein;
+        this.vegetable = vegetable;
      }
+
+    public PlayerNutritionSyncPacket(CompoundTag tag) {
+        fat = tag.getFloat("fat");
+        carbohydrate = tag.getFloat("carbohydrate");
+        protein = tag.getFloat("protein");
+        vegetable = tag.getFloat("vegetable");
+    }
 
 
     public PlayerNutritionSyncPacket(Player pe) {
-        super(NutritionCapability.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundTag::new));
+        this(NutritionCapability.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundTag::new));
     }
 
-    public static CompoundTag toTag(float fat ,float carbohydrate ,float portein,float vegetable) {
-        CompoundTag compound = new CompoundTag();
-        compound.putFloat("fat", fat);
-        compound.putFloat("carbohydrate", carbohydrate);
-        compound.putFloat("protein", portein);
-        compound.putFloat("vegetable", vegetable);
-        return compound;
+    @Override
+    public void encode(FriendlyByteBuf buffer) {
+        buffer.writeFloat(fat);
+        buffer.writeFloat(carbohydrate);
+        buffer.writeFloat(protein);
+        buffer.writeFloat(vegetable);
     }
 
     @Override
