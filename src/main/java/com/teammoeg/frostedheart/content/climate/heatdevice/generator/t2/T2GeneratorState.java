@@ -40,7 +40,8 @@ public class T2GeneratorState extends GeneratorState {
         nbt.putInt("tickUntilStopBoom", tickUntilStopBoom);
         nbt.putInt("notFullPowerTick", notFullPowerTick);
         nbt.put("tank", tank.writeToNBT(new CompoundTag()));
-        nbt.put("manager", manager.serializeNBT());
+        if(manager!=null)
+            nbt.put("manager", manager.serializeNBT());
     }
 
     @Override
@@ -51,7 +52,8 @@ public class T2GeneratorState extends GeneratorState {
         tickUntilStopBoom = nbt.getInt("tickUntilStopBoom");
         notFullPowerTick = nbt.getInt("notFullPowerTick");
         tank.readFromNBT(nbt.getCompound("tank"));
-        manager.deserializeNBT(nbt.getCompound("manager"));
+        if(manager!=null)
+            manager.deserializeNBT(nbt.getCompound("manager"));
     }
 
 }
