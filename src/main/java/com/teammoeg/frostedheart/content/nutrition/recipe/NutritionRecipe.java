@@ -22,32 +22,26 @@ import java.util.List;
 public class NutritionRecipe implements Recipe<Inventory> {
     public final float fat,carbohydrate,protein,vegetable;
     protected final ResourceLocation id;
-    protected final String group;
     protected final Ingredient ingredient;
 
     public static RegistryObject<RecipeSerializer<NutritionRecipe>> SERIALIZER;
     public static RegistryObject<RecipeType<NutritionRecipe>> TYPE;
 
-
-
-
     public static class Serializer implements RecipeSerializer<NutritionRecipe> {
-
 
         @Override
         public NutritionRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
-            String group = GsonHelper.getAsString(json, "group", "");
+            JsonObject group = GsonHelper.getAsJsonObject(json, "group", new JsonObject());
             Item item = ForgeRegistries.ITEMS.getValue(ResourceLocation.tryParse(GsonHelper.getAsString(json, "item", "")));
-            float fat = GsonHelper.getAsFloat(json, "fat");
-            float carbohydrate = GsonHelper.getAsFloat(json, "carbohydrate");
-            float protein = GsonHelper.getAsFloat(json, "protein");
-            float vegetable = GsonHelper.getAsFloat(json, "vegetable");
-            return new NutritionRecipe(recipeId, group,fat,carbohydrate,protein,vegetable,Ingredient.of(item));
+            float fat = GsonHelper.getAsFloat(group, "fat", 0);
+            float carbohydrate = GsonHelper.getAsFloat(group, "carbohydrate", 0);
+            float protein = GsonHelper.getAsFloat(group, "protein", 0);
+            float vegetable = GsonHelper.getAsFloat(group, "vegetable", 0);
+            return new NutritionRecipe(recipeId,fat,carbohydrate,protein,vegetable,Ingredient.of(item));
         }
 
         @Override
         public void toNetwork(FriendlyByteBuf buffer, NutritionRecipe recipe) {
-            buffer.writeUtf(recipe.getGroup());
             recipe.getIngredient().toNetwork(buffer);
             buffer.writeFloat(recipe.fat);
             buffer.writeFloat(recipe.carbohydrate);
@@ -58,25 +52,23 @@ public class NutritionRecipe implements Recipe<Inventory> {
         @javax.annotation.Nullable
         @Override
         public NutritionRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf byteBuf) {
-            String group = byteBuf.readUtf();
             Ingredient ingredient = Ingredient.fromNetwork(byteBuf);
             float fat = byteBuf.readFloat();
             float carbohydrate = byteBuf.readFloat();
             float protein = byteBuf.readFloat();
             float vegetable = byteBuf.readFloat();
-            return new NutritionRecipe(recipeId, group,fat,carbohydrate,protein,vegetable,  ingredient);
+            return new NutritionRecipe(recipeId,fat,carbohydrate,protein,vegetable,  ingredient);
         }
 
     }
 
-    public NutritionRecipe(ResourceLocation id, String group, float fat, float carbohydrate, float protein, float vegetable, Ingredient ingredient) {
+    public NutritionRecipe(ResourceLocation id, float fat, float carbohydrate, float protein, float vegetable, Ingredient ingredient) {
         super();
         this.fat = fat;
         this.carbohydrate = carbohydrate;
         this.protein = protein;
         this.vegetable = vegetable;
         this.id = id;
-        this.group = group;
         this.ingredient = ingredient;
     }
 
@@ -122,11 +114,6 @@ public class NutritionRecipe implements Recipe<Inventory> {
     @Override
     public RecipeType<?> getType() {
         return TYPE.get();
-    }
-
-    @Override
-    public String getGroup() {
-        return this.group;
     }
 
     public static NutritionRecipe getRecipeFromItem(Level world, ItemStack itemStack) {
