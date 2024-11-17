@@ -179,10 +179,11 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
         if (p.getArmorCoverPercentage() > 0.0F) {
             return;
         }
-        UUID owner = IOwnerTile.getOwner(this);
-        if (owner == null) return;
-        UUID t = ResearchDataAPI.getData(p).getId();
-        if (t == null || !t.equals(owner)) return;
+        // We don't really need to do this kind of check...
+//        UUID owner = IOwnerTile.getOwner(this);
+//        if (owner == null) return;
+//        UUID t = ResearchDataAPI.getData(p).getId();
+//        if (t == null || !t.equals(owner)) return;
         // add wet effect
         if (world.getGameTime() % 200L == 0L) {
             p.addPotionEffect(new EffectInstance(FHEffects.WET.get(), 200, 0, true, false));
