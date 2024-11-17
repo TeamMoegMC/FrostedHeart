@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.content.water.network;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
@@ -34,11 +33,7 @@ public class PlayerWaterLevelSyncPacket implements FHMessage {
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         if (context.get().getDirection() == NetworkDirection.PLAY_TO_CLIENT) {
-            context.get().enqueueWork(() -> WaterLevelCapability.getCapability(context.get().getSender()).ifPresent(date -> {
-                date.setWaterSaturationLevel(waterSaturationLevel);
-                date.setWaterLevel(waterLevel);
-                date.setWaterExhaustionLevel(waterExhaustionLevel);
-            }));
+            PlayerWaterLevelHandler.handle(context, this);
         }
     }
 }
