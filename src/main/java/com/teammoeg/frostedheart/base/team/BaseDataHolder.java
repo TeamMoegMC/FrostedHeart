@@ -37,17 +37,18 @@ public class BaseDataHolder<T extends BaseDataHolder<T>> implements SpecialDataH
 
 	@Override
 	public void save(CompoundTag nbt, boolean isPacket) {
-		SerializeUtil.toNBTMap(data.entrySet(), (t,p)->p.put(t.getKey().getId(),(Tag)t.getKey().saveData(NbtOps.INSTANCE, t.getValue())));
+		nbt.put("data", SerializeUtil.toNBTMap(data.entrySet(), (t,p)->p.put(t.getKey().getId(),(Tag)t.getKey().saveData(NbtOps.INSTANCE, t.getValue()))));
 	}
 
 	@Override
 	public void load(CompoundTag data, boolean isPacket) {
+		data = data.getCompound("data");
 		for(SpecialDataType<?> tc:SpecialDataTypes.TYPE_REGISTRY) {
-        	if(data.contains(tc.getId())) {
-        		System.out.println(tc.getId());
+        	if(data.contains(/*"loading type: " + */tc.getId())) {
+        		//System.out.println(tc.getId());
         		SpecialData raw=tc.loadData(NbtOps.INSTANCE, data.get(tc.getId()));
         		raw.setHolder(this);
-        		data.put(tc.getId(), data);
+				this.data.put(tc, raw);
         	}
         }
 	}

@@ -402,5 +402,17 @@ public class TeamTownData implements SpecialData{
         availableWorkers.forEach(TempDataHolder::saveResidents);
     }
 
+    //debug
+    @Override
+    public String toString() {
+        return "TeamTownData{" +
+                "name='" + name + '\'' +
+                ", resources=" + resources +
+                ", backupResources=" + backupResources +
+                ", blocks=" + blocks +
+                ", residents=" + residents +
+                '}';
+    }
+
 
 }
