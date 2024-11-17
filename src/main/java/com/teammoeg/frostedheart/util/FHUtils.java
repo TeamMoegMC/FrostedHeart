@@ -68,6 +68,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.ToIntFunction;
 
@@ -321,6 +322,7 @@ public class FHUtils {
 	        Collections.addAll(fields, aClass.getDeclaredFields());
 	        aClass = aClass.getSuperclass();
 	    } while (aClass != null);
+	    fields.removeIf(f->Modifier.isStatic(f.getModifiers()));
 	    return fields;
 	}
 
