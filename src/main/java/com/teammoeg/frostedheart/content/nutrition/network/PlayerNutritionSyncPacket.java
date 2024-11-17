@@ -1,13 +1,9 @@
 package com.teammoeg.frostedheart.content.nutrition.network;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.content.nutrition.capability.NutritionCapability;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.client.Minecraft;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -30,18 +26,6 @@ public class PlayerNutritionSyncPacket implements FHMessage {
         this.vegetable = vegetable;
      }
 
-    public PlayerNutritionSyncPacket(CompoundTag tag) {
-        fat = tag.getFloat("fat");
-        carbohydrate = tag.getFloat("carbohydrate");
-        protein = tag.getFloat("protein");
-        vegetable = tag.getFloat("vegetable");
-    }
-
-
-    public PlayerNutritionSyncPacket(Player pe) {
-        this(NutritionCapability.getCapability(pe).map(NBTSerializable::serializeNBT).orElseGet(CompoundTag::new));
-    }
-
     @Override
     public void encode(FriendlyByteBuf buffer) {
         buffer.writeFloat(fat);
@@ -53,7 +37,7 @@ public class PlayerNutritionSyncPacket implements FHMessage {
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         if (context.get().getDirection() == NetworkDirection.PLAY_TO_CLIENT) {
-            context.get().enqueueWork(() -> NutritionCapability.getCapability(Minecraft.getInstance().player).ifPresent(date -> {
+            context.get().enqueueWork(() -> NutritionCapability.getCapability(context.get().getSender()).ifPresent(date -> {
                 date.setCarbohydrate(carbohydrate);
                 date.setProtein(protein);
                 date.setVegetable(vegetable);
