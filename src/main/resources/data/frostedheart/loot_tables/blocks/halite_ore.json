@@ -9,7 +9,7 @@
           "children": [
             {
               "type": "minecraft:item",
-              "name": "kubejs:halite"
+              "name": "frostedheart:raw_halite"
             }
           ]
         }

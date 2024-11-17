@@ -19,7 +19,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-		    "conditions": [
+          "conditions": [
             {
               "condition": "minecraft:block_state_property",
               "block": "frostedheart:drawing_desk",
