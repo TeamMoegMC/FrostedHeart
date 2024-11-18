@@ -96,10 +96,10 @@ public class FoodTemperatureHandler {
     }
 
     public static void checkFoodBeforeEating(LivingEntityUseItemEvent.Start event) {
-        ItemStack stack = event.getItem();
-        Player player = (Player) event.getEntity();
-        if (player.level().isClientSide)
+        if (!(event.getEntity() instanceof ServerPlayer player))
             return;
+
+        ItemStack stack = event.getItem();
 
         if (canChangeTemperatureFood(stack)) {
             byte temperature = FoodTemperatureHandler.getTemperature(stack);
