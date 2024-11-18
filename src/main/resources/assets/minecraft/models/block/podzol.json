@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "minecraft:block/podzol_top",
+    "bottom": "frostedheart:block/sediment/dirt",
+    "side": "frostedheart:block/sediment/podzol_side"
+  }
+}
