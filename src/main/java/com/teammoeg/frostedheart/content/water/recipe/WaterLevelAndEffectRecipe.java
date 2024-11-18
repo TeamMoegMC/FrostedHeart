@@ -154,8 +154,8 @@ public class WaterLevelAndEffectRecipe implements Recipe<Inventory>, Comparable<
             buffer.writeVarInt(recipe.getWaterSaturationLevel());
             buffer.writeUtf(recipe.getFluid() == null ? "" : ForgeRegistries.FLUIDS.getKey(recipe.getFluid()).toString());
             buffer.writeNbt(recipe.getCompoundTag());
-            buffer.writeInt(recipe.getDuration());
-            buffer.writeInt(recipe.getAmplifier());
+            buffer.writeVarInt(recipe.getDuration());
+            buffer.writeVarInt(recipe.getAmplifier());
             buffer.writeFloat(recipe.getProbability());
 
 

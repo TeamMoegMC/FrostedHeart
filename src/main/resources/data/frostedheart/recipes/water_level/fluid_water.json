@@ -1,8 +1,8 @@
 {
     "type": "frostedheart:water_level_and_effect",
 	"fluid": "minecraft:water",
-	"water_level": 4,
-	"water_saturation_level": 2,
+	"waterLevel": 4,
+	"waterSaturationLevel": 2,
 	"duration": 1600,
 	"amplifier": 0,
 	"probability": 75
