@@ -116,10 +116,10 @@ public class WaterLevelAndEffectRecipe implements Recipe<Inventory>, Comparable<
             int amplifier = GsonHelper.getAsInt(json, "amplifier", 0);
             float probability = GsonHelper.getAsFloat(json, "probability", 0);
             //water level
-            waterLevel = GsonHelper.getAsInt(json, "water_level", 0);
-            waterSaturationLevel = GsonHelper.getAsInt(json, "water_saturation_level", 0);
+            waterLevel = GsonHelper.getAsInt(json, "waterLevel", 0);
+            waterSaturationLevel = GsonHelper.getAsInt(json, "waterSaturationLevel", 0);
 
-            return (WaterLevelAndEffectRecipe) new WaterLevelAndEffectRecipe(recipeId, group, ingredient, waterLevel, waterSaturationLevel, effectInstances, fluid, compoundTag,duration ,amplifier,probability );
+            return new WaterLevelAndEffectRecipe(recipeId, group, ingredient, waterLevel, waterSaturationLevel, effectInstances, fluid, compoundTag,duration ,amplifier,probability );
         }
 
         @Override
