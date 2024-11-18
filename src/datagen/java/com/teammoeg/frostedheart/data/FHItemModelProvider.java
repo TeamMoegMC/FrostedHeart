@@ -63,6 +63,7 @@ public class FHItemModelProvider extends ItemModelProvider {
 		texture(FHItems.CONDENSED_BALL_TIN_ORE);
 		texture(FHItems.CONDENSED_BALL_PYRITE_ORE);
 		texture(FHItems.CONDENSED_BALL_NICKEL_ORE);
+		texture(FHItems.CONDENSED_BALL_LEAD_ORE);
 
 		texture(FHItems.IRON_SLURRY);
 		texture(FHItems.COPPER_SLURRY);
@@ -72,6 +73,7 @@ public class FHItemModelProvider extends ItemModelProvider {
 		texture(FHItems.TIN_SLURRY);
 		texture(FHItems.PYRITE_SLURRY);
 		texture(FHItems.NICKEL_SLURRY);
+		texture(FHItems.LEAD_SLURRY);
 
 		texture(FHItems.CRUSHED_RAW_SILVER);
 		texture(FHItems.CRUSHED_RAW_TIN);
