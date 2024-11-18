@@ -9,7 +9,7 @@ import net.minecraft.world.phys.Vec3;
 
 public class ColumbiatWaypoint extends Waypoint {
     public ColumbiatWaypoint() {
-        super(new Vec3(0, 0, 0), "Columbiat", 0xF6F1D5);
+        super(new Vec3(0, 0, 0), "Columbiat", 0xFFF6F1D5);
         this.displayName = TranslateUtils.translateWaypoint("columbiat");
         this.focus = true;
     }
