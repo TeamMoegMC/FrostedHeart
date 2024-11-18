@@ -24,6 +24,7 @@ import java.util.function.Supplier;
 
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import com.teammoeg.frostedheart.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.base.block.FHKineticBlock;
 import com.teammoeg.frostedheart.util.TranslateUtils;
@@ -127,10 +128,12 @@ public class MechCalcBlock extends FHKineticBlock implements FHEntityBlock<MechC
 
 	@Override
 	public void fillItemCategory(CreativeTabItemHelper helper) {
-		helper.accept(this);
-        ItemStack is = new ItemStack(this);
-        is.getOrCreateTag().putBoolean("prod", true);
-        helper.accept(is);
+        if(helper.isType(FHTabs.itemGroup)) {
+            helper.accept(this);
+            ItemStack is = new ItemStack(this);
+            is.getOrCreateTag().putBoolean("prod", true);
+            helper.accept(is);
+        }
 	}
 
 
