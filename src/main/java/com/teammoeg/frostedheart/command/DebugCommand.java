@@ -44,22 +44,24 @@ import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.FileUtil;
 
+import com.teammoeg.frostedheart.world.FHFeatures;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 public class DebugCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("debug")
                 .then(Commands.literal("generate_airship").executes(ct -> {
-                	//TODO Add spacecraft feature
-                    /*FHFeatures.spacecraft_feature.place(((ServerLevel) ct.getSource().getPlayerOrException().level()), ((ServerLevel) ct.getSource().getPlayerOrException().level()).getChunkSource().getGenerator(), ct.getSource().getPlayerOrException().level().random,
-                            ct.getSource().getPlayerOrException().blockPosition());*/
+                    FHFeatures.SPACECRAFT.get().place(NoneFeatureConfiguration.INSTANCE, ((ServerLevel) ct.getSource().getPlayerOrException().level()), ((ServerLevel) ct.getSource().getPlayerOrException().level()).getChunkSource().getGenerator(), ct.getSource().getPlayerOrException().level().random,
+                            ct.getSource().getPlayerOrException().blockPosition());
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("export_food").executes(ct -> {
                     Set<Item> items = new HashSet<>();

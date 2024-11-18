@@ -38,6 +38,15 @@ import net.minecraft.core.Vec3i;
 
 public class AddTempCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+
+        // Remove
+        LiteralArgumentBuilder<CommandSourceStack> remove = Commands.literal("remove")
+                .then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ct) -> {
+                    ChunkHeatData.removeTempAdjust(ct.getSource().getLevel(), BlockPosArgument.getBlockPos(ct, "position"));
+                    return Command.SINGLE_SUCCESS;
+                }));
+
+        // Set
         LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("set")
                 .then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ct) -> {
                     ChunkHeatData.removeTempAdjust(ct.getSource().getLevel(), BlockPosArgument.getBlockPos(ct, "position"));
@@ -50,6 +59,8 @@ public class AddTempCommand {
                                     IntegerArgumentType.getInteger(ct, "temperature"));
                             return Command.SINGLE_SUCCESS;
                         }))));
+
+        // Get
         LiteralArgumentBuilder<CommandSourceStack> get = Commands.literal("get")
                 .executes((ct) -> {
                     Collection<IHeatArea> adjs = ChunkHeatData.getAdjust(ct.getSource().getLevel(), ct.getSource().getPlayerOrException().blockPosition());
@@ -77,6 +88,6 @@ public class AddTempCommand {
                             }
                             return Command.SINGLE_SUCCESS;
                         }));
-        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermission(2)).then(Commands.literal("temperature").then(add).then(get)));
+        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermission(2)).then(Commands.literal("temperature").then(add).then(get).then(remove)));
     }
 }
