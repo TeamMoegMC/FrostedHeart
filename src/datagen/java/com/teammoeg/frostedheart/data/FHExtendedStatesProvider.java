@@ -153,6 +153,13 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
         // block item model
         simpleBlockItem(block, models().cubeAll(name(block), texture));
     }
+//
+//    protected void snowCovered(Block b, ResourceLocation top, ResourceLocation side, ResourceLocation bottom)
+//    {
+//        ModelFile model = models().grassBlock(name(b), top, side, bottom);
+//
+//        simpleBlockItem(b, model);
+//    }
 
     protected void scaffold(Block b, ResourceLocation others, ResourceLocation top)
     {
