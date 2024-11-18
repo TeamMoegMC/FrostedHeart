@@ -6,6 +6,8 @@ import java.awt.image.BufferedImage;
 
 import org.lwjgl.opengl.GL11;
 
+import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.TypedDynamicTexture;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.Rect;
 
@@ -19,8 +21,8 @@ import com.mojang.blaze3d.platform.NativeImage.Format;
 public class PrerenderParams {
 	Graphics2D g2d;
 	BufferedImage image;
-	int width=2048;
-	int height=1152;
+	int width=1024*FHConfig.CLIENT.getScenarioScale();
+	int height=576*FHConfig.CLIENT.getScenarioScale();
 	double scale;
 	public PrerenderParams() {
 		image=new BufferedImage(width,width, BufferedImage.TYPE_INT_ARGB);
@@ -50,34 +52,33 @@ public class PrerenderParams {
 			return (int) (width-((width-x)*scale));
 		}
 		return (int) (x*scale);*/
-		return x;
+		return x*FHConfig.CLIENT.getScenarioScale();
 	}
 	public int calculateScaledY(int y) {
 		/*if(y>height/2) {
 			return (int) (height-((height-y)*scale));
 		}
 		return (int) (y*scale);*/
-		return y;
+		return y*FHConfig.CLIENT.getScenarioScale();
 	}
 	public Rect calculateRect(int x,int y,int w,int h) {
-		/*int nx=calculateScaledX(x);
-		int ny=calculateScaledY(y);
-		int nw=calculateScaledX(x+w)-nx;
-		int nh=calculateScaledY(y+h)-ny;*/
+		int nx=x*FHConfig.CLIENT.getScenarioScale();
+		int ny=y*FHConfig.CLIENT.getScenarioScale();
+		int nw=w*FHConfig.CLIENT.getScenarioScale();
+		int nh=h*FHConfig.CLIENT.getScenarioScale();
 		return new Rect(x,y,w,h);
 	}
 	public int calculateScaledSize(int s) {
 		//return (int) (s*scale);
-		return s;
+		return s*FHConfig.CLIENT.getScenarioScale();
 	}
-	public DynamicTexture loadTexture() {
+	public TypedDynamicTexture loadTexture() {
 		g2d.dispose();
 		image.flush();
 		BufferedImage cur=image;
 		NativeImage texture=new NativeImage(Format.RGBA, cur.getWidth(), cur.getHeight(), false);//No need to close because dynamicTexture would handle this properly
 		int[] pixels = new int[cur.getWidth() * cur.getHeight()];
 		cur.getRGB(0, 0, cur.getWidth(), cur.getHeight(), pixels, 0, cur.getWidth());
-		
 		for (int y = 0; y < cur.getHeight(); y++) {
 			for (int x = 0; x < cur.getWidth(); x++) {
 				int pixel = pixels[y * cur.getWidth() + x];
@@ -98,7 +99,7 @@ public class PrerenderParams {
 			FHMain.LOGGER.error("Error rendering scenario layer!");
 		}*/
 		
-		return new DynamicTexture(texture);
+		return new TypedDynamicTexture(texture);
 		/*int[] pixels = new int[cur.getWidth() * cur.getHeight()];
 		cur.getRGB(0, 0, cur.getWidth(), cur.getHeight(), pixels, 0, cur.getWidth());
 

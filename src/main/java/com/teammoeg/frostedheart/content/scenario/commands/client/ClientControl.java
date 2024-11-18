@@ -63,7 +63,7 @@ import net.minecraft.network.chat.ClickEvent;
 
 public class ClientControl implements IClientControlCommand {
 	public void link(IClientScene runner,@Param("lid")String linkId) {
-		runner.setPreset(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"fh$scenario$link:"+linkId)).withUnderlined(true));
+		runner.setPreset(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,FHScenarioClient.LINK_SYMBOL+linkId)).withUnderlined(true));
 	}
 	public void endlink(IClientScene runner) {
 		runner.setPreset(null);

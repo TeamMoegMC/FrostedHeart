@@ -30,6 +30,7 @@ import net.minecraft.resources.ResourceLocation;
 
 public class FHScenarioClient {
     static ScenarioExecutor<IClientScene> client = new ScenarioExecutor<>(IClientScene.class);
+    public static final String LINK_SYMBOL="fh$scenario$link:";
     public static void callCommand(String name, IClientScene runner, Map<String, String> params) {
         client.callCommand(name, runner, params);
     }

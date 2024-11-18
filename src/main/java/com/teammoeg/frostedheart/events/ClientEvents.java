@@ -171,8 +171,8 @@ public class ClientEvents {
     public static void fireLogin(PlayerLoggedInEvent event) {
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClientTeamDataManager.INSTANCE::reset);
         // TODO: temporary fix for client not sending ready packet
-//      ClientScene.INSTANCE=new ClientScene();
-//    	ClientScene.INSTANCE.sendClientReady();
+        ClientScene.INSTANCE=new ClientScene();
+    	ClientScene.INSTANCE.sendClientReady();
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -375,14 +375,7 @@ public class ClientEvents {
     public void onWorldUnLoad(LevelEvent.Unload event) {
     	
     }
-    @SubscribeEvent
-    public static void onClientChat(ClientChatEvent event) {
-    	if(event.getOriginalMessage().startsWith("fh$scenario$link:")) {
-    		ClientLinkClickedPacket packet=new ClientLinkClickedPacket(event.getOriginalMessage().substring("fh$scenario$link:".length()));
-    		FHNetwork.sendToServer(packet);
-    		event.setCanceled(true);
-    	}
-    }
+
     @SubscribeEvent
     public static void onClientKey(InputEvent.Key event) {
     	if(event.getAction()==GLFW.GLFW_PRESS&&ClientRegistryEvents.key_skipDialog.consumeClick()) {
