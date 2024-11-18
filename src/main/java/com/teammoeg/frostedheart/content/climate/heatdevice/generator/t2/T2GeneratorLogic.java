@@ -119,7 +119,7 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
     private void tickLiquid(IMultiblockContext<T2GeneratorState> ctx) {
         Optional<GeneratorData> data = getData(ctx);
         ctx.getState().liquidtick = data.map(t -> t.steamProcess).orElse(0);
-        if (!this.getIsActive(ctx))
+        if (!ctx.getState().isActive())
             return;
         float rt = ctx.getState().getTempLevel();
         /*if (rt == 0) {

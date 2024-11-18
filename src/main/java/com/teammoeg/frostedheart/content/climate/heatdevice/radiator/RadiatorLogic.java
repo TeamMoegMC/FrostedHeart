@@ -49,10 +49,10 @@ public class RadiatorLogic extends HeatingLogic<RadiatorLogic, RadiatorState> {
         if (state.network.tryDrainHeat(4)) {
             state.setTempLevel(state.network.getTemperatureLevel());
             state.setRangeLevel(0.5f);
-            this.setAllActive(ctx, true);
+            state.setActive(true);
             hasFuel = true;
         } else {
-            this.setAllActive(ctx, false);
+            state.setActive(false);
             state.setTempLevel(0);
             state.setRangeLevel(0);
             hasFuel = false;

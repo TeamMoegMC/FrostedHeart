@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "frostedheart:item/ceramic_bucket"
+    "layer0": "frostedheart:item/lead_slurry"
   }
 }

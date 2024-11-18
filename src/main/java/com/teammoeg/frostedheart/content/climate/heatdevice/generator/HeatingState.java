@@ -6,6 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 
 public class HeatingState extends OwnerState {
+    private boolean active;
     private float tempLevel;
     private float rangeLevel;
     private float lastTempMod;
@@ -23,6 +24,7 @@ public class HeatingState extends OwnerState {
         //nbt.putBoolean("isOverdrive", isOverdrive);
         nbt.putFloat("tempLevel", tempLevel);
         nbt.putFloat("rangeLevel", rangeLevel);
+        nbt.putBoolean("active", active);
     }
 
     @Override
@@ -32,6 +34,7 @@ public class HeatingState extends OwnerState {
         //isOverdrive = nbt.getBoolean("isOverdrive");
         tempLevel = nbt.getFloat("tempLevel");
         rangeLevel = nbt.getFloat("rangeLevel");
+        active = nbt.getBoolean("active");
     }
 
     /**
@@ -71,6 +74,14 @@ public class HeatingState extends OwnerState {
 
     public void setInitialized(boolean initialized) {
         this.initialized = initialized;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     /**

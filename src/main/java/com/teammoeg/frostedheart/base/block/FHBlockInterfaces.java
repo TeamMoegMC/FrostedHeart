@@ -47,27 +47,7 @@ public class FHBlockInterfaces {
             return false;
         }
     }
-    public interface IActiveStateLogic {
-        default boolean getIsActive(IMultiblockContext<?> ctx) {
-            BlockState state = ctx.getLevel().getBlockState(BlockPos.ZERO);
-            return state.hasProperty(BlockStateProperties.LIT) ? state.getValue(BlockStateProperties.LIT) : false;
-        }
 
-        /**
-         * Set the block to active or inactive.
-         * @param active true if the block should be active, false otherwise
-         * @return true if the state was changed, false otherwise
-         */
-        default boolean setActive(IMultiblockContext<?> ctx,BlockPos relpos,boolean active) {
-            BlockState state = ctx.getLevel().getBlockState(relpos);
-            if (state.getValue(BlockStateProperties.LIT) != active) {
-                BlockState newState = state.setValue(BlockStateProperties.LIT, active);
-                ctx.getLevel().setBlock(relpos, newState);
-                return true;
-            }
-            return false;
-        }
-    }
     public FHBlockInterfaces() {
     }
 }

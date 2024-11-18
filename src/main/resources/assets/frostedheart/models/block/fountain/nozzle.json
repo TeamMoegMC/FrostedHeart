@@ -6,5 +6,6 @@
   "loader": "forge:obj",
   "model": "frostedheart:models/block/fountain/nozzle.obj",
   "detectCullableFaces": false,
-  "flip-v": true
+  "flip-v": true,
+  "render_type": "cutout"
 }

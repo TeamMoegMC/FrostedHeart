@@ -81,7 +81,7 @@ public class FHItemModelProvider extends ItemModelProvider {
 		texture(FHItems.CRUSHED_RAW_NICKEL);
 		texture(FHItems.CRUSHED_RAW_LEAD);
 		texture(FHItems.CRUSHED_RAW_HALITE);
-//		texture(FHItems.CRUSHED_RAW_SYLVITE);
+		texture(FHItems.CRUSHED_RAW_SYLVITE);
 		texture(FHItems.CRUSHED_RAW_MAGNESITE);
 
 		texture(FHItems.RAW_SILVER);
