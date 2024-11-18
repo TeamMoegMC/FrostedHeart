@@ -55,23 +55,14 @@ public class GraphicGlyphRenderer implements FormattedCharSink{
 		if(p_accept_2_.isItalic())
 			g2d.setTransform(italic);
 		if(shadow) {
-			int shadowX=2;
-			int shadowY=2;
-			if(p_accept_2_.isBold()) {
-				shadowX+=1;
-				shadowY+=1;
-			}
-			glyph.renderFont(g2d, x+shadowX, y+shadowY, size,0xFF000000);
+			int shadowOff=Math.round((glyph.isUnicode?0.5f:1f)/ glyph.height*size);
+			glyph.renderFont(g2d, x+shadowOff, y+shadowOff, size,0xFF000000);
 			advance++;
 		}
 		advance+=glyph.renderFont(g2d, x, y, size,c);
 		if(p_accept_2_.isBold()) {
-			for(int i=0;i<2;i++) {
-				for(int j=-1;j<1;j++) {
-					if(i==0&&j==0)continue;
-					glyph.renderFont(g2d, x+i, y+j, size,c);
-				}
-			}
+			int offset=Math.round((glyph.isUnicode?0.5f:1f)/ glyph.height*size);
+			glyph.renderFont(g2d, x+offset, y, size,c);
 			advance+=1;
 		}
 		Color prev=g2d.getColor();

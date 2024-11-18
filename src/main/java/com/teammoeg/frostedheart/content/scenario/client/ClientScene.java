@@ -37,6 +37,7 @@ public class ClientScene implements IClientScene {
 	public LinkedList<LayerManager> layers=new LinkedList<>();
 	public ClientScene() {
 		super();
+		w=Mth.floor((double) Minecraft.getInstance().gui.getChat().getWidth() / Minecraft.getInstance().gui.getChat().getScale());
 		this.setSpeed(1);
 	}
 	public static int fromRelativeXW(float val) {
@@ -164,13 +165,14 @@ public class ClientScene implements IClientScene {
 	public void cls() {
 		Minecraft mc = ClientUtils.mc();
 		List<GuiMessage.Line> i = ((NewChatGuiAccessor) mc.gui.getChat()).getTrimmedMessages();
-		i.removeIf(l -> l.addedTime() == fhchatid);
+		i.removeIf(l -> l.tag()==SCENARIO);
+		msgQueue.clear();
 		for(Component ic:origmsgQueue) {
 			for(FormattedCharSequence j:ComponentRenderUtils.wrapComponents(ic,w, ClientUtils.mc().font))
 				i.add(0, new GuiMessage.Line(mc.gui.getGuiTicks(), j, GuiMessageTag.system(),true));
 		}
 		origmsgQueue.clear();
-		msgQueue.clear();
+		
 		if(dialog!=null&&dialog.hasDialog()) {
 			dialog.updateTextLines(msgQueue);
 		}

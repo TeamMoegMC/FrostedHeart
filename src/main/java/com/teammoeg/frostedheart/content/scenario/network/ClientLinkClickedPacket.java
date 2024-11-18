@@ -46,7 +46,6 @@ public class ClientLinkClickedPacket implements FHMessage {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            // Update client-side nbt
         	FHScenario.get(context.get().getSender()).onLinkClicked(link);
         });
         context.get().setPacketHandled(true);

@@ -1,7 +1,6 @@
 {
-  "parent": "forge:item/bucket",
+  "parent": "minecraft:item/generated",
   "textures": {
-    "base": "frostedheart:item/ceramic_bucket",
-    "fluid": "forge:item/mask/bucket_fluid_drip"
+    "layer0": "frostedheart:item/ceramic_bucket"
   }
 }

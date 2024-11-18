@@ -19,9 +19,6 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
-import java.util.function.Consumer;
-
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveStateLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.FHMultiblockHelper;
 
@@ -30,44 +27,14 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IServerT
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockLogic;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
 
 /**
  * Common base class for any generator like block that maintains a heat area
  */
-public abstract class HeatingLogic<T extends HeatingLogic<T, ?>, R extends HeatingState> implements IServerTickableComponent<R>, IMultiblockLogic<R>, IActiveStateLogic, IClientTickableComponent<R> {
+public abstract class HeatingLogic<T extends HeatingLogic<T, ?>, R extends HeatingState> implements IServerTickableComponent<R>, IMultiblockLogic<R>, IClientTickableComponent<R> {
 
     public HeatingLogic() {
         super();
-    }
-
-    /**
-     * Helper method to apply a function to all block positions in the multiblock.
-     * @param ctx
-     * @param consumer
-     */
-    private void forEachBlock(IMultiblockContext<R> ctx, Consumer<BlockPos> consumer) {
-        Vec3i vec = FHMultiblockHelper.getSize(ctx.getLevel());
-        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-        for (int x = 0; x < vec.getX(); ++x) {
-            pos.setX(x);
-            for (int y = 0; y < vec.getY(); ++y) {
-                pos.setY(y);
-                for (int z = 0; z < vec.getZ(); ++z) {
-                    pos.setZ(z);
-                    consumer.accept(pos);
-                }
-            }
-        }
-    }
-
-    /**
-     * Helper method to set all blocks active or inactive
-     * @param ctx
-     * @param state
-     */
-    public void setAllActive(IMultiblockContext<R> ctx, boolean state) {
-        forEachBlock(ctx, s -> setActive(ctx, s, state));
     }
 
     /**
@@ -81,7 +48,7 @@ public abstract class HeatingLogic<T extends HeatingLogic<T, ?>, R extends Heati
         HeatingState state = ctx.getState();
 
         // Check the previous activity status
-        final boolean activeBeforeTick = getIsActive(ctx);
+        final boolean activeBeforeTick = state.isActive();
 
         // Tick the fuel
         boolean isActive = tickFuel(ctx);
@@ -91,7 +58,7 @@ public abstract class HeatingLogic<T extends HeatingLogic<T, ?>, R extends Heati
 
         // Set the activity status
         if (activeBeforeTick != isActive)
-            setAllActive(ctx, isActive);
+            state.setActive(isActive);
 
         // Update the heat area
         if (state.shouldUpdateAdjust()) {
@@ -121,7 +88,7 @@ public abstract class HeatingLogic<T extends HeatingLogic<T, ?>, R extends Heati
      */
     @Override
     public final void tickClient(IMultiblockContext<R> ctx) {
-        tickEffects(ctx, FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()), getIsActive(ctx));
+        tickEffects(ctx, FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()), ctx.getState().isActive());
     }
 
 

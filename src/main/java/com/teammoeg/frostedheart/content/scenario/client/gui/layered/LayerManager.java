@@ -4,18 +4,33 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLImageContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLLayerContent;
-
-import net.minecraft.client.renderer.texture.DynamicTexture;
+import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.TypedDynamicTexture;
 
 public class LayerManager extends GLLayerContent {
 	Map<String, OrderedRenderableContent> names = new LinkedHashMap<>();
 	PriorityQueue<OrderedRenderableContent> pq;
 	PriorityQueue<OrderedRenderableContent> opq;
-	GLImageContent oglc=new GLImageContent(null,0,0, 1, 1, 0, 0, 2048, 1152, 2048, 2048);
-	GLImageContent nglc=new GLImageContent(null,0,0, 1, 1, 0, 0, 2048, 1152, 2048, 2048);
+	GLImageContent oglc=new GLImageContent(null,0,0, 2f/FHConfig.CLIENT.getScenarioScale(), 2f/FHConfig.CLIENT.getScenarioScale(), 0, 0, 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale(), 1024*FHConfig.CLIENT.getScenarioScale(), 1024*FHConfig.CLIENT.getScenarioScale());
+	GLImageContent nglc=new GLImageContent(null,0,0, 2f/FHConfig.CLIENT.getScenarioScale(), 2f/FHConfig.CLIENT.getScenarioScale(), 0, 0, 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale(), 1024*FHConfig.CLIENT.getScenarioScale(), 1024*FHConfig.CLIENT.getScenarioScale());
+	private static ExecutorService executor;
+	private Future <PrerenderParams> rendering;
+	public static <T> Future<T> submitRenderTask(Runnable r,T result) {
+		if(executor==null) {
+			AtomicInteger id=new AtomicInteger(0);
+			executor=Executors.newFixedThreadPool(FHConfig.CLIENT.scenarioRenderThread.get(),rn->new Thread(rn,"frostedheart-scenario-prerender-"+id.getAndAdd(1)));
+		}
+		return executor.submit(r,result);
+	} 
 	int transTicks;
 	int maxTransTicks;
 	TransitionFunction trans;
@@ -84,6 +99,7 @@ public class LayerManager extends GLLayerContent {
 				((LayerManager) ctx).close();
 			}
 	}
+	boolean prerenderRequested;
 	public synchronized void commitChanges(TransitionFunction t, int ticks) {
 
 		if (t != null) {
@@ -108,9 +124,13 @@ public class LayerManager extends GLLayerContent {
 				pq.add(r);
 				i++;
 			}
-			PrerenderParams prerender=new PrerenderParams();
-			pq.forEach(s->s.prerender(prerender));
-			DynamicTexture tex=prerender.loadTexture();
+			final PrerenderParams prerender=new PrerenderParams();
+			
+			pq.forEach(s->s.prerender(prerender));				
+			
+
+			TypedDynamicTexture tex=prerender.loadTexture();
+
 			//System.out.println("Loading tex");
 			if(nglc.texture!=null) {
 				nglc.texture.close();
@@ -122,6 +142,30 @@ public class LayerManager extends GLLayerContent {
 
 	@Override
 	public synchronized void renderContents(RenderParams params) {
+		/*if(rendering!=null) {
+			Future<PrerenderParams> rendering=this.rendering;
+			this.rendering=null;
+			PrerenderParams rendered;
+			try {
+				rendered = rendering.get();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				throw new RuntimeException("scenario rendering failed");
+			} catch (ExecutionException e) {
+				e.getCause().printStackTrace();
+				throw new RuntimeException("scenario rendering failed");
+			}
+			
+			TypedDynamicTexture tex=rendered.loadTexture();
+
+			//System.out.println("Loading tex");
+			if(nglc.texture!=null) {
+				nglc.texture.close();
+				nglc.texture=null;
+			}
+			nglc.texture=tex;
+		}*/
 		if (trans != null) {
 			RenderParams prev = params.copyWithCurrent(this);
 			RenderParams next = params.copyWithCurrent(this);

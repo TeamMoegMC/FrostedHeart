@@ -419,7 +419,6 @@ public class FHItems {
 
     public static RegistryObject<Item> COPPER_OXIDE_DUST = register("copper_oxide_dust");
     public static RegistryObject<Item> ZINC_OXIDE_DUST = register("zinc_oxide_dust");
-    public static RegistryObject<Item> TIN_OXIDE_DUST = register("tin_oxide_dust");
     public static RegistryObject<Item> ALUMINA_DUST = register("alumina_dust");
     public static RegistryObject<Item> MAGNESIA_DUST = register("magnesia_dust");
     public static RegistryObject<Item> LEAD_OXIDE_DUST = register("lead_oxide_dust");
@@ -427,9 +426,6 @@ public class FHItems {
     public static RegistryObject<Item> SODIUM_HYDROXIDE_DUST = register("sodium_hydroxide_dust");
     public static RegistryObject<Item> SODIUM_SULFIDE_DUST = register("sodium_sulfide_dust");
     public static RegistryObject<Item> SODIUM_CHLORIDE_DUST = register("sodium_chloride_dust");
-    public static RegistryObject<Item> POTASSIUM_CHLORIDE_DUST = register("potassium_chloride_dust");
-    public static RegistryObject<Item> SULFUR_DUST = register("sulfur_dust");
-    public static RegistryObject<Item> GRAPHITE_DUST = register("graphite_dust");
     public static RegistryObject<Item> CRYOLITE_DUST = register("cryolite_dust");
 
     // MISC MATERIALS

@@ -25,7 +25,6 @@ import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestItem;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;

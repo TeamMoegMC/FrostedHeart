@@ -167,27 +167,24 @@ public class FHBlocks {
     public static RegistryObject<Block> ROTTEN_WOOD = register("rotten_wood_block", () -> new Block(BlockBehaviour.Properties.copy(MUD)));
     public static RegistryObject<Block> BAUXITE = register("bauxite_block", () -> new Block(BlockBehaviour.Properties.copy(GRAVEL)));
     public static RegistryObject<Block> KAOLIN = register("kaolin_block", () -> new Block(BlockBehaviour.Properties.copy(CLAY)));
-
-    // buried_mycelium
     public static RegistryObject<Block> BURIED_MYCELIUM = register("buried_mycelium", () -> new Block(BlockBehaviour.Properties.copy(MYCELIUM)));
-    // buried podzol
     public static RegistryObject<Block> BURIED_PODZOL = register("buried_podzol", () -> new Block(BlockBehaviour.Properties.copy(PODZOL)));
 
     // PERMAFROST
-    public static RegistryObject<Block> DIRT_PERMAFROST = register("dirt_permafrost", () -> new Block(BlockBehaviour.Properties.copy(DIRT).strength(2.0F)));
-    public static RegistryObject<Block> MYCELIUM_PERMAFROST = register("mycelium_permafrost", () -> new Block(BlockBehaviour.Properties.copy(MYCELIUM).strength(2.0F)));
-    public static RegistryObject<Block> PODZOL_PERMAFROST = register("podzol_permafrost", () -> new Block(BlockBehaviour.Properties.copy(PODZOL).strength(2.0F)));
-    public static RegistryObject<Block> ROOTED_DIRT_PERMAFROST = register("rooted_dirt_permafrost", () -> new Block(BlockBehaviour.Properties.copy(ROOTED_DIRT).strength(2.0F)));
-    public static RegistryObject<Block> COARSE_DIRT_PERMAFROST = register("coarse_dirt_permafrost", () -> new Block(BlockBehaviour.Properties.copy(COARSE_DIRT).strength(2.0F)));
-    public static RegistryObject<Block> MUD_PERMAFROST = register("mud_permafrost", () -> new Block(BlockBehaviour.Properties.copy(MUD).strength(2.0F)));
-    public static RegistryObject<Block> GRAVEL_PERMAFROST = register("gravel_permafrost", () -> new Block(BlockBehaviour.Properties.copy(GRAVEL).strength(2.0F)));
-    public static RegistryObject<Block> SAND_PERMAFROST = register("sand_permafrost", () -> new Block(BlockBehaviour.Properties.copy(SAND).strength(2.0F)));
-    public static RegistryObject<Block> RED_SAND_PERMAFROST = register("red_sand_permafrost", () -> new Block(BlockBehaviour.Properties.copy(RED_SAND).strength(2.0F)));
-    public static RegistryObject<Block> CLAY_PERMAFROST = register("clay_permafrost", () -> new Block(BlockBehaviour.Properties.copy(CLAY).strength(2.0F)));
-    public static RegistryObject<Block> PEAT_PERMAFROST = register("peat_permafrost", () -> new Block(BlockBehaviour.Properties.copy(MUD).strength(2.0F)));
-    public static RegistryObject<Block> ROTTEN_WOOD_PERMAFROST = register("rotten_wood_permafrost", () -> new Block(BlockBehaviour.Properties.copy(MUD).strength(2.0F)));
-    public static RegistryObject<Block> BAUXITE_PERMAFROST = register("bauxite_permafrost", () -> new Block(BlockBehaviour.Properties.copy(GRAVEL).strength(2.0F)));
-    public static RegistryObject<Block> KAOLIN_PERMAFROST = register("kaolin_permafrost", () -> new Block(BlockBehaviour.Properties.copy(CLAY).strength(2.0F)));
+    public static RegistryObject<Block> DIRT_PERMAFROST = register("dirt_permafrost", () -> new SnowyDirtBlock(BlockBehaviour.Properties.copy(DIRT).strength(2.0F)));
+    public static RegistryObject<Block> MUD_PERMAFROST = register("mud_permafrost", () -> new SnowyDirtBlock(BlockBehaviour.Properties.copy(MUD).strength(2.0F)));
+    public static RegistryObject<Block> GRAVEL_PERMAFROST = register("gravel_permafrost", () -> new SnowyDirtBlock(BlockBehaviour.Properties.copy(GRAVEL).strength(2.0F)));
+    public static RegistryObject<Block> SAND_PERMAFROST = register("sand_permafrost", () -> new SnowyDirtBlock(BlockBehaviour.Properties.copy(SAND).strength(2.0F)));
+    public static RegistryObject<Block> RED_SAND_PERMAFROST = register("red_sand_permafrost", () -> new SnowyDirtBlock(BlockBehaviour.Properties.copy(RED_SAND).strength(2.0F)));
+    public static RegistryObject<Block> CLAY_PERMAFROST = register("clay_permafrost", () -> new SnowyDirtBlock(BlockBehaviour.Properties.copy(CLAY).strength(2.0F)));
+    public static RegistryObject<Block> PEAT_PERMAFROST = register("peat_permafrost", () -> new SnowyDirtBlock(BlockBehaviour.Properties.copy(MUD).strength(2.0F)));
+    public static RegistryObject<Block> ROTTEN_WOOD_PERMAFROST = register("rotten_wood_permafrost", () -> new SnowyDirtBlock(BlockBehaviour.Properties.copy(MUD).strength(2.0F)));
+    public static RegistryObject<Block> BAUXITE_PERMAFROST = register("bauxite_permafrost", () -> new SnowyDirtBlock(BlockBehaviour.Properties.copy(GRAVEL).strength(2.0F)));
+    public static RegistryObject<Block> KAOLIN_PERMAFROST = register("kaolin_permafrost", () -> new SnowyDirtBlock(BlockBehaviour.Properties.copy(CLAY).strength(2.0F)));
+    public static RegistryObject<Block> MYCELIUM_PERMAFROST = register("mycelium_permafrost", () -> new SnowyDirtBlock(BlockBehaviour.Properties.copy(MYCELIUM).strength(2.0F)));
+    public static RegistryObject<Block> PODZOL_PERMAFROST = register("podzol_permafrost", () -> new SnowyDirtBlock(BlockBehaviour.Properties.copy(PODZOL).strength(2.0F)));
+    public static RegistryObject<Block> ROOTED_DIRT_PERMAFROST = register("rooted_dirt_permafrost", () -> new SnowyDirtBlock(BlockBehaviour.Properties.copy(ROOTED_DIRT).strength(2.0F)));
+    public static RegistryObject<Block> COARSE_DIRT_PERMAFROST = register("coarse_dirt_permafrost", () -> new SnowyDirtBlock(BlockBehaviour.Properties.copy(COARSE_DIRT).strength(2.0F)));
 
     /*
     copper
@@ -295,12 +292,12 @@ public class FHBlocks {
             .sound(SoundType.METAL)
             .requiresCorrectToolForDrops()
             .strength(45, 800)));
-    public static RegistryObject<Block> WHALE_BLOCK = register("whale_block", () -> new FHBaseBlock(Block.Properties
+    public static RegistryObject<Block> WHALE_BLOCK = register("whale_block", () -> new HugeMushroomBlock(Block.Properties
             .of().mapColor(MapColor.COLOR_GRAY)
             .sound(SoundType.MUD)
             .requiresCorrectToolForDrops()
             .strength(45, 800)));
-    public static RegistryObject<Block> WHALE_BELLY_BLOCK = register("whale_belly_block", () -> new FHBaseBlock(Block.Properties
+    public static RegistryObject<Block> WHALE_BELLY_BLOCK = register("whale_belly_block", () -> new HugeMushroomBlock(Block.Properties
             .of().mapColor(MapColor.COLOR_YELLOW)
             .sound(SoundType.SLIME_BLOCK)
             .requiresCorrectToolForDrops()

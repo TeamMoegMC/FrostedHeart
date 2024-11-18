@@ -53,6 +53,8 @@ public class GlyphData {
 		int crx=this.x;
 		int cry=this.y;
 		BufferedImage currentImage=image;
+		if(image==null)
+			return (int) (advance * 1f / height * hsize);
 		if(color!=0xFFFFFFFF) {
 			if(color==0xFF000000) {
 				if(shadowGraphics==null) {
