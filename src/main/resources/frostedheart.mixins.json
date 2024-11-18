@@ -79,7 +79,8 @@
     "client.MixinLightTexture",
     "client.PrimaryLevelDataMixin",
     "client.ToastComponentMixin",
-    "create.MixinOpenConfigButtonHandler"
+    "create.MixinOpenConfigButtonHandler",
+    "client.ChatScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

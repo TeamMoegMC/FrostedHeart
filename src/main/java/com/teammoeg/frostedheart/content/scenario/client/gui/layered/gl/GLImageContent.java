@@ -1,27 +1,14 @@
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 
-import org.joml.Matrix4f;
-import org.lwjgl.opengl.GL11C;
-
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.BufferUploader;
-
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.resources.ResourceLocation;
 
 public class GLImageContent extends GLLayerContent {
 	public ResourceLocation showingImage;
-	public DynamicTexture texture;
+	public TypedDynamicTexture texture;
 	int u, v, uw, uh, tw, th;
 
 	public GLImageContent(float x, float y, float width, float height, int z, ResourceLocation showingImage, int u, int v, int uw, int uh, int tw, int th) {
@@ -50,8 +37,10 @@ public class GLImageContent extends GLLayerContent {
 				FHGuiHelper.blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
 			}
 		}else {
-			texture.bind();
-			FHGuiHelper.blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
+			texture.draw(params.getGuiGraphics(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, params.getOpacity());
+
+			//texture.bind();
+			//FHGuiHelper.blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
 		}
 	}
 

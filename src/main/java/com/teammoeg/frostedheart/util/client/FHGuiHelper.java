@@ -34,7 +34,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -51,6 +50,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.client.ForgeRenderTypes;
 
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -74,6 +74,14 @@ public class FHGuiHelper {
 
         public RenderStateAccess(String p_i225973_1_, Runnable p_i225973_2_, Runnable p_i225973_3_) {
             super(p_i225973_1_, p_i225973_2_, p_i225973_3_);
+        }
+        public static RenderType createTempType(ResourceLocation texture) {
+            RenderType.CompositeState rendertype$state = RenderType.CompositeState.builder()
+                .setShaderState(RenderType.RENDERTYPE_TEXT_SHADER)
+                .setTextureState(new TextureStateShard(texture, ForgeRenderTypes.enableTextTextureLinearFiltering, false))
+                .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+                .createCompositeState(false);
+            return RenderType.create("frostedheart_prerendered", DefaultVertexFormat.POSITION_COLOR_TEX, VertexFormat.Mode.QUADS, 256, false, true, rendertype$state);
         }
 
     }
