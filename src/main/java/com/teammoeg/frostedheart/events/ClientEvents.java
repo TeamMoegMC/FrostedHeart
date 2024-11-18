@@ -66,7 +66,6 @@ import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -168,7 +167,7 @@ public class ClientEvents {
     }
 
     @SubscribeEvent
-    public static void fireLogin(PlayerLoggedInEvent event) {
+    public static void fireLogin(ClientPlayerNetworkEvent.LoggingIn event) {
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClientTeamDataManager.INSTANCE::reset);
         // TODO: temporary fix for client not sending ready packet
         ClientScene.INSTANCE=new ClientScene();
@@ -263,7 +262,7 @@ public class ClientEvents {
     }
 
     @SubscribeEvent
-    public static void sendLoginUpdateReminder(PlayerEvent.PlayerLoggedInEvent event) {
+    public static void sendLoginUpdateReminder(ClientPlayerNetworkEvent.LoggingIn event) {
     	
         FHMain.remote.fetchVersion().ifPresent(stableVersion -> {
             boolean isStable = true;
@@ -278,10 +277,10 @@ public class ClientEvents {
                 return;
             FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
             if (!stableVersion.isEmpty() && (clientVersion.isEmpty() || !clientVersion.laterThan(stableVersion))) {
-                event.getEntity().displayClientMessage(TranslateUtils.translateGui("update_recommended")
+                event.getPlayer().displayClientMessage(TranslateUtils.translateGui("update_recommended")
                         .append(stableVersion.getOriginal()).withStyle(ChatFormatting.BOLD), false);
                 if (isStable) {
-                    event.getEntity()
+                    event.getPlayer()
                             .displayClientMessage(TranslateUtils.str("CurseForge")
                                     .setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
                                             "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
@@ -302,12 +301,12 @@ public class ClientEvents {
         });
         if (ServerLifecycleHooks.getCurrentServer() != null)
             if (FHMain.saveNeedUpdate) {
-                event.getEntity().displayClientMessage(
+                event.getPlayer().displayClientMessage(
                         TranslateUtils.translateGui("save_update_needed", FHMain.lastServerConfig.getAbsolutePath())
                                 .withStyle(ChatFormatting.RED),
                         false);
             } else if (FHMain.lastbkf != null) {
-                event.getEntity().displayClientMessage(TranslateUtils.translateGui("save_updated")
+                event.getPlayer().displayClientMessage(TranslateUtils.translateGui("save_updated")
                                 .append(TranslateUtils.str(FHMain.lastbkf.getName()).setStyle(Style.EMPTY
                                         .withClickEvent(
                                                 new ClickEvent(ClickEvent.Action.OPEN_FILE, FHMain.lastbkf.getAbsolutePath()))
@@ -445,7 +444,7 @@ public class ClientEvents {
     }
 
     @SubscribeEvent
-    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+    public static void onPlayerLoggedIn(ClientPlayerNetworkEvent.LoggingIn event) {
         // write a default tip with form { "contents": ["Default Tip."] } in config/fhtips/tips/default.json
         File filePath = new File(TipLockManager.TIPS, "default.json");
         if (!filePath.exists()) {
