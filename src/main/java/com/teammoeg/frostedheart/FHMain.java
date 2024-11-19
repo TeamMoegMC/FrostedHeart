@@ -98,6 +98,7 @@ public class FHMain {
         // Registration
         FHEntityTypes.ENTITY_TYPES.register(mod);
         FHFluids.FLUIDS.register(mod);
+        FHFluids.FLUID_TYPES.register(mod);
         FHMobEffects.EFFECTS.register(mod);
         FHParticleTypes.REGISTER.register(mod);
         FHBlockEntityTypes.REGISTER.register(mod);
