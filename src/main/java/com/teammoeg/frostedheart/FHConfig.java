@@ -166,24 +166,26 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Double> steamCorePowerIntake;
         public final ForgeConfigSpec.ConfigValue<Double> steamCoreGeneratedSpeed;
         public final ForgeConfigSpec.ConfigValue<Double> steamCoreCapacity;
-        public final ForgeConfigSpec.BooleanValue enableSnowAccumulationDuringWorldgen;
         public final ForgeConfigSpec.ConfigValue<Double> flintIgnitionChance;
         public final ForgeConfigSpec.ConfigValue<Double> stickIgnitionChance;
         public final ForgeConfigSpec.ConfigValue<Double> consumeChanceWhenIgnited;
+        public final ForgeConfigSpec.ConfigValue<Integer> simulationRange;
+        public final ForgeConfigSpec.ConfigValue<Integer> simulationParticles;
+        public final ForgeConfigSpec.ConfigValue<Integer> simulationDivision;
+        public final ForgeConfigSpec.ConfigValue<Double> simulationParticleInitialSpeed;
+        public final ForgeConfigSpec.ConfigValue<Integer> simulationParticleLife;
 
         Common(ForgeConfigSpec.Builder builder) {
+            builder.push("Weather Forecast");
             enablesTemperatureForecast = builder
                     .comment("Enables the weather forecast system. ")
                     .define("enablesTemperatureForecast", true);
             forceEnableTemperatureForecast = builder
                     .comment("Forces the weather forecast system to be enabled regardless of scenario. ")
-                    .define("forceEnableTemperatureForecast", true); // TODO: set false
-            blackmods = builder
-                    .comment("BlackListed mods to kick player")
-                    .defineList("Mod Blacklist", new ArrayList<>(), s -> true);
-            enableDailyKitchen = builder
-                    .comment("Enables sending wanted food message. ")
-                    .define("enableDailyKitchen", true);
+                    .define("forceEnableTemperatureForecast", false);
+            builder.pop();
+
+            builder.push("Steam Core");
             steamCoreMaxPower = builder.comment("The max power which steam core can store.Steam Core will cost the power stored without any heat source connected.")
                     .defineInRange("steamCoreMaxPower", 600f, 100f, 6000000f);
             steamCorePowerIntake = builder.comment("SteamCore will cost such heat 20 times per second.")
@@ -192,14 +194,39 @@ public class FHConfig {
                     .defineInRange("steamCoreGeneratedSpeed", 32f, 0f, 256f);
             steamCoreCapacity = builder.comment("The capacity which steam core can provide.")
                     .defineInRange("steamCoreCapacity", 32, 0f, 256f);
-            enableSnowAccumulationDuringWorldgen = builder.comment("Enables snow accumulation during world generation.")
-                    .define("enableSnowAccumulationDuringWorldgen", false);
+            builder.pop();
+
+            builder.push("Fire Ignition");
             flintIgnitionChance = builder.comment("The chance of igniting when using a flint and metal.")
                     .defineInRange("flintIgnitionChance", 0.1, 0, 1);
             stickIgnitionChance = builder.comment("The chance of igniting igniting when using a stick.")
                     .defineInRange("stickIgnitionChance", 0.05, 0, 1);
             consumeChanceWhenIgnited = builder.comment("The chance of consuming the item when ignited.")
                     .defineInRange("consumeChanceWhenIgnited", 0.1, 0, 1);
+            builder.pop();
+
+            // TODO: Check numerics range
+            builder.push("Surrounding Temperature Simulation").comment("The simulator is used to simulate the temperature of the surrounding environment. Not recommended to change.");
+            simulationRange = builder.comment("The range of the simulation.")
+                    .defineInRange("simulationRange", 8, 1, 8);
+            simulationParticles = builder.comment("The number of particles in the simulation.")
+                    .defineInRange("simulationParticles", 100, 4168, 4168);
+            simulationDivision = builder.comment("The number of divisions of unit square in the simulation.")
+                    .defineInRange("simulationDivision", 10, 1, 100);
+            simulationParticleInitialSpeed = builder.comment("The initial speed of the particles in the simulation.")
+                    .defineInRange("simulationParticleInitialSpeed", 0.4f, 0.01f, 1f);
+            simulationParticleLife = builder.comment("The life ticks of the particles in the simulation.")
+                    .defineInRange("simulationParticleLife", 20, 1, 100);
+            builder.pop();
+
+            builder.push("Miscellaneous");
+            blackmods = builder
+                    .comment("BlackListed mods to kick player")
+                    .defineList("Mod Blacklist", new ArrayList<>(), s -> true);
+            enableDailyKitchen = builder
+                    .comment("Enables sending wanted food message. ")
+                    .define("enableDailyKitchen", true);
+            builder.pop();
 
         }
     }
@@ -219,31 +246,26 @@ public class FHConfig {
         public final ForgeConfigSpec.IntValue snowAccumulationDifficulty;
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> nonWinterBiomes;
         public final ForgeConfigSpec.BooleanValue invertNonWinterBiomes;
+        public final ForgeConfigSpec.BooleanValue enableSnowAccumulationDuringWorldgen;
 
         Server(ForgeConfigSpec.Builder builder) {
-            alwaysKeepInventory = builder
-                    .comment("Always keep inventory on death on every dimension and world")
-                    .define("alwaysKeepInventory", false);
-            keepEquipments = builder.comment("Instead of keeping all inventory, only keep equipments, curios and quickbar tools on death")
-                    .define("keepEquipments", true);
-            fixEssJeiIssue = builder
-                    .comment("Fixes JEI and Bukkit server compat issue, don't touch unless you know what you are doing.")
-                    .define("fixEssJeiIssue", true);
-            taskPerTick = builder.comment("Range Detection tasks to execute per tick")
-                    .defineInRange("taskPerTick", 1, 0.005, Integer.MAX_VALUE);
-            developers = builder
-                    .comment("Special array of players")
-                    .defineList("Player Whitelist", DEFAULT_WHITELIST, s -> true);
+            builder.push("Temperature");
             tdiffculty = builder.comment("Temperature System difficulty", "Easy=Strong body", "Normal=Average", "Hard=Reality", "Hardcore=Sick body")
                     .defineEnum("temperatureDifficulty", FHTemperatureDifficulty.Normal);
             tempSpeed = builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
                     .defineInRange("temperatureChangeRate", 0.5, 0, 20);
+            builder.pop();
+
+            builder.push("Water");
             waterReducingRate = builder.comment("finalReducingValue = basicValue * waterReducingRate.(DoubleValue)")
                     .defineInRange("waterReducingRate", 1.0D, 0d, 1000D);
             weaknessEffectAmplifier = builder.comment("It is the weakness effect amplifier of the effect punishment when player's water level is too low. -1 means canceling this effect. Default:0")
                     .defineInRange("weaknessEffectAmplifier", 0, -1, 999999);
             resetWaterLevelInDeath = builder.comment("It decides if players' water level would reset in death.")
                     .define("resetWaterLevelInDeath", true);
+            builder.pop();
+
+            builder.push("Worldgen");
             enableSnowAccumulationDuringWeather = builder.comment("Enables snow accumulation during snow weather.")
                     .define("enableSnowAccumulationDuringWeather", true);
             snowAccumulationDifficulty = builder.comment("The the inverse of this value is the probability of snow adding one layer during each tick.")
@@ -267,6 +289,25 @@ public class FHConfig {
                     ));
             invertNonWinterBiomes = builder.comment("If true, the 'nonWinterBiomes' config option will be interpreted as a list of winter biomes, and all others will be ignored.")
                     .define("invertNonWinterBiomes", false);
+            enableSnowAccumulationDuringWorldgen = builder.comment("Enables snow accumulation during world generation.")
+                    .define("enableSnowAccumulationDuringWorldgen", false);
+            builder.pop();
+
+            builder.push("Miscellaneous");
+            alwaysKeepInventory = builder
+                    .comment("Always keep inventory on death on every dimension and world")
+                    .define("alwaysKeepInventory", false);
+            keepEquipments = builder.comment("Instead of keeping all inventory, only keep equipments, curios and quickbar tools on death")
+                    .define("keepEquipments", true);
+            fixEssJeiIssue = builder
+                    .comment("Fixes JEI and Bukkit server compat issue, don't touch unless you know what you are doing.")
+                    .define("fixEssJeiIssue", true);
+            taskPerTick = builder.comment("Range Detection tasks to execute per tick")
+                    .defineInRange("taskPerTick", 1, 0.005, Integer.MAX_VALUE);
+            developers = builder
+                    .comment("Special array of players")
+                    .defineList("Player Whitelist", DEFAULT_WHITELIST, s -> true);
+            builder.pop();
         }
     }
 
@@ -301,6 +342,15 @@ public class FHConfig {
         DEFAULT_WHITELIST.add("khjxiaogu");
         DEFAULT_WHITELIST.add("Lyuuke");
         DEFAULT_WHITELIST.add("goumo_g");
+        DEFAULT_WHITELIST.add("alphaGem");
+        DEFAULT_WHITELIST.add("JackyWang");
+        DEFAULT_WHITELIST.add("Fu_Yang");
+        DEFAULT_WHITELIST.add("asdfghjkl");
+        DEFAULT_WHITELIST.add("03110");
+        DEFAULT_WHITELIST.add("shidi");
+        DEFAULT_WHITELIST.add("yuqijun");
+        DEFAULT_WHITELIST.add("Dsanilen");
+        DEFAULT_WHITELIST.add("Lanshan");
         DEFAULT_WHITELIST.add("Dev");
     }
 

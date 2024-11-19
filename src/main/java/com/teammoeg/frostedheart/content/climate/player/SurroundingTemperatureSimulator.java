@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Random;
 
 import com.mojang.datafixers.util.Pair;
+import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 
@@ -83,14 +84,14 @@ public class SurroundingTemperatureSimulator {
         }
     }
 
-    public static final int range = 8;// through max range is 8, to avoid some rare issues, set it to 7 to keep count
-    private static final int n = 4168;//number of particles
-    private static final int rdiff = 10;//division of the unit square, changing this value would have no effect but improve precision
-    private static final float v0 = .4f;//initial particle speed
+    public static final int range = FHConfig.COMMON.simulationRange.get();// through max range is 8, to avoid some rare issues, set it to 7 to keep count
+    private static final int n = FHConfig.COMMON.simulationParticles.get();//number of particles
+    private static final int rdiff = FHConfig.COMMON.simulationDivision.get();//division of the unit square, changing this value would have no effect but improve precision
+    private static final double v0 = FHConfig.COMMON.simulationParticleInitialSpeed.get();//initial particle speed
     private static final VoxelShape EMPTY = Shapes.empty();
     private static final VoxelShape FULL = Shapes.block();
     private static Vec3[] speedVectors;// Vp, speed vector list, this list is constant and considered a distributed ball mesh.
-    private static final int num_rounds = 20;//propagate time-to-live for each particles
+    private static final int num_rounds = FHConfig.COMMON.simulationParticleLife.get();//propagate time-to-live for each particles
     private static int[][] speedVectorByDirection = new int[6][];// index: ordinal value of outbounding facing
 
     static {// generate speed vector list
