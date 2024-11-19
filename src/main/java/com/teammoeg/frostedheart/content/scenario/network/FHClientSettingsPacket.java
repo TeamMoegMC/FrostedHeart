@@ -31,20 +31,28 @@ import net.minecraftforge.network.NetworkEvent;
 
 public class FHClientSettingsPacket implements FHMessage {
     double scale;
+    int scaledWidth;
+    int scaledHeight;
 
     public FHClientSettingsPacket(FriendlyByteBuf buffer) {
         scale=buffer.readDouble();
+        scaledWidth=buffer.readInt();
+        scaledHeight=buffer.readInt();
     }
 
 
     public FHClientSettingsPacket() {
         super();
         this.scale=Minecraft.getInstance().getWindow().getGuiScale();
+        this.scaledWidth=Minecraft.getInstance().getWindow().getGuiScaledWidth();
+        this.scaledHeight=Minecraft.getInstance().getWindow().getGuiScaledHeight();
     }
 
 
     public void encode(FriendlyByteBuf buffer) {
         buffer.writeDouble(scale);
+        buffer.writeInt(scaledWidth);
+        buffer.writeInt(scaledHeight);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
@@ -52,8 +60,13 @@ public class FHClientSettingsPacket implements FHMessage {
             // Update client-side nbt
             ScenarioVariables sv=FHScenario.get(context.get().getSender()).getVaribles();
             sv.getExecutionData().putDouble("uiScale", scale);
-            if(sv.getSnapshot()!=null)
+            sv.getExecutionData().putDouble("scaledWidth", scaledWidth);
+            sv.getExecutionData().putDouble("scaledHeight", scaledHeight);
+            if(sv.getSnapshot()!=null) {
             	sv.getSnapshot().putDouble("uiScale", scale);
+                sv.getSnapshot().putDouble("scaledWidth", scaledWidth);
+                sv.getSnapshot().putDouble("scaledHeight", scaledHeight);
+            }
             	
         });
         context.get().setPacketHandled(true);

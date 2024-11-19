@@ -66,7 +66,7 @@ public class PrerenderParams {
 		int ny=y*FHConfig.CLIENT.getScenarioScale();
 		int nw=w*FHConfig.CLIENT.getScenarioScale();
 		int nh=h*FHConfig.CLIENT.getScenarioScale();
-		return new Rect(x,y,w,h);
+		return new Rect(nx,ny,nw,nh);
 	}
 	public int calculateScaledSize(int s) {
 		//return (int) (s*scale);

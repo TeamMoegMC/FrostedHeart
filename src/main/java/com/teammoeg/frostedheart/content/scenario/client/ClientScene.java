@@ -279,11 +279,14 @@ public class ClientScene implements IClientScene {
 	}
 	int w;
 	double lastScale=0;
+	int lastW=0,lastH=0;
 	public void tick(Minecraft mc) {
 		w=Mth.floor((double) mc.gui.getChat().getWidth() / mc.gui.getChat().getScale());
 		if (!mc.isPaused()) {
-			if(lastScale!=mc.getWindow().getGuiScale()) {
+			if(lastScale!=mc.getWindow().getGuiScale()||lastW!=mc.getWindow().getGuiScaledWidth()||lastH!=mc.getWindow().getGuiScaledHeight()) {
 				lastScale=mc.getWindow().getGuiScale();
+				lastW=mc.getWindow().getGuiScaledWidth();
+				lastH=mc.getWindow().getGuiScaledHeight();
 				this.sendClientUpdate();
 			}
 			if(ticksActUpdate>0)
