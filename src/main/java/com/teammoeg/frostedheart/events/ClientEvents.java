@@ -42,6 +42,8 @@ import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.client.GuiClickedEvent;
 import com.teammoeg.frostedheart.util.client.RenderHelper;
 import com.teammoeg.frostedheart.util.version.FHVersion;
+
+import dev.architectury.event.events.client.ClientPlayerEvent;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -60,6 +62,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent.LoggingIn;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
@@ -171,7 +174,8 @@ public class ClientEvents {
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClientTeamDataManager.INSTANCE::reset);
         // TODO: temporary fix for client not sending ready packet
         ClientScene.INSTANCE=new ClientScene();
-    	ClientScene.INSTANCE.sendClientReady();
+        ClientScene.INSTANCE.sendClientReady();
+    	
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)

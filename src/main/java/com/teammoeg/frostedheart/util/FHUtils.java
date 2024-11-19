@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.ToIntFunction;
 
@@ -391,6 +392,7 @@ public class FHUtils {
 	        Collections.addAll(fields, aClass.getDeclaredFields());
 	        aClass = aClass.getSuperclass();
 	    } while (aClass != null);
+	    fields.removeIf(t->Modifier.isStatic(t.getModifiers()));
 	    return fields;
 	}
 
