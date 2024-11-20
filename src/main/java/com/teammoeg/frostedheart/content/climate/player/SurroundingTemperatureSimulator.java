@@ -62,7 +62,7 @@ public class SurroundingTemperatureSimulator {
      */
     private static class CachedBlockInfo {
         VoxelShape shape;
-
+        List<AABB> aabbList;
         float temperature;
         boolean exposeToAir;
         BlockState bs;
@@ -70,6 +70,7 @@ public class SurroundingTemperatureSimulator {
         public CachedBlockInfo(VoxelShape shape, float temperature, boolean exposeToAir, BlockState bs) {
             super();
             this.shape = shape;
+            this.aabbList=shape.toAabbs();
             this.temperature = temperature;
             this.exposeToAir = exposeToAir;
             this.bs = bs;
@@ -78,6 +79,7 @@ public class SurroundingTemperatureSimulator {
         public CachedBlockInfo(VoxelShape shape, boolean exposeToAir, BlockState bs) {
             super();
             this.shape = shape;
+            this.aabbList=shape.toAabbs();
             this.exposeToAir = exposeToAir;
             this.bs = bs;
         }
@@ -251,7 +253,7 @@ public class SurroundingTemperatureSimulator {
                 VoxelShape shape = info.shape;
                 BlockHitResult bhr = shape.clip(svec, dvec, bpos);
                 if (shape != EMPTY && bhr != null && (shape == FULL || bhr.isInside())) {
-                    BlockHitResult brtr = AABB.clip(info.shape.toAabbs(), svec, dvec, bpos);
+                    BlockHitResult brtr = AABB.clip(info.aabbList, svec, dvec, bpos);
                     if (brtr != null) {
                         if (rnd.nextDouble() < 0.33f) {
                             nid = rnd.nextInt(speedVectors.length);

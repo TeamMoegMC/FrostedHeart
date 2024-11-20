@@ -1,9 +1,11 @@
 package com.teammoeg.frostedheart.content.scenario.runner;
 
+import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 
-public interface IScenarioVaribles {
+public interface IScenarioVaribles extends IEnvironment{
 
 	CompoundTag save();
 
@@ -34,5 +36,7 @@ public interface IScenarioVaribles {
 	Double getOptional(String key);
 
 	void set(String key, double v);
+
+	CompoundTag getExtraData();
 
 }

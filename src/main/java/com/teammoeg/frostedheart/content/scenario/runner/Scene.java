@@ -5,17 +5,17 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
-import com.teammoeg.frostedheart.content.scenario.runner.target.IScenarioTarget;
-import com.teammoeg.frostedheart.content.scenario.runner.target.TriggerTarget;
-
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
-import net.minecraft.nbt.Tag;
-
+/**
+ * A scene object is used to display things on client, acts as a bridge between user interaction and scenario execution.
+ * 
+ * */
 public abstract class Scene {
 
 	private final transient Map<String, ExecuteTarget> links = new HashMap<>();
@@ -23,12 +23,11 @@ public abstract class Scene {
 	public transient boolean isNowait;
 	private boolean isSaveNowait;
 	private transient boolean isSlient;
-	private transient int waiting;
+	private boolean clearAfterClick;
+	public  int clientStatus;
 	LinkedList<StringBuilder> log = new LinkedList<>();
-	private transient List<TriggerTarget> triggers = new ArrayList<>();
 	List<String> savedLog = new ArrayList<>();
 	private transient boolean requireClear;
-	public boolean isClick = true;
 
 	public Scene() {
 		super();
@@ -55,7 +54,14 @@ public abstract class Scene {
 			log.add(new StringBuilder(s.getAsString()));
 		}
 	}
-
+	public void markClearAfterClick() {
+		clearAfterClick=true;
+	}
+	public void notifyClientResponse(ScenarioContext ctx,int clientStatus) {
+		if(clearAfterClick) {
+			this.clear(ctx);
+		}
+	}
 	public void addLog(String text) {
 		if (!log.isEmpty()) {
 			log.peekLast().append(text);
@@ -69,7 +75,7 @@ public abstract class Scene {
 		log.add(new StringBuilder());
 	}
 
-	public void clear(IScenarioThread parent) {
+	public void clear(ScenarioContext parent) {
 		if (requireClear)
 			forcedClear(parent);
 	}
@@ -83,15 +89,30 @@ public abstract class Scene {
 			savedLog.add(sb.toString());
 	
 		log.clear();
-		triggers.clear();
 	}
 
-	public void forcedClear(IScenarioThread parent) {
-		sendClear(parent);
+	public void forcedClear(ScenarioContext parent) {
+		sendClear(parent,false);
 		requireClear = false;
 		clearLink();
 	}
-
+    
+    /**
+     * Creates the link.
+     *
+     * @param id the id
+     * @param scenario the scenario
+     * @param label the label
+     * @return the string
+     */
+    public String createLink(String id,String scenario,String label) {
+		if(id==null||getLinks().containsKey(id)) {
+			id=UUID.randomUUID().toString();
+		}
+		getLinks().put(id, new ExecuteTarget(scenario,label));
+		markChatboxDirty();
+		return id;
+	}
 	public boolean shouldWaitClient() {
 		return (currentLiteral != null && currentLiteral.length() != 0) && !isNowait && !isSlient;
 	}
@@ -109,14 +130,14 @@ public abstract class Scene {
 	 * sync all remaining cached text and send a 'clear current dialog' message to client
 	 * Also sync current state, so call this after all status operation
 	 * */
-	public void sendClear(IScenarioThread parent) {
+	public void sendClear(ScenarioContext ctx,boolean waitClick) {
 		String tosend="";
 		if (currentLiteral != null) {
 			tosend=currentLiteral.toString();
 			addLogLn(tosend);
 		}
 		if (!isSlient())
-			sendScene(parent,tosend, false, true);
+			sendScene(ctx,tosend,RunStatus.STOPPED, false, true,waitClick);
 		currentLiteral = null;
 	}
 
@@ -124,31 +145,32 @@ public abstract class Scene {
 	 * Send all current message and start a new line after that
 	 * Also sync current state, so call this after all status operation
 	 * */
-	public void sendNewLine(IScenarioThread parent) {
+	public void sendNewLine(ScenarioContext ctx,RunStatus status,boolean noAutoDelay) {
 		String tosend="";
 		if (currentLiteral != null) {
 			tosend=currentLiteral.toString();
 			addLogLn(tosend);
 		}
 		if (!isSlient())
-			sendScene(parent,tosend, true, false);
+			sendScene(ctx,tosend,status, true, false,noAutoDelay);
 		currentLiteral = null;
 	}
-
 	/**
 	 * Send all current message
 	 * Also sync current state, so call this after all status operation
 	 * */
-	public void sendCurrent(IScenarioThread parent) {
+	public void sendCurrent(ScenarioContext ctx,RunStatus status,boolean noAutoDelay) {
 		if (currentLiteral != null) {
 			addLog(currentLiteral.toString());
 			if (!isSlient())
-				sendScene(parent,currentLiteral.toString(), false, false);
+				sendScene(ctx,currentLiteral.toString(),status, false, false,noAutoDelay);
 		}
 	
 		currentLiteral = null;
 	}
-
+	public void sendCached(ScenarioContext ctx) {
+		sendCurrent(ctx,RunStatus.RUNNING,false);
+	}
 	public boolean isSlient() {
 		return isSlient;
 	}
@@ -156,55 +178,6 @@ public abstract class Scene {
 	public void setSlient(boolean isSlient) {
 		this.isSlient = isSlient;
 	}
-
-	public void waitClientIfNeeded(IScenarioThread parent) {
-		if (shouldWaitClient() && !isSlient)
-			parent.setStatus(RunStatus.WAITCLIENT);
-	}
-
-	public void waitClient(IScenarioThread parent, boolean isClick) {
-		if (!isSlient) {
-			parent.setStatus(RunStatus.WAITCLIENT);
-			this.isClick=isClick;
-		}
-	}
-
-	public void addWait(IScenarioThread parent, int time) {
-		waiting += time;
-		parent.setStatus(RunStatus.WAITTIMER);
-	}
-
-	public boolean tickWait() {
-		if (waiting > 0) {
-			waiting--;
-
-            return waiting <= 0;
-		}
-		return false;
-	}
-
-	public void tickTriggers(IScenarioThread parent, boolean isCurrentAct) {
-		TriggerTarget acttrigger = null;
-		for (TriggerTarget t : triggers) {
-			if (t.test(parent)) {
-				if (t.use()) {
-					if (isCurrentAct) {
-						acttrigger = t;
-						break;
-					}
-					if(t.isAsync())
-						parent.queue(t);
-					else
-						parent.jump(t);
-				}
-			}
-		}
-		triggers.removeIf(t -> !t.canUse());
-		if (acttrigger != null) {
-			parent.jump(acttrigger);
-		}
-	}
-
 	public void clearLink() {
 		getLinks().clear();
 	}
@@ -213,22 +186,13 @@ public abstract class Scene {
 		requireClear=true;
 	}
 
-	public void addTrigger(IScenarioTrigger trig, IScenarioTarget targ) {
-		triggers.add(new TriggerTarget(trig,targ));
-	}
 
-	public void stopWait(IScenarioThread parent) {
-		if(parent.getStatus()==RunStatus.WAITTIMER) {
-			waiting=0;
-			parent.setStatus(RunStatus.RUNNING);
-		}
-	}
 
 	public Map<String, ExecuteTarget> getLinks() {
 		return links;
 	}
 
-	public abstract void sendTitles(IScenarioThread parent, String title, String subtitle);
+	public abstract void sendTitles(ScenarioContext ctx, String title, String subtitle);
 
-	protected abstract void sendScene(IScenarioThread parent, String text, boolean wrap, boolean reset);
+	protected abstract void sendScene(ScenarioContext ctx,String text,RunStatus status, boolean wrap, boolean reset,boolean noAutoDelay);
 }

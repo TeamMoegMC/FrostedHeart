@@ -17,13 +17,12 @@ public class ServerScene extends Scene {
 	}
 
 	@Override
-	protected void sendScene(IScenarioThread parent,String text, boolean wrap, boolean reset) {
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> ((ServerPlayer)parent.getPlayer())), new ServerSenarioScenePacket(text, wrap, isNowait, reset,parent.getStatus(),isClick));
-		isClick=true;
+	protected void sendScene(ScenarioContext ctx,String text,RunStatus status,boolean wrap, boolean reset,boolean waitClick) {
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> ((ServerPlayer)ctx.player())), new ServerSenarioScenePacket(text, wrap, isNowait, reset,status,waitClick));
 	}
 	@Override
-	public void sendTitles(IScenarioThread parent,String title,String subtitle) {
-		FHNetwork.send(PacketDistributor.PLAYER.with(()->((ServerPlayer)parent.getPlayer())), new ServerSenarioActPacket(title,subtitle));
+	public void sendTitles(ScenarioContext ctx,String title,String subtitle) {
+		FHNetwork.send(PacketDistributor.PLAYER.with(()->((ServerPlayer)ctx.player())), new ServerSenarioActPacket(title,subtitle));
 	}
 
 }

@@ -19,38 +19,23 @@
 
 package com.teammoeg.frostedheart.content.scenario.runner.target;
 
+import java.util.List;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.content.scenario.runner.IScenarioThread;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
 
-import net.minecraft.nbt.CompoundTag;
-
-public class ExecuteStackElement extends ScenarioTarget{
-	private final int nodeNum;
-	public ExecuteStackElement(IScenarioThread par,String name, int nodeNum) {
-		super(par,name);
-		this.nodeNum = nodeNum;
-	}
-	public ExecuteStackElement(Scenario sc, int nodeNum) {
-		super(sc);
-		this.nodeNum = nodeNum;
-	}
-	public ExecuteStackElement(IScenarioThread par,CompoundTag n) {
-		this(par,n.getString("storage"),n.getInt("node"));
-	}
-
-	public CompoundTag save() {
-		CompoundTag nbt=new CompoundTag();
-		nbt.putString("storage", getName());
-		nbt.putInt("node", nodeNum);
-		return nbt;
-	}
-	public ExecuteStackElement next() {
-		return new ExecuteStackElement(this.getScenario(),nodeNum+1);
-	}
+public record ExecuteStackElement(String name,int nodeNum) implements ScenarioTarget{
+	public static final Codec<ExecuteStackElement> CODEC=RecordCodecBuilder.create(t->t.group(
+		Codec.STRING.fieldOf("storage").forGetter(o->o.name()),
+		Codec.INT.fieldOf("node").forGetter(o->o.nodeNum())
+		).apply(t,ExecuteStackElement::new));
+	public static final Codec<List<ExecuteStackElement>> LIST_CODEC=Codec.list(CODEC);
 	@Override
-	public void apply(IScenarioThread conductor) {
-		super.apply(conductor);
-		conductor.setNodeNum(nodeNum);
+	public PreparedScenarioTarget prepare(ScenarioContext t, Scenario current) {
+
+		return new PreparedScenarioTarget(t.loadScenario(name),nodeNum);
 	}
 
 }

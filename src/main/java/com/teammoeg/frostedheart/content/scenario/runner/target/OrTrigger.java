@@ -2,8 +2,9 @@ package com.teammoeg.frostedheart.content.scenario.runner.target;
 
 import java.util.Arrays;
 
-import com.teammoeg.frostedheart.content.scenario.runner.IScenarioThread;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioThread;
 import com.teammoeg.frostedheart.content.scenario.runner.IScenarioTrigger;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
 
 public class OrTrigger implements IScenarioTrigger {
 	IScenarioTrigger[] triggers;
@@ -13,7 +14,7 @@ public class OrTrigger implements IScenarioTrigger {
 	}
 
 	@Override
-	public boolean test(IScenarioThread t) {
+	public boolean test(ScenarioContext t) {
 		
 		return Arrays.stream(triggers).anyMatch(a -> a.test(t));
 	}

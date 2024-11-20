@@ -19,14 +19,14 @@
 
 package com.teammoeg.frostedheart.content.scenario.parser;
 
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVM;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 
 public interface Node {
-    String getLiteral(ScenarioVM scenarioVM);
+    String getLiteral(ScenarioCommandContext scenarioVM);
 
     String getText();
 
     boolean isLiteral();
 
-    void run(ScenarioVM scenarioVM);
+    void run(ScenarioCommandContext scenarioVM);
 }

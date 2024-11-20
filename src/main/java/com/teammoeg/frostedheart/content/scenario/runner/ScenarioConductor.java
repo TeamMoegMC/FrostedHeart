@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.scenario.runner;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -33,6 +34,7 @@ import com.teammoeg.frostedheart.content.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.IScenarioTarget;
+import com.teammoeg.frostedheart.content.scenario.runner.target.ScenarioTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
@@ -50,7 +52,7 @@ import net.minecraftforge.common.util.LazyOptional;
  * You shouldn't opearte this class from any other code except from scenario trigger and commands.
  * You should define triggers in script file and activate triggers to make it execute.
  * */
-public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
+public class ScenarioConductor implements NBTSerializable{
     //Sence control
     private transient Act currentAct;
     public Map<ActNamespace,Act> acts=new HashMap<>();
@@ -60,8 +62,18 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 
 	private static final ActNamespace init=new ActNamespace(null,null);
     boolean inited=false;
-
-
+	
+	/** Owner player UUID. */
+	protected UUID player;
+	/** The is skip. */
+	protected boolean isSkip;
+	/** The client status. */
+	protected int clientStatus;
+	/** The scene. */
+	protected Scene scene;
+	
+	/** The clear after click. */
+	protected boolean clearAfterClick;
     public void copy() {}
     public void enableActs() {
     	if(!isActsEnabled) {
@@ -103,7 +115,15 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 		
 	}
 
-
+	/**
+	 * Gets the client status.
+	 *
+	 * @return the client status
+	 */
+	public int getClientStatus() {
+		return clientStatus;
+	}
+	
 
 	public Scene getScene() {
     	return getCurrentAct().getScene();
@@ -111,11 +131,6 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 
 
 
-    public void paragraph(int pn) {
-		varData.takeSnapshot();
-    	getCurrentAct().newParagraph(getScenario(), pn);
-    	super.paragraph(pn);
-	}
 
 	public void notifyClientResponse(boolean isSkip,int status) {
 		this.isSkip=isSkip;
@@ -139,7 +154,7 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 	}
 
 
-	public void addTrigger(IScenarioTrigger trig,IScenarioTarget targ) {
+	public void addTrigger(IScenarioTrigger trig,ScenarioTarget targ) {
 		//if(getCurrentAct().name.isAct()) {
 			getCurrentAct().addTrigger(trig,targ);
 		//}else super.addTrigger(trig,targ);
@@ -159,6 +174,11 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 		run();
 	}
 
+	@Override
+	protected void runCode(ScenarioContext ctx) {
+		clearAfterClick=false;
+		super.runCode(ctx);
+	}
 	@Override
 	public LinkedList<ExecuteStackElement> getCallStack() {
 		return getCurrentAct().getCallStack();
@@ -189,7 +209,7 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 	    	a.getScene().tickTriggers(this, getCurrentAct()==a);
     	
     	if(getStatus()==RunStatus.WAITTIMER) {
-    		if(getScene().tickWait()) {
+    		if(tickWait()) {
     			
     			run();
     			return;
@@ -227,7 +247,7 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 			data.prepareForRun();
 			if(data.getScenario()!=null) {
 				this.sp=data.getScenario();
-				this.nodeNum=data.getNodeNum();
+				this.nodeNum=data.getExecutePos();
 				this.status=data.getStatus();
 			}
 			data.sendTitles(true, true);
@@ -347,4 +367,6 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 	public void sendMessage(String s) {
 		getPlayer().displayClientMessage(TranslateUtils.str(s), false);
 	}
+    
+
 }

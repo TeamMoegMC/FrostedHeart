@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 
-public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
+public class ScenarioVariables implements IScenarioVaribles  {
     CompoundTag extraData=new CompoundTag();
     CompoundTag snapshot;
 
@@ -182,6 +182,7 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
         }
         nbt.remove(paths[paths.length - 1]);
 	}
+	@Override
 	public CompoundTag getExtraData() {
 		return extraData;
 	}

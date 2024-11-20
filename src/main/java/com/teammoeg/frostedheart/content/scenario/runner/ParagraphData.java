@@ -1,53 +1,22 @@
 package com.teammoeg.frostedheart.content.scenario.runner;
 
-import com.teammoeg.frostedheart.content.scenario.FHScenario;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.content.scenario.runner.target.IScenarioTarget;
+import com.teammoeg.frostedheart.content.scenario.runner.target.PreparedScenarioTarget;
+import com.teammoeg.frostedheart.content.scenario.runner.target.ScenarioTarget;
 
-public class ParagraphData implements IScenarioTarget{
-	private String name;
-	private transient Scenario sp;
-	private int paragraphNum;
-	private transient IScenarioThread cd;
-	public ParagraphData(IScenarioThread cd) {
-		super();
-		this.cd=cd;
-	}
-	public ParagraphData(IScenarioThread cd,String name, int paragraphNum) {
-		this(cd);
-		this.name = name;
-		this.paragraphNum = paragraphNum;
-	}
-	public ParagraphData copy() {
-		return new ParagraphData(cd,name,paragraphNum);
-	}
-	public void setScenario(Scenario sc) {
-		this.sp=sc;
-		this.name=sc.name;
-	}
-	public Scenario getScenario() {
-		if(sp==null)
-			sp=FHScenario.loadScenario(cd,name);
-		return sp;
-	}
-
-	public int getParagraphNum() {
-		return paragraphNum;
-	}
-	public void setParagraphNum(int paraGraphNum) {
-		this.paragraphNum = paraGraphNum;
-	}
-	public String getName() {
-		return name;
-	}
-
+public record ParagraphData(String name,int paragraphNum) implements ScenarioTarget{
+	public static final Codec<ParagraphData> CODEC=RecordCodecBuilder.create(t->t.group(
+		Codec.STRING.fieldOf("name").forGetter(o->o.name()),
+		Codec.INT.fieldOf("paragraphNum").forGetter(o->o.paragraphNum())
+		).apply(t,ParagraphData::new));
 	@Override
-	public void apply(IScenarioThread t) {
-		if(name!=null&&!getScenario().equals(t.getScenario())) {
-			t.setScenario(getScenario());
-			t.setNodeNum(0);
-		}
-		if(paragraphNum!=0&&paragraphNum<=t.getScenario().paragraphs.length)
-			t.setNodeNum(t.getScenario().paragraphs[paragraphNum-1]+1);
+	public PreparedScenarioTarget prepare(ScenarioContext t, Scenario current) {
+		Scenario scenario=t.loadScenario(name);
+		int nodeNum=0;
+		if(paragraphNum<scenario.paragraphs.length)
+			nodeNum=scenario.paragraphs[paragraphNum];
+		return new PreparedScenarioTarget(scenario,nodeNum);
 	}
 }
