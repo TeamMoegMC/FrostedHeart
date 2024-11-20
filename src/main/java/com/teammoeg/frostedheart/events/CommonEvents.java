@@ -437,6 +437,7 @@ public class CommonEvents {
         ScenarioCommand.register(dispatcher);
         TownCommand.register(dispatcher);
         TipCommand.register(dispatcher);
+        WaterCommand.register(dispatcher);
     }
 
     @SubscribeEvent

@@ -62,8 +62,8 @@ public class FHInsightSyncPacket implements FHMessage {
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         TeamResearchData clientData = ClientResearchDataAPI.getData();
-        clientData.setInsight(this.insight);
-        clientData.setInsightLevel(this.insightLevel);
+        clientData.setInsightOnly(this.insight);
+        clientData.setInsightLevelOnly(this.insightLevel);
         clientData.setUsedInsightLevel(this.usedInsightLevel);
         context.get().setPacketHandled(true);
     }

@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.teammoeg.frostedheart.FHMobEffects;
+import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.mixin.client.BossHealthOverlayAccess;
 import org.checkerframework.checker.units.qual.C;
@@ -446,8 +447,9 @@ public class FrostedHud {
         RenderSystem.enableBlend();
 
         HUDElements.exp_bar_frame.blitAt(stack, x, y, BasePos.exp_bar);
-        float progress = ClientResearchDataAPI.getData().getInsightProgress();
-        int level = ClientResearchDataAPI.getData().getInsightLevel();
+        TeamResearchData data = ClientResearchDataAPI.getData();
+        float progress = data.getInsightProgress();
+        int level = data.getInsightLevel();
         if (progress > 0) {
             HUDElements.exp_bar.blit(stack, x, y, BarPos.exp_bar, Transition.RIGHT, progress);
         }

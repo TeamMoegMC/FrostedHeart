@@ -62,13 +62,13 @@ public class ResearchCommand {
                     return Command.SINGLE_SUCCESS;
                 }))
                         // Get insight level
-                .then(Commands.literal("level").executes(ct -> {
+                .then(Commands.literal("getLevel").executes(ct -> {
                     TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
                     ct.getSource().sendSuccess(()->TranslateUtils.str("Insight Level: " + trd.getInsightLevel()).withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 }))
                         // Get used insight level
-                .then(Commands.literal("usedLevel").executes(ct -> {
+                .then(Commands.literal("getUsedLevel").executes(ct -> {
                     TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
                     ct.getSource().sendSuccess(()->TranslateUtils.str("Used Insight Level: " + trd.getUsedInsightLevel()).withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
@@ -81,14 +81,14 @@ public class ResearchCommand {
                     return Command.SINGLE_SUCCESS;
                 })))
                         // set insight level
-                .then(Commands.literal("level").then(Commands.argument("level", IntegerArgumentType.integer(0)).executes(ct -> {
+                .then(Commands.literal("setLevel").then(Commands.argument("level", IntegerArgumentType.integer(0)).executes(ct -> {
                     TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
                     trd.setInsightLevel(ct.getArgument("level", Integer.class));
                     ct.getSource().sendSuccess(()->TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
                         // set used insight level
-                .then(Commands.literal("usedLevel").then(Commands.argument("level", IntegerArgumentType.integer(0)).executes(ct -> {
+                .then(Commands.literal("setUsedLevel").then(Commands.argument("level", IntegerArgumentType.integer(0)).executes(ct -> {
                     TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
                     trd.setUsedInsightLevel(ct.getArgument("level", Integer.class));
                     ct.getSource().sendSuccess(()->TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);

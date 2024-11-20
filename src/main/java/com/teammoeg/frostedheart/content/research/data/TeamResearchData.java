@@ -569,6 +569,10 @@ public class TeamResearchData implements SpecialData{
         return false;
     }
 
+    public void setInsightOnly(int insight) {
+        this.insight = insight;
+    }
+
     public int getInsight() {
         return insight;
     }
@@ -581,6 +585,10 @@ public class TeamResearchData implements SpecialData{
             return true;
         }
         return false;
+    }
+
+    public void setInsightLevelOnly(int insightLevel) {
+        this.insightLevel = insightLevel;
     }
 
     public int getInsightLevel() {
@@ -633,6 +641,8 @@ public class TeamResearchData implements SpecialData{
     /**
      * Get the fraction of how much insights point is needed to reach next level.
      * @return a float in [0, 1)
+     *
+     * TODO: Fix somehow insight is always synced to the currentLevelInsights
      */
     public float getInsightProgress() {
         int nextLevel = insightLevel + 1;
