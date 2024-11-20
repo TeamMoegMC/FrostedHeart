@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.scenario.parser;
 
 import java.util.Map;
 
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVM;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 
 public class AssignNode implements Node {
     String exp;
@@ -38,7 +38,7 @@ public class AssignNode implements Node {
     }
 
     @Override
-    public String getLiteral(ScenarioVM runner) {
+    public String getLiteral(ScenarioCommandContext runner) {
         return "";
     }
 
@@ -53,13 +53,13 @@ public class AssignNode implements Node {
     }
 
     @Override
-    public void run(ScenarioVM runner) {
+    public void run(ScenarioCommandContext runner) {
         if (pat2 != null) {
-            runner.getVaribles().setPath(pat, runner.getVaribles().evalPath(pat2));
+            runner.context().getVarData().setPath(pat, runner.context().getVarData().evalPath(pat2));
         } else if (str != null) {
-            runner.getVaribles().setPathString(pat, str);
+            runner.context().getVarData().setPathString(pat, str);
         } else {
-            runner.getVaribles().setPathNumber(pat, runner.eval(exp));
+            runner.context().getVarData().setPathNumber(pat, runner.eval(exp));
         }
     }
 

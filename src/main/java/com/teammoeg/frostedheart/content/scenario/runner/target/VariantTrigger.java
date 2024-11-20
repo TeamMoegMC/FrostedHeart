@@ -21,18 +21,19 @@ package com.teammoeg.frostedheart.content.scenario.runner.target;
 
 import com.teammoeg.frostedheart.content.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
-import com.teammoeg.frostedheart.content.scenario.runner.IScenarioThread;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioThread;
 import com.teammoeg.frostedheart.content.scenario.runner.IScenarioTrigger;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
 
 import net.minecraft.world.entity.player.Player;
 
-public class VariantTargetTrigger implements IScenarioTrigger,IVarTrigger {
+public class VariantTrigger implements IScenarioTrigger,IVarTrigger {
 	boolean canStillTrigger=true;
 	public boolean canTrigger;
 	boolean async=true;
 
 	@Override
-	public boolean test(IScenarioThread t) {
+	public boolean test(ScenarioContext t) {
 		return canTrigger;
 	}
 	@Override
@@ -51,7 +52,7 @@ public class VariantTargetTrigger implements IScenarioTrigger,IVarTrigger {
 	public boolean isAsync() {
 		return async;
 	}
-	public VariantTargetTrigger setSync() {
+	public VariantTrigger setSync() {
 		this.async = false;
 		return this;
 	}
@@ -63,7 +64,7 @@ public class VariantTargetTrigger implements IScenarioTrigger,IVarTrigger {
 	public boolean canStillTrig() {
 		return !canTrigger&&!canStillTrigger;
 	}
-	public VariantTargetTrigger register(Player pe,EventTriggerType type) {
+	public VariantTrigger register(Player pe,EventTriggerType type) {
 		FHScenario.addVarTrigger(pe, type, this);
 		return this;
 	}

@@ -33,6 +33,7 @@ import com.mojang.serialization.ListBuilder;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.EitherMapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
 import com.teammoeg.frostedheart.util.ConstructorCodec;
@@ -358,17 +359,23 @@ public class CodecUtil {
 		return decodeOrThrow(codec.decode(NbtOps.INSTANCE,new CompoundTag()));
 	}
 	public static <T> void encodeNBT(Codec<T> codec,CompoundTag nbt,String key,T value) {
-		codec.encodeStart(NbtOps.INSTANCE, value).resultOrPartial(System.out::println).ifPresent(t->nbt.put(key,t));
+		codec.encodeStart(NbtOps.INSTANCE, value).resultOrPartial(FHMain.LOGGER::debug).ifPresent(t->nbt.put(key,t));
+	}
+	public static <T> void encodeNBT(MapCodec<T> codec,CompoundTag nbt,T value) {
+		codec.encode(value, NbtOps.INSTANCE, codec.compressedBuilder(NbtOps.INSTANCE)).build(nbt);
+	}
+	public static <T> T decodeNBT(MapCodec<T> codec,CompoundTag nbt) {
+		return codec.compressedDecode(NbtOps.INSTANCE, nbt).resultOrPartial(FHMain.LOGGER::debug).orElse(null);
 	}
 	public static <T> T decodeNBTIfPresent(Codec<T> codec,CompoundTag nbt,String key) {
 		if(nbt.contains(key))
-			return codec.parse(NbtOps.INSTANCE, nbt.get(key)).resultOrPartial(System.out::println).orElse(null);
+			return codec.parse(NbtOps.INSTANCE, nbt.get(key)).resultOrPartial(FHMain.LOGGER::debug).orElse(null);
 		return null;
 	}
 	public static <T> T decodeNBT(Codec<T> codec,CompoundTag nbt,String key) {
 		if(nbt.contains(key))
-			return codec.parse(NbtOps.INSTANCE, nbt.get(key)).resultOrPartial(System.out::println).orElse(null);
-		return codec.parse(NbtOps.INSTANCE,NbtOps.INSTANCE.empty()).resultOrPartial(System.out::println).orElse(null);
+			return codec.parse(NbtOps.INSTANCE, nbt.get(key)).resultOrPartial(FHMain.LOGGER::debug).orElse(null);
+		return codec.parse(NbtOps.INSTANCE,NbtOps.INSTANCE.empty()).resultOrPartial(FHMain.LOGGER::debug).orElse(null);
 	}
 	public static <T> ListTag toNBTList(Collection<T> stacks, Codec<T> codec) {
 		ArrayNBTBuilder<Void> arrayBuilder = ArrayNBTBuilder.create();

@@ -44,9 +44,11 @@ import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.content.scenario.parser.ScenarioParser;
 import com.teammoeg.frostedheart.content.scenario.parser.providers.FTBQProvider;
 import com.teammoeg.frostedheart.content.scenario.parser.providers.ScenarioProvider;
-import com.teammoeg.frostedheart.content.scenario.runner.IScenarioThread;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioThread;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVM;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
+import com.teammoeg.frostedheart.content.scenario.runner.BaseScenarioRunner;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 import com.teammoeg.frostedheart.content.scenario.runner.target.IVarTrigger;
 
 import net.minecraft.world.entity.player.Player;
@@ -57,7 +59,7 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.network.PacketDistributor;
 
 public class FHScenario {
-	public static ScenarioExecutor<ScenarioVM> server = new ScenarioExecutor<>(ScenarioVM.class);
+	public static ScenarioExecutor<ScenarioCommandContext> server = new ScenarioExecutor<>(ScenarioCommandContext.class);
 	private static final List<ScenarioProvider> scenarioProviders = new ArrayList<>();
 	public static Map<Player,Map<EventTriggerType,List<IVarTrigger>>> triggers=new HashMap<>();
 	//private static Map<ServerPlayerEntity,ScenarioConductor> runners=new HashMap<>();
@@ -92,7 +94,7 @@ public class FHScenario {
 		scenarioProviders.add(p);
 	}
 
-	public static Scenario loadScenario(IScenarioThread caller,String name) {
+	public static Scenario loadScenario(ScenarioContext ctx,String name) {
 		String[] paths=name.split("\\?");
 		String[] args=new String[0];
 		if(paths.length>1&&!paths[1].isEmpty())
@@ -120,7 +122,7 @@ public class FHScenario {
 				}
 				
 			}
-			File f=new File(scenarioPath, caller.getLang()+"/"+paths[0] + ".ks");
+			File f=new File(scenarioPath, ctx.getLang()+"/"+paths[0] + ".ks");
 			if(!f.exists()) {
 				f=new File(scenarioPath, paths[0] + ".ks");
             }
@@ -129,7 +131,7 @@ public class FHScenario {
 				return parser.parseFile(name, f);
 			}
 		} catch (Exception e) {
-			caller.sendMessage("Exception loading scenario: "+e.getMessage()+" see log for more detail");
+			ctx.sendMessage("Exception loading scenario: "+e.getMessage()+" see log for more detail");
 			e.printStackTrace();
 			
 		}
@@ -137,7 +139,7 @@ public class FHScenario {
 		return new Scenario(name);
 	}
 
-	public static void callCommand(String name, ScenarioVM scenarioVM, Map<String, String> params) {
+	public static void callCommand(String name, ScenarioCommandContext scenarioVM, Map<String, String> params) {
 		server.callCommand(name, scenarioVM, params);
 	}
 
@@ -145,18 +147,18 @@ public class FHScenario {
 		server.register(clazz);
 	}
 
-	public static void callClientCommand(String name, ScenarioVM runner, Map<String, String> params) {
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) runner.getPlayer()),
+	public static void callClientCommand(String name, ScenarioContext runner, Map<String, String> params) {
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) runner.player()),
 				new ServerScenarioCommandPacket(name.toLowerCase(), params));
 	}
 
-	public static void callClientCommand(String name, ScenarioVM runner, String... params) {
+	public static void callClientCommand(String name, ScenarioContext runner, String... params) {
 		Map<String, String> data = new HashMap<>();
 		for (int i = 0; i < params.length / 2; i++) {
 			data.put(params[i * 2], params[i * 2 + 1]);
 		}
 
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) runner.getPlayer()),
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) runner.player()),
 				new ServerScenarioCommandPacket(name.toLowerCase(), data));
 	}
 
@@ -164,12 +166,12 @@ public class FHScenario {
 		for (Method met : cls.getMethods()) {
 			if (Modifier.isPublic(met.getModifiers())) {
 				final String name = met.getName();
-				registerCommand(name, (r, p) -> callClientCommand(name, r, p));
+				registerCommand(name, (r, p) -> callClientCommand(name, r.context(), p));
 			}
 		}
 	}
 
-	public static void registerCommand(String cmdName, ScenarioMethod<ScenarioVM> method) {
+	public static void registerCommand(String cmdName, ScenarioMethod<ScenarioCommandContext> method) {
 		server.registerCommand(cmdName, method);
 	}
 

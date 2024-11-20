@@ -21,50 +21,37 @@ package com.teammoeg.frostedheart.content.scenario.runner;
 
 import java.util.LinkedList;
 
-import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.content.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElement;
-import com.teammoeg.frostedheart.content.scenario.runner.target.IScenarioTarget;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 
 /**
  * An act is a basic unit of execution code
  * You should NOT store this object, always get it from {@link ScenarioConductor#getCurrentAct()}
  * */
-public class Act implements IScenarioThread{
-	ParagraphData paragraph=new ParagraphData(this);
+public class Act extends BaseScenarioRunner{
 	String label;
 	
 	ActNamespace name;
-	private transient Scenario sp;//current scenario
-	private transient int nodeNum=-1;//Program register
-	private RunStatus status=RunStatus.STOPPED;
-    private final Scene scene;
     private String title="";
     private String subtitle="";
 
 	private LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
-    private final ScenarioVM parent;
-    public Act(ScenarioConductor paraData,ActNamespace name) {
+    public Act(ActNamespace name) {
 		super();
 		this.scene=new ServerScene();
-		parent=paraData;
 		this.name=name;
+		nodeNum=-1;
 	}
-    public Act(ScenarioConductor paraData,CompoundTag data) {
+    public Act(CompoundTag data) {
 		super();
 		this.scene=new ServerScene();
-		parent=paraData;
 		load(data);
 	}
-    public void prepareForRun() {
+    public void prepareForRun(ScenarioContext ctx) {
     	if(nodeNum<0) {
-    		paragraph.apply(this);
+    		this.restoreLocation(ctx);
     		
     		if(label!=null) {
     			Integer nn=sp.labels.get(label);
@@ -76,14 +63,10 @@ public class Act implements IScenarioThread{
     }
     public CompoundTag save() {
     	CompoundTag nbt=new CompoundTag();
-    	if(paragraph.getName()!=null)
-    		nbt.putString("pname", paragraph.getName());
-    	nbt.putInt("pn", paragraph.getParagraphNum());
-    	ListTag css=new ListTag();
-    	for(ExecuteStackElement cs:callStack) {
-    		css.add(cs.save());
-    	}
-    	nbt.put("callStack", css);
+    	if(savedLocation!=null)
+    		CodecUtil.encodeNBT(ParagraphData.CODEC, nbt,"location",savedLocation);
+    	
+    	CodecUtil.encodeNBT(ExecuteStackElement.LIST_CODEC,nbt,"callStack",callStack);
     	nbt.putString("chapter", name.chapter);
     	nbt.putString("act", name.act);
     	nbt.putString("title", title);
@@ -99,14 +82,9 @@ public class Act implements IScenarioThread{
     	return nbt;
     }
     public void load(CompoundTag nbt) {
-    	String pn=null;
-    	if(nbt.contains("pname"))
-    		pn=nbt.getString("pname");
-    	paragraph=new ParagraphData(this,pn,nbt.getInt("pn"));
-    	ListTag css=nbt.getList("callStack", Tag.TAG_COMPOUND);
-    	for(Tag n:css) {
-    		callStack.add(new ExecuteStackElement(this,(CompoundTag) n));
-    	}
+    	savedLocation=CodecUtil.decodeNBTIfPresent(ParagraphData.CODEC, nbt, "location");
+    	callStack.clear();
+    	callStack.addAll(CodecUtil.decodeNBTIfPresent(ExecuteStackElement.LIST_CODEC, nbt, "callStack"));
     	name=new ActNamespace(nbt.getString("chapter"),nbt.getString("act"));
     	title=nbt.getString("title");
     	if(nbt.contains("label"))
@@ -118,49 +96,13 @@ public class Act implements IScenarioThread{
     	setStatus((RunStatus.values()[nbt.getInt("status")]));
     	
     }
-    public void setActState() {
-		setNodeNum(parent.getNodeNum());
-		setScenario(parent.getScenario());
-		setStatus(parent.getStatus());
-    }
-	public void newParagraph(Scenario sp,int pn) {
-		setActState();
-		paragraph.setParagraphNum(pn);	
-		paragraph.setScenario(sp);
-		
-		getScene().paragraph();
-    }
-	public Scene getScene() {
-		return scene;
-	}
-    public ExecuteStackElement getCurrentPosition() {
-    	return new ExecuteStackElement(sp,nodeNum);
-    }
-
-
-	public void queue(IScenarioTarget target) {
-		parent.addToQueue(new ActTarget(name,target));
-	}
-	public Player getPlayer() {
-		return parent.getPlayer();
-	}
 
 	@Override
-	public void setScenario(Scenario s) {
-		this.sp=s;
-		
-	}
-	@Override
-	public Scenario getScenario() {
-		// TODO Auto-generated method stub
-		return sp;
-	}
-	@Override
-	public void setNodeNum(int num) {
+	public void setExecutePos(int num) {
 		this.nodeNum=num;
 	}
 	@Override
-	public int getNodeNum() {
+	public int getExecutePos() {
 		// TODO Auto-generated method stub
 		return nodeNum;
 	}
@@ -176,11 +118,11 @@ public class Act implements IScenarioThread{
 	public String getSubtitle() {
 		return subtitle;
 	}
-	public void sendTitles(boolean updateT,boolean updateSt) {
-		this.scene.sendTitles(parent, updateT?title:null, updateSt?subtitle:null);
+	public void sendTitles(ScenarioContext ctx,boolean updateT,boolean updateSt) {
+		this.scene.sendTitles(ctx, updateT?title:null, updateSt?subtitle:null);
 		//FHNetwork.send(PacketDistributor.PLAYER.with(()->parent.getPlayer()), new ServerSenarioActPacket(updateT?title:null,updateSt?subtitle:null));
 	}
-	public void setTitles(String t,String st) {
+	public void setTitles(ScenarioContext ctx,String t,String st) {
 		//System.out.println(t+","+st);
 		boolean b1 = false,b2 = false;
 		if(t!=null&&!title.equals(t)) {
@@ -191,37 +133,19 @@ public class Act implements IScenarioThread{
 			this.subtitle=st;
 			b2=true;
 		}
-		sendTitles(b1,b2);
+		sendTitles(ctx,b1,b2);
 	}
-	public void setTitle(String title) {
+	public void setTitle(ScenarioContext ctx,String title) {
 		if(title!=null&&!this.title.equals(title)) {
 			this.title=title;
-			sendTitles(true,false);
+			sendTitles(ctx,true,false);
 		}
 	}
-	public void setSubtitle(String subtitle) {
+	public void setSubtitle(ScenarioContext ctx,String subtitle) {
 		if(subtitle!=null&&!this.subtitle.equals(subtitle)) {
 			this.subtitle=subtitle;
-			sendTitles(false,true);
+			sendTitles(ctx,false,true);
 		}
-	}
-	@Override
-	public String getLang() {
-		return parent.getLang();
-	}
-	@Override
-	public void sendMessage(String s) {
-		parent.sendMessage(s);
-	}
-	public void addTrigger(IScenarioTrigger trig,IScenarioTarget targ) {
-		scene.addTrigger(trig,new ActTarget(name,targ));
-	}
-	@Override
-	public void jump(IScenarioTarget acttrigger) {
-		if(acttrigger instanceof ActTarget) {
-			parent.jump(acttrigger);
-		}else
-			parent.jump(new ActTarget(this.name,acttrigger));
 	}
 	@Override
 	public LinkedList<ExecuteStackElement> getCallStack() {

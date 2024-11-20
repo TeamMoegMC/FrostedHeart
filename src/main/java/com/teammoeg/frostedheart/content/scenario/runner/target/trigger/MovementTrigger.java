@@ -9,7 +9,7 @@ public class MovementTrigger extends SingleExecuteTargetTrigger {
 	Vec3 pos;
 	public MovementTrigger(Player pe) {
 		super(null);
-		this.test=t->t.getPlayer().position().distanceToSqr(this.pos)>0.25;
+		this.test=t->t.player().position().distanceToSqr(this.pos)>0.25;
 		pos=pe.position();
 	}
 

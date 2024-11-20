@@ -19,39 +19,20 @@
 
 package com.teammoeg.frostedheart.content.scenario.runner.target;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.content.scenario.runner.IScenarioThread;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
 
-public class ExecuteTarget extends ScenarioTarget{
-
-	private final String label;
-	public ExecuteTarget(IScenarioThread par,String name, String label) {
-		super(par,name);
-
-		this.label = label;
-	}
-	public ExecuteTarget(Scenario sc, String label) {
-		super(sc);
-
-		this.label = label;
-	}
-	@Override
-	public void apply(IScenarioThread runner) {
-		super.apply(runner);
-		if(label!=null) {
-			Integer ps=runner.getScenario().labels.get(label);
-			if(ps!=null) {
-				runner.setNodeNum(ps);
-			}else {
-				FHMain.LOGGER.error ("Invalid label "+label );
-			}
-		}
-	}
+public record ExecuteTarget(String file,String label) implements ScenarioTarget{
 
 	@Override
 	public String toString() {
-		return "ExecuteTarget [label=" + label + ", getName()=" + getName() + "]";
+		return "ExecuteTarget [label=" + label + ", file=" + file + "]";
+	}
+	@Override
+	public PreparedScenarioTarget prepare(ScenarioContext t, Scenario current) {
+		Scenario scenario=file==null?current:t.loadScenario(file);
+
+		return new PreparedScenarioTarget(scenario,scenario.labels.getOrDefault(label, 0));
 	}
 
 	

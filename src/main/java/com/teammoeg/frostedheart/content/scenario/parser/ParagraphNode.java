@@ -21,7 +21,8 @@ package com.teammoeg.frostedheart.content.scenario.parser;
 
 import java.util.Map;
 
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVM;
+import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 
 public class ParagraphNode implements Node {
     int nodeNum;
@@ -31,7 +32,7 @@ public class ParagraphNode implements Node {
     }
 
     @Override
-    public String getLiteral(ScenarioVM runner) {
+    public String getLiteral(ScenarioCommandContext runner) {
         return "";
     }
 
@@ -47,7 +48,13 @@ public class ParagraphNode implements Node {
     }
 
     @Override
-    public void run(ScenarioVM runner) {
-    	runner.paragraph(nodeNum);
+    public void run(ScenarioCommandContext runner) {
+    	runner.context().getVaribles().takeSnapshot();
+    	runner.thread().newParagraph(nodeNum);
+    	if(runner.thread().scene().shouldWaitClient()&&!runner.thread().scene().isSlient()) {
+    		runner.thread().setStatus(RunStatus.WAITCLIENT);
+    		runner.thread().scene().markClearAfterClick();
+    		runner.thread().scene().sendCurrent(runner.context(),RunStatus.WAITCLIENT,false);
+    	}else runner.thread().scene().clear(runner.context());
     }
 }

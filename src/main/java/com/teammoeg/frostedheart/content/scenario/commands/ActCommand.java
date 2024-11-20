@@ -22,10 +22,10 @@ package com.teammoeg.frostedheart.content.scenario.commands;
 import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.runner.ActNamespace;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVM;
+import com.teammoeg.frostedheart.content.scenario.runner.BaseScenarioRunner;
 
 public class ActCommand {
-	public void act(ScenarioVM vrunner,@Param("c")String c,@Param("a")String a) {
+	public void act(BaseScenarioRunner vrunner,@Param("c")String c,@Param("a")String a) {
 		ScenarioConductor runner;
 		if(vrunner instanceof ScenarioConductor) {
 			runner=(ScenarioConductor) vrunner;
@@ -34,28 +34,28 @@ public class ActCommand {
 		runner.enterAct(new ActNamespace(c,a));
 		//runner.jump(new ActTarget(new ActNamespace(c,a),runner.getCurrentAct().getCurrentPosition().next()));
 	}
-	public void endAct(ScenarioVM vrunner) {
+	public void endAct(BaseScenarioRunner vrunner) {
 		ScenarioConductor runner;
 		if(vrunner instanceof ScenarioConductor) {
 			runner=(ScenarioConductor) vrunner;
 		}else return;
 		runner.endAct();
 	}
-	public void startAct(ScenarioVM vrunner,@Param("s")String s,@Param("l")String l,@Param("c")String c,@Param("a")String a) {
+	public void startAct(BaseScenarioRunner vrunner,@Param("s")String s,@Param("l")String l,@Param("c")String c,@Param("a")String a) {
 		ScenarioConductor runner;
 		if(vrunner instanceof ScenarioConductor) {
 			runner=(ScenarioConductor) vrunner;
 		}else return;
 		runner.queueAct(new ActNamespace(c,a),s,l);
 	}
-	public void actTitle(ScenarioVM vrunner,@Param("t")String t,@Param("st")String st) {
+	public void actTitle(BaseScenarioRunner vrunner,@Param("t")String t,@Param("st")String st) {
 		ScenarioConductor runner;
 		if(vrunner instanceof ScenarioConductor) {
 			runner=(ScenarioConductor) vrunner;
 		}else return;
 		runner.getCurrentAct().setTitles(t, st);
 	}
-	public void startSystem(ScenarioVM vrunner) {
+	public void startSystem(BaseScenarioRunner vrunner) {
 		ScenarioConductor runner;
 		if(vrunner instanceof ScenarioConductor) {
 			runner=(ScenarioConductor) vrunner;

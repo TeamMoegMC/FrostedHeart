@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 
-public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles  {
+public class DirectScenarioVariables implements  IScenarioVaribles  {
     CompoundTag extraData;
     
     public DirectScenarioVariables() {
@@ -158,4 +158,8 @@ public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles 
     public void set(String key, double v) {
     	setPathNumber(key, v);
     }
+	@Override
+	public CompoundTag getExtraData() {
+		return extraData;
+	}
 }

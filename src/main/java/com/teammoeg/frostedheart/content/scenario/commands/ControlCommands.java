@@ -20,28 +20,28 @@
 package com.teammoeg.frostedheart.content.scenario.commands;
 
 import com.teammoeg.frostedheart.content.scenario.Param;
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVM;
+import com.teammoeg.frostedheart.content.scenario.runner.BaseScenarioRunner;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 
 public class ControlCommands {
 
-	public void jump(ScenarioVM runner,@Param("s")String scenario,@Param("l")String label) {
+	public void jump(BaseScenarioRunner runner,@Param("s")String scenario,@Param("l")String label) {
 		runner.jump(new ExecuteTarget(runner,scenario,label));
 	}
-	public void call(ScenarioVM runner,@Param("s")String scenario,@Param("l")String label) {
+	public void call(BaseScenarioRunner runner,@Param("s")String scenario,@Param("l")String label) {
 		runner.call(scenario, label);
 	}
-	public void queue(ScenarioVM runner,@Param("s")String scenario,@Param("l")String label) {
+	public void queue(BaseScenarioRunner runner,@Param("s")String scenario,@Param("l")String label) {
 		runner.queue(new ExecuteTarget(runner,scenario,label));
 	}
-	public void Return(ScenarioVM runner) {
+	public void Return(BaseScenarioRunner runner) {
 		runner.popCallStack();
 	}
-	public void macro(ScenarioVM runner,@Param("name")String name) {
+	public void macro(BaseScenarioRunner runner,@Param("name")String name) {
 		runner.addMacro(name);
 
 	}
-	public void endmacro(ScenarioVM runner) {
+	public void endmacro(BaseScenarioRunner runner) {
 		runner.getVaribles().remove("mp");
 		runner.popCallStack();
 	}

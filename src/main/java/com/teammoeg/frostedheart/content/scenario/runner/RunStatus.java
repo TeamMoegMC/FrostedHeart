@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.scenario.runner;
 
 public enum RunStatus {
-	RUNNING(false,true),
+	RUNNING(false,true),//running 
 	WAITCLIENT(false,true),//waiting for client response
 	WAITACTION(false,false),//waiting for player action
 	WAITTIMER,//waiting for timer
