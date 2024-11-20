@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import java.text.DecimalFormat;
 
+import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
+import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
@@ -48,6 +50,7 @@ public class ResearchDashboardPanel extends Panel {
 
     ResearchDetailPanel detailPanel;
     RTextField techpoint;
+    RTextField availableInsightLevel;
     public static synchronized String toReadable(long num) {
         int unit = -1;
         double lnum = num;
@@ -74,6 +77,8 @@ public class ResearchDashboardPanel extends Panel {
         detailPanel = panel;
         techpoint = new RTextField(this).setMaxWidth(100).setMaxLine(1).setColor(TechIcons.text);
         techpoint.setPos(40, 28);
+        availableInsightLevel = new RTextField(this).setMaxWidth(100).setMaxLine(1).setColor(TechIcons.text);
+        availableInsightLevel.setPos(60, 28);
     }
 
     @Override
@@ -106,6 +111,9 @@ public class ResearchDashboardPanel extends Panel {
         }
         techpoint.setText(toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
         add(techpoint);
+        TeamResearchData data = ClientResearchDataAPI.getData();
+        availableInsightLevel.setText(data.getAvailableInsightLevel() + "Insight Points");
+        add(availableInsightLevel);
     }
 
     @Override
@@ -124,6 +132,14 @@ public class ResearchDashboardPanel extends Panel {
             techpoint.setText(toReadable(rd.getTotalCommitted()) + "/" + toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
         }
         techpoint.setX(140 - techpoint.width);
+
+        TeamResearchData data = ClientResearchDataAPI.getData();
+        if (data.getAvailableInsightLevel() == 0) {
+            availableInsightLevel.setColor(TechIcons.text_red);
+        } else {
+            availableInsightLevel.setColor(TechIcons.text);
+        }
+        availableInsightLevel.setX(160 - availableInsightLevel.width);
         super.draw(matrixStack, theme, x, y, w, h);
 
         // name

@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.SpecialData;
 import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
@@ -62,6 +63,28 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * @date 2022/9/2
  */
 public class TeamResearchData implements SpecialData{
+    /**
+     * The Insights point.<br>
+     *
+     * Insights are rewarded by active actions and new discoveries.
+     *
+     * Insights is monotone increasing.
+     */
+    int insight = 0;
+    /**
+     * The Insights level.<br>
+     *
+     * Computed from insights point.
+     *
+     * Insights level is a monotone increasing function of insights point.
+     */
+    int insightLevel = 0;
+    /**
+     * The used insights level.<br>
+     *
+     * Completing one research would increment this value.
+     */
+    int usedInsightLevel = 0;
     /**
      * The clue complete.<br>
      */
@@ -535,15 +558,119 @@ public class TeamResearchData implements SpecialData{
 	public void setVariants(CompoundTag variants) {
 		this.variants = variants;
 	}
+
+    public boolean setInsight(int insight) {
+        this.insight = insight;
+        int newLevel = computeLevelFromInsight(this.insight);
+        if (newLevel != insightLevel) {
+            insightLevel = newLevel;
+            return true;
+        }
+        return false;
+    }
+
+    public int getInsight() {
+        return insight;
+    }
+
+    public boolean setInsightLevel(int insightLevel) {
+        this.insightLevel = insightLevel;
+        int newInsight = computeInsightFromLevel(insightLevel);
+        if (newInsight != insight) {
+            insight = newInsight;
+            return true;
+        }
+        return false;
+    }
+
+    public int getInsightLevel() {
+        return insightLevel;
+    }
+
+    public boolean setUsedInsightLevel(int usedInsightLevel) {
+        if (usedInsightLevel > insightLevel) {
+            FHMain.LOGGER.warn("Used insights level cannot exceed insights level. Set to insights level instead.");
+            this.usedInsightLevel = insightLevel;
+            return false;
+        }
+        this.usedInsightLevel = usedInsightLevel;
+        return true;
+    }
+
+    public int getUsedInsightLevel() {
+        return usedInsightLevel;
+    }
+
+    /**
+     * Used to compute the insights level from insights point.
+     * TODO: The function is placeholder. Should be adjusted.
+     * @param insights insights point
+     */
+    public static final double GROWTH_RATE_MULTIPLIER = 0.5;
+    public static int computeLevelFromInsight(int insights) {
+        return (int) Math.floor(Math.sqrt(GROWTH_RATE_MULTIPLIER * insights + 9) - 3);
+    }
+    public static int computeInsightFromLevel(int level) {
+        return (int) Math.ceil( ((level + 3) * (level + 3) - 9) / GROWTH_RATE_MULTIPLIER);
+    }
+
+    /**
+     * Add insights point to the team.
+     * Increment level if needed.
+     * @param newInsights insights point to add
+     * @return whether the level is changed.
+     */
+    public boolean addInsight(int newInsights) {
+        this.insight += newInsights;
+        int newLevel = computeLevelFromInsight(this.insight);
+        if (newLevel != insightLevel) {
+            insightLevel = newLevel;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Get the fraction of how much insights point is needed to reach next level.
+     * @return a float in [0, 1)
+     */
+    public float getInsightProgress() {
+        int nextLevel = insightLevel + 1;
+        int nextLevelInsights = computeInsightFromLevel(nextLevel);
+        int currentLevelInsights = computeInsightFromLevel(insightLevel);
+        return (float) (insight - currentLevelInsights) / (nextLevelInsights - currentLevelInsights);
+    }
+
+    /**
+     * Get available insights level.
+     * @return available insights level
+     */
+    public int getAvailableInsightLevel() {
+        int level = insightLevel - usedInsightLevel;
+        if (level < 0) {
+            FHMain.LOGGER.warn("Used insights level exceeds insights level.");
+            level = 0;
+        }
+        return level;
+    }
+
 	public static final Codec<TeamResearchData> CODEC=RecordCodecBuilder.create(t->
 	t.group(CodecUtil.LONG_ARRAY_CODEC.fieldOf("clues").forGetter(o->o.clueComplete.toLongArray()),
-		CodecUtil.LONG_ARRAY_CODEC.fieldOf("effects").forGetter(o->o.grantedEffects.toLongArray()),
-		CompoundTag.CODEC.fieldOf("vars").forGetter(o->o.variants),
-		Codec.list(ResearchData.CODEC).fieldOf("researches").forGetter(o->o.rdata),
-		Codec.INT.fieldOf("active").forGetter(o->o.activeResearchId)
+		    CodecUtil.LONG_ARRAY_CODEC.fieldOf("effects").forGetter(o->o.grantedEffects.toLongArray()),
+		    CompoundTag.CODEC.fieldOf("vars").forGetter(o->o.variants),
+		    Codec.list(ResearchData.CODEC).fieldOf("researches").forGetter(o->o.rdata),
+            CodecUtil.defaultValue(Codec.INT, 0).fieldOf("active").forGetter(o->o.activeResearchId),
+            CodecUtil.defaultValue(Codec.INT, 0).fieldOf("insight").forGetter(o->o.insight),
+            CodecUtil.defaultValue(Codec.INT, 0).fieldOf("insightLevel").forGetter(o->o.insightLevel),
+            CodecUtil.defaultValue(Codec.INT, 0).fieldOf("usedInsightLevel").forGetter(o->o.usedInsightLevel)
+//            Codec.INT.fieldOf("active").forGetter(o->o.activeResearchId),
+//            Codec.INT.fieldOf("insight").forGetter(o->o.insight),
+//            Codec.INT.fieldOf("insightLevel").forGetter(o->o.insightLevel),
+//            Codec.INT.fieldOf("usedInsightLevel").forGetter(o->o.usedInsightLevel)
 		).apply(t, TeamResearchData::new));
+
 	boolean isInited;
-	public TeamResearchData(long[] clueComplete, long[] grantedEffects, CompoundTag variants, List<ResearchData> rdata, int activeResearchId) {
+	public TeamResearchData(long[] clueComplete, long[] grantedEffects, CompoundTag variants, List<ResearchData> rdata, int activeResearchId, int insight, int insightLevel, int usedInsightLevel) {
 		super();
         crafting.clear();
         building.clear();
@@ -556,6 +683,9 @@ public class TeamResearchData implements SpecialData{
             rdata.get(i).setParent(FHResearch.getResearch(i + 1), this);
         }
 		this.activeResearchId = activeResearchId;
+        this.insight = insight;
+        this.insightLevel = insightLevel;
+        this.usedInsightLevel = usedInsightLevel;
 		this.variants = variants;
         for (int i = 0; i < this.grantedEffects.length(); i++) {
             if (this.grantedEffects.get(i))

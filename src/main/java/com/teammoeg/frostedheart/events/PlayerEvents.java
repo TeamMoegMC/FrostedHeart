@@ -23,6 +23,7 @@ package com.teammoeg.frostedheart.events;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.content.climate.ForecastHandler;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
+import com.teammoeg.frostedheart.content.research.insight.InsightHandler;
 import com.teammoeg.frostedheart.content.utility.transportation.MovementModificationHandler;
 
 import net.minecraftforge.event.TickEvent;
@@ -36,6 +37,7 @@ public class PlayerEvents {
         FoodTemperatureHandler.onPlayerTick(event);
         ForecastHandler.sendForecastMessages(event);
         MovementModificationHandler.movementModifier(event);
+        InsightHandler.onPlayerTick(event);
     }
 
 }

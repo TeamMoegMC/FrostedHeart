@@ -227,7 +227,9 @@ public class ClientEvents {
                 if (FrostedHud.renderHypothermia) {
                     FrostedHud.renderHypothermia(stack, anchorX, anchorY, mc, clientPlayer);
                 } else {
-                    FrostedHud.renderExperience(stack, anchorX, anchorY, mc, clientPlayer);
+                    // TODO: Provide some method to render both
+//                    FrostedHud.renderExperience(stack, anchorX, anchorY, mc, clientPlayer);
+                    FrostedHud.renderInsight(stack, anchorX, anchorY, mc, clientPlayer);
                 }
                 event.setCanceled(true);
             }

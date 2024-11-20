@@ -48,6 +48,56 @@ import net.minecraft.ChatFormatting;
 public class ResearchCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("research")
+                // add insight
+                .then(Commands.literal("insight").then(Commands.literal("add").then(Commands.argument("amount", IntegerArgumentType.integer(0)).executes(ct -> {
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    trd.addInsight(ct.getArgument("amount", Integer.class));
+                    ct.getSource().sendSuccess(()->TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    return Command.SINGLE_SUCCESS;
+                })))
+                        // get insight
+                .then(Commands.literal("get").executes(ct -> {
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    ct.getSource().sendSuccess(()->TranslateUtils.str("Insight: " + trd.getInsight()).withStyle(ChatFormatting.GREEN), false);
+                    return Command.SINGLE_SUCCESS;
+                }))
+                        // Get insight level
+                .then(Commands.literal("level").executes(ct -> {
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    ct.getSource().sendSuccess(()->TranslateUtils.str("Insight Level: " + trd.getInsightLevel()).withStyle(ChatFormatting.GREEN), false);
+                    return Command.SINGLE_SUCCESS;
+                }))
+                        // Get used insight level
+                .then(Commands.literal("usedLevel").executes(ct -> {
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    ct.getSource().sendSuccess(()->TranslateUtils.str("Used Insight Level: " + trd.getUsedInsightLevel()).withStyle(ChatFormatting.GREEN), false);
+                    return Command.SINGLE_SUCCESS;
+                }))
+                        // set insight
+                .then(Commands.literal("set").then(Commands.argument("amount", IntegerArgumentType.integer(0)).executes(ct -> {
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    trd.setInsight(ct.getArgument("amount", Integer.class));
+                    ct.getSource().sendSuccess(()->TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    return Command.SINGLE_SUCCESS;
+                })))
+                        // set insight level
+                .then(Commands.literal("level").then(Commands.argument("level", IntegerArgumentType.integer(0)).executes(ct -> {
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    trd.setInsightLevel(ct.getArgument("level", Integer.class));
+                    ct.getSource().sendSuccess(()->TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    return Command.SINGLE_SUCCESS;
+                })))
+                        // set used insight level
+                .then(Commands.literal("usedLevel").then(Commands.argument("level", IntegerArgumentType.integer(0)).executes(ct -> {
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    trd.setUsedInsightLevel(ct.getArgument("level", Integer.class));
+                    ct.getSource().sendSuccess(()->TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    return Command.SINGLE_SUCCESS;
+                })))
+
+                )
+
+
                 .then(Commands.literal("complete").then(Commands.argument("name", StringArgumentType.string()).suggests((ct, s) -> {
                     for (Research r : FHResearch.getAllResearch())
                         if (r.getId().startsWith(s.getRemaining()))

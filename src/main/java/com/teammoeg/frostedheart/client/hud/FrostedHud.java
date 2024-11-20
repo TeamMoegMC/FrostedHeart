@@ -26,6 +26,7 @@ import java.util.Map;
 import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.mixin.client.BossHealthOverlayAccess;
+import org.checkerframework.checker.units.qual.C;
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -425,6 +426,33 @@ public class FrostedHud {
         }
         if (mc.player.experienceLevel > 0) {
             String s = "" + mc.player.experienceLevel;
+            int i1 = (x * 2 - mc.font.width(s)) / 2;
+            int j1 = y - 29;
+
+            stack.drawString(mc.font, s, i1 + 1, j1, 0, false);
+            stack.drawString(mc.font, s, i1 - 1, j1, 0, false);
+            stack.drawString(mc.font, s, i1, j1 + 1, 0, false);
+            stack.drawString(mc.font, s, i1, j1 - 1, 0, false);
+            stack.drawString(mc.font, s, i1, j1, 8453920, false);
+        }
+
+        RenderSystem.disableBlend();
+        mc.getProfiler().pop();
+    }
+
+    public static void renderInsight(GuiGraphics stack, int x, int y, Minecraft mc, LocalPlayer player) {
+        mc.getProfiler().push("frostedheart_insight");
+
+        RenderSystem.enableBlend();
+
+        HUDElements.exp_bar_frame.blitAt(stack, x, y, BasePos.exp_bar);
+        float progress = ClientResearchDataAPI.getData().getInsightProgress();
+        int level = ClientResearchDataAPI.getData().getInsightLevel();
+        if (progress > 0) {
+            HUDElements.exp_bar.blit(stack, x, y, BarPos.exp_bar, Transition.RIGHT, progress);
+        }
+        if (level > 0) {
+            String s = "" + level;
             int i1 = (x * 2 - mc.font.width(s)) / 2;
             int j1 = y - 29;
 

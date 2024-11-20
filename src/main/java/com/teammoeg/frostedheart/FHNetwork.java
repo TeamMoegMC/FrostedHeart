@@ -33,19 +33,7 @@ import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
 import com.teammoeg.frostedheart.content.nutrition.network.PlayerNutritionSyncPacket;
-import com.teammoeg.frostedheart.content.research.network.FHChangeActiveResearchPacket;
-import com.teammoeg.frostedheart.content.research.network.FHClueProgressSyncPacket;
-import com.teammoeg.frostedheart.content.research.network.FHDrawingDeskOperationPacket;
-import com.teammoeg.frostedheart.content.research.network.FHEffectProgressSyncPacket;
-import com.teammoeg.frostedheart.content.research.network.FHEffectTriggerPacket;
-import com.teammoeg.frostedheart.content.research.network.FHEnergyDataSyncPacket;
-import com.teammoeg.frostedheart.content.research.network.FHResearchAttributeSyncPacket;
-import com.teammoeg.frostedheart.content.research.network.FHResearchControlPacket;
-import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
-import com.teammoeg.frostedheart.content.research.network.FHResearchDataUpdatePacket;
-import com.teammoeg.frostedheart.content.research.network.FHResearchRegistrtySyncPacket;
-import com.teammoeg.frostedheart.content.research.network.FHResearchSyncEndPacket;
-import com.teammoeg.frostedheart.content.research.network.FHResearchSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.*;
 import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacket;
 import com.teammoeg.frostedheart.content.scenario.network.ClientScenarioResponsePacket;
 import com.teammoeg.frostedheart.content.scenario.network.FHClientReadyPacket;
@@ -150,6 +138,7 @@ public class FHNetwork {
         registerMessage("research_drawdesk", FHDrawingDeskOperationPacket.class);
         registerMessage("research_effect", FHEffectProgressSyncPacket.class);
         registerMessage("research_energy_data", FHEnergyDataSyncPacket.class);
+        registerMessage("research_insight", FHInsightSyncPacket.class);
        
         
         //Trade Messages
