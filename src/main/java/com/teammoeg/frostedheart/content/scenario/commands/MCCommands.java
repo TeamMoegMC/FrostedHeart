@@ -8,10 +8,10 @@ import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.content.scenario.Param;
-import com.teammoeg.frostedheart.content.scenario.runner.BaseScenarioRunner;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.OrTrigger;
-import com.teammoeg.frostedheart.content.scenario.runner.target.VariantTargetTrigger;
+import com.teammoeg.frostedheart.content.scenario.runner.target.VariantTrigger;
 import com.teammoeg.frostedheart.content.scenario.runner.target.trigger.MovementTrigger;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
@@ -27,27 +27,27 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 
 public class MCCommands {
-	public void giveItem(BaseScenarioRunner runner, @Param("i") String item, @Param("n") String nbt, @Param("c") int count) throws CommandSyntaxException {
+	public void giveItem(ScenarioCommandContext runner, @Param("i") String item, @Param("n") String nbt, @Param("c") int count) throws CommandSyntaxException {
 		Item i = RegistryUtils.getItem(new ResourceLocation(item));
 		if (count == 0) count = 1;
 		ItemStack is = new ItemStack(i, count);
 		if (nbt != null)
 			is.setTag(TagParser.parseTag(nbt));
-		FHUtils.giveItem(runner.getPlayer(), is);
+		FHUtils.giveItem(runner.context().player(), is);
 	}
 
-	public void setResearchAttribute(BaseScenarioRunner runner, @Param("k") String key, @Param("v") double value) {
-		ResearchDataAPI.putVariantDouble(runner.getPlayer(), key, value);
+	public void setResearchAttribute(ScenarioCommandContext runner, @Param("k") String key, @Param("v") double value) {
+		ResearchDataAPI.putVariantDouble(runner.context().player(), key, value);
 	}
 
-	public void waitPlayerStart(BaseScenarioRunner runner, @Param("s") String s, @Param("l") String l) {
-		runner.addTrigger(new OrTrigger(new MovementTrigger(runner.getPlayer()), new VariantTargetTrigger().register(runner.getPlayer(), EventTriggerType.PLAYER_INTERACT)).setSync(),
-			new ExecuteTarget(runner, s, l));
+	public void waitPlayerStart(ScenarioCommandContext runner, @Param("s") String s, @Param("l") String l) {
+		runner.thread().addTrigger(new OrTrigger(new MovementTrigger(runner.context().player()), new VariantTrigger().register(runner.context().player(), EventTriggerType.PLAYER_INTERACT)).setSync(),
+			new ExecuteTarget( s, l));
 	}
 
-	public void gameCommand(BaseScenarioRunner runner,@Param("op")int op,@Param("asPlayer")int asp, @Param("cmd") @Param("command") String s) {
+	public void gameCommand(ScenarioCommandContext runner,@Param("op")boolean op,@Param("asPlayer")boolean asp, @Param("cmd") @Param("command") String s) {
 		Map<String, Object> overrides = new HashMap<>();
-		ServerPlayer triggerPlayer = (ServerPlayer) runner.getPlayer();
+		ServerPlayer triggerPlayer = (ServerPlayer) runner.context().player();
 		overrides.put("p", triggerPlayer.getGameProfile().getName());
 
 		BlockPos pos = triggerPlayer.blockPosition();
@@ -55,21 +55,24 @@ public class MCCommands {
 		overrides.put("y", pos.getY());
 		overrides.put("z", pos.getZ());
 		ServerOpListEntry opent= FHTeamDataManager.getServer().getPlayerList().getOps().get(triggerPlayer.getGameProfile());
-		if(op>0)
+		if(op)
 			if(opent==null){
 				FHTeamDataManager.getServer().getPlayerList().op(triggerPlayer.getGameProfile());
 			}
-		Commands cmds = FHTeamDataManager.getServer().getCommands();
-		CommandSourceStack source = asp>0?triggerPlayer.createCommandSourceStack(): FHTeamDataManager.getServer().createCommandSourceStack();
-		for (Map.Entry<String, Object> entry : overrides.entrySet()) {
-			if (entry.getValue() != null) {
-				s = s.replace("@" + entry.getKey(), entry.getValue().toString());
+		try {
+			Commands cmds = FHTeamDataManager.getServer().getCommands();
+			CommandSourceStack source = asp?triggerPlayer.createCommandSourceStack(): FHTeamDataManager.getServer().createCommandSourceStack();
+			for (Map.Entry<String, Object> entry : overrides.entrySet()) {
+				if (entry.getValue() != null) {
+					s = s.replace("@" + entry.getKey(), entry.getValue().toString());
+				}
 			}
+			cmds.performPrefixedCommand(source, s);
+		}finally {
+			if(op)
+				if(opent==null){
+					FHTeamDataManager.getServer().getPlayerList().deop(triggerPlayer.getGameProfile());
+				}
 		}
-		cmds.performPrefixedCommand(source, s);
-		if(op>0)
-			if(opent==null){
-				FHTeamDataManager.getServer().getPlayerList().deop(triggerPlayer.getGameProfile());
-			}
 	}
 }

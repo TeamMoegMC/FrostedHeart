@@ -20,8 +20,8 @@ public class LayerManager extends GLLayerContent {
 	Map<String, OrderedRenderableContent> names = new LinkedHashMap<>();
 	PriorityQueue<OrderedRenderableContent> pq;
 	PriorityQueue<OrderedRenderableContent> opq;
-	GLImageContent oglc=new GLImageContent(null,0,0, 2f/FHConfig.CLIENT.getScenarioScale(), 2f/FHConfig.CLIENT.getScenarioScale(), 0, 0, 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale(), 1024*FHConfig.CLIENT.getScenarioScale(), 1024*FHConfig.CLIENT.getScenarioScale());
-	GLImageContent nglc=new GLImageContent(null,0,0, 2f/FHConfig.CLIENT.getScenarioScale(), 2f/FHConfig.CLIENT.getScenarioScale(), 0, 0, 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale(), 1024*FHConfig.CLIENT.getScenarioScale(), 1024*FHConfig.CLIENT.getScenarioScale());
+	GLImageContent oglc=new GLImageContent(null,0,0, 1f, 1f, 0, 0, 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale(), 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale());
+	GLImageContent nglc=new GLImageContent(null,0,0, 1f, 1f, 0, 0, 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale(), 1024*FHConfig.CLIENT.getScenarioScale(), 576*FHConfig.CLIENT.getScenarioScale());
 	private static ExecutorService executor;
 	private Future <PrerenderParams> rendering;
 	public static <T> Future<T> submitRenderTask(Runnable r,T result) {

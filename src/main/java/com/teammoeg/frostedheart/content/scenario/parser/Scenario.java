@@ -24,29 +24,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Scenario {
-    public final String name;
-    public final List<Node> pieces;
-    public final int[] paragraphs;
-    public final Map<String, Integer> labels;
-
-    public Scenario(String fileName, List<Node> pieces, int[] paragraphs, Map<String, Integer> labels) {
-        super();
-        this.name = fileName;
-        this.pieces = pieces;
-        this.paragraphs = paragraphs;
-        this.labels = labels;
-        /*for(Node n:pieces) {
-        	System.out.println(n.getText());
-        }*/
-    }
+public record Scenario(String name, List<Node> pieces, int[] paragraphs, Map<String, Integer> labels) {
 
     public Scenario(String name) {
-        super();
-        this.name = name;
-        this.pieces = new ArrayList<>();
-        paragraphs = new int[0];
-        labels = new HashMap<>();
+        this(name,new ArrayList<>(),new int[0],new HashMap<>());
     }
 
 	@Override
@@ -70,5 +51,10 @@ public class Scenario {
             return other.name == null;
 		} else return name.equals(other.name);
     }
+
+	@Override
+	public String toString() {
+		return "Scenario [name=" + name + "]";
+	}
     
 }

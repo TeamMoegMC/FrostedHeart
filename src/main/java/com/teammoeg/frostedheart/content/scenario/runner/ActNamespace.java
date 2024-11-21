@@ -1,19 +1,18 @@
 package com.teammoeg.frostedheart.content.scenario.runner;
 
+import java.util.List;
 import java.util.Objects;
 
-public class ActNamespace {
-    public final String chapter;
-    public final String act;
-    public ActNamespace(String chapter, String quest) {
-		super();
-		this.chapter = chapter;
-		this.act = quest;
-	}
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
+public record ActNamespace(String chapter,String act) {
+	public static final Codec<ActNamespace> CODEC=RecordCodecBuilder.create(t->t.group(
+		Codec.STRING.fieldOf("chapter").forGetter(o->o.chapter),
+		Codec.STRING.fieldOf("act").forGetter(o->o.act)).apply(t, ActNamespace::new));
+	public static final Codec<List<ActNamespace>> LIST_CODEC=Codec.list(CODEC);
     public ActNamespace() {
-		super();
-		this.chapter = "";
-		this.act = "";
+		this("","");
 	}
     
 	@Override

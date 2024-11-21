@@ -21,45 +21,36 @@ package com.teammoeg.frostedheart.content.scenario.commands;
 
 import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.runner.ActNamespace;
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
-import com.teammoeg.frostedheart.content.scenario.runner.BaseScenarioRunner;
+import com.teammoeg.frostedheart.content.scenario.runner.ActScenarioContext;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 
 public class ActCommand {
-	public void act(BaseScenarioRunner vrunner,@Param("c")String c,@Param("a")String a) {
-		ScenarioConductor runner;
-		if(vrunner instanceof ScenarioConductor) {
-			runner=(ScenarioConductor) vrunner;
-		}else return;
-		runner.endAct();
-		runner.enterAct(new ActNamespace(c,a));
+	public void act(ScenarioCommandContext vrunner,@Param("c")String c,@Param("a")String a) {
+		if(vrunner.context() instanceof ActScenarioContext context) {
+			context.conductor().endAct();
+			context.conductor().enterAct(new ActNamespace(c,a));
+		}
+
 		//runner.jump(new ActTarget(new ActNamespace(c,a),runner.getCurrentAct().getCurrentPosition().next()));
 	}
-	public void endAct(BaseScenarioRunner vrunner) {
-		ScenarioConductor runner;
-		if(vrunner instanceof ScenarioConductor) {
-			runner=(ScenarioConductor) vrunner;
-		}else return;
-		runner.endAct();
+	public void endAct(ScenarioCommandContext vrunner) {
+		if(vrunner.context() instanceof ActScenarioContext context) {
+			context.conductor().endAct();
+		}
 	}
-	public void startAct(BaseScenarioRunner vrunner,@Param("s")String s,@Param("l")String l,@Param("c")String c,@Param("a")String a) {
-		ScenarioConductor runner;
-		if(vrunner instanceof ScenarioConductor) {
-			runner=(ScenarioConductor) vrunner;
-		}else return;
-		runner.queueAct(new ActNamespace(c,a),s,l);
+	public void startAct(ScenarioCommandContext vrunner,@Param("s")String s,@Param("l")String l,@Param("c")String c,@Param("a")String a) {
+		if(vrunner.context() instanceof ActScenarioContext context) {
+			context.conductor().queueAct(new ActNamespace(c,a),s,l);
+		}
 	}
-	public void actTitle(BaseScenarioRunner vrunner,@Param("t")String t,@Param("st")String st) {
-		ScenarioConductor runner;
-		if(vrunner instanceof ScenarioConductor) {
-			runner=(ScenarioConductor) vrunner;
-		}else return;
-		runner.getCurrentAct().setTitles(t, st);
+	public void actTitle(ScenarioCommandContext vrunner,@Param("t")String t,@Param("st")String st) {
+		if(vrunner.context() instanceof ActScenarioContext context) {
+			context.conductor().getCurrentAct().setTitles(vrunner.context(),t, st);
+		}
 	}
-	public void startSystem(BaseScenarioRunner vrunner) {
-		ScenarioConductor runner;
-		if(vrunner instanceof ScenarioConductor) {
-			runner=(ScenarioConductor) vrunner;
-		}else return;
-		runner.enableActs();
+	public void startSystem(ScenarioCommandContext vrunner) {
+		if(vrunner.context() instanceof ActScenarioContext context) {
+			context.conductor().enableActs();
+		}
 	}
 }

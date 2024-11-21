@@ -20,30 +20,30 @@
 package com.teammoeg.frostedheart.content.scenario.commands;
 
 import com.teammoeg.frostedheart.content.scenario.Param;
-import com.teammoeg.frostedheart.content.scenario.runner.BaseScenarioRunner;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 
 public class ControlCommands {
 
-	public void jump(BaseScenarioRunner runner,@Param("s")String scenario,@Param("l")String label) {
-		runner.jump(new ExecuteTarget(runner,scenario,label));
+	public void jump(ScenarioCommandContext runner,@Param("s")String scenario,@Param("l")String label) {
+		runner.thread().jump(runner.context(),new ExecuteTarget(scenario,label));
 	}
-	public void call(BaseScenarioRunner runner,@Param("s")String scenario,@Param("l")String label) {
-		runner.call(scenario, label);
+	public void call(ScenarioCommandContext runner,@Param("s")String scenario,@Param("l")String label) {
+		runner.thread().call(runner.context(),scenario, label);
 	}
-	public void queue(BaseScenarioRunner runner,@Param("s")String scenario,@Param("l")String label) {
-		runner.queue(new ExecuteTarget(runner,scenario,label));
+	public void queue(ScenarioCommandContext runner,@Param("s")String scenario,@Param("l")String label) {
+		runner.thread().queue(new ExecuteTarget(scenario,label));
 	}
-	public void Return(BaseScenarioRunner runner) {
-		runner.popCallStack();
+	public void Return(ScenarioCommandContext runner) {
+		runner.thread().popCallStack(runner.context());
 	}
-	public void macro(BaseScenarioRunner runner,@Param("name")String name) {
-		runner.addMacro(name);
+	public void macro(ScenarioCommandContext runner,@Param("name")String name) {
+		runner.context().addMacro(name,runner.thread());
 
 	}
-	public void endmacro(BaseScenarioRunner runner) {
-		runner.getVaribles().remove("mp");
-		runner.popCallStack();
+	public void endmacro(ScenarioCommandContext runner) {
+		runner.context().getVaribles().remove("mp");
+		runner.thread().popCallStack(runner.context());
 	}
 
 }

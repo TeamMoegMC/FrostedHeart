@@ -137,10 +137,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 	 * @param label the label
 	 */
 	public void jump(ScenarioContext ctx,String scenario,String label) {
-		if(scenario==null)
-			jump(ctx,new ExecuteTarget(scenario,label));
-		else
-			jump(ctx,new ExecuteTarget(null,label));
+		jump(ctx,new ExecuteTarget(scenario,label));
 	}
 	public void jump(ScenarioContext ctx, ScenarioTarget t) {
 		jump(t.prepare(ctx, getScenario()));
@@ -161,15 +158,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 	public LinkedList<ExecuteStackElement> getCallStack() {
 		return callStack;
 	}
-	
-	/**
-	 * Adds the macro.
-	 *
-	 * @param name the name
-	 */
-	public void addMacro(ScenarioContext ctx,String name) {
-		ctx.macros.put(name.toLowerCase(), getCurrentPosition(1));
-	}
+
 	
 	/**
 	 * Queue.
@@ -192,9 +181,10 @@ public class BaseScenarioRunner implements ScenarioThread{
     /**
      * Pop call stack.
      */
+	@Override
     public void popCallStack(ScenarioContext ctx) {
 		if(getCallStack().isEmpty()) {
-			throw new ScenarioExecutionException("Invalid return at "+getScenario().name);
+			throw new ScenarioExecutionException("Invalid return at "+getScenario().name());
 		}
 		jump(ctx,getCallStack().pollLast());
 	}
@@ -202,6 +192,7 @@ public class BaseScenarioRunner implements ScenarioThread{
     /**
      * Try pop call stack.
      */
+	@Override
     public void tryPopCallStack(ScenarioContext ctx) {
 		if(!getCallStack().isEmpty()) {
 			jump(ctx,getCallStack().pollLast());
@@ -211,6 +202,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 	/**
 	 * Adds the call stack.
 	 */
+	@Override
 	public void addCallStack() {
 		getCallStack().add(getCurrentPosition(0));
 	}
@@ -220,6 +212,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 	 *
 	 * @param target the target
 	 */
+	@Override
 	public void call(ScenarioContext ctx,ScenarioTarget target) {
 		addCallStack();
 		jump(ctx,target);
@@ -230,8 +223,9 @@ public class BaseScenarioRunner implements ScenarioThread{
 	 *
 	 * @return the current position
 	 */
+	@Override
 	public ExecuteStackElement getCurrentPosition(int offset) {
-    	return new ExecuteStackElement(sp.name,nodeNum+offset);
+    	return new ExecuteStackElement(sp.name(),nodeNum+offset);
     }
 	
 	/**
@@ -239,8 +233,8 @@ public class BaseScenarioRunner implements ScenarioThread{
 	 */
 	protected void runCode(ScenarioContext ctx) {
     	ScenarioCommandContext commandCtx=new ScenarioCommandContext(ctx,this);
-    	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
-    		Node node=getScenario().pieces.get(nodeNum++);
+    	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces().size()) {
+    		Node node=getScenario().pieces().get(nodeNum++);
     		try {
     			scene.appendLiteral(node.getLiteral(commandCtx));
     			node.run(commandCtx);
@@ -252,7 +246,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 	    		//sendCachedSence();
     			break;
     		}
-	    	if(getScenario()==null||nodeNum>=getScenario().pieces.size()) {
+	    	if(getScenario()==null||nodeNum>=getScenario().pieces().size()) {
 	    		setStatus((RunStatus.STOPPED));
 	    		//ctx.scene().clear(this);
 	    		//sendCachedSence();
@@ -309,7 +303,7 @@ public class BaseScenarioRunner implements ScenarioThread{
      * Stop.
      */
     public void stop() {
-    	nodeNum=getScenario().pieces.size();
+    	nodeNum=getScenario().pieces().size();
     	setStatus(RunStatus.STOPPED);
     }
     protected void runCodeExecutionLoop(ScenarioContext ctx) {
@@ -321,11 +315,33 @@ public class BaseScenarioRunner implements ScenarioThread{
 	/**
 	 * Tick.
 	 */
-	public void tick(ScenarioContext ctx) {    	
+	public void tick(ScenarioContext ctx) {
+		runIfNeeded(ctx);
     	//detect triggers
+		tickTrigger(ctx);
+		if(tickWaitIfNeeded())
+			return;
+    	runScheduled(ctx);
+    }
+	public boolean tickWaitIfNeeded() {
+		if(getStatus()==RunStatus.WAITTIMER) {
+    		if(tickWait()) {
+    			run();
+    			return true;
+    		}
+    	}
+		return false;
+	}
+	public void tickMain(ScenarioContext ctx) {
+		runIfNeeded(ctx);
+		tickWaitIfNeeded();
+	}
+	public void runIfNeeded(ScenarioContext ctx) {
 		if(getStatus()==RunStatus.RUNNING) {
 			runCodeExecutionLoop(ctx);
 		}
+	}
+	public void tickTrigger(ScenarioContext ctx) {
     	for(TriggerTarget t:triggers) {
     		if(t.trigger().test(ctx)) {
     			if(t.trigger().use()) {
@@ -337,16 +353,8 @@ public class BaseScenarioRunner implements ScenarioThread{
     		}
     	}
     	triggers.removeIf(t->!t.trigger().canUse());
-    	if(getStatus()==RunStatus.WAITTIMER) {
-    		if(tickWait()) {
-    			run();
-    			//runCodeExecutionLoop(ctx);
-    			return;
-    		}
-    	}
-    	runScheduled(ctx);
-    }
-	
+    	
+	}
 	
 	/**
 	 * Adds the trigger.
@@ -354,6 +362,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 	 * @param trig the trig
 	 * @param targ the targ
 	 */
+	@Override
 	public void addTrigger(IScenarioTrigger trig,ScenarioTarget targ) {
 		triggers.add(new TriggerTarget(trig,targ));
 	}
@@ -410,6 +419,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 	 * @param scenario the scenario
 	 * @param label the label
 	 */
+	@Override
 	public void call(ScenarioContext ctx,String scenario, String label) {
 		call(ctx,new ExecuteTarget(scenario,label));
 	}
@@ -451,7 +461,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 	}
 	@Override
 	public void newParagraph(int pn) {
-		this.savedLocation=new ParagraphData(sp.name,pn);
+		this.savedLocation=new ParagraphData(sp.name(),pn);
     }
 	@Override
 	public void notifyClientResponse(ScenarioContext ctx,boolean isSkip,int status) {
@@ -472,5 +482,10 @@ public class BaseScenarioRunner implements ScenarioThread{
 	@Override
 	public Scene scene() {
 		return scene;
+	}
+
+	@Override
+	public void waitClient() {
+		this.setStatus(RunStatus.WAITCLIENT);
 	}
 }

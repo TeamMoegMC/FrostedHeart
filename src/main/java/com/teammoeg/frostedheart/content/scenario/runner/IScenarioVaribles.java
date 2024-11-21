@@ -39,4 +39,6 @@ public interface IScenarioVaribles extends IEnvironment{
 
 	CompoundTag getExtraData();
 
+	void remove(String path);
+
 }

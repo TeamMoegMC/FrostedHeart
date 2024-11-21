@@ -44,10 +44,8 @@ import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.content.scenario.parser.ScenarioParser;
 import com.teammoeg.frostedheart.content.scenario.parser.providers.FTBQProvider;
 import com.teammoeg.frostedheart.content.scenario.parser.providers.ScenarioProvider;
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioThread;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
-import com.teammoeg.frostedheart.content.scenario.runner.BaseScenarioRunner;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 import com.teammoeg.frostedheart.content.scenario.runner.target.IVarTrigger;
 
@@ -66,13 +64,9 @@ public class FHScenario {
 	public static void startFor(ServerPlayer pe) {
 		ScenarioConductor sr = get(pe);
 		sr.init(pe);
-		Scenario scenario = loadScenario(sr,"init");
-		if (scenario == null) {
-			FHMain.LOGGER.error("[FHScenario] Loaded scenario is null");
-		} else {
-			FHMain.LOGGER.info("[FHScenario] Loaded scenario "+scenario.name);
-		}
-		sr.run(scenario);
+		
+
+		sr.run("init");
 	}
 	public static void addVarTrigger(Player pe,EventTriggerType type,IVarTrigger trig) {
 		triggers.computeIfAbsent(pe,k->new HashMap<>()).computeIfAbsent(type, k->new ArrayList<>()).add(trig);

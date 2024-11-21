@@ -447,8 +447,8 @@ public class CommonEvents {
 
             // Scenario runner
             ScenarioConductor runner=FHScenario.getNullable(player);
-            if (runner != null && runner.isInited())
-            	runner.tick();
+            if (runner != null)
+            	runner.tick(player);
 
             // Heat network statistics update
             if (player.containerMenu instanceof HeatStatContainer) {
