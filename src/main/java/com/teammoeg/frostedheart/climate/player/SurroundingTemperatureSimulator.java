@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Random;
 
 import com.mojang.datafixers.util.Pair;
+import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 
@@ -72,12 +73,13 @@ public class SurroundingTemperatureSimulator {
         }
     }
     public static final int range = 8;// through max range is 8, to avoid some rare issues, set it to 7 to keep count
-    private static final int n = 4168;//number of particles
+    //private static final int n = 4168;//number of particles
     private static final int rdiff = 10;
     private static final float v0 = .4f;//initial particle speed
     private static final VoxelShape EMPTY = VoxelShapes.empty();
     private static final VoxelShape FULL = VoxelShapes.fullCube();
-    private static float[] vx = new float[n], vy = new float[n], vz = new float[n];// Vp, speed vector list, this list is constant and considered a distributed ball mesh.
+    private static final int Nvec=4168;
+    private static float[] vx = new float[Nvec], vy = new float[Nvec], vz = new float[Nvec];// Vp, speed vector list, this list is constant and considered a distributed ball mesh.
     private static final int num_rounds = 20;
     static {// generate speed vector list
         int o = 0;
@@ -101,9 +103,9 @@ public class SurroundingTemperatureSimulator {
     BlockPos origin;
     ServerWorld world;
     Random rnd;
-
-    private double[] qx = new double[n], qy = new double[n], qz = new double[n];// Qpos, position of particle.
-    private int[] vid = new int[n];// IDv, particle speed index in speed vector list, this lower random cost.
+    private int n=FHConfig.COMMON.heatParticleNum.get();
+    private double[] qx , qy , qz ;// Qpos, position of particle.
+    private int[] vid;// IDv, particle speed index in speed vector list, this lower random cost.
     //private double[] factor=
     
 
@@ -115,6 +117,12 @@ public class SurroundingTemperatureSimulator {
 
     public SurroundingTemperatureSimulator(ServerPlayerEntity player) {
         int sourceX = MathHelper.floor(player.getPosX()), sourceY = MathHelper.floor(player.getPosYEye()-.7f), sourceZ = MathHelper.floor(player.getPosZ());
+
+        vid = new int[n];
+        qx = new double[n];
+        qy = new double[n];
+        qz = new double[n];// Qpos, position of particle.
+        vid = new int[n];// IDv, particle speed index in speed vector list, this lower random cost.
         // System.out.println(sourceX+","+sourceY+","+sourceZ);
         // these are block position offset
         int offsetN = sourceZ - range;
@@ -210,7 +218,7 @@ public class SurroundingTemperatureSimulator {
             qx[i] = qx0;
             qy[i] = qy0;
             qz[i] = qz0;
-            vid[i] = i;
+            vid[i] = rnd.nextInt(Nvec);
         }
         float heat = 0;
         for (int round = 0; round < num_rounds; ++round) // time-to-live for each particle is `num_rounds`
@@ -225,9 +233,10 @@ public class SurroundingTemperatureSimulator {
                 qy[i] = qy[i] + vy[vid[i]]; // move y
                 qz[i] = qz[i] + vz[vid[i]]; // move z
                 BlockPos bp=new BlockPos(qx[i],qy[i],qz[i]);
-                heat += getHeat(bp)
+                CachedBlockInfo info=getInfoCached(bp);
+                heat += info.temperature
                         * MathHelper.lerp(MathHelper.clamp(vy[vid[i]], 0, 0.4) * 2.5, 1, 0.5); // add heat
-                wind +=getAir(bp)?MathHelper.lerp((MathHelper.clamp(Math.abs(vy[vid[i]]), 0.2, 0.8)-0.2)/0.6, 2, 0.5):0;
+                wind +=info.exposeToAir?MathHelper.lerp((MathHelper.clamp(Math.abs(vy[vid[i]]), 0.2, 0.8)-0.2)/0.6, 2, 0.5):0;
             }
         }
         return Pair.of(heat / n, wind/n);

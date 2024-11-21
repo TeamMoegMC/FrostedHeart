@@ -98,6 +98,7 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Double> steamCorePowerIntake;
         public final ForgeConfigSpec.ConfigValue<Double> steamCoreGeneratedSpeed;
         public final ForgeConfigSpec.ConfigValue<Double> steamCoreCapacity;
+        public final ForgeConfigSpec.IntValue heatParticleNum;
         Common(ForgeConfigSpec.Builder builder) {
             enablesTemperatureForecast = builder
                     .comment("Enables the weather forecast system. ")
@@ -116,6 +117,8 @@ public class FHConfig {
                     .defineInRange("steamCoreGeneratedSpeed", 32f, 0f, 256f);
             steamCoreCapacity = builder.comment("The capacity which steam core can provide.")
                     .defineInRange("steamCoreCapacity", 32, 0f, 256f);
+            heatParticleNum = builder.comment("Number of heat particles")
+                    .defineInRange("steamCoreCapacity", 4168, 32,32767);
 
         }
     }
