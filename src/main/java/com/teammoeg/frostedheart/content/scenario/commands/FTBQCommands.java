@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.scenario.commands;
 
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import com.teammoeg.frostedheart.content.scenario.Param;
-import com.teammoeg.frostedheart.content.scenario.runner.BaseScenarioRunner;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.SingleExecuteTargetTrigger;
 
@@ -34,46 +34,46 @@ import dev.ftb.mods.ftbquests.quest.task.Task;
 import dev.ftb.mods.ftbquests.util.ProgressChange;
 
 public class FTBQCommands {
-	public void waitquestComplete(BaseScenarioRunner runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
+	public void waitquestComplete(ScenarioCommandContext runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
 		BaseQuestFile qf=FTBQuestsAPI.api().getQuestFile(false);
 		Quest quest=qf.getQuest(BaseQuestFile.parseCodeString(q));
-		runner.addTrigger(new SingleExecuteTargetTrigger(r-> quest.isCompletedRaw(ServerQuestFile.INSTANCE.getOrCreateTeamData(r.getPlayer()))),new ExecuteTarget(runner,s,l));
+		runner.thread().addTrigger(new SingleExecuteTargetTrigger(r-> quest.isCompletedRaw(ServerQuestFile.INSTANCE.getOrCreateTeamData(r.player()))),new ExecuteTarget(s,l));
 	}
-	public void waittaskComplete(BaseScenarioRunner runner,@Param("s")String s,@Param("l")String l,@Param("q")String q,@Param("t")int t) {
+	public void waittaskComplete(ScenarioCommandContext runner,@Param("s")String s,@Param("l")String l,@Param("q")String q,@Param("t")int t) {
 		BaseQuestFile qf=FTBQuestsAPI.api().getQuestFile(false);
 		Quest quest=qf.getQuest(BaseQuestFile.parseCodeString(q));
 		Task tsk=quest.getTasksAsList().get(t);
-		runner.addTrigger(new SingleExecuteTargetTrigger(r-> tsk.isCompletedRaw(ServerQuestFile.INSTANCE.getOrCreateTeamData(r.getPlayer()))),new ExecuteTarget(runner,s,l));
+		runner.thread().addTrigger(new SingleExecuteTargetTrigger(r-> tsk.isCompletedRaw(ServerQuestFile.INSTANCE.getOrCreateTeamData(r.player()))),new ExecuteTarget(s,l));
 	}
-	public void waittaskCompleteShow(BaseScenarioRunner runner,@Param("s")String s,@Param("l")String l,@Param("q")String q,@Param("t")int t) {
+	public void waittaskCompleteShow(ScenarioCommandContext runner,@Param("s")String s,@Param("l")String l,@Param("q")String q,@Param("t")int t) {
 		//System.out.println("wtcs");
 		BaseQuestFile qf=FTBQuestsAPI.api().getQuestFile(false);
 		Quest quest=qf.getQuest(BaseQuestFile.parseCodeString(q));
 		Task tsk=quest.getTasksAsList().get(t);
-		FHScenario.callClientCommand("showTask", runner, "q",q,"t",""+t);
-		runner.addTrigger(new SingleExecuteTargetTrigger(r->{
-			TeamData td=ServerQuestFile.INSTANCE.getOrCreateTeamData(r.getPlayer());
+		FHScenario.callClientCommand("showTask", runner.context(), "q",q,"t",""+t);
+		runner.thread().addTrigger(new SingleExecuteTargetTrigger(r->{
+			TeamData td=ServerQuestFile.INSTANCE.getOrCreateTeamData(r.player());
             return td.isCompleted(tsk);
-		}),new ExecuteTarget(runner,s,l));
+		}),new ExecuteTarget(s,l));
 		
 	}
-	public void waitquestStart(BaseScenarioRunner runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
+	public void waitquestStart(ScenarioCommandContext runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
 		BaseQuestFile qf=FTBQuestsAPI.api().getQuestFile(false);
 		Quest quest=qf.getQuest(BaseQuestFile.parseCodeString(q));
-		runner.addTrigger(new SingleExecuteTargetTrigger(r-> qf.getOrCreateTeamData(r.getPlayer()).canStartTasks(quest)),new ExecuteTarget(runner,s,l));
+		runner.thread().addTrigger(new SingleExecuteTargetTrigger(r-> qf.getOrCreateTeamData(r.player()).canStartTasks(quest)),new ExecuteTarget(s,l));
 	}
-	public void completequest(BaseScenarioRunner runner,@Param("q")String q) {
+	public void completequest(ScenarioCommandContext runner,@Param("q")String q) {
 		Quest quest=ServerQuestFile.INSTANCE.getQuest(BaseQuestFile.parseCodeString(q));
-		TeamData td=ServerQuestFile.INSTANCE.getOrCreateTeamData(runner.getPlayer());
-		ProgressChange change=new ProgressChange(ServerQuestFile.INSTANCE, quest, runner.getPlayer().getUUID());
+		TeamData td=ServerQuestFile.INSTANCE.getOrCreateTeamData(runner.context().player());
+		ProgressChange change=new ProgressChange(ServerQuestFile.INSTANCE, quest, runner.context().player().getUUID());
 		change.setReset(false);
 		quest.forceProgress(td, change);
 
 	}
-	public void completetask(BaseScenarioRunner runner,@Param("q")String q,@Param("t")int t) {
+	public void completetask(ScenarioCommandContext runner,@Param("q")String q,@Param("t")int t) {
 		Quest quest=ServerQuestFile.INSTANCE.getQuest(BaseQuestFile.parseCodeString(q));
-		TeamData td=ServerQuestFile.INSTANCE.getOrCreateTeamData(runner.getPlayer());
-		ProgressChange change=new ProgressChange(ServerQuestFile.INSTANCE,quest.getTasksAsList().get(t),runner.getPlayer().getUUID());
+		TeamData td=ServerQuestFile.INSTANCE.getOrCreateTeamData(runner.context().player());
+		ProgressChange change=new ProgressChange(ServerQuestFile.INSTANCE,quest.getTasksAsList().get(t),runner.context().player().getUUID());
 		change.setReset(false);
 		quest.forceProgress(td, change);
 		//ServerQuestFile.INSTANCE.forceProgress(td,change);

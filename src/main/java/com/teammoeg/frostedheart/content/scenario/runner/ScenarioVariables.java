@@ -162,11 +162,11 @@ public class ScenarioVariables implements IScenarioVaribles  {
         return get(key);
     }
 
-
-    @Override
+	@Override
     public void set(String key, double v) {
     	setPathNumber(key, v);
     }
+	@Override
 	public void remove(String path) {
         String[] paths = path.split("\\.");
         CompoundTag nbt = getExecutionData();

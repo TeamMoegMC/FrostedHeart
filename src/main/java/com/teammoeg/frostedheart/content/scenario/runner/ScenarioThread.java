@@ -92,4 +92,51 @@ public interface ScenarioThread {
 	void addWait(int time);
 
 	void stop();
+
+	void waitClient();
+
+	/**
+	 * Adds the trigger.
+	 *
+	 * @param trig the trig
+	 * @param targ the targ
+	 */
+	void addTrigger(IScenarioTrigger trig, ScenarioTarget targ);
+
+	/**
+	 * Call.
+	 *
+	 * @param scenario the scenario
+	 * @param label the label
+	 */
+	void call(ScenarioContext ctx, String scenario, String label);
+
+	/**
+	 * Call.
+	 *
+	 * @param target the target
+	 */
+	void call(ScenarioContext ctx, ScenarioTarget target);
+
+	/**
+	 * Gets the current position.
+	 *
+	 * @return the current position
+	 */
+	ExecuteStackElement getCurrentPosition(int offset);
+
+	/**
+	 * Adds the call stack.
+	 */
+	void addCallStack();
+
+	/**
+	 * Try pop call stack.
+	 */
+	void tryPopCallStack(ScenarioContext ctx);
+
+	/**
+	 * Pop call stack.
+	 */
+	void popCallStack(ScenarioContext ctx);
 }

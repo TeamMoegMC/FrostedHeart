@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
+import com.teammoeg.frostedheart.content.scenario.runner.IScenarioVaribles;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioVariables;
 
 import net.minecraft.client.Minecraft;
@@ -58,15 +59,15 @@ public class FHClientSettingsPacket implements FHMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-            ScenarioVariables sv=FHScenario.get(context.get().getSender()).getVaribles();
+            IScenarioVaribles sv=FHScenario.get(context.get().getSender()).getContext().getVaribles();
             sv.getExecutionData().putDouble("uiScale", scale);
             sv.getExecutionData().putDouble("scaledWidth", scaledWidth);
             sv.getExecutionData().putDouble("scaledHeight", scaledHeight);
-            if(sv.getSnapshot()!=null) {
+            /*if(sv.getSnapshot()!=null) {
             	sv.getSnapshot().putDouble("uiScale", scale);
                 sv.getSnapshot().putDouble("scaledWidth", scaledWidth);
                 sv.getSnapshot().putDouble("scaledHeight", scaledHeight);
-            }
+            }*/
             	
         });
         context.get().setPacketHandled(true);

@@ -52,6 +52,7 @@ public class ClientScenarioResponsePacket implements FHMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
+        	//System.out.println("client responded");
             FHScenario.get(context.get().getSender()).notifyClientResponse(isSkipped, status);
         });
         context.get().setPacketHandled(true);

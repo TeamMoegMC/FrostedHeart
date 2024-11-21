@@ -31,6 +31,10 @@ import net.minecraft.nbt.CompoundTag;
  * You should NOT store this object, always get it from {@link ScenarioConductor#getCurrentAct()}
  * */
 public class Act extends BaseScenarioRunner{
+	@Override
+	public String toString() {
+		return "Act [name=" + name + ", sp=" + sp + ", nodeNum=" + nodeNum + ", status=" + status + "]";
+	}
 	String label;
 	
 	ActNamespace name;
@@ -54,7 +58,7 @@ public class Act extends BaseScenarioRunner{
     		this.restoreLocation(ctx);
     		
     		if(label!=null) {
-    			Integer nn=sp.labels.get(label);
+    			Integer nn=sp.labels().get(label);
     			if(nn!=null)
     				this.nodeNum=nn;
     			label=null;
@@ -67,8 +71,8 @@ public class Act extends BaseScenarioRunner{
     		CodecUtil.encodeNBT(ParagraphData.CODEC, nbt,"location",savedLocation);
     	
     	CodecUtil.encodeNBT(ExecuteStackElement.LIST_CODEC,nbt,"callStack",callStack);
-    	nbt.putString("chapter", name.chapter);
-    	nbt.putString("act", name.act);
+    	nbt.putString("chapter", name.chapter());
+    	nbt.putString("act", name.act());
     	nbt.putString("title", title);
     	nbt.putString("subtitle", subtitle);
     	if(label!=null)

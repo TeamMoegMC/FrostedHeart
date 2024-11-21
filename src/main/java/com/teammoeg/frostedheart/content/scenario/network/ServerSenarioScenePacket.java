@@ -51,6 +51,7 @@ public class ServerSenarioScenePacket implements FHMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
         	if(ClientScene.INSTANCE!=null) {
+        		//System.out.println("scene sent");
         		ClientScene.INSTANCE.process(text, isReline, isNowait,resetScene,status);
         		ClientScene.INSTANCE.sendImmediately=!isWaitClick;
         	}

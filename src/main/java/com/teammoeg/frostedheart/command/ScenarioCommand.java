@@ -21,33 +21,33 @@ public class ScenarioCommand {
 			Commands.argument("scenario", StringArgumentType.string()).then(
 				Commands.argument("label", StringArgumentType.string()).executes(ct->{
 					FHScenario.get(ct.getSource().getPlayerOrException()).jump(
-						new ExecuteTarget(FHScenario.get(ct.getSource().getPlayerOrException()),StringArgumentType.getString(ct, "scenario"),StringArgumentType.getString(ct, "label")));
+						new ExecuteTarget(StringArgumentType.getString(ct, "scenario"),StringArgumentType.getString(ct, "label")));
 					return Command.SINGLE_SUCCESS;
 				})
 				).executes(ct->{
 					
 					FHScenario.get(ct.getSource().getPlayerOrException()).jump(
-						new ExecuteTarget(FHScenario.get(ct.getSource().getPlayerOrException()),StringArgumentType.getString(ct, "scenario"),null));
+						new ExecuteTarget(StringArgumentType.getString(ct, "scenario"),null));
 					return Command.SINGLE_SUCCESS;
 				})
 			)).then(Commands.literal("queue").then(
 				Commands.argument("scenario", StringArgumentType.string()).then(
 					Commands.argument("label", StringArgumentType.string()).executes(ct->{
 						FHScenario.get(ct.getSource().getPlayerOrException()).queue(
-							new ExecuteTarget(FHScenario.get(ct.getSource().getPlayerOrException()),StringArgumentType.getString(ct, "scenario"),StringArgumentType.getString(ct, "label")));
+							new ExecuteTarget(StringArgumentType.getString(ct, "scenario"),StringArgumentType.getString(ct, "label")));
 						return Command.SINGLE_SUCCESS;
 					})
 					).executes(ct->{
 						FHScenario.get(ct.getSource().getPlayerOrException()).queue(
-							new ExecuteTarget(FHScenario.get(ct.getSource().getPlayerOrException()),StringArgumentType.getString(ct, "scenario"),null));
+							new ExecuteTarget(StringArgumentType.getString(ct, "scenario"),null));
 						return Command.SINGLE_SUCCESS;
 					})
 			)).then(Commands.literal("run").then(
 				Commands.argument("script", StringArgumentType.string()).executes(ct->{
                     String sb = StringArgumentType.getString(ct, "script") + "\n" + "@return";
 						ScenarioConductor cdt=FHScenario.get(ct.getSource().getPlayerOrException());
-						cdt.addCallStack();
-						cdt.run(FHScenario.parser.parseString("<anoymous_command>", sb));
+						cdt.getCurrentAct().addCallStack();
+						cdt.getCurrentAct().run(FHScenario.parser.parseString("<anoymous_command>", sb+"\r\n@return"));
 						return Command.SINGLE_SUCCESS;
 					})
 			)).then(Commands.literal("pause").executes(ct->{

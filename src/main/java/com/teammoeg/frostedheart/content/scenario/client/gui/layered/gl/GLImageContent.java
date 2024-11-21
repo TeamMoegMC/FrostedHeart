@@ -30,6 +30,8 @@ public class GLImageContent extends GLLayerContent {
 	@Override
 	public void renderContents(RenderParams params) {
 		//RenderSystem.colorMask(false, false, false, false);
+		System.out.println("computed width:"+params.getContentWidth());
+		System.out.println("total width:"+params.getScreenWidth());
 		if(texture==null) {
 			if(showingImage!=null) {
 				

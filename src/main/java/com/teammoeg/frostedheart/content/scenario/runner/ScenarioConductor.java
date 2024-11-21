@@ -30,13 +30,12 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.content.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
-import com.teammoeg.frostedheart.content.scenario.runner.target.IScenarioTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ScenarioTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraft.world.entity.player.Player;
@@ -57,100 +56,64 @@ public class ScenarioConductor implements NBTSerializable{
     private transient Act currentAct;
     public Map<ActNamespace,Act> acts=new HashMap<>();
     private transient boolean isActsEnabled;
-    private transient ActNamespace lastQuest;
+    //private transient ActNamespace lastQuest;
     private static final ActNamespace global=new ActNamespace();
-
+    private ActScenarioContext context=new ActScenarioContext(this);
+    private static ActNamespace lastCurrent;
 	private static final ActNamespace init=new ActNamespace(null,null);
-    boolean inited=false;
 	
-	/** Owner player UUID. */
-	protected UUID player;
-	/** The is skip. */
-	protected boolean isSkip;
-	/** The client status. */
-	protected int clientStatus;
-	/** The scene. */
-	protected Scene scene;
-	
-	/** The clear after click. */
-	protected boolean clearAfterClick;
     public void copy() {}
     public void enableActs() {
     	if(!isActsEnabled) {
     		isActsEnabled=true;
-       		if(lastQuest!=null) {
-    			acts.get(lastQuest).queue(acts.get(lastQuest).paragraph);
+       		if(lastCurrent!=null) {
+       			currentAct=acts.get(lastCurrent);
     		}
     		acts.values().forEach(t->{
     			if(t.getStatus()==RunStatus.WAITTRIGGER) {
+    				t.scene().setSlient(true);
     				//t.getScene().setSlient(true);
     				t.setStatus(RunStatus.RUNNING);
-    				if(t.name.equals(lastQuest))lastQuest=null;
-    				t.queue(t.paragraph);
-    				//t.getScene().setSlient(false);
+    				//if(t.name.equals(lastQuest))lastQuest=null;
+    				
+    				t.restoreLocation(getContext());
+    				t.runCodeExecutionLoop(getContext());
+    				t.scene().setSlient(false);
+    			}else if(t.getStatus()==RunStatus.RUNNING) {
+    				t.prepareForRun(context);
     			}
     		});
  
     	}
     }
+    public void initContext(ServerPlayer player) {
+    	context.setPlayer(player);
+    }
     public ScenarioConductor() {
 		super();
-		setCurrentAct(new Act(this,init));
-		acts.put(init, getCurrentAct());
-		acts.put(global, new Act(this,global));
+		currentAct=new Act(init);
+		acts.put(init,currentAct);
+		acts.put(global, new Act(global));
 	}
 
     public void init(ServerPlayer player) {
-    	if(!isInited())inited=true;
-		this.player = player.getUUID();
+    	initContext(player);
 	}
 
     public ScenarioConductor(ServerPlayer player) {
-		super();
-		this.player = player.getUUID();
-		setCurrentAct(new Act(this,init));
-		acts.put(init, getCurrentAct());
-		acts.put(global, new Act(this,global));
-
-		
-	}
-
-	/**
-	 * Gets the client status.
-	 *
-	 * @return the client status
-	 */
-	public int getClientStatus() {
-		return clientStatus;
+		this();
+		this.initContext(player);
 	}
 	
-
-	public Scene getScene() {
-    	return getCurrentAct().getScene();
-    }
-
-
-
-
 	public void notifyClientResponse(boolean isSkip,int status) {
-		this.isSkip=isSkip;
-		this.clientStatus=status;
-		if(this.getStatus()==RunStatus.WAITCLIENT) {
-			if(clearAfterClick)
-				doParagraph();
-			run();
-		}else if(this.getStatus()==RunStatus.WAITTIMER&&isSkip) {
-			this.stopWait();
-			run();
-		}
+		getCurrentAct().notifyClientResponse(context, isSkip, status);
 		
     }
 
 	public void onLinkClicked(String link) {
-		ExecuteTarget jt=getScene().getLinks().get(link);
-		if(jt!=null) {
-			jump(jt);
-		}
+		ExecuteTarget target=getCurrentAct().scene().getLinks().get(link);
+		if(target!=null)
+			getCurrentAct().jump(getContext(), target);
 	}
 
 
@@ -159,64 +122,35 @@ public class ScenarioConductor implements NBTSerializable{
 			getCurrentAct().addTrigger(trig,targ);
 		//}else super.addTrigger(trig,targ);
 	}
-    public void run(Scenario sp) {
-		if (sp == null) {
+    public void run(String scenario) {
+		if (scenario == null) {
 			FHMain.LOGGER.error("[Scenario Conductor] Scenario to run is null");
 		} else {
-			FHMain.LOGGER.info("[Scenario Conductor] Running scenario "+sp.name);
+			FHMain.LOGGER.info("[Scenario Conductor] Running scenario "+scenario);
 		}
-
-		this.setScenario(sp);
-		nodeNum=0;
-		varData.takeSnapshot();
-		getCurrentAct().newParagraph(sp, 0);
-
-		run();
+		getContext().takeSnapshot();
+		acts.get(init).jump(getContext(), scenario, null);
 	}
-
-	@Override
-	protected void runCode(ScenarioContext ctx) {
-		clearAfterClick=false;
-		super.runCode(ctx);
-	}
-	@Override
-	public LinkedList<ExecuteStackElement> getCallStack() {
-		return getCurrentAct().getCallStack();
-	}
-	@Override
-	public void jump(IScenarioTarget nxt) {
-		getCurrentAct().setActState();
-		super.jump(nxt);
-	}
-	public void tick() {
-		if(!isInited())return;
+	public void tick(ServerPlayer player) {
+		init(player);
     	//detect triggers
-		if(getStatus()==RunStatus.RUNNING) {
-			run();
-		}
-    	for(TriggerTarget t:triggers) {
-    		if(t.test(this)) {
-    			if(t.use()) {
-    				if(t.isAsync())
-						addToQueue(t);
-					else
-						jump(t);
-    			}
-    		}
+		//System.out.println("start tick==============");
+		
+    	for(Act act:acts.values()) {
+    		act.tickTrigger(getContext());
     	}
-    	triggers.removeIf(t->!t.canUse());
-    	for(Act a:acts.values())
-	    	a.getScene().tickTriggers(this, getCurrentAct()==a);
+    	if(currentAct!=null) {
+	    	currentAct.tickMain(context);
+	    	if(currentAct.getStatus().shouldPause) currentAct=null;
+    	}
+    	if(currentAct==null)
+	    	for(Act act:acts.values()) {
+	    		act.runScheduled(context);
+	    		if(!act.getStatus().shouldPause) {
+	    			currentAct=act;
+	    		}
+	    	}
     	
-    	if(getStatus()==RunStatus.WAITTIMER) {
-    		if(tickWait()) {
-    			
-    			run();
-    			return;
-    		}
-    	}
-    	//Execute Queued actions
-    	runScheduled();
     }
 
 
@@ -224,18 +158,16 @@ public class ScenarioConductor implements NBTSerializable{
 		if(getCurrentAct().name.isAct()) {
 			ActNamespace old=getCurrentAct().name;
 			Act olddata=getCurrentAct();
-			varData.restoreSnapshot();//Protective against modify varibles without save
-			if(!status.shouldPause) {//Back to last savepoint unless it is waiting trigger
-				olddata.paragraph.apply(olddata);
-				olddata.setStatus(RunStatus.RUNNING);
-			}else {//Save current state if stopped or waiting trigger.
-				olddata.setActState();
+			getContext().restoreSnapshot();//Protective against modify varibles without save
+			if(!olddata.getStatus().shouldPause) {//Back to last savepoint unless it is waiting trigger
+				olddata.restoreLocation(getContext());
 			}
-			olddata.getScene().clear(this);
+			olddata.scene().clear(getContext(),RunStatus.STOPPED);
+			olddata.setStatus(RunStatus.PAUSED);//pause current act
 			acts.put(old, olddata);
 			globalScope();
 		}else {
-			varData.takeSnapshot();
+			getContext().takeSnapshot();
 		}	
 	}
 	public void continueAct(ActNamespace quest) {
@@ -243,22 +175,18 @@ public class ScenarioConductor implements NBTSerializable{
 		Act data=acts.get(quest);
 		if(data!=null) {
 			pauseAct();
-			this.setCurrentAct(data);
-			data.prepareForRun();
-			if(data.getScenario()!=null) {
-				this.sp=data.getScenario();
-				this.nodeNum=data.getExecutePos();
-				this.status=data.getStatus();
-			}
-			data.sendTitles(true, true);
-			if(getStatus().shouldRun) {
-				getScene().forcedClear(this);
-				run();
+			currentAct=data;
+			data.prepareForRun(getContext());
+			
+			data.sendTitles(getContext(),true, true);
+			if(data.getStatus().shouldRun) {
+				data.scene().forcedClear(getContext(),RunStatus.RUNNING);
+				data.run();
 			}
 		}
 	}
 	private void globalScope() {
-		setCurrentAct(acts.get(global));
+		currentAct=(acts.get(global));
 	}
 	public void enterAct(ActNamespace quest) {
 		if(quest.equals(getCurrentAct().name))return;
@@ -266,43 +194,35 @@ public class ScenarioConductor implements NBTSerializable{
 		Act data=acts.get(quest);
 		pauseAct();
 		if(data!=null) {
-			this.setCurrentAct(data);
-			data.paragraph.setScenario(this.getScenario());
-			data.paragraph.setParagraphNum(old.paragraph.getParagraphNum());
+			currentAct=data;
+			data.savedLocation=new ParagraphData(old.savedLocation);
 		}else {
-			data=new Act(this,quest);
+			data=new Act(quest);
 			acts.put(quest, data);
-			data.paragraph.setScenario(this.getScenario());
-			data.paragraph.setParagraphNum(old.paragraph.getParagraphNum());
-			this.setCurrentAct(data);
+			data.savedLocation=new ParagraphData(old.savedLocation);
+			currentAct=data;
 		}
-	}
-	public void queue(IScenarioTarget questExecuteTarget) {
-		getCurrentAct().queue(questExecuteTarget);
-		//toExecute.add(questExecuteTarget);
 	}
 	public void queueAct(ActNamespace quest,String scene,String label) {
 		Act data=getCurrentAct();
 		if(!quest.equals(getCurrentAct().name)) {
 			data=acts.get(quest);
 			if(data==null){
-				data=new Act(this,quest);
+				data=new Act(quest);
 				acts.put(quest, data);
 			}
 		}
 		if(scene==null)
-			scene=getScenario().name;
+			scene=getCurrentAct().getScenario().name();
 		ExecuteTarget target;
 		if(label!=null) {
 			data.label=label;
-			target=new ExecuteTarget(this,scene,label);
+			target=new ExecuteTarget(scene,label);
 		}else {
-			target=new ExecuteTarget(this,scene,null);
+			target=new ExecuteTarget(scene,null);
 		}
-		target.apply(data);
-		data.paragraph.setScenario(target.getScenario());
-		data.paragraph.setParagraphNum(0);
-		addToQueue(new ActTarget(quest,target));
+		data.jump(getContext(), target);
+		data.savedLocation=new ParagraphData(scene,0);
 	}
 
 	public void endAct() {
@@ -316,57 +236,60 @@ public class ScenarioConductor implements NBTSerializable{
 	public Act getCurrentAct() {
 		return currentAct;
 	}
-	private void setCurrentAct(Act currentAct) {
-		this.currentAct = currentAct;
-	}
     public static LazyOptional<ScenarioConductor> getCapability(@Nullable Player player) {
     	return FHCapabilities.SCENARIO.getCapability(player);
     }
 
-	public boolean isInited() {
-		return inited;
-	}
 	@Override
 	public void save(CompoundTag data, boolean isPacket) {
-    	if(varData.snapshot==null)
-    		data.put("vars", varData.extraData);
-    	else
-    		data.put("vars", varData.snapshot);
+    	data.put("vars", getContext().varData.save());
     	ListTag lacts=new ListTag();
     	for(Act v:acts.values()) {
     		if(v.name.isAct())
     			lacts.add(v.save());
     	}
+    	
     	data.put("acts", lacts);
-    	if(getCurrentAct().name.isAct()) {
-    		data.putString("chapter", getCurrentAct().name.chapter);
-    		data.putString("act", getCurrentAct().name.act);
+    	if(getCurrentAct()!=null&&getCurrentAct().name.isAct()) {
+    		CodecUtil.encodeNBT(ActNamespace.CODEC, data, "current",getCurrentAct().name);
     	}
 	}
 	@Override
 	public void load(CompoundTag data, boolean isPacket) {
-		// TODO Auto-generated method stub
-		varData.extraData=data.getCompound("vars");
-    	varData.snapshot=varData.extraData;
+		getContext().varData.load(data.getCompound("vars"));
+    	getContext().takeSnapshot();
     	ListTag lacts=data.getList("acts", Tag.TAG_COMPOUND);
+    	//Act initact=acts.get(init);
     	for(Tag v:lacts) {
-    		Act i=new Act(this,(CompoundTag) v);
-    		acts.put(i.name, i);
+    		CompoundTag t=(CompoundTag) v;
+    		ActNamespace ns=new ActNamespace(t.getString("chapter"),t.getString("act"));
+    		if(acts.containsKey(ns)) {
+    			acts.get(ns).load(t);
+    		}else {
+    			Act i=new Act(t);
+        		acts.put(i.name, i);
+    		}
+    		
     	}
-    	lastQuest=new ActNamespace(data.getString("chapter"),data.getString("act"));
+    	//acts.put(init, initact);
+    	if(data.contains("current")) {
+    		lastCurrent=CodecUtil.decodeNBT(ActNamespace.CODEC, data, "current");
+    	}
+    	//lastQuest=
+
     	//currentAct=acts.get();
     	//if(currentAct==null)
     	//currentAct=acts.get(empty);
 	}
-	public ServerPlayer getPlayer() {
-        return FHTeamDataManager.getServer().getPlayerList().getPlayer(player);
-    }
-    public String getLang() {
-    	return getPlayer().getLanguage();
-    }
-	public void sendMessage(String s) {
-		getPlayer().displayClientMessage(TranslateUtils.str(s), false);
+	public ScenarioContext getContext() {
+		return context;
 	}
-    
+
+	public void jump(ExecuteTarget executeTarget) {
+		getCurrentAct().jump(context,executeTarget);
+	}
+	public void queue(ExecuteTarget executeTarget) {
+		getCurrentAct().queue(executeTarget);
+	}
 
 }

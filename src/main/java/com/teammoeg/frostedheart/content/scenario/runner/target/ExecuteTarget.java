@@ -32,7 +32,7 @@ public record ExecuteTarget(String file,String label) implements ScenarioTarget{
 	public PreparedScenarioTarget prepare(ScenarioContext t, Scenario current) {
 		Scenario scenario=file==null?current:t.loadScenario(file);
 
-		return new PreparedScenarioTarget(scenario,scenario.labels.getOrDefault(label, 0));
+		return new PreparedScenarioTarget(scenario,scenario.labels().getOrDefault(label, 0));
 	}
 
 	

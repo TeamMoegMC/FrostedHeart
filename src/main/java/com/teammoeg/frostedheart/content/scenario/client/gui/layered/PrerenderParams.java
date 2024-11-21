@@ -25,7 +25,7 @@ public class PrerenderParams {
 	int height=576*FHConfig.CLIENT.getScenarioScale();
 	double scale;
 	public PrerenderParams() {
-		image=new BufferedImage(width,width, BufferedImage.TYPE_INT_ARGB);
+		image=new BufferedImage(width,height, BufferedImage.TYPE_INT_ARGB);
 		g2d=image.createGraphics();
 
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_DEFAULT);
@@ -52,25 +52,25 @@ public class PrerenderParams {
 			return (int) (width-((width-x)*scale));
 		}
 		return (int) (x*scale);*/
-		return x*FHConfig.CLIENT.getScenarioScale();
+		return x*FHConfig.CLIENT.getScenarioScale()/2;
 	}
 	public int calculateScaledY(int y) {
 		/*if(y>height/2) {
 			return (int) (height-((height-y)*scale));
 		}
 		return (int) (y*scale);*/
-		return y*FHConfig.CLIENT.getScenarioScale();
+		return y*FHConfig.CLIENT.getScenarioScale()/2;
 	}
 	public Rect calculateRect(int x,int y,int w,int h) {
-		int nx=x*FHConfig.CLIENT.getScenarioScale();
-		int ny=y*FHConfig.CLIENT.getScenarioScale();
-		int nw=w*FHConfig.CLIENT.getScenarioScale();
-		int nh=h*FHConfig.CLIENT.getScenarioScale();
+		int nx=x*FHConfig.CLIENT.getScenarioScale()/2;
+		int ny=y*FHConfig.CLIENT.getScenarioScale()/2;
+		int nw=w*FHConfig.CLIENT.getScenarioScale()/2;
+		int nh=h*FHConfig.CLIENT.getScenarioScale()/2;
 		return new Rect(nx,ny,nw,nh);
 	}
 	public int calculateScaledSize(int s) {
 		//return (int) (s*scale);
-		return s*FHConfig.CLIENT.getScenarioScale();
+		return s*FHConfig.CLIENT.getScenarioScale()/2;
 	}
 	public TypedDynamicTexture loadTexture() {
 		g2d.dispose();

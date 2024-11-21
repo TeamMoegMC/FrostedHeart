@@ -59,7 +59,7 @@ public abstract class Scene {
 	}
 	public void notifyClientResponse(ScenarioContext ctx,int clientStatus) {
 		if(clearAfterClick) {
-			this.clear(ctx);
+			this.clear(ctx,RunStatus.RUNNING);
 		}
 	}
 	public void addLog(String text) {
@@ -75,9 +75,9 @@ public abstract class Scene {
 		log.add(new StringBuilder());
 	}
 
-	public void clear(ScenarioContext parent) {
+	public void clear(ScenarioContext parent,RunStatus status) {
 		if (requireClear)
-			forcedClear(parent);
+			forcedClear(parent,status);
 	}
 
 	public void paragraph() {
@@ -91,8 +91,8 @@ public abstract class Scene {
 		log.clear();
 	}
 
-	public void forcedClear(ScenarioContext parent) {
-		sendClear(parent,false);
+	public void forcedClear(ScenarioContext parent,RunStatus status) {
+		sendClear(parent,status,false);
 		requireClear = false;
 		clearLink();
 	}
@@ -130,14 +130,14 @@ public abstract class Scene {
 	 * sync all remaining cached text and send a 'clear current dialog' message to client
 	 * Also sync current state, so call this after all status operation
 	 * */
-	public void sendClear(ScenarioContext ctx,boolean waitClick) {
+	public void sendClear(ScenarioContext ctx,RunStatus status,boolean waitClick) {
 		String tosend="";
 		if (currentLiteral != null) {
 			tosend=currentLiteral.toString();
 			addLogLn(tosend);
 		}
 		if (!isSlient())
-			sendScene(ctx,tosend,RunStatus.STOPPED, false, true,waitClick);
+			sendScene(ctx,tosend,status, false, true,waitClick);
 		currentLiteral = null;
 	}
 

@@ -11,12 +11,16 @@ public record ParagraphData(String name,int paragraphNum) implements ScenarioTar
 		Codec.STRING.fieldOf("name").forGetter(o->o.name()),
 		Codec.INT.fieldOf("paragraphNum").forGetter(o->o.paragraphNum())
 		).apply(t,ParagraphData::new));
+	public ParagraphData(ParagraphData old) {
+		this(old.name(),old.paragraphNum());
+	}
+	
 	@Override
 	public PreparedScenarioTarget prepare(ScenarioContext t, Scenario current) {
 		Scenario scenario=t.loadScenario(name);
 		int nodeNum=0;
-		if(paragraphNum<scenario.paragraphs.length)
-			nodeNum=scenario.paragraphs[paragraphNum];
+		if(paragraphNum<scenario.paragraphs().length)
+			nodeNum=scenario.paragraphs()[paragraphNum];
 		return new PreparedScenarioTarget(scenario,nodeNum);
 	}
 }

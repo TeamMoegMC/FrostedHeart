@@ -6,6 +6,7 @@ public enum RunStatus {
 	WAITACTION(false,false),//waiting for player action
 	WAITTIMER,//waiting for timer
 	WAITTRIGGER(true,false,true),//waiting for async trigger
+	PAUSED(true,false,true),//Paused from use action
 	STOPPED(true,false,true);//stopped
 	public final boolean doPersist;
 	public final boolean shouldRun;

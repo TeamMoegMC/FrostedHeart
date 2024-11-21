@@ -162,4 +162,20 @@ public class DirectScenarioVariables implements  IScenarioVaribles  {
 	public CompoundTag getExtraData() {
 		return extraData;
 	}
+	@Override
+	public void remove(String path) {
+        String[] paths = path.split("\\.");
+        CompoundTag nbt = getExecutionData();
+        for (int i = 0; i < paths.length - 1; i++) {
+            if (nbt.contains(paths[i], 10)) {
+                nbt = nbt.getCompound(paths[i]);
+            } else if (!nbt.contains(paths[i])) {
+                CompoundTag cnbt = new CompoundTag();
+                nbt.put(paths[i], cnbt);
+                nbt = cnbt;
+            } else
+                throw new IllegalArgumentException(String.join(".", Arrays.copyOfRange(paths, 0, i + 1)) + " is not an object");
+        }
+        nbt.remove(paths[paths.length - 1]);
+	}
 }

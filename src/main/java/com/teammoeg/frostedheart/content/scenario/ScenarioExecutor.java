@@ -103,6 +103,10 @@ public class ScenarioExecutor<T> {
                     converter = fnumber;
                     if(partype.isPrimitive())
                     	def=()->0f;
+                } else if (partype.isAssignableFrom(Boolean.class)|| partype==boolean.class) {
+                	converter=bo;
+                	if(partype.isPrimitive())
+                    	def=()->false;
                 } else if(parent.types.containsKey(partype)){
                 	converter=parent.types.get(partype);
                 }else {
@@ -174,6 +178,12 @@ public class ScenarioExecutor<T> {
     	if(s==null||s.isEmpty())return s;
     	if(s.toLowerCase().startsWith("0x"))return (int)(Long.parseLong(s.substring(2),16));
     	return ((Double) Double.parseDouble(s)).intValue();
+    	};
+	private static TypeAdapter<?, Object> bo = (r,n,p) ->{ 
+    	String s=getFirstExists(p,n);
+    	if(s==null||s.isEmpty())return s;
+    	if(s.toLowerCase().startsWith("0x"))return (int)(Long.parseLong(s.substring(2),16));
+    	return ((Double) Double.parseDouble(s)).intValue()>0;
     	};
 
     private static TypeAdapter<?,Object> fnumber = (r,n,p) ->{
