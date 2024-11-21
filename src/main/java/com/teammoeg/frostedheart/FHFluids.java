@@ -54,10 +54,10 @@ public class FHFluids {
     public static RegistryObject<Fluid> CHLORINE = registerSimpleGas("chlorine", 0xFFADFF2F);
     public static RegistryObject<Fluid> STEAM = registerSimpleGas("steam", 0xFFFFFFFF);
     public static RegistryObject<Fluid> SO2 = registerSimpleGas("sulfur_dioxide", 0xFFEEE888);
-    public static RegistryObject<Fluid> FERROUS_CHLORIDE = registerSimpleLiquid("ferrous_chloride", 0xBB3333);
-    public static RegistryObject<Fluid> FERRIC_CHLORIDE = registerSimpleLiquid("ferric_chloride", 0xB0FFDE);
-    public static RegistryObject<Fluid> COPPER_CHLORIDE = registerSimpleLiquid("copper_chloride", 0xB0FFDE);
-    public static RegistryObject<Fluid> ZINC_SULFATE = registerSimpleLiquid("zinc_sulfate", 0xB0C4FF);
+    public static RegistryObject<Fluid> FERROUS_CHLORIDE = registerSimpleLiquid("ferrous_chloride", 0xFFBB3333);
+    public static RegistryObject<Fluid> FERRIC_CHLORIDE = registerSimpleLiquid("ferric_chloride", 0xFFB0FFDE);
+    public static RegistryObject<Fluid> COPPER_CHLORIDE = registerSimpleLiquid("copper_chloride", 0xFFB0FFDE);
+    public static RegistryObject<Fluid> ZINC_SULFATE = registerSimpleLiquid("zinc_sulfate", 0xFFB0C4FF);
     public static RegistryObject<Fluid> LIME_WATER = registerSimpleLiquid("lime_water", 0xB0C4DE);
     public static RegistryObject<Fluid> MAGNESIUM_CHLORIDE = registerSimpleLiquid("magnesium_chloride", 0xDEDEEE);
     public static RegistryObject<Fluid> SULFURIC_ACID = registerSimpleLiquid("sulfuric_acid", 0xEEE8AA);
@@ -107,10 +107,14 @@ public class FHFluids {
     }
 
     public static RegistryObject<Fluid> registerSimpleGas(String name, int color) {
+    	if((color|0xFF000000)==0)
+    		color|=0xFF000000;
         return registerSimpleFluid(name, color, -1, 0, 300, false);
     }
 
     public static RegistryObject<Fluid> registerSimpleLiquid(String name, int color) {
+    	if((color|0xFF000000)==0)
+    		color|=0xFF000000;
         return registerSimpleFluid(name, color, 1, 0, 300, false);
     }
 

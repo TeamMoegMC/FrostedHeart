@@ -133,6 +133,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood,I
             
             helper.accept(new ItemStack(this));
             if (tag == null) return;
+            if(doAddItems)
             for (Fluid fluid : tag) {
                 if (fluid.is(hidden)) continue;
                 ItemStack itemStack = new ItemStack(this);

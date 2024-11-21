@@ -269,6 +269,7 @@ dependencies {
 
     // Tetra
     compileOnly fg.deobf("curse.maven:tetra-289712:5544287") // somehow, when datagening, you must set to compileOnly
+    
     implementation fg.deobf("curse.maven:mutil-351914:4824501")
 
     // Caupona
