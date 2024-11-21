@@ -438,6 +438,7 @@ public class CommonEvents {
         TownCommand.register(dispatcher);
         TipCommand.register(dispatcher);
         WaterCommand.register(dispatcher);
+        NutritionCommand.register(dispatcher);
     }
 
     @SubscribeEvent

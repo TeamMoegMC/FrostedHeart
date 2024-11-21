@@ -419,7 +419,9 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 				.add(rk(FHBlocks.KAOLIN_PERMAFROST.get().asItem()));
 
 
-		tag(ItemTags.PICKAXES).add(rk(FHItems.MAKESHIFT_PICKAXE)).add(rk(FHItems.BRONZE_PICKAXE));
+		tag(ItemTags.PICKAXES)
+				.add(rk(FHItems.MAKESHIFT_PICKAXE)).add(rk(FHItems.BRONZE_PICKAXE))
+				.add(rk(FHItems.BRONZE_HAMMER)).add(rk(FHItems.STONE_HAMMER));
 		tag(ItemTags.AXES).add(rk(FHItems.MAKESHIFT_AXE)).add(rk(FHItems.BRONZE_AXE));
 		tag(ItemTags.SHOVELS).add(rk(FHItems.MAKESHIFT_SHOVEL)).add(rk(FHItems.BRONZE_SHOVEL));
 		tag(ItemTags.HOES).add(rk(FHItems.MAKESHIFT_HOE)).add(rk(FHItems.BRONZE_HOE));
@@ -431,6 +433,8 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 		tag(frl("hoes/bronze")).add(rk(FHItems.BRONZE_HOE));
 		tag(frl("swords/bronze")).add(rk(FHItems.BRONZE_SWORD));
 		tag(frl("knives/bronze")).add(rk(FHItems.BRONZE_KNIFE));
+		tag(frl("hammers/bronze")).add(rk(FHItems.BRONZE_HAMMER));
+		tag(frl("spears/bronze")).add(rk(FHItems.BRONZE_SPEAR));
 
 		tag(FHTags.Items.IGNITION_MATERIAL)
 				.add(rk(Items.FLINT));

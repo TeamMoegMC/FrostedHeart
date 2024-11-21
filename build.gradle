@@ -128,6 +128,7 @@ mixin {
 }
 
 repositories {
+    mavenCentral()
     mavenLocal()
     maven {
         // location of the maven that hosts JEI files before January 2023
@@ -228,6 +229,12 @@ repositories {
 }
 
 dependencies {
+    compileOnly 'org.projectlombok:lombok:1.18.36'
+    annotationProcessor 'org.projectlombok:lombok:1.18.36'
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.36'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.36'
+
     minecraft "net.neoforged:forge:${minecraft_version}-${forge_version}"
 //    implementation fileTree(include: ['*.jar'], dir: 'libs')
 
@@ -261,8 +268,7 @@ dependencies {
     noDatagenRuntimeOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:${ftb_quests_version}")
 
     // Tetra
-	implementation fg.deobf("curse.maven:tetra-289712:5544287")
-    noDatagenRuntimeOnly fg.deobf("curse.maven:tetra-289712:5544287")
+    compileOnly fg.deobf("curse.maven:tetra-289712:5544287") // somehow, when datagening, you must set to compileOnly
     implementation fg.deobf("curse.maven:mutil-351914:4824501")
 
     // Caupona
@@ -283,24 +289,6 @@ dependencies {
     datagenImplementation fg.deobf("curse.maven:crock-pot-404523:5458905")
     datagenImplementation fg.deobf("curse.maven:charcoal-pit-reloaded-534602:5861935")
     datagenImplementation fg.deobf("curse.maven:selene-499980:5854670") // supp api
-    // dead mods:
-//    implementation fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
-//    implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5-TWR')
-//    implementation fg.deobf('curse.maven:Project-Rankine-400704:4086553')
-//    implementation fg.deobf("curse.maven:thermopolium-594107:4005647")
-
-    // no longer used
-//    compileOnly fg.deobf("curse.maven:chisel-235279:3376782")
-//    compileOnly fg.deobf("curse.maven:ctm-267602:3137659")
-//    implementation fg.deobf("curse.maven:kiwi-303657:3377053")
-//    compileOnly fg.deobf("curse.maven:snowrealmagic-308663:3295579")
-//    compileOnly fg.deobf("curse.maven:selene-499980:3517008")
-//    compileOnly fg.deobf("curse.maven:age-api-353992:3176394")
-//    compileOnly fg.deobf("curse.maven:neolithic-world-534605:3937806")
-//    compileOnly fg.deobf("curse.maven:supplementaries-412082:3650035")
-//    compileOnly fg.deobf("curse.maven:engineers-decor-313866:3566177")
-//    compileOnly fg.deobf("curse.maven:projecte-226410:3223221")
-//    implementation fg.deobf("curse.maven:diet-443570:4813904")
 
     // FG5 requires 0.8.3
     annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"

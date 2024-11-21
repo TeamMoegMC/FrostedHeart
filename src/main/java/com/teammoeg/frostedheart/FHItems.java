@@ -116,6 +116,10 @@ public class FHItems {
     public static final RegistryObject<Item> BRONZE_SPEAR = register("bronze_spear", n -> new SpearItem(FHToolMaterials.ALLOY, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/bronze_spear.png"), new Item.Properties()));
     public static final RegistryObject<Item> BRONZE_SWORD = register("bronze_sword", n -> new SwordItem(FHToolMaterials.ALLOY, 3, -2.4F, new Item.Properties()));
 
+    public static final RegistryObject<Item> STONE_HAMMER = register("stone_hammer", n -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()));
+    public static final RegistryObject<Item> BRONZE_HAMMER = register("bronze_hammer", n -> new PickaxeItem(FHToolMaterials.ALLOY, 1, -2.8F, new Item.Properties()));
+
+
     // Materials
     public static RegistryObject<Item> generator_ash = register("generator_ash", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> raw_hide = register("raw_hide", n -> new FHBaseItem(createProps()));

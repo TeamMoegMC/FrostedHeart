@@ -229,6 +229,9 @@ public class FHItemModelProvider extends ItemModelProvider {
 		texture(FHItems.SNOWSHOES);
 		texture(FHItems.ICE_SKATES);
 
+		texture(FHItems.STONE_HAMMER);
+		texture(FHItems.BRONZE_HAMMER);
+
 //		texture(FHItems.CURIOSITY_SPAWN_EGG);
 //		texture(FHItems.WANDERING_REFUGEE_SPAWN_EGG);
 
