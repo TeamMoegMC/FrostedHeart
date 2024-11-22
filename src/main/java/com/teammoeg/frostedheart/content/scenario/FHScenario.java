@@ -107,6 +107,7 @@ public class FHScenario {
 			for (ScenarioProvider i : scenarioProviders) {
 				try {
 					Scenario s = i.apply(paths[0],params,name);
+					
 					if (s != null) {
 						FHMain.LOGGER.info("Loading scenario from provider "+i.getName());
 						return s;

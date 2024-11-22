@@ -192,23 +192,18 @@ public class ScenarioConductor implements NBTSerializable{
 		Act data=acts.get(quest);
 		endAct();
 		if(data!=null) {
-			currentAct=data;
-			if(old.savedLocation!=null)
-				data.savedLocation=new ParagraphData(old.savedLocation);
-			else
-				data.savedLocation=new ParagraphData(old.getScenario().name(),-1);
 		}else {
 			data=new Act(quest);
 			acts.put(quest, data);
-			if(old.savedLocation!=null)
-				data.savedLocation=new ParagraphData(old.savedLocation);
-			else
-				data.savedLocation=new ParagraphData(old.getScenario().name(),-1);
-			currentAct=data;
+
 		}
+		if(old.savedLocation!=null)
+			data.savedLocation=new ParagraphData(old.savedLocation);
+		else
+			data.savedLocation=new ParagraphData(old.getScenario().name(),-1);
+		currentAct=data;
 		copyExecuteInfo(currentAct,old);
 		old.setStatus(RunStatus.STOPPED);
-		currentAct.setExecutePos(currentAct.getExecutePos());
 		
 	}
 	public void copyExecuteInfo(Act later,Act old) {
@@ -240,9 +235,9 @@ public class ScenarioConductor implements NBTSerializable{
 	}
 
 	public void endAct() {
- 
-		if(getCurrentAct().name.isAct()) {
-			Act old=getCurrentAct();
+		Act old=getCurrentAct();
+		if(old.name.isAct()) {
+			
 			globalScope();
 			copyExecuteInfo(currentAct,old);
 			old.setStatus(RunStatus.STOPPED);

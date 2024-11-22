@@ -27,7 +27,6 @@ import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 public class ActCommand {
 	public void act(ScenarioCommandContext vrunner,@Param("c")String c,@Param("a")String a) {
 		if(vrunner.context() instanceof ActScenarioContext context) {
-			context.conductor().endAct();
 			context.conductor().enterAct(new ActNamespace(c,a));
 		}
 

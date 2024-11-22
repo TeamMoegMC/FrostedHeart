@@ -59,12 +59,12 @@ public class FTBQProvider extends StringScenarioProvider {
 				b.append("[link l=tsk").append(it).append("]").append(tsk.getRawTitle()==null||tsk.getRawTitle().isEmpty()?"{message.frostedheart.click_complete}":tsk.getRawTitle()).append("[endlink]")
 				.append("[wa]\n");
 			}else {
-				b.append("@WaitTaskCompleteShow l=tsk").append(it).append(" q=").append(quest.getCodeString())
+				b.append("@WaitTaskCompleteShow l=tsk").append(it).append(" q=").append(tsk.getCodeString())
 				.append(" t=").append(it).append("\n").append("@wt\n");
 			}
 			b.append("@label name=tsk").append(it).append("\n");
 			if(tsk instanceof CheckmarkTask)
-				b.append("@CompleteTask q=").append(quest.getCodeString()).append(" t=").append(it).append("\n");
+				b.append("@CompleteTask q=").append(tsk.getCodeString()).append(" t=").append(it).append("\n");
 			b.append("@p\n");
 			
 			it++;
@@ -72,7 +72,7 @@ public class FTBQProvider extends StringScenarioProvider {
 		if(param.containsKey("call"))
 			b.append("@Return\n");
 		//b.append("@EndAct\n");
-		//System.out.println(b.toString());
+		System.out.println(b.toString());
 		return b.toString();
 	}
 

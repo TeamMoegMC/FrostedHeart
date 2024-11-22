@@ -118,7 +118,7 @@ public abstract class Scene {
 	}
 
 	public void appendLiteral(String text) {
-		requireClear=true;
+		markChatboxDirty();
 		if (!text.isEmpty()) {
 			if (currentLiteral == null)
 				currentLiteral = new StringBuilder();
