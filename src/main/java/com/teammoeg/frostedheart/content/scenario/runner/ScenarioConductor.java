@@ -207,6 +207,8 @@ public class ScenarioConductor implements NBTSerializable{
 			currentAct=data;
 		}
 		copyExecuteInfo(currentAct,old);
+		old.setStatus(RunStatus.STOPPED);
+		currentAct.setExecutePos(currentAct.getExecutePos());
 		
 	}
 	public void copyExecuteInfo(Act later,Act old) {
@@ -243,6 +245,7 @@ public class ScenarioConductor implements NBTSerializable{
 			Act old=getCurrentAct();
 			globalScope();
 			copyExecuteInfo(currentAct,old);
+			old.setStatus(RunStatus.STOPPED);
 		}
 	}
 
