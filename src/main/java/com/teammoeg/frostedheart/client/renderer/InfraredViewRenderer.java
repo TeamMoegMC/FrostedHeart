@@ -76,6 +76,9 @@ public class InfraredViewRenderer {
             radius = Mth.clamp(radius + RADIUS_DUR, 0, MAXIMUM_CHUNK_RADIUS * 16);
         } else if (!isOpen && radius > 0) {
             radius = Mth.clamp(radius - RADIUS_DUR, 0, MAXIMUM_CHUNK_RADIUS * 16);
+            if (radius == 0) {
+                lastChunkPos = null;
+            }
         }
     }
 
