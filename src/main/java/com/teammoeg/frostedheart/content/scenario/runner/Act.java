@@ -114,6 +114,8 @@ public class Act extends BaseScenarioRunner{
 		return status;
 	}
 	public void setStatus(RunStatus status) {
+		//if(!name.isAct()&&status==RunStatus.RUNNING)
+		//	new Exception().printStackTrace();
 		this.status = status;
 	}
     public String getTitle() {

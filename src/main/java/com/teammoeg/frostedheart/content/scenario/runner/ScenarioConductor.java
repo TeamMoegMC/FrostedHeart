@@ -139,8 +139,10 @@ public class ScenarioConductor implements NBTSerializable{
 		//System.out.println("start tick==============");
 		
     	for(Act act:acts.values()) {
+    		//System.out.println(act.name+": "+act);
     		act.tickTrigger(getContext());
     	}
+    	//System.out.println("current act: "+getCurrentAct());
     	if(currentAct!=null) {
 	    	currentAct.tickMain(context);
 	    	if(currentAct.getStatus().shouldPause) {
@@ -149,6 +151,7 @@ public class ScenarioConductor implements NBTSerializable{
     	}
     	if(currentAct==null)
 	    	for(Act act:acts.values()) {
+	    		
 	    		act.runScheduled(context);
 	    		if(!act.getStatus().shouldPause) {
 	    			currentAct=act;
@@ -165,9 +168,12 @@ public class ScenarioConductor implements NBTSerializable{
 			getContext().restoreSnapshot();//Protective against modify varibles without save
 			if(!olddata.getStatus().shouldPause) {//Back to last savepoint unless it is waiting trigger
 				olddata.restoreLocation(getContext());
+			}else {
+				olddata.setStatus(RunStatus.PAUSED);//pause current act
 			}
 			olddata.scene().clear(getContext(),RunStatus.STOPPED);
-			olddata.setStatus(RunStatus.PAUSED);//pause current act
+			
+			
 			acts.put(old, olddata);
 			globalScope();
 		}else {
@@ -196,7 +202,6 @@ public class ScenarioConductor implements NBTSerializable{
 		if(quest.equals(getCurrentAct().name))return;
 		Act old=getCurrentAct();
 		Act data=acts.get(quest);
-		endAct();
 		if(data!=null) {
 		}else {
 			data=new Act(quest);
@@ -209,13 +214,13 @@ public class ScenarioConductor implements NBTSerializable{
 			data.savedLocation=new ParagraphData(old.getScenario().name(),-1);
 		currentAct=data;
 		copyExecuteInfo(currentAct,old);
-		old.setStatus(RunStatus.STOPPED);
+		old.stop();
 		
 	}
 	public void copyExecuteInfo(Act later,Act old) {
 		later.setExecutePos(old.getExecutePos());
 		later.setScenario(old.getScenario());
-		later.setStatus(RunStatus.RUNNING);
+		later.setStatus(old.getStatus());
 		later.setCallStack(old.getCallStack());
 	}
 	public void queueAct(ActNamespace quest,String scene,String label) {
@@ -247,7 +252,7 @@ public class ScenarioConductor implements NBTSerializable{
 			
 			globalScope();
 			copyExecuteInfo(currentAct,old);
-			old.setStatus(RunStatus.STOPPED);
+			old.stop();
 		}
 	}
 

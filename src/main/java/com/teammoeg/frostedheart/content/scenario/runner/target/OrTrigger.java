@@ -23,7 +23,7 @@ public class OrTrigger implements IScenarioTrigger {
 	}
 	@Override
 	public boolean canUse() {
-		return Arrays.stream(triggers).anyMatch(IScenarioTrigger::canUse);
+		return Arrays.stream(triggers).allMatch(IScenarioTrigger::canUse);
 	}
 
 	public OrTrigger setSync() {

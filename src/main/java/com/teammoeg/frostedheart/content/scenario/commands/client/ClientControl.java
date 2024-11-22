@@ -52,6 +52,7 @@ import dev.ftb.mods.ftbquests.quest.task.Task;
 import net.minecraft.sounds.Music;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance.Attenuation;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
@@ -79,16 +80,16 @@ public class ClientControl implements IClientControlCommand {
 		Component itt;
 		if(tsk instanceof ItemTask itmtask) {
 
-			MutableComponent cmp=tsk.getTitle().copy().withStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM,new HoverEvent.ItemStackInfo(itmtask.getItemStack()))));
+			MutableComponent cmp=tsk.getTitle().copy().withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM,new HoverEvent.ItemStackInfo(itmtask.getItemStack()))));
 			itt=TranslateUtils.translateMessage("item_task",cmp);
 			
 		}else if(tsk instanceof KillTask) {
-			itt=TranslateUtils.translateMessage("kill_task",tsk.getTitle());
+			itt=TranslateUtils.translateMessage("kill_task",tsk.getTitle().copy().withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)));
 		}else {
-			itt=TranslateUtils.translateMessage("other_task",tsk.getTitle());
+			itt=TranslateUtils.translateMessage("other_task",tsk.getTitle().copy().withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)));
 		}
 		runner.cls();
-		runner.processClient(ClientTextComponentUtils.parse(itt.getString()), true, false);
+		runner.processClient(itt, true, false);
 		runner.setActHud(null, tsk.getTitle().getString());
 	}
 	@Override
