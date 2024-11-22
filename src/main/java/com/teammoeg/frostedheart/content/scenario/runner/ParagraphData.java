@@ -19,7 +19,7 @@ public record ParagraphData(String name,int paragraphNum) implements ScenarioTar
 	public PreparedScenarioTarget prepare(ScenarioContext t, Scenario current) {
 		Scenario scenario=t.loadScenario(name);
 		int nodeNum=0;
-		if(paragraphNum<scenario.paragraphs().length)
+		if(paragraphNum<scenario.paragraphs().length&&paragraphNum>=0)
 			nodeNum=scenario.paragraphs()[paragraphNum];
 		return new PreparedScenarioTarget(scenario,nodeNum);
 	}

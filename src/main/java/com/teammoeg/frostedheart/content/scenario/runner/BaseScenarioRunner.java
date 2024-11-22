@@ -475,7 +475,8 @@ public class BaseScenarioRunner implements ScenarioThread{
 		
     }
 	public void restoreLocation(ScenarioContext ctx) {
-		this.jump(ctx, savedLocation);
+		if(savedLocation!=null)
+			this.jump(ctx, savedLocation);
 	}
 
 
