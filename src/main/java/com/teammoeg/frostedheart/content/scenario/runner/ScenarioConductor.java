@@ -57,7 +57,6 @@ public class ScenarioConductor implements NBTSerializable{
     public Map<ActNamespace,Act> acts=new HashMap<>();
     private transient boolean isActsEnabled;
     //private transient ActNamespace lastQuest;
-    private static final ActNamespace global=new ActNamespace();
     private ActScenarioContext context=new ActScenarioContext(this);
     private static ActNamespace lastCurrent;
 	private static final ActNamespace init=new ActNamespace(null,null);
@@ -93,7 +92,6 @@ public class ScenarioConductor implements NBTSerializable{
 		super();
 		currentAct=new Act(init);
 		acts.put(init,currentAct);
-		acts.put(global, new Act(global));
 	}
 
     public void init(ServerPlayer player) {
@@ -186,27 +184,32 @@ public class ScenarioConductor implements NBTSerializable{
 		}
 	}
 	private void globalScope() {
-		currentAct=(acts.get(global));
+		currentAct=(acts.get(init));
 	}
 	public void enterAct(ActNamespace quest) {
 		if(quest.equals(getCurrentAct().name))return;
 		Act old=getCurrentAct();
 		Act data=acts.get(quest);
-		pauseAct();
+		endAct();
 		if(data!=null) {
 			currentAct=data;
-			data.savedLocation=new ParagraphData(old.savedLocation);
+			if(old.savedLocation!=null)
+				data.savedLocation=new ParagraphData(old.savedLocation);
 		}else {
 			data=new Act(quest);
 			acts.put(quest, data);
-			data.savedLocation=new ParagraphData(old.savedLocation);
+			if(old.savedLocation!=null)
+				data.savedLocation=new ParagraphData(old.savedLocation);
 			currentAct=data;
 		}
-		currentAct.setExecutePos(old.getExecutePos());
-		currentAct.setScenario(old.getScenario());
-		currentAct.setStatus(RunStatus.RUNNING);
-		currentAct.setCallStack(old.getCallStack());
+		copyExecuteInfo(currentAct,old);
 		
+	}
+	public void copyExecuteInfo(Act later,Act old) {
+		later.setExecutePos(old.getExecutePos());
+		later.setScenario(old.getScenario());
+		later.setStatus(RunStatus.RUNNING);
+		later.setCallStack(old.getCallStack());
 	}
 	public void queueAct(ActNamespace quest,String scene,String label) {
 		Act data=getCurrentAct();
@@ -231,10 +234,12 @@ public class ScenarioConductor implements NBTSerializable{
 	}
 
 	public void endAct() {
-		/*if(getCurrentAct().name.isAct()) {
-			acts.remove(getCurrentAct().name);
-		}*/
-		globalScope();
+ 
+		if(getCurrentAct().name.isAct()) {
+			Act old=getCurrentAct();
+			globalScope();
+			copyExecuteInfo(currentAct,old);
+		}
 	}
 
 
