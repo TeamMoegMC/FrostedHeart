@@ -130,8 +130,8 @@ public class Evaluator {
             while ((ch >= '0' && ch <= '9') || ch == '.')
                 nextChar();
             x = new ConstNode(Double.parseDouble(str.substring(startPos, this.pos)));
-        } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) { // functions
-            while ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '.')
+        } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')||ch == '_') { // functions
+            while ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '.'||ch == '_')
                 nextChar();
             String func = str.substring(startPos, this.pos);
             // System.out.println(String.valueOf(Character.toString(str.charAt(pos))));

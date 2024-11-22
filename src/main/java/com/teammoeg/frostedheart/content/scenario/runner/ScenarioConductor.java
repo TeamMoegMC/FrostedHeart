@@ -202,6 +202,11 @@ public class ScenarioConductor implements NBTSerializable{
 			data.savedLocation=new ParagraphData(old.savedLocation);
 			currentAct=data;
 		}
+		currentAct.setExecutePos(old.getExecutePos());
+		currentAct.setScenario(old.getScenario());
+		currentAct.setStatus(RunStatus.RUNNING);
+		currentAct.setCallStack(old.getCallStack());
+		
 	}
 	public void queueAct(ActNamespace quest,String scene,String label) {
 		Act data=getCurrentAct();
@@ -226,15 +231,15 @@ public class ScenarioConductor implements NBTSerializable{
 	}
 
 	public void endAct() {
-		if(getCurrentAct().name.isAct()) {
+		/*if(getCurrentAct().name.isAct()) {
 			acts.remove(getCurrentAct().name);
-		}
+		}*/
 		globalScope();
 	}
 
 
 	public Act getCurrentAct() {
-		return currentAct;
+		return currentAct==null?acts.get(init):currentAct;
 	}
     public static LazyOptional<ScenarioConductor> getCapability(@Nullable Player player) {
     	return FHCapabilities.SCENARIO.getCapability(player);

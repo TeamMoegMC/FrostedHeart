@@ -70,7 +70,7 @@ public class Act extends BaseScenarioRunner{
     	if(savedLocation!=null)
     		CodecUtil.encodeNBT(ParagraphData.CODEC, nbt,"location",savedLocation);
     	
-    	CodecUtil.encodeNBT(ExecuteStackElement.LIST_CODEC,nbt,"callStack",callStack);
+    	CodecUtil.encodeNBT(ExecuteStackElement.LIST_CODEC,nbt,"callStack",getCallStack());
     	nbt.putString("chapter", name.chapter());
     	nbt.putString("act", name.act());
     	nbt.putString("title", title);
@@ -87,8 +87,8 @@ public class Act extends BaseScenarioRunner{
     }
     public void load(CompoundTag nbt) {
     	savedLocation=CodecUtil.decodeNBTIfPresent(ParagraphData.CODEC, nbt, "location");
-    	callStack.clear();
-    	callStack.addAll(CodecUtil.decodeNBTIfPresent(ExecuteStackElement.LIST_CODEC, nbt, "callStack"));
+    	getCallStack().clear();
+    	getCallStack().addAll(CodecUtil.decodeNBTIfPresent(ExecuteStackElement.LIST_CODEC, nbt, "callStack"));
     	name=new ActNamespace(nbt.getString("chapter"),nbt.getString("act"));
     	title=nbt.getString("title");
     	if(nbt.contains("label"))
@@ -154,5 +154,9 @@ public class Act extends BaseScenarioRunner{
 	@Override
 	public LinkedList<ExecuteStackElement> getCallStack() {
 		return this.callStack;
+	}
+	public void setCallStack(LinkedList<ExecuteStackElement> callStack) {
+		this.callStack.clear();;
+		this.callStack.addAll(callStack);
 	}
 }
