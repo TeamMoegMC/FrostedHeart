@@ -23,11 +23,13 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
+import lombok.Getter;
 import net.minecraft.core.BlockPos;
 
 /**
  * Pillar Temperature Adjust, would adjust temperature in a pillar.
  */
+@Getter
 public class PillarHeatArea extends CubicHeatArea {
     public static Codec<PillarHeatArea> CODEC = RecordCodecBuilder.create(t -> t.group(CodecUtil.BLOCKPOS.fieldOf("pos").forGetter(o -> o.center),
             Codec.INT.fieldOf("r").forGetter(o -> o.r),
@@ -56,5 +58,10 @@ public class PillarHeatArea extends CubicHeatArea {
     @Override
     public String toString() {
         return "PillarHeatArea [center=" + center + ", r=" + r + ", value=" + value + ", upper=" + upper + ", lower=" + lower + "]";
+    }
+
+    @Override
+    public float[] getStructData() {
+        return new float[] {getCenterX() + 0.5f, getCenterY() + 0.5f, getCenterZ() + 0.5f, 1, value, getRadius(), upper, lower};
     }
 }

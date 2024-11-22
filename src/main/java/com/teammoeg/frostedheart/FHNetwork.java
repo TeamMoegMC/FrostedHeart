@@ -28,6 +28,9 @@ import java.util.function.Function;
 import com.teammoeg.frostedheart.base.network.FHContainerOperation;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHBodyDataSyncPacket;
+import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHNotifyChunkHeatUpdatePacket;
+import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHRequestInfraredViewDataSyncPacket;
+import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHResponseInfraredViewDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorModifyPacket;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.network.FHDatapackSyncPacket;
@@ -57,6 +60,7 @@ import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
@@ -65,42 +69,48 @@ import net.minecraftforge.network.simple.SimpleChannel;
 public class FHNetwork {
 
     private static SimpleChannel CHANNEL;
-    private static Map<Class<? extends FHMessage>,ResourceLocation> classesId=new HashMap<>();
+    private static Map<Class<? extends FHMessage>, ResourceLocation> classesId = new HashMap<>();
+
     public static SimpleChannel get() {
         return CHANNEL;
     }
-    private static int iid=0;
+
+    private static int iid = 0;
+
     /**
      * Register Message Type, would automatically use method in FHMessage as serializer and <init>(PacketBuffer) as deserializer
-     * */
-    public static synchronized <T extends FHMessage> void registerMessage(String name,Class<T> msg) {
-    	classesId.put(msg,FHMain.rl(name));
-		try {
-			Constructor<T> ctor = msg.getConstructor(FriendlyByteBuf.class);
-	    	CHANNEL.registerMessage(++iid,msg,FHMessage::encode,pb->{
-	    		try {
-					return ctor.newInstance(pb);
-				} catch (IllegalAccessException | IllegalArgumentException | InstantiationException |
+     */
+    public static synchronized <T extends FHMessage> void registerMessage(String name, Class<T> msg) {
+        classesId.put(msg, FHMain.rl(name));
+        try {
+            Constructor<T> ctor = msg.getConstructor(FriendlyByteBuf.class);
+            CHANNEL.registerMessage(++iid, msg, FHMessage::encode, pb -> {
+                try {
+                    return ctor.newInstance(pb);
+                } catch (IllegalAccessException | IllegalArgumentException | InstantiationException |
                          InvocationTargetException e) {
-					throw new RuntimeException("Can not create message "+msg.getSimpleName(), e);
-				}
-            },FHMessage::handle);
-		} catch (NoSuchMethodException | SecurityException e1) {
-            FHMain.LOGGER.error("Can not register message "+msg.getSimpleName());
-			e1.printStackTrace();
-		}
+                    throw new RuntimeException("Can not create message " + msg.getSimpleName(), e);
+                }
+            }, FHMessage::handle);
+        } catch (NoSuchMethodException | SecurityException e1) {
+            FHMain.LOGGER.error("Can not register message " + msg.getSimpleName());
+            e1.printStackTrace();
+        }
     }
+
     /**
      * Register Message Type, should provide a deserializer
-     * */
-    public static synchronized <T extends FHMessage> void registerMessage(String name,Class<T> msg,Function<FriendlyByteBuf,T> func) {
-    	classesId.put(msg,FHMain.rl(name));
-    	CHANNEL.registerMessage(++iid, msg, FHMessage::encode,func,FHMessage::handle);
-	    //CHANNEL.registerMessage(++iid,msg,FHMessage::encode,func,FHMessage::handle);
+     */
+    public static synchronized <T extends FHMessage> void registerMessage(String name, Class<T> msg, Function<FriendlyByteBuf, T> func) {
+        classesId.put(msg, FHMain.rl(name));
+        CHANNEL.registerMessage(++iid, msg, FHMessage::encode, func, FHMessage::handle);
+        //CHANNEL.registerMessage(++iid,msg,FHMessage::encode,func,FHMessage::handle);
     }
+
     public static ResourceLocation getId(Class<? extends FHMessage> cls) {
-    	return classesId.get(cls);
+        return classesId.get(cls);
     }
+
     public static void register() {
         String VERSION = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
         FHMain.LOGGER.info("FH Network Version: " + VERSION);
@@ -115,15 +125,15 @@ public class FHNetwork {
         // TemperatureChangePacket::encode, TemperatureChangePacket::new,
         // TemperatureChangePacket::handle);
         //Fundamental Message
-        registerMessage("container_operation",FHContainerOperation.class);
-        
+        registerMessage("container_operation", FHContainerOperation.class);
+
         //Climate Messages
         registerMessage("body_data", FHBodyDataSyncPacket.class);
         registerMessage("temperature_data", FHDatapackSyncPacket.class);
 
         registerMessage("climate_data", FHClimatePacket.class);
         registerMessage("temperature_display", FHTemperatureDisplayPacket.class);
-        
+
         //Research Messages
         registerMessage("research_registry", FHResearchRegistrtySyncPacket.class);
         registerMessage("research_sync", FHResearchSyncPacket.class);
@@ -139,14 +149,13 @@ public class FHNetwork {
         registerMessage("research_effect", FHEffectProgressSyncPacket.class);
         registerMessage("research_energy_data", FHEnergyDataSyncPacket.class);
         registerMessage("research_insight", FHInsightSyncPacket.class);
-       
-        
+
         //Trade Messages
         registerMessage("bargain_request", BargainRequestPacket.class);
         registerMessage("bargain_response", BargainResponse.class);
         registerMessage("trade_commit", TradeCommitPacket.class);
         registerMessage("trade_update", TradeUpdatePacket.class);
-        
+
         //Scenario System
         registerMessage("scenario_client_op", ClientScenarioResponsePacket.class);
         registerMessage("scenario_server_command", ServerScenarioCommandPacket.class);
@@ -161,7 +170,7 @@ public class FHNetwork {
 
         // Town Messages
         registerMessage("team_town_data_s2c", TeamTownDataS2CPacket.class);
-        
+
         // Generator Messages
         registerMessage("generator_upgrade", GeneratorModifyPacket.class);
 
@@ -179,16 +188,30 @@ public class FHNetwork {
 
         // Nutrition
         registerMessage("nutrition", PlayerNutritionSyncPacket.class);
+
+        // Infrared View
+        registerMessage("infrared_view_c2s", FHRequestInfraredViewDataSyncPacket.class);
+        registerMessage("infrared_view_s2c", FHResponseInfraredViewDataSyncPacket.class);
+        registerMessage("notify_chunk_heat_update", FHNotifyChunkHeatUpdatePacket.class);
     }
 
     public static void sendPlayer(ServerPlayer p, FHMessage message) {
-        CHANNEL.send(PacketDistributor.PLAYER.with(()->p), message);
+        send(PacketDistributor.PLAYER.with(() -> p), message);
     }
+
     public static void send(PacketDistributor.PacketTarget target, FHMessage message) {
         CHANNEL.send(target, message);
     }
+
     public static void sendToServer(FHMessage message) {
         CHANNEL.sendToServer(message);
     }
 
+    public static void sendToAll(FHMessage message) {
+        send(PacketDistributor.ALL.noArg(), message);
+    }
+
+    public static void sendToTrackingChunk(LevelChunk levelChunk, FHMessage packet) {
+        send(PacketDistributor.TRACKING_CHUNK.with(() -> levelChunk), packet);
+    }
 }

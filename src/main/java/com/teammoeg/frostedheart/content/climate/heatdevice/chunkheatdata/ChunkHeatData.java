@@ -34,6 +34,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHCapabilities;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import net.minecraft.core.BlockPos;
@@ -41,6 +42,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class ChunkHeatData {
@@ -78,6 +80,14 @@ public class ChunkHeatData {
             if (data != null) {
                 data.adjusters.remove(adjx.getCenter());
                 data.adjusters.put(adjx.getCenter(), adjx);
+            }
+
+            // we should notify players in chunk to refresh infrared view.
+            // we won't notify all clients, just players in the chunk is enough.
+            if (chunk instanceof LevelChunk levelChunk) {
+                FHNetwork.sendToTrackingChunk(levelChunk, new FHNotifyChunkHeatUpdatePacket(chunkPos));
+            } else {
+                FHNetwork.sendToAll(new FHNotifyChunkHeatUpdatePacket(chunkPos));
             }
         }
     }
@@ -282,6 +292,14 @@ public class ChunkHeatData {
             // TODO: should use isPresent some how
             if (data != null)
                 data.adjusters.remove(src);
+
+            // we should notify players in chunk to refresh infrared view.
+            // we won't notify all clients, just players in the chunk is enough.
+            if (chunk instanceof LevelChunk levelChunk) {
+                FHNetwork.sendToTrackingChunk(levelChunk, new FHNotifyChunkHeatUpdatePacket(chunkPos));
+            } else {
+                FHNetwork.sendToAll(new FHNotifyChunkHeatUpdatePacket(chunkPos));
+            }
         }
     }
 

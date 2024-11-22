@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class FHConfig {
-	
+
     public static class Client {
         public final ForgeConfigSpec.BooleanValue enablesTemperatureOrb;
         public final ForgeConfigSpec.BooleanValue enableUI;
@@ -61,6 +61,8 @@ public class FHConfig {
         public final ForgeConfigSpec.BooleanValue skyRenderChanges;
         public final ForgeConfigSpec.IntValue scenarioRenderQuality;
         public final ForgeConfigSpec.IntValue scenarioRenderThread;
+        public final ForgeConfigSpec.IntValue infraredViewUBOOffset;
+
         Client(ForgeConfigSpec.Builder builder) {
             builder.push("Frosted HUD");
             enableUI = builder
@@ -137,26 +139,31 @@ public class FHConfig {
             builder.push("Scenario");
             renderScenario = builder.comment("Enables the scenario act hud rendering. ")
                     .define("renderScenario", true); // todo: set true
-            autoMode=builder.comment("Enables Auto click when scenario requires")
+            autoMode = builder.comment("Enables Auto click when scenario requires")
                     .define("autoMode", true);
-            autoModeInterval=builder.comment("Tick before click when a click is required to progress")
-                    .defineInRange("autoModeInterval",40,0,500);
-            textSpeed=builder.comment("Base text appear speed, actual speed may change by scenario if necessary, speed 1 is 0.5 character per tick.")
+            autoModeInterval = builder.comment("Tick before click when a click is required to progress")
+                    .defineInRange("autoModeInterval", 40, 0, 500);
+            textSpeed = builder.comment("Base text appear speed, actual speed may change by scenario if necessary, speed 1 is 0.5 character per tick.")
                     .defineInRange("textSpeed", 1d, 0.000001, 100000);
-            scenarioRenderQuality=builder.comment("Scenario 2d content rendering quality, internal resolution=2^(config value)*1024, 2d contents are rendered on cpu, higher quality may cause lag")
-            	.defineInRange("scenarioRenderQuality",2, 0, 16);
-            scenarioRenderThread=builder.comment("Scenario rendering thread")
-            	.defineInRange("scenarioRenderThread", 2, 1, 16);
-            
+            scenarioRenderQuality = builder.comment("Scenario 2d content rendering quality, internal resolution=2^(config value)*1024, 2d contents are rendered on cpu, higher quality may cause lag")
+                    .defineInRange("scenarioRenderQuality", 2, 0, 16);
+            scenarioRenderThread = builder.comment("Scenario rendering thread")
+                    .defineInRange("scenarioRenderThread", 2, 1, 16);
+            infraredViewUBOOffset = builder.comment("The binding offset of the UBO for the infrared view shader.")
+                    .comment("Partial shaders and mods may occupy the position as well.")
+                    .comment("We will use default offset (7) for some known mods here. However, it is not guaranteed to be always compatible with all mods / shaders.")
+                    .comment("In this case, player have to modify the config to specify the offset.")
+                    .comment("No worries, from my experience, offset 7 is compatible with 99% mods / shaders.")
+                    .defineInRange("infraredViewUBOOffset", 7, 0, Integer.MAX_VALUE);
             builder.pop();
 
-
         }
+
         public int getScenarioScale() {
-        	return 1<<scenarioRenderQuality.get();
+            return 1 << scenarioRenderQuality.get();
         }
     }
-    
+
     public static class Common {
         public final ForgeConfigSpec.BooleanValue enablesTemperatureForecast;
         public final ForgeConfigSpec.BooleanValue forceEnableTemperatureForecast;
@@ -360,10 +367,8 @@ public class FHConfig {
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, FHConfig.SERVER_CONFIG);
     }
 
-    public static boolean isWinterBiome(ResourceLocation name)
-    {
-        if (name != null)
-        {
+    public static boolean isWinterBiome(ResourceLocation name) {
+        if (name != null) {
             final Stream<ResourceLocation> stream = FHConfig.SERVER.nonWinterBiomes.get().stream().map(ResourceLocation::new);
             return FHConfig.SERVER.invertNonWinterBiomes.get() ? stream.anyMatch(name::equals) : stream.noneMatch(name::equals);
         }

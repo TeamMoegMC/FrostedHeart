@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
 import com.teammoeg.frostedheart.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.world.entities.CuriosityEntityRenderer;
 import net.minecraftforge.client.event.*;
+import net.minecraftforge.common.util.Lazy;
 import org.lwjgl.glfw.GLFW;
 
 import com.teammoeg.frostedheart.client.model.DynamicBlockModelReference;
@@ -89,7 +90,9 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientRegistryEvents {
+
     private static Tree.InnerNode<ResourceLocation, ManualEntry> CATEGORY;
+
 	@SubscribeEvent
 	public static void onCreativeTabContents(BuildCreativeModeTabContentsEvent event) {
 		CreativeTabItemHelper helper = new CreativeTabItemHelper(event.getTabKey(), event.getTab());
@@ -101,6 +104,7 @@ public class ClientRegistryEvents {
 		helper.register(event);
 
 	}
+
     public static void addManual() {
         ManualInstance man = ManualHelper.getManual();
         CATEGORY = man.getRoot().getOrCreateSubnode(new ResourceLocation(FHMain.MODID, "main"), 110);
@@ -120,24 +124,35 @@ public class ClientRegistryEvents {
     }
 
     public static <C extends AbstractContainerMenu, S extends BaseScreen> MenuScreens.ScreenConstructor<C, MenuScreenWrapper<C>>
+
     FTBScreenFactory(Function<C, S> factory) {
         return (c, i, t) -> new MenuScreenWrapper<>(factory.apply(c), c, i, t).disableSlotDrawing();
     }
-	public static KeyMapping key_skipDialog = new KeyMapping("key.frostedheart.skip_dialog", 
-		GLFW.GLFW_KEY_Z, "key.categories.frostedheart");
+
+	public static Lazy<KeyMapping> key_skipDialog = Lazy.of(() -> new KeyMapping("key.frostedheart.skip_dialog",
+		GLFW.GLFW_KEY_Z, "key.categories.frostedheart"));
+
+    public static Lazy<KeyMapping> key_InfraredView = Lazy.of(() -> new KeyMapping("key.frostedheart.infrared_view",
+            GLFW.GLFW_KEY_I, "key.categories.frostedheart"));
+
 	@SubscribeEvent
-	public void registerKeys(RegisterKeyMappingsEvent ev) {
-		key_skipDialog.setKeyConflictContext(KeyConflictContext.IN_GAME);
-		ev.register(key_skipDialog);
+	public static void registerKeys(RegisterKeyMappingsEvent ev) {
+        key_skipDialog.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
+        key_InfraredView.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
+		ev.register(key_skipDialog.get());
+        ev.register(key_InfraredView.get());
 	}
+
 	@SubscribeEvent
 	public static void onLayerRegister(final RegisterLayerDefinitions event) {
 		event.registerLayerDefinition(HeaterVestModel.HEATER_VEST_LAYER, () -> HeaterVestModel.createLayer());
 	}
+
 	@SubscribeEvent
 	public static void onLayerAdd(final AddLayers event) {
 		HeaterVestExtension.MODEL=new HeaterVestModel(Minecraft.getInstance().getEntityModels().bakeLayer(HeaterVestModel.HEATER_VEST_LAYER));
 	}
+
 	@SubscribeEvent
 	public static void registerModels(ModelEvent.RegisterAdditional ev)
 	{
@@ -151,6 +166,7 @@ public class ClientRegistryEvents {
         event.registerBlockEntityRenderer(FHMultiblocks.Logic.GENERATOR_T2.masterBE().get(), T2GeneratorRenderer::new);
         event.registerBlockEntityRenderer(FHBlockEntityTypes.MECH_CALC.get(), MechCalcRenderer::new);
 	}
+
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
         // Register screens

@@ -137,6 +137,7 @@ repositories {
         content {
             excludeGroup "curse.maven"
             excludeGroup "net.neoforged"
+            excludeGroup "maven.modrinth"
         }
     }
     maven {
@@ -146,6 +147,7 @@ repositories {
         content {
             excludeGroup "curse.maven"
             excludeGroup "net.minecraftforge"
+            excludeGroup "maven.modrinth"
         }
     }
     maven {
@@ -155,6 +157,7 @@ repositories {
         content {
             excludeGroup "curse.maven"
             excludeGroup "net.minecraftforge"
+            excludeGroup "maven.modrinth"
         }
     }
     maven {
@@ -164,6 +167,7 @@ repositories {
         content {
             excludeGroup "curse.maven"
             excludeGroup "net.minecraftforge"
+            excludeGroup "maven.modrinth"
         }
     }
     // Needed for JEI -Not accesible now, comment to speed up compile
@@ -182,6 +186,7 @@ repositories {
         content {
             excludeGroup "curse.maven"
             excludeGroup "net.minecraftforge"
+            excludeGroup "maven.modrinth"
         }
     }
     maven {
@@ -190,6 +195,7 @@ repositories {
         content {
             excludeGroup "curse.maven"
             excludeGroup "net.minecraftforge"
+            excludeGroup "maven.modrinth"
         }
     }
     maven {
@@ -198,6 +204,7 @@ repositories {
         content {
             excludeGroup "curse.maven"
             excludeGroup "net.minecraftforge"
+            excludeGroup "maven.modrinth"
         }
     }
     maven {
@@ -216,6 +223,25 @@ repositories {
         content {
             excludeGroup "curse.maven"
             excludeGroup "net.minecraftforge"
+            excludeGroup "maven.modrinth"
+        }
+    }
+    maven {
+        name "firstdarkdev"
+        url "https://maven.firstdarkdev.xyz/snapshots"
+        content {
+            excludeGroup "curse.maven"
+            excludeGroup "net.minecraftforge"
+            excludeGroup "maven.modrinth"
+        }
+    }
+    maven {
+        name "modrinth"
+        url "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+            excludeGroup "curse.maven"
+            excludeGroup "net.minecraftforge"
         }
     }
     maven {
@@ -223,6 +249,7 @@ repositories {
         url = "https://www.cursemaven.com"
         content {
             includeGroup "curse.maven"
+            excludeGroup "maven.modrinth"
             excludeGroup "net.minecraftforge"
         }
     }
@@ -274,6 +301,15 @@ dependencies {
 
     // Caupona
     implementation fg.deobf("curse.maven:caupona-656147:5116975")
+
+    // LDLib
+    implementation fg.deobf("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }
+
+    // oculus
+    compileOnly fg.deobf("maven.modrinth:oculus:${oculus_version}")
+
+    // embeddium
+    implementation fg.deobf("org.embeddedt:embeddium-${minecraft_version}:${embeddium_version}")
 
     // Comforts
 //    implementation fg.deobf("curse.maven:comforts-276951:5503516")

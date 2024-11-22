@@ -26,14 +26,17 @@ SOFTWARE.
 package com.teammoeg.frostedheart.mixin.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.FHSoundEvents;
+import com.teammoeg.frostedheart.client.renderer.InfraredViewRenderer;
 import com.teammoeg.frostedheart.content.climate.client.BlizzardRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.ParticleStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.core.BlockPos;
@@ -57,6 +60,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.FogType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -70,18 +74,25 @@ import java.util.Random;
  * Set priority to 1 for injecting earlier than Primal Winter.
  *
  * @author alcatrazEscapee, yuesha-yc
- *
+ * <p>
  * License: MIT
  */
 @OnlyIn(Dist.CLIENT)
 @Mixin(value = LevelRenderer.class, priority = 1)
-public abstract class  LevelRendererMixin {
-    @Shadow @Final private static ResourceLocation SNOW_LOCATION;
+public abstract class LevelRendererMixin {
+    @Shadow
+    @Final
+    private static ResourceLocation SNOW_LOCATION;
 
-    @Shadow @Final private Minecraft minecraft;
-    @Shadow private ClientLevel level;
-    @Shadow private int ticks;
-    @Shadow private int rainSoundTime;
+    @Shadow
+    @Final
+    private Minecraft minecraft;
+    @Shadow
+    private ClientLevel level;
+    @Shadow
+    private int ticks;
+    @Shadow
+    private int rainSoundTime;
     private int windSoundTime;
 
     /**
@@ -101,15 +112,23 @@ public abstract class  LevelRendererMixin {
 //    }
 
     /**
+     * Capture camera pose for infrared view rendering.
+     *
+     * @author KilaBash
+     */
+    @Inject(method = "renderLevel", at = @At(value = "HEAD"))
+    private void beforeRenderLever(PoseStack pPoseStack, float pPartialTick, long pFinishNanoTime, boolean pRenderBlockOutline, Camera pCamera, GameRenderer pGameRenderer, LightTexture pLightTexture, Matrix4f pProjectionMatrix, CallbackInfo ci) {
+        InfraredViewRenderer.setCameraPose(pPoseStack);
+    }
+
+    /**
      * Always use rain rendering.
      *
      * @author alcatrazEscapee
      */
     @Redirect(method = "renderSnowAndRain", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/biome/Biome;getPrecipitationAt(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/biome/Biome$Precipitation;"))
-    private Biome.Precipitation alwaysUseRainRendering(Biome biome, BlockPos pos)
-    {
-        if (FHConfig.CLIENT.weatherRenderChanges.get())
-        {
+    private Biome.Precipitation alwaysUseRainRendering(Biome biome, BlockPos pos) {
+        if (FHConfig.CLIENT.weatherRenderChanges.get()) {
             return Biome.Precipitation.RAIN;
         }
         return biome.getPrecipitationAt(pos);
@@ -121,11 +140,9 @@ public abstract class  LevelRendererMixin {
      * @author alcatrazEscapee
      */
     @Redirect(method = "renderSnowAndRain", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;getLightColor(Lnet/minecraft/world/level/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;)I"))
-    private int getAdjustedLightColorForSnow(BlockAndTintGetter level, BlockPos pos)
-    {
+    private int getAdjustedLightColorForSnow(BlockAndTintGetter level, BlockPos pos) {
         final int packedLight = LevelRenderer.getLightColor(level, pos);
-        if (FHConfig.CLIENT.weatherRenderChanges.get())
-        {
+        if (FHConfig.CLIENT.weatherRenderChanges.get()) {
             // Adjusts the light color via a heuristic that mojang uses to make snow appear more white
             // This targets both paths, but since we always use the rain rendering, it's fine.
             final int lightU = packedLight & 0xffff;
@@ -143,10 +160,8 @@ public abstract class  LevelRendererMixin {
      * @author alcatrazEscapee
      */
     @Inject(method = "renderSnowAndRain", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;begin(Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;Lcom/mojang/blaze3d/vertex/VertexFormat;)V"))
-    private void overrideWithSnowTextures(LightTexture lightTexture, float partialTick, double x, double y, double z, CallbackInfo ci)
-    {
-        if (FHConfig.CLIENT.weatherRenderChanges.get())
-        {
+    private void overrideWithSnowTextures(LightTexture lightTexture, float partialTick, double x, double y, double z, CallbackInfo ci) {
+        if (FHConfig.CLIENT.weatherRenderChanges.get()) {
             RenderSystem.setShaderTexture(0, SNOW_LOCATION);
         }
     }
@@ -157,8 +172,7 @@ public abstract class  LevelRendererMixin {
      * @author alcatrazEscapee
      */
     @ModifyConstant(method = "renderSnowAndRain", constant = {@Constant(intValue = 5), @Constant(intValue = 10)})
-    private int modifySnowAmount(int constant)
-    {
+    private int modifySnowAmount(int constant) {
         // This constant is used to control how much snow is rendered - 5 with default, 10 with fancy graphics. By default, we bump this all the way to 15.
         int density = FHConfig.CLIENT.snowDensity.get();
         int blizzardDensity = FHConfig.CLIENT.blizzardDensity.get();
@@ -167,23 +181,20 @@ public abstract class  LevelRendererMixin {
 
     /**
      * Add extra snow particles and sounds.
-     *
+     * <p>
      * TODO: Adjust wind sound frequency and level based on blizzard intensity.
      *
      * @author alcatrazEscapee
      */
     @Inject(method = "tickRain", at = @At("HEAD"))
-    private void addExtraSnowParticlesAndSounds(Camera camera, CallbackInfo ci)
-    {
-        if (!FHConfig.CLIENT.snowSounds.get())
-        {
+    private void addExtraSnowParticlesAndSounds(Camera camera, CallbackInfo ci) {
+        if (!FHConfig.CLIENT.snowSounds.get()) {
             // Prevent default rain/snow sounds by setting rainSoundTime to -1, which means the if() checking it will never pass
             rainSoundTime = -1;
         }
 
         final float rain = level.getRainLevel(1f) / (Minecraft.useFancyGraphics() ? 1f : 2f);
-        if (rain > 0f)
-        {
+        if (rain > 0f) {
             final Random random = new Random((long) ticks * 312987231L);
             final BlockPos cameraPos = BlockPos.containing(camera.getPosition());
             BlockPos pos = null;
@@ -192,15 +203,13 @@ public abstract class  LevelRendererMixin {
             int particleCount = (int) (100.0F * rain * rain) / (minecraft.options.particles().get() == ParticleStatus.DECREASED ? 2 : 1);
             // Snow storm
             particleCount *= 2;
-            for (int i = 0; i < particleCount; ++i)
-            {
+            for (int i = 0; i < particleCount; ++i) {
                 final BlockPos randomPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, cameraPos.offset(random.nextInt(21) - 10, 0, random.nextInt(21) - 10));
                 final Biome biome = level.getBiome(randomPos).value();
                 if (randomPos.getY() > level.getMinBuildHeight() && randomPos.getY() <= cameraPos.getY() + 10 && randomPos.getY() >= cameraPos.getY() - 10 && biome.coldEnoughToSnow(randomPos)) // Change: use SNOW and coldEnoughToSnow() instead
                 {
                     pos = randomPos.below();
-                    if (minecraft.options.particles().get() == ParticleStatus.MINIMAL)
-                    {
+                    if (minecraft.options.particles().get() == ParticleStatus.MINIMAL) {
                         break;
                     }
 
@@ -215,27 +224,21 @@ public abstract class  LevelRendererMixin {
                 }
             }
 
-            if (pos != null && random.nextInt(3) < rainSoundTime++)
-            {
+            if (pos != null && random.nextInt(3) < rainSoundTime++) {
                 rainSoundTime = 0;
-                if (pos.getY() > cameraPos.getY() + 1 && level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, cameraPos).getY() > Mth.floor((float) cameraPos.getY()))
-                {
+                if (pos.getY() > cameraPos.getY() + 1 && level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, cameraPos).getY() > Mth.floor((float) cameraPos.getY())) {
                     level.playLocalSound(pos, SoundEvents.WEATHER_RAIN_ABOVE, SoundSource.WEATHER, 0.05f, 0.2f, false);
-                }
-                else
-                {
+                } else {
                     level.playLocalSound(pos, SoundEvents.WEATHER_RAIN, SoundSource.WEATHER, 0.1f, 0.5f, false);
                 }
             }
 
             // Added
-            if (windSoundTime-- < 0 && FHConfig.CLIENT.windSounds.get())
-            {
+            if (windSoundTime-- < 0 && FHConfig.CLIENT.windSounds.get()) {
                 final BlockPos playerPos = camera.getBlockPosition();
                 final Entity entity = camera.getEntity();
                 int light = camera.getEntity().level().getBrightness(LightLayer.SKY, playerPos);
-                if (light > 3 && entity.level().isRaining() && entity.level().getBiome(playerPos).value().coldEnoughToSnow(playerPos))
-                {
+                if (light > 3 && entity.level().isRaining() && entity.level().getBiome(playerPos).value().coldEnoughToSnow(playerPos)) {
                     // In a windy location, play wind sounds
                     float volumeModifier = 0.2f + (light - 3) * 0.01f;
                     // In snow storm, increase volume, added by yuesha-yc
@@ -243,8 +246,7 @@ public abstract class  LevelRendererMixin {
                         volumeModifier *= 2;
                     }
                     float pitchModifier = 0.7f;
-                    if (camera.getFluidInCamera() != FogType.NONE)
-                    {
+                    if (camera.getFluidInCamera() != FogType.NONE) {
                         pitchModifier = 0.3f;
                     }
                     // In normal snow
@@ -254,9 +256,7 @@ public abstract class  LevelRendererMixin {
                         windSoundTime = 20 * 3 + random.nextInt(20);
                     }
                     level.playLocalSound(playerPos, FHSoundEvents.WIND.get(), SoundSource.WEATHER, volumeModifier, pitchModifier, false);
-                }
-                else
-                {
+                } else {
                     windSoundTime += 5; // check a short time later
                 }
             }

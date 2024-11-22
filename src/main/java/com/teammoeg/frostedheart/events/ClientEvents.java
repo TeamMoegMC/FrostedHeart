@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.events;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
+import com.teammoeg.frostedheart.client.renderer.InfraredViewRenderer;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
@@ -31,7 +32,6 @@ import com.teammoeg.frostedheart.content.research.research.effects.EffectCraftin
 import com.teammoeg.frostedheart.content.research.research.effects.EffectShowCategory;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
-import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacket;
 import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
 import com.teammoeg.frostedheart.content.tips.TipLockManager;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
@@ -43,7 +43,6 @@ import com.teammoeg.frostedheart.util.client.GuiClickedEvent;
 import com.teammoeg.frostedheart.util.client.RenderHelper;
 import com.teammoeg.frostedheart.util.version.FHVersion;
 
-import dev.architectury.event.events.client.ClientPlayerEvent;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -62,7 +61,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent.LoggingIn;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
@@ -125,7 +123,7 @@ public class ClientEvents {
                                 needEvents = false;
                                 break;
                             }
-                        matrixStack.drawString(ClientUtils.mc().font, itxc, 1, (int)(gui.height / 2.0F + l), 0xFFFFFF);
+                        matrixStack.drawString(ClientUtils.mc().font, itxc, 1, (int) (gui.height / 2.0F + l), 0xFFFFFF);
                         Style opencf = Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
                                 "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue"));
                         // Though the capture is ? extends IGuiEventListener, I can't add new to it
@@ -173,9 +171,18 @@ public class ClientEvents {
     public static void fireLogin(ClientPlayerNetworkEvent.LoggingIn event) {
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClientTeamDataManager.INSTANCE::reset);
         // TODO: temporary fix for client not sending ready packet
-        ClientScene.INSTANCE=new ClientScene();
+        ClientScene.INSTANCE = new ClientScene();
         ClientScene.INSTANCE.sendClientReady();
-    	
+
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onRenderAfterBlockEntity(RenderLevelStageEvent event) {
+        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_LEVEL) {
+            ClientUtils.mc().getProfiler().push("frostedheart:render_infrared_view");
+            InfraredViewRenderer.renderInfraredView();
+            ClientUtils.mc().getProfiler().pop();
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -217,9 +224,9 @@ public class ClientEvents {
                     if (FHConfig.CLIENT.renderScenario.get())
                         FrostedHud.renderScenarioAct(stack, anchorX, anchorY, mc, renderViewPlayer);
                 }
-                
-                if(ClientScene.INSTANCE!=null&&ClientScene.INSTANCE.dialog instanceof HUDDialog dialog) {
-                	dialog.render(stack, 0, 0, partialTicks);
+
+                if (ClientScene.INSTANCE != null && ClientScene.INSTANCE.dialog instanceof HUDDialog dialog) {
+                    dialog.render(stack, 0, 0, partialTicks);
                 }
                 event.setCanceled(true);
             }
@@ -263,13 +270,13 @@ public class ClientEvents {
         if (event.isCanceled()) {
             if (event.getOverlay() != VanillaGuiOverlay.FOOD_LEVEL.type())
                 MinecraftForge.EVENT_BUS
-                        .post(new RenderGuiOverlayEvent.Post(event.getWindow(),event.getGuiGraphics(), event.getPartialTick(), event.getOverlay()));// compatibility
+                        .post(new RenderGuiOverlayEvent.Post(event.getWindow(), event.getGuiGraphics(), event.getPartialTick(), event.getOverlay()));// compatibility
         }
     }
 
     @SubscribeEvent
     public static void sendLoginUpdateReminder(ClientPlayerNetworkEvent.LoggingIn event) {
-    	
+
         FHMain.remote.fetchVersion().ifPresent(stableVersion -> {
             boolean isStable = true;
             if (FHMain.pre != null && FHMain.pre.fetchVersion().isPresent()) {
@@ -321,36 +328,38 @@ public class ClientEvents {
             }
 
     }
+
     @SubscribeEvent
     public static void addReloadListeners(AddReloadListenerEvent event) {
 
-       // event.addListener(KGlyphProvider.INSTANCE);
+        // event.addListener(KGlyphProvider.INSTANCE);
 
     }
-    @SuppressWarnings("resource")
-	@SubscribeEvent
-    public static void tickClient(ClientTickEvent event) {
 
+    @SuppressWarnings("resource")
+    @SubscribeEvent
+    public static void tickClient(ClientTickEvent event) {
         if (event.phase == Phase.START) {
+            InfraredViewRenderer.clientTick();
             if (ClientUtils.mc().level != null) {
                 Minecraft mc = ClientUtils.mc();
-                if(ClientScene.INSTANCE!=null)
-                	ClientScene.INSTANCE.tick(mc);
+                if (ClientScene.INSTANCE != null)
+                    ClientScene.INSTANCE.tick(mc);
 
             }
             Player pe = ClientUtils.getPlayer();
-            PlayerTemperatureData.getCapability(pe).ifPresent(t->{
-            	t.smoothedBodyPrev=t.smoothedBody;
-            	t.smoothedBody=t.smoothedBody*.9f+t.getBodyTemp()*.1f;
+            PlayerTemperatureData.getCapability(pe).ifPresent(t -> {
+                t.smoothedBodyPrev = t.smoothedBody;
+                t.smoothedBody = t.smoothedBody * .9f + t.getBodyTemp() * .1f;
             });
-            
+
             if (pe != null && pe.getEffect(FHMobEffects.NYCTALOPIA.get()) != null) {
                 ClientUtils.applyspg = true;
-                ClientUtils.spgamma = Mth.clamp((float)(double) (ClientUtils.mc().options.gamma().get()), 0f, 1f) * 0.1f
+                ClientUtils.spgamma = Mth.clamp((float) (double) (ClientUtils.mc().options.gamma().get()), 0f, 1f) * 0.1f
                         - 1f;
             } else {
                 ClientUtils.applyspg = false;
-                ClientUtils.spgamma = Mth.clamp((float)(double) ClientUtils.mc().options.gamma().get(), 0f, 1f);
+                ClientUtils.spgamma = Mth.clamp((float) (double) ClientUtils.mc().options.gamma().get(), 0f, 1f);
             }
         }
     }
@@ -375,19 +384,23 @@ public class ClientEvents {
         }*/
     @SuppressWarnings({"resource", "unchecked", "rawtypes"})
 
-    
+
     @SubscribeEvent
     public void onWorldUnLoad(LevelEvent.Unload event) {
-    	
+
     }
 
     @SubscribeEvent
     public static void onClientKey(InputEvent.Key event) {
-    	if(event.getAction()==GLFW.GLFW_PRESS&&ClientRegistryEvents.key_skipDialog.consumeClick()) {
-    		if(ClientScene.INSTANCE!=null)
-    			ClientScene.INSTANCE.sendContinuePacket(true);
-    		//event.setCanceled(true);
-    	}
+        if (event.getAction() == GLFW.GLFW_PRESS) {
+            if (ClientRegistryEvents.key_skipDialog.get().consumeClick()) {
+                if (ClientScene.INSTANCE != null)
+                    ClientScene.INSTANCE.sendContinuePacket(true);
+                //event.setCanceled(true);
+            } else if (ClientRegistryEvents.key_InfraredView.get().consumeClick()) {
+                InfraredViewRenderer.toggleInfraredView();
+            }
+        }
     }
 
     /**
