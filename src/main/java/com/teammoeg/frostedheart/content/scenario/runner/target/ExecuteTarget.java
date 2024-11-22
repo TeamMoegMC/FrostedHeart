@@ -30,8 +30,8 @@ public record ExecuteTarget(String file,String label) implements ScenarioTarget{
 	}
 	@Override
 	public PreparedScenarioTarget prepare(ScenarioContext t, Scenario current) {
-		Scenario scenario=file==null?current:t.loadScenario(file);
-
+		Scenario scenario=(file==null||(current!=null&&file.equals(current.name())))?current:t.loadScenario(file);
+		
 		return new PreparedScenarioTarget(scenario,scenario.labels().getOrDefault(label, 0));
 	}
 

@@ -72,10 +72,12 @@ public class FTBQCommands {
 	}
 	public void completetask(ScenarioCommandContext runner,@Param("q")String q,@Param("t")int t) {
 		Quest quest=ServerQuestFile.INSTANCE.getQuest(BaseQuestFile.parseCodeString(q));
+		Task tsk=quest.getTasksAsList().get(t);
 		TeamData td=ServerQuestFile.INSTANCE.getOrCreateTeamData(runner.context().player());
-		ProgressChange change=new ProgressChange(ServerQuestFile.INSTANCE,quest.getTasksAsList().get(t),runner.context().player().getUUID());
+		ProgressChange change=new ProgressChange(ServerQuestFile.INSTANCE,tsk,runner.context().player().getUUID());
 		change.setReset(false);
-		quest.forceProgress(td, change);
+	
+		tsk.forceProgress(td, change);
 		//ServerQuestFile.INSTANCE.forceProgress(td,change);
 
 	}

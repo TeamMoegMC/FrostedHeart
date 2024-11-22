@@ -109,7 +109,7 @@ public class FHScenario {
 					Scenario s = i.apply(paths[0],params,name);
 					
 					if (s != null) {
-						FHMain.LOGGER.info("Loading scenario from provider "+i.getName());
+						FHMain.LOGGER.info("Loaded scenario from provider "+i.getName());
 						return s;
 					}
 				}catch(Exception e) {
@@ -126,11 +126,11 @@ public class FHScenario {
 				return parser.parseFile(name, f);
 			}
 		} catch (Exception e) {
-			ctx.sendMessage("Exception loading scenario: "+e.getMessage()+" see log for more detail");
+			ctx.sendMessage("Exception loading scenario "+name+": "+e.getMessage()+" see log for more detail");
 			e.printStackTrace();
 			
 		}
-		FHMain.LOGGER.error("Scenario not found, falling back to empty scenario");
+		FHMain.LOGGER.error("Scenario "+name+" not found, falling back to empty scenario");
 		return new Scenario(name);
 	}
 

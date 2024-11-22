@@ -64,7 +64,7 @@ public class FTBQProvider extends StringScenarioProvider {
 			}
 			b.append("@label name=tsk").append(it).append("\n");
 			if(tsk instanceof CheckmarkTask)
-				b.append("@CompleteTask q=").append(tsk.getCodeString()).append(" t=").append(it).append("\n");
+				b.append("@CompleteTask q=").append(quest.getCodeString()).append(" t=").append(it).append("\n");
 			b.append("@p\n");
 			
 			it++;
