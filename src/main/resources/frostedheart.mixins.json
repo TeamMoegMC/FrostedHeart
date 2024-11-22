@@ -5,10 +5,6 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "frostedheart.refmap.json",
   "plugin": "com.teammoeg.frostedheart.mixin.FrostedHeartMixinPlugin",
-  "warning": [
-    "Share modified version of our modpack violates The Winter Rescue Term of Use.",
-    "擅自修改和分发我们的整合包违反了《冬季救援使用协议》，我们有权拒绝为您提供帮助！"
-  ],
   "mixins": [
     "create.HandCrankBlockMixin",
     "create.MixinAbstractContraption",
