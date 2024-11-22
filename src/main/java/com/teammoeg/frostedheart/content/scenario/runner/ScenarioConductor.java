@@ -37,6 +37,7 @@ import com.teammoeg.frostedheart.content.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.registry.IdRegistry;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
@@ -55,6 +56,7 @@ public class ScenarioConductor implements NBTSerializable{
     //Sence control
     private transient Act currentAct;
     public Map<ActNamespace,Act> acts=new HashMap<>();
+    public IdRegistry<ActNamespace> actids=new IdRegistry<>();
     private transient boolean isActsEnabled;
     //private transient ActNamespace lastQuest;
     private ActScenarioContext context=new ActScenarioContext(this);
@@ -92,6 +94,7 @@ public class ScenarioConductor implements NBTSerializable{
 		super();
 		currentAct=new Act(init);
 		acts.put(init,currentAct);
+		actids.register(init);
 	}
 
     public void init(ServerPlayer player) {
@@ -104,7 +107,8 @@ public class ScenarioConductor implements NBTSerializable{
 	}
 	
 	public void notifyClientResponse(boolean isSkip,int status) {
-		getCurrentAct().notifyClientResponse(context, isSkip, status);
+		for(Act act:acts.values())
+		act.notifyClientResponse(context, isSkip, status);
 		
     }
 
@@ -139,7 +143,9 @@ public class ScenarioConductor implements NBTSerializable{
     	}
     	if(currentAct!=null) {
 	    	currentAct.tickMain(context);
-	    	if(currentAct.getStatus().shouldPause) currentAct=null;
+	    	if(currentAct.getStatus().shouldPause) {
+	    		currentAct=null;
+	    	}
     	}
     	if(currentAct==null)
 	    	for(Act act:acts.values()) {
@@ -195,7 +201,7 @@ public class ScenarioConductor implements NBTSerializable{
 		}else {
 			data=new Act(quest);
 			acts.put(quest, data);
-
+			actids.register(quest);
 		}
 		if(old.savedLocation!=null)
 			data.savedLocation=new ParagraphData(old.savedLocation);
@@ -219,6 +225,7 @@ public class ScenarioConductor implements NBTSerializable{
 			if(data==null){
 				data=new Act(quest);
 				acts.put(quest, data);
+				actids.register(quest);
 			}
 		}
 		if(scene==null)
@@ -280,6 +287,7 @@ public class ScenarioConductor implements NBTSerializable{
     		}else {
     			Act i=new Act(t);
         		acts.put(i.name, i);
+        		actids.register(i.name);
     		}
     		
     	}

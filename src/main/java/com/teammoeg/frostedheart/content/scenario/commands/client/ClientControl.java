@@ -55,9 +55,12 @@ import net.minecraft.client.resources.sounds.SoundInstance.Attenuation;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.ClickEvent;
 
@@ -74,8 +77,10 @@ public class ClientControl implements IClientControlCommand {
 		Quest quest=qf.getQuest(BaseQuestFile.parseCodeString(q));
 		Task tsk=quest.getTasksAsList().get(t);
 		Component itt;
-		if(tsk instanceof ItemTask) {
-			itt=TranslateUtils.translateMessage("item_task",tsk.getTitle());
+		if(tsk instanceof ItemTask itmtask) {
+
+			MutableComponent cmp=tsk.getTitle().copy().withStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM,new HoverEvent.ItemStackInfo(itmtask.getItemStack()))));
+			itt=TranslateUtils.translateMessage("item_task",cmp);
 			
 		}else if(tsk instanceof KillTask) {
 			itt=TranslateUtils.translateMessage("kill_task",tsk.getTitle());
@@ -254,7 +259,7 @@ public class ClientControl implements IClientControlCommand {
 	public void bgm(IClientScene runner,@Param("n")@Param("name")String name) {
 		//ISound sound=SimpleSound.music();
 		ClientUtils.mc().getMusicManager().stopPlaying();
-		ForgeRegistries.SOUND_EVENTS.getHolder(FHScenarioClient.getPathOf(new ResourceLocation(name),""))
+		FHScenarioClient.getPathFrom(ForgeRegistries.SOUND_EVENTS,new ResourceLocation(name),"")
 		.ifPresentOrElse(t->ClientUtils.mc().getMusicManager().startPlaying(new Music(t, 0, 0, true)), ()->{
 			FHMain.LOGGER.error("[FHScenario] Music "+name+" Not found");
 		});

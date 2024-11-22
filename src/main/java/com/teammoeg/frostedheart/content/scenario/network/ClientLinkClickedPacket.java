@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
+import com.teammoeg.frostedheart.content.scenario.runner.ActNamespace;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;

@@ -28,6 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
+
+import org.objectweb.asm.Type;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
@@ -53,7 +56,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.ModLoader;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.forgespi.language.ModFileScanData;
+import net.minecraftforge.forgespi.language.ModFileScanData.AnnotationData;
 import net.minecraftforge.network.PacketDistributor;
 
 public class FHScenario {
@@ -171,6 +177,16 @@ public class FHScenario {
 	}
 
 	static {
+		/*Type anno=Type.getType(ScenarioCommandProvider.class);
+		for(ModFileScanData data:ModList.get().getAllScanData()) {
+			AnnotationData dat=null;
+			for(AnnotationData an:data.getAnnotations()) {
+				if(Objects.equals(an.annotationType(), anno)) {
+					dat=an;
+					break;
+				}
+			}
+		}*/
 		register(TextualCommands.class);
 		register(ControlCommands.class);
 		if(ModList.get().isLoaded("ftbquests"))

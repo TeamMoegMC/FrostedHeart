@@ -15,21 +15,28 @@ public class IdRegistry<T> {
 	}
 
 	public T read(FriendlyByteBuf pb) {
-	    int id = pb.readByte();
-	    if (id < 0 || id >= fromPacket.size())
-	        throw new IllegalArgumentException("Packet Error");
-	    return fromPacket.get(id);
+	   return get( pb.readByte());
 	}
 	public T register(T from) {
+		if(types.containsKey(from))return from;
 		int id=fromPacket.size();
 		fromPacket.add(from);
 		types.put(from, id);
 		return from;
 	}
-	public void write(FriendlyByteBuf pb, T obj) {
+	public int getId(T obj) {
 		Integer dat=types.get(obj.getClass());
 		if(dat==null)dat=0;
-	    pb.writeByte(dat);
+		return dat;
+	}
+	public T get(int id) {
+	    if (id < 0 || id >= fromPacket.size())
+	        throw new IllegalArgumentException("Packet Error");
+	    return fromPacket.get(id);
+	}
+	public void write(FriendlyByteBuf pb, T obj) {
+
+	    pb.writeByte(getId(obj));
 	}
 
 }

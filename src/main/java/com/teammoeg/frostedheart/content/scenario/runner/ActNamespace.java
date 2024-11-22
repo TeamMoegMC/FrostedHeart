@@ -6,6 +6,8 @@ import java.util.Objects;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import net.minecraft.network.FriendlyByteBuf;
+
 public record ActNamespace(String chapter,String act) {
 	public static final Codec<ActNamespace> CODEC=RecordCodecBuilder.create(t->t.group(
 		Codec.STRING.fieldOf("chapter").forGetter(o->o.chapter),
@@ -19,7 +21,6 @@ public record ActNamespace(String chapter,String act) {
 	public int hashCode() {
 		return Objects.hash(act, chapter);
 	}
-
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;

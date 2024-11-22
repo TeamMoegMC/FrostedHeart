@@ -465,10 +465,12 @@ public class BaseScenarioRunner implements ScenarioThread{
     }
 	@Override
 	public void notifyClientResponse(ScenarioContext ctx,boolean isSkip,int status) {
-		scene.notifyClientResponse(ctx, status);
+		
 		if(this.getStatus()==RunStatus.WAITCLIENT) {
+			scene.notifyClientResponse(ctx, status);
 			run();
 		}else if(this.getStatus()==RunStatus.WAITTIMER&&isSkip) {
+			scene.notifyClientResponse(ctx, status);
 			this.stopWait();
 			run();
 		}

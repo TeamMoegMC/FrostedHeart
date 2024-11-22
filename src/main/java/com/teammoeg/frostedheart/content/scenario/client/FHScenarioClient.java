@@ -20,13 +20,16 @@
 package com.teammoeg.frostedheart.content.scenario.client;
 
 import java.util.Map;
+import java.util.Optional;
 
 import com.teammoeg.frostedheart.content.scenario.ScenarioExecutor;
 import com.teammoeg.frostedheart.content.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.content.scenario.commands.client.ClientControl;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
+import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.registries.IForgeRegistry;
 
 public class FHScenarioClient {
     static ScenarioExecutor<IClientScene> client = new ScenarioExecutor<>(IClientScene.class);
@@ -40,6 +43,13 @@ public class FHScenarioClient {
     		return rl;
     	}
     	return new ResourceLocation(orig.getNamespace(),path+orig.getPath());
+    }
+    public static <T> Optional<Holder<T>> getPathFrom(IForgeRegistry<T> registry,ResourceLocation orig,String path) {
+    	ResourceLocation rl= new ResourceLocation(orig.getNamespace(),path+ClientUtils.mc().getLanguageManager().getSelected()+"/"+orig.getPath());
+    	if(registry.containsKey(rl)) {
+    		return registry.getHolder(rl);
+    	}
+    	return registry.getHolder(new ResourceLocation(orig.getNamespace(),path+orig.getPath()));
     }
     public static void register(Class<?> clazz) {
         client.register(clazz);
