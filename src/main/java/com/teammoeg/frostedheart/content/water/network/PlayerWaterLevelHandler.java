@@ -14,5 +14,6 @@ public class PlayerWaterLevelHandler {
             data.setWaterLevel(packet.waterLevel);
             data.setWaterExhaustionLevel(packet.waterExhaustionLevel);
         }));
+        context.get().setPacketHandled(true);
     }
 }

@@ -15,6 +15,7 @@ public class PlayerNutritionSyncHandler {
             data.setVegetable(packet.vegetable);
             data.setFat(packet.fat);
         }));
+        context.get().setPacketHandled(true);
 
     }
 }
