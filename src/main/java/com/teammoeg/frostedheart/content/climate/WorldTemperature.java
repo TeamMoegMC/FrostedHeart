@@ -141,6 +141,7 @@ public class WorldTemperature {
             temp = biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
         float wt = 0;
         if (w instanceof Level) {
+            // I suppose it has memory leaking issue here, use weak reference instead (by @KilaBash)
             wt = worldbuffer.computeIfAbsent(w, (k) -> {
                 Float fw = FHDataManager.getWorldTemp((Level) w);
                 if (fw == null) return -10F;

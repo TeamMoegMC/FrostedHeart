@@ -23,17 +23,19 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.core.BlockPos;
 
-/**
- * Cubic Temperature Adjust, would adjust temperature in a cube
- */
+
 public class CubicHeatArea implements IHeatArea {
     public static Codec<CubicHeatArea> CODEC = RecordCodecBuilder.create(t -> t.group(CodecUtil.BLOCKPOS.fieldOf("pos").forGetter(o -> o.center),
             Codec.INT.fieldOf("r").forGetter(o -> o.r),
             Codec.INT.fieldOf("v").forGetter(o -> o.value)).apply(t, CubicHeatArea::new));
     BlockPos center;
     int r;
+    @Getter
+    @Setter
     int value;
 
 
@@ -67,13 +69,9 @@ public class CubicHeatArea implements IHeatArea {
         return 0;
     }
 
-    public int getValue() {
-        return value;
-    }
-
     @Override
-    public void setValue(int value) {
-        this.value = value;
+    public float[] getStructData() {
+        return new float[] {center.getX() + 0.5f, center.getY() + 0.5f, center.getZ() + 0.5f, 0, value, getRadius(), 0, 0};
     }
 
     @Override

@@ -80,4 +80,22 @@ public interface IHeatArea {
     boolean isEffective(int x, int y, int z);
 
     void setValue(int value);
+
+    /**
+     * Get the struct data for infrared view rendering.
+     * see {@link com.teammoeg.frostedheart.client.renderer.InfraredViewRenderer} and "assets/frostedheart/shaders/infrared_view.fsh"
+     * <pre>
+     * struct HeatArea {
+     *     vec4 position; // [x, y, z, mode]
+     *     vec4 data; // [value, radius, additional data, additional data]
+     * };
+     * </pre>
+     * use the mode to determine the type of this adjust.
+     * <br>
+     * mode = 0: {@link CubicHeatArea}
+     * mode = 1: {@link PillarHeatArea}
+     *
+     * @return the data of this adjust in a float array.
+     */
+    float[] getStructData();
 }
