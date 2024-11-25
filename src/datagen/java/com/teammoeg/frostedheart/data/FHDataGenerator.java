@@ -18,7 +18,12 @@
 
 package com.teammoeg.frostedheart.data;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.simibubi.create.Create;
+import com.simibubi.create.foundation.utility.FilesHelper;
 import com.teammoeg.frostedheart.FHMain;
+import com.tterrag.registrate.providers.ProviderType;
 import net.minecraft.Util;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistryAccess;
@@ -36,8 +41,10 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class FHDataGenerator {
@@ -54,8 +61,11 @@ public class FHDataGenerator {
         gen.addProvider(event.includeClient(), new FHBlockModelProvider(gen, FHMain.MODID, exHelper));
         gen.addProvider(event.includeServer(), new FHItemTagProvider(gen, FHMain.MODID, exHelper, lookup));
         gen.addProvider(event.includeServer(), new FHLootTableProvider(output));
+        gen.addProvider(event.includeServer(), new FHLangProvider(output, FHMain.MODID, "en_us"));
         for (final DataProvider provider : makeProviders(output, lookup, exHelper))
             gen.addProvider(event.includeServer(), provider);
+
+        addExtraRegistrateData();
     }
 
     public static List<DataProvider> makeProviders(PackOutput output, CompletableFuture<HolderLookup.Provider> vanillaRegistries, ExistingFileHelper exFiles) {
@@ -73,5 +83,27 @@ public class FHDataGenerator {
     private static HolderLookup.Provider append(HolderLookup.Provider original, RegistrySetBuilder builder)
     {
         return builder.buildPatch(RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY), original);
+    }
+
+    private static void addExtraRegistrateData() {
+        FHMain.FH_REGISTRATE.addDataGenerator(ProviderType.LANG, provider -> {
+//            provider.add("itemGroup.frostedheart", "Frosted Heart");
+            BiConsumer<String, String> langConsumer = provider::add;
+            provideDefaultLang("en_us", langConsumer);
+        });
+    }
+
+    private static void provideDefaultLang(String fileName, BiConsumer<String, String> consumer) {
+        String path = "assets/frostedheart/lang/default/" + fileName + ".json";
+        JsonElement jsonElement = FilesHelper.loadJsonResource(path);
+        if (jsonElement == null) {
+            throw new IllegalStateException(String.format("Could not find default lang file: %s", path));
+        }
+        JsonObject jsonObject = jsonElement.getAsJsonObject();
+        for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue().getAsString();
+            consumer.accept(key, value);
+        }
     }
 }

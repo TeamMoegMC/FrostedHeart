@@ -67,7 +67,7 @@ import javax.annotation.Nullable;
  */
 public class FHItems {
 
-    static final DeferredRegister<Item> registry = DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
+    public static final DeferredRegister<Item> registry = DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
 
     // helper method: use FHBaseItem as the item class
     public static RegistryObject<Item> register(String name) {
