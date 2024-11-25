@@ -132,8 +132,8 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 
 		super.cubeAll(FHBlocks.PEAT.get(), modLoc("block/sediment/peat_block"));
 //		super.cubeAll(FHBlocks.ROTTEN_WOOD.get(), modLoc("block/sediment/rotten_wood_block"));
-//		super.cubeAll(FHBlocks.BAUXITE.get(), modLoc("block/sediment/bauxite_block"));
-//		super.cubeAll(FHBlocks.KAOLIN.get(), modLoc("block/sediment/kaolin_block"));
+		super.cubeAll(FHBlocks.BAUXITE.get(), modLoc("block/sediment/bauxite_block"));
+		super.cubeAll(FHBlocks.KAOLIN.get(), modLoc("block/sediment/kaolin_block"));
 //		super.cubeAll(FHBlocks.BURIED_MYCELIUM.get(), modLoc("block/sediment/buried_mycelium"));
 //		super.cubeAll(FHBlocks.BURIED_PODZOL.get(), modLoc("block/sediment/buried_podzol"));
 

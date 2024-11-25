@@ -1,0 +1,24 @@
+{
+  "variants": {
+    "snowy=false": [
+      {
+        "model": "frostedheart:block/bauxite_permafrost"
+      },
+      {
+        "model": "frostedheart:block/bauxite_permafrost",
+        "y": 90
+      },
+      {
+        "model": "frostedheart:block/bauxite_permafrost",
+        "y": 180
+      },
+      {
+        "model": "frostedheart:block/bauxite_permafrost",
+        "y": 270
+      }
+    ],
+    "snowy=true": {
+      "model": "frostedheart:block/bauxite_permafrost_snow"
+    }
+  }
+}
