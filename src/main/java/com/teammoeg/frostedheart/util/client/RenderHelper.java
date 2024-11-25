@@ -9,6 +9,7 @@ import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 public class RenderHelper {
@@ -19,40 +20,38 @@ public class RenderHelper {
 
     /**
      * 获取一个世界坐标显示在屏幕中的坐标
-     * @param pos 世界坐标
+     * @param worldPos 世界坐标
      */
-    public static Vec2 worldPosToScreenPos(Vec3 pos) { //TODO 视角晃动时结果有些问题
+    public static Vec2 worldPosToScreenPos(Vec3 worldPos) {
         if (projectionMatrix == null) return Vec2.ZERO;
         int screenWidth = ClientUtils.screenWidth();
         int screenHeight = ClientUtils.screenHeight();
+        // 调整摄像机旋转以用于计算
+        Quaternionf cameraRotation = getCameraRotation().conjugate(new Quaternionf()).rotateLocalY(Mth.PI);
+        Vector4f result;
 
-        //转换为相对坐标
-        Vec3 relativePos = getCameraPos().subtract(pos.x, pos.y, pos.z);
-        Vector4f result = new Vector4f((float)relativePos.x, (float)relativePos.y, (float)relativePos.z, 1);
+        // 当路径点不在摄像机范围时将屏幕坐标映射到屏幕边缘
+        if (!isPosInFrustum(worldPos)) {
+            Vector3f cameraPos = getCameraPos().subtract(worldPos).toVector3f();
+            result = new Vector4f(cameraPos, 1F).rotate(cameraRotation);
 
-        Quaternionf camera = getCameraRotation();
-        //调整摄像机旋转以用于计算
-        camera.conjugate();
-        camera.rotateLocalY(Mth.PI);
-
-        result.rotate(camera);
-        ClientUtils.mc().options.bobView();
-        //当路径点不在摄像机范围时将屏幕坐标映射到屏幕边缘
-        if (!isPosInFrustum(pos)) {
-            float screenX, screenY;
             float x = -result.x;
             float y = -result.y;
-            screenX = (screenWidth * 0.5F) + (x / y) * (screenHeight * 0.5F) * (y > 0 ? 1 : -1);
-            screenY = (screenHeight * 0.5F) + (y / x) * (screenWidth * 0.5F) * (x < 0 ? 1 : -1);
-
+            float screenX = (screenWidth * 0.5F) + (x / y) * (screenHeight * 0.5F) * (y > 0 ? 1 : -1);
+            float screenY = (screenHeight * 0.5F) + (y / x) * (screenWidth * 0.5F) * (x < 0 ? 1 : -1);
             return new Vec2(screenX, screenY);
         }
-        //应用投影矩阵
-        result.mul(projectionMatrix);
-        result.div(result.w);
 
-        float screenX = screenWidth * (0.5F + result.x * 0.5F);
-        float screenY = screenHeight * (0.5F - result.y * 0.5F);
+        // 视图矩阵
+        // 下面的代码来自 (https://github.com/LouisQuepierts/ThatSkyInteractions/blob/teacon-jiachen/src/main/java/net/quepierts/thatskyinteractions/client/gui/layer/World2ScreenWidgetLayer.java)
+        Matrix4f viewMatrix = new Matrix4f()
+                .rotation(cameraRotation)
+                .translate(getCameraPos().reverse().toVector3f());
+        result = new Vector4f(worldPos.toVector3f(), 1F)
+                .mul(new Matrix4f(projectionMatrix).mul(viewMatrix));
+
+        float screenX = (result.x / result.z * 0.5F + 0.5F) * screenWidth;
+        float screenY = (1.0F - (result.y / result.z * 0.5F + 0.5F)) * screenHeight;
         return new Vec2(screenX, screenY);
     }
 
@@ -82,8 +81,8 @@ public class RenderHelper {
     }
 
     public static Quaternionf getCameraRotation() {
-        if (camera == null) return new Quaternionf(0, 0, 0, 0);
-        return new Quaternionf(camera.rotation());
+        if (camera == null) return new Quaternionf();
+        return camera.rotation();
     }
 
     public static Vec3 getCameraPos() {
