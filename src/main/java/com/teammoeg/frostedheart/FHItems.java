@@ -74,7 +74,7 @@ import static com.teammoeg.frostedheart.FHTags.forgeItemTag;
 public class FHItems {
 
     static {
-        FH_REGISTRATE.setCreativeTab(FHTabs.main);
+        FH_REGISTRATE.setCreativeTab(FHTabs.BASE_TAB);
     }
 
     public static final DeferredRegister<Item> registry = DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
@@ -201,6 +201,10 @@ public class FHItems {
             FH_REGISTRATE.item("bronze_hammer", p -> new PickaxeItem(FHToolMaterials.ALLOY, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/bronze"))
                     .register();
+
+    static {
+        FH_REGISTRATE.setCreativeTab(FHTabs.MATERIALS_TAB);
+    }
 
     // Soil drops
     public static ItemEntry<Item> PEAT =
@@ -1030,6 +1034,9 @@ public class FHItems {
     public static ItemEntry<Item> REFRACTORY_BRICK =
             ingredient("refractory_brick");
 
+    static {
+        FH_REGISTRATE.setCreativeTab(FHTabs.BASE_TAB);
+    }
 
     // OLD FORGE LIKE REGISTRY - TRY NOT USE THIS, USE REGISTRATE like above
 

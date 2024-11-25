@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.data.FHRecipeReloadListener;
+import com.teammoeg.frostedheart.data.FHRegistrate;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.loot.FHLoot;
 import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
@@ -75,7 +76,7 @@ public class FHMain {
     public static File lastbkf;
     public static File lastServerConfig;
     public static boolean saveNeedUpdate;
-    public static final CreateRegistrate FH_REGISTRATE = CreateRegistrate.create(MODID);
+    public static final FHRegistrate FH_REGISTRATE = FHRegistrate.create(MODID);
 
     public static ResourceLocation rl(String path) {
         return new ResourceLocation(MODID, path);
