@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 
 import com.teammoeg.frostedheart.FHTags;
+import com.tterrag.registrate.util.entry.ItemEntry;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.DataGenerator;
@@ -419,22 +420,22 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 				.add(rk(FHBlocks.KAOLIN_PERMAFROST.get().asItem()));
 
 
-		tag(ItemTags.PICKAXES)
-				.add(rk(FHItems.MAKESHIFT_PICKAXE)).add(rk(FHItems.BRONZE_PICKAXE))
-				.add(rk(FHItems.BRONZE_HAMMER)).add(rk(FHItems.STONE_HAMMER));
-		tag(ItemTags.AXES).add(rk(FHItems.MAKESHIFT_AXE)).add(rk(FHItems.BRONZE_AXE));
-		tag(ItemTags.SHOVELS).add(rk(FHItems.MAKESHIFT_SHOVEL)).add(rk(FHItems.BRONZE_SHOVEL));
-		tag(ItemTags.HOES).add(rk(FHItems.MAKESHIFT_HOE)).add(rk(FHItems.BRONZE_HOE));
-		tag(ItemTags.SWORDS).add(rk(FHItems.MAKESHIFT_KNIFE)).add(rk(FHItems.BRONZE_KNIFE)).add(rk(FHItems.BRONZE_SWORD));
+//		tag(ItemTags.PICKAXES)
+//				.add(rk(FHItems.MAKESHIFT_PICKAXE)).add(rk(FHItems.BRONZE_PICKAXE))
+//				.add(rk(FHItems.BRONZE_HAMMER)).add(rk(FHItems.STONE_HAMMER));
+//		tag(ItemTags.AXES).add(rk(FHItems.MAKESHIFT_AXE)).add(rk(FHItems.BRONZE_AXE));
+//		tag(ItemTags.SHOVELS).add(rk(FHItems.MAKESHIFT_SHOVEL)).add(rk(FHItems.BRONZE_SHOVEL));
+//		tag(ItemTags.HOES).add(rk(FHItems.MAKESHIFT_HOE)).add(rk(FHItems.BRONZE_HOE));
+//		tag(ItemTags.SWORDS).add(rk(FHItems.MAKESHIFT_KNIFE)).add(rk(FHItems.BRONZE_KNIFE)).add(rk(FHItems.BRONZE_SWORD));
 
-		tag(frl("pickaxes/bronze")).add(rk(FHItems.BRONZE_PICKAXE));
-		tag(frl("axes/bronze")).add(rk(FHItems.BRONZE_AXE));
-		tag(frl("shovels/bronze")).add(rk(FHItems.BRONZE_SHOVEL));
-		tag(frl("hoes/bronze")).add(rk(FHItems.BRONZE_HOE));
-		tag(frl("swords/bronze")).add(rk(FHItems.BRONZE_SWORD));
-		tag(frl("knives/bronze")).add(rk(FHItems.BRONZE_KNIFE));
-		tag(frl("hammers/bronze")).add(rk(FHItems.BRONZE_HAMMER));
-		tag(frl("spears/bronze")).add(rk(FHItems.BRONZE_SPEAR));
+//		tag(frl("pickaxes/bronze")).add(rk(FHItems.BRONZE_PICKAXE));
+//		tag(frl("axes/bronze")).add(rk(FHItems.BRONZE_AXE));
+//		tag(frl("shovels/bronze")).add(rk(FHItems.BRONZE_SHOVEL));
+//		tag(frl("hoes/bronze")).add(rk(FHItems.BRONZE_HOE));
+//		tag(frl("swords/bronze")).add(rk(FHItems.BRONZE_SWORD));
+//		tag(frl("knives/bronze")).add(rk(FHItems.BRONZE_KNIFE));
+//		tag(frl("hammers/bronze")).add(rk(FHItems.BRONZE_HAMMER));
+//		tag(frl("spears/bronze")).add(rk(FHItems.BRONZE_SPEAR));
 
 		tag(FHTags.Items.IGNITION_MATERIAL)
 				.add(rk(Items.FLINT));
@@ -522,6 +523,10 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 		return ForgeRegistries.ITEMS.getResourceKey(b).orElseGet(()->b.builtInRegistryHolder().key());
 	}
 	private ResourceKey<Item> rk(RegistryObject<Item> b) {
+		return rk(b.get());
+	}
+
+	private ResourceKey<? extends Item> rk(ItemEntry<? extends Item> b) {
 		return rk(b.get());
 	}
 

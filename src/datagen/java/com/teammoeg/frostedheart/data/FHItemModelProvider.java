@@ -24,6 +24,7 @@ package com.teammoeg.frostedheart.data;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 
+import com.tterrag.registrate.util.entry.ItemEntry;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -211,26 +212,26 @@ public class FHItemModelProvider extends ItemModelProvider {
 		texture(FHItems.SODIUM_INGOT);
 		texture(FHItems.REFRACTORY_BRICK);
 
-		texture(FHItems.MAKESHIFT_KNIFE);
-		texture(FHItems.MAKESHIFT_PICKAXE);
-		texture(FHItems.MAKESHIFT_AXE);
-		texture(FHItems.MAKESHIFT_SHOVEL);
-		texture(FHItems.MAKESHIFT_HOE);
-		texture(FHItems.MAKESHIFT_SPEAR);
-
-		texture(FHItems.BRONZE_KNIFE);
-		texture(FHItems.BRONZE_PICKAXE);
-		texture(FHItems.BRONZE_AXE);
-		texture(FHItems.BRONZE_SHOVEL);
-		texture(FHItems.BRONZE_HOE);
-		texture(FHItems.BRONZE_SPEAR);
-		texture(FHItems.BRONZE_SWORD);
-
-		texture(FHItems.SNOWSHOES);
-		texture(FHItems.ICE_SKATES);
-
-		texture(FHItems.STONE_HAMMER);
-		texture(FHItems.BRONZE_HAMMER);
+//		texture(FHItems.MAKESHIFT_KNIFE);
+//		texture(FHItems.MAKESHIFT_PICKAXE);
+//		texture(FHItems.MAKESHIFT_AXE);
+//		texture(FHItems.MAKESHIFT_SHOVEL);
+//		texture(FHItems.MAKESHIFT_HOE);
+//		texture(FHItems.MAKESHIFT_SPEAR);
+//
+//		texture(FHItems.BRONZE_KNIFE);
+//		texture(FHItems.BRONZE_PICKAXE);
+//		texture(FHItems.BRONZE_AXE);
+//		texture(FHItems.BRONZE_SHOVEL);
+//		texture(FHItems.BRONZE_HOE);
+//		texture(FHItems.BRONZE_SPEAR);
+//		texture(FHItems.BRONZE_SWORD);
+//
+//		texture(FHItems.SNOWSHOES);
+//		texture(FHItems.ICE_SKATES);
+//
+//		texture(FHItems.STONE_HAMMER);
+//		texture(FHItems.BRONZE_HAMMER);
 
 //		texture(FHItems.CURIOSITY_SPAWN_EGG);
 //		texture(FHItems.WANDERING_REFUGEE_SPAWN_EGG);
@@ -253,6 +254,10 @@ public class FHItemModelProvider extends ItemModelProvider {
 	}
 
 	public ItemModelBuilder texture(RegistryObject<Item> name) {
+		return texture(name.getId().getPath());
+	}
+
+	public ItemModelBuilder texture(ItemEntry<? extends Item> name) {
 		return texture(name.getId().getPath());
 	}
 
