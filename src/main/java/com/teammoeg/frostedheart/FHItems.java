@@ -19,10 +19,7 @@
 
 package com.teammoeg.frostedheart;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-
+import com.simibubi.create.AllTags;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.teammoeg.frostedheart.base.item.FHArmorMaterial;
@@ -42,7 +39,6 @@ import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestItem;
 import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
-
 import com.teammoeg.frostedheart.content.water.item.FluidBottleItem;
 import com.teammoeg.frostedheart.content.water.item.IronBottleItem;
 import com.teammoeg.frostedheart.content.water.item.LeatherWaterBagItem;
@@ -52,20 +48,22 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.food.Foods;
-import net.minecraft.world.item.*;
 import net.minecraft.world.item.ArmorItem.Type;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.Item.Properties;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 import static com.teammoeg.frostedheart.FHMain.FH_REGISTRATE;
 import static com.teammoeg.frostedheart.FHTags.forgeItemTag;
@@ -118,7 +116,7 @@ public class FHItems {
                 .register();
     }
 
-    // REGISTRATE ITEMS
+    // REGISTRATE STYLE REGISTRY - USE THIS!
 
     // Spawn Eggs
     // Well, you MUST use ForgeSpawnEggItem, to take in the RegistryObject Supplier, instead of the EntityType itself,
@@ -133,6 +131,7 @@ public class FHItems {
                     .lang("Wandering Refugee Spawn Egg")
                     .model(AssetLookup.existingItemModel())
                     .register();
+
     // Equipment
     public static final ItemEntry<FHBaseArmorItem> SNOWSHOES =
             FH_REGISTRATE.item("snowshoes", p -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)))
@@ -140,6 +139,7 @@ public class FHItems {
     public static final ItemEntry<FHBaseArmorItem> ICE_SKATES =
             FH_REGISTRATE.item("ice_skates", p -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)))
                     .register();
+
     // Tools
     public static final ItemEntry<KnifeItem> MAKESHIFT_KNIFE =
             FH_REGISTRATE.item("makeshift_knife", p -> new KnifeItem(FHToolMaterials.FLINT, 1, -1.5F, new Item.Properties()))
@@ -202,9 +202,836 @@ public class FHItems {
                     .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/bronze"))
                     .register();
 
+    // Soil drops
+    public static ItemEntry<Item> PEAT =
+            taggedIngredient("peat",
+                    forgeItemTag("raw_materials"),
+                    forgeItemTag("raw_materials/peat"));
+    public static ItemEntry<Item> KAOLIN =
+            taggedIngredient("kaolin",
+                    forgeItemTag("raw_materials"),
+                    forgeItemTag("raw_materials/kaolin"));
+    public static ItemEntry<Item> BAUXITE =
+            taggedIngredient("bauxite",
+                    forgeItemTag("raw_materials"),
+                    forgeItemTag("raw_materials/bauxite")
+            );
+    public static ItemEntry<Item> ROTTEN_WOOD =
+            ingredient("rotten_wood");
+    public static ItemEntry<Item> CRUSHED_RAW_BAUXITE =
+            taggedIngredient("crushed_raw_bauxite",
+                    forgeItemTag("crushed_raw_materials"),
+                    forgeItemTag("crushed_raw_materials/bauxite"),
+                    AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
+    public static ItemEntry<Item> KAOLIN_DUST =
+            taggedIngredient("kaolin_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/kaolin"));
+    public static ItemEntry<Item> BAUXITE_DUST =
+            taggedIngredient("bauxite_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/bauxite"));
+
+    // Redo condensed balls
+    public static ItemEntry<FHSnowballItem> CONDENSED_BALL_IRON_ORE =
+            FH_REGISTRATE.item("condensed_ball_iron_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS)
+                    .register();
+    public static ItemEntry<FHSnowballItem> CONDENSED_BALL_COPPER_ORE =
+            FH_REGISTRATE.item("condensed_ball_copper_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS)
+                    .register();
+    public static ItemEntry<FHSnowballItem> CONDENSED_BALL_GOLD_ORE =
+            FH_REGISTRATE.item("condensed_ball_gold_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS)
+                    .register();
+    public static ItemEntry<FHSnowballItem> CONDENSED_BALL_ZINC_ORE =
+            FH_REGISTRATE.item("condensed_ball_zinc_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS)
+                    .register();
+    public static ItemEntry<FHSnowballItem> CONDENSED_BALL_SILVER_ORE =
+            FH_REGISTRATE.item("condensed_ball_silver_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS)
+                    .register();
+    public static ItemEntry<FHSnowballItem> CONDENSED_BALL_TIN_ORE =
+            FH_REGISTRATE.item("condensed_ball_tin_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS)
+                    .register();
+    public static ItemEntry<FHSnowballItem> CONDENSED_BALL_PYRITE_ORE =
+            FH_REGISTRATE.item("condensed_ball_pyrite_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS)
+                    .register();
+    public static ItemEntry<FHSnowballItem> CONDENSED_BALL_NICKEL_ORE =
+            FH_REGISTRATE.item("condensed_ball_nickel_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS)
+                    .register();
+    public static ItemEntry<FHSnowballItem> CONDENSED_BALL_LEAD_ORE =
+            FH_REGISTRATE.item("condensed_ball_lead_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS)
+                    .register();
+
+    // Slurry
+    public static ItemEntry<Item> IRON_SLURRY =
+            taggedIngredient("iron_slurry", FHTags.Items.SLURRY);
+    public static ItemEntry<Item> COPPER_SLURRY =
+            taggedIngredient("copper_slurry", FHTags.Items.SLURRY);
+    public static ItemEntry<Item> GOLD_SLURRY =
+            taggedIngredient("gold_slurry", FHTags.Items.SLURRY);
+    public static ItemEntry<Item> ZINC_SLURRY =
+            taggedIngredient("zinc_slurry", FHTags.Items.SLURRY);
+    public static ItemEntry<Item> SILVER_SLURRY =
+            taggedIngredient("silver_slurry", FHTags.Items.SLURRY);
+    public static ItemEntry<Item> TIN_SLURRY =
+            taggedIngredient("tin_slurry", FHTags.Items.SLURRY);
+    public static ItemEntry<Item> PYRITE_SLURRY =
+            taggedIngredient("pyrite_slurry", FHTags.Items.SLURRY);
+    public static ItemEntry<Item> NICKEL_SLURRY =
+            taggedIngredient("nickel_slurry", FHTags.Items.SLURRY);
+    public static ItemEntry<Item> LEAD_SLURRY =
+            taggedIngredient("lead_slurry", FHTags.Items.SLURRY);
+
+    // Crushed ores
+    public static ItemEntry<Item> CRUSHED_RAW_SILVER =
+            taggedIngredient("crushed_raw_silver",
+                    forgeItemTag("crushed_raw_materials"),
+                    forgeItemTag("crushed_raw_materials/silver"),
+                    AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
+    public static ItemEntry<Item> CRUSHED_RAW_TIN =
+            taggedIngredient("crushed_raw_tin",
+                    forgeItemTag("crushed_raw_materials"),
+                    forgeItemTag("crushed_raw_materials/tin"),
+                    AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
+    public static ItemEntry<Item> CRUSHED_RAW_PYRITE =
+            taggedIngredient("crushed_raw_pyrite",
+                    forgeItemTag("crushed_raw_materials"),
+                    forgeItemTag("crushed_raw_materials/pyrite"),
+                    AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
+    public static ItemEntry<Item> CRUSHED_RAW_NICKEL =
+            taggedIngredient("crushed_raw_nickel",
+                    forgeItemTag("crushed_raw_materials"),
+                    forgeItemTag("crushed_raw_materials/nickel"),
+                    AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
+    public static ItemEntry<Item> CRUSHED_RAW_LEAD =
+            taggedIngredient("crushed_raw_lead",
+                    forgeItemTag("crushed_raw_materials"),
+                    forgeItemTag("crushed_raw_materials/lead"),
+                    AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
+    public static ItemEntry<Item> CRUSHED_RAW_HALITE =
+            taggedIngredient("crushed_raw_halite",
+                    forgeItemTag("crushed_raw_materials"),
+                    forgeItemTag("crushed_raw_materials/halite"),
+                    AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
+    public static ItemEntry<Item> CRUSHED_RAW_SYLVITE =
+            taggedIngredient("crushed_raw_sylvite",
+                    forgeItemTag("crushed_raw_materials"),
+                    forgeItemTag("crushed_raw_materials/sylvite"),
+                    AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
+    public static ItemEntry<Item> CRUSHED_RAW_MAGNESITE =
+            taggedIngredient("crushed_raw_magnesite",
+                    forgeItemTag("crushed_raw_materials"),
+                    forgeItemTag("crushed_raw_materials/magnesite"),
+                    AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
+
+    // Raw ores
+    public static ItemEntry<Item> RAW_SILVER =
+                taggedIngredient("raw_silver",
+                        forgeItemTag("raw_materials/silver"),
+                        forgeItemTag("raw_materials"));
+    public static ItemEntry<Item> RAW_TIN =
+            taggedIngredient("raw_tin",
+                    forgeItemTag("raw_materials/tin"),
+                    forgeItemTag("raw_materials"));
+    public static ItemEntry<Item> RAW_PYRITE =
+            taggedIngredient("raw_pyrite",
+                    forgeItemTag("raw_materials/pyrite"),
+                    forgeItemTag("raw_materials"),
+                    FHTags.Items.IGNITION_METAL);
+    public static ItemEntry<Item> RAW_NICKEL =
+            taggedIngredient("raw_nickel",
+                    forgeItemTag("raw_materials/nickel"),
+                    forgeItemTag("raw_materials"));
+    public static ItemEntry<Item> RAW_LEAD =
+            taggedIngredient("raw_lead",
+                    forgeItemTag("raw_materials/lead"),
+                    forgeItemTag("raw_materials"));
+    public static ItemEntry<Item> RAW_HALITE =
+            taggedIngredient("raw_halite",
+                    forgeItemTag("raw_materials/halite"),
+                    forgeItemTag("raw_materials/salt"),
+                    forgeItemTag("raw_materials"));
+    public static ItemEntry<Item> RAW_SYLVITE =
+            taggedIngredient("raw_sylvite",
+                    forgeItemTag("raw_materials/sylvite"),
+                    forgeItemTag("raw_materials/potash"),
+                    forgeItemTag("raw_materials"));
+    public static ItemEntry<Item> RAW_MAGNESITE =
+            taggedIngredient("raw_magnesite",
+                    forgeItemTag("raw_materials/magnesite"),
+                    forgeItemTag("raw_materials"));
+
+    // MATERIALS
+
+    /*
+    copper
+    aluminum
+    steel
+    electrum
+    constantan
+    iron
+    cast_iron
+    brass
+    duralumin
+    gold
+    silver
+    nickel
+    lead
+    titanium
+    bronze
+    invar
+    tungsten_steel
+    zinc
+    tin
+    magnesium
+    tungsten
+     */
+
+    // Dusts
+    public static ItemEntry<Item> COPPER_DUST =
+            taggedIngredient("copper_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/copper")
+            );
+    public static ItemEntry<Item> ALUMINUM_DUST =
+            taggedIngredient("aluminum_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/aluminum")
+            );
+//    public static ItemEntry<Item> STEEL_DUST =
+//            taggedIngredient("steel_dust",
+//                    forgeItemTag("dusts"),
+//                    forgeItemTag("dusts/steel")
+//            );
+//    public static ItemEntry<Item> ELECTRUM_DUST =
+//            taggedIngredient("electrum_dust",
+//                    forgeItemTag("dusts"),
+//                    forgeItemTag("dusts/electrum")
+//            );
+//    public static ItemEntry<Item> CONSTANTAN_DUST =
+//            taggedIngredient("constantan_dust",
+//                    forgeItemTag("dusts"),
+//                    forgeItemTag("dusts/constantan")
+//            );
+//    public static ItemEntry<Item> IRON_DUST =
+//            taggedIngredient("iron_dust",
+//                    forgeItemTag("dusts"),
+//                    forgeItemTag("dusts/iron")
+//            );
+//    public static ItemEntry<Item> CAST_IRON_DUST =
+//            taggedIngredient("cast_iron_dust",
+//                    forgeItemTag("dusts"),
+//                    forgeItemTag("dusts/cast_iron")
+//            );
+//    public static ItemEntry<Item> BRASS_DUST =
+//            taggedIngredient("brass_dust",
+//                    forgeItemTag("dusts"),
+//                    forgeItemTag("dusts/brass")
+//            );
+    public static ItemEntry<Item> DURALUMIN_DUST =
+            taggedIngredient("duralumin_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/duralumin")
+            );
+    public static ItemEntry<Item> GOLD_DUST =
+            taggedIngredient("gold_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/gold")
+            );
+    public static ItemEntry<Item> SILVER_DUST =
+            taggedIngredient("silver_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/silver")
+            );
+    public static ItemEntry<Item> NICKEL_DUST =
+            taggedIngredient("nickel_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/nickel")
+            );
+    public static ItemEntry<Item> LEAD_DUST =
+            taggedIngredient("lead_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/lead")
+            );
+    public static ItemEntry<Item> TITANIUM_DUST =
+            taggedIngredient("titanium_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/titanium")
+            );
+//    public static ItemEntry<Item> BRONZE_DUST =
+//            taggedIngredient("bronze_dust",
+//                    forgeItemTag("dusts"),
+//                    forgeItemTag("dusts/bronze")
+//            );
+//    public static ItemEntry<Item> INVAR_DUST =
+//            taggedIngredient("invar_dust",
+//                    forgeItemTag("dusts"),
+//                    forgeItemTag("dusts/invar")
+//            );
+//    public static ItemEntry<Item> TUNGSTEN_STEEL_DUST =
+//            taggedIngredient("tungsten_steel_dust",
+//                    forgeItemTag("dusts"),
+//                    forgeItemTag("dusts/tungsten_steel")
+//            );
+    public static ItemEntry<Item> ZINC_DUST =
+            taggedIngredient("zinc_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/zinc")
+            );
+    public static ItemEntry<Item> TIN_DUST =
+            taggedIngredient("tin_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/tin")
+            );
+    public static ItemEntry<Item> MAGNESIUM_DUST =
+            taggedIngredient("magnesium_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/magnesium")
+            );
+    public static ItemEntry<Item> TUNGSTEN_DUST =
+            taggedIngredient("tungsten_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/tungsten")
+            );
+
+    // Ingots
+//    public static ItemEntry<Item> COPPER_INGOT =
+//            taggedIngredient("copper_ingot",
+//                    forgeItemTag("ingots"),
+//                    forgeItemTag("ingots/copper")
+//            );
+    public static ItemEntry<Item> ALUMINUM_INGOT =
+            taggedIngredient("aluminum_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/aluminum")
+            );
+    public static ItemEntry<Item> STEEL_INGOT =
+            taggedIngredient("steel_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/steel"),
+                    FHTags.Items.IGNITION_METAL
+            );
+    public static ItemEntry<Item> ELECTRUM_INGOT =
+            taggedIngredient("electrum_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/electrum")
+            );
+    public static ItemEntry<Item> CONSTANTAN_INGOT =
+            taggedIngredient("constantan_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/constantan")
+            );
+//    public static ItemEntry<Item> IRON_INGOT =
+//            taggedIngredient("iron_ingot",
+//                    forgeItemTag("ingots"),
+//                    forgeItemTag("ingots/iron")
+//            );
+    public static ItemEntry<Item> CAST_IRON_INGOT =
+            taggedIngredient("cast_iron_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/cast_iron"),
+                    FHTags.Items.IGNITION_METAL
+            );
+//    public static ItemEntry<Item> BRASS_INGOT =
+//            taggedIngredient("brass_ingot",
+//                    forgeItemTag("ingots"),
+//                    forgeItemTag("ingots/brass")
+//            );
+    public static ItemEntry<Item> DURALUMIN_INGOT =
+            taggedIngredient("duralumin_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/duralumin"),
+                    FHTags.Items.IGNITION_METAL
+            );
+//    public static ItemEntry<Item> GOLD_INGOT =
+//            taggedIngredient("gold_ingot",
+//                    forgeItemTag("ingots"),
+//                    forgeItemTag("ingots/gold")
+//            );
+    public static ItemEntry<Item> SILVER_INGOT =
+            taggedIngredient("silver_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/silver")
+            );
+    public static ItemEntry<Item> NICKEL_INGOT =
+            taggedIngredient("nickel_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/nickel")
+            );
+    public static ItemEntry<Item> LEAD_INGOT =
+            taggedIngredient("lead_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/lead")
+            );
+    public static ItemEntry<Item> TITANIUM_INGOT =
+            taggedIngredient("titanium_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/titanium")
+            );
+    public static ItemEntry<Item> BRONZE_INGOT =
+            taggedIngredient("bronze_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/bronze")
+            );
+    public static ItemEntry<Item> INVAR_INGOT =
+            taggedIngredient("invar_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/invar")
+            );
+    public static ItemEntry<Item> TUNGSTEN_STEEL_INGOT =
+            taggedIngredient("tungsten_steel_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/tungsten_steel")
+            );
+//    public static ItemEntry<Item> ZINC_INGOT =
+//            taggedIngredient("zinc_ingot",
+//                    forgeItemTag("ingots"),
+//                    forgeItemTag("ingots/zinc")
+//            );
+    public static ItemEntry<Item> TIN_INGOT =
+            taggedIngredient("tin_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/tin")
+            );
+    public static ItemEntry<Item> MAGNESIUM_INGOT =
+            taggedIngredient("magnesium_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/magnesium"),
+                    FHTags.Items.IGNITION_METAL
+            );
+    public static ItemEntry<Item> TUNGSTEN_INGOT =
+            taggedIngredient("tungsten_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/tungsten")
+            );
+
+    // Nuggets
+//    public static ItemEntry<Item> COPPER_NUGGET =
+//            taggedIngredient("copper_nugget",
+//                    forgeItemTag("nuggets"),
+//                    forgeItemTag("nuggets/copper")
+//            );
+    public static ItemEntry<Item> ALUMINUM_NUGGET =
+            taggedIngredient("aluminum_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/aluminum")
+            );
+    public static ItemEntry<Item> STEEL_NUGGET =
+            taggedIngredient("steel_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/steel"),
+                    FHTags.Items.IGNITION_METAL
+            );
+    public static ItemEntry<Item> ELECTRUM_NUGGET =
+            taggedIngredient("electrum_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/electrum")
+            );
+    public static ItemEntry<Item> CONSTANTAN_NUGGET =
+            taggedIngredient("constantan_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/constantan")
+            );
+//    public static ItemEntry<Item> IRON_NUGGET =
+//            taggedIngredient("iron_nugget",
+//                    forgeItemTag("nuggets"),
+//                    forgeItemTag("nuggets/iron")
+//            );
+    public static ItemEntry<Item> CAST_IRON_NUGGET =
+            taggedIngredient("cast_iron_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/cast_iron"),
+                    FHTags.Items.IGNITION_METAL
+            );
+//    public static ItemEntry<Item> BRASS_NUGGET =
+//            taggedIngredient("brass_nugget",
+//                    forgeItemTag("nuggets"),
+//                    forgeItemTag("nuggets/brass")
+//            );
+    public static ItemEntry<Item> DURALUMIN_NUGGET =
+            taggedIngredient("duralumin_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/duralumin"),
+                    FHTags.Items.IGNITION_METAL
+            );
+//    public static ItemEntry<Item> GOLD_NUGGET =
+//            taggedIngredient("gold_nugget",
+//                    forgeItemTag("nuggets"),
+//                    forgeItemTag("nuggets/gold")
+//            );
+    public static ItemEntry<Item> SILVER_NUGGET =
+            taggedIngredient("silver_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/silver")
+            );
+    public static ItemEntry<Item> NICKEL_NUGGET =
+            taggedIngredient("nickel_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/nickel")
+            );
+    public static ItemEntry<Item> LEAD_NUGGET =
+            taggedIngredient("lead_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/lead")
+            );
+    public static ItemEntry<Item> TITANIUM_NUGGET =
+            taggedIngredient("titanium_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/titanium")
+            );
+    public static ItemEntry<Item> BRONZE_NUGGET =
+            taggedIngredient("bronze_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/bronze")
+            );
+    public static ItemEntry<Item> INVAR_NUGGET =
+            taggedIngredient("invar_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/invar")
+            );
+    public static ItemEntry<Item> TUNGSTEN_STEEL_NUGGET =
+            taggedIngredient("tungsten_steel_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/tungsten_steel")
+            );
+//    public static ItemEntry<Item> ZINC_NUGGET =
+//            taggedIngredient("zinc_nugget",
+//                    forgeItemTag("nuggets"),
+//                    forgeItemTag("nuggets/zinc")
+//            );
+    public static ItemEntry<Item> TIN_NUGGET =
+            taggedIngredient("tin_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/tin")
+            );
+    public static ItemEntry<Item> MAGNESIUM_NUGGET =
+            taggedIngredient("magnesium_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/magnesium"),
+                    FHTags.Items.IGNITION_METAL
+            );
+    public static ItemEntry<Item> TUNGSTEN_NUGGET =
+            taggedIngredient("tungsten_nugget",
+                    forgeItemTag("nuggets"),
+                    forgeItemTag("nuggets/tungsten")
+            );
+
+    // Sheets
+//    public static ItemEntry<Item> COPPER_SHEET =
+//            taggedIngredient("copper_sheet",
+//                    forgeItemTag("sheets"),
+//                    forgeItemTag("plates"),
+//                    forgeItemTag("sheets/copper"),
+//                    forgeItemTag("plates/copper")
+//            );
+    public static ItemEntry<Item> ALUMINUM_SHEET =
+            taggedIngredient("aluminum_sheet",
+                    forgeItemTag("sheets"),
+                    forgeItemTag("plates"),
+                    forgeItemTag("sheets/aluminum"),
+                    forgeItemTag("plates/aluminum")
+            );
+    public static ItemEntry<Item> STEEL_SHEET =
+            taggedIngredient("steel_sheet",
+                    forgeItemTag("sheets"),
+                    forgeItemTag("plates"),
+                    forgeItemTag("sheets/steel"),
+                    forgeItemTag("plates/steel")
+            );
+    public static ItemEntry<Item> ELECTRUM_SHEET =
+            taggedIngredient("electrum_sheet",
+                    forgeItemTag("sheets"),
+                    forgeItemTag("plates"),
+                    forgeItemTag("sheets/electrum"),
+                    forgeItemTag("plates/electrum")
+            );
+    public static ItemEntry<Item> CONSTANTAN_SHEET =
+            taggedIngredient("constantan_sheet",
+                    forgeItemTag("sheets"),
+                    forgeItemTag("plates"),
+                    forgeItemTag("sheets/constantan"),
+                    forgeItemTag("plates/constantan")
+            );
+//    public static ItemEntry<Item> IRON_SHEET =
+//            taggedIngredient("iron_sheet",
+//                    forgeItemTag("sheets"),
+//                    forgeItemTag("plates"),
+//                    forgeItemTag("sheets/iron"),
+//                    forgeItemTag("plates/iron")
+//            );
+    public static ItemEntry<Item> CAST_IRON_SHEET =
+            taggedIngredient("cast_iron_sheet",
+                    forgeItemTag("sheets"),
+                    forgeItemTag("plates"),
+                    forgeItemTag("sheets/cast_iron"),
+                    forgeItemTag("plates/cast_iron")
+            );
+//    public static ItemEntry<Item> BRASS_SHEET =
+//            taggedIngredient("brass_sheet",
+//                    forgeItemTag("sheets"),
+//                    forgeItemTag("plates"),
+//                    forgeItemTag("sheets/brass"),
+//                    forgeItemTag("plates/brass")
+//            );
+    public static ItemEntry<Item> DURALUMIN_SHEET =
+            taggedIngredient("duralumin_sheet",
+                    forgeItemTag("sheets"),
+                    forgeItemTag("plates"),
+                    forgeItemTag("sheets/duralumin"),
+                    forgeItemTag("plates/duralumin")
+            );
+//    public static ItemEntry<Item> GOLD_SHEET =
+//            taggedIngredient("gold_sheet",
+//                    forgeItemTag("sheets"),
+//                    forgeItemTag("plates"),
+//                    forgeItemTag("sheets/gold"),
+//                    forgeItemTag("plates/gold")
+//            );
+    public static ItemEntry<Item> SILVER_SHEET =
+            taggedIngredient("silver_sheet",
+                    forgeItemTag("sheets"),
+                    forgeItemTag("plates"),
+                    forgeItemTag("sheets/silver"),
+                    forgeItemTag("plates/silver")
+            );
+    public static ItemEntry<Item> NICKEL_SHEET =
+            taggedIngredient("nickel_sheet",
+                    forgeItemTag("sheets"),
+                    forgeItemTag("plates"),
+                    forgeItemTag("sheets/nickel"),
+                    forgeItemTag("plates/nickel")
+            );
+    public static ItemEntry<Item> LEAD_SHEET =
+            taggedIngredient("lead_sheet",
+                    forgeItemTag("sheets"),
+                    forgeItemTag("plates"),
+                    forgeItemTag("sheets/lead"),
+                    forgeItemTag("plates/lead")
+            );
+    public static ItemEntry<Item> TITANIUM_SHEET =
+            taggedIngredient("titanium_sheet",
+                    forgeItemTag("sheets"),
+                    forgeItemTag("plates"),
+                    forgeItemTag("sheets/titanium"),
+                    forgeItemTag("plates/titanium")
+            );
+    public static ItemEntry<Item> BRONZE_SHEET =
+            taggedIngredient("bronze_sheet",
+                    forgeItemTag("sheets"),
+                    forgeItemTag("plates"),
+                    forgeItemTag("sheets/bronze"),
+                    forgeItemTag("plates/bronze")
+            );
+    public static ItemEntry<Item> INVAR_SHEET =
+            taggedIngredient("invar_sheet",
+                    forgeItemTag("sheets"),
+                    forgeItemTag("plates"),
+                    forgeItemTag("sheets/invar"),
+                    forgeItemTag("plates/invar")
+            );
+    public static ItemEntry<Item> TUNGSTEN_STEEL_SHEET =
+            taggedIngredient("tungsten_steel_sheet",
+                    forgeItemTag("sheets"),
+                    forgeItemTag("plates"),
+                    forgeItemTag("sheets/tungsten_steel"),
+                    forgeItemTag("plates/tungsten_steel")
+            );
+
+    // Rods
+    public static ItemEntry<Item> COPPER_ROD =
+            taggedIngredient("copper_rod",
+                    forgeItemTag("rods"),
+                    forgeItemTag("rods/copper")
+            );
+    public static ItemEntry<Item> ALUMINUM_ROD =
+            taggedIngredient("aluminum_rod",
+                    forgeItemTag("rods"),
+                    forgeItemTag("rods/aluminum")
+            );
+    public static ItemEntry<Item> STEEL_ROD =
+            taggedIngredient("steel_rod",
+                    forgeItemTag("rods"),
+                    forgeItemTag("rods/steel"),
+                    FHTags.Items.IGNITION_METAL
+            );
+    public static ItemEntry<Item> ELECTRUM_ROD =
+            taggedIngredient("electrum_rod",
+                    forgeItemTag("rods"),
+                    forgeItemTag("rods/electrum")
+            );
+    public static ItemEntry<Item> CONSTANTAN_ROD =
+            taggedIngredient("constantan_rod",
+                    forgeItemTag("rods"),
+                    forgeItemTag("rods/constantan")
+            );
+    public static ItemEntry<Item> IRON_ROD =
+            taggedIngredient("iron_rod",
+                    forgeItemTag("rods"),
+                    forgeItemTag("rods/iron"),
+                    FHTags.Items.IGNITION_METAL
+            );
+    public static ItemEntry<Item> CAST_IRON_ROD =
+            taggedIngredient("cast_iron_rod",
+                    forgeItemTag("rods"),
+                    forgeItemTag("rods/cast_iron"),
+                    FHTags.Items.IGNITION_METAL
+            );
+
+    // Wires
+    public static ItemEntry<Item> COPPER_WIRE =
+            taggedIngredient("copper_wire",
+                    forgeItemTag("wires"),
+                    forgeItemTag("wires/copper")
+            );
+    public static ItemEntry<Item> ALUMINUM_WIRE =
+            taggedIngredient("aluminum_wire",
+                    forgeItemTag("wires"),
+                    forgeItemTag("wires/aluminum")
+            );
+    public static ItemEntry<Item> STEEL_WIRE =
+            taggedIngredient("steel_wire",
+                    forgeItemTag("wires"),
+                    forgeItemTag("wires/steel")
+            );
+    public static ItemEntry<Item> ELECTRUM_WIRE =
+            taggedIngredient("electrum_wire",
+                    forgeItemTag("wires"),
+                    forgeItemTag("wires/electrum")
+            );
+    public static ItemEntry<Item> CONSTANTAN_WIRE =
+            taggedIngredient("constantan_wire",
+                    forgeItemTag("wires"),
+                    forgeItemTag("wires/constantan")
+            );
+
+    // Rusted ingots
+    public static ItemEntry<Item> RUSTED_IRON_INGOT =
+            taggedIngredient("rusted_iron_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/rusted_iron"),
+                    FHTags.Items.IGNITION_METAL
+            );
+    public static ItemEntry<Item> RUSTED_COPPER_INGOT =
+            taggedIngredient("rusted_copper_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/rusted_copper")
+            );
+    public static ItemEntry<Item> GRAY_TIN_INGOT =
+            taggedIngredient("gray_tin_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/gray_tin")
+            );
+
+    // Slags
+    public static ItemEntry<Item> IRON_SLAG =
+            taggedIngredient("iron_slag",
+                    forgeItemTag("slags"),
+                    forgeItemTag("slags/iron")
+            );
+    public static ItemEntry<Item> NICKEL_MATTE =
+            taggedIngredient("nickel_matte",
+                    forgeItemTag("slags"),
+                    forgeItemTag("slags/nickel")
+            );
+
+    // Chemicals
+    public static ItemEntry<Item> COPPER_OXIDE_DUST =
+            taggedIngredient("copper_oxide_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/copper_oxide")
+            );
+    public static ItemEntry<Item> ZINC_OXIDE_DUST =
+            taggedIngredient("zinc_oxide_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/zinc_oxide")
+            );
+    public static ItemEntry<Item> ALUMINA_DUST =
+            taggedIngredient("alumina_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/alumina")
+            );
+    public static ItemEntry<Item> MAGNESIA_DUST =
+            taggedIngredient("magnesia_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/magnesia")
+            );
+    public static ItemEntry<Item> LEAD_OXIDE_DUST =
+            taggedIngredient("lead_oxide_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/lead_oxide")
+            );
+    public static ItemEntry<Item> ALUMINIUM_HYDROXIDE_DUST =
+            taggedIngredient("aluminium_hydroxide_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/aluminium_hydroxide")
+            );
+    public static ItemEntry<Item> SODIUM_HYDROXIDE_DUST =
+            taggedIngredient("sodium_hydroxide_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/sodium_hydroxide")
+            );
+    public static ItemEntry<Item> SODIUM_SULFIDE_DUST =
+            taggedIngredient("sodium_sulfide_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/sodium_sulfide")
+            );
+    public static ItemEntry<Item> SODIUM_CHLORIDE_DUST =
+            taggedIngredient("sodium_chloride_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/sodium_chloride")
+            );
+    public static ItemEntry<Item> CRYOLITE_DUST =
+            taggedIngredient("cryolite_dust",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/cryolite")
+            );
+
+    // Misc
+    public static ItemEntry<Item> MORTAR =
+            ingredient("mortar");
+    public static ItemEntry<Item> VULCANIZED_RUBBER =
+            taggedIngredient("vulcanized_rubber",
+                    forgeItemTag("rubber")
+            );
+    public static ItemEntry<Item> PULP =
+            ingredient("pulp");
+    public static ItemEntry<Item> FIRE_CLAY_BALL =
+            ingredient("fire_clay_ball");
+    public static ItemEntry<Item> HIGH_REFRACTORY_BRICK =
+            ingredient("high_refractory_brick");
+    public static ItemEntry<Item> SAWDUST =
+            taggedIngredient("sawdust",
+                    forgeItemTag("dusts/wooden")
+            );
+    public static ItemEntry<Item> BIOMASS =
+            ingredient("biomass");
+    public static ItemEntry<Item> SYNTHETIC_LEATHER =
+            taggedIngredient("synthetic_leather",
+                    forgeItemTag("leather")
+            );
+    public static ItemEntry<Item> QUICKLIME =
+            taggedIngredient("quicklime",
+                    forgeItemTag("dusts"),
+                    forgeItemTag("dusts/quicklime")
+            );
+    public static ItemEntry<Item> SODIUM_INGOT =
+            taggedIngredient("sodium_ingot",
+                    forgeItemTag("ingots"),
+                    forgeItemTag("ingots/sodium")
+            );
+    public static ItemEntry<Item> REFRACTORY_BRICK =
+            ingredient("refractory_brick");
 
 
-    // OLD FORGE LIKE REGISTRY
+    // OLD FORGE LIKE REGISTRY - TRY NOT USE THIS, USE REGISTRATE like above
 
     // Materials
     public static RegistryObject<Item> generator_ash = register("generator_ash", n -> new FHBaseItem(createProps()));
@@ -296,259 +1123,6 @@ public class FHItems {
             alladvthermos.add(register(s + "_advanced_thermos", n -> new ThermosItem("item.frostedheart.advanced_thermos", 3000, 250, false)));
         }
     }
-
-    // ADDITIONAL SOIL DROPS
-    public static RegistryObject<Item> PEAT = register("peat", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> KAOLIN = register("kaolin", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> BAUXITE = register("bauxite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> ROTTEN_WOOD = register("rotten_wood", n -> new FHBaseItem(createProps()));
-//    public static RegistryObject<Item> CRUSHED_KAOLIN = register("crushed_raw_kaolin", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_RAW_BAUXITE = register("crushed_raw_bauxite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> KAOLIN_DUST = register("kaolin_dust", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> BAUXITE_DUST = register("bauxite_dust", n -> new FHBaseItem(createProps()));
-
-    // CONDENSED BALLS
-    public static RegistryObject<Item> CONDENSED_BALL_IRON_ORE = register("condensed_ball_iron_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_COPPER_ORE = register("condensed_ball_copper_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_GOLD_ORE = register("condensed_ball_gold_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_ZINC_ORE = register("condensed_ball_zinc_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_SILVER_ORE = register("condensed_ball_silver_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_TIN_ORE = register("condensed_ball_tin_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_PYRITE_ORE = register("condensed_ball_pyrite_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_NICKEL_ORE = register("condensed_ball_nickel_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> CONDENSED_BALL_LEAD_ORE = register("condensed_ball_lead_ore", n -> new FHSnowballItem(createProps().stacksTo(16)));
-
-    // SLURRY
-    public static RegistryObject<Item> IRON_SLURRY = register("iron_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> COPPER_SLURRY = register("copper_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> GOLD_SLURRY = register("gold_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> ZINC_SLURRY = register("zinc_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> SILVER_SLURRY = register("silver_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> TIN_SLURRY = register("tin_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> PYRITE_SLURRY = register("pyrite_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> NICKEL_SLURRY = register("nickel_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
-    public static RegistryObject<Item> LEAD_SLURRY = register("lead_slurry", n -> new FHSnowballItem(createProps().stacksTo(16)));
-
-    // CRUSHED ORES
-    public static RegistryObject<Item> CRUSHED_RAW_SILVER = register("crushed_raw_silver", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_RAW_TIN = register("crushed_raw_tin", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_RAW_PYRITE = register("crushed_raw_pyrite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_RAW_NICKEL = register("crushed_raw_nickel", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_RAW_LEAD = register("crushed_raw_lead", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_RAW_HALITE = register("crushed_raw_halite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_RAW_SYLVITE = register("crushed_raw_sylvite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> CRUSHED_RAW_MAGNESITE = register("crushed_raw_magnesite", n -> new FHBaseItem(createProps()));
-
-    // RAW ORES
-    public static RegistryObject<Item> RAW_SILVER = register("raw_silver", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> RAW_TIN = register("raw_tin", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> RAW_PYRITE = register("raw_pyrite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> RAW_NICKEL = register("raw_nickel", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> RAW_LEAD = register("raw_lead", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> RAW_HALITE = register("raw_halite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> RAW_SYLVITE = register("raw_sylvite", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> RAW_MAGNESITE = register("raw_magnesite", n -> new FHBaseItem(createProps()));
-
-    // MATERIALS
-
-    /*
-    copper
-    aluminum
-    steel
-    electrum
-    constantan
-    iron
-    cast_iron
-    brass
-    duralumin
-    gold
-    silver
-    nickel
-    lead
-    titanium
-    bronze
-    invar
-    tungsten_steel
-    zinc
-    tin
-    magnesium
-    tungsten
-     */
-
-    // DUSTS
-    public static RegistryObject<Item> COPPER_DUST = register("copper_dust");
-    public static RegistryObject<Item> ALUMINUM_DUST = register("aluminum_dust");
-//    public static RegistryObject<Item> STEEL_DUST = register("steel_dust");
-//    public static RegistryObject<Item> ELECTRUM_DUST = register("electrum_dust");
-//    public static RegistryObject<Item> CONSTANTAN_DUST = register("constantan_dust");
-//    public static RegistryObject<Item> IRON_DUST = register("iron_dust");
-//    public static RegistryObject<Item> CAST_IRON_DUST = register("cast_iron_dust");
-//    public static RegistryObject<Item> BRASS_DUST = register("brass_dust");
-    public static RegistryObject<Item> DURALUMIN_DUST = register("duralumin_dust");
-    public static RegistryObject<Item> GOLD_DUST = register("gold_dust");
-    public static RegistryObject<Item> SILVER_DUST = register("silver_dust");
-    public static RegistryObject<Item> NICKEL_DUST = register("nickel_dust");
-    public static RegistryObject<Item> LEAD_DUST = register("lead_dust");
-    public static RegistryObject<Item> TITANIUM_DUST = register("titanium_dust");
-//    public static RegistryObject<Item> BRONZE_DUST = register("bronze_dust");
-//    public static RegistryObject<Item> INVAR_DUST = register("invar_dust");
-//    public static RegistryObject<Item> TUNGSTEN_STEEL_DUST = register("tungsten_steel_dust");
-    public static RegistryObject<Item> ZINC_DUST = register("zinc_dust");
-    public static RegistryObject<Item> TIN_DUST = register("tin_dust");
-    public static RegistryObject<Item> MAGNESIUM_DUST = register("magnesium_dust");
-    public static RegistryObject<Item> TUNGSTEN_DUST = register("tungsten_dust");
-
-    // INGOTS
-
-    // public static RegistryObject<Item> COPPER_INGOT = register("copper_ingot");
-    public static RegistryObject<Item> ALUMINUM_INGOT = register("aluminum_ingot");
-    public static RegistryObject<Item> STEEL_INGOT = register("steel_ingot");
-    public static RegistryObject<Item> ELECTRUM_INGOT = register("electrum_ingot");
-    public static RegistryObject<Item> CONSTANTAN_INGOT = register("constantan_ingot");
-    // public static RegistryObject<Item> IRON_INGOT = register("iron_ingot");
-    public static RegistryObject<Item> CAST_IRON_INGOT = register("cast_iron_ingot");
-    // public static RegistryObject<Item> BRASS_INGOT = register("brass_ingot");
-    public static RegistryObject<Item> DURALUMIN_INGOT = register("duralumin_ingot");
-    // public static RegistryObject<Item> GOLD_INGOT = register("gold_ingot");
-    public static RegistryObject<Item> SILVER_INGOT = register("silver_ingot");
-    public static RegistryObject<Item> NICKEL_INGOT = register("nickel_ingot");
-    public static RegistryObject<Item> LEAD_INGOT = register("lead_ingot");
-    public static RegistryObject<Item> TITANIUM_INGOT = register("titanium_ingot");
-    public static RegistryObject<Item> BRONZE_INGOT = register("bronze_ingot");
-    public static RegistryObject<Item> INVAR_INGOT = register("invar_ingot");
-    public static RegistryObject<Item> TUNGSTEN_STEEL_INGOT = register("tungsten_steel_ingot");
-    // public static RegistryObject<Item> ZINC_INGOT = register("zinc_ingot");
-    public static RegistryObject<Item> TIN_INGOT = register("tin_ingot");
-    public static RegistryObject<Item> MAGNESIUM_INGOT = register("magnesium_ingot");
-    public static RegistryObject<Item> TUNGSTEN_INGOT = register("tungsten_ingot");
-
-    // NUGGET
-    // public static RegistryObject<Item> COPPER_NUGGET = register("copper_nugget");
-    public static RegistryObject<Item> ALUMINUM_NUGGET = register("aluminum_nugget");
-    public static RegistryObject<Item> STEEL_NUGGET = register("steel_nugget");
-    public static RegistryObject<Item> ELECTRUM_NUGGET = register("electrum_nugget");
-    public static RegistryObject<Item> CONSTANTAN_NUGGET = register("constantan_nugget");
-    // public static RegistryObject<Item> IRON_NUGGET = register("iron_nugget");
-    public static RegistryObject<Item> CAST_IRON_NUGGET = register("cast_iron_nugget");
-    // public static RegistryObject<Item> BRASS_NUGGET = register("brass_nugget");
-    public static RegistryObject<Item> DURALUMIN_NUGGET = register("duralumin_nugget");
-    // public static RegistryObject<Item> GOLD_NUGGET = register("gold_nugget");
-    public static RegistryObject<Item> SILVER_NUGGET = register("silver_nugget");
-    public static RegistryObject<Item> NICKEL_NUGGET = register("nickel_nugget");
-    public static RegistryObject<Item> LEAD_NUGGET = register("lead_nugget");
-    public static RegistryObject<Item> TITANIUM_NUGGET = register("titanium_nugget");
-    public static RegistryObject<Item> BRONZE_NUGGET = register("bronze_nugget");
-    public static RegistryObject<Item> INVAR_NUGGET = register("invar_nugget");
-    public static RegistryObject<Item> TUNGSTEN_STEEL_NUGGET = register("tungsten_steel_nugget");
-    // public static RegistryObject<Item> ZINC_NUGGET = register("zinc_nugget");
-    public static RegistryObject<Item> TIN_NUGGET = register("tin_nugget");
-    public static RegistryObject<Item> MAGNESIUM_NUGGET = register("magnesium_nugget");
-    public static RegistryObject<Item> TUNGSTEN_NUGGET = register("tungsten_nugget");
-
-    // SHEETS
-    // public static RegistryObject<Item> COPPER_SHEET = register("copper_sheet");
-    public static RegistryObject<Item> ALUMINUM_SHEET = register("aluminum_sheet");
-    public static RegistryObject<Item> STEEL_SHEET = register("steel_sheet");
-    public static RegistryObject<Item> ELECTRUM_SHEET = register("electrum_sheet");
-    public static RegistryObject<Item> CONSTANTAN_SHEET = register("constantan_sheet");
-    // public static RegistryObject<Item> IRON_SHEET = register("iron_sheet");
-    public static RegistryObject<Item> CAST_IRON_SHEET = register("cast_iron_sheet");
-    // public static RegistryObject<Item> BRASS_SHEET = register("brass_sheet");
-    public static RegistryObject<Item> DURALUMIN_SHEET = register("duralumin_sheet");
-    // public static RegistryObject<Item> GOLD_SHEET = register("gold_sheet");
-    public static RegistryObject<Item> SILVER_SHEET = register("silver_sheet");
-    public static RegistryObject<Item> NICKEL_SHEET = register("nickel_sheet");
-    public static RegistryObject<Item> LEAD_SHEET = register("lead_sheet");
-    public static RegistryObject<Item> TITANIUM_SHEET = register("titanium_sheet");
-    public static RegistryObject<Item> BRONZE_SHEET = register("bronze_sheet");
-    public static RegistryObject<Item> INVAR_SHEET = register("invar_sheet");
-    public static RegistryObject<Item> TUNGSTEN_STEEL_SHEET = register("tungsten_steel_sheet");
-
-    // RODS
-    public static RegistryObject<Item> COPPER_ROD = register("copper_rod");
-    public static RegistryObject<Item> ALUMINUM_ROD = register("aluminum_rod");
-    public static RegistryObject<Item> STEEL_ROD = register("steel_rod");
-    public static RegistryObject<Item> ELECTRUM_ROD = register("electrum_rod");
-    public static RegistryObject<Item> CONSTANTAN_ROD = register("constantan_rod");
-    public static RegistryObject<Item> IRON_ROD = register("iron_rod");
-    public static RegistryObject<Item> CAST_IRON_ROD = register("cast_iron_rod");
-
-    // WIRES
-    public static RegistryObject<Item> COPPER_WIRE = register("copper_wire");
-    public static RegistryObject<Item> ALUMINUM_WIRE = register("aluminum_wire");
-    public static RegistryObject<Item> STEEL_WIRE = register("steel_wire");
-    public static RegistryObject<Item> ELECTRUM_WIRE = register("electrum_wire");
-    public static RegistryObject<Item> CONSTANTAN_WIRE = register("constantan_wire");
-
-    // RUSTED ITEMS
-    public static RegistryObject<Item> RUSTED_IRON_INGOT = register("rusted_iron_ingot");
-    public static RegistryObject<Item> RUSTED_COPPER_INGOT = register("rusted_copper_ingot");
-    public static RegistryObject<Item> GRAY_TIN_INGOT = register("gray_tin_ingot");
-
-    // SLUGS
-    public static RegistryObject<Item> IRON_SLAG = register("iron_slag");
-    public static RegistryObject<Item> NICKEL_MATTE = register("nickel_matte");
-
-    // CHEMICALS in dust
-    /*
-    copper_oxide
-    zinc_oxide
-    tin_oxide
-    alumina
-    magnesia
-    lead_oxide
-    aluminium_hydroxide
-    sodium_hydroxide
-    sodium_sulfide
-    sodium_choloride
-    potassium_choloride
-    sulfur
-    graphite
-    cryolite
-     */
-
-    public static RegistryObject<Item> COPPER_OXIDE_DUST = register("copper_oxide_dust");
-    public static RegistryObject<Item> ZINC_OXIDE_DUST = register("zinc_oxide_dust");
-    public static RegistryObject<Item> ALUMINA_DUST = register("alumina_dust");
-    public static RegistryObject<Item> MAGNESIA_DUST = register("magnesia_dust");
-    public static RegistryObject<Item> LEAD_OXIDE_DUST = register("lead_oxide_dust");
-    public static RegistryObject<Item> ALUMINIUM_HYDROXIDE_DUST = register("aluminium_hydroxide_dust");
-    public static RegistryObject<Item> SODIUM_HYDROXIDE_DUST = register("sodium_hydroxide_dust");
-    public static RegistryObject<Item> SODIUM_SULFIDE_DUST = register("sodium_sulfide_dust");
-    public static RegistryObject<Item> SODIUM_CHLORIDE_DUST = register("sodium_chloride_dust");
-    public static RegistryObject<Item> CRYOLITE_DUST = register("cryolite_dust");
-
-    // MISC MATERIALS
-    /*
-    mortar
-    vulcanized_rubber
-
-    pulp
-
-    fire_clay_ball
-
-    high_refractory_brick
-
-    sawdust
-    biomass
-    synthetic_leather
-    quicklime
-    sodium_ingot
-    refractory_brick
-
-     */
-
-    public static RegistryObject<Item> MORTAR = register("mortar");
-    public static RegistryObject<Item> VULCANIZED_RUBBER = register("vulcanized_rubber");
-    public static RegistryObject<Item> PULP = register("pulp");
-    public static RegistryObject<Item> FIRE_CLAY_BALL = register("fire_clay_ball");
-    public static RegistryObject<Item> HIGH_REFRACTORY_BRICK = register("high_refractory_brick");
-    public static RegistryObject<Item> SAWDUST = register("sawdust");
-    public static RegistryObject<Item> BIOMASS = register("biomass");
-    public static RegistryObject<Item> SYNTHETIC_LEATHER = register("synthetic_leather");
-    public static RegistryObject<Item> QUICKLIME = register("quicklime");
-    public static RegistryObject<Item> SODIUM_INGOT = register("sodium_ingot");
-    public static RegistryObject<Item> REFRACTORY_BRICK = register("refractory_brick");
 
     //WaterSource section
     public final static RegistryObject<Item> fluid_bottle = register("fluid_bottle", (s) -> new FluidBottleItem(new Item.Properties().stacksTo(16)));

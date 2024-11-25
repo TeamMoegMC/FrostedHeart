@@ -79,6 +79,7 @@ public class FHTags {
 //      public static final ITag.INamedTag<Block> ALWAYS_BREAKABLE = create("always_breakable");
 		public static final TagKey<Item> RAW_FOOD = tag("raw_food");
 		public static final TagKey<Item> CONDENSED_BALLS = tag("condensed_balls");
+		public static final TagKey<Item> SLURRY = tag("slurry");
 		public static final TagKey<Item> PERMAFROST = tag("permafrost");
 		public static final TagKey<Item> IGNITION_MATERIAL = tag("ignition_material");
 		public static final TagKey<Item> IGNITION_METAL = tag("ignition_metal");
