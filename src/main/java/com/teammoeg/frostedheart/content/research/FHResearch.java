@@ -250,7 +250,8 @@ public class FHResearch {
 		try {
 			JsonElement je = new JsonParser().parse(FileUtil.readString(f));
 			if (je.isJsonObject()) {
-				Research.CODEC.parse(JsonOps.INSTANCE, je).result().map(o -> {
+		
+				Research.CODEC.parse(JsonOps.INSTANCE, je).resultOrPartial(FHMain.LOGGER::error).map(o -> {
 					o.setId(r.getId());
 					return o;
 				}).ifPresent(researches::replace);
@@ -267,14 +268,14 @@ public class FHResearch {
 		File rf = new File(folder, "fhresearches");
 		rf.mkdirs();
 		JsonParser jp = new JsonParser();
-
+		FHMain.LOGGER.info("loading research from files...");
 		for (File f : rf.listFiles((dir, name) -> name.endsWith(".json"))) {
 			try {
 				JsonElement je = jp.parse(FileUtil.readString(f));
 				if (je.isJsonObject()) {
 					String id = f.getName();
 					id = id.substring(0, id.length() - 5);
-					Research r = Research.CODEC.parse(JsonOps.INSTANCE, je).result().orElse(null);
+					Research r = Research.CODEC.parse(JsonOps.INSTANCE, je).resultOrPartial(FHMain.LOGGER::error).orElse(null);
 					if (r != null) {
 						r.setId(id);
 						researches.register(r);

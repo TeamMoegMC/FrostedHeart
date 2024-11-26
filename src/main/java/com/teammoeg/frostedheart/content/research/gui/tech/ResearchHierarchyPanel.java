@@ -390,7 +390,7 @@ public class ResearchHierarchyPanel extends Panel {
         // }
         if (haveHScroll) {
             researchPanel.hierarchyBar.unhide();
-            researchPanel.hierarchyBar.setMaxValue(trmost + 24);
+           // researchPanel.hierarchyBar.setMaxValue(trmost + 24);
         } else
             researchPanel.hierarchyBar.hide();
 

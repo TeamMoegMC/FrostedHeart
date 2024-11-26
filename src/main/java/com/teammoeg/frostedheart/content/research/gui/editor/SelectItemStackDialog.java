@@ -491,6 +491,6 @@ public class SelectItemStackDialog extends EditDialog {
         panelStacks.addAll(items);
         scrollBar.setPosAndSize(panelStacks.posX + panelStacks.width + 25, panelStacks.posY - 1, 16, panelStacks.height + 2);
         scrollBar.setValue(0);
-        scrollBar.setMaxValue(1 + Mth.ceil(panelStacks.getWidgets().size() / 9F) * 19);
+        //scrollBar.setMaxValue(1 + Mth.ceil(panelStacks.getWidgets().size() / 9F) * 19);
     }
 }

@@ -73,7 +73,7 @@ minecraft {
             if (System.env.LIBGLFW_PATH != null) {
                 jvmArgs "-Dorg.lwjgl.glfw.libname=${System.env.LIBGLFW_PATH}/lib/libglfw.so"
             }
-
+			jvmArgs "-DFile.Encoding=UTF-8"
             arg "-mixin.config=" + "frostedheart.mixins.json"
             mods {
                 frostedheart {
@@ -295,7 +295,8 @@ dependencies {
     noDatagenRuntimeOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:${ftb_quests_version}")
 
     // Tetra
-    compileOnly fg.deobf("curse.maven:tetra-289712:5544287") // somehow, when datagening, you must set to compileOnly
+    compileOnly fg.deobf("curse.maven:tetra-289712:5544287")
+    noDatagenRuntimeOnly fg.deobf("curse.maven:tetra-289712:5544287") // somehow, when datagening, you must set to compileOnly
     
     implementation fg.deobf("curse.maven:mutil-351914:4824501")
 
