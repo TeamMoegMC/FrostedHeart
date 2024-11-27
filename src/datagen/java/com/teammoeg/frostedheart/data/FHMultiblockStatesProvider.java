@@ -84,7 +84,7 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 //		super.cubeAll(FHBlocks.IRON_SLUDGE.get(), modLoc("block/ore/iron_sludge"));
 
 		super.layered((SnowLayerBlock) FHBlocks.CONDENSED_COPPER_ORE.get(), FHBlocks.CONDENSED_COPPER_ORE_BLOCK.get(), modLoc("block/ore/condensed_copper_ore"));
-		super.layered((SnowLayerBlock) FHBlocks.CONDENSED_IRON_ORE.get(), FHBlocks.CONDENSED_IRON_ORE_BLOCK.get(), modLoc("block/ore/condensed_iron_ore"));
+//		super.layered((SnowLayerBlock) FHBlocks.CONDENSED_IRON_ORE.get(), FHBlocks.CONDENSED_IRON_ORE_BLOCK.get(), modLoc("block/ore/condensed_iron_ore"));
 		super.layered((SnowLayerBlock) FHBlocks.CONDENSED_GOLD_ORE.get(), FHBlocks.CONDENSED_GOLD_ORE_BLOCK.get(), modLoc("block/ore/condensed_gold_ore"));
 		super.layered((SnowLayerBlock) FHBlocks.CONDENSED_ZINC_ORE.get(), FHBlocks.CONDENSED_ZINC_ORE_BLOCK.get(), modLoc("block/ore/condensed_zinc_ore"));
 		super.layered((SnowLayerBlock) FHBlocks.CONDENSED_SILVER_ORE.get(), FHBlocks.CONDENSED_SILVER_ORE_BLOCK.get(), modLoc("block/ore/condensed_silver_ore"));
