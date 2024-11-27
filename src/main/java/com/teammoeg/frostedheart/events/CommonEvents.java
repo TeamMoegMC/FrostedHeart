@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.FHTags;
-import com.teammoeg.frostedheart.command.*;
+import com.teammoeg.frostedheart.infrastructure.command.*;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
