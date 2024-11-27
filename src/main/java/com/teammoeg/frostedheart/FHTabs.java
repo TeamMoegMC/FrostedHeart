@@ -73,7 +73,7 @@ public class FHTabs {
 
 
     public static void fillFHTab(CreativeModeTab.ItemDisplayParameters parms, CreativeModeTab.Output out) {
-        for (final RegistryObject<Item> itemRef : FHItems.registry.getEntries()) {
+        for (final RegistryObject<Item> itemRef : FHItems.ITEMS.getEntries()) {
             final Item item = itemRef.get();
             if (item instanceof ICreativeModeTabItem) {
                 continue;

@@ -76,15 +76,16 @@ import static com.teammoeg.frostedheart.FHMain.FH_REGISTRATE;
 import static net.minecraft.world.level.block.Blocks.*;
 
 public class FHBlocks {
-    public static void init() {
 
+    static {
+        FH_REGISTRATE.setCreativeTab(FHTabs.BASE_TAB);
     }
 
-    static final DeferredRegister<Block> registry = DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
+    static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
 
     public static <T extends Block> RegistryObject<T> register(String name, Supplier<T> block, String itemName, Function<T, Item> item) {
-        RegistryObject<T> blk = registry.register(name, block);
-        FHItems.registry.register(itemName, () -> item.apply(blk.get()));
+        RegistryObject<T> blk = BLOCKS.register(name, block);
+        FHItems.ITEMS.register(itemName, () -> item.apply(blk.get()));
         return blk;
     }
 
@@ -386,4 +387,6 @@ public class FHBlocks {
     public static RegistryObject<Block> MINE_BASE = register("mine_base", () -> new MineBaseBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
     public static RegistryObject<Block> HUNTING_CAMP = register("hunting_camp", () -> new HuntingCampBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
     public static RegistryObject<Block> HUNTING_BASE = register("hunting_base", () -> new HuntingBaseBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
+
+    public static void init() { }
 }

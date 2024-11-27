@@ -81,7 +81,7 @@ public class FHMultiblocks {
 			return new IEMultiblockBuilder<>(logic, name)
 				.notMirrored()
 				.customBlock(
-					FHBlocks.registry, FHItems.registry,
+					FHBlocks.BLOCKS, FHItems.ITEMS,
 					r -> new NonMirrorableWithActiveBlock<>(properties, r),
 					MultiblockItem::new)
 				.defaultBEs(FHBlockEntityTypes.REGISTER);
@@ -91,7 +91,7 @@ public class FHMultiblocks {
 			return new IEMultiblockBuilder<>(logic, name)
 				.defaultBEs(FHBlockEntityTypes.REGISTER)
 				.customBlock(
-					FHBlocks.registry, FHItems.registry,
+					FHBlocks.BLOCKS, FHItems.ITEMS,
 					r -> new NonMirrorableWithActiveBlock<>(IEBlocks.METAL_PROPERTIES_NO_OCCLUSION.get(), r),
 					MultiblockItem::new);
 		}

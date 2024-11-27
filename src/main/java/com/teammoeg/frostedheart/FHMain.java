@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart;
 
-import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.compat.CreateCompat;
@@ -105,8 +104,8 @@ public class FHMain {
         FHBlockEntityTypes.REGISTER.register(mod);
         FHMenuTypes.CONTAINERS.register(mod);
         FHTabs.TABS.register(mod);
-        FHItems.registry.register(mod);
-        FHBlocks.registry.register(mod);
+        FHItems.ITEMS.register(mod);
+        FHBlocks.BLOCKS.register(mod);
 
         FHSoundEvents.SOUNDS.register(mod);
         FHRecipes.RECIPE_SERIALIZERS.register(mod);
