@@ -12,7 +12,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -28,10 +27,6 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
     @Override
     protected void addTags(HolderLookup.Provider pProvider) {
         // FH deco and walls
-//        TagAppender<Block> deco = tag(FHTags.Blocks.TOWN_DECORATIONS);
-//        deco.add(rk(Blocks.FLOWER_POT), rk(Blocks.LANTERN), rk(Blocks.SOUL_LANTERN), rk(Blocks.CAMPFIRE), rk(Blocks.SOUL_CAMPFIRE), rk(Blocks.ENCHANTING_TABLE), rk(Blocks.ANVIL), rk(Blocks.CHIPPED_ANVIL), rk(Blocks.DAMAGED_ANVIL), rk(Blocks.STONECUTTER), rk(Blocks.GRINDSTONE));
-//        TagAppender<Block> wall = tag(FHTags.Blocks.TOWN_WALLS);
-//        wall.addTag(BlockTags.DOORS).addTag(BlockTags.WALLS).addTag(Tags.Blocks.FENCES).addTag(Tags.Blocks.FENCE_GATES).addTag(Tags.Blocks.GLASS_PANES).add(rk(Blocks.IRON_BARS));
 
         // Vanilla ores
         TagAppender<Block> ores = tag(Tags.Blocks.ORES);
@@ -162,19 +157,8 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.KAOLIN_PERMAFROST));
 
         tag(FHTags.Blocks.SOIL)
-                .add(rk(Blocks.DIRT))
-                .add(rk(Blocks.GRASS_BLOCK))
-                .add(rk(Blocks.COARSE_DIRT))
-                .add(rk(Blocks.PODZOL))
                 .add(rk(FHBlocks.BURIED_PODZOL))
-                .add(rk(Blocks.MYCELIUM))
                 .add(rk(FHBlocks.BURIED_MYCELIUM))
-                .add(rk(Blocks.ROOTED_DIRT))
-                .add(rk(Blocks.MUD))
-                .add(rk(Blocks.GRAVEL))
-                .add(rk(Blocks.SAND))
-                .add(rk(Blocks.RED_SAND))
-                .add(rk(Blocks.CLAY))
                 .add(rk(FHBlocks.PEAT))
                 .add(rk(FHBlocks.KAOLIN))
                 .add(rk(FHBlocks.BAUXITE))
@@ -212,15 +196,9 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
 
         // carver
         tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES)
-                .addTag(FHTags.Blocks.PERMAFROST)
-                .addTag(FHTags.Blocks.CONDENSED_ORES)
-                .addTag(Tags.Blocks.ORES)
                 .add(rk(FHBlocks.BURIED_MYCELIUM))
                 .add(rk(FHBlocks.BURIED_PODZOL));
 
-        // snow
-        tag(BlockTags.SNOW)
-                .addTag(FHTags.Blocks.CONDENSED_ORES);
 
         // crops
         tag(BlockTags.CROPS)
@@ -256,8 +234,6 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
 
         // Mining tool
         tag(BlockTags.MINEABLE_WITH_AXE)
-                .addTag(FHTags.Blocks.TOWN_BLOCKS)
-                .addTag(FHTags.Blocks.WOODEN_MACHINES)
                 .add(rk(FHBlocks.ROTTEN_WOOD))
                 .add(rk(FHBlocks.ROTTEN_WOOD_PERMAFROST))
                 // deco
@@ -265,10 +241,7 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.SMALL_GARAGE))
                 .add(rk(FHBlocks.PACKAGE_BLOCK));
 
-        tag(BlockTags.MINEABLE_WITH_HOE);
-
         tag(BlockTags.MINEABLE_WITH_PICKAXE)
-                .addTag(FHTags.Blocks.METAL_MACHINES)
                 // ores
                 .add(rk(FHBlocks.SILVER_ORE))
                 .add(rk(FHBlocks.TIN_ORE))
@@ -398,7 +371,6 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
                 .add(rk(FHBlocks.TUNGSTEN_BLOCK));
 
         tag(BlockTags.NEEDS_IRON_TOOL)
-                .addTag(FHTags.Blocks.PERMAFROST) // permafrost needs iron/bronze level tool!
                 .add(rk(FHBlocks.SILVER_ORE))
                 .add(rk(FHBlocks.NICKEL_ORE))
                 .add(rk(FHBlocks.STEEL_BLOCK))
@@ -428,34 +400,30 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
         tag(BlockTags.ANIMALS_SPAWNABLE_ON)
                 .add(rk(FHBlocks.DIRT_PERMAFROST))
                 .add(rk(FHBlocks.MYCELIUM_PERMAFROST))
-                .add(rk(FHBlocks.PODZOL_PERMAFROST))
-                .addTag(BlockTags.SNOW); // allow snow spawn
+                .add(rk(FHBlocks.PODZOL_PERMAFROST));
+
 
         // cold animals
         tag(BlockTags.RABBITS_SPAWNABLE_ON)
                 .add(rk(FHBlocks.DIRT_PERMAFROST))
                 .add(rk(FHBlocks.MYCELIUM_PERMAFROST))
-                .add(rk(FHBlocks.PODZOL_PERMAFROST))
-                .addTag(BlockTags.SNOW);
+                .add(rk(FHBlocks.PODZOL_PERMAFROST));
 
         tag(BlockTags.FOXES_SPAWNABLE_ON)
                 .add(rk(FHBlocks.DIRT_PERMAFROST))
                 .add(rk(FHBlocks.MYCELIUM_PERMAFROST))
-                .add(rk(FHBlocks.PODZOL_PERMAFROST))
-                .addTag(BlockTags.SNOW);
+                .add(rk(FHBlocks.PODZOL_PERMAFROST));
 
         tag(BlockTags.WOLVES_SPAWNABLE_ON)
                 .add(rk(FHBlocks.DIRT_PERMAFROST))
                 .add(rk(FHBlocks.MYCELIUM_PERMAFROST))
-                .add(rk(FHBlocks.PODZOL_PERMAFROST))
-                .addTag(BlockTags.SNOW);
+                .add(rk(FHBlocks.PODZOL_PERMAFROST));
 
         tag(BlockTags.GOATS_SPAWNABLE_ON)
                 .add(rk(FHBlocks.DIRT_PERMAFROST))
                 .add(rk(FHBlocks.MYCELIUM_PERMAFROST))
                 .add(rk(FHBlocks.PODZOL_PERMAFROST))
-                .add(rk(FHBlocks.GRAVEL_PERMAFROST))
-                .addTag(BlockTags.SNOW);
+                .add(rk(FHBlocks.GRAVEL_PERMAFROST));
 
         tag(BlockTags.SAND)
                 .add(rk(FHBlocks.SAND_PERMAFROST))
@@ -463,11 +431,9 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
 
         tag(FHTags.Blocks.SNOW_MOVEMENT)
                 .add(rk(FHBlocks.PACKED_SNOW))
-                .add(rk(FHBlocks.PACKED_SNOW_SLAB))
-                .addTag(BlockTags.SNOW);
+                .add(rk(FHBlocks.PACKED_SNOW_SLAB));
 
-        tag(FHTags.Blocks.ICE_MOVEMENT)
-                .addTag(BlockTags.ICE);
+
 
     }
 

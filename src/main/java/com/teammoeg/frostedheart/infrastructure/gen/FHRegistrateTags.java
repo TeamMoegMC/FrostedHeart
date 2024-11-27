@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.infrastructure.gen;
 
+import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTags;
 import com.tterrag.registrate.providers.ProviderType;
@@ -39,7 +40,11 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 /**
- * See CreateRegistrateTags
+ * See CreateRegistrateTags for reference.
+ *
+ * To use normal data generators with Registrate, you need to add stuff here.
+ * Normally, just use the builder to add tags for new blocks or items added.
+ * But if wanting to add tags for non-FH mods, vanilla, add them here.
  */
 public class FHRegistrateTags {
     public static void addGenerators() {
@@ -63,6 +68,63 @@ public class FHRegistrateTags {
                 .addTag(Tags.Blocks.FENCES)
                 .addTag(Tags.Blocks.FENCE_GATES)
                 .addTag(Tags.Blocks.GLASS_PANES);
+
+        prov.tag(BlockTags.SNOW)
+                .addTag(FHTags.Blocks.CONDENSED_ORES);
+
+        prov.tag(FHTags.Blocks.SOIL)
+                .add(Blocks.DIRT)
+                .add(Blocks.GRASS_BLOCK)
+                .add(Blocks.COARSE_DIRT)
+                .add(Blocks.PODZOL)
+                .add(Blocks.MYCELIUM)
+                .add(Blocks.ROOTED_DIRT)
+                .add(Blocks.MUD)
+                .add(Blocks.GRAVEL)
+                .add(Blocks.SAND)
+                .add(Blocks.RED_SAND)
+                .add(Blocks.CLAY);
+
+        prov.tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES)
+                .addTag(FHTags.Blocks.PERMAFROST)
+                .addTag(FHTags.Blocks.CONDENSED_ORES);
+
+        prov.tag(BlockTags.SNOW)
+                .addTag(FHTags.Blocks.CONDENSED_ORES);
+
+        prov.tag(BlockTags.MINEABLE_WITH_AXE)
+                .addTag(FHTags.Blocks.TOWN_BLOCKS)
+                .addTag(FHTags.Blocks.WOODEN_MACHINES);
+
+        prov.tag(BlockTags.MINEABLE_WITH_HOE);
+
+        prov.tag(BlockTags.MINEABLE_WITH_PICKAXE)
+                .addTag(FHTags.Blocks.METAL_MACHINES);
+
+//        prov.tag(BlockTags.NEEDS_IRON_TOOL)
+//                .addTag(FHTags.Blocks.PERMAFROST);
+
+        prov.tag(BlockTags.ANIMALS_SPAWNABLE_ON)
+                .addTag(BlockTags.SNOW); // allow snow spawn
+
+        prov.tag(FHTags.Blocks.SNOW_MOVEMENT)
+                .addTag(BlockTags.SNOW);
+
+        prov.tag(FHTags.Blocks.ICE_MOVEMENT)
+                .addTag(BlockTags.ICE);
+
+        prov.tag(BlockTags.RABBITS_SPAWNABLE_ON)
+                .addTag(BlockTags.SNOW);
+
+        prov.tag(BlockTags.FOXES_SPAWNABLE_ON)
+                .addTag(BlockTags.SNOW);
+
+        prov.tag(BlockTags.WOLVES_SPAWNABLE_ON)
+                .addTag(BlockTags.SNOW);
+
+        prov.tag(BlockTags.GOATS_SPAWNABLE_ON)
+                .addTag(BlockTags.SNOW);
+
 
     }
 
