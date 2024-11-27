@@ -169,10 +169,11 @@ public class ResearchEditorDialog extends BaseEditDialog {
 
             if (!id.getText().isEmpty()) {
                 r.setId(id.getText());
-                FHResearch.register(r);
+                //FHResearch.register(r);
             }
 
             EditUtils.saveResearch(r);
+            FHResearch.load(r);
         }
         FHResearch.reindex();
     }

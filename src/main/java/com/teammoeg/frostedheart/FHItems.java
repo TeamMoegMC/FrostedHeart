@@ -77,7 +77,7 @@ public class FHItems {
         FH_REGISTRATE.setCreativeTab(FHTabs.BASE_TAB);
     }
 
-    public static final DeferredRegister<Item> registry = DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
 
     // helper method: use FHBaseItem as the item class
     public static RegistryObject<Item> register(String name) {
@@ -85,7 +85,7 @@ public class FHItems {
     }
 
     static <T extends Item> RegistryObject<T> register(String name, Function<String, T> supplier) {
-        return registry.register(name, () -> {
+        return ITEMS.register(name, () -> {
             //item.setRegistryName(FHMain.MODID, name);
             return supplier.apply(name);
         });

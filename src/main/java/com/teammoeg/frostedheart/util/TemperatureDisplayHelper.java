@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.util;
 
 import java.util.Collection;
 
-import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
 

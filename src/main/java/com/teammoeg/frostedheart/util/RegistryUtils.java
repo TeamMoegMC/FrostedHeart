@@ -21,6 +21,22 @@ import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class RegistryUtils {
+	public static String getPath(Block v) {
+		return getRegistryName(v).getPath();
+	}
+
+	public static String getPath(Item v) {
+		return getRegistryName(v).getPath();
+	}
+
+	public static String getPath(Fluid v) {
+		return getRegistryName(v).getPath();
+	}
+
+	public static String getPath(Biome b) {
+		return getRegistryName(b).getPath();
+	}
+
 	public static ResourceLocation getRegistryName(Item v) {
 		return ForgeRegistries.ITEMS.getKey(v);
 	}

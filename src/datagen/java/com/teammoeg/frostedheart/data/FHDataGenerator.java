@@ -23,6 +23,7 @@ import com.google.gson.JsonObject;
 import com.simibubi.create.Create;
 import com.simibubi.create.foundation.utility.FilesHelper;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrateTags;
 import com.tterrag.registrate.providers.ProviderType;
 import net.minecraft.Util;
 import net.minecraft.core.HolderLookup;
@@ -86,6 +87,7 @@ public class FHDataGenerator {
     }
 
     private static void addExtraRegistrateData() {
+        FHRegistrateTags.addGenerators();
         FHMain.FH_REGISTRATE.addDataGenerator(ProviderType.LANG, provider -> {
 //            provider.add("itemGroup.frostedheart", "Frosted Heart");
             BiConsumer<String, String> langConsumer = provider::add;

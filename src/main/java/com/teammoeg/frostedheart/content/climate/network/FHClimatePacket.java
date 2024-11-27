@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.climate.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.client.ClientClimateData;
+import com.teammoeg.frostedheart.content.climate.ClientClimateData;
 import com.teammoeg.frostedheart.content.climate.ClimateType;
 import com.teammoeg.frostedheart.content.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;

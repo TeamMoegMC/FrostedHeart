@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate.client;
 
-import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.Util;
 import net.minecraft.client.Camera;
 import net.minecraft.core.BlockPos;

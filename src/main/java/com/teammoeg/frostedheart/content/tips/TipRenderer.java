@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.tips;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.tips.client.gui.EmptyScreen;

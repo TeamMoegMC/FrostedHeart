@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata;
 
+import com.teammoeg.frostedheart.foundation.renderer.InfraredViewRenderer;
 import net.minecraft.core.BlockPos;
 
 /**
@@ -83,7 +84,7 @@ public interface IHeatArea {
 
     /**
      * Get the struct data for infrared view rendering.
-     * see {@link com.teammoeg.frostedheart.client.renderer.InfraredViewRenderer} and "assets/frostedheart/shaders/infrared_view.fsh"
+     * see {@link InfraredViewRenderer} and "assets/frostedheart/shaders/infrared_view.fsh"
      * <pre>
      * struct HeatArea {
      *     vec4 position; // [x, y, z, mode]

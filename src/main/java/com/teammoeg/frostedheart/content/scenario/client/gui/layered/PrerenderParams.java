@@ -6,15 +6,13 @@ import java.awt.image.BufferedImage;
 
 import org.lwjgl.opengl.GL11;
 
-import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.TypedDynamicTexture;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.Rect;
 
-import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.FastColor;
 
-import com.jozufozu.flywheel.util.Color;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.NativeImage.Format;
 

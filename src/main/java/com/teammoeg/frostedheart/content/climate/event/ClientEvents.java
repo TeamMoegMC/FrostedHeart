@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.climate.event;
 
-import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.FHSoundEvents;

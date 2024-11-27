@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.frostedheart.client.model.DynamicBlockModelReference;
+import com.teammoeg.frostedheart.foundation.model.DynamicBlockModelReference;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 
@@ -36,7 +36,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 

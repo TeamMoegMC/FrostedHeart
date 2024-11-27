@@ -33,7 +33,7 @@ public class FHLangProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         // Iterate through all FHItems, check if there is already a translation
-        for (final RegistryObject<Item> itemRef : FHItems.registry.getEntries()) {
+        for (final RegistryObject<Item> itemRef : FHItems.ITEMS.getEntries()) {
             final Item item = itemRef.get();
             //
         }

@@ -19,9 +19,6 @@
 
 package com.teammoeg.frostedheart;
 
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
@@ -31,24 +28,16 @@ import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
 import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.decoration.BoneBlock;
-import com.teammoeg.frostedheart.content.decoration.OddMark;
-import com.teammoeg.frostedheart.content.decoration.PackageBlock;
-import com.teammoeg.frostedheart.content.decoration.PebbleBlock;
-import com.teammoeg.frostedheart.content.decoration.RelicChestBlock;
-import com.teammoeg.frostedheart.content.decoration.SmallGarage;
-import com.teammoeg.frostedheart.content.decoration.SmokeBlockT1;
-import com.teammoeg.frostedheart.content.decoration.WoodenBox;
-import com.teammoeg.frostedheart.content.decoration.bloodBlock;
+import com.teammoeg.frostedheart.content.decoration.*;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
 import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskBlock;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcBlock;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
+import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainBlock;
 import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainNozzleBlock;
-import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
@@ -60,31 +49,36 @@ import com.teammoeg.frostedheart.content.town.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerBlock;
-
+import com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen;
+import com.teammoeg.frostedheart.foundation.loot.FHLootGen;
 import com.teammoeg.frostedheart.util.constants.FHProps;
 import com.tterrag.registrate.util.entry.BlockEntry;
-
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
-import net.minecraft.world.item.Item;
-import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static com.teammoeg.frostedheart.FHMain.FH_REGISTRATE;
 import static net.minecraft.world.level.block.Blocks.*;
 
 public class FHBlocks {
-    public static void init() {
 
+    static {
+        FH_REGISTRATE.setCreativeTab(FHTabs.BASE_TAB);
     }
 
-    static final DeferredRegister<Block> registry = DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
+    static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
 
     public static <T extends Block> RegistryObject<T> register(String name, Supplier<T> block, String itemName, Function<T, Item> item) {
-        RegistryObject<T> blk = registry.register(name, block);
-        FHItems.registry.register(itemName, () -> item.apply(blk.get()));
+        RegistryObject<T> blk = BLOCKS.register(name, block);
+        FHItems.ITEMS.register(itemName, () -> item.apply(blk.get()));
         return blk;
     }
 
@@ -96,20 +90,10 @@ public class FHBlocks {
         return register(name, block, name, item);
     }
 
-    // SNOW ORES
-    // layered snow
-    public static RegistryObject<Block> CONDENSED_IRON_ORE = register("condensed_iron_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_COPPER_ORE = register("condensed_copper_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_GOLD_ORE = register("condensed_gold_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_ZINC_ORE = register("condensed_zinc_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_SILVER_ORE = register("condensed_silver_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_TIN_ORE = register("condensed_tin_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_PYRITE_ORE = register("condensed_pyrite_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_NICKEL_ORE = register("condensed_nickel_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> CONDENSED_LEAD_ORE = register("condensed_lead_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    // Registrate style
 
     // snow block
-    public static RegistryObject<Block> CONDENSED_IRON_ORE_BLOCK = register("condensed_iron_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
+//    public static RegistryObject<Block> CONDENSED_IRON_ORE_BLOCK = register("condensed_iron_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
     public static RegistryObject<Block> CONDENSED_COPPER_ORE_BLOCK = register("condensed_copper_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
     public static RegistryObject<Block> CONDENSED_GOLD_ORE_BLOCK = register("condensed_gold_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
     public static RegistryObject<Block> CONDENSED_ZINC_ORE_BLOCK = register("condensed_zinc_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
@@ -118,17 +102,6 @@ public class FHBlocks {
     public static RegistryObject<Block> CONDENSED_PYRITE_ORE_BLOCK = register("condensed_pyrite_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
     public static RegistryObject<Block> CONDENSED_NICKEL_ORE_BLOCK = register("condensed_nickel_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
     public static RegistryObject<Block> CONDENSED_LEAD_ORE_BLOCK = register("condensed_lead_ore_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
-
-    // sludge layer
-    public static RegistryObject<Block> IRON_SLUDGE = register("iron_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> COPPER_SLUDGE = register("copper_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> GOLD_SLUDGE = register("gold_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> ZINC_SLUDGE = register("zinc_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> SILVER_SLUDGE = register("silver_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> TIN_SLUDGE = register("tin_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> PYRITE_SLUDGE = register("pyrite_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> NICKEL_SLUDGE = register("nickel_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
-    public static RegistryObject<Block> LEAD_SLUDGE = register("lead_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
 
     // sludge block
     public static RegistryObject<Block> IRON_SLUDGE_BLOCK = register("iron_sludge_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
@@ -141,6 +114,52 @@ public class FHBlocks {
     public static RegistryObject<Block> NICKEL_SLUDGE_BLOCK = register("nickel_sludge_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
     public static RegistryObject<Block> LEAD_SLUDGE_BLOCK = register("lead_sludge_block", () -> new Block(BlockBehaviour.Properties.copy(SNOW_BLOCK)));
 
+
+    // Snow ore blocks
+    public static final BlockEntry<Block> CONDENSED_IRON_ORE_BLOCK = FH_REGISTRATE.block("condensed_iron_ore_block", Block::new)
+            .initialProperties(() -> SNOW_BLOCK)
+            .tag(FHTags.Blocks.CONDENSED_ORES)
+            .tag(BlockTags.MINEABLE_WITH_SHOVEL)
+            .blockstate(FHBlockStateGen.simpleCubeAll("ore/condensed_iron_ore"))
+            .simpleItem()
+            .register();
+
+    // Snow ores
+    public static final BlockEntry<SnowLayerBlock> CONDENSED_IRON_ORE = FH_REGISTRATE.block("condensed_iron_ore", SnowLayerBlock::new)
+            .initialProperties(() -> SNOW)
+            .tag(FHTags.Blocks.CONDENSED_ORES)
+            .tag(BlockTags.MINEABLE_WITH_SHOVEL)
+            .loot((lt, block) -> lt.add(block, FHLootGen.buildSnowLootTable(block, CONDENSED_IRON_ORE_BLOCK.get(), FHItems.CONDENSED_BALL_IRON_ORE.get())))
+            .blockstate(FHBlockStateGen.snowLayered("condensed_iron_ore", "condensed_iron_ore_block", "ore/condensed_iron_ore"))
+            .item()
+            .model(FHBlockStateGen.itemModelLayered("condensed_iron_ore", "ore/condensed_iron_ore"))
+            .build()
+            .register();
+
+    // SNOW ORES
+
+    // layered snow
+//    public static RegistryObject<Block> CONDENSED_IRON_ORE = register("condensed_iron_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_COPPER_ORE = register("condensed_copper_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_GOLD_ORE = register("condensed_gold_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_ZINC_ORE = register("condensed_zinc_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_SILVER_ORE = register("condensed_silver_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_TIN_ORE = register("condensed_tin_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_PYRITE_ORE = register("condensed_pyrite_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_NICKEL_ORE = register("condensed_nickel_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> CONDENSED_LEAD_ORE = register("condensed_lead_ore", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+
+
+    // sludge layer
+    public static RegistryObject<Block> IRON_SLUDGE = register("iron_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> COPPER_SLUDGE = register("copper_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> GOLD_SLUDGE = register("gold_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> ZINC_SLUDGE = register("zinc_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> SILVER_SLUDGE = register("silver_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> TIN_SLUDGE = register("tin_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> PYRITE_SLUDGE = register("pyrite_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> NICKEL_SLUDGE = register("nickel_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
+    public static RegistryObject<Block> LEAD_SLUDGE = register("lead_sludge", () -> new SnowLayerBlock(BlockBehaviour.Properties.copy(SNOW)));
 
     // STONE ORES
     public static RegistryObject<Block> SILVER_ORE = register("silver_ore", () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(GOLD_ORE)));
@@ -386,4 +405,6 @@ public class FHBlocks {
     public static RegistryObject<Block> MINE_BASE = register("mine_base", () -> new MineBaseBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
     public static RegistryObject<Block> HUNTING_CAMP = register("hunting_camp", () -> new HuntingCampBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
     public static RegistryObject<Block> HUNTING_BASE = register("hunting_base", () -> new HuntingBaseBlock(AbstractTownWorkerBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY));
+
+    public static void init() { }
 }

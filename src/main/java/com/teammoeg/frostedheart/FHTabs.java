@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart;
 
 import com.simibubi.create.foundation.item.TagDependentIngredientItem;
-import com.teammoeg.frostedheart.data.FHRegistrate;
+import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.util.creativeTab.TabType;
@@ -73,7 +73,7 @@ public class FHTabs {
 
 
     public static void fillFHTab(CreativeModeTab.ItemDisplayParameters parms, CreativeModeTab.Output out) {
-        for (final RegistryObject<Item> itemRef : FHItems.registry.getEntries()) {
+        for (final RegistryObject<Item> itemRef : FHItems.ITEMS.getEntries()) {
             final Item item = itemRef.get();
             if (item instanceof ICreativeModeTabItem) {
                 continue;

@@ -4,14 +4,12 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLImageContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLLayerContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.TypedDynamicTexture;

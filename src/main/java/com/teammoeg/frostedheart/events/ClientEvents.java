@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
-import com.teammoeg.frostedheart.client.hud.FrostedHud;
-import com.teammoeg.frostedheart.client.renderer.InfraredViewRenderer;
+import com.teammoeg.frostedheart.foundation.hud.FrostedHud;
+import com.teammoeg.frostedheart.foundation.renderer.InfraredViewRenderer;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
@@ -36,6 +36,7 @@ import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
 import com.teammoeg.frostedheart.content.tips.TipLockManager;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;

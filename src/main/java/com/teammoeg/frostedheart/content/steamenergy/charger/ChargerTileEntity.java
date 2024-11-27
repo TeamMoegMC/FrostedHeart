@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
-import com.teammoeg.frostedheart.recipes.CampfireDefrostRecipe;
+import com.teammoeg.frostedheart.foundation.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.util.FHUtils;

@@ -122,7 +122,7 @@ public class HeatStatScreen extends BaseScreen {
             		i++;
             	}
             }
-            scroll.setMaxValue(offset+39 + 1);
+           // scroll.setMaxValue(offset+39 + 1);
         }
 
         @Override

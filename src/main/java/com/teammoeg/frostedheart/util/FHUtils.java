@@ -28,9 +28,8 @@ import java.util.function.ToIntFunction;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHTags;
-import net.minecraft.world.item.Items;
 import net.minecraftforge.common.Tags;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 

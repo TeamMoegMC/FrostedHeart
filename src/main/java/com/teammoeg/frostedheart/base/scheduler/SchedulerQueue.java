@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.level.block.entity.BlockEntity;

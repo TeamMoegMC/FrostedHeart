@@ -31,24 +31,19 @@ import blusunrize.immersiveengineering.api.IETags;
 import com.teammoeg.caupona.CPFluids;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.recipes.ShapelessCopyDataRecipe;
 import com.teammoeg.frostedheart.content.trade.policy.TradeBuilder;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
-import net.minecraft.world.level.block.Block;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHRecipeProvider extends RecipeProvider {
 	private final HashMap<String, Integer> PATH_COUNT = new HashMap<>();

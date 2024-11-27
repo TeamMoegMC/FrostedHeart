@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.compat;
 import com.simibubi.create.content.kinetics.BlockStressValues.IStressValueProvider;
 import com.simibubi.create.foundation.utility.Couple;
 import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import net.minecraft.world.level.block.Block;
 
