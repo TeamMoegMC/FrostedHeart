@@ -3,7 +3,7 @@
 - Issues should go to the [TWR Issue Tracker](https://github.com/TeamMoegMC/The-Winter-Rescue/issues)
 
 This Mod is where most of the contents of The Winter Rescue
-are implemented. It is a Forge mod for Minecraft 1.20.1.
+are implemented. It is a NeoForge mod for Minecraft 1.20.1.
 
 Core APIs:
 - [Create](https://www.curseforge.com/minecraft/mc-mods/create)
@@ -69,24 +69,14 @@ or more precisely game mechanics and systems. It is divided by
 subtopics, such as `agriculture`, `town`, `steamenergy`. If you
 want to add a new game mechanic, this is the place to put it.
   (maybe we should name as `mechanics` instead of `content`?)
-- `world`: The world package contains everything that
-already exist before the player starts interacting with the world.
-This includes the world generation, animals, plants, mobs, etc.
-
-### Functional packages
-
-The following packages are organized by functionality instead.
-You may feel sometimes they can indeed also be put into `content`. 
-Correct, but the reason we
-separate is that they are sometime hard to organize by topic,
-and they are more like a list of things, rather than a thing, and
-they are shared by multiple topics.
-- `client`: Client-side stuff, like rendering and models.
+- `foundation`: The foundation package contains the foundation
+  of the game, such as the worldgen, effects, loots, models, recipes, etc.
+These are stuff not packaged by topic, but by functionality.
+- `infrastructure`: The infrastructure package contains the
+  infrastructure of the game, such as commands, data, gen, config.
 - `compat`: Compatibility for other mods.
-- `effects`: Game potion effects.
-- `loot`: Game loots.
 - `mixin`: Mixin classes.
-- `recipes`: Game recipes.
+- `events`: Event handling classes.
 
 ### Initializers
 The rest packages are what's normally called *initializer* classes,
@@ -118,7 +108,7 @@ to use either
 
 Now, you've know the basic structure, you can start contributing.
 Most of time, you will just be working with the `content` or
-`world` package. Know type of contribution you are making:
+`foundation` package. Know type of contribution you are making:
 - If it is part of a self-contained new game mechanic, system, or
 anything that can be organized as a topic, 
 you should put it in `content`.
@@ -130,18 +120,12 @@ Finally, use the entry points as needed. Examples:
   - Adding a new town building: `content.town`
   - Adding a new steam machine: `content.steamenergy`
   - Adding gun system: create `content.gun`
-- If it is anything about the world itself, not the player, put it
-in `world` and do registry and entry likewise. Examples:
-  - Adding a new hostile animal: `world.fauna`
-  - Adding a new forest biome: `world.flora`
-  - Adding a new tree: `world.flora.tree`
-  - Adding a new ancient ruin: `world.civilization.ancient`
-  - Adding a new underground cave: `world.geology`
 - If you create any utility classes during the process, put it in
 `util`.
 - If you create any functional classes, put it in the corresponding
 functional package.
 - Normally, you should not need to touch `base`.
+- Adding command? Put it in `infrastructure.commands`.
 But if you need to add such abstract and system level classes,
 you should put them there. But do not change existing classes
 without a good reason unless we discussed it.
