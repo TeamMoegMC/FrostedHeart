@@ -19,9 +19,6 @@
 
 package com.teammoeg.frostedheart;
 
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
@@ -31,24 +28,16 @@ import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
 import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.decoration.BoneBlock;
-import com.teammoeg.frostedheart.content.decoration.OddMark;
-import com.teammoeg.frostedheart.content.decoration.PackageBlock;
-import com.teammoeg.frostedheart.content.decoration.PebbleBlock;
-import com.teammoeg.frostedheart.content.decoration.RelicChestBlock;
-import com.teammoeg.frostedheart.content.decoration.SmallGarage;
-import com.teammoeg.frostedheart.content.decoration.SmokeBlockT1;
-import com.teammoeg.frostedheart.content.decoration.WoodenBox;
-import com.teammoeg.frostedheart.content.decoration.bloodBlock;
+import com.teammoeg.frostedheart.content.decoration.*;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
 import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskBlock;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcBlock;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
+import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainBlock;
 import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainNozzleBlock;
-import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
@@ -60,34 +49,21 @@ import com.teammoeg.frostedheart.content.town.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerBlock;
-
 import com.teammoeg.frostedheart.data.FHBlockStateGen;
 import com.teammoeg.frostedheart.loot.FHLootGen;
 import com.teammoeg.frostedheart.util.constants.FHProps;
 import com.tterrag.registrate.util.entry.BlockEntry;
-
-import net.minecraft.advancements.critereon.StatePropertiesPredicate;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.storage.loot.LootContext;
-import net.minecraft.world.level.storage.loot.LootPool;
-import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraft.world.level.storage.loot.entries.AlternativesEntry;
-import net.minecraft.world.level.storage.loot.entries.LootItem;
-import net.minecraft.world.level.storage.loot.entries.LootPoolEntryContainer;
-import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
-import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition;
-import net.minecraft.world.level.storage.loot.predicates.LootItemEntityPropertyCondition;
-import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
-import net.minecraftforge.common.Tags;
-import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static com.teammoeg.frostedheart.FHMain.FH_REGISTRATE;
 import static net.minecraft.world.level.block.Blocks.*;
