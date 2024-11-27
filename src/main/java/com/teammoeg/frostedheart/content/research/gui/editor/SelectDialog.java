@@ -121,7 +121,7 @@ public class SelectDialog<T> extends EditDialog {
                 button.setPosAndSize(4, offset, width, 16);
                 offset += 18;
             }
-            scroll.setMaxValue(offset);
+            //scroll.setMaxValue(offset);
         }
 
         @Override

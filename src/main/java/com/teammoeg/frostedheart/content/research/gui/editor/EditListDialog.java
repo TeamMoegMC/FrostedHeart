@@ -203,8 +203,8 @@ public class EditListDialog<T> extends EditDialog {
                 for (Widget w : widgets) {
                     w.setWidth(width - 16);
                 }
-
-                scroll.setMaxValue(align(WidgetLayout.VERTICAL));
+                align(WidgetLayout.VERTICAL);
+                //scroll.setMaxValue();
             }
         };
 

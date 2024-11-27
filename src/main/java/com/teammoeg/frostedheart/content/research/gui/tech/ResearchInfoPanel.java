@@ -248,7 +248,7 @@ public class ResearchInfoPanel extends Panel {
             p.setPos(3, offset);
             offset += p.height + 2;
         }
-        detailPanel.scrollInfo.setMaxValue(offset);
+        //detailPanel.scrollInfo.setMaxValue(offset);
     }
 
     @Override

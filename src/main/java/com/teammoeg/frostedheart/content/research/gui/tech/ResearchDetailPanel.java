@@ -60,7 +60,7 @@ public class ResearchDetailPanel extends Panel {
             }
             if (offset + 3 > height) {
                 detailPanel.scrolldetail.unhide();
-                detailPanel.scrolldetail.setMaxValue(offset + 3);
+               // detailPanel.scrolldetail.setMaxValue(offset + 3);
             } else
                 detailPanel.scrolldetail.hide();
             //this.setHeight(offset+3);

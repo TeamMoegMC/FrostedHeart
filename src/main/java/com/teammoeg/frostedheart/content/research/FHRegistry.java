@@ -272,6 +272,7 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
     public void register(T item) {
         String lid = item.getId();
         int index = rnames.getOrDefault(lid, -1);
+        System.out.println("re-registered index"+index+"");
         ensure();
         if (index == -1) {
             rnames.put(item.getId(), rnamesl.size());
