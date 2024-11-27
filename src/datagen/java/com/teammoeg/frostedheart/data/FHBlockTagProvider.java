@@ -28,10 +28,10 @@ public class FHBlockTagProvider extends TagsProvider<Block> {
     @Override
     protected void addTags(HolderLookup.Provider pProvider) {
         // FH deco and walls
-        TagAppender<Block> deco = tag(FHTags.Blocks.TOWN_DECORATIONS);
-        deco.add(rk(Blocks.FLOWER_POT), rk(Blocks.LANTERN), rk(Blocks.SOUL_LANTERN), rk(Blocks.CAMPFIRE), rk(Blocks.SOUL_CAMPFIRE), rk(Blocks.ENCHANTING_TABLE), rk(Blocks.ANVIL), rk(Blocks.CHIPPED_ANVIL), rk(Blocks.DAMAGED_ANVIL), rk(Blocks.STONECUTTER), rk(Blocks.GRINDSTONE));
-        TagAppender<Block> wall = tag(FHTags.Blocks.TOWN_WALLS);
-        wall.addTag(BlockTags.DOORS).addTag(BlockTags.WALLS).addTag(Tags.Blocks.FENCES).addTag(Tags.Blocks.FENCE_GATES).addTag(Tags.Blocks.GLASS_PANES).add(rk(Blocks.IRON_BARS));
+//        TagAppender<Block> deco = tag(FHTags.Blocks.TOWN_DECORATIONS);
+//        deco.add(rk(Blocks.FLOWER_POT), rk(Blocks.LANTERN), rk(Blocks.SOUL_LANTERN), rk(Blocks.CAMPFIRE), rk(Blocks.SOUL_CAMPFIRE), rk(Blocks.ENCHANTING_TABLE), rk(Blocks.ANVIL), rk(Blocks.CHIPPED_ANVIL), rk(Blocks.DAMAGED_ANVIL), rk(Blocks.STONECUTTER), rk(Blocks.GRINDSTONE));
+//        TagAppender<Block> wall = tag(FHTags.Blocks.TOWN_WALLS);
+//        wall.addTag(BlockTags.DOORS).addTag(BlockTags.WALLS).addTag(Tags.Blocks.FENCES).addTag(Tags.Blocks.FENCE_GATES).addTag(Tags.Blocks.GLASS_PANES).add(rk(Blocks.IRON_BARS));
 
         // Vanilla ores
         TagAppender<Block> ores = tag(Tags.Blocks.ORES);

@@ -10,6 +10,9 @@
     "minecraft:chipped_anvil",
     "minecraft:damaged_anvil",
     "minecraft:stonecutter",
-    "minecraft:grindstone"
+    "minecraft:grindstone",
+    "minecraft:bell",
+    "minecraft:loom",
+    "minecraft:smithing_table"
   ]
 }
