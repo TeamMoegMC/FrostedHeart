@@ -27,11 +27,10 @@ package com.teammoeg.frostedheart.mixin.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.FHSoundEvents;
-import com.teammoeg.frostedheart.client.renderer.InfraredViewRenderer;
-import com.teammoeg.frostedheart.content.climate.client.BlizzardRenderer;
+import com.teammoeg.frostedheart.foundation.renderer.InfraredViewRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.ParticleStatus;

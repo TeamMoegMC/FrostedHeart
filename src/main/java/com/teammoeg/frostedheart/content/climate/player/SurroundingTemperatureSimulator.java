@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.Random;
 
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.data.FHDataManager;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 
 import net.minecraft.world.level.block.state.BlockState;

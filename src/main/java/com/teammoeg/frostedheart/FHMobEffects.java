@@ -21,12 +21,12 @@ package com.teammoeg.frostedheart;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.effects.AnemiaEffect;
-import com.teammoeg.frostedheart.effects.BaseEffect;
-import com.teammoeg.frostedheart.effects.HyperthermiaEffect;
-import com.teammoeg.frostedheart.effects.HypothermiaEffect;
-import com.teammoeg.frostedheart.effects.IonEffect;
-import com.teammoeg.frostedheart.effects.SaunaEffect;
+import com.teammoeg.frostedheart.foundation.effects.AnemiaEffect;
+import com.teammoeg.frostedheart.foundation.effects.BaseEffect;
+import com.teammoeg.frostedheart.foundation.effects.HyperthermiaEffect;
+import com.teammoeg.frostedheart.foundation.effects.HypothermiaEffect;
+import com.teammoeg.frostedheart.foundation.effects.IonEffect;
+import com.teammoeg.frostedheart.foundation.effects.SaunaEffect;
 
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;

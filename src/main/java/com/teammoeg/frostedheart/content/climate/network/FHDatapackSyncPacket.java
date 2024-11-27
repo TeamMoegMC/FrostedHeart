@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.climate.network;
 import java.util.List;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.data.FHDataManager;
-import com.teammoeg.frostedheart.data.FHDataManager.DataType;
+import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
+import com.teammoeg.frostedheart.infrastructure.data.FHDataManager.DataType;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.util.io.IdDataPair;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;

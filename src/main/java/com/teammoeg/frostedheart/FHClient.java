@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.client.model.DynamicModelSetup;
+import com.teammoeg.frostedheart.foundation.model.DynamicModelSetup;
 import com.teammoeg.frostedheart.content.climate.client.FogModification;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 import net.minecraftforge.common.MinecraftForge;

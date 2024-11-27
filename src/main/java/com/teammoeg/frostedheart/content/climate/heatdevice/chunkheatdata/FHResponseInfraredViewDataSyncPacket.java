@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata;
 import com.lowdragmc.lowdraglib.LDLib;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.client.renderer.InfraredViewRenderer;
+import com.teammoeg.frostedheart.foundation.renderer.InfraredViewRenderer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.network.NetworkEvent;

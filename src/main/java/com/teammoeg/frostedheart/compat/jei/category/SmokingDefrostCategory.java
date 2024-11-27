@@ -27,7 +27,7 @@ import com.google.common.cache.LoadingCache;
 import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.recipes.SmokingDefrostRecipe;
+import com.teammoeg.frostedheart.foundation.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;

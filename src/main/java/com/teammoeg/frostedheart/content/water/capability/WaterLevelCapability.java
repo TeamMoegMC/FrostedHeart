@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.water.capability;
 
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;

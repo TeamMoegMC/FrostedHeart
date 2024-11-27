@@ -19,22 +19,19 @@
 
 package com.teammoeg.frostedheart.mixin.client;
 
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.frostedheart.client.hud.FrostedHud;
+import com.teammoeg.frostedheart.foundation.hud.FrostedHud;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.util.Mth;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
-import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(ForgeGui.class)
 public class ForgeGuiMixin extends Gui {

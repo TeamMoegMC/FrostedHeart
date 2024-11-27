@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.recipes.ShapelessCopyDataRecipe;
+import com.teammoeg.frostedheart.foundation.recipes.ShapelessCopyDataRecipe;
 
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.ingredient.ICraftingGridHelper;

@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart;
 
 import com.simibubi.create.foundation.item.TagDependentIngredientItem;
-import com.teammoeg.frostedheart.data.FHRegistrate;
+import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.util.creativeTab.TabType;

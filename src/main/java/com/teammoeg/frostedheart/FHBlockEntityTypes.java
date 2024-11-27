@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.kinetics.base.HorizontalHalfShaftInstance;
-import com.teammoeg.frostedheart.client.renderer.HalfShaftRenderer;
+import com.teammoeg.frostedheart.foundation.renderer.HalfShaftRenderer;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;

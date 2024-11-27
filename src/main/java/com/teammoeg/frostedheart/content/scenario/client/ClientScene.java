@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.scenario.client;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.IScenarioDialog;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.TextInfo;
