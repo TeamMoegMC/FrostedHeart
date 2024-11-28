@@ -243,6 +243,20 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Integer> temperatureUpdateIntervalTicks;
         public final ForgeConfigSpec.ConfigValue<Integer> wetEffectDuration;
         public final ForgeConfigSpec.ConfigValue<Integer> wetClothesDurationMultiplier;
+        public final ForgeConfigSpec.ConfigValue<Integer> tempSkyLightThreshold;
+        public final ForgeConfigSpec.ConfigValue<Integer> snowTempModifier;
+        public final ForgeConfigSpec.ConfigValue<Integer> blizzardTempModifier;
+        public final ForgeConfigSpec.ConfigValue<Integer> dayNightTempAmplitude;
+        public final ForgeConfigSpec.ConfigValue<Integer> onFireTempModifier;
+        public final ForgeConfigSpec.ConfigValue<Double> heatExchangeConstant;
+        /*
+        public static final double HURTING_HEAT_UPDATE = 0.1;
+    public static final int MIN_BODY_TEMP_CHANGE = -10;
+    public static final int MAX_BODY_TEMP_CHANGE = 10;
+         */
+        public final ForgeConfigSpec.ConfigValue<Double> hurtingHeatUpdate;
+        public final ForgeConfigSpec.ConfigValue<Integer> minBodyTempChange;
+        public final ForgeConfigSpec.ConfigValue<Integer> maxBodyTempChange;
 
         Server(ForgeConfigSpec.Builder builder) {
             builder.push("Temperature");
@@ -257,6 +271,24 @@ public class FHConfig {
             wetClothesDurationMultiplier = builder.comment("The multiplier of the wet effect duration when player is wearing clothes.")
                     .comment("finalDuration = wetEffectDuration * wetClothesDurationMultiplier")
                     .defineInRange("wetClothesDurationMultiplier", 4, 1, 1000);
+            tempSkyLightThreshold = builder.comment("Below which -dayNightTempModifier will be used.")
+                    .defineInRange("tempSkyLightThreshold", 5, 0, 15);
+            snowTempModifier = builder.comment("The temperature modifier when player is in snow weather.")
+                    .defineInRange("snowTempModifier", -3, -100, 100);
+            blizzardTempModifier = builder.comment("The temperature modifier when player is in blizzard weather.")
+                    .defineInRange("blizzardTempModifier", -6, -100, 100);
+            dayNightTempAmplitude = builder.comment("This is the amplitude of day night temperature cycle. The actual temperature modifier is sin(time) * dayNightTempModifier.")
+                    .defineInRange("dayNightTempAmplitude", 5, -100, 100);
+            onFireTempModifier = builder.comment("The temperature modifier when player is on fire.")
+                    .defineInRange("onFireTempModifier", 150, 0, 1000);
+            heatExchangeConstant = builder.comment("The heat exchange constant between player and environment.")
+                    .defineInRange("heatExchangeConstant", 0.0012, 0, 1);
+            hurtingHeatUpdate = builder.comment("The heat update when player is hurt.")
+                    .defineInRange("hurtingHeatUpdate", 0.1, 0, 1);
+            minBodyTempChange = builder.comment("The minimum body temperature change relative to 37.")
+                    .defineInRange("minBodyTempChange", -10, -100, 100);
+            maxBodyTempChange = builder.comment("The maximum body temperature change relative to 37.")
+                    .defineInRange("maxBodyTempChange", 10, -100, 100);
             builder.pop();
 
             builder.push("Water");

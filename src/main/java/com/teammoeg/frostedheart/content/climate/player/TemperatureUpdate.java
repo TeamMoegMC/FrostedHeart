@@ -53,9 +53,16 @@ import top.theillusivec4.curios.api.type.ISlotType;
 
 @Mod.EventBusSubscriber
 public class TemperatureUpdate {
-    public static final float HEAT_EXCHANGE_CONSTANT = 0.0012F;
-
-    public static final float SELF_HEATING_CONSTANT = 0.036F;
+    public static final Double HEAT_EXCHANGE_CONSTANT = FHConfig.SERVER.heatExchangeConstant.get();
+    public static final UUID envTempId = UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
+    public static final int TEMP_SKY_LIGHT_THRESHOLD = FHConfig.SERVER.tempSkyLightThreshold.get();
+    public static final int SNOW_TEMP_MODIFIER = FHConfig.SERVER.snowTempModifier.get();
+    public static final int BLIZZARD_TEMP_MODIFIER = FHConfig.SERVER.blizzardTempModifier.get();
+    public static final int DAY_NIGHT_TEMP_AMPLITUDE = FHConfig.SERVER.dayNightTempAmplitude.get();
+    public static final int ON_FIRE_TEMP_MODIFIER = FHConfig.SERVER.onFireTempModifier.get();
+    public static final double HURTING_HEAT_UPDATE = FHConfig.SERVER.hurtingHeatUpdate.get();
+    public static final int MIN_BODY_TEMP_CHANGE = FHConfig.SERVER.minBodyTempChange.get();
+    public static final int MAX_BODY_TEMP_CHANGE = FHConfig.SERVER.maxBodyTempChange.get();
 
 
     /**
@@ -116,8 +123,6 @@ public class TemperatureUpdate {
         }
     }
 
-    public static final UUID envTempId = UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
-
     /**
      * Perform temperature tick logic
      * <p>
@@ -151,14 +156,12 @@ public class TemperatureUpdate {
                             player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(), FHConfig.SERVER.wetEffectDuration.get(), 0));
                     }
 
-                    // Load current data
-                    float current = PlayerTemperatureData.getCapability(event.player).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
+                    /* Initialization */
+
+                    // Load config
                     double tspeed = FHConfig.SERVER.tempSpeed.get();
-                    if (current < 0) {
-                        float delt = (float) (FHConfig.SERVER.tdiffculty.get().self_heat.apply(player) * tspeed);
-                        player.causeFoodExhaustion(Math.min(delt, -current) * 0.5f);//cost hunger for cold.
-                        current += delt;
-                    }
+
+                    /* Environment temperature */
 
                     // World and chunk temperature: Climate, time, heat adjusts
                     Level world = player.level();
@@ -168,25 +171,50 @@ public class TemperatureUpdate {
                     // Surrounding block temperature
                     Pair<Float, Float> btp = new SurroundingTemperatureSimulator(player).getBlockTemperatureAndWind(player.getX(), player.getEyeY() - 0.7f, player.getZ());
                     float bt = btp.getFirst();
-                    //int wind=btp.getSecond()+WorldTemperature.getClimateWind(world);
-                    //Day-night temperature
-                    float skyLight = world.getChunkSource().getLightEngine().getLayerListener(LightLayer.SKY).getLightValue(pos);
-                    float gameTime = world.getDayTime() % 24000L;
-                    gameTime = gameTime / ((float) 200 / 3);
-                    gameTime = Mth.sin((float) Math.toRadians(gameTime));
                     envtemp += bt;
-                    envtemp += skyLight > 5.0F ?
-                            (world.isRaining() ?
-                                    (FHUtils.isRainingAt(player.blockPosition(), world) ? -8F : -5f)
-                                    : (gameTime * 5.0F))
-                            : -5F;
-                    // burning heat
+                    //int wind=btp.getSecond()+WorldTemperature.getClimateWind(world);
+
+                    // Day-night temperature
+                    int skyLight = world.getChunkSource().getLightEngine().getLayerListener(LightLayer.SKY).getLightValue(pos);
+                    float dayTime = world.getDayTime() % 24000L;
+                    float relativeTime = Mth.sin((float) Math.toRadians(dayTime / ((float) 200 / 3))); // range from -1 to 1
+
+                    if (skyLight < TEMP_SKY_LIGHT_THRESHOLD) {
+                        envtemp -= DAY_NIGHT_TEMP_AMPLITUDE;
+                    } else {
+                        envtemp += relativeTime * DAY_NIGHT_TEMP_AMPLITUDE;
+                    }
+
+                    // Weather temperature modifier
+                    if (world.isRaining() && FHUtils.isRainingAt(player.blockPosition(), world)) {
+                        envtemp -= SNOW_TEMP_MODIFIER;
+                        if (world.isThundering()) {
+                            envtemp -= BLIZZARD_TEMP_MODIFIER;
+                        }
+                    }
+
+                    // Burning temperature
                     if (player.isOnFire())
-                        envtemp += 150F;
+                        envtemp += ON_FIRE_TEMP_MODIFIER;
+
+                    // Handle Attributes
                     player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).removeModifier(envTempId);
                     player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).addTransientModifier(new AttributeModifier(envTempId, "player environment modifier", envtemp, Operation.ADDITION));
 
 
+                    /* Effective & Body Temperature */
+
+                    // Current body temperature
+                    float current = PlayerTemperatureData.getCapability(event.player).map(PlayerTemperatureData::getBodyTemp).orElse(0f);
+
+                    // Self heating
+                    if (current < 0) {
+                        float delt = (float) (FHConfig.SERVER.tdiffculty.get().self_heat.apply(player) * tspeed);
+                        player.causeFoodExhaustion(Math.min(delt, -current) * 0.5f);//cost hunger for cold.
+                        current += delt;
+                    }
+
+                    // Insulation
                     // envtemp=(float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
                     // float insulation = (float) player.getAttributeValue(FHAttributes.INSULATION.get());
                     PlayerTemperatureData.BodyPart[] parts = {
@@ -228,7 +256,7 @@ public class TemperatureUpdate {
                     float efftemp = current - (1 - insulation) * (current - envtemp); //Effective temperature, 37-based
 
 
-                    //list of equipments to be calculated
+                    // Equipments
                     for (Pair<ISlotType, ItemStack> is : CuriosCompat.getAllCuriosAndSlotsIfVisible(player)) {
                         if (is == null)
                             continue;
@@ -259,19 +287,22 @@ public class TemperatureUpdate {
                             keepwarm += iw.getFactor(player, is);
                     }*/
                     }
+
+                    /* Heat exchange section */
+
                     //environment heat exchange
-                    float dheat = HEAT_EXCHANGE_CONSTANT * (efftemp - current);
+                    float dheat = (float) (HEAT_EXCHANGE_CONSTANT * (efftemp - current));
                     //Attack player if temperature changes too much
-                    if (dheat > 0.1)
+                    if (dheat > HURTING_HEAT_UPDATE)
                         player.hurt(FHDamageTypes.createSource(world, FHDamageTypes.HYPERTHERMIA_INSTANT, player), (dheat) * 10);
-                    else if (dheat < -0.1)
+                    else if (dheat < -HURTING_HEAT_UPDATE)
                         player.hurt(FHDamageTypes.createSource(world, FHDamageTypes.HYPOTHERMIA_INSTANT, player), (-dheat) * 10);
                     if (!player.isCreative() && !player.isSpectator())//no modify body temp when creative or spectator
                         current += (float) (dheat * tspeed);
-                    if (current < -10)
-                        current = -10;
-                    else if (current > 10)
-                        current = 10;
+                    if (current < MIN_BODY_TEMP_CHANGE)
+                        current = MIN_BODY_TEMP_CHANGE;
+                    else if (current > MAX_BODY_TEMP_CHANGE)
+                        current = MAX_BODY_TEMP_CHANGE;
                     float lenvtemp = data.getEnvTemp();//get a smooth change in display
                     float lfeeltemp = data.getFeelTemp();
                     data.update(current, (envtemp + 37F) * .2f + lenvtemp * .8f, (efftemp + 37F) * .2f + lfeeltemp * .8f);
