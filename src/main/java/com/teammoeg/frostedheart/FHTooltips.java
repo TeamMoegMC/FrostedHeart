@@ -60,23 +60,23 @@ public class FHTooltips {
                 text.add(TranslateUtils.translateTooltip("double_stick_ignition").withStyle(ChatFormatting.RED));
             }
             else {
-                if (stack.is(FHTags.Items.IGNITION_MATERIAL)) {
+                if (stack.is(FHTags.Items.IGNITION_MATERIAL.tag)) {
                     text.add(TranslateUtils.translateTooltip("ignition_material").withStyle(ChatFormatting.RED));
                     text.add(TranslateUtils.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
                     List<Item> metals = ForgeRegistries.ITEMS.getValues().stream()
-                            .filter(item -> item.builtInRegistryHolder().is(FHTags.Items.IGNITION_METAL))
+                            .filter(item -> item.builtInRegistryHolder().is(FHTags.Items.IGNITION_METAL.tag))
                             .toList();
                     for (Item item : metals) {
                         text.add(item.getDescription().copy().withStyle(ChatFormatting.GRAY));
                     }
                 }
-                if (stack.is(FHTags.Items.IGNITION_METAL)) {
+                if (stack.is(FHTags.Items.IGNITION_METAL.tag)) {
                     text.add(TranslateUtils.translateTooltip("ignition_metal").withStyle(ChatFormatting.RED));
                     text.add(TranslateUtils.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
                     // append the localized names of ignition materials from the tag
                     // get all items in the tag
                     List<Item> materials = ForgeRegistries.ITEMS.getValues().stream()
-                            .filter(item -> item.builtInRegistryHolder().is(FHTags.Items.IGNITION_MATERIAL))
+                            .filter(item -> item.builtInRegistryHolder().is(FHTags.Items.IGNITION_MATERIAL.tag))
                             .toList();
                     for (Item item : materials) {
                         text.add(item.getDescription().copy().withStyle(ChatFormatting.GRAY));
@@ -86,10 +86,10 @@ public class FHTooltips {
 
 
             // Dry food cannot be frozen nor heated
-            if (stack.is(FHTags.Items.DRY_FOOD)) {
+            if (stack.is(FHTags.Items.DRY_FOOD.tag)) {
                 text.add(TranslateUtils.translateTooltip("food.dry").withStyle(ChatFormatting.YELLOW));
             }
-            if (stack.is(FHTags.Items.INSULATED_FOOD)) {
+            if (stack.is(FHTags.Items.INSULATED_FOOD.tag)) {
                 text.add(TranslateUtils.translateTooltip("food.insulated").withStyle(ChatFormatting.GREEN));
             }
 

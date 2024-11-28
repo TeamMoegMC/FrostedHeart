@@ -76,7 +76,7 @@ public class FHMain {
     public static File lastbkf;
     public static File lastServerConfig;
     public static boolean saveNeedUpdate;
-    public static final FHRegistrate FH_REGISTRATE = FHRegistrate.create(MODID);
+    public static final FHRegistrate REGISTRATE = FHRegistrate.create(MODID);
 
     public static ResourceLocation rl(String path) {
         return new ResourceLocation(MODID, path);
@@ -95,6 +95,8 @@ public class FHMain {
         if (local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal().contains("pre"))
             pre = new FHRemote.FHPreRemote();
         FHMain.LOGGER.info("TWR Version: " + local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
+
+        FHTags.init();
 
         // Registration
         FHEntityTypes.ENTITY_TYPES.register(mod);
@@ -137,7 +139,7 @@ public class FHMain {
         ItemPredicate.register(new ResourceLocation(MODID, "blacklist"), BlackListPredicate::new);
 
         // Registrate
-        FH_REGISTRATE.registerEventListeners(mod);
+        REGISTRATE.registerEventListeners(mod);
 
         // Forge bus
         forge.addListener(this::serverStart);

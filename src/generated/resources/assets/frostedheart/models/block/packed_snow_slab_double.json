@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/cube_bottom_top",
-  "textures": {
-    "bottom": "frostedheart:block/packed_snow",
-    "side": "frostedheart:block/packed_snow",
-    "top": "frostedheart:block/packed_snow"
-  }
-}

@@ -248,8 +248,8 @@ public class CommonEvents {
 
         if (!handStack.isEmpty() && !offHandStack.isEmpty() && !handStack.is(ItemTags.CREEPER_IGNITERS) &&
                 (handStack.is(Tags.Items.RODS_WOODEN) && offHandStack.is(Tags.Items.RODS_WOODEN) ||
-                        handStack.is(FHTags.Items.IGNITION_METAL) && offHandStack.is(FHTags.Items.IGNITION_MATERIAL) ||
-                        handStack.is(FHTags.Items.IGNITION_MATERIAL) && offHandStack.is(FHTags.Items.IGNITION_METAL))) {
+                        handStack.is(FHTags.Items.IGNITION_METAL.tag) && offHandStack.is(FHTags.Items.IGNITION_MATERIAL.tag) ||
+                        handStack.is(FHTags.Items.IGNITION_MATERIAL.tag) && offHandStack.is(FHTags.Items.IGNITION_METAL.tag))) {
             // place fire block
             if (!CampfireBlock.canLight(blockstate) && !CandleBlock.canLight(blockstate) && !CandleCakeBlock.canLight(blockstate)) {
                 BlockPos blockpos1 = blockpos.relative(event.getHitVec().getDirection());
@@ -518,7 +518,7 @@ public class CommonEvents {
     public static void punishEatingRawMeat(LivingEntityUseItemEvent.Finish event) {
         if (event.getEntity() != null && !event.getEntity().level().isClientSide
                 && event.getEntity() instanceof ServerPlayer
-                && ForgeRegistries.ITEMS.getHolder(event.getItem().getItem()).get().is(FHTags.Items.RAW_FOOD)) {
+                && ForgeRegistries.ITEMS.getHolder(event.getItem().getItem()).get().is(FHTags.Items.RAW_FOOD.tag)) {
             ServerPlayer player = (ServerPlayer) event.getEntity();
             player.addEffect(new MobEffectInstance(MobEffects.HUNGER, 400, 1));
             player.displayClientMessage(TranslateUtils.translate("message.frostedheart.eaten_poisonous_food"), false);

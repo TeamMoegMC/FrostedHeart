@@ -419,7 +419,7 @@ public class FHUtils {
                 offHandStack.shrink(1);
                 return false;
             }
-        } else if (handStack.is(FHTags.Items.IGNITION_METAL) && offHandStack.is(FHTags.Items.IGNITION_MATERIAL)) {
+        } else if (handStack.is(FHTags.Items.IGNITION_METAL.tag) && offHandStack.is(FHTags.Items.IGNITION_MATERIAL.tag)) {
             if (rand.nextFloat() < FHConfig.COMMON.flintIgnitionChance.get()) {
                 offHandStack.shrink(1);
                 if (rand.nextFloat() < FHConfig.COMMON.consumeChanceWhenIgnited.get()) {
@@ -427,7 +427,7 @@ public class FHUtils {
                 }
                 return true;
             }
-        } else if (handStack.is(FHTags.Items.IGNITION_MATERIAL) && offHandStack.is(FHTags.Items.IGNITION_METAL)) {
+        } else if (handStack.is(FHTags.Items.IGNITION_MATERIAL.tag) && offHandStack.is(FHTags.Items.IGNITION_METAL.tag)) {
             if (rand.nextFloat() < FHConfig.COMMON.flintIgnitionChance.get()) {
                 handStack.shrink(1);
                 if (rand.nextFloat() < FHConfig.COMMON.consumeChanceWhenIgnited.get()) {

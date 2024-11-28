@@ -1,11 +1,11 @@
 {
   "values": [
+    "frostedheart:warehouse",
+    "frostedheart:mine",
+    "frostedheart:mine_base",
+    "frostedheart:hunting_camp",
+    "frostedheart:hunting_base",
     "#frostedheart:town/blocks",
-    "#frostedheart:machines/wooden",
-    "frostedheart:rotten_wood_block",
-    "frostedheart:rotten_wood_permafrost",
-    "frostedheart:wooden_box",
-    "frostedheart:small_garage",
-    "frostedheart:package_block"
+    "#frostedheart:machines/wooden"
   ]
 }

@@ -52,13 +52,13 @@ public enum TownWorkerType {
      * The dummy.
      */
     DUMMY(null, null, -1),
-    HOUSE(FHBlocks.HOUSE, (town, workData) -> {
+    HOUSE(FHBlocks.HOUSE::get, (town, workData) -> {
         double residentNum = workData.getCompound("tileEntity").getList("residents", 10).size();
         double actualCost = town.cost(TownResourceType.PREP_FOOD, residentNum, false);
         return Math.abs(residentNum - actualCost) < 0.001;
     }, 0),
-    WAREHOUSE(FHBlocks.WAREHOUSE, new WarehouseWorker(), 0),
-    MINE(FHBlocks.MINE, new MineWorker(), 0, true,
+    WAREHOUSE(FHBlocks.WAREHOUSE::get, new WarehouseWorker(), 0),
+    MINE(FHBlocks.MINE::get, new MineWorker(), 0, true,
             (currentResidentNum, nbt) -> {
         int maxResident = nbt.getCompound("tileEntity").getInt("maxResident");
         double rating = TownWorkerData.getRating(nbt);
@@ -66,9 +66,9 @@ public enum TownWorkerType {
         return NEGATIVE_INFINITY;
             },
             (resident) -> resident.getTrust() * 0.01),
-    MINE_BASE(FHBlocks.MINE_BASE, null, 0),
-    HUNTING_CAMP(FHBlocks.HUNTING_CAMP, null, 0),
-    HUNTING_BASE(FHBlocks.HUNTING_BASE, new HuntingBaseBlockEntity.HuntingBaseWorker(), -1, true, (currentResidentNum, nbt) -> {
+    MINE_BASE(FHBlocks.MINE_BASE::get, null, 0),
+    HUNTING_CAMP(FHBlocks.HUNTING_CAMP::get, null, 0),
+    HUNTING_BASE(FHBlocks.HUNTING_BASE::get, new HuntingBaseBlockEntity.HuntingBaseWorker(), -1, true, (currentResidentNum, nbt) -> {
         int maxResident = nbt.getCompound("tileEntity").getInt("maxResident");
         if(currentResidentNum < maxResident) return -currentResidentNum + 1.0 * currentResidentNum / maxResident + 0.5 + TownWorkerData.getRating(nbt);
         return Double.NEGATIVE_INFINITY;

@@ -59,10 +59,10 @@ public class MovementModificationHandler {
         }
 
         // check if match FHTags.Blocks.SNOW_MOVEMENT
-        boolean isSnowBlock = world.getBlockState(player.blockPosition()).getTags().anyMatch(t -> t == FHTags.Blocks.SNOW_MOVEMENT);
-        boolean isSnowBlockBelow = world.getBlockState(player.blockPosition().below()).getTags().anyMatch(t -> t == FHTags.Blocks.SNOW_MOVEMENT);
-        boolean isIceBlock = world.getBlockState(player.blockPosition()).getTags().anyMatch(t -> t == FHTags.Blocks.ICE_MOVEMENT);
-        boolean isIceBlockBelow = world.getBlockState(player.blockPosition().below()).getTags().anyMatch(t -> t == FHTags.Blocks.ICE_MOVEMENT);
+        boolean isSnowBlock = world.getBlockState(player.blockPosition()).getTags().anyMatch(t -> t == FHTags.Blocks.SNOW_MOVEMENT.tag);
+        boolean isSnowBlockBelow = world.getBlockState(player.blockPosition().below()).getTags().anyMatch(t -> t == FHTags.Blocks.SNOW_MOVEMENT.tag);
+        boolean isIceBlock = world.getBlockState(player.blockPosition()).getTags().anyMatch(t -> t == FHTags.Blocks.ICE_MOVEMENT.tag);
+        boolean isIceBlockBelow = world.getBlockState(player.blockPosition().below()).getTags().anyMatch(t -> t == FHTags.Blocks.ICE_MOVEMENT.tag);
 
         if (feetEquipment == FHItems.SNOWSHOES.get()) {
             if ((isSnowBlock || isSnowBlockBelow) && !movementSpeed.hasModifier(FHAttributes.SNOW_DRIFTER)) {

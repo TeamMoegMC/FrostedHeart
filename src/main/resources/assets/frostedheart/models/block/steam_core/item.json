@@ -1,5 +1,5 @@
 {
-  "parent": "frostedheart:block/steamcore/steam_core",
+  "parent": "frostedheart:block/steam_core/horizontal",
   "display": {
     "gui": {
       "rotation": [ 30, 45, 0 ],

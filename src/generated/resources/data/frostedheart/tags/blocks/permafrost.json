@@ -1,18 +1,17 @@
 {
   "values": [
     "frostedheart:dirt_permafrost",
-    "frostedheart:mycelium_permafrost",
-    "frostedheart:podzol_permafrost",
-    "frostedheart:rooted_dirt_permafrost",
-    "frostedheart:coarse_dirt_permafrost",
     "frostedheart:mud_permafrost",
     "frostedheart:gravel_permafrost",
     "frostedheart:sand_permafrost",
     "frostedheart:red_sand_permafrost",
     "frostedheart:clay_permafrost",
     "frostedheart:peat_permafrost",
-    "frostedheart:rotten_wood_permafrost",
     "frostedheart:bauxite_permafrost",
-    "frostedheart:kaolin_permafrost"
+    "frostedheart:kaolin_permafrost",
+    "frostedheart:mycelium_permafrost",
+    "frostedheart:podzol_permafrost",
+    "frostedheart:rooted_dirt_permafrost",
+    "frostedheart:coarse_dirt_permafrost"
   ]
 }

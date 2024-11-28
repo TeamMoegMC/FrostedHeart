@@ -108,7 +108,7 @@ public class WanderingRefugee extends PathfinderMob implements Npc, NeutralMob {
             if (hired) {
                 player.displayClientMessage(TranslateUtils.translateMessage("refugee.hired", player.getName().getString()), false);
                 return InteractionResult.CONSUME;
-            } else if (itemStack.is(FHTags.Items.REFUGEE_NEEDS)) {
+            } else if (itemStack.is(FHTags.Items.REFUGEE_NEEDS.tag)) {
                 // try shrink stack and decrement amount needed
                 int amountNeeded = this.amountNeeded;
                 if (amountNeeded > 0) {
@@ -186,7 +186,7 @@ public class WanderingRefugee extends PathfinderMob implements Npc, NeutralMob {
 //        this.goalSelector.addGoal(1, new PanicGoal(this, 0.5D));
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.25D, true));
         this.goalSelector.addGoal(3, new MoveTowardsTargetGoal(this, 1.25D, 16.0F));
-        this.goalSelector.addGoal(4, new TemptGoal(this, 1.25D, Ingredient.of(FHTags.Items.REFUGEE_NEEDS), false));
+        this.goalSelector.addGoal(4, new TemptGoal(this, 1.25D, Ingredient.of(FHTags.Items.REFUGEE_NEEDS.tag), false));
         this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 1.0D));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 6.0F));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));

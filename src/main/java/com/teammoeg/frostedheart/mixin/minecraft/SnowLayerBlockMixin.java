@@ -45,8 +45,8 @@ public class SnowLayerBlockMixin {
                 ChunkHeatData.getTemperature(pLevel, pPos) >= WorldTemperature.SNOW_MELT_TEMPERATURE) {
             int layers = pState.getValue(SnowLayerBlock.LAYERS);
             if (layers > 1) {
-                pState.setValue(SnowLayerBlock.LAYERS, layers - 1);
-                pLevel.setBlock(pPos, pState, 2);
+                BlockState newState = pState.setValue(SnowLayerBlock.LAYERS, layers - 1);
+                pLevel.setBlock(pPos, newState, 2);
             } else {
                 Block.dropResources(pState, pLevel, pPos);
                 pLevel.removeBlock(pPos, false);

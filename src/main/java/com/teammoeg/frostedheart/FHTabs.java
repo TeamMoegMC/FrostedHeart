@@ -257,7 +257,7 @@ public class FHTabs {
 
         private List<Item> collectBlocks(Predicate<Item> exclusionPredicate) {
             List<Item> items = new ReferenceArrayList<>();
-            for (RegistryEntry<Block> entry : FHMain.FH_REGISTRATE.getAll(Registries.BLOCK)) {
+            for (RegistryEntry<Block> entry : FHMain.REGISTRATE.getAll(Registries.BLOCK)) {
                 if (!FHRegistrate.isInCreativeTab(entry, tabFilter))
                     continue;
                 Item item = entry.get()
@@ -273,7 +273,7 @@ public class FHTabs {
 
         private List<Item> collectItems(Predicate<Item> exclusionPredicate) {
             List<Item> items = new ReferenceArrayList<>();
-            for (RegistryEntry<Item> entry : FHMain.FH_REGISTRATE.getAll(Registries.ITEM)) {
+            for (RegistryEntry<Item> entry : FHMain.REGISTRATE.getAll(Registries.ITEM)) {
                 if (!FHRegistrate.isInCreativeTab(entry, tabFilter))
                     continue;
                 Item item = entry.get();

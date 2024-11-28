@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "frostedheart:block/sediment/podzol_permafrost",
+    "particle": "frostedheart:block/sediment/podzol_permafrost",
+    "side": "frostedheart:block/sediment/podzol_permafrost_snow",
+    "top": "minecraft:block/snow"
+  }
+}

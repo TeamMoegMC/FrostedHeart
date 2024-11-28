@@ -1,15 +1,9 @@
 {
   "values": [
-    "#frostedheart:permafrost",
     "frostedheart:silver_ore",
     "frostedheart:nickel_ore",
-    "frostedheart:steel_block",
-    "frostedheart:electrum_block",
-    "frostedheart:cast_iron_block",
-    "frostedheart:duralumin_block",
-    "frostedheart:silver_block",
-    "frostedheart:nickel_block",
-    "frostedheart:titanium_block",
-    "frostedheart:invar_block"
+    "frostedheart:deepslate_silver_ore",
+    "frostedheart:deepslate_nickel_ore",
+    "frostedheart:duralumin_sheetmetal"
   ]
 }

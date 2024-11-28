@@ -6,11 +6,19 @@
     "frostedheart:halite_ore",
     "frostedheart:sylvite_ore",
     "frostedheart:magnesite_ore",
-    "frostedheart:aluminum_block",
-    "frostedheart:constantan_block",
-    "frostedheart:lead_block",
-    "frostedheart:bronze_block",
-    "frostedheart:tin_block",
-    "frostedheart:magnesium_block"
+    "frostedheart:deepslate_tin_ore",
+    "frostedheart:deepslate_pyrite_ore",
+    "frostedheart:deepslate_lead_ore",
+    "frostedheart:deepslate_halite_ore",
+    "frostedheart:deepslate_sylvite_ore",
+    "frostedheart:deepslate_magnesite_ore",
+    "frostedheart:magnesite_block",
+    "frostedheart:magnesia_block",
+    "frostedheart:quicklime_block",
+    "frostedheart:refractory_bricks",
+    "frostedheart:high_refractory_bricks",
+    "frostedheart:whale_block",
+    "frostedheart:whale_belly_block",
+    "#frostedheart:permafrost"
   ]
 }

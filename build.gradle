@@ -106,7 +106,7 @@ minecraft {
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
-            args "-mixin.config=" + "frostedheart.mixins.json",'--mod', 'frostedheart','--all','--output', file('src/generated/resources/'), 'validate', '--existing', file('src/main/resources/'), '--existing-mod', 'immersiveengineering', '--existing-mod','rankine'
+            args "-mixin.config=" + "frostedheart.mixins.json",'--mod', 'frostedheart','--all','--output', file('src/generated/resources/'), 'validate', '--existing', file('src/main/resources/')
             mods {
                 frostedheart {
 					source sourceSets.main

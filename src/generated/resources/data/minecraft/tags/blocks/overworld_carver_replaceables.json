@@ -1,9 +1,6 @@
 {
   "values": [
-    "#frostedheart:permafrost",
     "#frostedheart:condensed_ores",
-    "#forge:ores",
-    "frostedheart:buried_mycelium",
-    "frostedheart:buried_podzol"
+    "#frostedheart:soil"
   ]
 }

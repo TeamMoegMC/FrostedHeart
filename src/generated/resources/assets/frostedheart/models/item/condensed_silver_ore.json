@@ -1,3 +1,7 @@
 {
-  "parent": "frostedheart:block/condensed_silver_ore_height2"
+  "parent": "minecraft:block/snow_height2",
+  "textures": {
+    "particle": "frostedheart:block/ore/condensed_silver_ore",
+    "texture": "frostedheart:block/ore/condensed_silver_ore"
+  }
 }

@@ -65,7 +65,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import static com.teammoeg.frostedheart.FHMain.FH_REGISTRATE;
+import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
 import static com.teammoeg.frostedheart.FHTags.forgeItemTag;
 
 /**
@@ -74,7 +74,7 @@ import static com.teammoeg.frostedheart.FHTags.forgeItemTag;
 public class FHItems {
 
     static {
-        FH_REGISTRATE.setCreativeTab(FHTabs.BASE_TAB);
+        REGISTRATE.setCreativeTab(FHTabs.BASE_TAB);
     }
 
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
@@ -100,18 +100,18 @@ public class FHItems {
     }
 
     private static ItemEntry<Item> ingredient(String name) {
-        return FH_REGISTRATE.item(name, Item::new)
+        return REGISTRATE.item(name, Item::new)
                 .register();
     }
 
     private static ItemEntry<SequencedAssemblyItem> sequencedIngredient(String name) {
-        return FH_REGISTRATE.item(name, SequencedAssemblyItem::new)
+        return REGISTRATE.item(name, SequencedAssemblyItem::new)
                 .register();
     }
 
     @SafeVarargs
     private static ItemEntry<Item> taggedIngredient(String name, TagKey<Item>... tags) {
-        return FH_REGISTRATE.item(name, Item::new)
+        return REGISTRATE.item(name, Item::new)
                 .tag(tags)
                 .register();
     }
@@ -122,88 +122,88 @@ public class FHItems {
     // Well, you MUST use ForgeSpawnEggItem, to take in the RegistryObject Supplier, instead of the EntityType itself,
     // because ITEMS always register before ENTITY_TYPES. I wasted 2 hours on this.
     public static final ItemEntry<ForgeSpawnEggItem> CURIOSITY_SPAWN_EGG =
-            FH_REGISTRATE.item("curiosity_spawn_egg", p -> new ForgeSpawnEggItem(FHEntityTypes.CURIOSITY, 0xfffeff, 0xafbdc0, createProps()))
+            REGISTRATE.item("curiosity_spawn_egg", p -> new ForgeSpawnEggItem(FHEntityTypes.CURIOSITY, 0xfffeff, 0xafbdc0, createProps()))
                     .lang("Curiosity of Deep Frostland Spawn Egg")
                     .model(AssetLookup.existingItemModel())
                     .register();
     public static final ItemEntry<ForgeSpawnEggItem> WANDERING_REFUGEE_SPAWN_EGG =
-            FH_REGISTRATE.item("wandering_refugee_spawn_egg", p -> new ForgeSpawnEggItem(FHEntityTypes.WANDERING_REFUGEE, 0xfffeff, 0x11374f, createProps()))
+            REGISTRATE.item("wandering_refugee_spawn_egg", p -> new ForgeSpawnEggItem(FHEntityTypes.WANDERING_REFUGEE, 0xfffeff, 0x11374f, createProps()))
                     .lang("Wandering Refugee Spawn Egg")
                     .model(AssetLookup.existingItemModel())
                     .register();
 
     // Equipment
     public static final ItemEntry<FHBaseArmorItem> SNOWSHOES =
-            FH_REGISTRATE.item("snowshoes", p -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)))
+            REGISTRATE.item("snowshoes", p -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)))
                     .register();
     public static final ItemEntry<FHBaseArmorItem> ICE_SKATES =
-            FH_REGISTRATE.item("ice_skates", p -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)))
+            REGISTRATE.item("ice_skates", p -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)))
                     .register();
 
     // Tools
     public static final ItemEntry<KnifeItem> MAKESHIFT_KNIFE =
-            FH_REGISTRATE.item("makeshift_knife", p -> new KnifeItem(FHToolMaterials.FLINT, 1, -1.5F, new Item.Properties()))
+            REGISTRATE.item("makeshift_knife", p -> new KnifeItem(FHToolMaterials.FLINT, 1, -1.5F, new Item.Properties()))
                     .tag(ItemTags.SWORDS)
                     .register();
     public static final ItemEntry<PickaxeItem> MAKESHIFT_PICKAXE =
-            FH_REGISTRATE.item("makeshift_pickaxe", p -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()))
+            REGISTRATE.item("makeshift_pickaxe", p -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES)
                     .register();
     public static final ItemEntry<AxeItem> MAKESHIFT_AXE =
-            FH_REGISTRATE.item("makeshift_axe", p -> new AxeItem(FHToolMaterials.FLINT, 4.0F, -3.2F, new Item.Properties()))
+            REGISTRATE.item("makeshift_axe", p -> new AxeItem(FHToolMaterials.FLINT, 4.0F, -3.2F, new Item.Properties()))
                     .tag(ItemTags.AXES)
                     .register();
     public static final ItemEntry<ShovelItem> MAKESHIFT_SHOVEL =
-            FH_REGISTRATE.item("makeshift_shovel", p -> new ShovelItem(FHToolMaterials.FLINT, 1.5F, -3.0F, new Item.Properties()))
+            REGISTRATE.item("makeshift_shovel", p -> new ShovelItem(FHToolMaterials.FLINT, 1.5F, -3.0F, new Item.Properties()))
                     .tag(ItemTags.SHOVELS)
                     .register();
     public static final ItemEntry<HoeItem> MAKESHIFT_HOE =
-            FH_REGISTRATE.item("makeshift_hoe", p -> new HoeItem(FHToolMaterials.FLINT, 0, -3.0F, new Item.Properties()))
+            REGISTRATE.item("makeshift_hoe", p -> new HoeItem(FHToolMaterials.FLINT, 0, -3.0F, new Item.Properties()))
                     .tag(ItemTags.HOES)
                     .register();
     public static final ItemEntry<SpearItem> MAKESHIFT_SPEAR =
-            FH_REGISTRATE.item("makeshift_spear", p -> new SpearItem(FHToolMaterials.FLINT, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/makeshift_spear.png"),new Item.Properties()))
+            REGISTRATE.item("makeshift_spear", p -> new SpearItem(FHToolMaterials.FLINT, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/makeshift_spear.png"),new Item.Properties()))
                     .tag(forgeItemTag("spears"), forgeItemTag("spears/flint"))
                     .register();
     public static final ItemEntry<KnifeItem> BRONZE_KNIFE =
-            FH_REGISTRATE.item("bronze_knife", p -> new KnifeItem(FHToolMaterials.ALLOY, 1, -1.5F, new Item.Properties()))
+            REGISTRATE.item("bronze_knife", p -> new KnifeItem(FHToolMaterials.ALLOY, 1, -1.5F, new Item.Properties()))
                     .tag(ItemTags.SWORDS, forgeItemTag("knifes"), forgeItemTag("knifes/bronze"))
                     .register();
     public static final ItemEntry<PickaxeItem> BRONZE_PICKAXE =
-            FH_REGISTRATE.item("bronze_pickaxe", p -> new PickaxeItem(FHToolMaterials.ALLOY, 1, -2.8F, new Item.Properties()))
+            REGISTRATE.item("bronze_pickaxe", p -> new PickaxeItem(FHToolMaterials.ALLOY, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES, forgeItemTag("pickaxes"), forgeItemTag("pickaxes/bronze"))
                     .register();
     public static final ItemEntry<AxeItem> BRONZE_AXE =
-            FH_REGISTRATE.item("bronze_axe", p -> new AxeItem(FHToolMaterials.ALLOY, 4.0F, -3.2F, new Item.Properties()))
+            REGISTRATE.item("bronze_axe", p -> new AxeItem(FHToolMaterials.ALLOY, 4.0F, -3.2F, new Item.Properties()))
                     .tag(ItemTags.AXES, forgeItemTag("axes"), forgeItemTag("axes/bronze"))
                     .register();
     public static final ItemEntry<ShovelItem> BRONZE_SHOVEL =
-            FH_REGISTRATE.item("bronze_shovel", p -> new ShovelItem(FHToolMaterials.ALLOY, 1.5F, -3.0F, new Item.Properties()))
+            REGISTRATE.item("bronze_shovel", p -> new ShovelItem(FHToolMaterials.ALLOY, 1.5F, -3.0F, new Item.Properties()))
                     .tag(ItemTags.SHOVELS, forgeItemTag("shovels"), forgeItemTag("shovels/bronze"))
                     .register();
     public static final ItemEntry<HoeItem> BRONZE_HOE =
-            FH_REGISTRATE.item("bronze_hoe", p -> new HoeItem(FHToolMaterials.ALLOY, 0, -3.0F, new Item.Properties()))
+            REGISTRATE.item("bronze_hoe", p -> new HoeItem(FHToolMaterials.ALLOY, 0, -3.0F, new Item.Properties()))
                     .tag(ItemTags.HOES, forgeItemTag("hoes"), forgeItemTag("hoes/bronze"))
                     .register();
     public static final ItemEntry<SpearItem> BRONZE_SPEAR =
-            FH_REGISTRATE.item("bronze_spear", p -> new SpearItem(FHToolMaterials.ALLOY, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/bronze_spear.png"), new Item.Properties()))
+            REGISTRATE.item("bronze_spear", p -> new SpearItem(FHToolMaterials.ALLOY, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/bronze_spear.png"), new Item.Properties()))
                     .tag(forgeItemTag("spears"), forgeItemTag("spears/bronze"))
                     .register();
     public static final ItemEntry<SwordItem> BRONZE_SWORD =
-            FH_REGISTRATE.item("bronze_sword", p -> new SwordItem(FHToolMaterials.ALLOY, 3, -2.4F, new Item.Properties()))
+            REGISTRATE.item("bronze_sword", p -> new SwordItem(FHToolMaterials.ALLOY, 3, -2.4F, new Item.Properties()))
                     .tag(ItemTags.SWORDS, forgeItemTag("swords"), forgeItemTag("swords/bronze"))
                     .register();
     public static final ItemEntry<PickaxeItem> STONE_HAMMER =
-            FH_REGISTRATE.item("stone_hammer", p -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()))
+            REGISTRATE.item("stone_hammer", p -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/stone"))
                     .register();
     public static final ItemEntry<PickaxeItem> BRONZE_HAMMER =
-            FH_REGISTRATE.item("bronze_hammer", p -> new PickaxeItem(FHToolMaterials.ALLOY, 1, -2.8F, new Item.Properties()))
+            REGISTRATE.item("bronze_hammer", p -> new PickaxeItem(FHToolMaterials.ALLOY, 1, -2.8F, new Item.Properties()))
                     .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/bronze"))
                     .register();
 
     static {
-        FH_REGISTRATE.setCreativeTab(FHTabs.MATERIALS_TAB);
+        REGISTRATE.setCreativeTab(FHTabs.MATERIALS_TAB);
     }
 
     // Soil drops
@@ -238,61 +238,61 @@ public class FHItems {
 
     // Redo condensed balls
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_IRON_ORE =
-            FH_REGISTRATE.item("condensed_ball_iron_ore", FHSnowballItem::new)
-                    .tag(FHTags.Items.CONDENSED_BALLS)
+            REGISTRATE.item("condensed_ball_iron_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS.tag)
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_COPPER_ORE =
-            FH_REGISTRATE.item("condensed_ball_copper_ore", FHSnowballItem::new)
-                    .tag(FHTags.Items.CONDENSED_BALLS)
+            REGISTRATE.item("condensed_ball_copper_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS.tag)
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_GOLD_ORE =
-            FH_REGISTRATE.item("condensed_ball_gold_ore", FHSnowballItem::new)
-                    .tag(FHTags.Items.CONDENSED_BALLS)
+            REGISTRATE.item("condensed_ball_gold_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS.tag)
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_ZINC_ORE =
-            FH_REGISTRATE.item("condensed_ball_zinc_ore", FHSnowballItem::new)
-                    .tag(FHTags.Items.CONDENSED_BALLS)
+            REGISTRATE.item("condensed_ball_zinc_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS.tag)
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_SILVER_ORE =
-            FH_REGISTRATE.item("condensed_ball_silver_ore", FHSnowballItem::new)
-                    .tag(FHTags.Items.CONDENSED_BALLS)
+            REGISTRATE.item("condensed_ball_silver_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS.tag)
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_TIN_ORE =
-            FH_REGISTRATE.item("condensed_ball_tin_ore", FHSnowballItem::new)
-                    .tag(FHTags.Items.CONDENSED_BALLS)
+            REGISTRATE.item("condensed_ball_tin_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS.tag)
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_PYRITE_ORE =
-            FH_REGISTRATE.item("condensed_ball_pyrite_ore", FHSnowballItem::new)
-                    .tag(FHTags.Items.CONDENSED_BALLS)
+            REGISTRATE.item("condensed_ball_pyrite_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS.tag)
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_NICKEL_ORE =
-            FH_REGISTRATE.item("condensed_ball_nickel_ore", FHSnowballItem::new)
-                    .tag(FHTags.Items.CONDENSED_BALLS)
+            REGISTRATE.item("condensed_ball_nickel_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS.tag)
                     .register();
     public static ItemEntry<FHSnowballItem> CONDENSED_BALL_LEAD_ORE =
-            FH_REGISTRATE.item("condensed_ball_lead_ore", FHSnowballItem::new)
-                    .tag(FHTags.Items.CONDENSED_BALLS)
+            REGISTRATE.item("condensed_ball_lead_ore", FHSnowballItem::new)
+                    .tag(FHTags.Items.CONDENSED_BALLS.tag)
                     .register();
 
     // Slurry
     public static ItemEntry<Item> IRON_SLURRY =
-            taggedIngredient("iron_slurry", FHTags.Items.SLURRY);
+            taggedIngredient("iron_slurry", FHTags.Items.SLURRY.tag);
     public static ItemEntry<Item> COPPER_SLURRY =
-            taggedIngredient("copper_slurry", FHTags.Items.SLURRY);
+            taggedIngredient("copper_slurry", FHTags.Items.SLURRY.tag);
     public static ItemEntry<Item> GOLD_SLURRY =
-            taggedIngredient("gold_slurry", FHTags.Items.SLURRY);
+            taggedIngredient("gold_slurry", FHTags.Items.SLURRY.tag);
     public static ItemEntry<Item> ZINC_SLURRY =
-            taggedIngredient("zinc_slurry", FHTags.Items.SLURRY);
+            taggedIngredient("zinc_slurry", FHTags.Items.SLURRY.tag);
     public static ItemEntry<Item> SILVER_SLURRY =
-            taggedIngredient("silver_slurry", FHTags.Items.SLURRY);
+            taggedIngredient("silver_slurry", FHTags.Items.SLURRY.tag);
     public static ItemEntry<Item> TIN_SLURRY =
-            taggedIngredient("tin_slurry", FHTags.Items.SLURRY);
+            taggedIngredient("tin_slurry", FHTags.Items.SLURRY.tag);
     public static ItemEntry<Item> PYRITE_SLURRY =
-            taggedIngredient("pyrite_slurry", FHTags.Items.SLURRY);
+            taggedIngredient("pyrite_slurry", FHTags.Items.SLURRY.tag);
     public static ItemEntry<Item> NICKEL_SLURRY =
-            taggedIngredient("nickel_slurry", FHTags.Items.SLURRY);
+            taggedIngredient("nickel_slurry", FHTags.Items.SLURRY.tag);
     public static ItemEntry<Item> LEAD_SLURRY =
-            taggedIngredient("lead_slurry", FHTags.Items.SLURRY);
+            taggedIngredient("lead_slurry", FHTags.Items.SLURRY.tag);
 
     // Crushed ores
     public static ItemEntry<Item> CRUSHED_RAW_SILVER =
@@ -349,7 +349,7 @@ public class FHItems {
             taggedIngredient("raw_pyrite",
                     forgeItemTag("raw_materials/pyrite"),
                     forgeItemTag("raw_materials"),
-                    FHTags.Items.IGNITION_METAL);
+                    FHTags.Items.IGNITION_METAL.tag);
     public static ItemEntry<Item> RAW_NICKEL =
             taggedIngredient("raw_nickel",
                     forgeItemTag("raw_materials/nickel"),
@@ -521,7 +521,7 @@ public class FHItems {
             taggedIngredient("steel_ingot",
                     forgeItemTag("ingots"),
                     forgeItemTag("ingots/steel"),
-                    FHTags.Items.IGNITION_METAL
+                    FHTags.Items.IGNITION_METAL.tag
             );
     public static ItemEntry<Item> ELECTRUM_INGOT =
             taggedIngredient("electrum_ingot",
@@ -542,7 +542,7 @@ public class FHItems {
             taggedIngredient("cast_iron_ingot",
                     forgeItemTag("ingots"),
                     forgeItemTag("ingots/cast_iron"),
-                    FHTags.Items.IGNITION_METAL
+                    FHTags.Items.IGNITION_METAL.tag
             );
 //    public static ItemEntry<Item> BRASS_INGOT =
 //            taggedIngredient("brass_ingot",
@@ -553,7 +553,7 @@ public class FHItems {
             taggedIngredient("duralumin_ingot",
                     forgeItemTag("ingots"),
                     forgeItemTag("ingots/duralumin"),
-                    FHTags.Items.IGNITION_METAL
+                    FHTags.Items.IGNITION_METAL.tag
             );
 //    public static ItemEntry<Item> GOLD_INGOT =
 //            taggedIngredient("gold_ingot",
@@ -609,7 +609,7 @@ public class FHItems {
             taggedIngredient("magnesium_ingot",
                     forgeItemTag("ingots"),
                     forgeItemTag("ingots/magnesium"),
-                    FHTags.Items.IGNITION_METAL
+                    FHTags.Items.IGNITION_METAL.tag
             );
     public static ItemEntry<Item> TUNGSTEN_INGOT =
             taggedIngredient("tungsten_ingot",
@@ -632,7 +632,7 @@ public class FHItems {
             taggedIngredient("steel_nugget",
                     forgeItemTag("nuggets"),
                     forgeItemTag("nuggets/steel"),
-                    FHTags.Items.IGNITION_METAL
+                    FHTags.Items.IGNITION_METAL.tag
             );
     public static ItemEntry<Item> ELECTRUM_NUGGET =
             taggedIngredient("electrum_nugget",
@@ -653,7 +653,7 @@ public class FHItems {
             taggedIngredient("cast_iron_nugget",
                     forgeItemTag("nuggets"),
                     forgeItemTag("nuggets/cast_iron"),
-                    FHTags.Items.IGNITION_METAL
+                    FHTags.Items.IGNITION_METAL.tag
             );
 //    public static ItemEntry<Item> BRASS_NUGGET =
 //            taggedIngredient("brass_nugget",
@@ -664,7 +664,7 @@ public class FHItems {
             taggedIngredient("duralumin_nugget",
                     forgeItemTag("nuggets"),
                     forgeItemTag("nuggets/duralumin"),
-                    FHTags.Items.IGNITION_METAL
+                    FHTags.Items.IGNITION_METAL.tag
             );
 //    public static ItemEntry<Item> GOLD_NUGGET =
 //            taggedIngredient("gold_nugget",
@@ -720,7 +720,7 @@ public class FHItems {
             taggedIngredient("magnesium_nugget",
                     forgeItemTag("nuggets"),
                     forgeItemTag("nuggets/magnesium"),
-                    FHTags.Items.IGNITION_METAL
+                    FHTags.Items.IGNITION_METAL.tag
             );
     public static ItemEntry<Item> TUNGSTEN_NUGGET =
             taggedIngredient("tungsten_nugget",
@@ -864,7 +864,7 @@ public class FHItems {
             taggedIngredient("steel_rod",
                     forgeItemTag("rods"),
                     forgeItemTag("rods/steel"),
-                    FHTags.Items.IGNITION_METAL
+                    FHTags.Items.IGNITION_METAL.tag
             );
     public static ItemEntry<Item> ELECTRUM_ROD =
             taggedIngredient("electrum_rod",
@@ -880,13 +880,13 @@ public class FHItems {
             taggedIngredient("iron_rod",
                     forgeItemTag("rods"),
                     forgeItemTag("rods/iron"),
-                    FHTags.Items.IGNITION_METAL
+                    FHTags.Items.IGNITION_METAL.tag
             );
     public static ItemEntry<Item> CAST_IRON_ROD =
             taggedIngredient("cast_iron_rod",
                     forgeItemTag("rods"),
                     forgeItemTag("rods/cast_iron"),
-                    FHTags.Items.IGNITION_METAL
+                    FHTags.Items.IGNITION_METAL.tag
             );
 
     // Wires
@@ -921,7 +921,7 @@ public class FHItems {
             taggedIngredient("rusted_iron_ingot",
                     forgeItemTag("ingots"),
                     forgeItemTag("ingots/rusted_iron"),
-                    FHTags.Items.IGNITION_METAL
+                    FHTags.Items.IGNITION_METAL.tag
             );
     public static ItemEntry<Item> RUSTED_COPPER_INGOT =
             taggedIngredient("rusted_copper_ingot",
@@ -1035,7 +1035,7 @@ public class FHItems {
             ingredient("refractory_brick");
 
     static {
-        FH_REGISTRATE.setCreativeTab(FHTabs.BASE_TAB);
+        REGISTRATE.setCreativeTab(FHTabs.BASE_TAB);
     }
 
     // OLD FORGE LIKE REGISTRY - TRY NOT USE THIS, USE REGISTRATE like above

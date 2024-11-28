@@ -1,3 +1,7 @@
 {
-  "parent": "frostedheart:block/iron_sludge_height2"
+  "parent": "minecraft:block/snow_height2",
+  "textures": {
+    "particle": "frostedheart:block/ore/iron_sludge",
+    "texture": "frostedheart:block/ore/iron_sludge"
+  }
 }

@@ -202,8 +202,8 @@ public class FoodTemperatureHandler {
     public static boolean canChangeTemperatureFood(ItemStack stack) {
         return (stack.getItem().isEdible() ||
                 stack.getItem() instanceof DrinkContainerItem && ((DrinkContainerItem) stack.getItem()).isDrinkable(stack))
-                && !stack.is(FHTags.Items.DRY_FOOD)
-                && !(stack.is(FHTags.Items.INSULATED_FOOD));
+                && !stack.is(FHTags.Items.DRY_FOOD.tag)
+                && !(stack.is(FHTags.Items.INSULATED_FOOD.tag));
     }
 
     public static boolean isFoodOrDrink(ItemStack stack) {

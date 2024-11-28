@@ -159,7 +159,7 @@ public class DrinkContainerItem extends ItemFluidContainer {
         return new FluidHandlerItemStack(stack, this.capacity) {
             @Override
             public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
-                for (Fluid fluid : ForgeRegistries.FLUIDS.tags().getTag(FHTags.Fluids.DRINK).stream().collect(Collectors.toList())) {
+                for (Fluid fluid : ForgeRegistries.FLUIDS.tags().getTag(FHTags.Fluids.DRINK.tag).stream().collect(Collectors.toList())) {
                     if (fluid == stack.getFluid()) {
                         return true;
                     }

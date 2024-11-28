@@ -1,6 +1,22 @@
 {
   "values": [
     "frostedheart:condensed_iron_ore_block",
-    "frostedheart:condensed_iron_ore"
+    "frostedheart:condensed_copper_ore_block",
+    "frostedheart:condensed_gold_ore_block",
+    "frostedheart:condensed_zinc_ore_block",
+    "frostedheart:condensed_silver_ore_block",
+    "frostedheart:condensed_tin_ore_block",
+    "frostedheart:condensed_pyrite_ore_block",
+    "frostedheart:condensed_nickel_ore_block",
+    "frostedheart:condensed_lead_ore_block",
+    "frostedheart:condensed_iron_ore",
+    "frostedheart:condensed_copper_ore",
+    "frostedheart:condensed_gold_ore",
+    "frostedheart:condensed_zinc_ore",
+    "frostedheart:condensed_silver_ore",
+    "frostedheart:condensed_tin_ore",
+    "frostedheart:condensed_pyrite_ore",
+    "frostedheart:condensed_nickel_ore",
+    "frostedheart:condensed_lead_ore"
   ]
 }

@@ -1,10 +1,10 @@
 {
   "variants": {
     "type=bottom": {
-      "model": "frostedheart:block/packed_snow_slab_bottom"
+      "model": "frostedheart:block/packed_snow_slab"
     },
     "type=double": {
-      "model": "frostedheart:block/packed_snow_slab_double"
+      "model": "frostedheart:block/packed_snow"
     },
     "type=top": {
       "model": "frostedheart:block/packed_snow_slab_top"

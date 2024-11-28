@@ -48,6 +48,7 @@ import com.teammoeg.frostedheart.content.utility.incinerator.GasVentTileEntity;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerTileEntity;
 import com.tterrag.registrate.util.entry.BlockEntityEntry;
 
+import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -56,7 +57,7 @@ import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
-import static com.teammoeg.frostedheart.FHMain.FH_REGISTRATE;
+import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
 
 public class FHBlockEntityTypes {
     public static final DeferredRegister<BlockEntityType<?>> REGISTER = DeferredRegister.create(
@@ -92,7 +93,7 @@ public class FHBlockEntityTypes {
     /*public static final RegistryObject<TileEntityType<SteamCoreTileEntity>> STEAM_CORE = REGISTER.register(
             "steam_core", makeType(SteamCoreTileEntity::new, FHBlocks.steam_core)
     );*/
-    public static final BlockEntityEntry<SteamCoreTileEntity> STEAM_CORE = FH_REGISTRATE
+    public static final BlockEntityEntry<SteamCoreTileEntity> STEAM_CORE = REGISTRATE
         .blockEntity("steam_core", SteamCoreTileEntity::new)
         .instance(() -> HorizontalHalfShaftInstance::new)
         .validBlocks(FHBlocks.STEAM_CORE)
@@ -113,23 +114,24 @@ public class FHBlockEntityTypes {
             "heat_incubator", makeType(HeatIncubatorTileEntity::new, FHBlocks.HEAT_INCUBATOR)
     );
     public static final RegistryObject<BlockEntityType<HouseBlockEntity>> HOUSE = REGISTER.register(
-            "house", makeType(HouseBlockEntity::new, FHBlocks.HOUSE)
+            "house", makeType(HouseBlockEntity::new, FHBlocks.HOUSE::get)
     );
     public static final RegistryObject<BlockEntityType<WarehouseBlockEntity>> WAREHOUSE = REGISTER.register(
-            "warehouse", makeType(WarehouseBlockEntity::new, FHBlocks.WAREHOUSE)
+            "warehouse", makeType(WarehouseBlockEntity::new, FHBlocks.WAREHOUSE::get)
     );
     public static final RegistryObject<BlockEntityType<MineBlockEntity>> MINE = REGISTER.register(
-            "mine", makeType(MineBlockEntity::new, FHBlocks.MINE)
+            "mine", makeType(MineBlockEntity::new, FHBlocks.MINE::get)
     );
     public static final RegistryObject<BlockEntityType<MineBaseBlockEntity>> MINE_BASE = REGISTER.register(
-            "mine_base", makeType(MineBaseBlockEntity::new, FHBlocks.MINE_BASE)
+            "mine_base", makeType(MineBaseBlockEntity::new, FHBlocks.MINE_BASE::get)
     );
     public static final RegistryObject<BlockEntityType<HuntingCampBlockEntity>> HUNTING_CAMP = REGISTER.register(
-            "hunting_camp", makeType(HuntingCampBlockEntity::new, FHBlocks.HUNTING_CAMP)
+            "hunting_camp", makeType(HuntingCampBlockEntity::new, FHBlocks.HUNTING_CAMP::get)
     );
     public static final RegistryObject<BlockEntityType<HuntingBaseBlockEntity>> HUNTING_BASE = REGISTER.register(
-            "hunting_base", makeType(HuntingBaseBlockEntity::new, FHBlocks.HUNTING_BASE)
+            "hunting_base", makeType(HuntingBaseBlockEntity::new, FHBlocks.HUNTING_BASE::get)
     );
+
     private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(BlockEntitySupplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }

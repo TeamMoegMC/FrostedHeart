@@ -20,7 +20,6 @@ package com.teammoeg.frostedheart.data;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.simibubi.create.Create;
 import com.simibubi.create.foundation.utility.FilesHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrateTags;
@@ -55,7 +54,7 @@ public class FHDataGenerator {
         ExistingFileHelper exHelper = event.getExistingFileHelper();
         CompletableFuture<HolderLookup.Provider> lookup = CompletableFuture.supplyAsync(VanillaRegistries::createLookup, Util.backgroundExecutor());
         PackOutput output = gen.getPackOutput();
-        gen.addProvider(event.includeServer(), new FHBlockTagProvider(gen, FHMain.MODID, exHelper, event.getLookupProvider()));
+//        gen.addProvider(event.includeServer(), new FHBlockTagProvider(gen, FHMain.MODID, exHelper, event.getLookupProvider()));
         gen.addProvider(event.includeServer(), new FHRecipeProvider(gen));
         gen.addProvider(event.includeServer(), new FHMultiblockStatesProvider(gen, FHMain.MODID, exHelper));
         gen.addProvider(event.includeClient(), new FHItemModelProvider(gen, FHMain.MODID, exHelper));
@@ -88,7 +87,7 @@ public class FHDataGenerator {
 
     private static void addExtraRegistrateData() {
         FHRegistrateTags.addGenerators();
-        FHMain.FH_REGISTRATE.addDataGenerator(ProviderType.LANG, provider -> {
+        FHMain.REGISTRATE.addDataGenerator(ProviderType.LANG, provider -> {
 //            provider.add("itemGroup.frostedheart", "Frosted Heart");
             BiConsumer<String, String> langConsumer = provider::add;
             provideDefaultLang("en_us", langConsumer);

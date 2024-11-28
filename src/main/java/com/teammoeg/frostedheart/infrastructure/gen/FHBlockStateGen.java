@@ -34,6 +34,11 @@ import net.minecraftforge.client.model.generators.ModelFile;
 
 public class FHBlockStateGen {
     public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> simpleCubeAll(
+            ResourceLocation texture) {
+        return (c, p) -> p.simpleBlock(c.get(), p.models()
+                .cubeAll(c.getName(), texture));
+    }
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> simpleCubeAll(
             String path) {
         return (c, p) -> p.simpleBlock(c.get(), p.models()
                 .cubeAll(c.getName(), p.modLoc("block/" + path)));
