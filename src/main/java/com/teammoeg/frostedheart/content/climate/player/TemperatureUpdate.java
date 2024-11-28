@@ -59,7 +59,7 @@ public class TemperatureUpdate {
 
     public static final float SELF_HEATING_CONSTANT = 0.036F;
 
-    
+
     /**
      * Perform temperature effect
      *
@@ -117,7 +117,9 @@ public class TemperatureUpdate {
             }
         }
     }
-    public static final UUID envTempId=UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
+
+    public static final UUID envTempId = UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
+
     /**
      * Perform temperature tick logic
      * <p>
@@ -133,8 +135,8 @@ public class TemperatureUpdate {
             // no longer ignore for easier debug
            /* if (player.isCreative() || player.isSpectator())
                 return;*/
-            PlayerTemperatureData data= PlayerTemperatureData.getCapability(event.player).orElse(null);
-            if(data==null)return;
+            PlayerTemperatureData data = PlayerTemperatureData.getCapability(event.player).orElse(null);
+            if (data == null) return;
             if (player.tickCount % 10 == 0) {
                 //soak in water modifier
                 if (player.isInWater()) {
@@ -161,14 +163,14 @@ public class TemperatureUpdate {
                 }
                 //world and chunk temperature
                 Level world = player.getCommandSenderWorld();
-                BlockPos pos = new BlockPos((int)player.getX(),(int) player.getEyeY(),(int) player.getZ());
+                BlockPos pos = new BlockPos((int) player.getX(), (int) player.getEyeY(), (int) player.getZ());
 
                 //Temperature from generators
-                float envtemp = WorldTemperature.getTemperature(world, pos)-37F; // 37-based
+                float envtemp = WorldTemperature.getTemperature(world, pos) - 37F; // 37-based
                 envtemp += ChunkHeatData.getAdditionTemperature(world, pos);
                 //Surrounding temperature
-                Pair<Float, Float> btp = new SurroundingTemperatureSimulator(player).getBlockTemperatureAndWind(player.getX(), player.getEyeY()-0.7f, player.getZ());
-                float bt=btp.getFirst();
+                Pair<Float, Float> btp = new SurroundingTemperatureSimulator(player).getBlockTemperatureAndWind(player.getX(), player.getEyeY() - 0.7f, player.getZ());
+                float bt = btp.getFirst();
                 //int wind=btp.getSecond()+WorldTemperature.getClimateWind(world);
                 //Day-night temperature
                 float skyLight = world.getChunkSource().getLightEngine().getLayerListener(LightLayer.SKY).getLightValue(pos);
@@ -185,9 +187,9 @@ public class TemperatureUpdate {
                 if (player.isOnFire())
                     envtemp += 150F;
                 player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).removeModifier(envTempId);
-                player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).addTransientModifier(new AttributeModifier(envTempId,"player environment modifier", envtemp, Operation.ADDITION));
-                
-                
+                player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).addTransientModifier(new AttributeModifier(envTempId, "player environment modifier", envtemp, Operation.ADDITION));
+
+
                 // envtemp=(float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
                 // float insulation = (float) player.getAttributeValue(FHAttributes.INSULATION.get());
                 PlayerTemperatureData.BodyPart[] parts = {
@@ -226,27 +228,25 @@ public class TemperatureUpdate {
                     }
                 }
 
-                float efftemp=current-(1-insulation)*(current-envtemp); //Effective temperature, 37-based
-                
-                
-                
-                
+                float efftemp = current - (1 - insulation) * (current - envtemp); //Effective temperature, 37-based
+
+
                 //list of equipments to be calculated
                 for (Pair<ISlotType, ItemStack> is : CuriosCompat.getAllCuriosAndSlotsIfVisible(player)) {
                     if (is == null)
                         continue;
                     Item it = is.getSecond().getItem();
                     if (it instanceof IHeatingEquipment)
-                    	efftemp+=((IHeatingEquipment) it).getEffectiveTempAdded(Either.left(is.getFirst()), is.getSecond(), efftemp, current);
+                        efftemp += ((IHeatingEquipment) it).getEffectiveTempAdded(Either.left(is.getFirst()), is.getSecond(), efftemp, current);
                 }
                 for (EquipmentSlot slot : EquipmentSlot.values()) {
-                	ItemStack is=player.getItemBySlot(slot);
+                    ItemStack is = player.getItemBySlot(slot);
                     if (is.isEmpty())
                         continue;
                     Item it = is.getItem();
                     if (it instanceof IHeatingEquipment) {
-                    	if (it instanceof IHeatingEquipment)
-                        	efftemp+=((IHeatingEquipment) it).getEffectiveTempAdded(Either.right(EquipmentCuriosSlotType.fromVanilla(slot)), is, efftemp, current);
+                        if (it instanceof IHeatingEquipment)
+                            efftemp += ((IHeatingEquipment) it).getEffectiveTempAdded(Either.right(EquipmentCuriosSlotType.fromVanilla(slot)), is, efftemp, current);
                     }
                     /*if (it instanceof IWarmKeepingEquipment) {
                         keepwarm += ((IWarmKeepingEquipment) it).getFactor(player, is);
@@ -269,19 +269,19 @@ public class TemperatureUpdate {
                     player.hurt(FHDamageTypes.createSource(world, FHDamageTypes.HYPERTHERMIA_INSTANT, player), (dheat) * 10);
                 else if (dheat < -0.1)
                     player.hurt(FHDamageTypes.createSource(world, FHDamageTypes.HYPOTHERMIA_INSTANT, player), (-dheat) * 10);
-                if (!player.isCreative()&&!player.isSpectator())//no modify body temp when creative or spectator
-                	current += (float) (dheat * tspeed);
+                if (!player.isCreative() && !player.isSpectator())//no modify body temp when creative or spectator
+                    current += (float) (dheat * tspeed);
                 if (current < -10)
                     current = -10;
                 else if (current > 10)
                     current = 10;
                 float lenvtemp = data.getEnvTemp();//get a smooth change in display
-                float lfeeltemp=data.getFeelTemp();
-                data.update(current, (envtemp+37F) * .2f + lenvtemp * .8f, (efftemp+37F)*.2f+lfeeltemp*.8f);
+                float lfeeltemp = data.getFeelTemp();
+                data.update(current, (envtemp + 37F) * .2f + lenvtemp * .8f, (efftemp + 37F) * .2f + lfeeltemp * .8f);
                 //FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
             }
 
-            FHNetwork.sendPlayer( player, new FHBodyDataSyncPacket(player));
+            FHNetwork.sendPlayer(player, new FHBodyDataSyncPacket(player));
         }
     }
 }
