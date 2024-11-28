@@ -59,6 +59,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount;
@@ -72,6 +73,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
+import static com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen.*;
 import static com.teammoeg.frostedheart.infrastructure.gen.FHTagGen.*;
 import static net.minecraft.world.level.block.Blocks.*;
 
@@ -706,6 +708,7 @@ public class FHBlocks {
             .loot((lt, b) -> lt.add(b,
                     lt.createSingleItemTableWithSilkTouch(b, FHItems.ROTTEN_WOOD.get(), ConstantValue.exactly(4))))
             .tag(FHTags.Blocks.SOIL.tag)
+            .tag(BlockTags.MUSHROOM_GROW_BLOCK)
             .transform(tagBlockAndItem("rotten_wood"))
             .build()
             .register();
@@ -737,6 +740,7 @@ public class FHBlocks {
             .properties(p -> p.mapColor(MapColor.COLOR_PURPLE))
             .blockstate(FHBlockStateGen.simpleCubeAll("sediment/buried_mycelium"))
             .tag(FHTags.Blocks.SOIL.tag)
+            .tag(BlockTags.MUSHROOM_GROW_BLOCK)
             .transform(tagBlockAndItem("mycelium"))
             .build()
             .register();
@@ -746,6 +750,7 @@ public class FHBlocks {
             .properties(p -> p.mapColor(MapColor.COLOR_BROWN))
             .blockstate(FHBlockStateGen.simpleCubeAll("sediment/buried_podzol"))
             .tag(FHTags.Blocks.SOIL.tag)
+            .tag(BlockTags.MUSHROOM_GROW_BLOCK)
             .transform(tagBlockAndItem("podzol"))
             .build()
             .register();
@@ -1010,7 +1015,7 @@ public class FHBlocks {
 
     // Metal blocks, registrate
     // TODO: Uncomment when textures are ready
-    /*
+
     public static final BlockEntry<Block> ALUMINUM_BLOCK = REGISTRATE.block("aluminum_block", Block::new)
             .initialProperties(() -> IRON_BLOCK)
             .properties(p -> p.mapColor(MapColor.COLOR_LIGHT_BLUE).requiresCorrectToolForDrops())
@@ -1018,6 +1023,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/aluminum"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
@@ -1031,6 +1037,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/steel"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
@@ -1044,6 +1051,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/electrum"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
@@ -1057,6 +1065,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/constantan"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
@@ -1070,6 +1079,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/cast_iron"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
@@ -1083,6 +1093,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/duralumin"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
@@ -1096,6 +1107,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/silver"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
@@ -1109,6 +1121,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/nickel"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
@@ -1122,6 +1135,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/lead"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
@@ -1135,6 +1149,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/titanium"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
@@ -1148,6 +1163,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/bronze"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
@@ -1161,6 +1177,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/invar"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
@@ -1174,6 +1191,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_DIAMOND_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/tungstensteel"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
@@ -1187,6 +1205,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/tin"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
@@ -1200,6 +1219,7 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_IRON_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/magnesium"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
@@ -1213,12 +1233,13 @@ public class FHBlocks {
             .tag(BlockTags.NEEDS_DIAMOND_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
+            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/iron_block")))
             .transform(tagBlockAndItem("storage_blocks/tungsten"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
             .lang("Block of Tungsten")
             .register();
-    */
+
 
     // Resource Blocks, registrate
     public static final BlockEntry<Block> MAGNESITE_BLOCK = REGISTRATE.block("magnesite_block", Block::new)
@@ -1361,6 +1382,101 @@ public class FHBlocks {
             .sound(SoundType.METAL)
             .requiresCorrectToolForDrops()
             .strength(45, 800)));
+
+    public static BlockEntry<Block> CHASSIS = REGISTRATE.block("chassis", Block::new)
+            .transform(ruinedMachines())
+            .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/chassis"))
+            .simpleItem()
+            .register();
+    public static BlockEntry<Block> RUINED_FLUCTUATING = REGISTRATE.block("ruined_fluctuating", Block::new)
+            .transform(ruinedMachines())
+            .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_fluctuating"))
+            .simpleItem()
+            .lang("Fluctuating Ruined Block")
+            .register();
+    public static BlockEntry<Block> RUINED_JAGGED = REGISTRATE.block("ruined_jagged", Block::new)
+            .transform(ruinedMachines())
+            .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_jagged"))
+            .simpleItem()
+            .lang("Jagged Ruined Block")
+            .register();
+    // ruined ladder
+    public static BlockEntry<RotatedPillarBlock> RUINED_LADDER = REGISTRATE.block("ruined_ladder", RotatedPillarBlock::new)
+            .transform(ruinedMachines())
+            .blockstate((c, p) -> {
+                p.axisBlock(c.get(), p.modLoc("block/ruined_machines/ruined_ladder"), p.modLoc("block/ruined_machines/ruined_fluctuating"));
+            })
+            .simpleItem()
+            .lang("Ruined Ladder")
+            .register();
+    // ruined scale tile bordered
+    public static BlockEntry<Block> RUINED_SCALE_TILE_BORDERED = REGISTRATE.block("ruined_scale_tile_bordered", Block::new)
+            .transform(ruinedMachines())
+            .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_scale_tile_bordered"))
+            .simpleItem()
+            .lang("Bordered Ruined Scale Tile")
+            .register();
+    // ruined scale tile borderless
+    public static BlockEntry<Block> RUINED_SCALE_TILE_BORDERLESS = REGISTRATE.block("ruined_scale_tile_borderless", Block::new)
+            .transform(ruinedMachines())
+            .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_scale_tile_borderless"))
+            .simpleItem()
+            .lang("Borderless Ruined Scale Tile")
+            .register();
+    // ruined scale tile borderless 2
+    public static BlockEntry<Block> RUINED_SCALE_TILE_BORDERLESS_2 = REGISTRATE.block("ruined_scale_tile_borderless_2", Block::new)
+            .transform(ruinedMachines())
+            .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_scale_tile_borderless_2"))
+            .simpleItem()
+            .lang("Dense Borderless Ruined Scale Tile")
+            .register();
+    // ruined striped bordered
+    public static BlockEntry<Block> RUINED_STRIPED_BORDERED = REGISTRATE.block("ruined_striped_bordered", Block::new)
+            .transform(ruinedMachines())
+            .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_striped_bordered"))
+            .simpleItem()
+            .lang("Bordered Ruined Striped Block")
+            .register();
+    // ruined striped borderless
+    public static BlockEntry<Block> RUINED_STRIPED_BORDERLESS = REGISTRATE.block("ruined_striped_borderless", Block::new)
+            .transform(ruinedMachines())
+            .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_striped_borderless"))
+            .simpleItem()
+            .lang("Borderless Ruined Striped Block")
+            .register();
+    // ruined general machine
+    // this is a block with six different side textures
+    // TODO: need new block types
+    /*
+    public static BlockEntry<Block> RUINED_GENERAL_MACHINE = REGISTRATE.block("ruined_general_machine", Block::new)
+            .transform(ruinedMachines())
+            .blockstate((c, p) -> {
+                p.directionalBlock();
+            })
+            .simpleItem()
+            .register();
+    // These are obj blocks
+    // ruined machine a
+    public static BlockEntry<Block> RUINED_MACHINE_A = REGISTRATE.block("ruined_machine_a", Block::new)
+            .transform(ruinedMachines())
+            .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_machine_a"))
+            .simpleItem()
+            .register();
+    // ruined machine b
+    public static BlockEntry<Block> RUINED_MACHINE_B = REGISTRATE.block("ruined_machine_b", Block::new)
+            .transform(ruinedMachines())
+            .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_machine_b"))
+            .simpleItem()
+            .register();
+    // ruined machine c
+    public static BlockEntry<Block> RUINED_MACHINE_C = REGISTRATE.block("ruined_machine_c", Block::new)
+            .transform(ruinedMachines())
+            .blockstate(FHBlockStateGen.simpleCubeAll("ruined_machines/ruined_machine_c"))
+            .simpleItem()
+            .register();
+    */
+
+
 
     // Machine Blocks
     public static RegistryObject<Block> RELIC_CHEST = register("relic_chest", RelicChestBlock::new);

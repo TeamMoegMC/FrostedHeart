@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "frostedheart:block/ruined_machines/ruined_scale_tile_borderless_2"
+  }
+}

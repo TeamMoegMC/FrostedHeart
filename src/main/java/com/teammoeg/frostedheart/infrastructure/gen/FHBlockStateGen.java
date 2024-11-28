@@ -21,15 +21,20 @@ package com.teammoeg.frostedheart.infrastructure.gen;
 
 import com.simibubi.create.content.logistics.funnel.FunnelItem;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.providers.DataGenContext;
 import com.tterrag.registrate.providers.RegistrateBlockstateProvider;
 import com.tterrag.registrate.providers.RegistrateItemModelProvider;
 import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
+import com.tterrag.registrate.util.nullness.NonNullFunction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SnowLayerBlock;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.client.model.generators.ModelFile;
 
 public class FHBlockStateGen {
@@ -104,6 +109,17 @@ public class FHBlockStateGen {
                     .texture("particle", texture)
                     .texture("texture", texture);
         };
+    }
+
+    public static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, BlockBuilder<T, P>> ruinedMachines() {
+        return b -> b
+                .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
+                        .requiresCorrectToolForDrops()
+                        .strength(10, 10)
+                        .sound(SoundType.METAL)
+                        .noOcclusion())
+                .tag(BlockTags.MINEABLE_WITH_PICKAXE)
+                .tag(BlockTags.NEEDS_IRON_TOOL);
     }
 
 }

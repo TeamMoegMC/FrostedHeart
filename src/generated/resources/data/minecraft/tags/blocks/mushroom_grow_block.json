@@ -1,5 +1,8 @@
 {
   "values": [
+    "frostedheart:rotten_wood_block",
+    "frostedheart:buried_mycelium",
+    "frostedheart:buried_podzol",
     "frostedheart:mycelium_permafrost",
     "frostedheart:podzol_permafrost"
   ]

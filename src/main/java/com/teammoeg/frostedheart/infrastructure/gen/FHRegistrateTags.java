@@ -119,7 +119,7 @@ public class FHRegistrateTags {
                 .add(Blocks.CLAY);
 
         prov.tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES)
-//                .addTag(FHTags.Blocks.PERMAFROST)
+                .addTag(FHTags.Blocks.PERMAFROST.tag)
                 .addTag(FHTags.Blocks.CONDENSED_ORES.tag)
                 .addTag(FHTags.Blocks.SOIL.tag);
 
