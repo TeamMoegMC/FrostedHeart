@@ -30,8 +30,8 @@ public class BlockTempData{
 	boolean lit;
 	public static final MapCodec<BlockTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
 		CodecUtil.defaultValue(Codec.FLOAT,0f).fieldOf("temperature").forGetter(o->o.temperature),
-		CodecUtil.defaultValue(Codec.BOOL,false).fieldOf("level").forGetter(o->o.level),
-		CodecUtil.defaultValue(Codec.BOOL,false).fieldOf("lit").forGetter(o->o.lit)).apply(t, BlockTempData::new));
+		CodecUtil.defaultValue(Codec.BOOL,false).fieldOf("level_divide").forGetter(o->o.level),
+		CodecUtil.defaultValue(Codec.BOOL,false).fieldOf("must_lit").forGetter(o->o.lit)).apply(t, BlockTempData::new));
     
 
     public BlockTempData(float temperature, boolean level, boolean lit) {
