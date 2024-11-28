@@ -163,11 +163,8 @@ public class TemperatureUpdate {
                 BlockPos pos = new BlockPos((int)player.getX(),(int) player.getEyeY(),(int) player.getZ());
 
                 //Temperature from generators
-                float envtemp = ChunkHeatData.getAdditionTemperature(world, pos);
-                //Temperature from world basis and biome basis
-                envtemp += WorldTemperature.getBaseTemperature(world, pos);
-                //Temperature from climate
-                envtemp += WorldTemperature.getClimateTemperature(world);
+                float envtemp = WorldTemperature.getTemperature(world, pos)-37F; // 37-based
+                envtemp += ChunkHeatData.getAdditionTemperature(world, pos);
                 //Surrounding temperature
                 Pair<Float, Float> btp = new SurroundingTemperatureSimulator(player).getBlockTemperatureAndWind(player.getX(), player.getEyeY()-0.7f, player.getZ());
                 float bt=btp.getFirst();
@@ -190,9 +187,35 @@ public class TemperatureUpdate {
                 player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).addTransientModifier(new AttributeModifier(envTempId,"player environment modifier", envtemp, Operation.ADDITION));
                 
                 
-                envtemp=(float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
-                float insulation = (float) player.getAttributeValue(FHAttributes.INSULATION.get());
-                float efftemp=current-(1-insulation)*(current-envtemp);//Effective temperature
+                // envtemp=(float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
+                // float insulation = (float) player.getAttributeValue(FHAttributes.INSULATION.get());
+                PlayerTemperatureData.BodyPart[] parts = {
+                        PlayerTemperatureData.BodyPart.HEAD,
+                        PlayerTemperatureData.BodyPart.BODY,
+                        PlayerTemperatureData.BodyPart.HANDS,
+                        PlayerTemperatureData.BodyPart.LEGS,
+                        PlayerTemperatureData.BodyPart.FEET
+                };
+                float[] ratios = {0.1f, 0.4f, 0.05f, 0.4f, 0.05f};
+                float insulation = 1;
+                for(int i=0;i<5;++i) {
+                    PlayerTemperatureData.BodyPart part = parts[i];
+                    float ratio = ratios[i];
+                    float thermalConductivity = data.getThermalConductivityByPart(part);
+                    insulation -= ratio*thermalConductivity;
+                    float temperature = data.getTemperatureByPart(part);
+                    float dt = (temperature - envtemp)*thermalConductivity;
+                    temperature -= 0.001f*6*dt; // 10 dt -> temperature change 0.06 per tick
+                    if(temperature<0.0) {
+                        temperature += 0.09f;
+                    }
+                    else {
+                        temperature += 0.06f;
+                    }
+                    data.setTemperatureByPart(part, temperature);
+
+                }
+                float efftemp=current-(1-insulation)*(current-envtemp); //Effective temperature, 37-based
                 
                 
                 
@@ -229,7 +252,7 @@ public class TemperatureUpdate {
                     }*/
                 }
                 //environment heat exchange
-                float dheat = HEAT_EXCHANGE_CONSTANT * ((efftemp-37F) - current);
+                float dheat = HEAT_EXCHANGE_CONSTANT * (efftemp - current);
                 //Attack player if temperature changes too much
                 if (dheat > 0.1)
                     player.hurt(FHDamageTypes.createSource(world, FHDamageTypes.HYPERTHERMIA_INSTANT, player), (dheat) * 10);
@@ -243,8 +266,7 @@ public class TemperatureUpdate {
                     current = 10;
                 float lenvtemp = data.getEnvTemp();//get a smooth change in display
                 float lfeeltemp=data.getFeelTemp();
-                
-                data.update(current, (envtemp) * .2f + lenvtemp * .8f, (efftemp)*.2f+lfeeltemp*.8f);
+                data.update(current, (envtemp+37F) * .2f + lenvtemp * .8f, (efftemp+37F)*.2f+lfeeltemp*.8f);
                 //FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
             }
 
