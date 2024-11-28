@@ -243,6 +243,12 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Integer> temperatureUpdateIntervalTicks;
         public final ForgeConfigSpec.ConfigValue<Integer> wetEffectDuration;
         public final ForgeConfigSpec.ConfigValue<Integer> wetClothesDurationMultiplier;
+        public final ForgeConfigSpec.ConfigValue<Integer> tempSkyLightThreshold;
+        public final ForgeConfigSpec.ConfigValue<Integer> snowTempModifier;
+        public final ForgeConfigSpec.ConfigValue<Integer> blizzardTempModifier;
+        public final ForgeConfigSpec.ConfigValue<Integer> dayNightTempAmplitude;
+        public final ForgeConfigSpec.ConfigValue<Integer> onFireTempModifier;
+        public final ForgeConfigSpec.ConfigValue<Double> heatExchangeConstant;
 
         Server(ForgeConfigSpec.Builder builder) {
             builder.push("Temperature");
@@ -257,6 +263,18 @@ public class FHConfig {
             wetClothesDurationMultiplier = builder.comment("The multiplier of the wet effect duration when player is wearing clothes.")
                     .comment("finalDuration = wetEffectDuration * wetClothesDurationMultiplier")
                     .defineInRange("wetClothesDurationMultiplier", 4, 1, 1000);
+            tempSkyLightThreshold = builder.comment("Below which -dayNightTempModifier will be used.")
+                    .defineInRange("tempSkyLightThreshold", 5, 0, 15);
+            snowTempModifier = builder.comment("The temperature modifier when player is in snow weather.")
+                    .defineInRange("snowTempModifier", -3, -100, 100);
+            blizzardTempModifier = builder.comment("The temperature modifier when player is in blizzard weather.")
+                    .defineInRange("blizzardTempModifier", -6, -100, 100);
+            dayNightTempAmplitude = builder.comment("This is the amplitude of day night temperature cycle. The actual temperature modifier is sin(time) * dayNightTempModifier.")
+                    .defineInRange("dayNightTempAmplitude", 5, -100, 100);
+            onFireTempModifier = builder.comment("The temperature modifier when player is on fire.")
+                    .defineInRange("onFireTempModifier", 150, 0, 1000);
+            heatExchangeConstant = builder.comment("The heat exchange constant between player and environment.")
+                    .defineInRange("heatExchangeConstant", 0.0012, 0, 1);
             builder.pop();
 
             builder.push("Water");
