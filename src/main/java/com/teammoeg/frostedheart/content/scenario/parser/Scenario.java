@@ -24,10 +24,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public record Scenario(String name, List<Node> pieces, int[] paragraphs, Map<String, Integer> labels) {
+public record Scenario(String name, List<Node> pieces, Map<String, Integer> labels) {
 
     public Scenario(String name) {
-        this(name,new ArrayList<>(),new int[0],new HashMap<>());
+        this(name,new ArrayList<>(),new HashMap<>());
     }
 
 	@Override

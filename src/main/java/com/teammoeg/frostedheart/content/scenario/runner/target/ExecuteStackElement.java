@@ -21,21 +21,37 @@ package com.teammoeg.frostedheart.content.scenario.runner.target;
 
 import java.util.List;
 
+import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
 
 public record ExecuteStackElement(String name,int nodeNum) implements ScenarioTarget{
-	public static final Codec<ExecuteStackElement> CODEC=RecordCodecBuilder.create(t->t.group(
+	public static final Codec<ExecuteStackElement> RAW_CODEC=RecordCodecBuilder.create(t->t.group(
 		Codec.STRING.fieldOf("storage").forGetter(o->o.name()),
 		Codec.INT.fieldOf("node").forGetter(o->o.nodeNum())
 		).apply(t,ExecuteStackElement::new));
-	public static final Codec<List<ExecuteStackElement>> LIST_CODEC=Codec.list(CODEC);
+	public static final Codec<Either<ExecuteStackElement, ExecuteTarget>> CODEC=Codec.either(RAW_CODEC, ExecuteTarget.CODEC);
+	public static final Codec<List<ScenarioTarget>> LIST_CODEC=Codec.list(CODEC.flatXmap(ExecuteStackElement::map, ExecuteStackElement::map));
 	@Override
 	public PreparedScenarioTarget prepare(ScenarioContext t, Scenario current) {
 
 		return new PreparedScenarioTarget(t.loadScenario(name),nodeNum);
 	}
-
+	
+	private static DataResult<ScenarioTarget> map(Either<ExecuteStackElement, ExecuteTarget> either) {
+		return either.left().map(t->(ScenarioTarget)t).or(()->either.right()).map(DataResult::success).orElseGet(()->DataResult.error(()->"invalid data"));
+		
+	}
+	
+	private static DataResult<Either<ExecuteStackElement, ExecuteTarget>> map(ScenarioTarget either) {
+		if(either instanceof ExecuteStackElement ex)
+			return DataResult.success(Either.left(ex));
+		if(either instanceof ExecuteTarget ex)
+			return DataResult.success(Either.right(ex));
+		return DataResult.error(()->"invalid stacktrace element");
+		
+	}
 }

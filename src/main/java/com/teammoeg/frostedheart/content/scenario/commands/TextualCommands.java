@@ -20,6 +20,9 @@ public class TextualCommands {
 	public void r(ScenarioCommandContext runner) {
 		runner.thread().scene().sendNewLine(runner.context(), RunStatus.RUNNING, false);
 	}
+	
+	
+	
 	public void link(ScenarioCommandContext runner,@Param("lid")String linkId,@Param("s")String scenario,@Param("l")String label) {
 		runner.thread().scene().sendCached(runner.context());
 		linkId=runner.thread().scene().createLink(linkId, scenario, label);
@@ -45,6 +48,13 @@ public class TextualCommands {
 	public void l(ScenarioCommandContext runner) {
 		runner.thread().waitClient();
 		runner.thread().scene().sendCurrent(runner.context(), RunStatus.WAITCLIENT,false);
+	}
+	public void p(ScenarioCommandContext runner) {
+    	if(runner.thread().scene().shouldWaitClient()&&!runner.thread().scene().isSlient()) {
+    		runner.thread().setStatus(RunStatus.WAITCLIENT);
+    		runner.thread().scene().markClearAfterClick();
+    		runner.thread().scene().sendCurrent(runner.context(),RunStatus.WAITCLIENT,false);
+    	}else runner.thread().scene().clear(runner.context(),RunStatus.RUNNING);
 	}
 	public void wc(ScenarioCommandContext runner) {
 		runner.thread().waitClient();

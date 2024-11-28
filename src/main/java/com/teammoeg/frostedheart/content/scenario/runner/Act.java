@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.content.scenario.runner;
 import java.util.LinkedList;
 
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElement;
+import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
+import com.teammoeg.frostedheart.content.scenario.runner.target.ScenarioTarget;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import net.minecraft.nbt.CompoundTag;
@@ -35,13 +37,11 @@ public class Act extends BaseScenarioRunner{
 	public String toString() {
 		return "Act [name=" + name + ", sp=" + sp + ", nodeNum=" + nodeNum + ", status=" + status + "]";
 	}
-	String label;
 	
 	ActNamespace name;
     private String title="";
     private String subtitle="";
 
-	private LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
     public Act(ActNamespace name) {
 		super();
 		this.scene=new ServerScene();
@@ -56,27 +56,18 @@ public class Act extends BaseScenarioRunner{
     public void prepareForRun(ScenarioContext ctx) {
     	if(nodeNum<0) {
     		this.restoreLocation(ctx);
-    		
-    		if(label!=null) {
-    			Integer nn=sp.labels().get(label);
-    			if(nn!=null)
-    				this.nodeNum=nn;
-    			label=null;
-    		}
     	}
     }
     public CompoundTag save() {
     	CompoundTag nbt=new CompoundTag();
-    	if(savedLocation!=null)
-    		CodecUtil.encodeNBT(ParagraphData.CODEC, nbt,"location",savedLocation);
+    	if(currentLabel!=null)
+    		CodecUtil.encodeNBT(ExecuteTarget.CODEC, nbt,"currentLabel",currentLabel);
     	
     	CodecUtil.encodeNBT(ExecuteStackElement.LIST_CODEC,nbt,"callStack",getCallStack());
     	nbt.putString("chapter", name.chapter());
     	nbt.putString("act", name.act());
     	nbt.putString("title", title);
     	nbt.putString("subtitle", subtitle);
-    	if(label!=null)
-    		nbt.putString("label", label);
     	nbt.put("scene", scene.save());
     	if(getStatus().doPersist) {
     		nbt.putInt("status", getStatus().ordinal());
@@ -86,15 +77,11 @@ public class Act extends BaseScenarioRunner{
     	return nbt;
     }
     public void load(CompoundTag nbt) {
-    	savedLocation=CodecUtil.decodeNBTIfPresent(ParagraphData.CODEC, nbt, "location");
+    	currentLabel=CodecUtil.decodeNBTIfPresent(ExecuteTarget.CODEC, nbt, "currentLabel");
     	getCallStack().clear();
     	getCallStack().addAll(CodecUtil.decodeNBTIfPresent(ExecuteStackElement.LIST_CODEC, nbt, "callStack"));
     	name=new ActNamespace(nbt.getString("chapter"),nbt.getString("act"));
     	title=nbt.getString("title");
-    	if(nbt.contains("label"))
-    		label=nbt.getString("label");
-    	else
-    		label=null;
     	subtitle=nbt.getString("subtitle");
     	scene.load(nbt.getCompound("scene"));
     	setStatus((RunStatus.values()[nbt.getInt("status")]));
@@ -153,12 +140,8 @@ public class Act extends BaseScenarioRunner{
 			sendTitles(ctx,false,true);
 		}
 	}
-	@Override
-	public LinkedList<ExecuteStackElement> getCallStack() {
-		return this.callStack;
-	}
-	public void setCallStack(LinkedList<ExecuteStackElement> callStack) {
+	public void setCallStack(LinkedList<ScenarioTarget> linkedList) {
 		this.callStack.clear();;
-		this.callStack.addAll(callStack);
+		this.callStack.addAll(linkedList);
 	}
 }

@@ -65,7 +65,7 @@ public class ScenarioCommand {
 				Commands.argument("script", StringArgumentType.string()).executes(ct->{
                     String sb = StringArgumentType.getString(ct, "script") + "\n" + "@return";
 						ScenarioConductor cdt=FHScenario.get(ct.getSource().getPlayerOrException());
-						cdt.getCurrentAct().addCallStack();
+						cdt.getCurrentAct().addCallStack(null);
 						cdt.getCurrentAct().run(FHScenario.parser.parseString("<anoymous_command>", sb+"\r\n@return"));
 						return Command.SINGLE_SUCCESS;
 					})

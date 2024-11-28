@@ -28,9 +28,7 @@ public class ControlCommands {
 	public void jump(ScenarioCommandContext runner,@Param("s")String scenario,@Param("l")String label) {
 		runner.thread().jump(runner.context(),new ExecuteTarget(scenario,label));
 	}
-	public void call(ScenarioCommandContext runner,@Param("s")String scenario,@Param("l")String label) {
-		runner.thread().call(runner.context(),scenario, label);
-	}
+
 	public void queue(ScenarioCommandContext runner,@Param("s")String scenario,@Param("l")String label) {
 		runner.thread().queue(new ExecuteTarget(scenario,label));
 	}
