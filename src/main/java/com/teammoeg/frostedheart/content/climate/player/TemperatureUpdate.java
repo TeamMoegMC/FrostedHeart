@@ -51,7 +51,6 @@ import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 import top.theillusivec4.curios.api.type.ISlotType;
 
-@Mod.EventBusSubscriber
 public class TemperatureUpdate {
     public static final Double HEAT_EXCHANGE_CONSTANT = FHConfig.SERVER.heatExchangeConstant.get();
     public static final UUID envTempId = UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
@@ -70,7 +69,6 @@ public class TemperatureUpdate {
      *
      * @param event fired every tick on player
      */
-    @SubscribeEvent
     public static void regulateTemperature(PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayer) {
@@ -130,7 +128,6 @@ public class TemperatureUpdate {
      *
      * @param event fired every tick on player
      */
-    @SubscribeEvent
     public static void updateTemperature(PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.START && event.player instanceof ServerPlayer player) {
             // ignore creative and spectator players

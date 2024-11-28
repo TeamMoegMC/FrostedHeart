@@ -23,6 +23,7 @@ package com.teammoeg.frostedheart.events;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.content.climate.ForecastHandler;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
+import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
 import com.teammoeg.frostedheart.content.research.insight.InsightHandler;
 import com.teammoeg.frostedheart.content.utility.transportation.MovementModificationHandler;
 
@@ -38,6 +39,8 @@ public class PlayerEvents {
         ForecastHandler.sendForecastMessages(event);
         MovementModificationHandler.movementModifier(event);
         InsightHandler.onPlayerTick(event);
+        TemperatureUpdate.updateTemperature(event);
+        TemperatureUpdate.regulateTemperature(event);
     }
 
 }

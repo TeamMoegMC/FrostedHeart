@@ -164,7 +164,6 @@ public class FHMain {
     private void setup(final FMLCommonSetupEvent event) {
         FHNetwork.register();
         FHCapabilities.setup();
-        SurroundingTemperatureSimulator.init();
         // modify default value
         GameRules.GAME_RULE_TYPES.put(GameRules.RULE_SPAWN_RADIUS, IntegerValue.create(0));
 
@@ -182,7 +181,7 @@ public class FHMain {
         new FHTeamDataManager(event.getServer());
         FHResearch.load();
         FHTeamDataManager.INSTANCE.load();
-
+        SurroundingTemperatureSimulator.init();
     }
 
     public void serverStop(final ServerStoppedEvent event) {
