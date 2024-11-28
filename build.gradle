@@ -360,6 +360,14 @@ task deobfJar(type: Jar) {
     archiveClassifier.set('deobf')
 }
 
+tasks.sourcesJar {
+    duplicatesStrategy = DuplicatesStrategy.WARN
+}
+
+tasks.deobfJar {
+    duplicatesStrategy = DuplicatesStrategy.WARN
+}
+
 artifacts {
     archives sourcesJar
     archives deobfJar

@@ -185,6 +185,8 @@ public class FHRegistrateTags {
     private static void genItemTags(RegistrateTagsProvider<Item> provIn) {
         FHTagGen.FHTagsProvider<Item> prov = new FHTagGen.FHTagsProvider<>(provIn, Item::builtInRegistryHolder);
 
+        prov.tag(FHTags.Items.RAW_FOOD.tag).add(Items.CHICKEN, Items.BEEF, Items.PORKCHOP, Items.MUTTON, Items.RABBIT, Items.COD, Items.SALMON);
+
         prov.tag(FHTags.Items.IGNITION_MATERIAL.tag)
                 .add(Items.FLINT);
 
