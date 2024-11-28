@@ -25,7 +25,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import com.teammoeg.frostedheart.FHDamageTypes;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
@@ -203,7 +202,7 @@ public abstract class CowEntityMixin extends Animal implements IMilkable, IFeedS
                 	 this.hurt(FHDamageTypes.createSource(level(), FHDamageTypes.BLIZZARD, this), 1);
                 }
             } else {
-                float temp = ChunkHeatData.getTemperature(this.getCommandSenderWorld(), this.blockPosition());
+                float temp = WorldTemperature.get(this.getCommandSenderWorld(), this.blockPosition());
                 if (temp < WorldTemperature.ANIMAL_ALIVE_TEMPERATURE
                         || temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
                     if (hxteTimer < 100) {

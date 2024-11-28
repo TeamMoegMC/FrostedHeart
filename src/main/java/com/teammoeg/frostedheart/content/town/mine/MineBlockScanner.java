@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.town.mine;
 import java.util.HashSet;
 import java.util.function.Consumer;
 
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.ConfinedSpaceScanner;
 
@@ -71,7 +71,7 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
     public boolean scan(){
         this.scan(512, (pos)->{
             this.volume++;
-            this.temperature += ChunkHeatData.getTemperature(world, pos);
+            this.temperature += WorldTemperature.get(world, pos);
         }, (pos)->{
             if(isStoneOrOre(world, pos)){
                 validStone++;

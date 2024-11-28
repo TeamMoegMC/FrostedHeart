@@ -38,7 +38,6 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.capability.nbt.FHNBTCapability;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
@@ -107,7 +106,7 @@ public class FHUtils {
     }
 
     public static boolean canGrassSurvive(LevelReader world, BlockPos pos) {
-        float t = ChunkHeatData.getTemperature(world, pos);
+        float t = WorldTemperature.get(world, pos);
         return t >= WorldTemperature.HEMP_GROW_TEMPERATURE && t <= WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX;
     }
 
@@ -115,7 +114,7 @@ public class FHUtils {
         if (!(w instanceof LevelAccessor)) {
             return false;
         }
-        float temp = ChunkHeatData.getTemperature((LevelAccessor) w, p);
+        float temp = WorldTemperature.get((LevelAccessor) w, p);
         if (temp <= 300)
             return false;
         return !(temp > 300 + WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX);
@@ -155,7 +154,7 @@ public class FHUtils {
     	return null;
     }
     public static boolean canTreeGrow(LevelAccessor worldIn, BlockPos p, RandomSource rand) {
-        float temp = ChunkHeatData.getTemperature(worldIn, p);
+        float temp = WorldTemperature.get(worldIn, p);
         if (temp <= -6 || WorldClimate.isBlizzard(worldIn))
             return false;
         if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)

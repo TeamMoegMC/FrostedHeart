@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.utility;
 import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.world.item.TooltipFlag;
@@ -41,8 +41,6 @@ import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
-
-import net.minecraft.world.item.Item.Properties;
 
 public class SoilThermometer extends FHBaseItem {
     public SoilThermometer(Properties properties) {
@@ -75,7 +73,7 @@ public class SoilThermometer extends FHBaseItem {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, playerIn, Fluid.ANY);
             if (brtr.getType() != Type.MISS) {
 
-            	playerIn.sendSystemMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(ChunkHeatData.getTemperature(playerIn.level(), brtr.getBlockPos()))));
+            	playerIn.sendSystemMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(WorldTemperature.get(playerIn.level(), brtr.getBlockPos()))));
             }
 
         }
@@ -89,7 +87,7 @@ public class SoilThermometer extends FHBaseItem {
         if (entityplayer instanceof ServerPlayer) {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, Fluid.ANY);
             if (brtr.getType() == Type.MISS) return stack;
-            entityplayer.sendSystemMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(ChunkHeatData.getTemperature(entityplayer.level(), brtr.getBlockPos()))));
+            entityplayer.sendSystemMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(WorldTemperature.get(entityplayer.level(), brtr.getBlockPos()))));
         }
         return stack;
     }

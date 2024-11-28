@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.climate;
 
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.noise.INoise1D;
 
 import net.minecraft.core.BlockPos;
@@ -78,7 +77,7 @@ public final class VanillaClimate {
      * MUST NOT be used by world generation, it should use {@link VanillaClimate#calculateTemperature(BlockPos, float)} instead, with the average temperature obtained through the correct chunk data source
      */
     public static float getTemperature(LevelAccessor world, BlockPos pos) {
-        return calculateTemperature(pos.getZ(), pos.getY(), ChunkHeatData.getTemperature(world, pos));
+        return calculateTemperature(pos.getZ(), pos.getY(), WorldTemperature.get(world, pos));
     }
 
     /**

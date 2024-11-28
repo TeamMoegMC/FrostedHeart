@@ -23,12 +23,11 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -50,7 +49,7 @@ public class BeeHiveMixin extends BlockEntity {
 
 	@Inject(at = @At("HEAD"), method = "tickOccupants", cancellable = true)
 	private static void tickOccupants(Level level, BlockPos worldPosition, BlockState pState, List pData, @Nullable BlockPos pSavedFlowerPos,CallbackInfo cbi) {
-        if (!level.isClientSide && ChunkHeatData.getTemperature(level, worldPosition) < 14)
+        if (!level.isClientSide && WorldTemperature.get(level, worldPosition) < 14)
             cbi.cancel();
     }
 }

@@ -26,7 +26,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.FHDamageTypes;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
@@ -70,7 +69,7 @@ public class CoolableAnimals extends Mob {
                     this.hurt(FHDamageTypes.createSource(level(), FHDamageTypes.BLIZZARD, this), 1);
                 }
             } else {
-                float temp = ChunkHeatData.getTemperature(this.getCommandSenderWorld(), this.blockPosition());
+                float temp = WorldTemperature.get(this.getCommandSenderWorld(), this.blockPosition());
                 if (temp < WorldTemperature.ANIMAL_ALIVE_TEMPERATURE
                         || temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
                     if (hxteTimer < 100) {

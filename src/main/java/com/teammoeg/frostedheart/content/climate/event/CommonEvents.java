@@ -127,7 +127,7 @@ public class CommonEvents {
         Block growBlock = event.getState().getBlock();
         BlockPos belowPos=event.getPos().below();
         Block belowGrowBlock=event.getLevel().getBlockState(belowPos).getBlock();
-        float temp = ChunkHeatData.getTemperature(event.getLevel(), event.getPos());
+        float temp = WorldTemperature.get(event.getLevel(), event.getPos());
         boolean bz = WorldClimate.isBlizzard(event.getLevel());
         if (bz) {
         	BlockPos cur=event.getPos();
@@ -270,7 +270,7 @@ public class CommonEvents {
         if (event.getEntity() instanceof ServerPlayer) {
             ServerPlayer player = (ServerPlayer) event.getEntity();
             Block growBlock = event.getPlacedBlock().getBlock();
-            float temp = ChunkHeatData.getTemperature(event.getLevel(), event.getPos());
+            float temp = WorldTemperature.get(event.getLevel(), event.getPos());
             if (growBlock instanceof BonemealableBlock) {
                 if (growBlock instanceof SaplingBlock) {
                     if (temp < -5) {
@@ -358,7 +358,7 @@ public class CommonEvents {
         if (event.getEntity() instanceof ServerPlayer) {
             ServerPlayer player = (ServerPlayer) event.getEntity();
             Block growBlock = event.getBlock().getBlock();
-            float temp = ChunkHeatData.getTemperature(event.getLevel(), event.getPos());
+            float temp = WorldTemperature.get(event.getLevel(), event.getPos());
             if (growBlock instanceof FHCropBlock) {
                 int growTemp = ((FHCropBlock) growBlock).getGrowTemperature() + WorldTemperature.BONEMEAL_TEMPERATURE;
                 if (temp < growTemp) {
@@ -423,7 +423,7 @@ public class CommonEvents {
             BlockPos pos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(blockX, 0, blockZ, 15));
             BlockState state = level.getBlockState(pos);
             Biome biome = level.getBiome(pos).value();
-            if (level.isRaining() && biome.coldEnoughToSnow(pos) && ChunkHeatData.getTemperature(level, pos) <= SNOW_TEMPERATURE && level.getBrightness(LightLayer.BLOCK, pos) < 10 && state.getBlock() == Blocks.SNOW) {
+            if (level.isRaining() && biome.coldEnoughToSnow(pos) && WorldTemperature.get(level, pos) <= SNOW_TEMPERATURE && level.getBrightness(LightLayer.BLOCK, pos) < 10 && state.getBlock() == Blocks.SNOW) {
                 int layers = state.getValue(BlockStateProperties.LAYERS);
                 if (layers < 5) {
                     level.setBlockAndUpdate(pos, state.setValue(BlockStateProperties.LAYERS, 1 + layers));

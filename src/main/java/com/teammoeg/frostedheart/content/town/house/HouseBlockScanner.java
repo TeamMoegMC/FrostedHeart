@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.town.house;
 
 import com.teammoeg.frostedheart.FHTags;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
@@ -124,7 +124,7 @@ public class HouseBlockScanner extends BlockScanner {
         //第二次扫描，判断房间是否密闭
         ConfinedSpaceScanner airScanner = new ConfinedSpaceScanner(world, startPos.above());
         airScanner.scan(MAX_SCANNING_TIMES_VOLUME, (pos) -> {//对每一个空气方块执行的操作：统计温度、统计体积、统计温度
-                    this.temperature += ChunkHeatData.getTemperature(world, pos);
+                    this.temperature += WorldTemperature.get(world, pos);
                     this.volume++;
                     this.occupiedArea.add(new ColumnPos(pos.getX(), pos.getZ()));
                     //FHMain.LOGGER.debug("scanning air pos:" + pos);

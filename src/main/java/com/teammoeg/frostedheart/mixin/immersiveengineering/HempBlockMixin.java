@@ -25,7 +25,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 
 import blusunrize.immersiveengineering.common.blocks.plant.HempBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -39,7 +38,7 @@ public class HempBlockMixin {
 
     @Inject(at=@At("HEAD"),method="randomTick",cancellable=true)
     private void fh$randomTick(BlockState state, ServerLevel world, BlockPos pos, RandomSource rand,CallbackInfo cbi) {
-        float temp = ChunkHeatData.getTemperature(world, pos);
+        float temp = WorldTemperature.get(world, pos);
         if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE) {
             cbi.cancel();
         }
