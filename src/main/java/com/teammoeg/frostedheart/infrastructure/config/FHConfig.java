@@ -274,11 +274,18 @@ public class FHConfig {
             tempSkyLightThreshold = builder.comment("Below which -dayNightTempModifier will be used.")
                     .defineInRange("tempSkyLightThreshold", 5, 0, 15);
             snowTempModifier = builder.comment("The temperature modifier when player is in snow weather.")
-                    .defineInRange("snowTempModifier", -3, -100, 100);
+                    .defineInRange("snowTempModifier", -5, -100, 100);
             blizzardTempModifier = builder.comment("The temperature modifier when player is in blizzard weather.")
-                    .defineInRange("blizzardTempModifier", -6, -100, 100);
-            dayNightTempAmplitude = builder.comment("This is the amplitude of day night temperature cycle. The actual temperature modifier is sin(time) * dayNightTempModifier.")
-                    .defineInRange("dayNightTempAmplitude", 5, -100, 100);
+                    .defineInRange("blizzardTempModifier", -10, -100, 100);
+            dayNightTempAmplitude = builder.comment("This is the amplitude of day night temperature cycle.")
+                    .comment("The actual temperature modifier is sin(time) * dayNightTempAmplitude.")
+                    .comment("Note that when sky light is below tempSkyLightThreshold, the modifier will be dayNightTempAmplitude * -1.")
+                    .comment("Note that when snow or blizzard occurs, amplitude is reduced to 1/5 as sunlight is blocked.")
+                    .comment("Ref: https://en.wikipedia.org/wiki/Diurnal_air_temperature_variation")
+                    .comment("Such amplitude could be up to 50 Celsius in extreme.")
+                    .comment("More humid, more stable. More dry, more extreme.")
+                    .comment("We set default to be 10, as arctic is quite stable.")
+                    .defineInRange("dayNightTempAmplitude", 10, -100, 100);
             onFireTempModifier = builder.comment("The temperature modifier when player is on fire.")
                     .defineInRange("onFireTempModifier", 150, 0, 1000);
             heatExchangeConstant = builder.comment("The heat exchange constant between player and environment.")

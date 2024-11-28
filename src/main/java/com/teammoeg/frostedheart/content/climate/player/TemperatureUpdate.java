@@ -178,20 +178,21 @@ public class TemperatureUpdate {
                     int skyLight = world.getChunkSource().getLightEngine().getLayerListener(LightLayer.SKY).getLightValue(pos);
                     float dayTime = world.getDayTime() % 24000L;
                     float relativeTime = Mth.sin((float) Math.toRadians(dayTime / ((float) 200 / 3))); // range from -1 to 1
-
                     if (skyLight < TEMP_SKY_LIGHT_THRESHOLD) {
-                        envtemp -= DAY_NIGHT_TEMP_AMPLITUDE;
-                    } else {
-                        envtemp += relativeTime * DAY_NIGHT_TEMP_AMPLITUDE;
+                        relativeTime = -1;
                     }
 
                     // Weather temperature modifier
+                    float weatherMultiplier = 1.0F;
                     if (world.isRaining() && FHUtils.isRainingAt(player.blockPosition(), world)) {
                         envtemp -= SNOW_TEMP_MODIFIER;
                         if (world.isThundering()) {
                             envtemp -= BLIZZARD_TEMP_MODIFIER;
                         }
+                        weatherMultiplier = 0.2F;
                     }
+
+                    envtemp += relativeTime * DAY_NIGHT_TEMP_AMPLITUDE * weatherMultiplier;
 
                     // Burning temperature
                     if (player.isOnFire())
