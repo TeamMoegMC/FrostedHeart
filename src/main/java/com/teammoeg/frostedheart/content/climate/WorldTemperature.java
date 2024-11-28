@@ -31,6 +31,40 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 
+/**
+ * World Temperature API on the server side.
+ *
+ * <p>This class provides a set of methods to get realistic temperature in the world.
+ *
+ * Methods here are cheap, so you can call them tick wise frequently.
+ *
+ * <p>There are 4 types of temperature:
+ *
+ * <p>1. Dimension temperature: The temperature of the world defined by datapack. This is fixed on registry.
+ *
+ * <p>2. Biome temperature: The temperature of the biome defined by datapack. This is fixed on registry.
+ *
+ * <p>3. Climate temperature: The temperature of the climate. This is dynamic, see {@link WorldClimate}.
+ *
+ * <p>4. Heat adjusts: The temperature of the heat source or sink. This is dynamic, see {@link ChunkHeatData}.
+ *
+ * <p>You can access these temperature by calling the methods in this class.
+ *
+ * <p>
+ *     Methods:
+ *     <ul>
+ *         <li>{@link #dimension(LevelReader)}: Get Dimension temperature.</li>
+ *         <li>{@link #biome(LevelReader, BlockPos)}: Get Biome temperature.</li>
+ *         <li>{@link #climate(LevelReader)}: Get Climate temperature.</li>
+ *         <li>{@link #base(LevelReader, BlockPos)}: Get World temperature without heat adjusts.</li>
+ *         <li>{@link #heat(LevelReader, BlockPos)}: Get Heat adjusts temperature.</li>
+ *         <li>{@link #get(LevelReader, BlockPos)}: Get World temperature with heat adjusts. USE THIS!</li>
+ *         <li>{@link #isBlizzard(LevelReader)}: Check if it is blizzard.</li>
+ *         <li>{@link #wind(LevelReader)}: Get wind speed.</li>
+ *         <li>{@link #clear()}: Clear cache.</li>
+ *     </ul>
+ * </p>
+ */
 public class WorldTemperature {
 
     /**
@@ -181,6 +215,18 @@ public class WorldTemperature {
     }
 
     /**
+     * Get heat adjust temperature.
+     *
+     * Called to get temperature when a world context is available.
+     * on server, will either query capability falling back to cache, or query
+     * provider to generate the data.
+     * This method directly get temperature at any positions.
+     */
+    public static float heat(LevelReader world, BlockPos pos) {
+        return ChunkHeatData.get(world, new ChunkPos(pos)).map(t -> t.getAdditionTemperatureAtBlock(world, pos)).orElse(0f);
+    }
+
+    /**
      * This is the most common method to get temperature.
      *
      * Result = Dimension + Biome + Climate + HeatAdjusts.
@@ -207,5 +253,4 @@ public class WorldTemperature {
         }
         return 0;
     }
-
 }
