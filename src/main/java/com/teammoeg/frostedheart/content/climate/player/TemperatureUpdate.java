@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
 
+import net.minecraft.client.renderer.EffectInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.server.level.ServerPlayer;
@@ -198,23 +199,33 @@ public class TemperatureUpdate {
                 };
                 float[] ratios = {0.1f, 0.4f, 0.05f, 0.4f, 0.05f};
                 float insulation = 1;
-                for(int i=0;i<5;++i) {
-                    PlayerTemperatureData.BodyPart part = parts[i];
-                    float ratio = ratios[i];
-                    float thermalConductivity = data.getThermalConductivityByPart(part);
-                    insulation -= ratio*thermalConductivity;
-                    float temperature = data.getTemperatureByPart(part);
-                    float dt = (temperature - envtemp)*thermalConductivity;
-                    temperature -= 0.001f*6*dt; // 10 dt -> temperature change 0.06 per tick
-                    if(temperature<0.0) {
-                        temperature += 0.09f;
+                // If the player has the insulation effect, insulation is set to 1, so no heat exchange with the environment
+                if (!player.hasEffect(FHMobEffects.INSULATION.get())) {
+                    for (int i = 0; i < 5; ++i) {
+                        PlayerTemperatureData.BodyPart part = parts[i];
+                        float ratio = ratios[i];
+                        float thermalConductivity = data.getThermalConductivityByPart(part);
+                        insulation -= ratio * thermalConductivity;
+                        float temperature = data.getTemperatureByPart(part);
+                        float dt = (temperature - envtemp) * thermalConductivity;
+                        temperature -= 0.001f * 6 * dt; // 10 dt -> temperature change 0.06 per tick
+                        if (temperature < 0.0) {
+                            temperature += 0.09f;
+                        } else {
+                            temperature += 0.06f;
+                        }
+                        data.setTemperatureByPart(part, temperature);
                     }
-                    else {
-                        temperature += 0.06f;
+                } else {
+                    MobEffectInstance insulationEffect = player.getEffect(FHMobEffects.INSULATION.get());
+                    if (insulationEffect != null) {
+                        int amp = insulationEffect.getAmplifier();
+                        // clamp to 0 to 100
+                        amp = Mth.clamp(amp, 0, 100);
+                        insulation = 1 - amp / 100.0f;
                     }
-                    data.setTemperatureByPart(part, temperature);
-
                 }
+
                 float efftemp=current-(1-insulation)*(current-envtemp); //Effective temperature, 37-based
                 
                 
