@@ -60,6 +60,7 @@ import net.minecraft.world.level.biome.Biome;
  *         <li>{@link #base(LevelReader, BlockPos)}: Get World temperature without heat adjusts.</li>
  *         <li>{@link #heat(LevelReader, BlockPos)}: Get Heat adjusts temperature.</li>
  *         <li>{@link #block(LevelReader, BlockPos)}: Get World temperature with heat adjusts. USE THIS!</li>
+ *         <li>{@link #air(LevelReader, BlockPos)}: Get Air temperature with heat adjusts.</li>
  *         <li>{@link #isBlizzard(LevelReader)}: Check if it is blizzard.</li>
  *         <li>{@link #wind(LevelReader)}: Get wind speed.</li>
  *         <li>{@link #clear()}: Clear cache.</li>
