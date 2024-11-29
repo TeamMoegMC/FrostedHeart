@@ -701,10 +701,12 @@ public class FHBlocks {
             .build()
             .register();
 
-    public static final BlockEntry<Block> ROTTEN_WOOD = REGISTRATE.block("rotten_wood_block", Block::new)
+    public static final BlockEntry<RotatedPillarBlock> ROTTEN_WOOD = REGISTRATE.block("rotten_wood_block", RotatedPillarBlock::new)
             .initialProperties(() -> MUD)
             .properties(p -> p.mapColor(MapColor.COLOR_BROWN))
-            .blockstate(FHBlockStateGen.simpleCubeAll(new ResourceLocation("block/oak_log")))
+            .blockstate((c, p) -> {
+                p.axisBlock(c.get(), FHMain.rl("block/sediment/rotten_wood_block_side"), FHMain.rl("block/sediment/rotten_wood_block_top"));
+            })
             .loot((lt, b) -> lt.add(b,
                     lt.createSingleItemTableWithSilkTouch(b, FHItems.ROTTEN_WOOD.get(), ConstantValue.exactly(4))))
             .tag(FHTags.Blocks.SOIL.tag)

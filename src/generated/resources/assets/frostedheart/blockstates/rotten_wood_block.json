@@ -1,7 +1,16 @@
 {
   "variants": {
-    "": {
+    "axis=x": {
+      "model": "frostedheart:block/rotten_wood_block_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
       "model": "frostedheart:block/rotten_wood_block"
+    },
+    "axis=z": {
+      "model": "frostedheart:block/rotten_wood_block_horizontal",
+      "x": 90
     }
   }
 }

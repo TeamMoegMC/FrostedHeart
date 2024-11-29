@@ -235,6 +235,11 @@ public class FHItems {
                     forgeItemTag("crushed_raw_materials"),
                     forgeItemTag("crushed_raw_materials/bauxite"),
                     AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
+    public static ItemEntry<Item> CRUSHED_RAW_KAOLIN =
+            taggedIngredient("crushed_raw_kaolin",
+                    forgeItemTag("crushed_raw_materials"),
+                    forgeItemTag("crushed_raw_materials/kaolin"),
+                    AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
     public static ItemEntry<Item> KAOLIN_DUST =
             taggedIngredient("kaolin_dust",
                     forgeItemTag("dusts"),
