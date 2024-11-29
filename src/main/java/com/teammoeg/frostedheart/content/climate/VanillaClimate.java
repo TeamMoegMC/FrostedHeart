@@ -77,7 +77,7 @@ public final class VanillaClimate {
      * MUST NOT be used by world generation, it should use {@link VanillaClimate#calculateTemperature(BlockPos, float)} instead, with the average temperature obtained through the correct chunk data source
      */
     public static float getTemperature(LevelAccessor world, BlockPos pos) {
-        return calculateTemperature(pos.getZ(), pos.getY(), WorldTemperature.get(world, pos));
+        return calculateTemperature(pos.getZ(), pos.getY(), WorldTemperature.block(world, pos));
     }
 
     /**

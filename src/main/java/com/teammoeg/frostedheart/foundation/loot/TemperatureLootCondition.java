@@ -90,7 +90,7 @@ public class TemperatureLootCondition implements LootItemCondition {
             Vec3 v = t.getParamOrNull(LootContextParams.ORIGIN);
             BlockPos bp = new BlockPos((int)v.x,(int)v.y,(int)v.z);
             Level w = t.getLevel();
-            return comparator.test(WorldTemperature.get(w, bp), temp);
+            return comparator.test(WorldTemperature.block(w, bp), temp);
         }
         return false;
     }

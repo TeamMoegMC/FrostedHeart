@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate.event;
 
+import blusunrize.immersiveengineering.common.blocks.plant.HempBlock;
 import blusunrize.immersiveengineering.common.register.IEBlocks;
 import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.*;
@@ -32,6 +33,7 @@ import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature.TemperatureCheckResult;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
@@ -64,6 +66,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.DigDurabilityEnchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
@@ -127,67 +130,25 @@ public class CommonEvents {
         Block growBlock = event.getState().getBlock();
         BlockPos belowPos=event.getPos().below();
         Block belowGrowBlock=event.getLevel().getBlockState(belowPos).getBlock();
-        float temp = WorldTemperature.get(event.getLevel(), event.getPos());
-        boolean bz = WorldClimate.isBlizzard(event.getLevel());
-        if (bz) {
-        	BlockPos cur=event.getPos();
-
-        	/*if(!(growBlock instanceof IGrowable)) {
-	        	if(belowGrowBlock instanceof IGrowable)
-	        		cur=belowPos;
-	        	else {
-	        		event.setResult(Event.Result.DENY);
-	        		return;
-	        	}
-
-        	}*/
-            if (FHUtils.isBlizzardHarming(event.getLevel(), event.getPos())) {
-            	FluidState curstate=event.getLevel().getFluidState(cur);
-            	if(curstate.isEmpty())
-            		event.getLevel().setBlock(cur, Blocks.AIR.defaultBlockState(), 2);
-            	else
-            		event.getLevel().setBlock(cur, curstate.createLegacyBlock(), 2);
-            } else if (event.getLevel().getRandom().nextInt(3) == 0) {
-            	//FluidState curstate=event.getLevel().getFluidState(cur);
-
-                event.getLevel().setBlock(cur,growBlock.defaultBlockState(), 2);
-            }
-            event.setResult(Event.Result.DENY);
-        } else if (growBlock instanceof FHCropBlock) {
-        } else if (growBlock==(IEBlocks.Misc.HEMP_PLANT.get())) {
-            if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE) {
-                if (event.getLevel().getRandom().nextInt(3) == 0) {
-                    event.getLevel().setBlock(event.getPos(), growBlock.defaultBlockState(), 2);
-                }
-                event.setResult(Event.Result.DENY);
-            } else if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
-                if (event.getLevel().getRandom().nextInt(3) == 0) {
-                    BlockState cbs = event.getLevel().getBlockState(event.getPos());
-                    if (cbs.is(growBlock))
-                        event.getLevel().setBlock(event.getPos(), Blocks.AIR.defaultBlockState(), 2);
-                }
-                event.setResult(Event.Result.DENY);
-            }
-        } else if(growBlock instanceof BonemealableBlock){
-            if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE) {
-                // Set back to default state, might not be necessary
-                if (event.getLevel().getRandom().nextInt(3) == 0) {
+        
+        if (growBlock instanceof FHCropBlock||growBlock instanceof FHBerryBushBlock||growBlock instanceof HempBlock) {
+        }  else if(growBlock instanceof BonemealableBlock){
+        	TemperatureCheckResult temp = WorldTemperature.isSuitableForCrop(event.getLevel(),event.getPos(), WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE, WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE-10);
+            if (temp.isRipedOff()) {
+            	if(event.getLevel() instanceof Level l)
+            		FHUtils.setToAirPreserveFluid(l, event.getPos());
+            }else if(temp.isDeadly()) {
+            	if (event.getLevel().getRandom().nextInt(3) == 0) {
                     BlockState cbs = event.getLevel().getBlockState(event.getPos());
                     if (cbs.is(growBlock) && cbs != growBlock.defaultBlockState())
                         event.getLevel().setBlock(event.getPos(), growBlock.defaultBlockState(), 2);
                 }
-                event.setResult(Event.Result.DENY);
-            } else if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
-                if (event.getLevel().getRandom().nextInt(3) == 0) {
-                    BlockState cbs = event.getLevel().getBlockState(event.getPos());
-                    if (cbs.is(growBlock))
-                        event.getLevel().setBlock(event.getPos(), Blocks.AIR.defaultBlockState(), 2);
-                }
-                event.setResult(Event.Result.DENY);
             }
-
+            if(!temp.isSuitable())
+            	event.setResult(Event.Result.DENY);
         }else {
-        	if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE)
+        	TemperatureCheckResult temp = WorldTemperature.isSuitableForCrop(event.getLevel(),event.getPos(), WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE, WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE-10);
+        	if (!temp.isSuitable())
         		event.setResult(Event.Result.DENY);
         }
     }
@@ -270,7 +231,7 @@ public class CommonEvents {
         if (event.getEntity() instanceof ServerPlayer) {
             ServerPlayer player = (ServerPlayer) event.getEntity();
             Block growBlock = event.getPlacedBlock().getBlock();
-            float temp = WorldTemperature.get(event.getLevel(), event.getPos());
+            float temp = WorldTemperature.block(event.getLevel(), event.getPos());
             if (growBlock instanceof BonemealableBlock) {
                 if (growBlock instanceof SaplingBlock) {
                     if (temp < -5) {
@@ -358,7 +319,7 @@ public class CommonEvents {
         if (event.getEntity() instanceof ServerPlayer) {
             ServerPlayer player = (ServerPlayer) event.getEntity();
             Block growBlock = event.getBlock().getBlock();
-            float temp = WorldTemperature.get(event.getLevel(), event.getPos());
+            float temp = WorldTemperature.block(event.getLevel(), event.getPos());
             if (growBlock instanceof FHCropBlock) {
                 int growTemp = ((FHCropBlock) growBlock).getGrowTemperature() + WorldTemperature.BONEMEAL_TEMPERATURE;
                 if (temp < growTemp) {
@@ -423,7 +384,7 @@ public class CommonEvents {
             BlockPos pos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, level.getBlockRandomPos(blockX, 0, blockZ, 15));
             BlockState state = level.getBlockState(pos);
             Biome biome = level.getBiome(pos).value();
-            if (level.isRaining() && biome.coldEnoughToSnow(pos) && WorldTemperature.get(level, pos) <= SNOW_TEMPERATURE && level.getBrightness(LightLayer.BLOCK, pos) < 10 && state.getBlock() == Blocks.SNOW) {
+            if (level.isRaining() && biome.coldEnoughToSnow(pos) && WorldTemperature.block(level, pos) <= SNOW_TEMPERATURE && level.getBrightness(LightLayer.BLOCK, pos) < 10 && state.getBlock() == Blocks.SNOW) {
                 int layers = state.getValue(BlockStateProperties.LAYERS);
                 if (layers < 5) {
                     level.setBlockAndUpdate(pos, state.setValue(BlockStateProperties.LAYERS, 1 + layers));

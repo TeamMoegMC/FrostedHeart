@@ -62,7 +62,7 @@ public class HuntingBaseBlockScanner extends HouseBlockScanner {
         //第二次扫描，判断房间是否密闭
         ConfinedSpaceScanner airScanner = new ConfinedSpaceScanner(world, startPos.above());
         airScanner.scan(MAX_SCANNING_TIMES_VOLUME, (pos) -> {//对每一个空气方块执行的操作：统计温度、统计体积、统计温度
-                    this.temperature += WorldTemperature.get(world, pos);
+                    this.temperature += WorldTemperature.block(world, pos);
                     this.volume++;
                     this.occupiedArea.add(new ColumnPos(pos.getX(), pos.getZ()));
                     //FHMain.LOGGER.debug("scanning air pos:" + pos);

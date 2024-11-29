@@ -69,7 +69,7 @@ public class CoolableAnimals extends Mob {
                     this.hurt(FHDamageTypes.createSource(level(), FHDamageTypes.BLIZZARD, this), 1);
                 }
             } else {
-                float temp = WorldTemperature.get(this.getCommandSenderWorld(), this.blockPosition());
+                float temp = WorldTemperature.block(this.getCommandSenderWorld(), this.blockPosition());
                 if (temp < WorldTemperature.ANIMAL_ALIVE_TEMPERATURE
                         || temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
                     if (hxteTimer < 100) {

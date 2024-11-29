@@ -24,6 +24,7 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
+import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
@@ -58,7 +59,7 @@ import net.minecraft.world.level.biome.Biome;
  *         <li>{@link #climate(LevelReader)}: Get Climate temperature.</li>
  *         <li>{@link #base(LevelReader, BlockPos)}: Get World temperature without heat adjusts.</li>
  *         <li>{@link #heat(LevelReader, BlockPos)}: Get Heat adjusts temperature.</li>
- *         <li>{@link #get(LevelReader, BlockPos)}: Get World temperature with heat adjusts. USE THIS!</li>
+ *         <li>{@link #block(LevelReader, BlockPos)}: Get World temperature with heat adjusts. USE THIS!</li>
  *         <li>{@link #isBlizzard(LevelReader)}: Check if it is blizzard.</li>
  *         <li>{@link #wind(LevelReader)}: Get wind speed.</li>
  *         <li>{@link #clear()}: Clear cache.</li>
@@ -66,7 +67,32 @@ import net.minecraft.world.level.biome.Biome;
  * </p>
  */
 public class WorldTemperature {
-
+    public enum TemperatureCheckResult{
+    	INVALID,
+    	BLIZZARD_HARM,
+    	TOO_COLD,
+    	COLD,
+    	TOO_HOT,
+    	SUITABLE;
+    	public boolean isValid() {
+    		return this!=INVALID;
+    	}
+    	public boolean isSuitable() {
+    		return this==SUITABLE;
+    	}
+    	public boolean isCold() {
+    		return this==TOO_COLD||this==COLD;
+    	}
+    	public boolean isHot() {
+    		return this==TOO_HOT;
+    	}
+     	public boolean isDeadly() {
+    		return this==TOO_COLD||this==TOO_HOT;
+    	}
+     	public boolean isRipedOff() {
+    		return this==TOO_COLD||this==BLIZZARD_HARM;
+    	}
+    }
     /**
      * Baseline temperature for temperate period.
      */
@@ -155,41 +181,42 @@ public class WorldTemperature {
     public static final float FEEDED_ANIMAL_ALIVE_TEMPERATURE = -30f;
 
     public static final float VANILLA_PLANT_GROW_TEMPERATURE_MAX = 50;
-
-    public static Map<Object, Float> worldbuffer = new HashMap<>();
-    public static Map<Biome, Float> biomebuffer = new HashMap<>();
+    public static final float CLIMATE_BLOCK_AFFECTION=0.5f;
+    
+    public static Map<Object, Float> worldCache = new HashMap<>();
+    public static Map<Biome, Float> biomeCache = new HashMap<>();
 
     public static void clear() {
-        worldbuffer.clear();
-        biomebuffer.clear();
+        worldCache.clear();
+        biomeCache.clear();
     }
 
     /**
-     * Get World temperature without climate.
+     * Get World temperature adjustment, this value is consistent.
      * @param w
      * @return
      */
     public static float dimension(LevelReader w) {
         float wt = 0;
         if (w instanceof Level level) {
-            wt = worldbuffer.computeIfAbsent(level, (k) -> FHDataManager.getWorldTemp(level));
+            wt = worldCache.computeIfAbsent(level, (k) -> FHDataManager.getWorldTemp(level));
         }
         return wt;
     }
 
     /**
-     * Get Biome temperature without climate.
+     * Get Biome temperature adjustment, this value is consistent.
      * @param w
      * @param pos
      * @return
      */
     public static float biome(LevelReader w, BlockPos pos) {
         Biome b = w.getBiome(pos).get();
-        return biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
+        return biomeCache.computeIfAbsent(b, FHDataManager::getBiomeTemp);
     }
 
     /**
-     * Get World temperature with climate.
+     * Get Climate temperature adjustment, this value is consistent.
      * @param w
      * @return
      */
@@ -201,11 +228,11 @@ public class WorldTemperature {
     }
 
     /**
-     * Get World temperature for a specific world.
+     * Get World temperature for a specific world, in absolute value.
      *
      * Result = Dimension + Biome + Climate.
      *
-     * Climate temperature is dynamic in game.
+     * This value is dynamic in game.
      *
      * @param w the world<br>
      * @return world temperature<br>
@@ -215,19 +242,33 @@ public class WorldTemperature {
     }
 
     /**
-     * Get heat adjust temperature.
+     * Get heat adjust (from heating device) temperature adjustment.
      *
      * Called to get temperature when a world context is available.
      * on server, will either query capability falling back to cache, or query
      * provider to generate the data.
-     * This method directly get temperature at any positions.
+     * This value is dynamic in game.
      */
     public static float heat(LevelReader world, BlockPos pos) {
         return ChunkHeatData.get(world, new ChunkPos(pos)).map(t -> t.getAdditionTemperatureAtBlock(world, pos)).orElse(0f);
     }
 
     /**
-     * This is the most common method to get temperature.
+     * This is the most common method to get temperature for blocks like crops and machines.
+     *
+     * Result = Dimension + Biome + Climate + HeatAdjusts.
+     * A factor would be applied to climate value to lower the climate affect on block, simulates lower heat transfer rate between block and air
+     * Called to get temperature when a world context is available.
+     * on server, will either query capability falling back to cache, or query
+     * provider to generate the data.
+     * This method directly get temperature at any positions.
+     * This value is dynamic in game.
+     */
+    public static float block(LevelReader world, BlockPos pos) {
+        return dimension(world) + biome(world, pos) + climate(world) * CLIMATE_BLOCK_AFFECTION + heat(world,pos);
+    }
+    /**
+     * This is the most common method to get air temperature which may affect player.
      *
      * Result = Dimension + Biome + Climate + HeatAdjusts.
      *
@@ -235,22 +276,61 @@ public class WorldTemperature {
      * on server, will either query capability falling back to cache, or query
      * provider to generate the data.
      * This method directly get temperature at any positions.
+     * This value is dynamic in game.
      */
-    public static float get(LevelReader world, BlockPos pos) {
-        return ChunkHeatData.get(world, new ChunkPos(pos)).map(t -> t.getTemperatureAtBlock(world, pos)).orElseGet(() -> base(world, pos));
+    public static float air(LevelReader world, BlockPos pos) {
+        return dimension(world) + biome(world, pos) + climate(world) + heat(world,pos);
     }
-
+    
+    /**
+     * Convenience method for checking is Blizzard in specific world
+     * 
+     * */
     public static boolean isBlizzard(LevelReader w) {
-        if (w instanceof Level) {
-            return WorldClimate.isBlizzard((Level) w);
+        if (w instanceof Level l) {
+            return WorldClimate.isBlizzard(l);
         }
         return false;
     }
-
+    /**
+     * Convenience method for checking wind strength in specific world.
+     * 
+     * */
     public static int wind(LevelReader w) {
-        if (w instanceof Level) {
-            return WorldClimate.getWind((Level) w);
+        if (w instanceof Level l) {
+            return WorldClimate.getWind(l);
         }
         return 0;
+    }
+    /**
+     * Convenience method for checking crop growable in specific location.
+     * */
+    public static TemperatureCheckResult isSuitableForCrop(LevelReader w,BlockPos pos,float growTemperature) {
+    	return isSuitableForCrop(w,pos,growTemperature,growTemperature);
+    }
+    /**
+     * Convenience method for checking crop growable in specific location.
+     * death temperature must be lower than growTemperature
+     * */
+    public static TemperatureCheckResult isSuitableForCrop(LevelReader w,BlockPos pos,float growTemperature,float deathTemperature) {
+        if (w instanceof Level l) {
+        	WorldClimate climate =WorldClimate.get(l);
+        	float temp=0;
+        	if(climate!=null) {
+	        	if(climate.getHourData().getType() == ClimateType.BLIZZARD)//always too cold in blizzard
+	        		return FHUtils.isBlizzardVulnerable(l,pos)?TemperatureCheckResult.BLIZZARD_HARM:TemperatureCheckResult.TOO_COLD;
+	        	temp=climate.getTemp();
+        	}
+        	float block=(dimension(w) + biome(w, pos) + temp * CLIMATE_BLOCK_AFFECTION + heat(w,pos));
+        	if(block<deathTemperature)
+        		return TemperatureCheckResult.TOO_COLD;
+        	if(block<growTemperature)
+        		return TemperatureCheckResult.COLD;
+        	if(block>VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
+        		return TemperatureCheckResult.TOO_HOT;
+        	}
+        	return TemperatureCheckResult.SUITABLE;
+        }
+        return TemperatureCheckResult.INVALID;
     }
 }

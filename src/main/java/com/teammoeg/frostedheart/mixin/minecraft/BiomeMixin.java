@@ -47,7 +47,7 @@ public abstract class BiomeMixin {
 	      if (this.warmEnoughToRain(pWater)) {
 	          return false;
 	       } else {
-	          if (pWater.getY() >= pLevel.getMinBuildHeight() && pWater.getY() < pLevel.getMaxBuildHeight() && pLevel.getBrightness(LightLayer.BLOCK, pWater) < 10 &&  WorldTemperature.get(pLevel, pWater) < 0) {
+	          if (pWater.getY() >= pLevel.getMinBuildHeight() && pWater.getY() < pLevel.getMaxBuildHeight() && pLevel.getBrightness(LightLayer.BLOCK, pWater) < 10 &&  WorldTemperature.block(pLevel, pWater) < 0) {
 	             BlockState blockstate = pLevel.getBlockState(pWater);
 	             FluidState fluidstate = pLevel.getFluidState(pWater);
 	             if (fluidstate.getType() == Fluids.WATER && blockstate.getBlock() instanceof LiquidBlock) {

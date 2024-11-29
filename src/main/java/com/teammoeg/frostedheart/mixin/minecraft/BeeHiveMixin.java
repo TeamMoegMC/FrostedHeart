@@ -49,7 +49,7 @@ public class BeeHiveMixin extends BlockEntity {
 
 	@Inject(at = @At("HEAD"), method = "tickOccupants", cancellable = true)
 	private static void tickOccupants(Level level, BlockPos worldPosition, BlockState pState, List pData, @Nullable BlockPos pSavedFlowerPos,CallbackInfo cbi) {
-        if (!level.isClientSide && WorldTemperature.get(level, worldPosition) < 14)
+        if (!level.isClientSide && WorldTemperature.block(level, worldPosition) < 14)
             cbi.cancel();
     }
 }

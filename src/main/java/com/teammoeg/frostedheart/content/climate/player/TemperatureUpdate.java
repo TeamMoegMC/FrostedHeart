@@ -163,7 +163,7 @@ public class TemperatureUpdate {
                     // World and chunk temperature: Climate, time, heat adjusts
                     Level world = player.level();
                     BlockPos pos = new BlockPos((int) player.getX(), (int) player.getEyeY(), (int) player.getZ());
-                    float envtemp = WorldTemperature.get(world, pos) - 37F; // 37-based
+                    float envtemp = WorldTemperature.air(world, pos) - 37F; // 37-based
 
                     // Surrounding block temperature
                     Pair<Float, Float> btp = new SurroundingTemperatureSimulator(player).getBlockTemperatureAndWind(player.getX(), player.getEyeY() - 0.7f, player.getZ());

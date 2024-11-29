@@ -55,7 +55,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
                 return false;
             }
             if(NetherVines.isValidGrowthState(world.getBlockState(pos1))){
-                temperature += WorldTemperature.get(world, pos1);
+                temperature += WorldTemperature.block(world, pos1);
                 counter_for_temperature++;
                 return false;
             }

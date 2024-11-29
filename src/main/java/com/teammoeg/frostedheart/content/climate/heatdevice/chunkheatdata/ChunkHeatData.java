@@ -403,7 +403,7 @@ public class ChunkHeatData {
      * @param world world in
      * @param pos   position
      */
-    public float getTemperatureAtBlock(LevelReader world, BlockPos pos) {
+    /*public float getTemperatureAtBlock(LevelReader world, BlockPos pos) {
         if (adjusters.isEmpty()) return WorldTemperature.base(world, pos);
         float ret = 0, tmp;
         for (IHeatArea adj : adjusters.values()) {
@@ -414,7 +414,7 @@ public class ChunkHeatData {
             }
         }
         return WorldTemperature.base(world, pos) + ret;
-    }
+    }*/
 
     private void reset() {
         adjusters.clear();

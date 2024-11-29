@@ -62,6 +62,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
@@ -73,6 +74,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap.Types;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraft.nbt.Tag;
@@ -106,7 +108,7 @@ public class FHUtils {
     }
 
     public static boolean canGrassSurvive(LevelReader world, BlockPos pos) {
-        float t = WorldTemperature.get(world, pos);
+        float t = WorldTemperature.block(world, pos);
         return t >= WorldTemperature.HEMP_GROW_TEMPERATURE && t <= WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX;
     }
 
@@ -114,7 +116,7 @@ public class FHUtils {
         if (!(w instanceof LevelAccessor)) {
             return false;
         }
-        float temp = WorldTemperature.get((LevelAccessor) w, p);
+        float temp = WorldTemperature.block((LevelAccessor) w, p);
         if (temp <= 300)
             return false;
         return !(temp > 300 + WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX);
@@ -154,7 +156,7 @@ public class FHUtils {
     	return null;
     }
     public static boolean canTreeGrow(LevelAccessor worldIn, BlockPos p, RandomSource rand) {
-        float temp = WorldTemperature.get(worldIn, p);
+        float temp = WorldTemperature.block(worldIn, p);
         if (temp <= -6 || WorldClimate.isBlizzard(worldIn))
             return false;
         if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
@@ -282,9 +284,11 @@ public class FHUtils {
     }
 
     public static boolean isBlizzardHarming(LevelAccessor iWorld, BlockPos p) {
-        return WorldClimate.isBlizzard(iWorld) && iWorld.getHeight(Types.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) <= p.getY();
+        return WorldClimate.isBlizzard(iWorld) && isBlizzardVulnerable(iWorld,p);
     }
-
+    public static boolean isBlizzardVulnerable(LevelAccessor iWorld, BlockPos p) {
+        return iWorld.getHeight(Types.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) <= p.getY();
+    }
     public static boolean isRainingAt(BlockPos pos, Level world) {
 
         if (!world.isRaining()) {
@@ -436,5 +440,12 @@ public class FHUtils {
             }
         }
         return false;
+    }
+    public static void setToAirPreserveFluid(Level l,BlockPos pos) {
+    	FluidState curstate=l.getFluidState(pos);
+    	if(curstate.isEmpty())
+    		l.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+    	else
+    		l.setBlock(pos, curstate.createLegacyBlock(), 2);
     }
 }

@@ -71,7 +71,7 @@ public class MineBlockScanner extends ConfinedSpaceScanner {
     public boolean scan(){
         this.scan(512, (pos)->{
             this.volume++;
-            this.temperature += WorldTemperature.get(world, pos);
+            this.temperature += WorldTemperature.block(world, pos);
         }, (pos)->{
             if(isStoneOrOre(world, pos)){
                 validStone++;

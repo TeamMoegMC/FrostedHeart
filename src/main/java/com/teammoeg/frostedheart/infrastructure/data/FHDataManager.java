@@ -226,7 +226,7 @@ public class FHDataManager implements ResourceManagerReloadListener {
 		WorldTempData data = FHDataManager.get(World).get(w.dimension().location());
 		if (data != null)
 			return data.getTemp();
-		return 0F;
+		return -10F;
 	}
 
 	public static <T> void load(DataType<T> type, List<IdDataPair<?>> entries) {

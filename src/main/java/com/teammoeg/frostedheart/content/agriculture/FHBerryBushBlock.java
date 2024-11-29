@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.content.agriculture;
 
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature.TemperatureCheckResult;
+import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
@@ -53,8 +55,7 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
 
     @Override
     public boolean isBonemealSuccess(Level worldIn, RandomSource rand, BlockPos pos, BlockState state) {
-        float temp = WorldTemperature.get(worldIn, pos);
-        return temp >= growTemperature;
+        return WorldTemperature.isSuitableForCrop(worldIn,pos,getGrowTemperature()+ WorldTemperature.BONEMEAL_TEMPERATURE).isSuitable();
     }
 
 
@@ -81,20 +82,19 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
     @Override
     public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
         int i = state.getValue(AGE);
-        float temp = WorldTemperature.get(worldIn, pos);
-        boolean bz = WorldClimate.isBlizzard(worldIn);
-        if (temp < this.growTemperature || bz) {
-            if ((bz || temp < this.growTemperature - 5) && worldIn.getRandom().nextInt(3) == 0) {
-                worldIn.setBlock(pos, this.defaultBlockState(), 2);
-            }
-        } else if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
+        TemperatureCheckResult res = WorldTemperature.isSuitableForCrop(worldIn,pos,getGrowTemperature(),getGrowTemperature()-5);
+        if(!res.isValid())return;
+        if(res.isRipedOff()) {
+        	FHUtils.setToAirPreserveFluid(worldIn, pos);
+        }else if (res.isDeadly()) {
             if (worldIn.getRandom().nextInt(3) == 0) {
                 worldIn.setBlock(pos, this.defaultBlockState(), 2);
             }
-        } else if (i < 3 && worldIn.getRawBrightness(pos.above(), 0) >= 9 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt(50) < this.growSpeed)) {
-            worldIn.setBlock(pos, state.setValue(AGE, i + 1), 2);
-            net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state);
-        }
+        } else if(res.isSuitable())
+        	if (i < 3 && worldIn.getRawBrightness(pos.above(), 0) >= 9 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt(50) < this.growSpeed)) {
+	            worldIn.setBlock(pos, state.setValue(AGE, i + 1), 2);
+	            net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state);
+        	}
     }
 
 }
