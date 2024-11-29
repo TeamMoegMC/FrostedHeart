@@ -49,8 +49,8 @@ import com.teammoeg.frostedheart.content.scenario.parser.providers.FTBQProvider;
 import com.teammoeg.frostedheart.content.scenario.parser.providers.ScenarioProvider;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
+import com.teammoeg.frostedheart.content.scenario.runner.trigger.IVarTrigger;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
-import com.teammoeg.frostedheart.content.scenario.runner.target.IVarTrigger;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;

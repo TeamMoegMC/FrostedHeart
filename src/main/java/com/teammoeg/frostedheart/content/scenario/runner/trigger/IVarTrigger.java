@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.scenario.runner.target;
+package com.teammoeg.frostedheart.content.scenario.runner.trigger;
 
 public interface IVarTrigger {
 	void trigger();

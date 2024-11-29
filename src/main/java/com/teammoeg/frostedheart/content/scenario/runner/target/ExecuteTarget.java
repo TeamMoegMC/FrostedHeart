@@ -35,7 +35,7 @@ public record ExecuteTarget(@Nullable String file,@Nullable String label) implem
 			Codec.STRING.optionalFieldOf("label").forGetter(o->Optional.ofNullable(o.label()))
 			).apply(t, ExecuteTarget::new));
 	public ExecuteTarget(Optional<String> file,Optional<String> label) {
-		this(file.orElse(null),label.orElse(null))
+		this(file.orElse(null),label.orElse(null));
 		
 	}
 	@Override

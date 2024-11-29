@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.scenario.runner.target;
+package com.teammoeg.frostedheart.content.scenario.runner.trigger;
 
 import com.teammoeg.frostedheart.content.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;

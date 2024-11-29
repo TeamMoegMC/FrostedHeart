@@ -10,9 +10,9 @@ import com.teammoeg.frostedheart.content.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
-import com.teammoeg.frostedheart.content.scenario.runner.target.OrTrigger;
-import com.teammoeg.frostedheart.content.scenario.runner.target.VariantTrigger;
-import com.teammoeg.frostedheart.content.scenario.runner.target.trigger.MovementTrigger;
+import com.teammoeg.frostedheart.content.scenario.runner.trigger.MovementTrigger;
+import com.teammoeg.frostedheart.content.scenario.runner.trigger.OrTrigger;
+import com.teammoeg.frostedheart.content.scenario.runner.trigger.VariantTrigger;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 

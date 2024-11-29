@@ -36,7 +36,6 @@ import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElem
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.PreparedScenarioTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ScenarioTarget;
-import com.teammoeg.frostedheart.content.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.util.evaluator.Evaluator;
 
 import net.minecraft.nbt.CompoundTag;

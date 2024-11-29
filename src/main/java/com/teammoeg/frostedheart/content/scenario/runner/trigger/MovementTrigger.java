@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.scenario.runner.target.trigger;
+package com.teammoeg.frostedheart.content.scenario.runner.trigger;
 
 import com.teammoeg.frostedheart.content.scenario.runner.target.SingleExecuteTargetTrigger;
 
