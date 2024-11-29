@@ -1,10 +1,12 @@
 package com.teammoeg.frostedheart.content.scenario.runner;
 
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Map;
 
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElement;
+import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.PreparedScenarioTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ScenarioTarget;
 
@@ -48,7 +50,15 @@ public interface ScenarioThread {
 	 * @param t the task
 	 */
 	void queue(ScenarioTarget t);
-	
+	/**
+	 * Jump.
+	 *
+	 * @param scenario the scenario
+	 * @param label the label
+	 */
+	default void jump(ScenarioContext ctx,String scenario,String label) {
+		jump(ctx,new ExecuteTarget(scenario,label));
+	}
 	/**
 	 * go to the task and start running, interrupts any and all current execution but not breaking triggers.
 	 *
@@ -77,12 +87,10 @@ public interface ScenarioThread {
 	 *
 	 * @return the call stack
 	 */
-	Collection<? extends ExecuteStackElement> getCallStack();
+	LinkedList<ScenarioTarget> getCallStack();
 	public double eval(ScenarioContext ctx,String exp) ;
 
 	void callCommand(ScenarioCommandContext scenarioCommandContext, String command, Map<String, String> params);
-
-	void newParagraph(int pn);
 
 
 	void notifyClientResponse(ScenarioContext ctx, boolean isSkip, int status);
@@ -103,20 +111,6 @@ public interface ScenarioThread {
 	 */
 	void addTrigger(IScenarioTrigger trig, ScenarioTarget targ);
 
-	/**
-	 * Call.
-	 *
-	 * @param scenario the scenario
-	 * @param label the label
-	 */
-	void call(ScenarioContext ctx, String scenario, String label);
-
-	/**
-	 * Call.
-	 *
-	 * @param target the target
-	 */
-	void call(ScenarioContext ctx, ScenarioTarget target);
 
 	/**
 	 * Gets the current position.
@@ -128,8 +122,8 @@ public interface ScenarioThread {
 	/**
 	 * Adds the call stack.
 	 */
-	void addCallStack();
-
+	void addCallStack(ExecuteTarget replacement);
+	void setCurrentLabel(String target) ;
 	/**
 	 * Try pop call stack.
 	 */

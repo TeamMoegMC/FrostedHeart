@@ -61,6 +61,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class FHDataManager implements ResourceManagerReloadListener {
@@ -178,6 +179,7 @@ public class FHDataManager implements ResourceManagerReloadListener {
 		return FHDataManager.<ArmorTempData>get(Armor).get(new ResourceLocation(is));
 	}
 
+	@Nonnull
 	public static Float getBiomeTemp(Biome b) {
 		if (b == null) return 0f;
 		BiomeTempData data = FHDataManager.get(Biome).get(RegistryUtils.getRegistryName(b));
@@ -219,11 +221,12 @@ public class FHDataManager implements ResourceManagerReloadListener {
         return foodData.get(RegistryUtils.getRegistryName(stack.getItem()));
 	}
 
+	@Nonnull
 	public static Float getWorldTemp(Level w) {
 		WorldTempData data = FHDataManager.get(World).get(w.dimension().location());
 		if (data != null)
 			return data.getTemp();
-		return null;
+		return 0F;
 	}
 
 	public static <T> void load(DataType<T> type, List<IdDataPair<?>> entries) {

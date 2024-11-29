@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.agriculture;
 
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.CropBlock;
@@ -40,7 +39,7 @@ public class FHCropBlock extends CropBlock {
 
     @Override
     public boolean isBonemealSuccess(Level worldIn, RandomSource rand, BlockPos pos, BlockState state) {
-        float temp = ChunkHeatData.getTemperature(worldIn, pos);
+        float temp = WorldTemperature.get(worldIn, pos);
         return temp >= growTemperature;
     }
 
@@ -55,7 +54,7 @@ public class FHCropBlock extends CropBlock {
             return; // Forge: prevent loading unloaded chunks when checking neighbor's light
         if (worldIn.getRawBrightness(pos, 0) >= 9) {
             int i = this.getAge(state);
-            float temp = ChunkHeatData.getTemperature(worldIn, pos);
+            float temp = WorldTemperature.get(worldIn, pos);
             boolean bz = WorldClimate.isBlizzard(worldIn);
             if (temp < growTemperature || bz) {
                 if ((bz || temp < growTemperature - 10) && worldIn.getRandom().nextInt(3) == 0) {

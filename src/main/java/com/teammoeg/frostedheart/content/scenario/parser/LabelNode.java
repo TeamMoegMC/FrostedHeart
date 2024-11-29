@@ -54,5 +54,7 @@ public class LabelNode implements Node {
 
     @Override
     public void run(ScenarioCommandContext runner) {
+    	runner.context().getVaribles().takeSnapshot();
+    	runner.thread().setCurrentLabel(name);
     }
 }

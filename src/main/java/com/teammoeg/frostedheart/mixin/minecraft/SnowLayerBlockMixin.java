@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.mixin.minecraft;
 
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -42,7 +41,7 @@ public class SnowLayerBlockMixin {
     @Inject(method = "randomTick", at = @At("HEAD"), cancellable = true)
     private void randomTick(BlockState pState, ServerLevel pLevel, BlockPos pPos, RandomSource pRandom, CallbackInfo info) {
         if (pLevel.getBrightness(LightLayer.BLOCK, pPos) > 11 ||
-                ChunkHeatData.getTemperature(pLevel, pPos) >= WorldTemperature.SNOW_MELT_TEMPERATURE) {
+                WorldTemperature.get(pLevel, pPos) >= WorldTemperature.SNOW_MELT_TEMPERATURE) {
             int layers = pState.getValue(SnowLayerBlock.LAYERS);
             if (layers > 1) {
                 BlockState newState = pState.setValue(SnowLayerBlock.LAYERS, layers - 1);

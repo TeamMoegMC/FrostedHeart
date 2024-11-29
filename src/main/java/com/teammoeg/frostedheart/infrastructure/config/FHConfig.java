@@ -176,11 +176,7 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Double> flintIgnitionChance;
         public final ForgeConfigSpec.ConfigValue<Double> stickIgnitionChance;
         public final ForgeConfigSpec.ConfigValue<Double> consumeChanceWhenIgnited;
-        public final ForgeConfigSpec.ConfigValue<Integer> simulationRange;
-        public final ForgeConfigSpec.ConfigValue<Integer> simulationParticles;
-        public final ForgeConfigSpec.ConfigValue<Integer> simulationDivision;
-        public final ForgeConfigSpec.ConfigValue<Double> simulationParticleInitialSpeed;
-        public final ForgeConfigSpec.ConfigValue<Integer> simulationParticleLife;
+
 
         Common(ForgeConfigSpec.Builder builder) {
             builder.push("Weather Forecast");
@@ -212,20 +208,6 @@ public class FHConfig {
                     .defineInRange("consumeChanceWhenIgnited", 0.1, 0, 1);
             builder.pop();
 
-            // TODO: Check numerics range
-            builder.push("Surrounding Temperature Simulation").comment("The simulator is used to simulate the temperature of the surrounding environment. Not recommended to change.");
-            simulationRange = builder.comment("The range of the simulation.")
-                    .defineInRange("simulationRange", 8, 1, 8);
-            simulationParticles = builder.comment("The number of particles in the simulation.")
-                    .defineInRange("simulationParticles", 100, 4168, 4168);
-            simulationDivision = builder.comment("The number of divisions of unit square in the simulation.")
-                    .defineInRange("simulationDivision", 10, 1, 100);
-            simulationParticleInitialSpeed = builder.comment("The initial speed of the particles in the simulation.")
-                    .defineInRange("simulationParticleInitialSpeed", 0.4f, 0.01f, 1f);
-            simulationParticleLife = builder.comment("The life ticks of the particles in the simulation.")
-                    .defineInRange("simulationParticleLife", 20, 1, 100);
-            builder.pop();
-
             builder.push("Miscellaneous");
             blackmods = builder
                     .comment("BlackListed mods to kick player")
@@ -254,6 +236,27 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> nonWinterBiomes;
         public final ForgeConfigSpec.BooleanValue invertNonWinterBiomes;
         public final ForgeConfigSpec.BooleanValue enableSnowAccumulationDuringWorldgen;
+        public final ForgeConfigSpec.ConfigValue<Integer> simulationRange;
+        public final ForgeConfigSpec.ConfigValue<Integer> simulationDivision;
+        public final ForgeConfigSpec.ConfigValue<Double> simulationParticleInitialSpeed;
+        public final ForgeConfigSpec.ConfigValue<Integer> simulationParticleLife;
+        public final ForgeConfigSpec.ConfigValue<Integer> temperatureUpdateIntervalTicks;
+        public final ForgeConfigSpec.ConfigValue<Integer> wetEffectDuration;
+        public final ForgeConfigSpec.ConfigValue<Integer> wetClothesDurationMultiplier;
+        public final ForgeConfigSpec.ConfigValue<Integer> tempSkyLightThreshold;
+        public final ForgeConfigSpec.ConfigValue<Integer> snowTempModifier;
+        public final ForgeConfigSpec.ConfigValue<Integer> blizzardTempModifier;
+        public final ForgeConfigSpec.ConfigValue<Integer> dayNightTempAmplitude;
+        public final ForgeConfigSpec.ConfigValue<Integer> onFireTempModifier;
+        public final ForgeConfigSpec.ConfigValue<Double> heatExchangeConstant;
+        /*
+        public static final double HURTING_HEAT_UPDATE = 0.1;
+    public static final int MIN_BODY_TEMP_CHANGE = -10;
+    public static final int MAX_BODY_TEMP_CHANGE = 10;
+         */
+        public final ForgeConfigSpec.ConfigValue<Double> hurtingHeatUpdate;
+        public final ForgeConfigSpec.ConfigValue<Integer> minBodyTempChange;
+        public final ForgeConfigSpec.ConfigValue<Integer> maxBodyTempChange;
 
         Server(ForgeConfigSpec.Builder builder) {
             builder.push("Temperature");
@@ -261,6 +264,38 @@ public class FHConfig {
                     .defineEnum("temperatureDifficulty", FHTemperatureDifficulty.Normal);
             tempSpeed = builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
                     .defineInRange("temperatureChangeRate", 0.5, 0, 20);
+            temperatureUpdateIntervalTicks = builder.comment("The interval of temperature update in ticks.")
+                    .defineInRange("temperatureUpdateIntervalTicks", 20, 1, Integer.MAX_VALUE);
+            wetEffectDuration = builder.comment("The duration of the wet effect applied in water in ticks.")
+                    .defineInRange("wetEffectDuration", 100, 1, Integer.MAX_VALUE);
+            wetClothesDurationMultiplier = builder.comment("The multiplier of the wet effect duration when player is wearing clothes.")
+                    .comment("finalDuration = wetEffectDuration * wetClothesDurationMultiplier")
+                    .defineInRange("wetClothesDurationMultiplier", 4, 1, 1000);
+            tempSkyLightThreshold = builder.comment("Below which -dayNightTempModifier will be used.")
+                    .defineInRange("tempSkyLightThreshold", 5, 0, 15);
+            snowTempModifier = builder.comment("The temperature modifier when player is in snow weather.")
+                    .defineInRange("snowTempModifier", -5, -100, 100);
+            blizzardTempModifier = builder.comment("The temperature modifier when player is in blizzard weather.")
+                    .defineInRange("blizzardTempModifier", -10, -100, 100);
+            dayNightTempAmplitude = builder.comment("This is the amplitude of day night temperature cycle.")
+                    .comment("The actual temperature modifier is sin(time) * dayNightTempAmplitude.")
+                    .comment("Note that when sky light is below tempSkyLightThreshold, the modifier will be dayNightTempAmplitude * -1.")
+                    .comment("Note that when snow or blizzard occurs, amplitude is reduced to 1/5 as sunlight is blocked.")
+                    .comment("Ref: https://en.wikipedia.org/wiki/Diurnal_air_temperature_variation")
+                    .comment("Such amplitude could be up to 50 Celsius in extreme.")
+                    .comment("More humid, more stable. More dry, more extreme.")
+                    .comment("We set default to be 10, as arctic is quite stable.")
+                    .defineInRange("dayNightTempAmplitude", 10, -100, 100);
+            onFireTempModifier = builder.comment("The temperature modifier when player is on fire.")
+                    .defineInRange("onFireTempModifier", 150, 0, 1000);
+            heatExchangeConstant = builder.comment("The heat exchange constant between player and environment.")
+                    .defineInRange("heatExchangeConstant", 0.0012, 0, 1);
+            hurtingHeatUpdate = builder.comment("The heat update when player is hurt.")
+                    .defineInRange("hurtingHeatUpdate", 0.1, 0, 1);
+            minBodyTempChange = builder.comment("The minimum body temperature change relative to 37.")
+                    .defineInRange("minBodyTempChange", -10, -100, 100);
+            maxBodyTempChange = builder.comment("The maximum body temperature change relative to 37.")
+                    .defineInRange("maxBodyTempChange", 10, -100, 100);
             builder.pop();
 
             builder.push("Water");
@@ -298,6 +333,19 @@ public class FHConfig {
                     .define("invertNonWinterBiomes", false);
             enableSnowAccumulationDuringWorldgen = builder.comment("Enables snow accumulation during world generation.")
                     .define("enableSnowAccumulationDuringWorldgen", false);
+            builder.pop();
+
+            builder.push("Surrounding Temperature Simulation").comment("The simulator is used to simulate the temperature of the surrounding environment. Not recommended to change.");
+            simulationRange = builder.comment("The range of the simulation.")
+                    .defineInRange("simulationRange", 8, 1, 8);
+            simulationDivision = builder.comment("The number of divisions of unit square in the simulation.")
+                    .comment("Number of particles is cubic of this value.")
+                    .comment("If your server lags, you can reduce this value.")
+                    .defineInRange("simulationDivision", 10, 1, 100);
+            simulationParticleInitialSpeed = builder.comment("The initial speed of the particles in the simulation.")
+                    .defineInRange("simulationParticleInitialSpeed", 0.4f, 0.01f, 1f);
+            simulationParticleLife = builder.comment("The life ticks of the particles in the simulation.")
+                    .defineInRange("simulationParticleLife", 20, 1, 100);
             builder.pop();
 
             builder.push("Miscellaneous");

@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
@@ -55,7 +55,7 @@ public class MineBaseBlockScanner extends FloorBlockScanner {
                 return false;
             }
             if(NetherVines.isValidGrowthState(world.getBlockState(pos1))){
-                temperature += ChunkHeatData.getTemperature(world, pos1);
+                temperature += WorldTemperature.get(world, pos1);
                 counter_for_temperature++;
                 return false;
             }

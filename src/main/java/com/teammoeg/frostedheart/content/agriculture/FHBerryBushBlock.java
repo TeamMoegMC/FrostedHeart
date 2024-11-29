@@ -19,25 +19,19 @@
 
 package com.teammoeg.frostedheart.content.agriculture;
 
-import java.util.Random;
-
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public class FHBerryBushBlock extends SweetBerryBushBlock {
 
@@ -59,7 +53,7 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
 
     @Override
     public boolean isBonemealSuccess(Level worldIn, RandomSource rand, BlockPos pos, BlockState state) {
-        float temp = ChunkHeatData.getTemperature(worldIn, pos);
+        float temp = WorldTemperature.get(worldIn, pos);
         return temp >= growTemperature;
     }
 
@@ -87,7 +81,7 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
     @Override
     public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
         int i = state.getValue(AGE);
-        float temp = ChunkHeatData.getTemperature(worldIn, pos);
+        float temp = WorldTemperature.get(worldIn, pos);
         boolean bz = WorldClimate.isBlizzard(worldIn);
         if (temp < this.growTemperature || bz) {
             if ((bz || temp < this.growTemperature - 5) && worldIn.getRandom().nextInt(3) == 0) {

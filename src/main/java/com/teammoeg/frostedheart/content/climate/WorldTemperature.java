@@ -22,13 +22,49 @@ package com.teammoeg.frostedheart.content.climate;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 
+/**
+ * World Temperature API on the server side.
+ *
+ * <p>This class provides a set of methods to get realistic temperature in the world.
+ *
+ * Methods here are cheap, so you can call them tick wise frequently.
+ *
+ * <p>There are 4 types of temperature:
+ *
+ * <p>1. Dimension temperature: The temperature of the world defined by datapack. This is fixed on registry.
+ *
+ * <p>2. Biome temperature: The temperature of the biome defined by datapack. This is fixed on registry.
+ *
+ * <p>3. Climate temperature: The temperature of the climate. This is dynamic, see {@link WorldClimate}.
+ *
+ * <p>4. Heat adjusts: The temperature of the heat source or sink. This is dynamic, see {@link ChunkHeatData}.
+ *
+ * <p>You can access these temperature by calling the methods in this class.
+ *
+ * <p>
+ *     Methods:
+ *     <ul>
+ *         <li>{@link #dimension(LevelReader)}: Get Dimension temperature.</li>
+ *         <li>{@link #biome(LevelReader, BlockPos)}: Get Biome temperature.</li>
+ *         <li>{@link #climate(LevelReader)}: Get Climate temperature.</li>
+ *         <li>{@link #base(LevelReader, BlockPos)}: Get World temperature without heat adjusts.</li>
+ *         <li>{@link #heat(LevelReader, BlockPos)}: Get Heat adjusts temperature.</li>
+ *         <li>{@link #get(LevelReader, BlockPos)}: Get World temperature with heat adjusts. USE THIS!</li>
+ *         <li>{@link #isBlizzard(LevelReader)}: Check if it is blizzard.</li>
+ *         <li>{@link #wind(LevelReader)}: Get wind speed.</li>
+ *         <li>{@link #clear()}: Clear cache.</li>
+ *     </ul>
+ * </p>
+ */
 public class WorldTemperature {
 
     /**
@@ -129,74 +165,92 @@ public class WorldTemperature {
     }
 
     /**
-     * Get World temperature for a specific world, affected by weather and so on
-     *
-     * @param w the world<br>
-     * @return world temperature<br>
+     * Get World temperature without climate.
+     * @param w
+     * @return
      */
-    public static float getBaseTemperature(LevelReader w, BlockPos pos) {
-        Biome b = w.getBiome(pos).get();
-        Float temp = null;
-        if (b != null)
-            temp = biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
+    public static float dimension(LevelReader w) {
         float wt = 0;
-        if (w instanceof Level) {
-            // I suppose it has memory leaking issue here, use weak reference instead (by @KilaBash)
-            wt = worldbuffer.computeIfAbsent(w, (k) -> {
-                Float fw = FHDataManager.getWorldTemp((Level) w);
-                if (fw == null) return -10F;
-                return fw;
-            });
+        if (w instanceof Level level) {
+            wt = worldbuffer.computeIfAbsent(level, (k) -> FHDataManager.getWorldTemp(level));
         }
-        if (temp != null)
-            return wt + temp;
         return wt;
     }
 
-    public static float getClimateTemperature(LevelReader w) {
+    /**
+     * Get Biome temperature without climate.
+     * @param w
+     * @param pos
+     * @return
+     */
+    public static float biome(LevelReader w, BlockPos pos) {
+        Biome b = w.getBiome(pos).get();
+        return biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
+    }
+
+    /**
+     * Get World temperature with climate.
+     * @param w
+     * @return
+     */
+    public static float climate(LevelReader w) {
         if (w instanceof Level) {
             return WorldClimate.getTemp((Level) w);
         }
         return 0;
     }
-    public static int getClimateWind(LevelReader w) {
-        if (w instanceof Level) {
-            return WorldClimate.getWind((Level) w);
-        }
-        return 0;
-    }
+
     /**
-     * Get World temperature for a specific world, affected by weather and so on
+     * Get World temperature for a specific world.
+     *
+     * Result = Dimension + Biome + Climate.
+     *
+     * Climate temperature is dynamic in game.
      *
      * @param w the world<br>
      * @return world temperature<br>
      */
-    public static float getTemperature(LevelReader w, BlockPos pos) {
-        Biome b = w.getBiome(pos).get();
-        Float temp = null;
-        if (b != null)
-            temp = biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
-        float wt = 0;
-        if (w instanceof Level) {
-            wt = worldbuffer.computeIfAbsent(w, (k) -> {
-                Float fw = FHDataManager.getWorldTemp((Level) w);
-                if (fw == null) return -10F;
-                return fw;
-            });
-
-            // Add dynamic temperature baseline
-            wt += WorldClimate.getTemp((Level) w) * 0.25f;
-        }
-
-        if (temp != null)
-            return wt + temp;
-        return wt;
+    public static float base(LevelReader w, BlockPos pos) {
+        return dimension(w) + biome(w, pos) + climate(w);
     }
 
-    public static boolean isWorldBlizzard(LevelReader w) {
+    /**
+     * Get heat adjust temperature.
+     *
+     * Called to get temperature when a world context is available.
+     * on server, will either query capability falling back to cache, or query
+     * provider to generate the data.
+     * This method directly get temperature at any positions.
+     */
+    public static float heat(LevelReader world, BlockPos pos) {
+        return ChunkHeatData.get(world, new ChunkPos(pos)).map(t -> t.getAdditionTemperatureAtBlock(world, pos)).orElse(0f);
+    }
+
+    /**
+     * This is the most common method to get temperature.
+     *
+     * Result = Dimension + Biome + Climate + HeatAdjusts.
+     *
+     * Called to get temperature when a world context is available.
+     * on server, will either query capability falling back to cache, or query
+     * provider to generate the data.
+     * This method directly get temperature at any positions.
+     */
+    public static float get(LevelReader world, BlockPos pos) {
+        return ChunkHeatData.get(world, new ChunkPos(pos)).map(t -> t.getTemperatureAtBlock(world, pos)).orElseGet(() -> base(world, pos));
+    }
+
+    public static boolean isBlizzard(LevelReader w) {
         if (w instanceof Level) {
             return WorldClimate.isBlizzard((Level) w);
         }
         return false;
+    }
+
+    public static int wind(LevelReader w) {
+        if (w instanceof Level) {
+            return WorldClimate.getWind((Level) w);
+        }
+        return 0;
     }
 }

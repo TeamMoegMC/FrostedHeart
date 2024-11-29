@@ -22,16 +22,26 @@ package com.teammoeg.frostedheart.content.scenario.parser.reader;
 import com.teammoeg.frostedheart.content.scenario.parser.ScenarioParseException;
 
 public class StringParseReader {
+	public static record ParserState(String name,int lineNo,int position){
+	    public ScenarioParseException generateException(Throwable nested) {
+	    	return new ScenarioParseException("At File: "+name+" Line:"+lineNo+":"+position+" "+nested.getMessage(),nested);
+	    }
+	    public ScenarioParseException generateException(String message) {
+	    	return new ScenarioParseException("At File: "+name+" Line:"+lineNo+":"+position+" "+message);
+	    }
+	}
     public final CodeLineSource strs;
     private String str;
     private int idx = 0;
     private int srecord = 0;
     private int lineNo=0;
+    private ParserState cache;
     public StringParseReader(CodeLineSource str) {
         super();
         this.strs = str;
     }
     public boolean nextLine(){
+    	cache=null;
     	str=null;
     	idx=0;
 		srecord=0;
@@ -54,6 +64,7 @@ public class StringParseReader {
     }
 
     public char eat() {
+    	cache=null;
         return str.charAt(idx++);
     }
 
@@ -71,11 +82,15 @@ public class StringParseReader {
     }
 
     public void skipWhitespace() {
+    	cache=null;
         while (has()&&Character.isWhitespace(read())) {
             idx++;
         }
     }
-    public ScenarioParseException generateException(Throwable nested) {
-    	return new ScenarioParseException("At File: "+strs.getName()+" Line:"+lineNo+":"+idx+" "+nested.getMessage(),nested);
+    public ParserState getCurrentState() {
+    	if(cache==null)
+    		cache=new ParserState(strs.getName(),lineNo,idx);
+    	return cache;
     }
+
 }

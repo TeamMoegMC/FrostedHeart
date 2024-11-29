@@ -208,10 +208,10 @@ public class ScenarioConductor implements NBTSerializable{
 			acts.put(quest, data);
 			actids.register(quest);
 		}
-		if(old.savedLocation!=null)
-			data.savedLocation=new ParagraphData(old.savedLocation);
+		if(old.currentLabel!=null)
+			data.currentLabel=old.currentLabel;
 		else
-			data.savedLocation=new ParagraphData(old.getScenario().name(),-1);
+			data.currentLabel=new ExecuteTarget(old.getScenario().name(),null);
 		currentAct=data;
 		copyExecuteInfo(currentAct,old);
 		old.stop();
@@ -237,13 +237,11 @@ public class ScenarioConductor implements NBTSerializable{
 			scene=getCurrentAct().getScenario().name();
 		ExecuteTarget target;
 		if(label!=null) {
-			data.label=label;
 			target=new ExecuteTarget(scene,label);
 		}else {
 			target=new ExecuteTarget(scene,null);
 		}
 		data.jump(getContext(), target);
-		data.savedLocation=new ParagraphData(scene,-1);
 	}
 
 	public void endAct() {

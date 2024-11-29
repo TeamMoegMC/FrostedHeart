@@ -25,7 +25,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -67,12 +66,12 @@ public class BaseScenarioRunner implements ScenarioThread{
 	protected int waiting;
 	
 	/** Call stack. */
-	protected LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
+	protected LinkedList<ScenarioTarget> callStack=new LinkedList<>();
 	
 	/** Prevent call run recursively. */
 	protected boolean isConducting;
 	
-	protected ParagraphData savedLocation;
+	protected ExecuteTarget currentLabel;
 
 	/**
 	 * Instantiates a new base scenario runner.
@@ -130,16 +129,11 @@ public class BaseScenarioRunner implements ScenarioThread{
         return nodeNum;
     }
 
-	/**
-	 * Jump.
-	 *
-	 * @param scenario the scenario
-	 * @param label the label
-	 */
-	public void jump(ScenarioContext ctx,String scenario,String label) {
-		jump(ctx,new ExecuteTarget(scenario,label));
-	}
+
+	@Override
 	public void jump(ScenarioContext ctx, ScenarioTarget t) {
+		if(t instanceof ExecuteTarget et)
+			this.currentLabel=et;
 		jump(t.prepare(ctx, getScenario()));
 	}
 
@@ -155,7 +149,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 	 *
 	 * @return the call stack
 	 */
-	public LinkedList<ExecuteStackElement> getCallStack() {
+	public LinkedList<ScenarioTarget> getCallStack() {
 		return callStack;
 	}
 
@@ -203,20 +197,13 @@ public class BaseScenarioRunner implements ScenarioThread{
 	 * Adds the call stack.
 	 */
 	@Override
-	public void addCallStack() {
-		getCallStack().add(getCurrentPosition(0));
+	public void addCallStack(ExecuteTarget replace) {
+		if(replace!=null)
+			getCallStack().add(replace);
+		else
+			getCallStack().add(getCurrentPosition(0));
 	}
 	
-	/**
-	 * Call.
-	 *
-	 * @param target the target
-	 */
-	@Override
-	public void call(ScenarioContext ctx,ScenarioTarget target) {
-		addCallStack();
-		jump(ctx,target);
-	}
 	
 	/**
 	 * Gets the current position.
@@ -408,21 +395,12 @@ public class BaseScenarioRunner implements ScenarioThread{
 				mp.putString(e.getKey(), e.getValue());
 			}
 			ctx.context().varData.getExtraData().put("mp", mp);
-			call(ctx.context(),ctx.context().macros.get(name));
+			addCallStack(null);
+			jump(ctx.context(),ctx.context().macros.get(name));
 		}else
 			FHScenario.callCommand(name, ctx, cparams);
 	}
 	
-	/**
-	 * Call.
-	 *
-	 * @param scenario the scenario
-	 * @param label the label
-	 */
-	@Override
-	public void call(ScenarioContext ctx,String scenario, String label) {
-		call(ctx,new ExecuteTarget(scenario,label));
-	}
     
     /**
      * Eval.
@@ -460,10 +438,6 @@ public class BaseScenarioRunner implements ScenarioThread{
 		this.status=status;
 	}
 	@Override
-	public void newParagraph(int pn) {
-		this.savedLocation=new ParagraphData(sp.name(),pn);
-    }
-	@Override
 	public void notifyClientResponse(ScenarioContext ctx,boolean isSkip,int status) {
 		
 		if(this.getStatus()==RunStatus.WAITCLIENT) {
@@ -477,8 +451,8 @@ public class BaseScenarioRunner implements ScenarioThread{
 		
     }
 	public void restoreLocation(ScenarioContext ctx) {
-		if(savedLocation!=null)
-			this.jump(ctx, savedLocation);
+		if(currentLabel!=null)
+			this.jump(ctx, currentLabel);
 	}
 
 
@@ -490,5 +464,11 @@ public class BaseScenarioRunner implements ScenarioThread{
 	@Override
 	public void waitClient() {
 		this.setStatus(RunStatus.WAITCLIENT);
+	}
+
+	@Override
+	public void setCurrentLabel(String target) {
+		if(this.sp!=null)
+			currentLabel=new ExecuteTarget(this.sp.name(),target);
 	}
 }

@@ -19,11 +19,10 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.LiquidBlock;
@@ -48,7 +47,7 @@ public abstract class BiomeMixin {
 	      if (this.warmEnoughToRain(pWater)) {
 	          return false;
 	       } else {
-	          if (pWater.getY() >= pLevel.getMinBuildHeight() && pWater.getY() < pLevel.getMaxBuildHeight() && pLevel.getBrightness(LightLayer.BLOCK, pWater) < 10 &&  ChunkHeatData.getTemperature(pLevel, pWater) < 0) {
+	          if (pWater.getY() >= pLevel.getMinBuildHeight() && pWater.getY() < pLevel.getMaxBuildHeight() && pLevel.getBrightness(LightLayer.BLOCK, pWater) < 10 &&  WorldTemperature.get(pLevel, pWater) < 0) {
 	             BlockState blockstate = pLevel.getBlockState(pWater);
 	             FluidState fluidstate = pLevel.getFluidState(pWater);
 	             if (fluidstate.getType() == Fluids.WATER && blockstate.getBlock() instanceof LiquidBlock) {

@@ -3,6 +3,8 @@ package com.teammoeg.frostedheart.content.scenario.runner;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElement;
@@ -25,6 +27,9 @@ public abstract class ScenarioContext {
 	}
 	public IScenarioVaribles getVaribles() {
 		return varData;
+	}
+	public Scenario loadScenarioIfNeeded(@Nullable String name,@Nullable Scenario current) {
+		return (name==null||(name!=null&&current!=null&&name.equals(current.name())))?current:loadScenario(name);
 	}
 	
 	/**

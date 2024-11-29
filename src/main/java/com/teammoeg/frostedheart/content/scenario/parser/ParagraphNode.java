@@ -49,8 +49,8 @@ public class ParagraphNode implements Node {
 
     @Override
     public void run(ScenarioCommandContext runner) {
-    	runner.context().getVaribles().takeSnapshot();
-    	runner.thread().newParagraph(nodeNum);
+    	//runner.context().getVaribles().takeSnapshot();
+    	//runner.thread().newParagraph(nodeNum);
     	if(runner.thread().scene().shouldWaitClient()&&!runner.thread().scene().isSlient()) {
     		runner.thread().setStatus(RunStatus.WAITCLIENT);
     		runner.thread().scene().markClearAfterClick();

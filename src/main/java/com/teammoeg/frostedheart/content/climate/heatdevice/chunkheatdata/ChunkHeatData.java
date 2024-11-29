@@ -227,16 +227,6 @@ public class ChunkHeatData {
     }
 
     /**
-     * Called to get temperature when a world context is available.
-     * on server, will either query capability falling back to cache, or query
-     * provider to generate the data.
-     * This method directly get temperature at any positions.
-     */
-    public static float getAdditionTemperature(LevelReader world, BlockPos pos) {
-        return get(world, new ChunkPos(pos)).map(t -> t.getAdditionTemperatureAtBlock(world, pos)).orElse(0f);
-    }
-
-    /**
      * Called to get temperature adjusts at location when a world context is available.
      * on server, will either query capability falling back to cache, or query
      * provider to generate the data.
@@ -260,16 +250,6 @@ public class ChunkHeatData {
      */
     public static LazyOptional<ChunkHeatData> getCapability(@Nullable ChunkAccess chunk) {
         return FHCapabilities.CHUNK_HEAT.getCapability(chunk);
-    }
-
-    /**
-     * Called to get temperature when a world context is available.
-     * on server, will either query capability falling back to cache, or query
-     * provider to generate the data.
-     * This method directly get temperature at any positions.
-     */
-    public static float getTemperature(LevelReader world, BlockPos pos) {
-        return get(world, new ChunkPos(pos)).map(t -> t.getTemperatureAtBlock(world, pos)).orElseGet(() -> WorldTemperature.getTemperature(world, pos));
     }
 
     public static String toDisplaySoil(float temp) {
@@ -391,7 +371,7 @@ public class ChunkHeatData {
      * @param world world in
      * @param pos   position
      */
-    float getAdditionTemperatureAtBlock(LevelReader world, BlockPos pos) {
+    public float getAdditionTemperatureAtBlock(LevelReader world, BlockPos pos) {
         if (adjusters.isEmpty()) return 0;
         float ret = 0, tmp;
         for (IHeatArea adj : adjusters.values()) {
@@ -423,8 +403,8 @@ public class ChunkHeatData {
      * @param world world in
      * @param pos   position
      */
-    float getTemperatureAtBlock(LevelReader world, BlockPos pos) {
-        if (adjusters.isEmpty()) return WorldTemperature.getTemperature(world, pos);
+    public float getTemperatureAtBlock(LevelReader world, BlockPos pos) {
+        if (adjusters.isEmpty()) return WorldTemperature.base(world, pos);
         float ret = 0, tmp;
         for (IHeatArea adj : adjusters.values()) {
             if (adj.isEffective(pos)) {
@@ -433,7 +413,7 @@ public class ChunkHeatData {
                     ret = tmp;
             }
         }
-        return WorldTemperature.getTemperature(world, pos) + ret;
+        return WorldTemperature.base(world, pos) + ret;
     }
 
     private void reset() {

@@ -86,14 +86,14 @@ public class SurroundingTemperatureSimulator {
         }
     }
 
-    public static final int range = FHConfig.COMMON.simulationRange.get();// through max range is 8, to avoid some rare issues, set it to 7 to keep count
-    private static final int n = FHConfig.COMMON.simulationParticles.get();//number of particles
-    private static final int rdiff = FHConfig.COMMON.simulationDivision.get();//division of the unit square, changing this value would have no effect but improve precision
-    private static final double v0 = FHConfig.COMMON.simulationParticleInitialSpeed.get();//initial particle speed
+    public static final int range = FHConfig.SERVER.simulationRange.get();// through max range is 8, to avoid some rare issues, set it to 7 to keep count
+    private static final int n; //number of particles
+    private static final int rdiff = FHConfig.SERVER.simulationDivision.get();//division of the unit square, changing this value would have no effect but improve precision
+    private static final double v0 = FHConfig.SERVER.simulationParticleInitialSpeed.get();//initial particle speed
     private static final VoxelShape EMPTY = Shapes.empty();
     private static final VoxelShape FULL = Shapes.block();
     private static Vec3[] speedVectors;// Vp, speed vector list, this list is constant and considered a distributed ball mesh.
-    private static final int num_rounds = FHConfig.COMMON.simulationParticleLife.get();//propagate time-to-live for each particles
+    private static final int num_rounds = FHConfig.SERVER.simulationParticleLife.get();//propagate time-to-live for each particles
     private static int[][] speedVectorByDirection = new int[6][];// index: ordinal value of outbounding facing
 
     static {// generate speed vector list
@@ -128,6 +128,7 @@ public class SurroundingTemperatureSimulator {
                         lis.get(Direction.NORTH).add(o);
                     o++;
                 }
+        n = o;
         speedVectors = v3fs.toArray(new Vec3[o]);
         for (Direction dr : Direction.values()) {
             speedVectorByDirection[dr.ordinal()] = lis.get(dr).stream().mapToInt(t -> t).toArray();
@@ -173,10 +174,11 @@ public class SurroundingTemperatureSimulator {
                 LevelChunk cnk = world.getChunk(x, z);
                 LevelChunkSection[] css = cnk.getSections();
                 maps[i / 2] = cnk.getOrCreateHeightmapUnprimed(Types.MOTION_BLOCKING_NO_LEAVES);
-                if (css.length > chunkOffsetD && chunkOffsetD >= 0)
-                    sections[i] = css[chunkOffsetD];
-                if (css.length > chunkOffsetD + 1 && chunkOffsetD + 1 >= 0)
-                    sections[i + 1] = css[chunkOffsetD + 1];
+                // all chunkOffsetD should +4 for adjusting 1.20 coords
+                if (css.length > chunkOffsetD+4 && chunkOffsetD+4 >= 0)
+                    sections[i] = css[chunkOffsetD+4];
+                if (css.length > chunkOffsetD+4+1 && chunkOffsetD+4+1 >= 0)
+                    sections[i + 1] = css[chunkOffsetD+4+1];
                 i += 2;
             }
         rnd = new Random(player.blockPosition().asLong() ^ (world.getGameTime() >> 6));
@@ -248,7 +250,7 @@ public class SurroundingTemperatureSimulator {
                 Vec3 curspeed = speedVectors[vid[i]];
                 Vec3 svec = Qpos[i];
                 Vec3 dvec = svec.add(curspeed);
-                BlockPos bpos = new BlockPos((int) dvec.x, (int) dvec.y, (int) dvec.z);
+                BlockPos bpos = new BlockPos(Mth.floor(dvec.x), Mth.floor(dvec.y), Mth.floor(dvec.z));
                 CachedBlockInfo info = getInfoCached(bpos);
 
                 VoxelShape shape = info.shape;

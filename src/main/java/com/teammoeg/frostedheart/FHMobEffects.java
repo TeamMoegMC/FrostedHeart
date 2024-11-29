@@ -54,6 +54,8 @@ public class FHMobEffects {
     });
     public static final RegistryObject<MobEffect> THIRST = register("thirst",() -> new BaseEffect(MobEffectCategory.BENEFICIAL, 0xE4D49F));
     public static final RegistryObject<MobEffect> WATER_RESTORING = register("water_restoring",() -> new BaseEffect(MobEffectCategory.BENEFICIAL, 0x379AD6));
+    // Insulation: Perform no heat exchange with the environment during body temperature update. Useful for admins and creative mode.
+    public static final RegistryObject<MobEffect> INSULATION = register("insulation",() -> new BaseEffect(MobEffectCategory.BENEFICIAL, 0x379AD6));
 
     public static <T extends MobEffect> RegistryObject<T> register(String name, Supplier<T> effect) {
     	return EFFECTS.register(name, effect);
