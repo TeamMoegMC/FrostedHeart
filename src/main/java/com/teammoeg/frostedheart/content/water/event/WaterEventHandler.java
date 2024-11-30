@@ -117,7 +117,7 @@ public class WaterEventHandler {
         Player player = event.player;
         Level level = player.level();
         if (!(player instanceof ServerPlayer)) return;
-        if(player.isCreative()) return;
+        if(player.isCreative() || player.isSpectator()) return;
         if (WaterLevelUtil.canPlayerAddWaterExhaustionLevel(player)) {
             if (tick % 2 == 0) {
                 player.getDeltaMovement();
