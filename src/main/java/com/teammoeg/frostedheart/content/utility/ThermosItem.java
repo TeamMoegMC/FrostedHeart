@@ -25,9 +25,11 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.simibubi.create.content.fluids.potion.PotionFluidHandler;
+import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.base.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.frostedheart.content.water.item.DurableDrinkContainerItem;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
@@ -78,7 +80,7 @@ import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.tags.ITag;
 
-public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood,ICreativeModeTabItem {
+public class ThermosItem extends DurableDrinkContainerItem implements ITempAdjustFood,ICreativeModeTabItem {
     final int unit;
     final boolean doAddItems;
     final String lang;
@@ -95,34 +97,6 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood,I
     public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         tooltip.add(TranslateUtils.translateTooltip("meme.thermos").withStyle(ChatFormatting.GRAY));
-        if (stack.getTagElement(FluidHandlerItemStack.FLUID_NBT_KEY) != null) {
-            FluidUtil.getFluidHandler(stack).ifPresent(f -> {
-                tooltip.add(((MutableComponent)f.getFluidInTank(0).getDisplayName()).append(String.format(": %d / %dmB", f.getFluidInTank(0).getAmount(), capacity)).withStyle(ChatFormatting.GRAY));
-                FluidStack fs = f.getFluidInTank(0);
-                Fluid ft = fs.getFluid();
-                if (ft instanceof com.simibubi.create.content.fluids.potion.PotionFluid)
-                    PotionFluidHandler.addPotionTooltip(fs, tooltip, 1);
-                else if (ft instanceof PotionFluid)
-                    ((PotionFluid) ft).addInformation(fs, tooltip::add);
-                tooltip.add(TranslateUtils.translate("tooltip.watersource.drink_unit").append(" : " + this.getUnit() + "mB").withStyle(ChatFormatting.GRAY));
-            });
-        }
-    }
-
-    public boolean canDrink(ItemStack is) {
-        LazyOptional<IFluidHandlerItem> ih = FluidUtil.getFluidHandler(is);
-        if (ih.isPresent())
-            return (ih.resolve().get().getFluidInTank(0).getAmount() >= unit);
-        return false;
-    }
-
-    public boolean canFill(ItemStack is, Fluid f) {
-        LazyOptional<IFluidHandlerItem> ih = FluidUtil.getFluidHandler(is);
-        if (ih.isPresent()) {
-            IFluidHandlerItem ihr = ih.resolve().get();
-            return ihr.getFluidInTank(0).isEmpty() || ihr.getFluidInTank(0).getFluid().isSame(f);
-        }
-        return false;
     }
 
     @Override
@@ -154,12 +128,18 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood,I
         return itemStack1;
     }
 
-    public SoundEvent getDrinkingSound() {
-        return SoundEvents.GENERIC_DRINK;
+    @Override
+    public ItemStack getContainerItem(ItemStack itemStack) {
+        return this.getDefaultInstance();
     }
 
-    public Item getEmptyContainer() {
-        return this;
+    @Override
+    public ItemStack getDrinkItem() {
+        return this.getDefaultInstance();
+    }
+
+    public SoundEvent getDrinkingSound() {
+        return SoundEvents.GENERIC_DRINK;
     }
 
     @Override
@@ -195,101 +175,9 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood,I
         return unit;
     }
 
-    public UseAnim getUseAnimation(ItemStack stack) {
-        return canDrink(stack) ? UseAnim.DRINK : UseAnim.NONE;
-    }
-
-    public int getUseDuration(ItemStack stack) {
-        return canDrink(stack) ? 40 : 0;
-    }
-
-    @Override
-    public ICapabilityProvider initCapabilities(@Nonnull ItemStack stack, @Nullable CompoundTag nbt) {
-        return new FluidHandlerItemStack(stack, capacity) {
-            @Override
-            public boolean canFillFluidType(FluidStack fluid) {
-                return isFluidValid(0, fluid);
-            }
-
-            @Nonnull
-            @Override
-            public ItemStack getContainer() {
-                return getFluid().isEmpty() ? new ItemStack(getEmptyContainer()) : this.container;
-            }
-
-            @Override
-            public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
-                if (stack.getFluid() instanceof PotionFluid || stack.getFluid() instanceof com.simibubi.create.content.fluids.potion.PotionFluid) {
-                    return true;
-                }
-               
-                return stack.getFluid().is(availableFluid);
-            }
-        };
-    }
-
-    @Override
-    public void inventoryTick(ItemStack stack, Level worldIn, Entity entityIn, int itemSlot, boolean isSelected) {
-        super.inventoryTick(stack, worldIn, entityIn, itemSlot, isSelected);
-        updateDamage(stack);
-    }
-
     @Override
     public boolean isEnchantable(ItemStack stack) {
         return false;
     }
-
-    public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
-        BlockHitResult raytraceresult = getPlayerPOVHitResult(worldIn, playerIn, ClipContext.Fluid.SOURCE_ONLY);
-        ItemStack itemstack = playerIn.getItemInHand(handIn);
-        if (raytraceresult.getType() == HitResult.Type.MISS) {
-            playerIn.startUsingItem(handIn);
-            return canDrink(playerIn.getItemInHand(handIn)) ? InteractionResultHolder.success(playerIn.getItemInHand(handIn)) : InteractionResultHolder.fail(playerIn.getItemInHand(handIn));
-        }
-        if (raytraceresult.getType() == HitResult.Type.BLOCK) {
-            BlockPos blockpos = raytraceresult.getBlockPos();
-            if (worldIn.getFluidState(blockpos).is(FluidTags.WATER)) {
-                if (canFill(itemstack, Fluids.WATER)) {
-                    worldIn.playSound(playerIn, playerIn.getX(), playerIn.getY(), playerIn.getZ(), SoundEvents.BOTTLE_FILL, SoundSource.NEUTRAL, 1.0F, 1.0F);
-                    itemstack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(data -> data.fill(new FluidStack(Fluids.WATER, data.getTankCapacity(0)), FluidAction.EXECUTE));
-
-                    return InteractionResultHolder.success(itemstack);
-                }
-            }
-            playerIn.startUsingItem(handIn);
-            return canDrink(playerIn.getItemInHand(handIn)) ? InteractionResultHolder.success(playerIn.getItemInHand(handIn)) : InteractionResultHolder.fail(playerIn.getItemInHand(handIn));
-        }
-        return InteractionResultHolder.fail(itemstack);
-    }
-
-    @Override
-    public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
-        Player entityplayer = entityLiving instanceof Player ? (Player) entityLiving : null;
-        stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(data -> {
-            FluidStack fs = data.drain(unit, IFluidHandler.FluidAction.EXECUTE);
-            if (entityplayer != null) {
-                entityplayer.awardStat(Stats.ITEM_USED.get(this));
-                Fluid f = fs.getFluid();
-                if (f instanceof com.simibubi.create.content.fluids.potion.PotionFluid) {
-                    for (MobEffectInstance ei : PotionUtils.getAllEffects(fs.getOrCreateTag()))
-                        FHUtils.applyEffectTo(ei, entityplayer);
-                } else if (f instanceof PotionFluid) {
-                    for (MobEffectInstance ei : PotionFluid.getType(fs).getEffects())
-                        FHUtils.applyEffectTo(ei, entityplayer);
-                }
-            }
-        });
-
-        updateDamage(stack);
-        return stack;
-    }
-
-    public void updateDamage(ItemStack stack) {
-        stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(data -> {
-            int i = Math.max(this.capacity - data.getFluidInTank(0).getAmount(), 0);
-            stack.setDamageValue(i);
-        });
-    }
-
 
 }
