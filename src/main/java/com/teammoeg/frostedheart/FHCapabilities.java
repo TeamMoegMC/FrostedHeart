@@ -9,7 +9,7 @@ import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.base.capability.IFHCapability;
 import com.teammoeg.frostedheart.base.capability.codec.FHCodecCapability;
 import com.teammoeg.frostedheart.base.capability.nbt.FHNBTCapability;
-import com.teammoeg.frostedheart.base.capability.nonpresistent.FHNPCapability;
+import com.teammoeg.frostedheart.base.capability.nonpresistent.FHTransientCapability;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -40,11 +40,11 @@ public class FHCapabilities {
 	public static final FHNBTCapability<ScenarioConductor> SCENARIO=register(ScenarioConductor.class);
 	public static final FHCodecCapability<ChunkHeatData> CHUNK_HEAT=register(ChunkHeatData.class,ChunkHeatData.CODEC);
 	public static final FHNBTCapability<HeatEndpoint> HEAT_EP=register(HeatEndpoint.class);
-	public static final FHNPCapability<HeatStorageCapability> ITEM_HEAT=registerNotPresist(HeatStorageCapability.class);
+	public static final FHTransientCapability<HeatStorageCapability> ITEM_HEAT=registerTransient(HeatStorageCapability.class);
 
 	public static final FHNBTCapability<WantedFoodCapability> WANTED_FOOD=register(WantedFoodCapability.class);
 	public static final FHNBTCapability<ChunkTownResourceCapability> CHUNK_TOWN_RESOURCE=register(ChunkTownResourceCapability.class);
-	public static final FHNPCapability<RobotChunk> ROBOTIC_LOGISTIC_CHUNK=registerNotPresist(RobotChunk.class);
+	public static final FHTransientCapability<RobotChunk> ROBOTIC_LOGISTIC_CHUNK=registerTransient(RobotChunk.class);
 	public static final FHNBTCapability<WaypointCapability> WAYPOINT=register(WaypointCapability.class);
 	public static final FHNBTCapability<WaterLevelCapability> PLAYER_WATER_LEVEL = register(WaterLevelCapability.class);
 	public static final FHNBTCapability<NutritionCapability> PLAYER_NUTRITION = register(NutritionCapability.class);
@@ -109,19 +109,27 @@ public class FHCapabilities {
 			}
 		},codec);
 	}
-
-	public static <T extends NBTSerializable> FHNBTCapability<T> register(Class<T> capClass,NonNullSupplier<T> sup){
-		FHNBTCapability<T> cap=new FHNBTCapability<>(capClass,sup);
+	/**
+	 * register capability with class, with provided factory in initialization
+	 * */
+	public static <T extends NBTSerializable> FHNBTCapability<T> register(Class<T> capClass,NonNullSupplier<T> factory){
+		FHNBTCapability<T> cap=new FHNBTCapability<>(capClass,factory);
 		capabilities.add(cap);
 		return cap;
 	}
-	public static <T> FHNPCapability<T> registerNotPresist(Class<T> capClass){
-		FHNPCapability<T> cap=new FHNPCapability<>(capClass);
+	/**
+	 * register Non persistent capability with class
+	 * */
+	public static <T> FHTransientCapability<T> registerTransient(Class<T> capClass){
+		FHTransientCapability<T> cap=new FHTransientCapability<>(capClass);
 		capabilities.add(cap);
 		return cap;
 	}
-	public static <T> FHCodecCapability<T> register(Class<T> capClass,NonNullSupplier<T> sup,Codec<T> codec){
-		FHCodecCapability<T> cap=new FHCodecCapability<>(capClass,sup,codec);
+	/**
+	 * register capability with class, with provided factory in initialization, and provided codec in serialization
+	 * */
+	public static <T> FHCodecCapability<T> register(Class<T> capClass,NonNullSupplier<T> factory,Codec<T> codec){
+		FHCodecCapability<T> cap=new FHCodecCapability<>(capClass,factory,codec);
 		capabilities.add(cap);
 		return cap;
 	}

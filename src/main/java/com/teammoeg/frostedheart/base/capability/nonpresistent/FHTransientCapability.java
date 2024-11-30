@@ -12,12 +12,16 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.common.util.NonNullSupplier;
-
-public class FHNPCapability<C> implements IFHCapability{
+/**
+ * Non persistent capability type.
+ * Used to register capablity that have special data storage like item nbt, block entities...
+ * Coresponding capability class should not implement INBTSerializable.
+ * */
+public class FHTransientCapability<C> implements IFHCapability{
 	private Class<C> capClass;
 	private Capability<C> capability;
 
-	public FHNPCapability(Class<C> capClass) {
+	public FHTransientCapability(Class<C> capClass) {
 		super();
 		this.capClass = capClass;
 	}
@@ -26,7 +30,7 @@ public class FHNPCapability<C> implements IFHCapability{
         capability=(Capability<C>) ((CapabilityManagerAccess)(Object)CapabilityManager.INSTANCE).getProviders().get(Type.getInternalName(capClass).intern());
 	}
 	public ICapabilityProvider provider(NonNullSupplier<C> factory) {
-		return new FHNPCapabilityProvider<>(this,factory);
+		return new FHTransientCapabilityProvider<>(this,factory);
 	}
 	public LazyOptional<C> getCapability(Object cap) {
 		if(cap instanceof ICapabilityProvider)

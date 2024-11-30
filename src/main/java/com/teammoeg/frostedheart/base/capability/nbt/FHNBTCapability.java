@@ -14,7 +14,10 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.common.util.NonNullSupplier;
-
+/**
+ * Basic nbt capability type
+ * 
+ * */
 public class FHNBTCapability<C extends NBTSerializable> implements IFHCapability{
 	private Class<C> capClass;
 	private Capability<C> capability;

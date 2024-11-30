@@ -10,7 +10,9 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.common.util.NonNullSupplier;
-
+/**
+ * Basic codec serialized capability type
+ * */
 public class FHCodecCapability<C> implements IFHCapability{
 	private Class<C> capClass;
 	private Capability<C> capability;
