@@ -173,7 +173,7 @@ public class WaterLevelCapability implements NBTSerializable {
             if (!player.level().isClientSide()) {
                 player.hurt(new DamageSource(Holder.direct(new DamageType("byThirst", 1.0F))), 1.0f);
             } else {
-                player.level().playSound(player, player, SoundEvents.GUARDIAN_ATTACK, SoundSource.PLAYERS, 1.0F, 1.0F);
+                //player.level().playSound(player, player, SoundEvents.GUARDIAN_ATTACK, SoundSource.PLAYERS, 1.0F, 1.0F);
             }
         }
         //TODO:当水分为0时死亡
