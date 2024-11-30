@@ -30,7 +30,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-
+/**
+ * Interface for entity block
+ * */
 public interface FHEntityBlock<B extends BlockEntity> extends EntityBlock {
 	@Override
 	public default BlockEntity newBlockEntity(BlockPos p, BlockState s) {

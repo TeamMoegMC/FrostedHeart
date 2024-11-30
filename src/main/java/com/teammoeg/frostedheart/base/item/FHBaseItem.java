@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.base.item;
 
 import com.teammoeg.frostedheart.FHTabs;
-import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
-import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.frostedheart.base.creativeTab.ICreativeModeTabItem;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;

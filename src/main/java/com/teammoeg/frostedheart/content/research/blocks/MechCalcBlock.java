@@ -27,9 +27,9 @@ import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.base.block.FHKineticBlock;
+import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.frostedheart.base.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
-import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.level.block.Block;

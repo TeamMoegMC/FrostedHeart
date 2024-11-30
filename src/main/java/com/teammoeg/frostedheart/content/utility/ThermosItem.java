@@ -26,13 +26,13 @@ import javax.annotation.Nullable;
 
 import com.simibubi.create.content.fluids.potion.PotionFluidHandler;
 import com.teammoeg.frostedheart.FHTabs;
+import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.frostedheart.base.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
-import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
 
 import blusunrize.immersiveengineering.common.fluids.PotionFluid;
 import net.minecraft.world.item.TooltipFlag;

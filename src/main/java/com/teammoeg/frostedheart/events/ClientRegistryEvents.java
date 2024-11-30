@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.events;
 import java.util.function.Function;
 
 import com.teammoeg.frostedheart.*;
+import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.frostedheart.base.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.foundation.particles.WetSteamParticle;
 import com.teammoeg.frostedheart.content.climate.client.SnowParticle;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorLogic;
@@ -54,8 +56,6 @@ import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestExtension;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestModel;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
-import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
 
 import blusunrize.immersiveengineering.api.ManualHelper;
 import blusunrize.immersiveengineering.client.manual.ManualElementMultiblock;

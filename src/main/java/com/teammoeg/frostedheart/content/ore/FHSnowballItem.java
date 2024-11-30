@@ -20,8 +20,9 @@
 package com.teammoeg.frostedheart.content.ore;
 
 import com.teammoeg.frostedheart.FHTabs;
-import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
-import com.teammoeg.frostedheart.util.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.frostedheart.base.creativeTab.ICreativeModeTabItem;
+
 import net.minecraft.world.item.SnowballItem;
 
 public class FHSnowballItem extends SnowballItem implements ICreativeModeTabItem {

@@ -19,14 +19,16 @@
  * along with Caupona. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.util.creativeTab;
+package com.teammoeg.frostedheart.base.creativeTab;
 
 import java.util.function.Predicate;
 
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraftforge.registries.RegistryObject;
-
+/**
+ * Symbol representitive for a specific creative tab
+ * */
 public class TabType implements Predicate<ResourceKey<CreativeModeTab>>{
 	public static final TabType HIDDEN=new TabType(e->false);
 	private final Predicate<ResourceKey<CreativeModeTab>> predicate;

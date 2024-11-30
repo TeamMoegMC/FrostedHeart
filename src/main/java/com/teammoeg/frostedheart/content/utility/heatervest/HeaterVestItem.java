@@ -28,13 +28,13 @@ import com.mojang.datafixers.util.Either;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTabs;
+import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
-import com.teammoeg.frostedheart.util.creativeTab.CreativeTabItemHelper;
 
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.Entity;

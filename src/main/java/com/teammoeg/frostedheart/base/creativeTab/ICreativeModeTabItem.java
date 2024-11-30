@@ -19,8 +19,12 @@
  * along with Caupona. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.util.creativeTab;
-
+package com.teammoeg.frostedheart.base.creativeTab;
+/**
+ * Interface for auto creative tab event listeners.
+ * Useful for item tab register
+ * Implementing in block without using FHBlockItem would take no effect.
+ * */
 public interface ICreativeModeTabItem {
 	void fillItemCategory(CreativeTabItemHelper helper);
 }
