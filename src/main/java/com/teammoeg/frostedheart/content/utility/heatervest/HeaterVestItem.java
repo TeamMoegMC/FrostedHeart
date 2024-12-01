@@ -34,7 +34,7 @@ import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
+import com.teammoeg.frostedheart.util.constants.EquipmentSlotType;
 
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.Entity;
@@ -112,7 +112,7 @@ public class HeaterVestItem extends FHBaseItem implements IHeatingEquipment, ICh
     }
 
 	@Override
-	public float getEffectiveTempAdded(Either<ISlotType,EquipmentCuriosSlotType> slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
+	public float getEffectiveTempAdded(Either<ISlotType,EquipmentSlotType> slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
 		if(slot==null) {
 			return 50;
 		}

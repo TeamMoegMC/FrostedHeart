@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
+import com.teammoeg.frostedheart.util.constants.EquipmentSlotType;
 
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
@@ -199,7 +199,6 @@ public class TemperatureUpdate {
                     player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).removeModifier(envTempId);
                     player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).addTransientModifier(new AttributeModifier(envTempId, "player environment modifier", envtemp, Operation.ADDITION));
 
-
                     /* Effective & Body Temperature */
 
                     // Current body temperature
@@ -213,7 +212,7 @@ public class TemperatureUpdate {
                     }
 
                     // Insulation
-                    // envtemp=(float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
+                    envtemp=(float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
                     // float insulation = (float) player.getAttributeValue(FHAttributes.INSULATION.get());
                     PlayerTemperatureData.BodyPart[] parts = {
                             PlayerTemperatureData.BodyPart.HEAD,
@@ -269,7 +268,7 @@ public class TemperatureUpdate {
                         Item it = is.getItem();
                         if (it instanceof IHeatingEquipment) {
                             if (it instanceof IHeatingEquipment)
-                                efftemp += ((IHeatingEquipment) it).getEffectiveTempAdded(Either.right(EquipmentCuriosSlotType.fromVanilla(slot)), is, efftemp, current);
+                                efftemp += ((IHeatingEquipment) it).getEffectiveTempAdded(Either.right(EquipmentSlotType.fromVanilla(slot)), is, efftemp, current);
                         }
                     /*if (it instanceof IWarmKeepingEquipment) {
                         keepwarm += ((IWarmKeepingEquipment) it).getFactor(player, is);

@@ -48,7 +48,7 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.foundation.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.constants.EquipmentCuriosSlotType;
+import com.teammoeg.frostedheart.util.constants.EquipmentSlotType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -106,7 +106,7 @@ public class CommonEvents {
         if(data!=null) {
         	EquipmentSlot es=event.getItemStack().getEquipmentSlot();
         	if(es!=null) {
-	        	EquipmentCuriosSlotType ecs=EquipmentCuriosSlotType.fromVanilla(es);
+	        	EquipmentSlotType ecs=EquipmentSlotType.fromVanilla(es);
 	        	if(event.getSlotType()==es) {
 		        	if(data.getInsulation()!=0)
 		        		event.addModifier(FHAttributes.INSULATION.get(), new AttributeModifier(ecs.getSlotUUID(0), ecs.getKey(0), data.getInsulation(), Operation.ADDITION));
