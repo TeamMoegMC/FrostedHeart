@@ -59,7 +59,7 @@ public class ScenarioConductor implements NBTSerializable{
     private transient boolean isActsEnabled;
     //private transient ActNamespace lastQuest;
     private ActScenarioContext context=new ActScenarioContext(this);
-    private static ActNamespace lastCurrent;
+    private ActNamespace lastCurrent;
 	private static final ActNamespace init=new ActNamespace(null,null);
 	
     public void copy() {}
@@ -213,6 +213,8 @@ public class ScenarioConductor implements NBTSerializable{
 			data.currentLabel=new ExecuteTarget(old.getScenario().name(),null);
 		currentAct=data;
 		copyExecuteInfo(currentAct,old);
+		System.out.println("new:"+data);
+		System.out.println("old:"+old);
 		old.stop();
 		
 	}
@@ -279,6 +281,7 @@ public class ScenarioConductor implements NBTSerializable{
 	public void load(CompoundTag data, boolean isPacket) {
 		getContext().varData.load(data.getCompound("vars"));
     	getContext().takeSnapshot();
+    	System.out.println(data.getCompound("vars"));
     	ListTag lacts=data.getList("acts", Tag.TAG_COMPOUND);
     	//Act initact=acts.get(init);
     	for(Tag v:lacts) {

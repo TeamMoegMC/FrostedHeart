@@ -24,6 +24,8 @@ import java.util.Arrays;
 import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NumericTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 
 public class ScenarioVariables implements IScenarioVaribles  {
@@ -80,9 +82,20 @@ public class ScenarioVariables implements IScenarioVaribles  {
 	        for (int i = 0; i < paths.length - 1; i++) {
 	            nbt = nbt.getCompound(paths[i]);
 	        }
-        return nbt.getDouble(paths[paths.length - 1]);
+        return convertToDouble(nbt.get(paths[paths.length - 1]));
     }
-
+    public double convertToDouble(Tag tag) {
+    	if(tag instanceof NumericTag n) {
+    		return n.getAsDouble();
+    	}else if(tag instanceof StringTag s) {
+    		try {
+    			return Double.parseDouble(s.getAsString());
+    		}catch(NumberFormatException ex) {
+    			
+    		}
+    	}
+    	return 0;
+    }
     @Override
 	public String evalPathString(String path) {
         return evalPath(path).getAsString();
