@@ -5,7 +5,7 @@
   },
   "loader": "forge:obj",
   "model": "frostedheart:models/block/charger.obj",
-  "detectCullableFaces": false,
-  "flip-v": true,
-  "render_type": "translucent"
+  "automatic_culling": false,
+  "flip_v": true,
+  "render_type": "cutout"
 }

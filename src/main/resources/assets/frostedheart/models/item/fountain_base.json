@@ -1,4 +1,4 @@
 {
   "parent": "frostedheart:block/fountain/base",
-  "flip-v": true
+  "flip_v": true
 }

@@ -1,4 +1,4 @@
 {
   "parent": "frostedheart:block/fountain/nozzle",
-  "flip-v": true
+  "flip_v": true
 }

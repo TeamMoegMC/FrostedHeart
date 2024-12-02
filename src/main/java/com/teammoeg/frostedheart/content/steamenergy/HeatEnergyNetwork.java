@@ -165,7 +165,7 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
         this.onConnect = con;
     }
     public Level getWorld() {
-    	if(world==null)
+    	if(world==null && cur != null)
             this.world = cur.getLevel();
     	return world;
     }
