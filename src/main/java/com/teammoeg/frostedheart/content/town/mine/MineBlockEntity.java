@@ -5,6 +5,7 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
+import com.teammoeg.frostedheart.content.town.resource.TownResourceType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.core.BlockPos;

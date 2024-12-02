@@ -19,6 +19,10 @@
 
 package com.teammoeg.frostedheart.content.town;
 
+import com.teammoeg.frostedheart.content.town.resource.TownResourceKey;
+import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
+import com.teammoeg.frostedheart.content.town.resource.TownResourceType;
+
 import java.util.Optional;
 
 /**
@@ -27,63 +31,14 @@ import java.util.Optional;
  * This is an abstract town, it may be a (player) team town, or a npc town.
  */
 public interface Town {
-    /**
-     * Adds resource.
-     *
-     * @param name     the resource type
-     * @param val      procuded
-     * @param simulate simulate process, not actually add.
-     * @return the value that has been added
-     */
-    double add(TownResourceType name, double val, boolean simulate);
 
     /**
-     * Adds a service,
-     * Service is kind or resource that only valid in this tick, and removed when tick ends. It would still count as a resource for get or cost
-     *
-     * @param name the resource type
-     * @param val  procuded
-     * @return the value that has been added
+     * Gets the resource manager.
+     * Resource manager is used to change resources in the town.
+     * Maybe there will be an interface super all resources managers, including town resource manager? I don't know.
+     * @return resource manager
      */
-    double addService(TownResourceType name, double val);
-
-    /**
-     * Cost a resource
-     *
-     * @param name     the resource type
-     * @param val      to be cost
-     * @param simulate simulate process, not actually cost.
-     * @return the value that has been actually cost.
-     */
-    double cost(TownResourceType name, double val, boolean simulate);
-
-    /**
-     * Cost a resource as a service, that means does not actually cost the resource, but would cost temporary at this tick.
-     *
-     * @param name     the resource type
-     * @param val      to be cost
-     * @param simulate simulate process, not actually cost.
-     * @return the value that has been actually cost.
-     */
-    double costAsService(TownResourceType name, double val, boolean simulate);
-
-    /**
-     * Cost a service
-     *
-     * @param name     the resource type
-     * @param val      to be cost
-     * @param simulate simulate process, not actually cost.
-     * @return the value that has been actually cost.
-     */
-    double costService(TownResourceType name, double val, boolean simulate);
-
-    /**
-     * Gets resource.
-     *
-     * @param name the resource type
-     * @return resource amount
-     */
-    double get(TownResourceType name);
+    TownResourceManager getResourceManager();
 
     /**
      * Gets the team town data, may be null if not a player team.

@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.mine.MineWorker;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resource.TownResourceType;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseWorker;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.nbt.CompoundTag;

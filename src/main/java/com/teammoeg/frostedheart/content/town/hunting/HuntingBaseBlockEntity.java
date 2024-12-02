@@ -6,6 +6,7 @@ import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEn
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockScanner;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
+import com.teammoeg.frostedheart.content.town.resource.TownResourceType;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
