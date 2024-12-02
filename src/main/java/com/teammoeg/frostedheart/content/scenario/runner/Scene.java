@@ -76,7 +76,7 @@ public abstract class Scene {
 	}
 
 	public void clear(ScenarioContext parent,RunStatus status) {
-		System.out.println("clear:"+requireClear);
+		//System.out.println("clear:"+requireClear);
 		if (requireClear)
 			forcedClear(parent,status);
 	}

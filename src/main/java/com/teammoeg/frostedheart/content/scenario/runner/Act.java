@@ -46,7 +46,7 @@ public class Act extends BaseScenarioRunner{
 		super();
 		this.scene=new ServerScene();
 		this.name=name;
-		nodeNum=-1;
+		//nodeNum=-1;
 	}
     public Act(CompoundTag data) {
 		super();
@@ -54,9 +54,9 @@ public class Act extends BaseScenarioRunner{
 		load(data);
 	}
     public void prepareForRun(ScenarioContext ctx) {
-    	if(nodeNum<0) {
+    	//if(nodeNum<0) {
     		this.restoreLocation(ctx);
-    	}
+    	//}
     }
     public CompoundTag save() {
     	CompoundTag nbt=new CompoundTag();
