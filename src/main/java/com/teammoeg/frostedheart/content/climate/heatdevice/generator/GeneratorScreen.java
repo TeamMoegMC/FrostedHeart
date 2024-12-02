@@ -60,7 +60,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
     int level;
     boolean validStructure;
     boolean hasResearch;
-    List<Component> costStr;
+    List<Component> costStr = new ArrayList<>();;
 
     public GeneratorScreen(GeneratorContainer<R, T> inventorySlotsIn, Inventory inv, Component title) {
         super(inventorySlotsIn, inv, title, TEXTURE);
@@ -78,11 +78,15 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
             return super.makeInfoAreas();
         return ImmutableList.of(new FluidInfoArea(menu.getTank(), new Rect2i(135, 27, 16, 60), 0, 0, 0, 0, TEXTURE));
     }
-
+    @Override
+	protected void drawBackgroundTexture(GuiGraphics graphics)
+	{
+		graphics.blit(background, leftPos, topPos, 0, 0, imageWidth, imageHeight, TEXW, TEXH);
+	}
     @Override
     protected void drawContainerBackgroundPre(GuiGraphics matrixStack, float partialTicks, int x, int y) {
         // background
-        matrixStack.blit(TEXTURE, 0, 0, this.imageWidth, this.imageHeight, 0, 0);
+        //matrixStack.blit(TEXTURE, 0, 0, 0, 0, this.imageWidth, this.imageHeight,TEXW,TEXH);
 
         // System.out.println(ininvarrx+","+ininvarry+"-"+inarryl);
         // range circle
@@ -100,19 +104,18 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         int inarryl = 76 - ininvarrx;
         int outarryl = out.getX() - 2 - outinvarrx;
         // arrows
-        matrixStack.blit(TEXTURE, ininvarrx, ininvarry, inarryl, 4, 511 - inarryl, 132);
-        matrixStack.blit(TEXTURE, outinvarrx, outinvarry, outarryl, 4, 511 - outarryl, 132);
+        matrixStack.blit(TEXTURE,leftPos+ ininvarrx,topPos+ ininvarry, inarryl, 4, 511 - inarryl, 132,TEXW,TEXH);
+        matrixStack.blit(TEXTURE,leftPos+ outinvarrx,topPos+  outinvarry, outarryl, 4, 511 - outarryl, 132,TEXW,TEXH);
         // slot background
-        matrixStack.blit(TEXTURE, in.getX() - 2, in.getY() - 2, 20, 20, 404, 128);
-        matrixStack.blit(TEXTURE, out.getX() - 2, out.getY() - 2, 20, 20, 424, 128);
+        matrixStack.blit(TEXTURE,leftPos+ in.getX() - 2,topPos+  in.getY() - 2, 20, 20, 404, 128,TEXW,TEXH);
+        matrixStack.blit(TEXTURE,leftPos+ out.getX() - 2,topPos+  out.getY() - 2, 20, 20, 424, 128,TEXW,TEXH);
         if (menu.getTank() != null) {
-            matrixStack.blit(TEXTURE, 133, 55, 20, 64, 384, 128);
-            matrixStack.blit(TEXTURE, 98, 84, 34, 4, 444, 128);
-            ClientUtils.bindTexture(TEXTURE);
+            matrixStack.blit(TEXTURE,leftPos+ 133,topPos+  55, 20, 64, 384, 128,TEXW,TEXH);
+            matrixStack.blit(TEXTURE,leftPos+ 98,topPos+  84, 34, 4, 444, 128,TEXW,TEXH);
         }
 
         // upgrade arrow
-        matrixStack.blit(TEXTURE, 85, 93, 6, 22, 412, 148);
+        matrixStack.blit(TEXTURE,leftPos+ 85,topPos+  93, 6, 22, 412, 148,TEXW,TEXH);
 
         // generator symbol
         generatorSymbol.blitAtlas(matrixStack, leftPos, topPos, generatorPos, (menu.isWorking.getValue() && menu.process.getValue() > 0) ? 2 : 1, (menu.getTier() - 1));
@@ -154,7 +157,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
                 }));
         level = 1;
         Player player = ClientUtils.mc().player;
-        costStr = new ArrayList<>();
+        costStr.clear();
         if (menu.isBroken.getValue()) {
             costStr.add(TranslateUtils.translateGui("generator.repair_material"));
             BitSet cost = FHUtils.checkItemList(ClientUtils.mc().player, tile.getRepairCost());
