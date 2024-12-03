@@ -72,6 +72,7 @@ import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import org.lwjgl.glfw.GLFW;
@@ -398,7 +399,7 @@ public class ClientEvents {
                 if (ClientScene.INSTANCE != null)
                     ClientScene.INSTANCE.sendContinuePacket(true);
                 //event.setCanceled(true);
-            } else if (ClientRegistryEvents.key_InfraredView.get().consumeClick()) {
+            } else if (ModList.get().isLoaded("ldlib") && ClientRegistryEvents.key_InfraredView.get().consumeClick()) {
                 InfraredViewRenderer.toggleInfraredView();
             }
         }

@@ -19,9 +19,6 @@
 
 package com.teammoeg.frostedheart.data;
 
-import com.sihenzhang.crockpot.block.AbstractCrockPotDoubleCropBlock;
-import com.sihenzhang.crockpot.block.CrockPotBlocks;
-import com.sihenzhang.crockpot.entity.CrockPotEntities;
 import com.teammoeg.frostedheart.FHEntityTypes;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;

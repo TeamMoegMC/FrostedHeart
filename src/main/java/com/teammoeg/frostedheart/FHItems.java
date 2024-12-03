@@ -139,13 +139,34 @@ public class FHItems {
                     .register();
 
     // Clothes
-    public static final ItemEntry<FHBaseClothesItem> DEBUG_CLOTH = REGISTRATE.item("debug_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.5f, 100.0f, PlayerTemperatureData.BodyPart.BODY)).register();
-    public static final ItemEntry<FHBaseClothesItem> HAY_CLOTH= REGISTRATE.item("hay_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.2f, 200.0f, PlayerTemperatureData.BodyPart.BODY)).register();
-    public static final ItemEntry<FHBaseClothesItem> HIDE_CLOTH = REGISTRATE.item("hide_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 1.0f, 300.0f, PlayerTemperatureData.BodyPart.BODY)).register();
-    public static final ItemEntry<FHBaseClothesItem> COTTON_CLOTH = REGISTRATE.item("cotton_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.3f, 400.0f, PlayerTemperatureData.BodyPart.BODY)).register();
-    public static final ItemEntry<FHBaseClothesItem> WOOL_CLOTH = REGISTRATE.item("wool_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.5f, 500.0f, PlayerTemperatureData.BodyPart.BODY)).register();
-    public static final ItemEntry<FHBaseClothesItem> DOWN_CLOTH = REGISTRATE.item("down_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.7f, 600.0f, PlayerTemperatureData.BodyPart.BODY)).register();
-    public static final ItemEntry<FHBaseClothesItem> REMOVE_ALL = REGISTRATE.item("debug_remove_all_cloth", n-> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.0f, 0.0f, PlayerTemperatureData.BodyPart.REMOVEALL)).register();
+    public static final ItemEntry<FHBaseClothesItem> DEBUG_CLOTH = REGISTRATE
+            .item("debug_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.5f, 100.0f, PlayerTemperatureData.BodyPart.BODY))
+            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
+            .register();
+    public static final ItemEntry<FHBaseClothesItem> HAY_CLOTH= REGISTRATE
+            .item("hay_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.2f, 200.0f, PlayerTemperatureData.BodyPart.BODY))
+            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
+            .register();
+    public static final ItemEntry<FHBaseClothesItem> HIDE_CLOTH = REGISTRATE
+            .item("hide_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 1.0f, 300.0f, PlayerTemperatureData.BodyPart.BODY))
+            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
+            .register();
+    public static final ItemEntry<FHBaseClothesItem> COTTON_CLOTH = REGISTRATE
+            .item("cotton_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.3f, 400.0f, PlayerTemperatureData.BodyPart.BODY))
+            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
+            .register();
+    public static final ItemEntry<FHBaseClothesItem> WOOL_CLOTH = REGISTRATE
+            .item("wool_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.5f, 500.0f, PlayerTemperatureData.BodyPart.BODY))
+            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
+            .register();
+    public static final ItemEntry<FHBaseClothesItem> DOWN_CLOTH = REGISTRATE
+            .item("down_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.7f, 600.0f, PlayerTemperatureData.BodyPart.BODY))
+            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
+            .register();
+    public static final ItemEntry<FHBaseClothesItem> REMOVE_ALL = REGISTRATE
+            .item("debug_remove_all_cloth", n-> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.0f, 0.0f, PlayerTemperatureData.BodyPart.REMOVEALL))
+            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
+            .register();
 
 
     // Tools

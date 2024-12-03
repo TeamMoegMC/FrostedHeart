@@ -267,7 +267,7 @@ dependencies {
 
     // IE
     implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}")
-    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}:datagen")
+    datagenImplementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}:datagen")
 
     // Create
     implementation fg.deobf("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }
@@ -296,21 +296,22 @@ dependencies {
 
     // Tetra
     compileOnly fg.deobf("curse.maven:tetra-289712:5544287")
-    noDatagenRuntimeOnly fg.deobf("curse.maven:tetra-289712:5544287") // somehow, when datagening, you must set to compileOnly
-    
-    implementation fg.deobf("curse.maven:mutil-351914:4824501")
+//    noDatagenRuntimeOnly fg.deobf("curse.maven:tetra-289712:5544287") // somehow, when datagening, you must set to compileOnly
+//
+    compileOnly fg.deobf("curse.maven:mutil-351914:4824501")
 
     // Caupona
-    implementation fg.deobf("curse.maven:caupona-656147:5116975")
+    compileOnly fg.deobf("curse.maven:caupona-656147:5116975")
+    datagenImplementation fg.deobf("curse.maven:caupona-656147:5116975")
 
     // LDLib
-    implementation fg.deobf("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }
+    compileOnly fg.deobf("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }
 
     // oculus
     compileOnly fg.deobf("maven.modrinth:oculus:${oculus_version}")
 
     // embeddium
-    implementation fg.deobf("org.embeddedt:embeddium-${minecraft_version}:${embeddium_version}")
+    compileOnly fg.deobf("org.embeddedt:embeddium-${minecraft_version}:${embeddium_version}")
 
     // Comforts
 //    implementation fg.deobf("curse.maven:comforts-276951:5503516")
@@ -323,10 +324,10 @@ dependencies {
 
 
     // Datagen only
-    datagenImplementation fg.deobf("curse.maven:supplementaries-412082:5676069")
-    datagenImplementation fg.deobf("curse.maven:crock-pot-404523:5458905")
-    datagenImplementation fg.deobf("curse.maven:charcoal-pit-reloaded-534602:5861935")
-    datagenImplementation fg.deobf("curse.maven:selene-499980:5854670") // supp api
+//    datagenImplementation fg.deobf("curse.maven:supplementaries-412082:5676069")
+//    datagenImplementation fg.deobf("curse.maven:crock-pot-404523:5458905")
+//    datagenImplementation fg.deobf("curse.maven:charcoal-pit-reloaded-534602:5861935")
+//    datagenImplementation fg.deobf("curse.maven:selene-499980:5854670") // supp api
 
     // FG5 requires 0.8.3
     annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
