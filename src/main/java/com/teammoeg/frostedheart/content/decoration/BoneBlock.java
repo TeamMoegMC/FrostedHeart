@@ -21,7 +21,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 
 public class BoneBlock extends FHBaseBlock {
-    private static IntegerProperty BNT = IntegerProperty.create("bonetype", 0, 5);
+    private static IntegerProperty BNT = IntegerProperty.create("bonetype", 0, 4);
     static final VoxelShape shape = Block.box(0, 0, 0, 16, 3, 16);
     static final VoxelShape shape2 = Block.box(0, 0, 0, 16, 15, 16);
     public BoneBlock(BlockBehaviour.Properties blockProps) {
