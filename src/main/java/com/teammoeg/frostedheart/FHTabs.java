@@ -50,26 +50,72 @@ import java.util.function.Predicate;
 
 public class FHTabs {
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, FHMain.MODID);
-    // Main Tab
-    public static final RegistryObject<CreativeModeTab> BASE_TAB = TABS.register("frostedheart_main",
+
+    // Building blocks Tab
+    public static final RegistryObject<CreativeModeTab> BUILDING_BLOCKS = TABS.register("frostedheart_building_blocks",
             ()->CreativeModeTab
                     .builder()
                     .withTabsBefore(CreativeModeTabs.SPAWN_EGGS)
-                    .icon(()->new ItemStack(FHItems.energy_core.get()))
-                    .title(TranslateUtils.translate("itemGroup.frostedheart"))
-                    .displayItems(FHTabs::fillFHTab)
-                    .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.BASE_TAB))
+                    .icon(()->new ItemStack(FHBlocks.DURALUMIN_BLOCK.get()))
+                    .title(TranslateUtils.translate("itemGroup.frostedheart.building_blocks"))
+                    .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.BUILDING_BLOCKS))
                     .build());
-    public static final TabType itemGroup = new TabType(BASE_TAB);
-    // Materials Tab
-    public static final RegistryObject<CreativeModeTab> MATERIALS_TAB = TABS.register("frostedheart_materials",
+    // Natural blocks Tab
+    public static final RegistryObject<CreativeModeTab> NATURAL_BLOCKS = TABS.register("frostedheart_natural_blocks",
             ()->CreativeModeTab
                     .builder()
-                    .withTabsBefore(BASE_TAB.getKey())
-                    .icon(()->new ItemStack(FHItems.DURALUMIN_DUST.get()))
-                    .title(TranslateUtils.translate("itemGroup.frostedheart.materials"))
-                    .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.MATERIALS_TAB))
+                    .withTabsBefore(BUILDING_BLOCKS.getKey())
+                    .icon(()->new ItemStack(FHBlocks.IRON_SLUDGE_BLOCK.get()))
+                    .title(TranslateUtils.translate("itemGroup.frostedheart.natural_blocks"))
+                    .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.NATURAL_BLOCKS))
                     .build());
+    // Functional blocks Tab
+    public static final RegistryObject<CreativeModeTab> FUNCTIONAL_BLOCKS = TABS.register("frostedheart_functional_blocks",
+            ()->CreativeModeTab
+                    .builder()
+                    .withTabsBefore(NATURAL_BLOCKS.getKey())
+                    .icon(()->new ItemStack(FHBlocks.HEAT_PIPE.get()))
+                    .title(TranslateUtils.translate("itemGroup.frostedheart.functional_blocks"))
+                    .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.FUNCTIONAL_BLOCKS))
+                    .build());
+    // Materials Tab
+    public static final RegistryObject<CreativeModeTab> INGREDIENTS = TABS.register("frostedheart_materials",
+            ()->CreativeModeTab
+                    .builder()
+                    .withTabsBefore(FUNCTIONAL_BLOCKS.getKey())
+                    .icon(()->new ItemStack(FHItems.DURALUMIN_DUST.get()))
+                    .title(TranslateUtils.translate("itemGroup.frostedheart.ingredients"))
+                    .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.INGREDIENTS))
+                    .build());
+    // Foods
+    public static final RegistryObject<CreativeModeTab> FOODS = TABS.register("frostedheart_foods",
+            ()->CreativeModeTab
+                    .builder()
+                    .withTabsBefore(INGREDIENTS.getKey())
+                    .icon(()->new ItemStack(FHItems.military_rations.get()))
+                    .title(TranslateUtils.translate("itemGroup.frostedheart.foods"))
+                    .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.FOODS))
+                    .build());
+    // Tools Tab
+    public static final RegistryObject<CreativeModeTab> TOOLS = TABS.register("frostedheart_tools",
+            ()->CreativeModeTab
+                    .builder()
+                    .withTabsBefore(FOODS.getKey())
+                    .icon(()->new ItemStack(FHItems.hand_stove.get()))
+                    .title(TranslateUtils.translate("itemGroup.frostedheart.tools"))
+                    .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.TOOLS))
+                    .build());
+    // Misc Tab
+    public static final RegistryObject<CreativeModeTab> MISC = TABS.register("frostedheart_misc",
+            ()->CreativeModeTab
+                    .builder()
+                    .withTabsBefore(TOOLS.getKey())
+                    .icon(()->new ItemStack(FHItems.energy_core.get()))
+                    .title(TranslateUtils.translate("itemGroup.frostedheart.misc"))
+                    .displayItems(FHTabs::fillFHTab)
+                    .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.MISC))
+                    .build());
+    public static final TabType itemGroup = new TabType(MISC);
 
 
     public static void fillFHTab(CreativeModeTab.ItemDisplayParameters parms, CreativeModeTab.Output out) {

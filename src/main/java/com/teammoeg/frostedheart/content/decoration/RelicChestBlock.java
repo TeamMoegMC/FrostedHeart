@@ -59,8 +59,8 @@ public class RelicChestBlock extends FHBaseBlock implements FHEntityBlock<RelicC
     protected static final VoxelShape Z_SHAPE = Block.box(2D, 0D, 0D, 14D, 13D, 16D);
     public static final EnumProperty<Direction.Axis> HORIZONTAL_AXIS = BlockStateProperties.HORIZONTAL_AXIS;
 
-    public RelicChestBlock() {
-        super(Block.Properties.of().mapColor(MapColor.METAL).sound(SoundType.STONE).requiresCorrectToolForDrops().strength(35, 600).noOcclusion());
+    public RelicChestBlock(Properties prop) {
+        super(prop);
     }
 
 

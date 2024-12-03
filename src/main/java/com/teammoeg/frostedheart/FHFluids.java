@@ -38,7 +38,7 @@ public class FHFluids {
     public static final int DEFAULT_COLOR = 0xFFFFFFFF;
 
     static {
-        REGISTRATE.setCreativeTab(FHTabs.MATERIALS_TAB);
+        REGISTRATE.setCreativeTab(FHTabs.INGREDIENTS);
     }
 
     public static final FluidEntry<ForgeFlowingFluid.Flowing> TEST = REGISTRATE.standardColoredWater(

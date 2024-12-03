@@ -59,40 +59,6 @@ public class FHRegistrateTags {
     private static void genBlockTags(RegistrateTagsProvider<Block> provIn) {
         FHTagGen.FHTagsProvider<Block> prov = new FHTagGen.FHTagsProvider<>(provIn, Block::builtInRegistryHolder);
 
-        // Metal machines
-        prov.tag(FHTags.Blocks.METAL_MACHINES.tag)
-                .add(FHBlocks.RELIC_CHEST.get())
-                .add(FHBlocks.HEAT_INCUBATOR.get())
-                .add(FHBlocks.DEBUG_HEATER.get())
-                .add(FHBlocks.CHARGER.get())
-                .add(FHBlocks.OIL_BURNER.get())
-                .add(FHBlocks.GAS_VENT.get())
-                .add(FHBlocks.SMOKE_BLOCK_T1.get())
-                .add(FHBlocks.MECHANICAL_CALCULATOR.get())
-                .add(FHBlocks.SAUNA_VENT.get())
-                .add(FHBlocks.FOUNTAIN_BASE.get())
-                .add(FHBlocks.FOUNTAIN_NOZZLE.get());
-
-        // Wood machines
-        prov.tag(FHTags.Blocks.WOODEN_MACHINES.tag)
-                .add(FHBlocks.HEAT_PIPE.get())
-                .add(FHBlocks.DRAWING_DESK.get())
-                .add(FHBlocks.INCUBATOR.get());
-
-        // crops
-        prov.tag(BlockTags.CROPS)
-                .add(FHBlocks.RYE_BLOCK.get())
-                .add(FHBlocks.WHITE_TURNIP_BLOCK.get())
-                .add(FHBlocks.WOLFBERRY_BUSH_BLOCK.get());
-
-        prov.tag(BlockTags.MINEABLE_WITH_PICKAXE)
-                // building
-                .add(FHBlocks.GENERATOR_CORE_T1.get())
-                .add(FHBlocks.GENERATOR_BRICK.get())
-                .add(FHBlocks.GENERATOR_AMPLIFIER_T1.get())
-                .add(FHBlocks.MAKESHIFT_GENERATOR_BROKEN.get())
-                .add(FHBlocks.BROKEN_PLATE.get());
-
         prov.tag(FHTags.Blocks.TOWN_DECORATIONS.tag).add(Blocks.FLOWER_POT, Blocks.LANTERN, Blocks.SOUL_LANTERN,
                 Blocks.CAMPFIRE, Blocks.SOUL_CAMPFIRE, Blocks.ENCHANTING_TABLE, Blocks.ANVIL, Blocks.CHIPPED_ANVIL,
                 Blocks.DAMAGED_ANVIL, Blocks.STONECUTTER, Blocks.GRINDSTONE, Blocks.BELL, Blocks.LOOM, Blocks.SMITHING_TABLE);

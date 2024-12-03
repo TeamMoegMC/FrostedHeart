@@ -20,9 +20,7 @@
 package com.teammoeg.frostedheart;
 
 import com.simibubi.create.AllTags;
-import com.simibubi.create.content.contraptions.actors.seat.SeatBlock;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
-import com.simibubi.create.foundation.block.DyedBlockList;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.item.ItemDescription;
 import com.teammoeg.frostedheart.base.item.*;
@@ -63,8 +61,6 @@ import net.minecraftforge.registries.RegistryObject;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
 
 import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
@@ -74,10 +70,6 @@ import static com.teammoeg.frostedheart.FHTags.forgeItemTag;
  * All items.
  */
 public class FHItems {
-
-    static {
-        REGISTRATE.setCreativeTab(FHTabs.BASE_TAB);
-    }
 
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
 
@@ -120,6 +112,10 @@ public class FHItems {
 
     // REGISTRATE STYLE REGISTRY - USE THIS!
 
+    static {
+        REGISTRATE.setCreativeTab(FHTabs.MISC);
+    }
+
     // Spawn Eggs
     // Well, you MUST use ForgeSpawnEggItem, to take in the RegistryObject Supplier, instead of the EntityType itself,
     // because ITEMS always register before ENTITY_TYPES. I wasted 2 hours on this.
@@ -134,109 +130,8 @@ public class FHItems {
                     .model(AssetLookup.existingItemModel())
                     .register();
 
-    // Equipment
-    public static final ItemEntry<FHBaseArmorItem> SNOWSHOES =
-            REGISTRATE.item("snowshoes", p -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)))
-                    .register();
-    public static final ItemEntry<FHBaseArmorItem> ICE_SKATES =
-            REGISTRATE.item("ice_skates", p -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)))
-                    .register();
-
-    // Clothes
-    public static final ItemEntry<FHBaseClothesItem> DEBUG_CLOTH = REGISTRATE
-            .item("debug_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.5f, 100.0f, PlayerTemperatureData.BodyPart.BODY))
-            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
-            .register();
-    public static final ItemEntry<FHBaseClothesItem> HAY_CLOTH= REGISTRATE
-            .item("hay_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.2f, 200.0f, PlayerTemperatureData.BodyPart.BODY))
-            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
-            .register();
-    public static final ItemEntry<FHBaseClothesItem> HIDE_CLOTH = REGISTRATE
-            .item("hide_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 1.0f, 300.0f, PlayerTemperatureData.BodyPart.BODY))
-            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
-            .register();
-    public static final ItemEntry<FHBaseClothesItem> COTTON_CLOTH = REGISTRATE
-            .item("cotton_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.3f, 400.0f, PlayerTemperatureData.BodyPart.BODY))
-            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
-            .register();
-    public static final ItemEntry<FHBaseClothesItem> WOOL_CLOTH = REGISTRATE
-            .item("wool_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.5f, 500.0f, PlayerTemperatureData.BodyPart.BODY))
-            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
-            .register();
-    public static final ItemEntry<FHBaseClothesItem> DOWN_CLOTH = REGISTRATE
-            .item("down_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.7f, 600.0f, PlayerTemperatureData.BodyPart.BODY))
-            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
-            .register();
-    public static final ItemEntry<FHBaseClothesItem> REMOVE_ALL = REGISTRATE
-            .item("debug_remove_all_cloth", n-> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.0f, 0.0f, PlayerTemperatureData.BodyPart.REMOVEALL))
-            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
-            .register();
-
-
-    // Tools
-    public static final ItemEntry<KnifeItem> MAKESHIFT_KNIFE =
-            REGISTRATE.item("makeshift_knife", p -> new KnifeItem(FHToolMaterials.FLINT, 1, -1.5F, new Item.Properties()))
-                    .tag(ItemTags.SWORDS)
-                    .register();
-    public static final ItemEntry<PickaxeItem> MAKESHIFT_PICKAXE =
-            REGISTRATE.item("makeshift_pickaxe", p -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()))
-                    .tag(ItemTags.PICKAXES)
-                    .register();
-    public static final ItemEntry<AxeItem> MAKESHIFT_AXE =
-            REGISTRATE.item("makeshift_axe", p -> new AxeItem(FHToolMaterials.FLINT, 4.0F, -3.2F, new Item.Properties()))
-                    .tag(ItemTags.AXES)
-                    .register();
-    public static final ItemEntry<ShovelItem> MAKESHIFT_SHOVEL =
-            REGISTRATE.item("makeshift_shovel", p -> new ShovelItem(FHToolMaterials.FLINT, 1.5F, -3.0F, new Item.Properties()))
-                    .tag(ItemTags.SHOVELS)
-                    .register();
-    public static final ItemEntry<HoeItem> MAKESHIFT_HOE =
-            REGISTRATE.item("makeshift_hoe", p -> new HoeItem(FHToolMaterials.FLINT, 0, -3.0F, new Item.Properties()))
-                    .tag(ItemTags.HOES)
-                    .register();
-    public static final ItemEntry<SpearItem> MAKESHIFT_SPEAR =
-            REGISTRATE.item("makeshift_spear", p -> new SpearItem(FHToolMaterials.FLINT, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/makeshift_spear.png"),new Item.Properties()))
-                    .tag(forgeItemTag("spears"), forgeItemTag("spears/flint"))
-                    .register();
-    public static final ItemEntry<KnifeItem> BRONZE_KNIFE =
-            REGISTRATE.item("bronze_knife", p -> new KnifeItem(FHToolMaterials.ALLOY, 1, -1.5F, new Item.Properties()))
-                    .tag(ItemTags.SWORDS, forgeItemTag("knifes"), forgeItemTag("knifes/bronze"))
-                    .register();
-    public static final ItemEntry<PickaxeItem> BRONZE_PICKAXE =
-            REGISTRATE.item("bronze_pickaxe", p -> new PickaxeItem(FHToolMaterials.ALLOY, 1, -2.8F, new Item.Properties()))
-                    .tag(ItemTags.PICKAXES, forgeItemTag("pickaxes"), forgeItemTag("pickaxes/bronze"))
-                    .register();
-    public static final ItemEntry<AxeItem> BRONZE_AXE =
-            REGISTRATE.item("bronze_axe", p -> new AxeItem(FHToolMaterials.ALLOY, 4.0F, -3.2F, new Item.Properties()))
-                    .tag(ItemTags.AXES, forgeItemTag("axes"), forgeItemTag("axes/bronze"))
-                    .register();
-    public static final ItemEntry<ShovelItem> BRONZE_SHOVEL =
-            REGISTRATE.item("bronze_shovel", p -> new ShovelItem(FHToolMaterials.ALLOY, 1.5F, -3.0F, new Item.Properties()))
-                    .tag(ItemTags.SHOVELS, forgeItemTag("shovels"), forgeItemTag("shovels/bronze"))
-                    .register();
-    public static final ItemEntry<HoeItem> BRONZE_HOE =
-            REGISTRATE.item("bronze_hoe", p -> new HoeItem(FHToolMaterials.ALLOY, 0, -3.0F, new Item.Properties()))
-                    .tag(ItemTags.HOES, forgeItemTag("hoes"), forgeItemTag("hoes/bronze"))
-                    .register();
-    public static final ItemEntry<SpearItem> BRONZE_SPEAR =
-            REGISTRATE.item("bronze_spear", p -> new SpearItem(FHToolMaterials.ALLOY, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/bronze_spear.png"), new Item.Properties()))
-                    .tag(forgeItemTag("spears"), forgeItemTag("spears/bronze"))
-                    .register();
-    public static final ItemEntry<SwordItem> BRONZE_SWORD =
-            REGISTRATE.item("bronze_sword", p -> new SwordItem(FHToolMaterials.ALLOY, 3, -2.4F, new Item.Properties()))
-                    .tag(ItemTags.SWORDS, forgeItemTag("swords"), forgeItemTag("swords/bronze"))
-                    .register();
-    public static final ItemEntry<PickaxeItem> STONE_HAMMER =
-            REGISTRATE.item("stone_hammer", p -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()))
-                    .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/stone"))
-                    .register();
-    public static final ItemEntry<PickaxeItem> BRONZE_HAMMER =
-            REGISTRATE.item("bronze_hammer", p -> new PickaxeItem(FHToolMaterials.ALLOY, 1, -2.8F, new Item.Properties()))
-                    .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/bronze"))
-                    .register();
-
     static {
-        REGISTRATE.setCreativeTab(FHTabs.MATERIALS_TAB);
+        REGISTRATE.setCreativeTab(FHTabs.INGREDIENTS);
     }
 
     // Soil drops
@@ -1071,18 +966,22 @@ public class FHItems {
     public static ItemEntry<Item> REFRACTORY_BRICK =
             ingredient("refractory_brick");
 
-    static {
-        REGISTRATE.setCreativeTab(FHTabs.BASE_TAB);
-    }
-
     // OLD FORGE LIKE REGISTRY - TRY NOT USE THIS, USE REGISTRATE like above
 
-    // Materials
+    static {
+        REGISTRATE.setCreativeTab(FHTabs.MISC);
+    }
+
+    // Misc
     public static RegistryObject<Item> generator_ash = register("generator_ash", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> raw_hide = register("raw_hide", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> makeshift_core_broken = register("makeshift_core_broken", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> handheld_core = register("handheld_core", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> energy_core = register("energy_core", n -> new FHBaseItem(createProps()));
+
+    static {
+        REGISTRATE.setCreativeTab(FHTabs.FOODS);
+    }
 
     // Foods and plants
     public static RegistryObject<Item> dried_wolfberries = register("dried_wolfberries", n -> new FHBaseItem(createProps().food(FHFoodProperties.DRIED_WOLFBERRIES)));
@@ -1104,6 +1003,10 @@ public class FHItems {
     public static RegistryObject<Item> dried_vegetables = register("dried_vegetables", n -> new CannedFoodItem(createProps().food((new FoodProperties.Builder()).nutrition(4).saturationMod(0.6F).build())));
     public static RegistryObject<Item> chocolate = register("chocolate", n -> new FHBaseItem(createProps().food((new FoodProperties.Builder()).nutrition(4).saturationMod(0.8F).meat().fast().build())));
 
+
+    static {
+        REGISTRATE.setCreativeTab(FHTabs.TOOLS);
+    }
 
     // Equipment and tools
 //    public static RegistryObject<Item> hand_stove = register("hand_stove", n -> new CoalHandStove(createProps().defaultDurability(10)));
@@ -1205,6 +1108,107 @@ public class FHItems {
                 .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.thermos"))
                 .register();
     });
+
+    // Equipment
+    public static final ItemEntry<FHBaseArmorItem> SNOWSHOES =
+            REGISTRATE.item("snowshoes", p -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)))
+                    .register();
+    public static final ItemEntry<FHBaseArmorItem> ICE_SKATES =
+            REGISTRATE.item("ice_skates", p -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)))
+                    .register();
+
+    // Clothes
+    public static final ItemEntry<FHBaseClothesItem> DEBUG_CLOTH = REGISTRATE
+            .item("debug_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.5f, 100.0f, PlayerTemperatureData.BodyPart.BODY))
+            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
+            .register();
+    public static final ItemEntry<FHBaseClothesItem> HAY_CLOTH= REGISTRATE
+            .item("hay_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.2f, 200.0f, PlayerTemperatureData.BodyPart.BODY))
+            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
+            .register();
+    public static final ItemEntry<FHBaseClothesItem> HIDE_CLOTH = REGISTRATE
+            .item("hide_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 1.0f, 300.0f, PlayerTemperatureData.BodyPart.BODY))
+            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
+            .register();
+    public static final ItemEntry<FHBaseClothesItem> COTTON_CLOTH = REGISTRATE
+            .item("cotton_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.3f, 400.0f, PlayerTemperatureData.BodyPart.BODY))
+            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
+            .register();
+    public static final ItemEntry<FHBaseClothesItem> WOOL_CLOTH = REGISTRATE
+            .item("wool_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.5f, 500.0f, PlayerTemperatureData.BodyPart.BODY))
+            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
+            .register();
+    public static final ItemEntry<FHBaseClothesItem> DOWN_CLOTH = REGISTRATE
+            .item("down_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.7f, 600.0f, PlayerTemperatureData.BodyPart.BODY))
+            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
+            .register();
+    public static final ItemEntry<FHBaseClothesItem> REMOVE_ALL = REGISTRATE
+            .item("debug_remove_all_cloth", n-> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.0f, 0.0f, PlayerTemperatureData.BodyPart.REMOVEALL))
+            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
+            .register();
+
+
+    // Tools
+    public static final ItemEntry<KnifeItem> MAKESHIFT_KNIFE =
+            REGISTRATE.item("makeshift_knife", p -> new KnifeItem(FHToolMaterials.FLINT, 1, -1.5F, new Item.Properties()))
+                    .tag(ItemTags.SWORDS)
+                    .register();
+    public static final ItemEntry<PickaxeItem> MAKESHIFT_PICKAXE =
+            REGISTRATE.item("makeshift_pickaxe", p -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()))
+                    .tag(ItemTags.PICKAXES)
+                    .register();
+    public static final ItemEntry<AxeItem> MAKESHIFT_AXE =
+            REGISTRATE.item("makeshift_axe", p -> new AxeItem(FHToolMaterials.FLINT, 4.0F, -3.2F, new Item.Properties()))
+                    .tag(ItemTags.AXES)
+                    .register();
+    public static final ItemEntry<ShovelItem> MAKESHIFT_SHOVEL =
+            REGISTRATE.item("makeshift_shovel", p -> new ShovelItem(FHToolMaterials.FLINT, 1.5F, -3.0F, new Item.Properties()))
+                    .tag(ItemTags.SHOVELS)
+                    .register();
+    public static final ItemEntry<HoeItem> MAKESHIFT_HOE =
+            REGISTRATE.item("makeshift_hoe", p -> new HoeItem(FHToolMaterials.FLINT, 0, -3.0F, new Item.Properties()))
+                    .tag(ItemTags.HOES)
+                    .register();
+    public static final ItemEntry<SpearItem> MAKESHIFT_SPEAR =
+            REGISTRATE.item("makeshift_spear", p -> new SpearItem(FHToolMaterials.FLINT, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/makeshift_spear.png"),new Item.Properties()))
+                    .tag(forgeItemTag("spears"), forgeItemTag("spears/flint"))
+                    .register();
+    public static final ItemEntry<KnifeItem> BRONZE_KNIFE =
+            REGISTRATE.item("bronze_knife", p -> new KnifeItem(FHToolMaterials.ALLOY, 1, -1.5F, new Item.Properties()))
+                    .tag(ItemTags.SWORDS, forgeItemTag("knifes"), forgeItemTag("knifes/bronze"))
+                    .register();
+    public static final ItemEntry<PickaxeItem> BRONZE_PICKAXE =
+            REGISTRATE.item("bronze_pickaxe", p -> new PickaxeItem(FHToolMaterials.ALLOY, 1, -2.8F, new Item.Properties()))
+                    .tag(ItemTags.PICKAXES, forgeItemTag("pickaxes"), forgeItemTag("pickaxes/bronze"))
+                    .register();
+    public static final ItemEntry<AxeItem> BRONZE_AXE =
+            REGISTRATE.item("bronze_axe", p -> new AxeItem(FHToolMaterials.ALLOY, 4.0F, -3.2F, new Item.Properties()))
+                    .tag(ItemTags.AXES, forgeItemTag("axes"), forgeItemTag("axes/bronze"))
+                    .register();
+    public static final ItemEntry<ShovelItem> BRONZE_SHOVEL =
+            REGISTRATE.item("bronze_shovel", p -> new ShovelItem(FHToolMaterials.ALLOY, 1.5F, -3.0F, new Item.Properties()))
+                    .tag(ItemTags.SHOVELS, forgeItemTag("shovels"), forgeItemTag("shovels/bronze"))
+                    .register();
+    public static final ItemEntry<HoeItem> BRONZE_HOE =
+            REGISTRATE.item("bronze_hoe", p -> new HoeItem(FHToolMaterials.ALLOY, 0, -3.0F, new Item.Properties()))
+                    .tag(ItemTags.HOES, forgeItemTag("hoes"), forgeItemTag("hoes/bronze"))
+                    .register();
+    public static final ItemEntry<SpearItem> BRONZE_SPEAR =
+            REGISTRATE.item("bronze_spear", p -> new SpearItem(FHToolMaterials.ALLOY, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/bronze_spear.png"), new Item.Properties()))
+                    .tag(forgeItemTag("spears"), forgeItemTag("spears/bronze"))
+                    .register();
+    public static final ItemEntry<SwordItem> BRONZE_SWORD =
+            REGISTRATE.item("bronze_sword", p -> new SwordItem(FHToolMaterials.ALLOY, 3, -2.4F, new Item.Properties()))
+                    .tag(ItemTags.SWORDS, forgeItemTag("swords"), forgeItemTag("swords/bronze"))
+                    .register();
+    public static final ItemEntry<PickaxeItem> STONE_HAMMER =
+            REGISTRATE.item("stone_hammer", p -> new PickaxeItem(FHToolMaterials.FLINT, 1, -2.8F, new Item.Properties()))
+                    .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/stone"))
+                    .register();
+    public static final ItemEntry<PickaxeItem> BRONZE_HAMMER =
+            REGISTRATE.item("bronze_hammer", p -> new PickaxeItem(FHToolMaterials.ALLOY, 1, -2.8F, new Item.Properties()))
+                    .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/bronze"))
+                    .register();
 
     //WaterSource section
     public final static RegistryObject<Item> fluid_bottle = register("fluid_bottle", (s) -> new FluidBottleItem(new Item.Properties().stacksTo(16)));

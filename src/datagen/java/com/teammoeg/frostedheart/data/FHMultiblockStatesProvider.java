@@ -64,23 +64,6 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 	}
 
 	protected void registerStatesAndModels() {
-		// createMultiblock(FHContent.FHMultiblocks.generator,
-		// split(obj("block/multiblocks/generator.obj"),
-		// FHContent.FHMultiblocks.GENERATOR));
-//        createMultiblock(FHBlocks.Multi.crucible, split(obj("block/multiblocks/crucible.obj"), FHMultiblocks.CRUCIBLE));
-		// createMultiblock(FHContent.FHMultiblocks.generator_t2,split(obj("block/multiblocks/generator_t2.obj"),
-		// FHContent.FHMultiblocks.GENERATOR_T2));
-		super.horizontalBlock(FHBlocks.MECHANICAL_CALCULATOR.get(), obj("block/mechanical_calculator_base.obj"));
-		obj("block/mechanical_calculator.obj");
-
-		super.horizontalBlock(FHBlocks.INCUBATOR.get(), bmf("incubator"));
-		super.itemModel(FHBlocks.INCUBATOR.get(), bmf("incubator"));
-		super.itemModel(FHBlocks.HEAT_INCUBATOR.get(), bmf("heat_incubator"));
-		super.horizontalBlock(FHBlocks.HEAT_INCUBATOR.get(),
-				s -> s.getValue(BlockStateProperties.LIT) ? bmf("heat_incubator_active") : bmf("heat_incubator"));
-		// super.itemModel(FHBlocks.mech_calc,models().withExistingParent("block/mechanical_calculator",
-		// modLoc("block/mechanical_calculator")));
-
 
 	}
 

@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart;
 
 import com.simibubi.create.AllTags;
+import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
@@ -54,13 +55,15 @@ import com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen;
 import com.teammoeg.frostedheart.util.constants.FHProps;
 import com.tterrag.registrate.providers.loot.RegistrateBlockLootTables;
 import com.tterrag.registrate.util.entry.BlockEntry;
+import net.minecraft.data.loot.packs.VanillaBlockLoot;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
@@ -79,10 +82,6 @@ import static net.minecraft.world.level.block.Blocks.*;
 
 public class FHBlocks {
 
-    static {
-        REGISTRATE.setCreativeTab(FHTabs.BASE_TAB);
-    }
-
     static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
 
     public static <T extends Block> RegistryObject<T> register(String name, Supplier<T> block, String itemName, Function<T, Item> item) {
@@ -100,6 +99,10 @@ public class FHBlocks {
     }
 
     // Registrate style
+
+    static {
+        REGISTRATE.setCreativeTab(FHTabs.NATURAL_BLOCKS);
+    }
 
     // Condensed ore blocks
     public static final BlockEntry<Block> CONDENSED_IRON_ORE_BLOCK = REGISTRATE.block("condensed_iron_ore_block", Block::new)
@@ -1015,8 +1018,79 @@ public class FHBlocks {
             .build()
             .register();
 
+    // Natural biological blocks
+    public static final BlockEntry<HugeMushroomBlock> WHALE_BLOCK = REGISTRATE.block("whale_block", HugeMushroomBlock::new)
+            .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
+                    .requiresCorrectToolForDrops()
+                    .friction(0.8F)
+                    .sound(SoundType.MUD)
+            )
+            .blockstate((c, p) -> {
+                p.getExistingMultipartBuilder(c.get());
+            })
+            .tag(BlockTags.NEEDS_STONE_TOOL)
+            .tag(BlockTags.SWORD_EFFICIENT)
+            .simpleItem()
+            .register();
+
+    public static final BlockEntry<HugeMushroomBlock> WHALE_BELLY_BLOCK = REGISTRATE.block("whale_belly_block", HugeMushroomBlock::new)
+            .properties(p -> p.mapColor(MapColor.COLOR_YELLOW)
+                    .requiresCorrectToolForDrops()
+                    .friction(0.8F)
+                    .sound(SoundType.MUD)
+            )
+            .blockstate((c, p) -> {
+                p.getExistingMultipartBuilder(c.get());
+            })
+            .tag(BlockTags.NEEDS_STONE_TOOL)
+            .tag(BlockTags.SWORD_EFFICIENT)
+            .simpleItem()
+            .register();
+
+    // to block entry
+    public static final BlockEntry<Block> COPPER_GRAVEL = REGISTRATE.block("copper_gravel", Block::new)
+            .initialProperties(() -> GRAVEL)
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .tag(BlockTags.CROPS)
+            .loot((lt, b) -> lt.add(b,
+                    lt.createSingleItemTableWithSilkTouch(b, Items.RAW_COPPER, ConstantValue.exactly(1))))
+            .register();
+    public static final BlockEntry<RyeBlock> RYE_BLOCK = REGISTRATE.block("rye_block", p -> new RyeBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Rye")
+            .tag(BlockTags.CROPS)
+            .register();
+
+    public static final BlockEntry<WolfBerryBushBlock> WOLFBERRY_BUSH_BLOCK = REGISTRATE.block("wolfberry_bush_block",
+                    p -> new WolfBerryBushBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.berryBushBlocks, 2))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Chinese Wolfberry")
+            .tag(BlockTags.CROPS)
+            .register();
+
+    public static final BlockEntry<WhiteTurnipBlock> WHITE_TURNIP_BLOCK = REGISTRATE.block("white_turnip_block",
+                    p -> new WhiteTurnipBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("White Turnip")
+            .register();
+
+    static {
+        REGISTRATE.setCreativeTab(FHTabs.BUILDING_BLOCKS);
+    }
+
     // Metal blocks, registrate
-    // TODO: Uncomment when textures are ready
 
     public static final BlockEntry<Block> ALUMINUM_BLOCK = REGISTRATE.block("aluminum_block", Block::new)
             .initialProperties(() -> IRON_BLOCK)
@@ -1279,17 +1353,52 @@ public class FHBlocks {
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
             .register();
-    public static RegistryObject<Block> COPPER_GRAVEL = register("copper_gravel", () -> new FHBaseBlock(FHProps.ore_gravel));
-
-    // Crop Blocks
-    public static RegistryObject<Block> RYE_BLOCK = register("rye_block", () -> new RyeBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps));
-    public static RegistryObject<Block> WOLFBERRY_BUSH_BLOCK = register("wolfberry_bush_block", () -> new WolfBerryBushBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.berryBushBlocks, 2), "wolfberries", t -> new FoodBlockItem(t, FHItems.createProps(), FHFoodProperties.WOLFBERRIES));
-    public static RegistryObject<Block> WHITE_TURNIP_BLOCK = register("white_turnip_block", () -> new WhiteTurnipBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps), (block) -> new FoodBlockItem(block, new Item.Properties(), FHFoodProperties.WHITE_TURNIP));
 
     // Building Blocks
-    public static RegistryObject<Block> GENERATOR_BRICK = register("generator_brick", () -> new FHBaseBlock(FHProps.stoneDecoProps));
-    public static RegistryObject<Block> GENERATOR_CORE_T1 = register("generator_core_t1", () -> new FHBaseBlock(FHProps.stoneDecoProps));
-    public static RegistryObject<Block> GENERATOR_AMPLIFIER_T1 = register("generator_amplifier_r1", () -> new FHBaseBlock(FHProps.stoneDecoProps));
+    public static final BlockEntry<Block> GENERATOR_BRICK = REGISTRATE.block("generator_brick", Block::new)
+            .properties(p -> p.sound(SoundType.STONE)
+                    .mapColor(MapColor.STONE)
+                    .requiresCorrectToolForDrops()
+                    .strength(2, 10)
+            )
+            .transform(pickaxeOnly())
+            .tag(BlockTags.NEEDS_STONE_TOOL)
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Generator Bricks")
+            .register();
+
+    public static final BlockEntry<Block> GENERATOR_CORE_T1 = REGISTRATE.block("generator_core_t1", Block::new)
+            .properties(p -> p.sound(SoundType.STONE)
+                    .mapColor(MapColor.STONE)
+                    .requiresCorrectToolForDrops()
+                    .strength(2, 10)
+            )
+            .transform(pickaxeOnly())
+            .tag(BlockTags.NEEDS_STONE_TOOL)
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Basic Generator Core")
+            .register();
+
+    public static final BlockEntry<Block> GENERATOR_AMPLIFIER_T1 = REGISTRATE.block("generator_amplifier_r1", Block::new)
+            .properties(p -> p.sound(SoundType.STONE)
+                    .mapColor(MapColor.STONE)
+                    .requiresCorrectToolForDrops()
+                    .strength(2, 10)
+            )
+            .transform(pickaxeOnly())
+            .tag(BlockTags.NEEDS_STONE_TOOL)
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Basic Generator Amplifier")
+            .register();
 
     public static final BlockEntry<Block> DURALUMIN_SHEETMETAL = REGISTRATE.block("duralumin_sheetmetal", Block::new)
             .properties(p -> p.mapColor(MapColor.METAL).sound(SoundType.METAL).strength(2, 2))
@@ -1337,53 +1446,108 @@ public class FHBlocks {
             .simpleItem()
             .register();
 
-    public static final BlockEntry<HugeMushroomBlock> WHALE_BLOCK = REGISTRATE.block("whale_block", HugeMushroomBlock::new)
-            .properties(p -> p.mapColor(MapColor.COLOR_GRAY)
-                    .requiresCorrectToolForDrops()
-                    .friction(0.8F)
-                    .sound(SoundType.MUD)
-            )
-            .blockstate((c, p) -> {
-                p.getExistingMultipartBuilder(c.get());
-            })
-            .tag(BlockTags.NEEDS_STONE_TOOL)
-            .tag(BlockTags.SWORD_EFFICIENT)
-            .simpleItem()
-            .register();
-
-    public static final BlockEntry<HugeMushroomBlock> WHALE_BELLY_BLOCK = REGISTRATE.block("whale_belly_block", HugeMushroomBlock::new)
-            .properties(p -> p.mapColor(MapColor.COLOR_YELLOW)
-                    .requiresCorrectToolForDrops()
-                    .friction(0.8F)
-                    .sound(SoundType.MUD)
-            )
-            .blockstate((c, p) -> {
-                p.getExistingMultipartBuilder(c.get());
-            })
-            .tag(BlockTags.NEEDS_STONE_TOOL)
-            .tag(BlockTags.SWORD_EFFICIENT)
-            .simpleItem()
-            .register();
-
     // Decoration Blocks
-    public static RegistryObject<Block> BLOOD_BLOCK = register("blood_block", () -> new bloodBlock(FHProps.stoneProps));
-    public static RegistryObject<Block> BONE_BLOCK = register("bone_block", () -> new BoneBlock(FHProps.grassProps));
-    public static RegistryObject<Block> SMALL_GARAGE = register("small_garage", () -> new SmallGarage(FHProps.grassProps));
-    public static RegistryObject<Block> PACKAGE_BLOCK = register("package_block", () -> new PackageBlock(FHProps.woodenProps));
-    public static RegistryObject<Block> PEBBLE_BLOCK = register("pebble_block", () -> new PebbleBlock(FHProps.stoneProps));
-    public static RegistryObject<Block> ODD_MARK = register("odd_mark", () -> new OddMark(FHProps.redStoneProps));
-    public static RegistryObject<Block> WOODEN_BOX = register("wooden_box", () -> new WoodenBox(FHProps.woodenProps));
-    public static RegistryObject<Block> MAKESHIFT_GENERATOR_BROKEN = register("makeshift_generator_broken", () -> new FHBaseBlock(Block.Properties
-            .of().mapColor(MapColor.STONE)
-            .sound(SoundType.STONE)
-            .requiresCorrectToolForDrops()
-            .strength(45, 800)));
-
-    public static RegistryObject<Block> BROKEN_PLATE = register("broken_plate", () -> new FHBaseBlock(Block.Properties
-            .of().mapColor(MapColor.METAL)
-            .sound(SoundType.METAL)
-            .requiresCorrectToolForDrops()
-            .strength(45, 800)));
+    // BLOOD_BLOCK
+    public static final BlockEntry<bloodBlock> BLOOD_BLOCK = REGISTRATE.block("blood_block", bloodBlock::new)
+            .properties(p -> p.mapColor(MapColor.COLOR_RED)
+                    .sound(SoundType.STONE)
+                    .strength(2.0F))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Blood")
+            .register();
+    // BONE_BLOCK
+    public static final BlockEntry<BoneBlock> BONE_BLOCK = REGISTRATE.block("bone_block", BoneBlock::new)
+            .properties(p -> p.mapColor(MapColor.SNOW)
+                    .sound(SoundType.BONE_BLOCK)
+                    .strength(2.0F))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Pile of Bones")
+            .register();
+    // SMALL_GARAGE
+    public static final BlockEntry<SmallGarage> SMALL_GARAGE = REGISTRATE.block("small_garage", SmallGarage::new)
+            .properties(p -> p.mapColor(MapColor.COLOR_BROWN)
+                    .sound(SoundType.METAL)
+                    .strength(2.0F))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Small Garage")
+            .register();
+    // PACKAGE_BLOCK
+    public static final BlockEntry<PackageBlock> PACKAGE_BLOCK = REGISTRATE.block("package_block", PackageBlock::new)
+            .properties(p -> p.mapColor(MapColor.COLOR_BROWN)
+                    .sound(SoundType.WOOD)
+                    .strength(2.0F))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Abandoned Package")
+            .register();
+    // PEBBLE_BLOCK
+    public static final BlockEntry<PebbleBlock> PEBBLE_BLOCK = REGISTRATE.block("pebble_block", PebbleBlock::new)
+            .properties(p -> p.mapColor(MapColor.STONE)
+                    .sound(SoundType.GRAVEL)
+                    .strength(2.0F))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Pebbles")
+            .register();
+    // ODD_MARK
+    public static final BlockEntry<OddMark> ODD_MARK = REGISTRATE.block("odd_mark", OddMark::new)
+            .properties(p -> p.mapColor(MapColor.COLOR_RED)
+                    .sound(SoundType.STONE)
+                    .strength(2.0F))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Odd Mark")
+            .register();
+    // WOODEN_BOX
+    public static final BlockEntry<WoodenBox> WOODEN_BOX = REGISTRATE.block("wooden_box", WoodenBox::new)
+            .properties(p -> p.mapColor(MapColor.WOOD)
+                    .sound(SoundType.WOOD)
+                    .strength(2.0F))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Wooden Box")
+            .register();
+    // MAKESHIFT_GENERATOR_BROKEN
+    public static final BlockEntry<Block> MAKESHIFT_GENERATOR_BROKEN = REGISTRATE.block("makeshift_generator_broken", Block::new)
+            .properties(p -> p.mapColor(MapColor.STONE)
+                    .sound(SoundType.STONE)
+                    .strength(45.0F, 800.0F))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Broken Generator Core")
+            .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
+            .register();
+    // BROKEN_PLATE
+    public static final BlockEntry<Block> BROKEN_PLATE = REGISTRATE.block("broken_plate", Block::new)
+            .properties(p -> p.mapColor(MapColor.METAL)
+                    .sound(SoundType.METAL)
+                    .strength(45.0F, 800.0F))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Broken Generator Plating")
+            .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
+            .register();
 
     public static BlockEntry<Block> CHASSIS = REGISTRATE.block("chassis", Block::new)
             .transform(ruinedMachines())
@@ -1479,73 +1643,184 @@ public class FHBlocks {
     */
 
 
+    static {
+        REGISTRATE.setCreativeTab(FHTabs.FUNCTIONAL_BLOCKS);
+    }
 
     // Machine Blocks
-    public static RegistryObject<Block> RELIC_CHEST = register("relic_chest", RelicChestBlock::new);
-    public static RegistryObject<Block> INCUBATOR = register("incubator", () -> new IncubatorBlock(FHProps.stoneDecoProps, FHBlockEntityTypes.INCUBATOR));
-    public static RegistryObject<Block> HEAT_INCUBATOR = register("heat_incubator", () -> new HeatIncubatorBlock(FHProps.metalDecoProps, FHBlockEntityTypes.INCUBATOR2));
-    public static RegistryObject<Block> HEAT_PIPE = register("heat_pipe", () -> new HeatPipeBlock(Block.Properties
-            .of().mapColor(MapColor.STONE).sound(SoundType.WOOD)
-            .strength(1, 5)
-            .noOcclusion()));
-    public static RegistryObject<Block> DEBUG_HEATER = register("debug_heater", () -> new DebugHeaterBlock(Block.Properties
-            .of().mapColor(MapColor.STONE).sound(SoundType.STONE)
-            .requiresCorrectToolForDrops()
-            .strength(2, 10)
-            .noOcclusion()));
-    public static RegistryObject<Block> CHARGER = register("charger", () -> new ChargerBlock(Block.Properties
-            .of().mapColor(MapColor.STONE)
-            .sound(SoundType.METAL)
-            .requiresCorrectToolForDrops()
-            .strength(2, 10)
-            .noOcclusion()));
-    public static RegistryObject<Block> OIL_BURNER = register("oil_burner", () -> new OilBurnerBlock(Block.Properties
-            .of().mapColor(MapColor.STONE)
-            .sound(SoundType.STONE)
-            .requiresCorrectToolForDrops()
-            .strength(2, 10)
-            .noOcclusion()));
-    public static RegistryObject<Block> GAS_VENT = register("gas_vent", () -> new GasVentBlock(Block.Properties
-            .of().mapColor(MapColor.METAL)
-            .sound(SoundType.METAL)
-            .requiresCorrectToolForDrops()
-            .strength(2, 10)
-            .noOcclusion()));
-    public static RegistryObject<Block> DRAWING_DESK = register("drawing_desk", () -> new DrawingDeskBlock(Block.Properties
-            .of().mapColor(MapColor.WOOD)
-            .sound(SoundType.WOOD)
-            .strength(2, 6)
-            .noOcclusion()));
-    public static RegistryObject<Block> SMOKE_BLOCK_T1 = register("smoke_block_t1", () -> new SmokeBlockT1(Block.Properties
-            .of().mapColor(MapColor.STONE)
-            .sound(SoundType.STONE)
-            .requiresCorrectToolForDrops()
-            .strength(2, 10)
-            .noOcclusion()));
-    public static RegistryObject<Block> MECHANICAL_CALCULATOR = register("mechanical_calculator", () -> new MechCalcBlock(Block.Properties
-            .of().mapColor(MapColor.METAL)
-            .sound(SoundType.METAL)
-            .requiresCorrectToolForDrops()
-            .strength(2, 10)
-            .noOcclusion()));
-    public static RegistryObject<Block> SAUNA_VENT = register("sauna_vent", () -> new SaunaBlock(Block.Properties
-            .of().mapColor(MapColor.STONE)
-            .sound(SoundType.METAL)
-            .requiresCorrectToolForDrops()
-            .strength(2, 10)
-            .noOcclusion()));
-    public static RegistryObject<Block> FOUNTAIN_BASE = register("fountain_base", () -> new FountainBlock(Block.Properties
-            .of().mapColor(MapColor.STONE)
-            .sound(SoundType.METAL)
-            .requiresCorrectToolForDrops()
-            .strength(2, 10)
-            .noOcclusion()));
-    public static RegistryObject<Block> FOUNTAIN_NOZZLE = register("fountain_nozzle", () -> new FountainNozzleBlock(Block.Properties
-            .of().mapColor(MapColor.METAL)
-            .sound(SoundType.METAL)
-            .requiresCorrectToolForDrops()
-            .strength(2, 10)
-            .noOcclusion()));
+    // RELIC_CHEST
+    public static final BlockEntry<RelicChestBlock> RELIC_CHEST = REGISTRATE.block("relic_chest", RelicChestBlock::new)
+            .properties(t -> t.mapColor(MapColor.METAL)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops()
+                    .strength(35, 600)
+                    .noOcclusion())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .register();
+    // INCUBATOR
+    public static final BlockEntry<IncubatorBlock> INCUBATOR = REGISTRATE.block("incubator", p -> new IncubatorBlock(FHProps.woodenProps, FHBlockEntityTypes.INCUBATOR))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .register();
+    // HEAT_INCUBATOR
+    public static final BlockEntry<HeatIncubatorBlock> HEAT_INCUBATOR = REGISTRATE.block("heat_incubator", p -> new HeatIncubatorBlock(FHProps.metalDecoProps, FHBlockEntityTypes.INCUBATOR2))
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Steam Incubator")
+            .register();
+    // HEAT_PIPE
+    public static final BlockEntry<HeatPipeBlock> HEAT_PIPE = REGISTRATE.block("heat_pipe", HeatPipeBlock::new)
+            .properties(t -> t.mapColor(MapColor.STONE)
+                    .sound(SoundType.WOOD)
+                    .strength(1, 5)
+                    .noOcclusion())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .register();
+    // DEBUG_HEATER
+    public static final BlockEntry<DebugHeaterBlock> DEBUG_HEATER = REGISTRATE.block("debug_heater", DebugHeaterBlock::new)
+            .properties(t -> t.mapColor(MapColor.STONE)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops()
+                    .strength(2, 10)
+                    .noOcclusion())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .register();
+    // CHARGER
+    public static final BlockEntry<ChargerBlock> CHARGER = REGISTRATE.block("charger", ChargerBlock::new)
+            .properties(t -> t.mapColor(MapColor.STONE)
+                    .sound(SoundType.METAL)
+                    .requiresCorrectToolForDrops()
+                    .strength(2, 10)
+                    .noOcclusion())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Steam Charger")
+            .register();
+    // OIL_BURNER
+    public static final BlockEntry<OilBurnerBlock> OIL_BURNER = REGISTRATE.block("oil_burner", OilBurnerBlock::new)
+            .properties(t -> t.mapColor(MapColor.STONE)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops()
+                    .strength(2, 10)
+                    .noOcclusion())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("Oil Incinerator")
+            .register();
+    // GAS_VENT
+    public static final BlockEntry<GasVentBlock> GAS_VENT = REGISTRATE.block("gas_vent", GasVentBlock::new)
+            .properties(t -> t.mapColor(MapColor.METAL)
+                    .sound(SoundType.METAL)
+                    .requiresCorrectToolForDrops()
+                    .strength(2, 10)
+                    .noOcclusion())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .register();
+    // DRAWING_DESK
+    public static final BlockEntry<DrawingDeskBlock> DRAWING_DESK = REGISTRATE.block("drawing_desk", DrawingDeskBlock::new)
+            .properties(t -> t.mapColor(MapColor.WOOD)
+                    .sound(SoundType.WOOD)
+                    .strength(2, 6)
+                    .noOcclusion())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.WOODEN_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+//            .loot((p, b) -> p.add(b, VanillaBlockLoot.noDrop()))
+            .register();
+    // SMOKE_BLOCK_T1
+    public static final BlockEntry<SmokeBlockT1> SMOKE_BLOCK_T1 = REGISTRATE.block("smoke_block_t1", SmokeBlockT1::new)
+            .properties(t -> t.mapColor(MapColor.STONE)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops()
+                    .strength(2, 10)
+                    .noOcclusion())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .lang("T1 Smoke Generator")
+            .register();
+    // MECHANICAL_CALCULATOR
+    public static final BlockEntry<MechCalcBlock> MECHANICAL_CALCULATOR = REGISTRATE.block("mechanical_calculator", MechCalcBlock::new)
+            .properties(t -> t.mapColor(MapColor.METAL)
+                    .sound(SoundType.METAL)
+                    .requiresCorrectToolForDrops()
+                    .strength(2, 10)
+                    .noOcclusion())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .register();
+    // SAUNA_VENT
+    public static final BlockEntry<SaunaBlock> SAUNA_VENT = REGISTRATE.block("sauna_vent", SaunaBlock::new)
+            .properties(t -> t.mapColor(MapColor.STONE)
+                    .sound(SoundType.METAL)
+                    .requiresCorrectToolForDrops()
+                    .strength(2, 10)
+                    .noOcclusion())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .register();
+    public static final BlockEntry<FountainBlock> FOUNTAIN_BASE = REGISTRATE.block("fountain_base", FountainBlock::new)
+            .properties(t -> t.sound(SoundType.METAL)
+                    .mapColor(MapColor.METAL)
+                    .requiresCorrectToolForDrops()
+                    .strength(2, 10)
+                    .noOcclusion())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .register();
+    public static final BlockEntry<FountainNozzleBlock> FOUNTAIN_NOZZLE = REGISTRATE.block("fountain_nozzle", FountainNozzleBlock::new)
+            .properties(t -> t.sound(SoundType.METAL)
+                    .mapColor(MapColor.METAL)
+                    .requiresCorrectToolForDrops()
+                    .strength(2, 10)
+                    .noOcclusion())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .register();
     public static final BlockEntry<SteamCoreBlock> STEAM_CORE = REGISTRATE.block("steam_core", SteamCoreBlock::new)
             .properties(t -> t.sound(SoundType.METAL)
                     .requiresCorrectToolForDrops()
