@@ -112,6 +112,7 @@ import net.minecraftforge.eventbus.api.Event.Result;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import se.mickelus.tetra.items.modular.IModularItem;
@@ -306,7 +307,7 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void canUseBlock(PlayerInteractEvent.RightClickBlock event) {
-        if (event.getItemStack().getItem() instanceof IModularItem) {
+        if (ModList.get().isLoaded("tetra") && event.getItemStack().getItem() instanceof IModularItem) {
             int type = 0;
             if (event.getItemStack().canPerformAction(TetraCompat.coreSpade))
                 type = 1;
