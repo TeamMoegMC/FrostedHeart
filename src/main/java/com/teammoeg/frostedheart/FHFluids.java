@@ -19,135 +19,136 @@
 
 package com.teammoeg.frostedheart;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
-
-import com.teammoeg.frostedheart.util.utility.ReferenceSupplier;
-
-import net.minecraft.world.level.material.FlowingFluid;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraft.core.registries.Registries;
+import com.simibubi.create.content.fluids.VirtualFluid;
+import com.tterrag.registrate.util.entry.FluidEntry;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidType;
 import net.minecraftforge.fluids.ForgeFlowingFluid;
-import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistries.Keys;
 
+import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
+
 public class FHFluids {
-    public static final ResourceLocation STILL_FLUID_TEXTURE = new ResourceLocation("block/water_still");
-    public static final ResourceLocation PROTEIN_FLUID_TEXTURE = new ResourceLocation(FHMain.MODID,
-            "block/protein_fluid");
-    public static final ResourceLocation FLOWING_FLUID_TEXTURE = new ResourceLocation("block/water_flow");
+
+    public static final ResourceLocation DEFAULT_STILL_TEXTURE = new ResourceLocation("block/water_still");
+    public static final ResourceLocation DEFAULT_FLOWING_TEXTURE = new ResourceLocation("block/water_flow");
+    public static final int DEFAULT_COLOR = 0xFFFFFFFF;
+
+    static {
+        REGISTRATE.setCreativeTab(FHTabs.MATERIALS_TAB);
+    }
+
+    public static final FluidEntry<ForgeFlowingFluid.Flowing> TEST = REGISTRATE.standardColoredWater(
+            "test", 0xFF00FF00, FluidType.Properties.create()
+                            .density(-1000).viscosity(10).temperature(300).canConvertToSource(false))
+            .register();
+
+    public static final FluidEntry<VirtualFluid> TEST3 = REGISTRATE.virtualColoredFluid(
+            "test3", DEFAULT_STILL_TEXTURE, DEFAULT_FLOWING_TEXTURE, 0xFF00FF00)
+            .register();
+
+    public static final FluidEntry<VirtualFluid> RED_WATER = REGISTRATE.virtualColoredWater(
+                    "red_water", 0xFFFF0000)
+            .register();
+
+    public static final FluidEntry<VirtualFluid> GREEN_WATER = REGISTRATE.virtualColoredWater(
+            "green_water", 0xFF00FF00)
+            .register();
+
+    public static final FluidEntry<VirtualFluid> BLUE_WATER = REGISTRATE.virtualColoredWater(
+            "blue_water", 0xFF0000FF)
+            .register();
+
+    // purple
+    public static final FluidEntry<VirtualFluid> PURPLE_WATER = REGISTRATE.virtualColoredWater(
+            "purple_water", 0xFF800080)
+            .register();
+
+    public static final FluidEntry<VirtualFluid> FLUORINE = REGISTRATE.virtualColoredGas(
+                    "fluorine", 0xFF00AA00)
+            .tag(FHTags.forgeFluidTag("fluorine"))
+            .register();
+    public static final FluidEntry<VirtualFluid> CHLORINE = REGISTRATE.virtualColoredGas(
+            "chlorine", 0xFFADFF2F)
+            .tag(FHTags.forgeFluidTag("chlorine"))
+            .register();
+    public static final FluidEntry<VirtualFluid> STEAM = REGISTRATE.virtualColoredGas(
+            "steam", 0xFFFFFFFF)
+            .tag(FHTags.forgeFluidTag("steam"))
+            .register();
+    public static final FluidEntry<VirtualFluid> SO2 = REGISTRATE.virtualColoredGas(
+            "sulfur_dioxide", 0xFFEEE888)
+            .tag(FHTags.forgeFluidTag("sulfur_dioxide"))
+            .register();
+    public static final FluidEntry<VirtualFluid> FERROUS_CHLORIDE = REGISTRATE.virtualColoredLiquid(
+            "ferrous_chloride", 0xFFBB3333)
+            .tag(FHTags.forgeFluidTag("ferrous_chloride"))
+            .register();
+    public static final FluidEntry<VirtualFluid> FERRIC_CHLORIDE = REGISTRATE.virtualColoredLiquid(
+            "ferric_chloride", 0xFFB0FFDE)
+            .tag(FHTags.forgeFluidTag("ferric_chloride"))
+            .register();
+    public static final FluidEntry<VirtualFluid> COPPER_CHLORIDE = REGISTRATE.virtualColoredLiquid(
+            "copper_chloride", 0xFFB0FFDE)
+            .tag(FHTags.forgeFluidTag("copper_chloride"))
+            .register();
+    public static final FluidEntry<VirtualFluid> ZINC_SULFATE = REGISTRATE.virtualColoredLiquid(
+            "zinc_sulfate", 0xFFB0C4FF)
+            .tag(FHTags.forgeFluidTag("zinc_sulfate"))
+            .register();
+    public static final FluidEntry<VirtualFluid> LIME_WATER = REGISTRATE.virtualColoredLiquid(
+            "lime_water", 0xFFB0C4DE)
+            .tag(FHTags.forgeFluidTag("lime_water"))
+            .register();
+    public static final FluidEntry<VirtualFluid> MAGNESIUM_CHLORIDE = REGISTRATE.virtualColoredLiquid(
+            "magnesium_chloride", 0xFFDEDEEE)
+            .tag(FHTags.forgeFluidTag("magnesium_chloride"))
+            .register();
+    public static final FluidEntry<VirtualFluid> SULFURIC_ACID = REGISTRATE.virtualColoredLiquid(
+            "sulfuric_acid", 0xFFEEE8AA)
+            .tag(FHTags.forgeFluidTag("sulfuric_acid"))
+            .register();
+    public static final FluidEntry<VirtualFluid> HYDROCHLORIC_ACID = REGISTRATE.virtualColoredLiquid(
+            "hydrochloric_acid", 0xFFAAFFAA)
+            .tag(FHTags.forgeFluidTag("hydrochloric_acid"))
+            .register();
+    public static final FluidEntry<VirtualFluid> CRYOLITE = REGISTRATE.virtualColoredLiquid(
+            "cryolite", 0xFF90EE90)
+            .tag(FHTags.forgeFluidTag("cryolite"))
+            .register();
+    public static final FluidEntry<VirtualFluid> TAR = REGISTRATE.virtualColoredLiquid(
+            "tar", 0xFF000000)
+            .tag(FHTags.forgeFluidTag("tar"))
+            .register();
+    public static final FluidEntry<VirtualFluid> PROTEIN = REGISTRATE.virtualColoredFluid(
+            "protein",
+                    new ResourceLocation(FHMain.MODID, "block/protein_fluid"),
+                    new ResourceLocation(FHMain.MODID, "block/protein_fluid"), 0xFFFFFF)
+            .tag(FHTags.forgeFluidTag("protein"))
+            .register();
+    public static final FluidEntry<VirtualFluid> LATEX = REGISTRATE.virtualColoredLiquid(
+            "latex", 0xFFFFD700)
+            .tag(FHTags.forgeFluidTag("latex"))
+            .register();
+    public static final FluidEntry<VirtualFluid> RESIN = REGISTRATE.virtualColoredLiquid(
+            "resin", 0xFF8B4513)
+            .tag(FHTags.forgeFluidTag("resin"))
+            .register();
+    // purified water
+    public static final FluidEntry<VirtualFluid> PURIFIED_WATER = REGISTRATE.virtualColoredLiquid(
+            "purified_water", 0xFF3ABDFF)
+            .tag(FHTags.forgeFluidTag("purified_water"))
+            .register();
+    // wolfberry tea
+    public static final FluidEntry<VirtualFluid> WOLFBERRY_TEA = REGISTRATE.virtualColoredLiquid(
+            "wolfberry_tea", 0xFF6ABDFF)
+            .tag(FHTags.forgeFluidTag("wolfberry_tea"))
+            .register();
+
     static final DeferredRegister<Fluid> FLUIDS = DeferredRegister.create(ForgeRegistries.FLUIDS, FHMain.MODID);
     static final DeferredRegister<FluidType> FLUID_TYPES = DeferredRegister.create(Keys.FLUID_TYPES, FHMain.MODID);
-    public static RegistryObject<Fluid> WOLFBERRY_TEA =
-            registerFluid("wolfberry_tea", STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE, 0xFF6ABDFF,
-                    FluidType.Properties.create().temperature(70),
-                    p -> p.block(null).slopeFindDistance(3).explosionResistance(100F)
-            );
-    public static RegistryObject<Fluid> FLUORINE = registerSimpleGas("fluorine", 0xFF00AA00);
-
-    public static RegistryObject<Fluid> CHLORINE = registerSimpleGas("chlorine", 0xFFADFF2F);
-    public static RegistryObject<Fluid> STEAM = registerSimpleGas("steam", 0xFFFFFFFF);
-    public static RegistryObject<Fluid> SO2 = registerSimpleGas("sulfur_dioxide", 0xFFEEE888);
-    public static RegistryObject<Fluid> FERROUS_CHLORIDE = registerSimpleLiquid("ferrous_chloride", 0xFFBB3333);
-    public static RegistryObject<Fluid> FERRIC_CHLORIDE = registerSimpleLiquid("ferric_chloride", 0xFFB0FFDE);
-    public static RegistryObject<Fluid> COPPER_CHLORIDE = registerSimpleLiquid("copper_chloride", 0xFFB0FFDE);
-    public static RegistryObject<Fluid> ZINC_SULFATE = registerSimpleLiquid("zinc_sulfate", 0xFFB0C4FF);
-    public static RegistryObject<Fluid> LIME_WATER = registerSimpleLiquid("lime_water", 0xB0C4DE);
-    public static RegistryObject<Fluid> MAGNESIUM_CHLORIDE = registerSimpleLiquid("magnesium_chloride", 0xDEDEEE);
-    public static RegistryObject<Fluid> SULFURIC_ACID = registerSimpleLiquid("sulfuric_acid", 0xEEE8AA);
-    public static RegistryObject<Fluid> HYDROCHLORIC_ACID = registerSimpleLiquid("hydrochloric_acid", 0xAAFFAA);
-    public static RegistryObject<Fluid> CRYOLITE = registerSimpleLiquid("cryolite", 0x90EE90);
-    public static RegistryObject<Fluid> TAR = registerSimpleLiquid("tar", 0x000000);
-    public static RegistryObject<Fluid> PROTEIN = registerFluid("protein", PROTEIN_FLUID_TEXTURE, PROTEIN_FLUID_TEXTURE, 0xFFFFFF, FluidType.Properties.create().viscosity(200).density(200), p -> p);
-    public static RegistryObject<Fluid> LATEX = registerSimpleLiquid("latex", 0xFFD700);
-    public static RegistryObject<Fluid> RESIN = registerSimpleLiquid("resin", 0x8B4513);
-
-    public static RegistryObject<Fluid> PURIFIED_WATER = registerSimpleLiquid("purified_water", 0xCC3ABDFF);
-
-    public static RegistryObject<Fluid> registerFluid(String name, ResourceLocation still, ResourceLocation flowing,
-                                                      int color, FluidType.Properties properties,
-                                                      UnaryOperator<ForgeFlowingFluid.Properties> blockProperties) {
-        RegistryObject<FluidType> fluidType = FLUID_TYPES.register(name, () -> new FluidType(properties) {
-            @Override
-            public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {
-                consumer.accept(new IClientFluidTypeExtensions() {
-                    @Override
-                    public int getTintColor() {
-                        return color;
-                    }
-
-                    @Override
-                    public ResourceLocation getStillTexture() {
-                        return still;
-                    }
-
-                    @Override
-                    public ResourceLocation getFlowingTexture() {
-                        return flowing;
-                    }
-
-                });
-            }
-
-
-        });
-        ReferenceSupplier<Fluid> ls = new ReferenceSupplier();
-        return ls.set(FLUIDS.register(name,
-                () -> new ForgeFlowingFluid.Flowing(
-						blockProperties.apply(new ForgeFlowingFluid.Properties(fluidType, ls, ls))
-                )
-        ));
-
-    }
-
-    public static RegistryObject<Fluid> registerSimpleGas(String name, int color) {
-    	if((color|0xFF000000)==0)
-    		color|=0xFF000000;
-        return registerSimpleFluid(name, color, -1, 0, 300, false);
-    }
-
-    public static RegistryObject<Fluid> registerSimpleLiquid(String name, int color) {
-    	if((color|0xFF000000)==0)
-    		color|=0xFF000000;
-        return registerSimpleFluid(name, color, 1, 0, 300, false);
-    }
-
-    public static RegistryObject<Fluid> registerSimpleFluid(String name, int color, int density, int viscosity, int temperature, boolean canConvertToSource) {
-        RegistryObject<FluidType> GAS = FLUID_TYPES.register(name, () -> new FluidType(FluidType.Properties.create().density(density).viscosity(viscosity).temperature(temperature).canConvertToSource(canConvertToSource)) {
-            @Override
-            public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {
-                consumer.accept(new IClientFluidTypeExtensions() {
-                    @Override
-                    public int getTintColor() {
-                        return color;
-                    }
-
-                    @Override
-                    public ResourceLocation getStillTexture() {
-                        return STILL_FLUID_TEXTURE;
-                    }
-
-                    @Override
-                    public ResourceLocation getFlowingTexture() {
-                        return FLOWING_FLUID_TEXTURE;
-                    }
-
-                });
-            }
-
-
-        });
-        ReferenceSupplier<Fluid> ls = new ReferenceSupplier<Fluid>();
-        //builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE).color(color)
-        return ls.set(FLUIDS.register(name, () -> new ForgeFlowingFluid.Flowing(new ForgeFlowingFluid.Properties(GAS, ls, ls)
-                .explosionResistance(100F).slopeFindDistance(3))));
-
-    }
 
 }
