@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart;
 
+import com.simibubi.create.foundation.item.ItemDescription;
+import com.simibubi.create.foundation.item.TooltipHelper;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.compat.CreateCompat;
@@ -77,6 +79,12 @@ public class FHMain {
     public static File lastServerConfig;
     public static boolean saveNeedUpdate;
     public static final FHRegistrate REGISTRATE = FHRegistrate.create(MODID);
+
+    static {
+        REGISTRATE.setTooltipModifierFactory(item -> {
+            return new ItemDescription.Modifier(item, TooltipHelper.Palette.STANDARD_CREATE);
+        });
+    }
 
     public static ResourceLocation rl(String path) {
         return new ResourceLocation(MODID, path);

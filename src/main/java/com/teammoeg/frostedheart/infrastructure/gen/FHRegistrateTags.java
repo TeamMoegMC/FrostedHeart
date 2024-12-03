@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.infrastructure.gen;
 
+import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.*;
 import com.tterrag.registrate.providers.ProviderType;
 import com.tterrag.registrate.providers.RegistrateTagsProvider;
@@ -37,6 +38,8 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+
+import static com.teammoeg.frostedheart.FHTags.forgeItemTag;
 
 /**
  * See CreateRegistrateTags for reference.
@@ -230,12 +233,20 @@ public class FHRegistrateTags {
                 .add(FHItems.chocolate.get());
 
         prov.tag(FHTags.Items.INSULATED_FOOD.tag)
-                .add(FHItems.military_rations.get())
-                .add(FHItems.thermos.get())
-                .add(FHItems.advanced_thermos.get());
+                .add(FHItems.military_rations.get());
 
-        FHItems.alladvthermos.stream().forEach(t->prov.tag(FHTags.Items.INSULATED_FOOD.tag).add(t.get()));
-        FHItems.allthermos.stream().forEach(t->prov.tag(FHTags.Items.INSULATED_FOOD.tag).add(t.get()));
+        prov.tag(forgeItemTag("crushed_raw_materials/copper"))
+                .add(AllItems.CRUSHED_COPPER.asItem());
+        prov.tag(forgeItemTag("crushed_raw_materials/iron"))
+                .add(AllItems.CRUSHED_IRON.asItem());
+        prov.tag(forgeItemTag("crushed_raw_materials/gold"))
+                .add(AllItems.CRUSHED_GOLD.asItem());
+        prov.tag(forgeItemTag("crushed_raw_materials/zinc"))
+                .add(AllItems.CRUSHED_ZINC.asItem());
+
+        // rewrite using prov method
+        prov.tag(FHTags.Items.CHICKEN_FEED.tag)
+                .addTag(Tags.Items.SEEDS);
 
         for (FHTags.Items tag : FHTags.Items.values()) {
             if (tag.alwaysDatagen) {

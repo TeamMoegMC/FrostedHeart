@@ -83,7 +83,7 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> list, TooltipFlag flag) {
-        list.add(TranslateUtils.translateTooltip("handstove.add_fuel").withStyle(ChatFormatting.GRAY));
+//        list.add(TranslateUtils.translateTooltip("handstove.add_fuel").withStyle(ChatFormatting.GRAY));
         if (getAshAmount(stack) >= 800)
             list.add(TranslateUtils.translateTooltip("handstove.trash_ash").withStyle(ChatFormatting.RED));
         list.add(TranslateUtils.translateTooltip("handstove.fuel", getFuelAmount(stack) / 2).withStyle(ChatFormatting.GRAY));

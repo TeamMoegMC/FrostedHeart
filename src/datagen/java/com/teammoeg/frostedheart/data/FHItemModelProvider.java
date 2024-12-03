@@ -42,10 +42,10 @@ public class FHItemModelProvider extends ItemModelProvider {
 	
 	@Override
 	protected void registerModels() {
-		for(String s:FHItems.colors) {
-			texture(s+"_thermos","flask_i/insulated_flask_i_pouch_"+s);
-			texture(s+"_advanced_thermos","flask_ii/insulated_flask_ii_pouch_"+s);
-		}
+//		for(String s:FHItems.colors) {
+//			texture(s+"_thermos","flask_i/insulated_flask_i_pouch_"+s);
+//			texture(s+"_advanced_thermos","flask_ii/insulated_flask_ii_pouch_"+s);
+//		}
 
 	}
 

@@ -91,6 +91,7 @@ public class FHDataGenerator {
 //            provider.add("itemGroup.frostedheart", "Frosted Heart");
             BiConsumer<String, String> langConsumer = provider::add;
             provideDefaultLang("en_us", langConsumer);
+            provideDefaultLang("tooltips", langConsumer); // tooltips using the create tooltip system
         });
     }
 

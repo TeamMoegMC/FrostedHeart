@@ -83,14 +83,12 @@ import net.minecraftforge.registries.tags.ITag;
 public class ThermosItem extends DurableDrinkContainerItem implements ITempAdjustFood,ICreativeModeTabItem {
     final int unit;
     final boolean doAddItems;
-    final String lang;
     static final TagKey<Fluid> availableFluid=FluidTags.create(new ResourceLocation(FHMain.MODID, "drink"));
     static final TagKey<Fluid> hidden = FluidTags.create(new ResourceLocation(FHMain.MODID, "hidden_drink"));
-    public ThermosItem( String lang, int capacity, int unit, boolean add) {
+    public ThermosItem(int capacity, int unit, boolean add) {
         super(new Properties().stacksTo(1).setNoRepair().durability(capacity).food(new FoodProperties.Builder().nutrition(1).saturationMod(1).build()), capacity);
         this.unit = unit;
         doAddItems = add;
-        this.lang = lang;
     }
 
     @Override
@@ -164,11 +162,6 @@ public class ThermosItem extends DurableDrinkContainerItem implements ITempAdjus
     @Override
     public float getMinTemp(ItemStack is) {
         return -1;
-    }
-
-    @Override
-    public String getDescriptionId() {
-        return lang;
     }
 
     public int getUnit() {

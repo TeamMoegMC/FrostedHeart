@@ -47,25 +47,7 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 
 	@Override
 	protected void addTags(HolderLookup.Provider pProvider) {
-		tag("colored_thermos")
-				.add(FHItems.allthermos.stream().map(t->rk(t.get())).toArray(ResourceKey[]::new));
-		tag("colored_advanced_thermos")
-				.add(FHItems.alladvthermos.stream().map(t->rk(t.get())).toArray(ResourceKey[]::new));
-		tag("thermos")
-				.addTag(ItemTags.create(mrl("colored_thermos")))
-				.add(rk(FHItems.thermos.get()))
-				.addTag(ItemTags.create(mrl("colored_advanced_thermos")))
-				.add(rk(FHItems.advanced_thermos.get()));
-		tag("chicken_feed").addTags(ftag("seeds"), ftag("breedables/chicken"));
 
-		tag(frl("crushed_raw_materials/copper"))
-				.add(rk(AllItems.CRUSHED_COPPER.asItem()));
-		tag(frl("crushed_raw_materials/iron"))
-				.add(rk(AllItems.CRUSHED_IRON.asItem()));
-		tag(frl("crushed_raw_materials/gold"))
-				.add(rk(AllItems.CRUSHED_GOLD.asItem()));
-		tag(frl("crushed_raw_materials/zinc"))
-				.add(rk(AllItems.CRUSHED_ZINC.asItem()));
 
 	}
 

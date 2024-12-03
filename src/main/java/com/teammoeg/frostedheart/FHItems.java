@@ -20,8 +20,11 @@
 package com.teammoeg.frostedheart;
 
 import com.simibubi.create.AllTags;
+import com.simibubi.create.content.contraptions.actors.seat.SeatBlock;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
+import com.simibubi.create.foundation.block.DyedBlockList;
 import com.simibubi.create.foundation.data.AssetLookup;
+import com.simibubi.create.foundation.item.ItemDescription;
 import com.teammoeg.frostedheart.base.item.*;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.foods.CannedFoodItem;
@@ -42,6 +45,7 @@ import com.teammoeg.frostedheart.content.water.item.IronBottleItem;
 import com.teammoeg.frostedheart.content.water.item.LeatherWaterBagItem;
 import com.teammoeg.frostedheart.content.water.item.WoodenCupItem;
 import com.tterrag.registrate.util.entry.ItemEntry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
@@ -951,22 +955,21 @@ public class FHItems {
             );
 
     // Rusted ingots
-    public static ItemEntry<Item> RUSTED_IRON_INGOT =
-            taggedIngredient("rusted_iron_ingot",
-                    forgeItemTag("ingots"),
-                    forgeItemTag("ingots/rusted_iron"),
-                    FHTags.Items.IGNITION_METAL.tag
-            );
-    public static ItemEntry<Item> RUSTED_COPPER_INGOT =
-            taggedIngredient("rusted_copper_ingot",
-                    forgeItemTag("ingots"),
-                    forgeItemTag("ingots/rusted_copper")
-            );
-    public static ItemEntry<Item> GRAY_TIN_INGOT =
-            taggedIngredient("gray_tin_ingot",
-                    forgeItemTag("ingots"),
-                    forgeItemTag("ingots/gray_tin")
-            );
+    public static ItemEntry<Item> RUSTED_IRON_INGOT = REGISTRATE
+            .item("rusted_iron_ingot", Item::new)
+            .tag(forgeItemTag("ingots"), forgeItemTag("ingots/rusted_iron"), FHTags.Items.IGNITION_METAL.tag)
+            .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.rusted_metal"))
+            .register();
+    public static ItemEntry<Item> RUSTED_COPPER_INGOT = REGISTRATE
+            .item("rusted_copper_ingot", Item::new)
+            .tag(forgeItemTag("ingots"), forgeItemTag("ingots/rusted_copper"))
+            .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.rusted_metal"))
+            .register();
+    public static ItemEntry<Item> GRAY_TIN_INGOT = REGISTRATE
+            .item("gray_tin_ingot", Item::new)
+            .tag(forgeItemTag("ingots"), forgeItemTag("ingots/gray_tin"))
+            .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.rusted_metal"))
+            .register();
 
     // Slags
     public static ItemEntry<Item> IRON_SLAG =
@@ -1103,7 +1106,13 @@ public class FHItems {
 
 
     // Equipment and tools
-    public static RegistryObject<Item> hand_stove = register("hand_stove", n -> new CoalHandStove(createProps().defaultDurability(10)));
+//    public static RegistryObject<Item> hand_stove = register("hand_stove", n -> new CoalHandStove(createProps().defaultDurability(10)));
+    // switch to registrate style
+    public static ItemEntry<CoalHandStove> hand_stove = REGISTRATE.item("hand_stove", CoalHandStove::new)
+            .properties(p -> p.defaultDurability(10))
+            .model(AssetLookup.existingItemModel())
+            .lang("Copper Hand Stove")
+            .register();
     public static RegistryObject<Item> debug_item = register("debug_item", n -> new DebugItem(createProps()));
     public static RegistryObject<Item> coal_stick = register("coal_stick", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> charcoal_stick = register("charcoal_stick", n -> new FHBaseItem(createProps()));
@@ -1149,21 +1158,53 @@ public class FHItems {
     public static RegistryObject<Item> temperatureProbe = register("temperature_probe", n -> new FHBaseItem(createProps().stacksTo(1)));
 
     // Thermos
-    public static String[] colors = new String[]{"black", "blue", "brown", "cyan", "gray", "green", "light_blue",
-            "light_gray", "lime", "magenta", "orange", "pink", "purple", "red", "white", "yellow"};
-    public static List<RegistryObject<Item>> allthermos = new ArrayList<>();
-    public static List<RegistryObject<Item>> alladvthermos = new ArrayList<>();
-    public static RegistryObject<Item> thermos = register("thermos", n -> new ThermosItem("item.frostedheart.thermos", 1500, 250, true));
-    public static RegistryObject<Item> advanced_thermos = register("advanced_thermos", n -> new ThermosItem("item.frostedheart.advanced_thermos", 3000, 250, true));
+    public static ItemEntry<ThermosItem> thermos = REGISTRATE
+        .item("thermos", p -> new ThermosItem(1500, 250, true))
+        .model(AssetLookup.existingItemModel())
+        .tag(FHTags.Items.INSULATED_FOOD.tag)
+        .tag(FHTags.Items.THERMOS.tag)
+        .lang("Thermos")
+        .register();
+    public static ItemEntry<ThermosItem> advanced_thermos = REGISTRATE.item("advanced_thermos", p -> new ThermosItem(3000, 250, true))
+            .model(AssetLookup.existingItemModel())
+            .tag(FHTags.Items.INSULATED_FOOD.tag)
+            .tag(FHTags.Items.THERMOS.tag)
+            .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.thermos"))
+            .lang("Advanced Thermos")
+            .register();
 
-    static {
-        for (String s : FHItems.colors) {
-            allthermos.add(register(s + "_thermos", n -> new ThermosItem("item.frostedheart.thermos", 1500, 250, false)));
+    // colour.getName() is all form xxx_xxx
+    // make it like Xxx[SPACE]Xxx[SPACE]
+    public static String fromIdToDisplay(String color) {
+        String[] split = color.split("_");
+        StringBuilder sb = new StringBuilder();
+        for (String s : split) {
+            sb.append(s.substring(0, 1).toUpperCase()).append(s.substring(1)).append(" ");
         }
-        for (String s : FHItems.colors) {
-            alladvthermos.add(register(s + "_advanced_thermos", n -> new ThermosItem("item.frostedheart.advanced_thermos", 3000, 250, false)));
-        }
+        return sb.toString();
     }
+
+    public static final DyedItemList<ThermosItem> allthermos = new DyedItemList<>(color -> {
+        return REGISTRATE.item(color + "_thermos", p -> new ThermosItem(1500, 250, false))
+                .model((ctx, prov) -> prov.generated(ctx, FHMain.rl("item/" + "flask_i/insulated_flask_i_pouch_" + color)))
+                .tag(FHTags.Items.INSULATED_FOOD.tag)
+                .tag(FHTags.Items.COLORED_THERMOS.tag)
+                .tag(FHTags.Items.THERMOS.tag)
+                .lang(fromIdToDisplay(color.getName()) + "Thermos")
+                .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.thermos"))
+                .register();
+    });
+
+    public static final DyedItemList<ThermosItem> alladvthermos = new DyedItemList<>(color -> {
+        return REGISTRATE.item(color + "_advanced_thermos", p -> new ThermosItem(3000, 250, false))
+                .model((ctx, prov) -> prov.generated(ctx, FHMain.rl("item/" + "flask_ii/insulated_flask_ii_pouch_" + color)))
+                .tag(FHTags.Items.INSULATED_FOOD.tag)
+                .tag(FHTags.Items.COLORED_ADVANCED_THERMOS.tag)
+                .tag(FHTags.Items.THERMOS.tag)
+                .lang(fromIdToDisplay(color.getName()) + "Advanced Thermos")
+                .onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.frostedheart.thermos"))
+                .register();
+    });
 
     //WaterSource section
     public final static RegistryObject<Item> fluid_bottle = register("fluid_bottle", (s) -> new FluidBottleItem(new Item.Properties().stacksTo(16)));

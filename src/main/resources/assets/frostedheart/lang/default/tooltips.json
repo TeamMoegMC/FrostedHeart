@@ -1,0 +1,27 @@
+{
+  "item.frostedheart.hand_stove.tooltip.summary": "A _portable stove_ that can be used to _warm body_.",
+  "item.frostedheart.hand_stove.tooltip.condition1": "When Placed At Offhand",
+  "item.frostedheart.hand_stove.tooltip.behaviour1": "Provides _heat_ to the player.",
+  "item.frostedheart.hand_stove.tooltip.condition2": "When Crafted with Coal Stick or Charcoal Stick",
+  "item.frostedheart.hand_stove.tooltip.behaviour2": "Refills the stove with _fuel_.",
+
+  "item.frostedheart.thermos.tooltip.summary": "A _thermos_ that can be used to _store hot fluid.",
+  "item.frostedheart.thermos.tooltip.condition1": "When Drank",
+  "item.frostedheart.thermos.tooltip.behaviour1": "Restores _heat_ to the player.",
+  "item.frostedheart.thermos.tooltip.condition2": "When Carrying Fluids",
+  "item.frostedheart.thermos.tooltip.behaviour2": "Insulates the fluid to keep it _hot_.",
+
+  "item.frostedheart.rusted_metal.tooltip.summary": "Metal oxidized into its natural state.",
+  "item.frostedheart.rusted_metal.tooltip.condition1": "When Smelted",
+  "item.frostedheart.rusted_metal.tooltip.behaviour1": "Turns into its _original form_.",
+
+  "item.frostedheart.snowshoes.tooltip.summary": "A pair of shoes for travelling on snow_.",
+  "item.frostedheart.snowshoes.tooltip.condition1": "When Worn While Walking on Powdered Snow",
+  "item.frostedheart.snowshoes.tooltip.behaviour1": "Prevents the wearer from _sinking_.",
+  "item.frostedheart.snowshoes.tooltip.condition2": "When Worn While Walking on Snow",
+  "item.frostedheart.snowshoes.tooltip.behaviour2": "Increases _movement speed_.",
+
+  "item.frostedheart.ice_skates.tooltip.summary": "A pair of skates for travelling on ice.",
+  "item.frostedheart.ice_skates.tooltip.condition1": "When Worn While Walking on Ice",
+  "item.frostedheart.ice_skates.tooltip.behaviour1": "Increases _movement speed_.",
+}
