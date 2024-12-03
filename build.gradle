@@ -131,23 +131,13 @@ repositories {
     mavenCentral()
     mavenLocal()
     maven {
-        // location of the maven that hosts JEI files before January 2023
-        name = "Progwml6's maven"
-        url = "https://dvs1.progwml6.com/files/maven/"
-        content {
-            excludeGroup "curse.maven"
-            excludeGroup "net.neoforged"
-            excludeGroup "maven.modrinth"
-        }
-    }
-    maven {
         // location of the maven that hosts JEI files since January 2023
         name = "Jared's maven"
         url = "https://maven.blamejared.com/"
         content {
-            excludeGroup "curse.maven"
-            excludeGroup "net.minecraftforge"
-            excludeGroup "maven.modrinth"
+            includeGroup "mezz.jei"
+            includeGroup "blusunrize.immersiveengineering"
+            includeGroup "org.embeddedt"
         }
     }
     maven {
@@ -155,9 +145,7 @@ repositories {
         name = "ModMaven"
         url = "https://modmaven.dev"
         content {
-            excludeGroup "curse.maven"
-            excludeGroup "net.minecraftforge"
-            excludeGroup "maven.modrinth"
+            includeGroup "mezz.jei"
         }
     }
     maven {
@@ -165,74 +153,55 @@ repositories {
         name = "tterrag maven"
         url = "https://maven.tterrag.com/"
         content {
-            excludeGroup "curse.maven"
-            excludeGroup "net.minecraftforge"
-            excludeGroup "maven.modrinth"
+            includeGroup "com.jozufozu.flywheel"
+            includeGroup "com.tterrag.registrate"
+            includeGroup "com.simibubi.create"
         }
     }
-    // Needed for JEI -Not accesible now, comment to speed up compile
-    /*maven {
-        name = "latvian maven"
-        url = "https://maven.latmod.com/"
-        content {
-            excludeGroup "curse.maven"
-            excludeGroup "net.minecraftforge"
-        }
-    }*/
     // Needed for Curios API
     maven {
         name = "theillusivec4 maven"
         url = "https://maven.theillusivec4.top/"
         content {
-            excludeGroup "curse.maven"
-            excludeGroup "net.minecraftforge"
-            excludeGroup "maven.modrinth"
+            includeGroup "top.theillusivec4.curios"
         }
     }
     maven {
         name = "architectury maven"
         url = "https://maven.architectury.dev/"
         content {
-            excludeGroup "curse.maven"
-            excludeGroup "net.minecraftforge"
-            excludeGroup "maven.modrinth"
+            includeGroup "dev.architectury"
         }
     }
     maven {
         name = "saps maven"
-        url = "https://maven.saps.dev/minecraft"
+        url = "https://maven.saps.dev/releases"
         content {
-            excludeGroup "curse.maven"
-            excludeGroup "net.minecraftforge"
-            excludeGroup "maven.modrinth"
+            includeGroup "dev.ftb.mods"
         }
     }
-    maven {
-        name = "TeamMoeg COS Maven"
-        url = "https://maven-1301510336.cos.ap-guangzhou.myqcloud.com"
+//    maven {
+//        name = "TeamMoeg COS Maven"
+//        url = "https://maven-1301510336.cos.ap-guangzhou.myqcloud.com"
+////        content {
+////            includeGroup "gloridifice.watersource"
+////            includeGroup "com.alcatrazescapee.primalwinter"
+////            includeGroup "java.moze_intel"
+////            excludeGroup "curse.maven"
+////        }
+//    }
+//    maven {
+//        name = "ftbMavenReleases"
+//        url = "https://maven.ftb.dev/releases"
 //        content {
-//            includeGroup "gloridifice.watersource"
-//            includeGroup "com.alcatrazescapee.primalwinter"
-//            includeGroup "java.moze_intel"
-//            excludeGroup "curse.maven"
+//            includeGroup "dev.ftb.mods"
 //        }
-    }
-    maven {
-        name = "ftbMavenReleases"
-        url = "https://maven.ftb.dev/releases"
-        content {
-            excludeGroup "curse.maven"
-            excludeGroup "net.minecraftforge"
-            excludeGroup "maven.modrinth"
-        }
-    }
+//    }
     maven {
         name "firstdarkdev"
         url "https://maven.firstdarkdev.xyz/snapshots"
         content {
-            excludeGroup "curse.maven"
-            excludeGroup "net.minecraftforge"
-            excludeGroup "maven.modrinth"
+            includeGroup "com.lowdragmc.ldlib"
         }
     }
     maven {
@@ -240,8 +209,6 @@ repositories {
         url "https://api.modrinth.com/maven"
         content {
             includeGroup "maven.modrinth"
-            excludeGroup "curse.maven"
-            excludeGroup "net.minecraftforge"
         }
     }
     maven {
@@ -249,8 +216,6 @@ repositories {
         url = "https://www.cursemaven.com"
         content {
             includeGroup "curse.maven"
-            excludeGroup "maven.modrinth"
-            excludeGroup "net.minecraftforge"
         }
     }
 }
@@ -291,8 +256,8 @@ dependencies {
     implementation fg.deobf("dev.ftb.mods:ftb-library-forge:${ftb_library_version}")
     implementation fg.deobf("dev.ftb.mods:ftb-teams-forge:${ftb_teams_version}")
     implementation fg.deobf("dev.ftb.mods:ftb-chunks-forge:${ftb_chunks_version}")
-    compileOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:${ftb_quests_version}")
-    noDatagenRuntimeOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:${ftb_quests_version}")
+    implementation fg.deobf("dev.ftb.mods:ftb-quests-forge:${ftb_quests_version}")
+//    noDatagenRuntimeOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:${ftb_quests_version}")
 
     // Tetra
     compileOnly fg.deobf("curse.maven:tetra-289712:5544287")
