@@ -125,6 +125,14 @@ public class TranslateUtils {
         return translate("waypoint." + FHMain.MODID + "." + name, args);
     }
 
+    public static MutableComponent ftbqReward(String name, Object... args) {
+        return translate("ftbquests.reward." + FHMain.MODID + "." + name, args);
+    }
+
+    public static String rawFtbqReward(String name, Object... args) {
+        return "ftbquests.reward." + FHMain.MODID + "." + name;
+    }
+
 	public static Component empty() {
 		return MutableComponent.create(LiteralContents.EMPTY);
 	}

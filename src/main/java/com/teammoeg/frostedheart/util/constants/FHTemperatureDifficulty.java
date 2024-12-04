@@ -19,20 +19,22 @@
 
 package com.teammoeg.frostedheart.util.constants;
 
-import java.util.function.Function;
-
+import dev.ftb.mods.ftblibrary.icon.Icon;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.util.function.Function;
+
 public enum FHTemperatureDifficulty {
-    Easy(s -> 0.05F),
-    Normal(s -> 0.036F),
-    Hard(s -> s.isSprinting() ? 0.036F : 0.024F),
-    HardCore(s -> 0F);
+    easy(s -> 0.05F, Icon.getIcon("frostedheart:item/flask_i/insulated_flask_i_pouch_green")),
+    normal(s -> 0.036F, Icon.getIcon("frostedheart:item/flask_i/insulated_flask_i_pouch_yellow")),
+    hard(s -> s.isSprinting() ? 0.036F : 0.024F, Icon.getIcon("frostedheart:item/flask_i/insulated_flask_i_pouch_orange")),
+    hardcore(s -> 0F, Icon.getIcon("frostedheart:item/flask_i/insulated_flask_i_pouch_red"));
 
     public final Function<ServerPlayer, Float> self_heat;
+    public final Icon icon;
 
-    FHTemperatureDifficulty(Function<ServerPlayer, Float> self_heat) {
+    FHTemperatureDifficulty(Function<ServerPlayer, Float> self_heat, Icon icon) {
         this.self_heat = self_heat;
-
+        this.icon = icon;
     }
 }

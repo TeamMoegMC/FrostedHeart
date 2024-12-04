@@ -260,8 +260,8 @@ public class FHConfig {
 
         Server(ForgeConfigSpec.Builder builder) {
             builder.push("Temperature");
-            tdiffculty = builder.comment("Temperature System difficulty", "Easy=Strong body", "Normal=Average", "Hard=Reality", "Hardcore=Sick body")
-                    .defineEnum("temperatureDifficulty", FHTemperatureDifficulty.Normal);
+            tdiffculty = builder.comment("Temperature System difficulty", "easy=Strong body", "normal=Average", "hard=Reality", "hardcore=Sick body")
+                    .defineEnum("temperatureDifficulty", FHTemperatureDifficulty.normal);
             tempSpeed = builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
                     .defineInRange("temperatureChangeRate", 0.5, 0, 20);
             temperatureUpdateIntervalTicks = builder.comment("The interval of temperature update in ticks.")

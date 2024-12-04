@@ -5,8 +5,12 @@ import javax.annotation.Nullable;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.base.item.FHBaseClothesItem;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.player.Player;
@@ -75,6 +79,10 @@ public class PlayerTemperatureData implements NBTSerializable  {
 		HEAD, // 10% area
 		REMOVEALL, // debug only
 	}
+
+	@Getter
+	@Setter
+	private FHTemperatureDifficulty difficulty = FHConfig.SERVER.tdiffculty.get();
 	float previousTemp;
 	float bodyTemp;
 	float envTemp;
@@ -100,6 +108,15 @@ public class PlayerTemperatureData implements NBTSerializable  {
 		temperatureOfParts.put(BodyPart.LEGS, new Pair<>("legs_temperature", 0.0f));
 	}
 	public void load(CompoundTag nbt,boolean isPacket) {
+		// load the difficulty
+		// this can cause issue if the nbt.getstring returns invalid string
+		// do a catch here, and default to normal
+		try {
+			difficulty = FHTemperatureDifficulty.valueOf(nbt.getString("difficulty").toLowerCase());
+		} catch (IllegalArgumentException e) {
+			difficulty = FHTemperatureDifficulty.normal;
+		}
+
 		previousTemp=nbt.getFloat("previous_body_temperature");
 		bodyTemp=nbt.getFloat("bodytemperature");
 		envTemp=nbt.getFloat("envtemperature");
@@ -118,6 +135,8 @@ public class PlayerTemperatureData implements NBTSerializable  {
 		}
 	}
 	public void save(CompoundTag nc,boolean isPacket) {
+		// save the difficulty
+		nc.putString("difficulty", difficulty.name().toLowerCase());
         nc.putFloat("previous_body_temperature",previousTemp);
         nc.putFloat("bodytemperature",bodyTemp);
         nc.putFloat("envtemperature",envTemp);

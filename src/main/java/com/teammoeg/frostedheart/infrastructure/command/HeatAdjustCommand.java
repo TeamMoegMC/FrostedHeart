@@ -34,9 +34,8 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
 
-public class AddTempCommand {
+public class HeatAdjustCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 
         // Remove
@@ -88,6 +87,9 @@ public class AddTempCommand {
                             }
                             return Command.SINGLE_SUCCESS;
                         }));
-        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermission(2)).then(Commands.literal("temperature").then(add).then(get).then(remove)));
+
+        for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
+            dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(Commands.literal("heat_adjust").then(add).then(get).then(remove)));
+        }
     }
 }

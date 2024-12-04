@@ -56,6 +56,7 @@ import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
@@ -71,6 +72,8 @@ import java.io.File;
 public class FHMain {
 
     public static final String MODID = "frostedheart";
+    public static final String ALIAS = "fh";
+    public static final String TWRID = "twr";
     public static final String MODNAME = "Frosted Heart";
     public static final Logger LOGGER = LogManager.getLogger(MODNAME);
     public static FHRemote remote;
@@ -139,7 +142,8 @@ public class FHMain {
         CreateCompat.init();
         TetraCompat.init();
         SpecialDataTypes.init();
-        FHRewardTypes.init();
+        if (ModList.get().isLoaded("ftbquests"))
+            FHRewardTypes.init();
 
         // Event registration
         TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);

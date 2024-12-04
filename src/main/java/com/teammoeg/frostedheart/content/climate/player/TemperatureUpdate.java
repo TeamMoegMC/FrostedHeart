@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.constants.EquipmentSlotType;
 
+import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.server.level.ServerPlayer;
@@ -46,9 +47,7 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.common.Mod;
 import top.theillusivec4.curios.api.type.ISlotType;
 
 public class TemperatureUpdate {
@@ -206,7 +205,9 @@ public class TemperatureUpdate {
 
                     // Self heating
                     if (current < 0) {
-                        float delt = (float) (FHConfig.SERVER.tdiffculty.get().self_heat.apply(player) * tspeed);
+                        // Fetch the self heating function from the difficulty
+                        float delt = (float) (PlayerTemperatureData.getCapability(event.player).map(PlayerTemperatureData::getDifficulty).orElse(FHTemperatureDifficulty.normal).self_heat.apply(player) * tspeed);
+                        // float delt = (float) (FHConfig.SERVER.tdiffculty.get().self_heat.apply(player) * tspeed);
                         player.causeFoodExhaustion(Math.min(delt, -current) * 0.5f);//cost hunger for cold.
                         current += delt;
                     }

@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
-import com.teammoeg.frostedheart.infrastructure.command.AddTempCommand;
+import com.teammoeg.frostedheart.infrastructure.command.HeatAdjustCommand;
 import com.teammoeg.frostedheart.infrastructure.command.ClimateCommand;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
@@ -42,6 +42,7 @@ import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
+import com.teammoeg.frostedheart.infrastructure.command.TemperatureCommand;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager.DataType;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -66,7 +67,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.DigDurabilityEnchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
@@ -77,7 +77,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.level.material.FluidState;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.ItemAttributeModifierEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -268,8 +267,9 @@ public class CommonEvents {
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-        AddTempCommand.register(dispatcher);
+        HeatAdjustCommand.register(dispatcher);
         ClimateCommand.register(dispatcher);
+        TemperatureCommand.register(dispatcher);
     }
 
     @SubscribeEvent
