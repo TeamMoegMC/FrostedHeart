@@ -158,23 +158,26 @@ public class ResearchData implements IEnvironment {
     private int committed;// points committed
     TeamResearchData parent;
 
-    private Map<Integer, IClueData> data = new HashMap<>();
+    private Map<Integer, ClueData> clueData = new HashMap<>();
+    private Map<Integer, Boolean> effectData = new HashMap<>();
     public static final Codec<ResearchData> CODEC=RecordCodecBuilder.create(t->t.group(
     	Codec.INT.fieldOf("committed").forGetter(o->o.committed),
     	CodecUtil.<ResearchData>booleans("flags")
     	.flag("active", o->o.active)
     	.flag("finished", o->o.finished).build(),
     	CodecUtil.defaultValue(Codec.INT, 0).fieldOf("level").forGetter(o->o.level),
-    	CodecUtil.mapCodec("id", Codec.INT, "data", ClueDatas.CODEC).fieldOf("clues").forGetter(o->o.data)
+    	CodecUtil.mapCodec("id", Codec.INT, "data", ClueData.CODEC).fieldOf("clueData").forGetter(o->o.clueData),
+    	CodecUtil.mapCodec("id", Codec.INT, "data", Codec.BOOL).fieldOf("effectData").forGetter(o->o.effectData)
     	).apply(t, ResearchData::new));
     
-    public ResearchData(int committed, boolean[] flags, int level, Map<Integer, IClueData> data) {
+    public ResearchData(int committed, boolean[] flags, int level, Map<Integer, ClueData> clueData,Map<Integer, Boolean> effectData) {
 		super();
 		this.active = flags[0];
 		this.finished = flags[1];
 		this.level = level;
 		this.committed = committed;
-		this.data.putAll(data);
+		this.clueData.putAll(clueData);
+		this.effectData.putAll(effectData);
 	}
     public void setParent(Supplier<Research> r, TeamResearchData parent) {
         this.rs = r;
@@ -258,7 +261,7 @@ public class ResearchData implements IEnvironment {
         return pts;
     }
 
-    public void deserialize(CompoundTag cn) {
+    public void deserialize(Research research,CompoundTag cn,boolean isNetwork) {
         committed = cn.getInt("committed");
         active = cn.getBoolean("active");
         finished = cn.getBoolean("finished");

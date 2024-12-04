@@ -81,7 +81,7 @@ public class BooleansCodec extends MapCodec<boolean[]> {
 		}
 		boolean[] bss=new boolean[keys.length];
 		for(int i=0;i<keys.length;i++) {
-			bss[i]=ops.getBooleanValue(input.get(keys[i])).result().orElse(false);
+			bss[i]=ops.getBooleanValue(input.get(keys[i])).resultOrPartial(s->{}).orElse(false);
 		}
 		return DataResult.success(bss);
 	}

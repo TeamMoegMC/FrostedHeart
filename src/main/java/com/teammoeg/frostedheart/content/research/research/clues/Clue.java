@@ -121,29 +121,9 @@ public abstract class Clue extends AutoIDItem{
         this.nonce = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
     }
 
-    public void delete() {
-        deleteSelf();
-        if (parent != null) {
-            Research r = parent.get();
-            if (r != null) {
-                r.getClues().remove(this);
-            }
-        }
-    }
-
     private void deleteInTree() {
         FHTeamDataManager.INSTANCE.getAllData().forEach(this::end);
     }
-
-    public void deleteSelf() {
-        deleteInTree();
-        FHResearch.clues.remove(this);
-    }
-
-    public void edit() {
-        deleteInTree();
-    }
-
     /**
      * Stop detection when clue is completed
      */
@@ -160,7 +140,7 @@ public abstract class Clue extends AutoIDItem{
         return "   " + (this.required ? "required " : "") + "+" + (int) (this.contribution * 100) + "%";
     }
 
-    public Component getDescription() {
+	public Component getDescription() {
         return FHTextUtil.getOptional(desc, "clue", () -> this.getId() + ".desc");
     }
 

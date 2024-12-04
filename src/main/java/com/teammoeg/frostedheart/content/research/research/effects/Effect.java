@@ -110,8 +110,6 @@ public abstract class Effect extends AutoIDItem{
 
     boolean hidden;
 
-    public transient Supplier<Research> parent;
-
     /**
      * Instantiates a new Effect.<br>
      */
@@ -184,44 +182,19 @@ public abstract class Effect extends AutoIDItem{
         this(name, tooltip, FHIcons.getIcon(icon));
     }
 
-    /**
-     * Delete from the registry and research
-     */
-    public void delete() {
-        deleteSelf();
-        if (parent != null) {
-            Research r = parent.get();
-            if (r != null) {
-                r.getEffects().remove(this);
-            }
-        }
-    }
-
     private void deleteInTree() {
         FHTeamDataManager.INSTANCE.getAllData().forEach(t -> {
-        	int iid=FHResearch.effects.getIntId(this);
-            if (iid != 0) {
             	TeamResearchData trd=t.getData(SpecialDataTypes.RESEARCH_DATA);
                 revoke(trd);
 
                 trd.setGrant(this, false);
-            }
+            
         });
     }
-
-    /**
-     * Delete from the registry.
-     */
-    public void deleteSelf() {
-        deleteInTree();
-        FHResearch.effects.remove(this);
-    }
-
     /**
      * Called when effect is edited.
      */
     public void edit() {
-        deleteInTree();
     }
 
     /**
@@ -387,24 +360,5 @@ public abstract class Effect extends AutoIDItem{
         ClientResearchDataAPI.getData().setGrant(this, b);
     }
 
-    /**
-     * set new id, would change registry data.
-     *
-     * @param id value to set new id to.
-     */
-    void setNewId(String id) {
-        if (!id.equals(this.nonce)) {
-            delete();
-            this.nonce = id;
-            FHResearch.effects.register(this);
-            if (parent != null) {
-                Research r = parent.get();
-                if (r != null) {
-                    r.attachEffect(this);
-                    r.doIndex();
-                }
-            }
-        }
-    }
 
 }

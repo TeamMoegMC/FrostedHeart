@@ -70,15 +70,15 @@ import net.minecraftforge.network.PacketDistributor.PacketTarget;
  */
 public class FHResearch {
 	public static FHRegistry<Research> researches = new FHRegistry<>();
-	public static FHRegistry<Clue> clues = new FHRegistry<>();
-	public static FHRegistry<Effect> effects = new FHRegistry<>();
+	/*public static FHRegistry<Clue> clues = new FHRegistry<>();
+	public static FHRegistry<Effect> effects = new FHRegistry<>();*/
 	private static OptionalLazy<List<Research>> allResearches = OptionalLazy.of(() -> researches.all());
 	public static boolean editor = false;
 
 	public static void clearAll() {
-		clues.clear();
+		//clues.clear();
 		researches.clear();
-		effects.clear();
+		//effects.clear();
 	}
 
 	// clear cache when modification applied
@@ -99,21 +99,21 @@ public class FHResearch {
 	// called after reload
 	public static void finishReload() {
 		reindex();
-		effects.all().forEach(Effect::init);
-		clues.all().forEach(Clue::init);
+		/*effects.all().forEach(Effect::init);
+		clues.all().forEach(Clue::init);*/
 	}
 
 	public static List<Research> getAllResearch() {
 		return allResearches.resolve().get();
 	}
 
-	public static Supplier<Clue> getClue(int id) {
+	/*public static Clue getClue(int id) {
 		return clues.get(id);
 	}
 
-	public static Supplier<Clue> getClue(String id) {
+	public static Clue getClue(String id) {
 		return clues.get(id);
-	}
+	}*/
 
 	public static Research getFirstResearchInCategory(ResearchCategory cate) {
 		List<Research> all = getAllResearch();
@@ -131,11 +131,11 @@ public class FHResearch {
 		return unl;
 	}
 
-	public static Supplier<Research> getResearch(int id) {
+	public static Research getResearch(int id) {
 		return researches.get(id);
 	}
 
-	public static Supplier<Research> getResearch(String id) {
+	public static Research getResearch(String id) {
 		return researches.get(id);
 	}
 
@@ -236,9 +236,9 @@ public class FHResearch {
 	}
 
 	public static void load(CompoundTag cnbt) {
-		clues.deserialize(cnbt.getList("clues", Tag.TAG_STRING));
+		//clues.deserialize(cnbt.getList("clues", Tag.TAG_STRING));
 		researches.deserialize(cnbt.getList("researches", Tag.TAG_STRING));
-		effects.deserialize(cnbt.getList("effects", Tag.TAG_STRING));
+		//effects.deserialize(cnbt.getList("effects", Tag.TAG_STRING));
 	}
 
 	public static Research load(Research r) {
@@ -333,8 +333,8 @@ public class FHResearch {
 	// called before reload
 	public static void prepareReload() {
 		researches.prepareReload();
-		clues.prepareReload();
-		effects.prepareReload();
+		//clues.prepareReload();
+		//effects.prepareReload();
 		clearCache();
 	}
 
@@ -358,14 +358,18 @@ public class FHResearch {
 
 	// called after reload
 	public static void reindex() {
+		try {
 		allResearches.orElse(Collections.emptyList()).forEach(Research::doReindex);
 		allResearches.orElse(Collections.emptyList()).forEach(Research::doIndex);
+		}catch(Throwable t) {
+			t.printStackTrace();
+		}
 	}
 
 	public static CompoundTag save(CompoundTag cnbt) {
-		cnbt.put("clues", clues.serialize());
+		//cnbt.put("clues", clues.serialize());
 		cnbt.put("researches", researches.serialize());
-		cnbt.put("effects", effects.serialize());
+		//cnbt.put("effects", effects.serialize());
 		return cnbt;
 	}
 

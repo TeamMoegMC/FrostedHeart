@@ -332,8 +332,8 @@ public class CodecUtil {
 		Object readed = ObjectWriter.readObject(pb);
 		System.out.println(readed);
 		DataResult<T> ob = codec.parse(DataOps.COMPRESSED, readed);
-		
-		Optional<T> ret = ob.resultOrPartial(t->{throw new DecoderException(t);});
+		System.out.println(ob);
+		Optional<T> ret = ob.resultOrPartial(FHMain.LOGGER::info);
 		return ret.get();
 	}
 	public static <T> void writeCodecNBT(FriendlyByteBuf pb, Codec<T> codec, T obj) {

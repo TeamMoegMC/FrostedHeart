@@ -25,29 +25,30 @@ import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.frostedheart.util.io.codec.DataOps;
+import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when player join
-public class FHResearchSyncPacket implements FHMessage {
-    final Research r;
+public record FHResearchSyncPacket(Object data,String key) implements FHMessage {
     public FHResearchSyncPacket(Research r) {
-    	this.r=r;
+    	this(CodecUtil.encodeOrThrow(Research.CODEC.encodeStart(DataOps.COMPRESSED, r)),r.getId());
+    	
     }
 
     public FHResearchSyncPacket(FriendlyByteBuf buffer) {
-        r = CodecUtil.readCodec(buffer, Research.CODEC);
-        r.setId(buffer.readUtf());
+    	this(ObjectWriter.readObject(buffer),buffer.readUtf());
     }
 
     public void encode(FriendlyByteBuf buffer) {
-        CodecUtil.writeCodec(buffer, Research.CODEC, r);
-        buffer.writeUtf(r.getId());
+    	ObjectWriter.writeObject(buffer, data);
+        buffer.writeUtf(key);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> FHResearch.readOne(r));
+        context.get().enqueueWork(() -> FHResearch.readOne(CodecUtil.decodeOrThrow(Research.CODEC.decode(DataOps.COMPRESSED, data))));
         context.get().setPacketHandled(true);
     }
 }

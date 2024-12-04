@@ -397,7 +397,7 @@ public class ResearchListeners {
                 if (RubbingTool.hasResearch(i)) {
                     int pts = RubbingTool.getPoint(i);
                     if (pts > 0) {
-                        Research rs = FHResearch.getResearch(RubbingTool.getResearch(i)).get();
+                        Research rs = FHResearch.getResearch(RubbingTool.getResearch(i));
                         if (rs != null && pts > 0) {
                             ResearchData rd = trd.getData(rs);
                             rd.commitPoints(pts);

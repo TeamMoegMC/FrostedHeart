@@ -68,13 +68,13 @@ public class Research implements FHRegisteredItem {
     public static final Codec<Research> CODEC=RecordCodecBuilder.create(t->t.group(
     	FHIcons.CODEC.optionalFieldOf("icon",FHIcons.nop()).forGetter(o->o.icon),
     	ResearchCategory.CODEC.fieldOf("category").forGetter(o->o.category),
-    	CodecUtil.defaultValue(Codec.list(FHResearch.researches.SUPPLIER_CODEC),Arrays.asList()).fieldOf("parents").forGetter(o->new ArrayList<>(o.parents)),
-    	Codec.list(Clue.CODEC).fieldOf("clues").forGetter(o->o.clues),
-    	Codec.list(CodecUtil.INGREDIENT_SIZE_CODEC).fieldOf("ingredients").forGetter(o->o.requiredItems),
-    	Codec.list(Effect.CODEC).fieldOf("effects").forGetter(o->o.effects),
-    	CodecUtil.defaultValue(Codec.STRING, "").fieldOf("name").forGetter(o->o.name),
-    	CodecUtil.defaultValue(Codec.list(Codec.STRING),Arrays.asList()).fieldOf("desc").forGetter(o->o.desc),
-    	CodecUtil.defaultValue(Codec.list(Codec.STRING),Arrays.asList()).fieldOf("descAlt").forGetter(o->o.fdesc),
+    	Codec.list(Codec.STRING).optionalFieldOf("parents",Arrays.asList()).forGetter(o->new ArrayList<>(o.parents)),
+    	Codec.list(Clue.CODEC).optionalFieldOf("clues",Arrays.asList()).forGetter(o->o.clues),
+    	Codec.list(CodecUtil.INGREDIENT_SIZE_CODEC).optionalFieldOf("ingredients",Arrays.asList()).forGetter(o->o.requiredItems),
+    	Codec.list(Effect.CODEC).optionalFieldOf("effects",Arrays.asList()).forGetter(o->o.effects),
+    	Codec.STRING.optionalFieldOf("name","").forGetter(o->o.name),
+    	Codec.list(Codec.STRING).optionalFieldOf("desc",Arrays.asList()).forGetter(o->o.desc),
+    	Codec.list(Codec.STRING).optionalFieldOf("descAlt",Arrays.asList()).forGetter(o->o.fdesc),
     	CodecUtil.<Research>booleans("flags")
     	.flag("showAltDesc", o->o.showfdesc)
     	.flag("hideEffects", o->o.hideEffects)
@@ -91,8 +91,8 @@ public class Research implements FHRegisteredItem {
     FHIcon icon;
 
     private ResearchCategory category=ResearchCategory.RESCUE;
-    private HashSet<Supplier<Research>> parents = new HashSet<>();// parent researches
-    private HashSet<Supplier<Research>> children = new HashSet<>();// child researches, this is set automatically,
+    private HashSet<String> parents = new HashSet<>();// parent researches
+    private HashSet<String> children = new HashSet<>();// child researches, this is set automatically,
     // should not set manually.
     private List<Clue> clues = new ArrayList<>();// research clues
 
@@ -156,7 +156,7 @@ public class Research implements FHRegisteredItem {
         this.icon = FHIcons.nop();
     }
 
-    public Research(FHIcon icon, ResearchCategory category, List<Supplier<Research>> parents, List<Clue> clues, List<IngredientWithSize> requiredItems, List<Effect> effects, String name,
+    public Research(FHIcon icon, ResearchCategory category, List<String> parents, List<Clue> clues, List<IngredientWithSize> requiredItems, List<Effect> effects, String name,
 		List<String> desc, List<String> fdesc, boolean[] flags, int points) {
 		super();
 		this.icon = icon;
@@ -187,7 +187,7 @@ public class Research implements FHRegisteredItem {
      * @param parents  the parents<br>
      */
     @SafeVarargs
-    public Research(String id, ResearchCategory category, ItemLike icon, Supplier<Research>... parents) {
+    public Research(String id, ResearchCategory category, ItemLike icon, String... parents) {
         this(id, category, new ItemStack(icon), parents);
     }
 
@@ -200,7 +200,7 @@ public class Research implements FHRegisteredItem {
      * @param parents  the parents<br>
      */
     @SafeVarargs
-    public Research(String id, ResearchCategory category, ItemStack icon, Supplier<Research>... parents) {
+    public Research(String id, ResearchCategory category, ItemStack icon, String... parents) {
         this.id = id;
         this.parents.addAll(Arrays.asList(parents));
         this.icon = FHIcons.getIcon(icon);
@@ -215,7 +215,7 @@ public class Research implements FHRegisteredItem {
      * @param parents  parents<br>
      */
     @SafeVarargs
-    public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
+    public Research(String path, ResearchCategory category, String... parents) {
         this(path, category, new ItemStack(Items.AIR), parents);
 
     }
@@ -225,7 +225,7 @@ public class Research implements FHRegisteredItem {
      *
      * @param par the par<br>
      */
-    public void addParent(Supplier<Research> par) {
+    public void addParent(String par) {
         this.parents.add(par);
     }
 
@@ -270,34 +270,33 @@ public class Research implements FHRegisteredItem {
 
     private void deleteInTree() {
         this.getChildren().forEach(e -> e.removeParent(this));
-        this.getParents().forEach(e -> e.children.removeIf(e2 -> e2.get() == this));
+        this.getParents().forEach(e -> e.children.removeIf(e2 -> e2.equals(this.getId())));
     }
 
     /**
      * Do index.
      */
     public void doIndex() {
-        Supplier<Research> objthis = getSupplier();
 
-        for (Supplier<Research> r : this.parents) {
-            Research rx = r.get();
+        for (String r : this.parents) {
+            Research rx = FHResearch.getResearch(r);
             if (rx != null)
-                rx.populateChild(objthis);
+                rx.populateChild(this);
         }
         int i = 0;
         effects.removeIf(Objects::isNull);
         clues.removeIf(Objects::isNull);
-        for (Effect e : effects) {
-            e.parent = getSupplier();
+       /* for (Effect e : effects) {
+            e.parent = this;
             FHResearch.effects.register(e);
             i++;
         }
         i = 0;
         for (Clue c : clues) {
-            c.parent = getSupplier();
+            c.parent = this;
             FHResearch.clues.register(c);
             i++;
-        }
+        }*/
     }
 
     /**
@@ -330,8 +329,8 @@ public class Research implements FHRegisteredItem {
      *
      * @return children<br>
      */
-    public Set<Research> getChildren() {
-        return children.stream().map(Supplier::get).filter(Objects::nonNull).collect(Collectors.toSet());
+    public Collection<Research> getChildren() {
+        return children.stream().map(FHResearch::getResearch).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     /*
@@ -448,7 +447,7 @@ public class Research implements FHRegisteredItem {
      * @return parents<br>
      */
     public Set<Research> getParents() {
-        return parents.stream().filter(Objects::nonNull).map(Supplier::get).filter(Objects::nonNull).collect(Collectors.toSet());
+        return parents.stream().filter(Objects::nonNull).map(FHResearch::getResearch).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     /**
@@ -479,15 +478,6 @@ public class Research implements FHRegisteredItem {
         return points;
     }
 
-    /**
-     * Get supplier.
-     *
-     * @return supplier<br>
-     */
-    public Supplier<Research> getSupplier() {
-        return FHResearch.getResearch(this.getId());
-
-    }
 
     /**
      * Grant effects.
@@ -632,8 +622,8 @@ public class Research implements FHRegisteredItem {
      *
      * @param child the child<br>
      */
-    public void populateChild(Supplier<Research> child) {
-        children.add(child);
+    public void populateChild(Research child) {
+        children.add(child.getId());
     }
 
     public void reload() {
@@ -647,7 +637,7 @@ public class Research implements FHRegisteredItem {
      * @param parent the parent<br>
      */
     public void removeParent(Research parent) {
-        this.parents.removeIf(e -> parent.equals(e.get()));
+        this.parents.removeIf(e -> parent.getId().equals(e));
     }
 
     /**
@@ -717,9 +707,9 @@ public class Research implements FHRegisteredItem {
             this.setId(nid);
             FHResearch.register(this);
 
-            this.getChildren().forEach(e -> e.addParent(this.getSupplier()));
-            this.getEffects().forEach(e -> FHResearch.effects.remove(e));
-            this.getClues().forEach(e -> FHResearch.clues.remove(e));
+            this.getChildren().forEach(e -> e.addParent(this.getId()));
+            //this.getEffects().forEach(e -> FHResearch.effects.remove(e));
+            //this.getClues().forEach(e -> FHResearch.clues.remove(e));
             this.doIndex();
         }
     }
@@ -729,7 +719,7 @@ public class Research implements FHRegisteredItem {
      *
      * @param collect value to set parents to.
      */
-    public void setParents(Collection<Supplier<Research>> collect) {
+    public void setParents(Collection<String> collect) {
         this.parents.clear();
         this.parents.addAll(collect);
     }
@@ -740,7 +730,7 @@ public class Research implements FHRegisteredItem {
      * @param parents value to set parents to.
      */
     @SafeVarargs
-    public final void setParents(Supplier<Research>... parents) {
+    public final void setParents(String... parents) {
         this.parents.clear();
         this.parents.addAll(Arrays.asList(parents));
     }
