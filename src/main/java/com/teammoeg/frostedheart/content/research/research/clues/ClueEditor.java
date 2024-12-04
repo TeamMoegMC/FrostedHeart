@@ -86,7 +86,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         @Override
         public void addWidgets() {
             super.addWidgets();
-            add(new OpenEditorButton<>(this, "Select Ingredient", IngredientEditor.EDITOR, e.stack, e.stack == null ? Icon.empty() : FHIcons.getIcon(e.stack), c -> e.stack = c));
+            add(new OpenEditorButton<>(this, "Select Ingredient", IngredientEditor.EDITOR, e.stack, e.stack == null ? Icon.empty() : FHIcons.getIcon(e.stack).asFtbIcon(), c -> e.stack = c));
             add(cons);
         }
 

@@ -22,12 +22,12 @@ package com.teammoeg.frostedheart.content.scenario.parser.reader;
 import com.teammoeg.frostedheart.content.scenario.parser.ScenarioParseException;
 
 public class StringParseReader {
-	public static record ParserState(String name,int lineNo,int position){
+	public static record ParserState(String name,int lineNum,int position){
 	    public ScenarioParseException generateException(Throwable nested) {
-	    	return new ScenarioParseException("At File: "+name+" Line:"+lineNo+":"+position+" "+nested.getMessage(),nested);
+	    	return new ScenarioParseException("At File: "+name+" Line:"+lineNum+":"+position+" "+nested.getMessage(),nested);
 	    }
 	    public ScenarioParseException generateException(String message) {
-	    	return new ScenarioParseException("At File: "+name+" Line:"+lineNo+":"+position+" "+message);
+	    	return new ScenarioParseException("At File: "+name+" Line:"+lineNum+":"+position+" "+message);
 	    }
 	}
     public final CodeLineSource strs;

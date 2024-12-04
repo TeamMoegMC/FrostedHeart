@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.scenario.parser;
 
 import java.util.Map;
 
+import com.teammoeg.frostedheart.content.scenario.ScenarioUtils;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 
 public class AssignNode implements Node {
@@ -32,9 +33,9 @@ public class AssignNode implements Node {
     public AssignNode(String command, Map<String, String> params) {
         super();
         exp = params.getOrDefault("exp", "0");
-        pat = params.get("var");
-        str = params.get("str");
-        pat2 = params.get("var2");
+        pat = ScenarioUtils.getOfAlias(params, "v","var");
+        str = ScenarioUtils.getOfAlias(params,"s","str");
+        pat2 = ScenarioUtils.getOfAlias(params,"v2","var2");
     }
 
     @Override
