@@ -165,11 +165,11 @@ public class ScenarioParser {
 
     private NodeInfo parseAtCommand(StringParseReader reader) {
         Map<String, String> params = new HashMap<>();
-        
+        ParserState state=reader.getCurrentState();
         String command = parseLiteralOrString(reader, -1);
         reader.skipWhitespace();
         //System.out.println("cmd:"+command);
-        if(!reader.has()) return createCommand(command, params,reader.getCurrentState());
+        if(!reader.has()) return createCommand(command, params,state);
         while (reader.has()) {
             String name = parseLiteralOrString(reader, '=');
             reader.skipWhitespace();
@@ -182,18 +182,19 @@ public class ScenarioParser {
             params.put(name, val);
             reader.skipWhitespace();
             
-            if (!reader.has()||reader.eat('#')) return createCommand(command, params,reader.getCurrentState());
+            if (!reader.has()||reader.eat('#')) return createCommand(command, params,state);
         }
-        return new NodeInfo(new LiteralNode(reader.fromStart()),reader.getCurrentState());
+        return new NodeInfo(new LiteralNode(reader.fromStart()),state);
 
     }
 
     private NodeInfo parseBarackCommand(StringParseReader reader) {
         Map<String, String> params = new HashMap<>();
+        ParserState state=reader.getCurrentState();
         String command = parseLiteralOrString(reader, ']');
         reader.skipWhitespace();
         
-        if(reader.eat(']')) return createCommand(command, params,reader.getCurrentState());
+        if(reader.eat(']')) return createCommand(command, params,state);
         while (reader.has()) {
             String name = parseLiteralOrString(reader, '=');
             reader.skipWhitespace();
@@ -204,9 +205,9 @@ public class ScenarioParser {
             String val = parseLiteralOrString(reader, ']');
             params.put(name, val);
             reader.skipWhitespace();
-            if(reader.eat(']'))return createCommand(command, params,reader.getCurrentState());
+            if(reader.eat(']'))return createCommand(command, params,state);
         }
-        return new NodeInfo(new LiteralNode(reader.fromStart()),reader.getCurrentState());
+        return new NodeInfo(new LiteralNode(reader.fromStart()),state);
     }
 
     private ParseResult parseLine(CodeLineSource source) {
@@ -223,12 +224,13 @@ public class ScenarioParser {
 		            } else if (reader.eat('[')) {
 		                nodes.add(parseBarackCommand(reader));
 		            }else{
+		            	ParserState state=reader.getCurrentState();
 		            	String lit=parseLiteral(reader);
 		            	if(lit!=null&&!lit.isEmpty()) {
 		            		if(lit.startsWith("*")) {
-		            			nodes.add(new NodeInfo(new LabelNode(lit),reader.getCurrentState()));
+		            			nodes.add(new NodeInfo(new LabelNode(lit),state));
 		                	}else
-		            		nodes.add(new NodeInfo(new LiteralNode(lit),reader.getCurrentState()));
+		            		nodes.add(new NodeInfo(new LiteralNode(lit),state));
 		            	}
 		            }
 		        }
