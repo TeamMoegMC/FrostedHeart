@@ -19,11 +19,13 @@
 
 package com.teammoeg.frostedheart;
 
+import com.teammoeg.frostedheart.compat.ftbq.FHGuiProviders;
 import com.teammoeg.frostedheart.foundation.model.DynamicModelSetup;
 import com.teammoeg.frostedheart.content.climate.client.FogModification;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 public class FHClient {
@@ -40,5 +42,11 @@ public class FHClient {
         forgeBus.addListener(FogModification::renderFogColors);
         forgeBus.addListener(FogModification::renderFogDensity);
         forgeBus.addListener(FHTooltips::onItemTooltip);
+
+        modBus.addListener(FHClient::onClientSetup);
+    }
+
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        FHGuiProviders.setRewardGuiProviders();
     }
 }

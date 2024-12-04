@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
+import com.teammoeg.frostedheart.compat.ftbq.FHRewardTypes;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.research.FHResearch;
@@ -138,6 +139,7 @@ public class FHMain {
         CreateCompat.init();
         TetraCompat.init();
         SpecialDataTypes.init();
+        FHRewardTypes.init();
 
         // Event registration
         TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);

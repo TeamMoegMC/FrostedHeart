@@ -34,6 +34,7 @@
   "effect.frostedheart.wet": "Wet",
   "entity.frostedheart.curiosity_entity": "Curiosity of the Deep Frostland",
   "entity.frostedheart.wandering_refugee": "Wandering Refugee",
+  "ftbquests.reward.frostedheart.insight": "Insight",
   "gui.frostedheart.any_food": "Any food",
   "gui.frostedheart.debug.clear_cache": "Clear tip cache (Read from the file again)",
   "gui.frostedheart.debug.clear_queue": "Clear tip render queue",
