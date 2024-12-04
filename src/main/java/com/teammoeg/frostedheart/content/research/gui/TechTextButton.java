@@ -20,10 +20,15 @@
 package com.teammoeg.frostedheart.content.research.gui;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.GameRenderer;
 
 import java.util.Optional;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+
+import blusunrize.immersiveengineering.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Icon;
+import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
@@ -48,19 +53,18 @@ public abstract class TechTextButton extends TechButton {
 
     @Override
     public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-        drawBackground(matrixStack, theme, x, y, w, h);
-        int s = h >= 16 ? 16 : 8;
+        //drawBackground(matrixStack, theme, x, y, w, h);
+    	TechIcons.drawTexturedRect(matrixStack, x, y, w, h, isMouseOver());
+    	int s = h >= 16 ? 16 : 8;
         int off = (h - s) / 2;
         FormattedText title = getTitle();
         int textX = x;
         int textY = y + (h - theme.getFontHeight() + 1) / 2;
-
-        int sw = theme.getStringWidth(title);
+        int sw = ClientUtils.mc().font.width(title);
         int mw = w - (hasIcon() ? off + s : 0) - 6;
 
         if (sw > mw) {
             sw = mw;
-            title = theme.trimStringToWidth(title, mw);
         }
 
         if (renderTitleInCenter()) {
@@ -73,8 +77,12 @@ public abstract class TechTextButton extends TechButton {
             drawIcon(matrixStack, theme, x + off, y + off, s, s);
             textX += off + s;
         }
-
-        theme.drawString(matrixStack, title, textX, textY, TechIcons.text, 0);
+        //RenderSystem.setShaderColor(textY, sw, mw, h);
+        RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
+        
+        //FIXME: IDK WHY BUT SHADER SEEMS NULL WHEN RENDERING ANYTHING.
+        //System.out.println(RenderSystem.getShader());
+        matrixStack.drawWordWrap(ClientUtils.mc().font, title, textX, textY, mw, TechIcons.text.rgba());
     }
 
     @Override

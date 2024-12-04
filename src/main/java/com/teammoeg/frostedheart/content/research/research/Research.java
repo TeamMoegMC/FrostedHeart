@@ -50,6 +50,7 @@ import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import dev.ftb.mods.ftblibrary.icon.Icon;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -408,6 +409,9 @@ public class Research implements FHRegisteredItem {
      */
     public FHIcon getIcon() {
         return icon;
+    }
+    public Icon getFTBIcon() {
+        return icon.asFtbIcon();
     }
 
     /**
