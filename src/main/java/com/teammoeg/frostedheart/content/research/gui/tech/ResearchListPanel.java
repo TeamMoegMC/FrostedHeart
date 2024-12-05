@@ -45,7 +45,7 @@ public class ResearchListPanel extends Panel {
         long lastupdate;
 
         public ResearchButton(ResearchList panel, Research research) {
-            super(panel, research.getName(), research.getIcon());
+            super(panel, research.getName(), research.getIcon().asFtbIcon());
             this.research = research;
             this.listPanel = panel;
             setSize(101, RESEARCH_HEIGHT);

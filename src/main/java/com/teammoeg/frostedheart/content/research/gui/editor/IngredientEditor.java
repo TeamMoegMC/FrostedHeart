@@ -138,7 +138,7 @@ public class IngredientEditor extends BaseEditDialog {
         igd.open();
     };
     public static final Editor<IngredientWithSize> EDITOR = (p, l, v, c) -> new IngredientEditor(p, l, v, c).open();
-    public static final Editor<List<IngredientWithSize>> LIST_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EDITOR, IngredientEditor::getDesc, FHIcons::getIcon, e -> c.accept(new ArrayList<>(e))).open();
+    public static final Editor<List<IngredientWithSize>> LIST_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EDITOR, IngredientEditor::getDesc,e-> FHIcons.getIcon(e).asFtbIcon(), e -> c.accept(new ArrayList<>(e))).open();
 
     String label;
 
@@ -199,7 +199,7 @@ public class IngredientEditor extends BaseEditDialog {
 
     @Override
     public void addWidgets() {
-        add(new OpenEditorButton<>(this, "Edit Ingredient", EDITOR_INGREDIENT, orig, orig == null ? Icon.empty() : FHIcons.getIcon(orig), e -> orig = e));
+        add(new OpenEditorButton<>(this, "Edit Ingredient", EDITOR_INGREDIENT, orig, orig == null ? Icon.empty() : FHIcons.getIcon(orig).asFtbIcon(), e -> orig = e));
         if (orig != null) {
             if (orig.values.length == 1)
                 add(new OpenEditorButton<>(this, "Change to Multiple", EDITOR_MULTIPLE, orig, e -> orig = e));

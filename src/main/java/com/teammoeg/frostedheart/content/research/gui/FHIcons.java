@@ -65,7 +65,7 @@ import net.minecraft.resources.ResourceLocation;
 public class FHIcons {
     private static final TypedCodecRegistry<FHIcon> serializers = new TypedCodecRegistry<>();
 	public static final Codec<FHIcon> CODEC=new AlternativeCodecBuilder<FHIcon>(FHIcon.class)
-		.add(FHNopIcon.class ,FHNopIcon.CODEC)
+		.addSaveOnly(FHNopIcon.class ,FHNopIcon.CODEC)
 		.add(FHItemIcon.class, FHItemIcon.ICON_CODEC)
 		.add(FHItemIcon.class,FHItemIcon.CODEC)
 		.add(FHAnimatedIcon.class,FHAnimatedIcon.ICON_CODEC)
@@ -148,8 +148,21 @@ public class FHIcons {
 
 
     }
+    private static class FHIconWrapper extends Icon{
+    	FHIcon icon;
 
-    public static abstract class FHIcon extends Icon implements Cloneable {
+		public FHIconWrapper(FHIcon icon) {
+			super();
+			this.icon = icon;
+		}
+
+		@Override
+		public void draw(GuiGraphics arg0, int arg1, int arg2, int arg3, int arg4) {
+			icon.draw(arg0, arg1, arg2, arg3, arg4);
+		}
+    	
+    }
+    public static abstract class FHIcon implements Cloneable {
         public FHIcon() {
             super();
         }
@@ -162,6 +175,14 @@ public class FHIcons {
                 throw new AssertionError();
             }
         }
+        public abstract void draw(GuiGraphics ms, int x, int y, int w, int h);
+        Icon ftbIconCache;
+        public Icon asFtbIcon() {
+        	if(ftbIconCache==null)
+	        	ftbIconCache= new FHIconWrapper(this) ;
+        	return ftbIconCache;
+        }
+        
     }
 
     private static class FHIngredientIcon extends FHAnimatedIcon {
@@ -472,7 +493,7 @@ public class FHIcons {
         };
         public static final Editor<FHIcon> NOP_CHANGE_EDITOR = (p, l, v, c) -> EDITOR.open(p, l, null, c);
         public static final Editor<FHAnimatedIcon> ANIMATED_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v == null ? null : v.icons, null, EDITOR, e -> e.getClass().getSimpleName(),
-                e -> e, e -> c.accept(new FHAnimatedIcon(e.toArray(new FHIcon[0])))).open();
+                e -> e.asFtbIcon(), e -> c.accept(new FHAnimatedIcon(e.toArray(new FHIcon[0])))).open();
         public static final Editor<FHCombinedIcon> COMBINED_EDITOR = (p, l, v, c) -> new Combined(p, l, v, c).open();
 
         public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> new SelectDialog<>(p, l, v == null ? null : v.name, o -> c.accept(new FHDelegateIcon(o)), TechIcons.internals::keySet, TranslateUtils::str, e -> new String[]{e}, TechIcons.internals::get).open();

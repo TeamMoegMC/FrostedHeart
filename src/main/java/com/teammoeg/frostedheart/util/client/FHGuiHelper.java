@@ -102,9 +102,9 @@ public class FHGuiHelper {
    public static void drawItem(GuiGraphics guiGraphics,ItemStack stack,int x,int y,int zindex,float scaleX,float scaleY,boolean drawDecorations,@Nullable String countReplacement) {
     	guiGraphics.pose().pushPose();
     	if(zindex!=0)
-    	guiGraphics.pose().translate(0.0F, 0.0F, zindex);
+    	guiGraphics.pose().translate(x, y, zindex);
     	guiGraphics.pose().scale(scaleX, scaleY, 0);
-    	guiGraphics.renderItem(stack, x, y, x+y);
+    	guiGraphics.renderItem(stack, 0, 0, x+y);
     	guiGraphics.renderItemDecorations(ClientUtils.mc().font, stack, x, y, countReplacement);
         guiGraphics.pose().popPose();
     }
