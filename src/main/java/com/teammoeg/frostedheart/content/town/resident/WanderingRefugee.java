@@ -19,16 +19,12 @@
 
 package com.teammoeg.frostedheart.content.town.resident;
 
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHTags;
 import com.teammoeg.frostedheart.content.town.TeamTown;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.util.TimeUtil;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.InteractionHand;
@@ -45,7 +41,6 @@ import net.minecraft.world.entity.monster.*;
 import net.minecraft.world.entity.npc.Npc;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
@@ -106,7 +101,7 @@ public class WanderingRefugee extends PathfinderMob implements Npc, NeutralMob {
         } else {
             ItemStack itemStack = player.getItemInHand(hand);
             if (hired) {
-                player.displayClientMessage(TranslateUtils.translateMessage("refugee.hired", player.getName().getString()), false);
+                player.displayClientMessage(Lang.translateMessage("refugee.hired", player.getName().getString()), false);
                 return InteractionResult.CONSUME;
             } else if (itemStack.is(FHTags.Items.REFUGEE_NEEDS.tag)) {
                 // try shrink stack and decrement amount needed
@@ -116,10 +111,10 @@ public class WanderingRefugee extends PathfinderMob implements Npc, NeutralMob {
                     this.amountNeeded = amountNeeded;
                     itemStack.shrink(1);
                     if (amountNeeded > 0) {
-                        player.displayClientMessage(TranslateUtils.translateMessage("refugee.unsatisfied"), false);
+                        player.displayClientMessage(Lang.translateMessage("refugee.unsatisfied"), false);
                         return InteractionResult.CONSUME;
                     } else {
-                        player.displayClientMessage(TranslateUtils.translateMessage("refugee.satisfied"), false);
+                        player.displayClientMessage(Lang.translateMessage("refugee.satisfied"), false);
                         // Get town of player
                         TeamTown town = TeamTown.from(player);
                         // Add resident
@@ -132,7 +127,7 @@ public class WanderingRefugee extends PathfinderMob implements Npc, NeutralMob {
                 }
             }
             // tell player they need to give the refugee something
-            player.displayClientMessage(TranslateUtils.translateMessage("refugee.needs", firstName, lastName), false);
+            player.displayClientMessage(Lang.translateMessage("refugee.needs", firstName, lastName), false);
             return InteractionResult.CONSUME;
         }
     }
@@ -202,7 +197,7 @@ public class WanderingRefugee extends PathfinderMob implements Npc, NeutralMob {
     @Override
     public Component getDisplayName() {
         if (hired) {
-            return TranslateUtils.str(this.firstName + " " + this.lastName);
+            return Lang.str(this.firstName + " " + this.lastName);
         }
         return super.getDisplayName();
     }

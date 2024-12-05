@@ -21,15 +21,13 @@ package com.teammoeg.frostedheart.content.foods.dailykitchen;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.world.item.Item;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.network.chat.MutableComponent;
@@ -39,7 +37,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 class WantedFoodsGenerator {
     private final Random random;
     private final Set<Item> foodsEaten;
-    private MutableComponent wantedFoodsText = TranslateUtils.translateMessage("wanted_foods");
+    private MutableComponent wantedFoodsText = Lang.translateMessage("wanted_foods");
     private final int eatenFoodsAmount;
     private final int maxGenerateAmount;
     private HashSet<Item> wantedFoods = new HashSet<>();
@@ -70,7 +68,7 @@ class WantedFoodsGenerator {
         for (Item food : foodsEaten) {
             if (wantedFoodsNumber.contains(i) && (isNotBadFood(food)) && !(food instanceof ItemFluidContainer/*Don't eat thermos!*/)) {
                 wantedFoods.add(food);
-                wantedFoodsText.append(TranslateUtils.translate(food.getDescriptionId())).append(TranslateUtils.str("  "));
+                wantedFoodsText.append(Lang.translate(food.getDescriptionId())).append(Lang.str("  "));
             }
             i++;
         }

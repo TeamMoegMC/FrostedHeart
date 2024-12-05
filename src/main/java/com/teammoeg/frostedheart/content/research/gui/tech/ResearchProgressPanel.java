@@ -20,12 +20,12 @@
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import com.ibm.icu.text.NumberFormat;
+import com.teammoeg.frostedheart.util.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -46,7 +46,7 @@ public class ResearchProgressPanel extends Panel {
         if (inprog != null)
             tf.setText(inprog.getName());
         else
-            tf.setText(TranslateUtils.translateGui("no_active_research"));
+            tf.setText(Lang.translateGui("no_active_research"));
         add(tf);
     }
 
@@ -60,7 +60,7 @@ public class ResearchProgressPanel extends Panel {
         super.draw(matrixStack, theme, x, y, w, h);
         // title
 
-        theme.drawString(matrixStack, TranslateUtils.translateGui("research_progress"), x + 3, y, TechIcons.text, 0);
+        theme.drawString(matrixStack, Lang.translateGui("research_progress"), x + 3, y, TechIcons.text, 0);
         // progress bar
         // TODO: this cause crash when root clue is added
         // float progress = researchScreen.getInProgressResearch().getProgressFraction();
@@ -75,7 +75,7 @@ public class ResearchProgressPanel extends Panel {
             if (inprog.getData().canComplete(inprog))
                 theme.drawString(matrixStack, NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, TechIcons.text, 0);
             else
-                theme.drawString(matrixStack, TranslateUtils.translateGui("research.required_clue"), x + 40, y + 40, TechIcons.text_red, 0);
+                theme.drawString(matrixStack, Lang.translateGui("research.required_clue"), x + 40, y + 40, TechIcons.text_red, 0);
             // research icon
 
             TechIcons.SHADOW.draw(matrixStack, x + 1, y + 38, 36, 9);

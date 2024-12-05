@@ -20,27 +20,18 @@
 package com.teammoeg.frostedheart.foundation.tooltips;
 
 import com.simibubi.create.foundation.item.TooltipModifier;
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTags;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
-import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
-import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
-import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
-import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.foundation.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -96,12 +87,12 @@ public class FHTooltips {
             // Part 1: Common information
             // Ignition materials
             if (stack.is(Tags.Items.RODS_WOODEN)) {
-                text.add(TranslateUtils.translateTooltip("double_stick_ignition").withStyle(ChatFormatting.RED));
+                text.add(Lang.translateTooltip("double_stick_ignition").withStyle(ChatFormatting.RED));
             }
             else {
                 if (stack.is(FHTags.Items.IGNITION_MATERIAL.tag)) {
-                    text.add(TranslateUtils.translateTooltip("ignition_material").withStyle(ChatFormatting.RED));
-                    text.add(TranslateUtils.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
+                    text.add(Lang.translateTooltip("ignition_material").withStyle(ChatFormatting.RED));
+                    text.add(Lang.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
                     List<Item> metals = ForgeRegistries.ITEMS.getValues().stream()
                             .filter(item -> item.builtInRegistryHolder().is(FHTags.Items.IGNITION_METAL.tag))
                             .toList();
@@ -110,8 +101,8 @@ public class FHTooltips {
                     }
                 }
                 if (stack.is(FHTags.Items.IGNITION_METAL.tag)) {
-                    text.add(TranslateUtils.translateTooltip("ignition_metal").withStyle(ChatFormatting.RED));
-                    text.add(TranslateUtils.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
+                    text.add(Lang.translateTooltip("ignition_metal").withStyle(ChatFormatting.RED));
+                    text.add(Lang.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
                     // append the localized names of ignition materials from the tag
                     // get all items in the tag
                     List<Item> materials = ForgeRegistries.ITEMS.getValues().stream()
@@ -126,10 +117,10 @@ public class FHTooltips {
 
             // Dry food cannot be frozen nor heated
             if (stack.is(FHTags.Items.DRY_FOOD.tag)) {
-                text.add(TranslateUtils.translateTooltip("food.dry").withStyle(ChatFormatting.YELLOW));
+                text.add(Lang.translateTooltip("food.dry").withStyle(ChatFormatting.YELLOW));
             }
             if (stack.is(FHTags.Items.INSULATED_FOOD.tag)) {
-                text.add(TranslateUtils.translateTooltip("food.insulated").withStyle(ChatFormatting.GREEN));
+                text.add(Lang.translateTooltip("food.insulated").withStyle(ChatFormatting.GREEN));
             }
 
             // Food temperature status
@@ -137,11 +128,11 @@ public class FHTooltips {
                 byte temperature = getTemperature(stack);
                 if (temperature != -1) {
                     if (temperature == FROZEN) {
-                        text.add(TranslateUtils.translateTooltip("food.temperature.frozen").withStyle(ChatFormatting.BLUE));
+                        text.add(Lang.translateTooltip("food.temperature.frozen").withStyle(ChatFormatting.BLUE));
                     } else if (temperature == HOT) {
-                        text.add(TranslateUtils.translateTooltip("food.temperature.hot").withStyle(ChatFormatting.GOLD));
+                        text.add(Lang.translateTooltip("food.temperature.hot").withStyle(ChatFormatting.GOLD));
                     } else if (temperature == COLD) {
-                        text.add(TranslateUtils.translateTooltip("food.temperature.cold").withStyle(ChatFormatting.AQUA));
+                        text.add(Lang.translateTooltip("food.temperature.cold").withStyle(ChatFormatting.AQUA));
                     }
                 }
             }
@@ -152,7 +143,7 @@ public class FHTooltips {
             // Inspiration item
             for (InspireRecipe ir : FHUtils.filterRecipes(null, InspireRecipe.TYPE)) {
                 if (ir.item.test(stack)) {
-                    event.getToolTip().add(TranslateUtils.translateTooltip("inspire_item").withStyle(ChatFormatting.GRAY));
+                    event.getToolTip().add(Lang.translateTooltip("inspire_item").withStyle(ChatFormatting.GRAY));
                     break;
                 }
             }
@@ -175,10 +166,10 @@ public class FHTooltips {
 //                if (temp != 0)
 //                    if (temp > 0)
 //                        event.getToolTip()
-//                                .add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.GOLD));
+//                                .add(Lang.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.GOLD));
 //                    else
 //                        event.getToolTip()
-//                                .add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.AQUA));
+//                                .add(Lang.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.AQUA));
 //            }
 //            // If not ITF, apply the default temp modifier through temp status
 //            else {
@@ -186,9 +177,9 @@ public class FHTooltips {
 //                    byte temperature = getTemperature(stack);
 //                    if (temperature != -1) {
 //                        if (temperature == HOT) {
-//                            text.add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(DEFAULT_HOT_FOOD_HEAT)).withStyle(ChatFormatting.GOLD));
+//                            text.add(Lang.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(DEFAULT_HOT_FOOD_HEAT)).withStyle(ChatFormatting.GOLD));
 //                        } else if (temperature == COLD) {
-//                            text.add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(DEFAULT_COLD_FOOD_HEAT)).withStyle(ChatFormatting.AQUA));
+//                            text.add(Lang.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(DEFAULT_COLD_FOOD_HEAT)).withStyle(ChatFormatting.AQUA));
 //                        }
 //                    }
 //                }
@@ -203,7 +194,7 @@ public class FHTooltips {
                 EquipmentSlotType aes = MobEntity.getSlotForItemStack(stack);
                 if (s.length() > 0 && aes != null) {
                     event.getToolTip().add(GuiUtils.translateTooltip("inner").mergeStyle(TextFormatting.GREEN)
-                            .appendSibling(TranslateUtils.translate("item." + s.replaceFirst(":", "."))));
+                            .appendSibling(Lang.translate("item." + s.replaceFirst(":", "."))));
                     if (!ItemNBTHelper.getBoolean(stack, "inner_bounded")) {
                         if (stack.hasTag() && stack.getTag().contains("inner_cover_tag")) {
                             CompoundNBT cn = stack.getTag().getCompound("inner_cover_tag");
@@ -241,10 +232,10 @@ public class FHTooltips {
 //                if (temp != 0)
 //                    if (temp > 0)
 //                        event.getToolTip()
-//                                .add(TranslateUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).withStyle(ChatFormatting.GOLD));
+//                                .add(Lang.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).withStyle(ChatFormatting.GOLD));
 //                    else
 //                        event.getToolTip()
-//                                .add(TranslateUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).withStyle(ChatFormatting.AQUA));
+//                                .add(Lang.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).withStyle(ChatFormatting.AQUA));
 //            }
 
           /*  if (iwe != null) {
@@ -262,10 +253,10 @@ public class FHTooltips {
 //                if (temp != 0)
 //                    if (temp > 0)
 //                        event.getToolTip().add(
-//                                TranslateUtils.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.GOLD));
+//                                Lang.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.GOLD));
 //                    else
 //                        event.getToolTip()
-//                                .add(TranslateUtils.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.AQUA));
+//                                .add(Lang.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.AQUA));
 //            }
 
             // Research tooltip

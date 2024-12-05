@@ -20,13 +20,13 @@
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import com.ibm.icu.text.NumberFormat;
+import com.teammoeg.frostedheart.util.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.TextField;
@@ -101,14 +101,14 @@ public class CluePanel extends Panel {
         if (c.isRequired()) {
             rq = new TextField(this)
                     .setMaxWidth(width)
-                    .setText(TranslateUtils.translateGui("research.required"))
+                    .setText(Lang.translateGui("research.required"))
                     .setColor(TechIcons.text_red);
             rq.setPos(0, offset);
             offset += rq.height + 2;
         }
         contribute = new TextField(this)
                 .setMaxWidth(width)
-                .setText(TranslateUtils.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
+                .setText(Lang.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
                 .setColor(TechIcons.text);
         contribute.setPos(0, offset);
         offset += contribute.height + 2;

@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -61,7 +61,7 @@ public class DebugHeaterBlock extends FHBaseBlock implements FHEntityBlock<Debug
 		if (item.getItem().equals(Item.byBlock(this))) {
 			state = state.cycle(BlockStateProperties.LEVEL_FLOWING);
 			world.setBlockAndUpdate(pos, state);
-			player.displayClientMessage(TranslateUtils.str(String.valueOf(state.getValue(BlockStateProperties.LEVEL_FLOWING))), true);
+			player.displayClientMessage(Lang.str(String.valueOf(state.getValue(BlockStateProperties.LEVEL_FLOWING))), true);
 			return InteractionResult.SUCCESS;
 		}
 		return superResult;

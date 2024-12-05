@@ -1,15 +1,12 @@
 package com.teammoeg.frostedheart.compat.ftbq;
 
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
 import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftbquests.net.DisplayRewardToastMessage;
 import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.reward.Reward;
@@ -95,14 +92,14 @@ public class TemperatureDifficultyReward extends Reward {
             data.setDifficulty(temperatureDifficulty);
         });
         if (notify) {
-            new DisplayRewardToastMessage(id, TranslateUtils.ftbqReward("temperature_difficulty").append(": ").append(Component.literal(temperatureDifficulty.name()).withStyle(ChatFormatting.GREEN)), Color4I.empty()).sendTo(player);
+            new DisplayRewardToastMessage(id, Lang.ftbqReward("temperature_difficulty").append(": ").append(Component.literal(temperatureDifficulty.name()).withStyle(ChatFormatting.GREEN)), Color4I.empty()).sendTo(player);
         }
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     public MutableComponent getAltTitle() {
-        return TranslateUtils.ftbqReward("temperature_difficulty").append(": ").append(Component.literal(temperatureDifficulty.name()).withStyle(ChatFormatting.GREEN));
+        return Lang.ftbqReward("temperature_difficulty").append(": ").append(Component.literal(temperatureDifficulty.name()).withStyle(ChatFormatting.GREEN));
     }
 
     @Override

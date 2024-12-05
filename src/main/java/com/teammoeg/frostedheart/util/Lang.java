@@ -28,9 +28,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.LiteralContents;
-import net.minecraft.network.chat.contents.TranslatableContents;
 
-public class TranslateUtils {
+public class Lang {
 
     public static ResourceLocation makeTextureLocation(String name) {
         return FHMain.rl("textures/gui/" + name + ".png");

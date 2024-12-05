@@ -36,7 +36,7 @@ import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
@@ -211,7 +211,7 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBloc
                 // player.sendStatusMessage(GuiUtils.translateMessage("structure_formed"), true);
                 NetworkHooks.openScreen((ServerPlayer) player, this, this.getBlockPos());
             } else {
-                player.displayClientMessage(TranslateUtils.translateMessage("structure_not_formed"), true);
+                player.displayClientMessage(Lang.translateMessage("structure_not_formed"), true);
             }
         }
         return InteractionResult.SUCCESS;

@@ -28,7 +28,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.IHeatArea;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -64,12 +64,12 @@ public class HeatAdjustCommand {
                 .executes((ct) -> {
                     Collection<IHeatArea> adjs = ChunkHeatData.getAdjust(ct.getSource().getLevel(), ct.getSource().getPlayerOrException().blockPosition());
                     if (adjs.isEmpty()) {
-                        ct.getSource().sendSuccess(()->TranslateUtils.str("No Active Adjust!"), true);
+                        ct.getSource().sendSuccess(()-> Lang.str("No Active Adjust!"), true);
                     } else {
-                        ct.getSource().sendSuccess(()->TranslateUtils.str("Active Adjusts:"), true);
+                        ct.getSource().sendSuccess(()-> Lang.str("Active Adjusts:"), true);
                         BlockPos pos=new BlockPos((int)ct.getSource().getPosition().x,(int)ct.getSource().getPosition().y,(int)ct.getSource().getPosition().z);
                         for (IHeatArea adj : adjs) {
-                            ct.getSource().sendSuccess(()->TranslateUtils.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(pos)), true);
+                            ct.getSource().sendSuccess(()-> Lang.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(pos)), true);
                         }
                     }
                     return Command.SINGLE_SUCCESS;
@@ -78,11 +78,11 @@ public class HeatAdjustCommand {
                         .executes((ct) -> {
                             Collection<IHeatArea> adjs = ChunkHeatData.getAdjust(ct.getSource().getLevel(), BlockPosArgument.getBlockPos(ct, "position"));
                             if (adjs.isEmpty()) {
-                                ct.getSource().sendSuccess(()->TranslateUtils.str("No Active Adjust!"), true);
+                                ct.getSource().sendSuccess(()-> Lang.str("No Active Adjust!"), true);
                             } else {
-                                ct.getSource().sendSuccess(()->TranslateUtils.str("Active Adjusts:"), true);
+                                ct.getSource().sendSuccess(()-> Lang.str("Active Adjusts:"), true);
                                 for (IHeatArea adj : adjs) {
-                                    ct.getSource().sendSuccess(()->TranslateUtils.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(BlockPosArgument.getBlockPos(ct, "position"))), true);
+                                    ct.getSource().sendSuccess(()-> Lang.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(BlockPosArgument.getBlockPos(ct, "position"))), true);
                                 }
                             }
                             return Command.SINGLE_SUCCESS;

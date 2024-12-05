@@ -40,8 +40,8 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.FileUtil;
 
 import com.teammoeg.frostedheart.foundation.world.FHFeatures;
@@ -105,7 +105,7 @@ public class DebugCommand {
                         FHMain.LOGGER.error("Error while exporting food values");
                         e.printStackTrace();
                     }
-                    ct.getSource().sendSuccess(()->TranslateUtils.str("Exported " + items.size() + " Foods"), true);
+                    ct.getSource().sendSuccess(()-> Lang.str("Exported " + items.size() + " Foods"), true);
                     return Command.SINGLE_SUCCESS;
                 }))
 /*
@@ -266,7 +266,7 @@ public class DebugCommand {
                                 packet.sendToAll(ct.getSource().getServer());
                             }
                         }
-                    ct.getSource().sendSuccess(()->TranslateUtils.str("Fixed " + tchunks.val + " Chunks"), true);
+                    ct.getSource().sendSuccess(()->Lang.str("Fixed " + tchunks.val + " Chunks"), true);
                     return Command.SINGLE_SUCCESS;
                 }))*/;
 

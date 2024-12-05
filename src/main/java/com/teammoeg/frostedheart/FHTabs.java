@@ -23,7 +23,7 @@ import com.simibubi.create.foundation.item.TagDependentIngredientItem;
 import com.teammoeg.frostedheart.base.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.base.creativeTab.TabType;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.tterrag.registrate.util.entry.ItemEntry;
 import com.tterrag.registrate.util.entry.ItemProviderEntry;
 import com.tterrag.registrate.util.entry.RegistryEntry;
@@ -57,7 +57,7 @@ public class FHTabs {
                     .builder()
                     .withTabsBefore(CreativeModeTabs.SPAWN_EGGS)
                     .icon(()->new ItemStack(FHBlocks.DURALUMIN_BLOCK.get()))
-                    .title(TranslateUtils.translate("itemGroup.frostedheart.building_blocks"))
+                    .title(Lang.translate("itemGroup.frostedheart.building_blocks"))
                     .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.BUILDING_BLOCKS))
                     .build());
     // Natural blocks Tab
@@ -66,7 +66,7 @@ public class FHTabs {
                     .builder()
                     .withTabsBefore(BUILDING_BLOCKS.getKey())
                     .icon(()->new ItemStack(FHBlocks.IRON_SLUDGE_BLOCK.get()))
-                    .title(TranslateUtils.translate("itemGroup.frostedheart.natural_blocks"))
+                    .title(Lang.translate("itemGroup.frostedheart.natural_blocks"))
                     .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.NATURAL_BLOCKS))
                     .build());
     // Functional blocks Tab
@@ -75,7 +75,7 @@ public class FHTabs {
                     .builder()
                     .withTabsBefore(NATURAL_BLOCKS.getKey())
                     .icon(()->new ItemStack(FHBlocks.HEAT_PIPE.get()))
-                    .title(TranslateUtils.translate("itemGroup.frostedheart.functional_blocks"))
+                    .title(Lang.translate("itemGroup.frostedheart.functional_blocks"))
                     .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.FUNCTIONAL_BLOCKS))
                     .build());
     // Materials Tab
@@ -84,7 +84,7 @@ public class FHTabs {
                     .builder()
                     .withTabsBefore(FUNCTIONAL_BLOCKS.getKey())
                     .icon(()->new ItemStack(FHItems.DURALUMIN_DUST.get()))
-                    .title(TranslateUtils.translate("itemGroup.frostedheart.ingredients"))
+                    .title(Lang.translate("itemGroup.frostedheart.ingredients"))
                     .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.INGREDIENTS))
                     .build());
     // Foods
@@ -93,7 +93,7 @@ public class FHTabs {
                     .builder()
                     .withTabsBefore(INGREDIENTS.getKey())
                     .icon(()->new ItemStack(FHItems.military_rations.get()))
-                    .title(TranslateUtils.translate("itemGroup.frostedheart.foods"))
+                    .title(Lang.translate("itemGroup.frostedheart.foods"))
                     .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.FOODS))
                     .build());
     // Tools Tab
@@ -102,7 +102,7 @@ public class FHTabs {
                     .builder()
                     .withTabsBefore(FOODS.getKey())
                     .icon(()->new ItemStack(FHItems.hand_stove.get()))
-                    .title(TranslateUtils.translate("itemGroup.frostedheart.tools"))
+                    .title(Lang.translate("itemGroup.frostedheart.tools"))
                     .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.TOOLS))
                     .build());
     // Misc Tab
@@ -111,7 +111,7 @@ public class FHTabs {
                     .builder()
                     .withTabsBefore(TOOLS.getKey())
                     .icon(()->new ItemStack(FHItems.energy_core.get()))
-                    .title(TranslateUtils.translate("itemGroup.frostedheart.misc"))
+                    .title(Lang.translate("itemGroup.frostedheart.misc"))
                     .displayItems(FHTabs::fillFHTab)
                     .displayItems(new RegistrateDisplayItemsGenerator(true, FHTabs.MISC))
                     .build());

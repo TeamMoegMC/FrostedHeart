@@ -19,13 +19,13 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
+import com.teammoeg.frostedheart.util.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.ui.Button;
@@ -70,7 +70,7 @@ public class ResearchListPanel extends Panel {
                 lastupdate = secs;
                 if (research.hasUnclaimedReward()) {
                     if (secs % 2 == 0) {
-                        tf.setText(TranslateUtils.translateGui("research.unclaimed"));
+                        tf.setText(Lang.translateGui("research.unclaimed"));
                     } else
                         tf.setText(research.getName());
                     tf.setColor(Color4I.rgb(0x5555ff));

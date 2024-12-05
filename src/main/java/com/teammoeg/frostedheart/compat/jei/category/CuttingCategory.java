@@ -28,7 +28,7 @@ import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.CuttingRecipe;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -81,7 +81,7 @@ public class CuttingCategory implements IRecipeCategory<CuttingRecipe> {
 
 
     public Component getTitle() {
-        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".knife_cutting"));
+        return (Lang.translate("gui.jei.category." + FHMain.MODID + ".knife_cutting"));
     }
 
 	@Override

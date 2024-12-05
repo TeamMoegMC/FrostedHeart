@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.waypoint.waypoints;
 
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.nbt.CompoundTag;
@@ -10,7 +10,7 @@ import net.minecraft.world.phys.Vec3;
 public class SunStationWaypoint extends Waypoint {
     public SunStationWaypoint() {
         super(new Vec3(0, 0, 0), "Sun Station", 0xFFFFDA64);
-        this.displayName = TranslateUtils.translateWaypoint("sun_station");
+        this.displayName = Lang.translateWaypoint("sun_station");
         this.focus = true;
     }
 

@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import mezz.jei.api.forge.ForgeTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
@@ -92,7 +92,7 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
     }
 
     public Component getTitle() {
-        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".generator_steam"));
+        return (Lang.translate("gui.jei.category." + FHMain.MODID + ".generator_steam"));
     }
 
     @Override
@@ -100,12 +100,12 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
         List<Component> tooltip = new ArrayList<>();
 
         if (isMouseIn(mouseX, mouseY, 8, 9, 2, 54)) {
-            tooltip.add(TranslateUtils.translateGui("generator.temperature.level").append(String.valueOf(recipe.level)));
+            tooltip.add(Lang.translateGui("generator.temperature.level").append(String.valueOf(recipe.level)));
         }
 
 
         if (isMouseIn(mouseX, mouseY, 142, 9, 2, 54)) {
-            tooltip.add(TranslateUtils.translateGui("generator.power.level").append(String.valueOf(recipe.power)));
+            tooltip.add(Lang.translateGui("generator.power.level").append(String.valueOf(recipe.power)));
         }
         return tooltip;
     }

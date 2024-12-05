@@ -51,10 +51,9 @@ import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeReloadListener;
-import com.teammoeg.frostedheart.infrastructure.command.*;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
@@ -155,21 +154,21 @@ public class CommonEvents {
             event.getEntity().getInventory().add(
                     new ItemStack(RegistryUtils.getItem(new ResourceLocation("ftbquests", "book"))));
             event.getEntity().getInventory().armor.set(3, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_HELMET)
-                    .setHoverName(TranslateUtils.translate("itemname.frostedheart.start_head"))));
+                    .setHoverName(Lang.translate("itemname.frostedheart.start_head"))));
             event.getEntity().getInventory().armor.set(2, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_CHESTPLATE)
-                    .setHoverName(TranslateUtils.translate("itemname.frostedheart.start_chest"))));
+                    .setHoverName(Lang.translate("itemname.frostedheart.start_chest"))));
             event.getEntity().getInventory().armor.set(1, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_LEGGINGS)
-                    .setHoverName(TranslateUtils.translate("itemname.frostedheart.start_leg"))));
+                    .setHoverName(Lang.translate("itemname.frostedheart.start_leg"))));
             event.getEntity().getInventory().armor.set(0, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_BOOTS)
-                    .setHoverName(TranslateUtils.translate("itemname.frostedheart.start_foot"))));
+                    .setHoverName(Lang.translate("itemname.frostedheart.start_foot"))));
             if (event.getEntity().getAbilities().instabuild) {
-                event.getEntity().sendSystemMessage(TranslateUtils.translate("message.frostedheart.creative_help")
+                event.getEntity().sendSystemMessage(Lang.translate("message.frostedheart.creative_help")
                         .setStyle(Style.EMPTY.applyFormat(ChatFormatting.YELLOW)
-                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TranslateUtils.str("Click to use command")))
+                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Lang.str("Click to use command")))
                                 .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/frostedheart research complete all"))));
             }
 
-            event.getEntity().sendSystemMessage(TranslateUtils.translate("message.frostedheart.temperature_help"));
+            event.getEntity().sendSystemMessage(Lang.translate("message.frostedheart.temperature_help"));
         }
     }
 /*
@@ -338,7 +337,7 @@ public class CommonEvents {
         if (!ResearchListeners.canUseBlock(event.getEntity(), event.getLevel().getBlockState(event.getHitVec().getBlockPos()).getBlock())) {
             event.setUseBlock(Result.DENY);
 
-            event.getEntity().displayClientMessage(TranslateUtils.translateMessage("research.cannot_use_block"), true);
+            event.getEntity().displayClientMessage(Lang.translateMessage("research.cannot_use_block"), true);
         }
 
     }
@@ -463,11 +462,11 @@ public class CommonEvents {
                 long energy = EnergyCore.getEnergy(player);
                 int messageNum = player.getRandom().nextInt(3);
                 if (energy > 10000)
-                    player.displayClientMessage(TranslateUtils.translateMessage("energy.full." + messageNum), false);
+                    player.displayClientMessage(Lang.translateMessage("energy.full." + messageNum), false);
                 else if (energy >= 5000)
-                    player.displayClientMessage(TranslateUtils.translateMessage("energy.suit." + messageNum), false);
+                    player.displayClientMessage(Lang.translateMessage("energy.suit." + messageNum), false);
                 else
-                    player.displayClientMessage(TranslateUtils.translateMessage("energy.lack." + messageNum), false);
+                    player.displayClientMessage(Lang.translateMessage("energy.lack." + messageNum), false);
             }
 
             // Town data sync (currently, every tick for debug)
@@ -522,7 +521,7 @@ public class CommonEvents {
                 && ForgeRegistries.ITEMS.getHolder(event.getItem().getItem()).get().is(FHTags.Items.RAW_FOOD.tag)) {
             ServerPlayer player = (ServerPlayer) event.getEntity();
             player.addEffect(new MobEffectInstance(MobEffects.HUNGER, 400, 1));
-            player.displayClientMessage(TranslateUtils.translate("message.frostedheart.eaten_poisonous_food"), false);
+            player.displayClientMessage(Lang.translate("message.frostedheart.eaten_poisonous_food"), false);
         }
     }
 /*

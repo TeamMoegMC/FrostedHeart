@@ -24,7 +24,7 @@ import java.util.List;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.item.TooltipFlag;
@@ -43,8 +43,6 @@ import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
-
-import net.minecraft.world.item.Item.Properties;
 
 public class RubbingTool extends FHBaseItem {
 
@@ -83,15 +81,15 @@ public class RubbingTool extends FHBaseItem {
         if (hasResearch(stack)) {
             Research rs = FHResearch.getResearch(getResearch(stack));
             if (rs != null)
-                tooltip.add(TranslateUtils.translateTooltip("rubbing.current", rs.getName()).withStyle(ChatFormatting.GOLD));
+                tooltip.add(Lang.translateTooltip("rubbing.current", rs.getName()).withStyle(ChatFormatting.GOLD));
             else
-                tooltip.add(TranslateUtils.translateTooltip("rubbing.current.empty").withStyle(ChatFormatting.GRAY));
+                tooltip.add(Lang.translateTooltip("rubbing.current.empty").withStyle(ChatFormatting.GRAY));
         } else
-            tooltip.add(TranslateUtils.translateTooltip("rubbing.current.empty").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Lang.translateTooltip("rubbing.current.empty").withStyle(ChatFormatting.GRAY));
         int points = getPoint(stack);
         if (points > 0) {
-            tooltip.add(TranslateUtils.translateTooltip("rubbing.points", points));
-            tooltip.add(TranslateUtils.translateTooltip("rubbing.points.hint").withStyle(ChatFormatting.YELLOW));
+            tooltip.add(Lang.translateTooltip("rubbing.points", points));
+            tooltip.add(Lang.translateTooltip("rubbing.points.hint").withStyle(ChatFormatting.YELLOW));
         }
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
 

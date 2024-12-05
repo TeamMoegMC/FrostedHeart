@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
+import com.teammoeg.frostedheart.util.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FormattedText;
 
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
@@ -31,7 +31,6 @@ import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardStat;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardType;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.ClientResearchGame;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -65,7 +64,7 @@ class MainGamePanel extends Panel {
             @Override
             public void addMouseOverText(TooltipList list) {
                 super.addMouseOverText(list);
-                list.add(TranslateUtils.translateGui("draw_desk.reset"));
+                list.add(Lang.translateGui("draw_desk.reset"));
             }
 
             @Override
@@ -152,7 +151,7 @@ class MainGamePanel extends Panel {
             @Override
             public void addMouseOverText(TooltipList list) {
                 super.addMouseOverText(list);
-                list.add(TranslateUtils.translateGui("draw_desk.help"));
+                list.add(Lang.translateGui("draw_desk.help"));
             }
 
             @Override
@@ -180,7 +179,7 @@ class MainGamePanel extends Panel {
         }
         if (ResearchListeners.fetchGameLevel() == -1) {
             if (lstatus != 4) {
-                status.setText(TranslateUtils.translateGui("minigame.no_clue"));
+                status.setText(Lang.translateGui("minigame.no_clue"));
                 status.setPosAndSize(22, 54, 108, 50);
                 lstatus = 4;
             }
@@ -191,7 +190,7 @@ class MainGamePanel extends Panel {
         if ((reset.isMouseOver() || rg.getLevel() == -1) && EnergyCore.getEnergy(ClientUtils.getPlayer())<=0) {
 
             if (lstatus != 1) {
-                status.setText(TranslateUtils.translateGui("minigame.tired_to_research"));
+                status.setText(Lang.translateGui("minigame.tired_to_research"));
                 status.setPosAndSize(22, 54, 108, 50);
                 lstatus = 1;
             }
@@ -200,21 +199,21 @@ class MainGamePanel extends Panel {
         DrawingDeskTileEntity tile = ot.dd.getTile();
         if (!tile.isInkSatisfied(reset.isMouseOver() ? 5 : 1)) {
             if (lstatus != 2) {
-                status.setText(TranslateUtils.translateGui("minigame.no_ink"));
+                status.setText(Lang.translateGui("minigame.no_ink"));
                 status.setPosAndSize(22, 54, 108, 50);
                 lstatus = 2;
             }
             return;
         } else if (reset.isMouseOver() && !tile.isPaperSatisfied()) {
             if (lstatus != 3) {
-                status.setText(TranslateUtils.translateGui("minigame.no_paper"));
+                status.setText(Lang.translateGui("minigame.no_paper"));
                 status.setPosAndSize(22, 54, 108, 50);
                 lstatus = 3;
             }
             return;
         } else if (rg.getLevel() == -1) {
             if (lstatus != 5) {
-                status.setText(TranslateUtils.translateGui("minigame.can_start"));
+                status.setText(Lang.translateGui("minigame.can_start"));
                 status.setPosAndSize(22, 54, 108, 50);
                 lstatus = 5;
             }

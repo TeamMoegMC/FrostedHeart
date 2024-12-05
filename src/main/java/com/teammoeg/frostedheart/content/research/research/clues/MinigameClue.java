@@ -23,7 +23,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.network.chat.Component;
 
@@ -61,7 +61,7 @@ public class MinigameClue extends CustomClue {
     public Component getName(Research parent) {
         if (name != null && !name.isEmpty())
             return super.getName(parent);
-        return TranslateUtils.translate("clue." + FHMain.MODID + ".minigame.t" + level);
+        return Lang.translate("clue." + FHMain.MODID + ".minigame.t" + level);
     }
 
     public void setLevel(int level) {

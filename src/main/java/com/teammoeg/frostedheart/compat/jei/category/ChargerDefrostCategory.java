@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
 import com.teammoeg.frostedheart.foundation.recipes.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -82,7 +82,7 @@ public class ChargerDefrostCategory implements IRecipeCategory<CampfireDefrostRe
 
 
     public Component getTitle() {
-        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".charger_defrost"));
+        return (Lang.translate("gui.jei.category." + FHMain.MODID + ".charger_defrost"));
     }
 
 

@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.constants.EquipmentSlotType;
 
 import net.minecraft.world.item.TooltipFlag;
@@ -62,9 +62,9 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> list, TooltipFlag flag) {
         if (stack.getDamageValue() > 0)
-            list.add(TranslateUtils.translateTooltip("meme.mushroom").withStyle(ChatFormatting.GRAY));
+            list.add(Lang.translateTooltip("meme.mushroom").withStyle(ChatFormatting.GRAY));
         else
-            list.add(TranslateUtils.translateTooltip("mushroom").withStyle(ChatFormatting.GRAY));
+            list.add(Lang.translateTooltip("mushroom").withStyle(ChatFormatting.GRAY));
     }
 
 

@@ -20,29 +20,24 @@
 package com.teammoeg.frostedheart.content.steamenergy.debug;
 
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.HeatHandler;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.core.NonNullList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.level.Level;
-
-import net.minecraft.world.item.Item.Properties;
 
 public class HeatDebugItem extends Item {
     public HeatDebugItem() {
@@ -70,9 +65,9 @@ public class HeatDebugItem extends Item {
 	            if (te instanceof EnergyNetworkProvider) {
 	            	if(((EnergyNetworkProvider) te).getNetwork()!=null)
 	            		HeatHandler.openHeatScreen((ServerPlayer) playerIn, ((EnergyNetworkProvider) te).getNetwork());
-	            	else playerIn.sendSystemMessage(TranslateUtils.str("EnergyNetwork " + ((EnergyNetworkProvider) te).getNetwork()));
+	            	else playerIn.sendSystemMessage(Lang.str("EnergyNetwork " + ((EnergyNetworkProvider) te).getNetwork()));
 	            }else if(te!=null) {
-	            	playerIn.sendSystemMessage(TranslateUtils.str("EnergyEndpoint "+te.getCapability(FHCapabilities.HEAT_EP.capability(), raytraceresult.getDirection()).orElse(null)));
+	            	playerIn.sendSystemMessage(Lang.str("EnergyEndpoint "+te.getCapability(FHCapabilities.HEAT_EP.capability(), raytraceresult.getDirection()).orElse(null)));
 	            }
             }
             return InteractionResultHolder.success(itemstack);

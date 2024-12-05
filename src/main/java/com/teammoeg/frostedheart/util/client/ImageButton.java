@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.util.client;
 
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -25,7 +25,7 @@ public class ImageButton extends Button {
 		Tooltip tt, Button.OnPress onPressIn) {
 	
 		this(texture,xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn, 256, 256, onPressIn, tt,
-			TranslateUtils.empty());
+			Lang.empty());
 	}
 
 	public ImageButton(ResourceLocation texture,int x, int y, int width, int height, int xTexStart, int yTexStart, int textureWidth,

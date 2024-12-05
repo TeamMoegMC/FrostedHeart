@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.foods;
 import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.item.TooltipFlag;
@@ -30,8 +30,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
-
-import net.minecraft.world.item.Item.Properties;
 
 public class CannedFoodItem extends FHBaseItem {
 
@@ -49,7 +47,7 @@ public class CannedFoodItem extends FHBaseItem {
     @Override
     public void appendHoverText(ItemStack stack, Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
         if (showtt)
-            tooltip.add(TranslateUtils.translateTooltip("canned_food").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Lang.translateTooltip("canned_food").withStyle(ChatFormatting.GRAY));
     }
 
     @Override

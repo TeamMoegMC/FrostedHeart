@@ -23,13 +23,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
-import java.util.Set;
 import java.util.function.Predicate;
 
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.utility.FHLeveledTool;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -50,8 +49,6 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.FakePlayer;
 import se.mickelus.tetra.properties.IToolProvider;
 
-import net.minecraft.world.item.Item.Properties;
-
 public class CoreSpade extends FHLeveledTool {
     public static TagKey<Block> otag = BlockTags.create(new ResourceLocation("forge:ores"));
     public static TagKey<Block> stag = BlockTags.create(new ResourceLocation("forge:stone"));
@@ -59,7 +56,7 @@ public class CoreSpade extends FHLeveledTool {
         if (player != null && (!(player instanceof FakePlayer))) {// fake players does not deserve XD
             if (!world.isClientSide && world.getBlockState(blockpos).is(otag)) {// early exit 'cause ore found
                 player.displayClientMessage(
-                        TranslateUtils.translate(world.getBlockState(blockpos).getBlock().getDescriptionId())
+                        Lang.translate(world.getBlockState(blockpos).getBlock().getDescriptionId())
                                 .withStyle(ChatFormatting.GOLD),
                         false);
                 return InteractionResult.SUCCESS;
@@ -102,10 +99,10 @@ public class CoreSpade extends FHLeveledTool {
 
                 if (!founded.isEmpty()) {
                     int count = 0;
-                    MutableComponent s = TranslateUtils.translateMessage("corespade.ore");
+                    MutableComponent s = Lang.translateMessage("corespade.ore");
                     for (Entry<String, Integer> f : founded.entrySet()) {
                         if (rnd.nextInt((int) (f.getValue() * corr)) != 0) {
-                            s = s.append(TranslateUtils.translate(f.getKey())
+                            s = s.append(Lang.translate(f.getKey())
                                     .withStyle(ChatFormatting.GREEN).append(","));
                             count++;
                         }
@@ -115,7 +112,7 @@ public class CoreSpade extends FHLeveledTool {
                         return InteractionResult.SUCCESS;
                     }
                 }
-                player.displayClientMessage(TranslateUtils.translateMessage("corespade.nothing").withStyle(ChatFormatting.GRAY),
+                player.displayClientMessage(Lang.translateMessage("corespade.nothing").withStyle(ChatFormatting.GRAY),
                         false);
             }
         }
@@ -150,7 +147,7 @@ public class CoreSpade extends FHLeveledTool {
 
     @Override
     public void appendHoverText(ItemStack stack, Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
-        tooltip.add(TranslateUtils.translateTooltip("meme.core_spade").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Lang.translateTooltip("meme.core_spade").withStyle(ChatFormatting.GRAY));
     }
 
     @Override

@@ -21,22 +21,14 @@ package com.teammoeg.frostedheart.infrastructure.command;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.IHeatArea;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
-
-import java.util.Collection;
 
 public class TemperatureCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -47,11 +39,11 @@ public class TemperatureCommand {
         LiteralArgumentBuilder<CommandSourceStack> get = Commands.literal("get").executes((ct) -> {
                     Player player = ct.getSource().getPlayerOrException();
                     PlayerTemperatureData.getCapability(player).ifPresent(data -> {
-                        ct.getSource().sendSuccess(()->TranslateUtils.str("Body Temperature: " + data.getBodyTemp()), true);
-                        ct.getSource().sendSuccess(()->TranslateUtils.str("Environment Temperature: " + data.getEnvTemp()), true);
-                        ct.getSource().sendSuccess(()->TranslateUtils.str("Feel Temperature: " + data.getFeelTemp()), true);
-                        ct.getSource().sendSuccess(()->TranslateUtils.str("Previous Temperature: " + data.getPreviousTemp()), true);
-                        ct.getSource().sendSuccess(()->TranslateUtils.str("Self-Heating Difficulty: " + data.getDifficulty().name()), true);
+                        ct.getSource().sendSuccess(()-> Lang.str("Body Temperature: " + data.getBodyTemp()), true);
+                        ct.getSource().sendSuccess(()-> Lang.str("Environment Temperature: " + data.getEnvTemp()), true);
+                        ct.getSource().sendSuccess(()-> Lang.str("Feel Temperature: " + data.getFeelTemp()), true);
+                        ct.getSource().sendSuccess(()-> Lang.str("Previous Temperature: " + data.getPreviousTemp()), true);
+                        ct.getSource().sendSuccess(()-> Lang.str("Self-Heating Difficulty: " + data.getDifficulty().name()), true);
                     });
                     return Command.SINGLE_SUCCESS;
                 });

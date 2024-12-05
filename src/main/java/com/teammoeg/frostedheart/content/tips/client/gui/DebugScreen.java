@@ -7,7 +7,7 @@ import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.ColumbiatWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.SunStationWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.Waypoint;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.FHColorHelper;
 import net.minecraft.client.gui.GuiGraphics;
@@ -23,7 +23,7 @@ import java.util.UUID;
 
 public class DebugScreen extends Screen {
     public DebugScreen() {
-        super(TranslateUtils.str(""));
+        super(Lang.str(""));
     }
 
     @Override

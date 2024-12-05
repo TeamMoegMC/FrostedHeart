@@ -5,7 +5,7 @@ import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.AnimationUtil;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.client.gui.GuiGraphics;
@@ -217,9 +217,9 @@ public class Waypoint extends AbstractWaypoint {
         this.id = nbt.getString("id");
         String displayName = nbt.getString("display_name");
         if (I18n.exists(displayName)) {
-            this.displayName = TranslateUtils.translate(displayName);
+            this.displayName = Lang.translate(displayName);
         } else {
-            this.displayName = TranslateUtils.str(displayName);
+            this.displayName = Lang.str(displayName);
         }
         this.dimension = Level.RESOURCE_KEY_CODEC.parse(NbtOps.INSTANCE, nbt.get("dimension")).resultOrPartial(LOGGER::error).orElse(Level.OVERWORLD).location();
         this.target = new Vec3(nbt.getDouble("x"), nbt.getDouble("y"), nbt.getDouble("z"));

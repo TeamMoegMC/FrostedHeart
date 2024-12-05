@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.entity.player.Player;
@@ -81,7 +81,7 @@ public class EffectShowCategory extends Effect {
 
     @Override
     public MutableComponent getDefaultName() {
-        return TranslateUtils.translateGui("effect.category");
+        return Lang.translateGui("effect.category");
     }
 
 

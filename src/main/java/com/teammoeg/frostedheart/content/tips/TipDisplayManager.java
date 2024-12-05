@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.tips;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.tips.client.hud.TipHUD;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import net.minecraft.client.Minecraft;
 
 import java.util.HashMap;
@@ -57,10 +57,10 @@ public class TipDisplayManager {
         TipElement ele = new TipElement();
         ele.ID = "*custom*" + title;
         ele.history = history;
-        ele.contents.add(TranslateUtils.str(title));
+        ele.contents.add(Lang.str(title));
         String[] contents = content.split("\\$\\$");
         for (String s : contents) {
-            ele.contents.add(TranslateUtils.str(s));
+            ele.contents.add(Lang.str(s));
         }
 
         if (visibleTime == -1) {

@@ -23,6 +23,7 @@ import java.text.DecimalFormat;
 
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.util.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
@@ -30,7 +31,6 @@ import com.teammoeg.frostedheart.content.research.gui.RTextField;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechTextButton;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
@@ -99,7 +99,7 @@ public class ResearchDashboardPanel extends Panel {
         tf.setMaxWidth(140).setMinWidth(140).setMaxLine(2).setColor(TechIcons.text).addFlags(4);
         tf.setText(detailPanel.research.getName());
         if (FHResearch.editor) {
-            Button create = new TechTextButton(this, TranslateUtils.str("edit"),
+            Button create = new TechTextButton(this, Lang.str("edit"),
                     Icon.empty()) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
@@ -147,9 +147,9 @@ public class ResearchDashboardPanel extends Panel {
         // icon
         TechIcons.SHADOW.draw(matrixStack, x + 1, y + 36, 36, 9);
         detailPanel.icon.draw(matrixStack, x + 3, y + 10, 32, 32);
-        theme.drawString(matrixStack, TranslateUtils.translateGui("research.points"), x + 40, y + 19, TechIcons.text, 0);
+        theme.drawString(matrixStack, Lang.translateGui("research.points"), x + 40, y + 19, TechIcons.text, 0);
         if (rd.canResearch() && !rd.canComplete(detailPanel.research))
-            theme.drawString(matrixStack, TranslateUtils.translateGui("research.required_clue"), x + 40, y + 38, TechIcons.text_red, 0);
+            theme.drawString(matrixStack, Lang.translateGui("research.required_clue"), x + 40, y + 38, TechIcons.text_red, 0);
         GuiHelper.setupDrawing();
         TechIcons.HLINE_L.draw(matrixStack, x, y + 49, 140, 3);
 

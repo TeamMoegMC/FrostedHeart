@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import com.teammoeg.frostedheart.util.Lang;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
@@ -26,7 +27,6 @@ import com.teammoeg.frostedheart.FHDamageTypes;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 import com.teammoeg.frostedheart.util.mixin.IMilkable;
 
@@ -133,9 +133,9 @@ public abstract class CowEntityMixin extends Animal implements IMilkable, IFeedS
             }
             if (!level().isClientSide) {
                 if (feeded <= 0)
-                    playerIn.displayClientMessage(TranslateUtils.translateMessage("cow.nomilk.hungry"), true);
+                    playerIn.displayClientMessage(Lang.translateMessage("cow.nomilk.hungry"), true);
                 else
-                    playerIn.displayClientMessage(TranslateUtils.translateMessage("cow.nomilk.digest"), true);
+                    playerIn.displayClientMessage(Lang.translateMessage("cow.nomilk.digest"), true);
             }
         }
         return super.mobInteract(playerIn, hand);

@@ -28,7 +28,7 @@ import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.foundation.recipes.SmokingDefrostRecipe;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -87,7 +87,7 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
         if (cookTime > 0) {
             int cookTimeSeconds = cookTime / 20;
             
-            Component timeString = TranslateUtils.translate("gui.jei.category.smelting.time.seconds", cookTimeSeconds);
+            Component timeString = Lang.translate("gui.jei.category.smelting.time.seconds", cookTimeSeconds);
             Minecraft minecraft = Minecraft.getInstance();
             Font fontRenderer = minecraft.font;
             int stringWidth = fontRenderer.width(timeString);
@@ -115,7 +115,7 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
     }
 
     public Component getTitle() {
-        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".defrost_smoking"));
+        return (Lang.translate("gui.jei.category." + FHMain.MODID + ".defrost_smoking"));
     }
 
 

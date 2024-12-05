@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.gson.JsonElement;
+import com.teammoeg.frostedheart.util.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -41,7 +42,6 @@ import com.teammoeg.frostedheart.content.research.gui.editor.NumberBox;
 import com.teammoeg.frostedheart.content.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectItemStackDialog;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
@@ -391,7 +391,7 @@ public class FHIcons {
                 add(h);
                 add(tw);
                 add(th);
-                add(new SimpleTextButton(this, TranslateUtils.str("Commit"), Icon.empty()) {
+                add(new SimpleTextButton(this, Lang.str("Commit"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton arg0) {
                         v.rl = new ResourceLocation(rl.getText());
@@ -475,7 +475,7 @@ public class FHIcons {
                 e -> e, e -> c.accept(new FHAnimatedIcon(e.toArray(new FHIcon[0])))).open();
         public static final Editor<FHCombinedIcon> COMBINED_EDITOR = (p, l, v, c) -> new Combined(p, l, v, c).open();
 
-        public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> new SelectDialog<>(p, l, v == null ? null : v.name, o -> c.accept(new FHDelegateIcon(o)), TechIcons.internals::keySet, TranslateUtils::str, e -> new String[]{e}, TechIcons.internals::get).open();
+        public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> new SelectDialog<>(p, l, v == null ? null : v.name, o -> c.accept(new FHDelegateIcon(o)), TechIcons.internals::keySet, Lang::str, e -> new String[]{e}, TechIcons.internals::get).open();
 
         public static final Editor<FHTextureUVIcon> UV_EDITOR = (p, l, v, c) -> new UV(p, l, v, c).open();
 

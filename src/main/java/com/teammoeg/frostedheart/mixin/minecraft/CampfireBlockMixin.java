@@ -20,12 +20,10 @@
 package com.teammoeg.frostedheart.mixin.minecraft;
 
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Containers;
@@ -36,7 +34,6 @@ import net.minecraft.world.entity.Entity.RemovalReason;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.crafting.CampfireCookingRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -46,7 +43,6 @@ import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.CampfireBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.items.ItemHandlerHelper;
@@ -111,11 +107,11 @@ public abstract class CampfireBlockMixin extends BaseEntityBlock {
                     } else {
                         ICampfireExtra info = (ICampfireExtra) campfiretileentity;
                         if (state.getValue(CampfireBlock.LIT)) {
-                            player.displayClientMessage(TranslateUtils.translateMessage("campfire.remaining", Integer.toString(info.getLifeTime() / 20)), true);
+                            player.displayClientMessage(Lang.translateMessage("campfire.remaining", Integer.toString(info.getLifeTime() / 20)), true);
                         } else if (info.getLifeTime() > 0) {
-                            player.displayClientMessage(TranslateUtils.translateMessage("campfire.ignition"), true);
+                            player.displayClientMessage(Lang.translateMessage("campfire.ignition"), true);
                         } else {
-                            player.displayClientMessage(TranslateUtils.translateMessage("campfire.fuel"), true);
+                            player.displayClientMessage(Lang.translateMessage("campfire.fuel"), true);
                         }
                         return InteractionResult.SUCCESS;
                     }

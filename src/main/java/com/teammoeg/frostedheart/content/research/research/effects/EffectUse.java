@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -78,7 +78,7 @@ public class EffectUse extends Effect {
 
     @Override
     public MutableComponent getDefaultName() {
-        return TranslateUtils.translateGui("effect.use");
+        return Lang.translateGui("effect.use");
     }
 
 

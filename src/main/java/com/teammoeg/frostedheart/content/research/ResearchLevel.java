@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.research;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -37,7 +37,7 @@ public enum ResearchLevel {
 
     ResearchLevel(String levelName) {
         icon = FHMain.rl("textures/gui/research/level/" + levelName);
-        name = TranslateUtils.translateResearchLevel(levelName);
+        name = Lang.translateResearchLevel(levelName);
     }
 
     public ResourceLocation getIcon() {

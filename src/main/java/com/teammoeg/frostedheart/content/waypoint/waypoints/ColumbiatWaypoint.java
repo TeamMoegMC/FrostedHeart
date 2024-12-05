@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.waypoint.waypoints;
 
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.nbt.CompoundTag;
@@ -10,7 +10,7 @@ import net.minecraft.world.phys.Vec3;
 public class ColumbiatWaypoint extends Waypoint {
     public ColumbiatWaypoint() {
         super(new Vec3(0, 0, 0), "Columbiat", 0xFFF6F1D5);
-        this.displayName = TranslateUtils.translateWaypoint("columbiat");
+        this.displayName = Lang.translateWaypoint("columbiat");
         this.focus = true;
     }
 

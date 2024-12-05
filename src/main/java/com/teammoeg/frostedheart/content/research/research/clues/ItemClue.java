@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -79,7 +79,7 @@ public class ItemClue extends Clue {
         if (stack.hasNoMatchingItems())
             return null;
         return stack.getMatchingStacks()[0].getHoverName().plainCopy()
-                .append(TranslateUtils.str(" x" + stack.getCount()));
+                .append(Lang.str(" x" + stack.getCount()));
     }
 
     @Override
@@ -87,8 +87,8 @@ public class ItemClue extends Clue {
         if (name != null && !name.isEmpty())
             return super.getName(parent);
         if (consume)
-            return TranslateUtils.translate("clue." + FHMain.MODID + ".consume_item");
-        return TranslateUtils.translate("clue." + FHMain.MODID + ".item");
+            return Lang.translate("clue." + FHMain.MODID + ".consume_item");
+        return Lang.translate("clue." + FHMain.MODID + ".item");
     }
 
     @Override

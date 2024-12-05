@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -50,7 +50,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
-import net.minecraft.nbt.Tag;
 
 /**
  * Class HeatProviderManager.
@@ -251,7 +250,7 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
     }
 	@Override
 	public Component getDisplayName() {
-		return TranslateUtils.translateGui("heat_stat");
+		return Lang.translateGui("heat_stat");
 	}
 
 

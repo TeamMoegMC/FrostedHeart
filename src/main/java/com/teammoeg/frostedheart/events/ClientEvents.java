@@ -37,7 +37,7 @@ import com.teammoeg.frostedheart.content.tips.TipLockManager;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.client.GuiClickedEvent;
@@ -106,7 +106,7 @@ public class ClientEvents {
                 FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
                 Font font = gui.getMinecraft().font;
                 if (!stableVersion.isEmpty() && (clientVersion.isEmpty() || !clientVersion.laterThan(stableVersion))) {
-                    List<FormattedCharSequence> list = font.split(TranslateUtils.translateGui("update_recommended")
+                    List<FormattedCharSequence> list = font.split(Lang.translateGui("update_recommended")
                             .append(stableVersion.getOriginal()).withStyle(ChatFormatting.BOLD), 70);
                     int l = 0;
                     for (FormattedCharSequence line : list) {
@@ -116,7 +116,7 @@ public class ClientEvents {
                         l += 9;
                     }
                     if (isStable) {
-                        MutableComponent itxc = TranslateUtils.str("CurseForge")
+                        MutableComponent itxc = Lang.str("CurseForge")
                                 .withStyle(ChatFormatting.UNDERLINE).withStyle(ChatFormatting.BOLD)
                                 .withStyle(ChatFormatting.GOLD);
                         boolean needEvents = true;
@@ -292,11 +292,11 @@ public class ClientEvents {
                 return;
             FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
             if (!stableVersion.isEmpty() && (clientVersion.isEmpty() || !clientVersion.laterThan(stableVersion))) {
-                event.getPlayer().displayClientMessage(TranslateUtils.translateGui("update_recommended")
+                event.getPlayer().displayClientMessage(Lang.translateGui("update_recommended")
                         .append(stableVersion.getOriginal()).withStyle(ChatFormatting.BOLD), false);
                 if (isStable) {
                     event.getPlayer()
-                            .displayClientMessage(TranslateUtils.str("CurseForge")
+                            .displayClientMessage(Lang.str("CurseForge")
                                     .setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
                                             "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
                                     .withStyle(ChatFormatting.UNDERLINE).withStyle(ChatFormatting.BOLD)
@@ -317,12 +317,12 @@ public class ClientEvents {
         if (ServerLifecycleHooks.getCurrentServer() != null)
             if (FHMain.saveNeedUpdate) {
                 event.getPlayer().displayClientMessage(
-                        TranslateUtils.translateGui("save_update_needed", FHMain.lastServerConfig.getAbsolutePath())
+                        Lang.translateGui("save_update_needed", FHMain.lastServerConfig.getAbsolutePath())
                                 .withStyle(ChatFormatting.RED),
                         false);
             } else if (FHMain.lastbkf != null) {
-                event.getPlayer().displayClientMessage(TranslateUtils.translateGui("save_updated")
-                                .append(TranslateUtils.str(FHMain.lastbkf.getName()).setStyle(Style.EMPTY
+                event.getPlayer().displayClientMessage(Lang.translateGui("save_updated")
+                                .append(Lang.str(FHMain.lastbkf.getName()).setStyle(Style.EMPTY
                                         .withClickEvent(
                                                 new ClickEvent(ClickEvent.Action.OPEN_FILE, FHMain.lastbkf.getAbsolutePath()))
                                         .applyFormat(ChatFormatting.UNDERLINE))),

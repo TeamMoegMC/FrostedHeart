@@ -29,8 +29,8 @@ import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IProcessBE;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
@@ -450,7 +450,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements FHTickableB
 
 	@Override
 	public Component getDisplayName() {
-		return TranslateUtils.translateGui("incubator.t1.title");
+		return Lang.translateGui("incubator.t1.title");
 	}
 
 }

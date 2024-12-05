@@ -40,7 +40,7 @@ import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import mezz.jei.library.util.RecipeUtil;
@@ -107,7 +107,7 @@ public class EffectCrafting extends Effect {
     @Override
     public String getBrief() {
         if (item != null)
-            return "Craft " + TranslateUtils.translate(item.getDescriptionId()).getString();
+            return "Craft " + Lang.translate(item.getDescriptionId()).getString();
         if (itemStack != null)
             return "Craft " + itemStack.getHoverName().getString();
         if (!unlocks.isEmpty())
@@ -136,7 +136,7 @@ public class EffectCrafting extends Effect {
 
     @Override
     public MutableComponent getDefaultName() {
-        return TranslateUtils.translateGui("effect.crafting");
+        return Lang.translateGui("effect.crafting");
     }
 
     @Override
@@ -144,7 +144,7 @@ public class EffectCrafting extends Effect {
         List<Component> tooltip = new ArrayList<>();
 
         if (item != null)
-            tooltip.add(TranslateUtils.translate(item.getDescriptionId()));
+            tooltip.add(Lang.translate(item.getDescriptionId()));
         else if (itemStack != null)
             tooltip.add(itemStack.getHoverName());
         else {
@@ -155,7 +155,7 @@ public class EffectCrafting extends Effect {
                 }
             }
             if (stacks.isEmpty())
-                tooltip.add(TranslateUtils.translateGui("effect.recipe.error"));
+                tooltip.add(Lang.translateGui("effect.recipe.error"));
             else
                 for (ItemStack is : stacks) {
                     tooltip.add(is.getHoverName());

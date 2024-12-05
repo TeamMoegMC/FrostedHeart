@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.teammoeg.frostedheart.util.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
@@ -33,7 +34,6 @@ import com.teammoeg.frostedheart.content.research.gui.ThickLine;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditUtils;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchEditorDialog;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -95,7 +95,7 @@ public class ResearchHierarchyPanel extends Panel {
         public void addMouseOverText(TooltipList list) {
             list.add(research.getName().copy().withStyle(ChatFormatting.BOLD));
             if (!research.isUnlocked()) {
-                list.add(TranslateUtils.translateTooltip("research_is_locked").withStyle(ChatFormatting.RED));
+                list.add(Lang.translateTooltip("research_is_locked").withStyle(ChatFormatting.RED));
                 for (Research parent : research.getParents()) {
                     if (!parent.isCompleted()) {
                         list.add(parent.getName().copy().withStyle(ChatFormatting.GRAY));
@@ -169,7 +169,7 @@ public class ResearchHierarchyPanel extends Panel {
         public void addMouseOverText(TooltipList list) {
             list.add(research.getName().copy().withStyle(ChatFormatting.BOLD));
             if ((parent == null && !research.isUnlocked()) || (parent != null && !parent.isUnlocked())) {
-                list.add(TranslateUtils.translateTooltip("research_is_locked").withStyle(ChatFormatting.RED));
+                list.add(Lang.translateTooltip("research_is_locked").withStyle(ChatFormatting.RED));
                 for (Research parent : research.getParents()) {
                     if (!parent.isCompleted()) {
                         list.add(parent.getName().copy().withStyle(ChatFormatting.GRAY));
@@ -222,7 +222,7 @@ public class ResearchHierarchyPanel extends Panel {
         if (FHResearch.editor) {
             int offset = 5;
             if (researchPanel.selectedResearch != null) {
-                Button par = new TechTextButton(this, TranslateUtils.str("parents"), Icon.empty()) {
+                Button par = new TechTextButton(this, Lang.str("parents"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add parent
@@ -242,7 +242,7 @@ public class ResearchHierarchyPanel extends Panel {
                 par.setPos(offset, 130);
                 add(par);
                 offset += par.width + 3;
-                Button chd = new TechTextButton(this, TranslateUtils.str("children"), Icon.empty()) {
+                Button chd = new TechTextButton(this, Lang.str("children"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add children
@@ -263,7 +263,7 @@ public class ResearchHierarchyPanel extends Panel {
                 offset += chd.width + 3;
             }
             {
-                Button create = new TechTextButton(this, TranslateUtils.str("new"), Icon.empty()) {
+                Button create = new TechTextButton(this, Lang.str("new"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add research
@@ -275,7 +275,7 @@ public class ResearchHierarchyPanel extends Panel {
                 offset += create.width + 3;
             }
             if (researchPanel.selectedResearch != null) {
-                Button create = new TechTextButton(this, TranslateUtils.str("edit"), Icon.empty()) {
+                Button create = new TechTextButton(this, Lang.str("edit"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         EditUtils.editResearch(this, researchPanel.selectedResearch);
@@ -284,7 +284,7 @@ public class ResearchHierarchyPanel extends Panel {
                 create.setPos(offset, 130);
                 add(create);
                 offset += create.width + 3;
-                Button rem = new TechTextButton(this, TranslateUtils.str("delete"), Icon.empty()) {
+                Button rem = new TechTextButton(this, Lang.str("delete"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         researchPanel.selectedResearch.delete();
@@ -418,7 +418,7 @@ public class ResearchHierarchyPanel extends Panel {
     @Override
     public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         super.draw(matrixStack, theme, x, y, w, h);
-        theme.drawString(matrixStack, TranslateUtils.translateGui("research_hierarchy"), x + 3, y + 3, TechIcons.text, 0);
+        theme.drawString(matrixStack, Lang.translateGui("research_hierarchy"), x + 3, y + 3, TechIcons.text, 0);
         TechIcons.HLINE_L.draw(matrixStack, x + 1, y + 13, 80, 3);
     }
 

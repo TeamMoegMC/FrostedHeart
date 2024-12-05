@@ -5,7 +5,7 @@ import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
 import com.teammoeg.frostedheart.content.tips.TipLockManager;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.*;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -36,16 +36,16 @@ public class TipListScreen extends Screen {
     public static String select = "";
 
     public TipListScreen(boolean background) {
-        super(TranslateUtils.str(""));
+        super(Lang.str(""));
         this.background = background;
     }
 
 	@Override
     public void init() {
-        this.addRenderableWidget(new IconButton(0, 0, IconButton.Icon.CROSS, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.close"), (button) -> {
+        this.addRenderableWidget(new IconButton(0, 0, IconButton.Icon.CROSS, 0xFFC6FCFF, Lang.translate(FHMain.MODID + ".tips.gui.close"), (button) -> {
             onClose();
         }));
-        this.addRenderableWidget(new IconButton(0, 0, IconButton.Icon.LOCK, 0xFFC6FCFF, TranslateUtils.translate(FHMain.MODID + ".tips.gui.pin"), (button) -> {
+        this.addRenderableWidget(new IconButton(0, 0, IconButton.Icon.LOCK, 0xFFC6FCFF, Lang.translate(FHMain.MODID + ".tips.gui.pin"), (button) -> {
             TipDisplayManager.forceAdd(selectEle, true);
         }));
 
@@ -205,7 +205,7 @@ public class TipListScreen extends Screen {
                     ele.ID = customTipList.get(select).get(0);
                     ele.visibleTime = Integer.parseInt(customTipList.get(select).get(1));
                     for (int i = 2; i < customTipList.get(select).size(); i++) {
-                        ele.contents.add(TranslateUtils.str(customTipList.get(select).get(i)));
+                        ele.contents.add(Lang.str(customTipList.get(select).get(i)));
                     }
                     ele.alwaysVisible = ele.visibleTime < 0;
                     selectEle = ele;

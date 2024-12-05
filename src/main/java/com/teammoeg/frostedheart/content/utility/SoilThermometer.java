@@ -24,7 +24,7 @@ import java.util.List;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.LivingEntity;
@@ -49,7 +49,7 @@ public class SoilThermometer extends FHBaseItem {
 
     @Override
     public void appendHoverText(ItemStack stack, Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
-        tooltip.add(TranslateUtils.translateTooltip("thermometer.usage").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Lang.translateTooltip("thermometer.usage").withStyle(ChatFormatting.GRAY));
     }
 
     /**
@@ -67,13 +67,13 @@ public class SoilThermometer extends FHBaseItem {
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
-        playerIn.displayClientMessage(TranslateUtils.translateMessage("thermometer.testing"), true);
+        playerIn.displayClientMessage(Lang.translateMessage("thermometer.testing"), true);
         playerIn.startUsingItem(handIn);
         if (playerIn instanceof ServerPlayer && playerIn.getAbilities().instabuild) {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, playerIn, Fluid.ANY);
             if (brtr.getType() != Type.MISS) {
 
-            	playerIn.sendSystemMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(WorldTemperature.block(playerIn.level(), brtr.getBlockPos()))));
+            	playerIn.sendSystemMessage(Lang.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(WorldTemperature.block(playerIn.level(), brtr.getBlockPos()))));
             }
 
         }
@@ -87,7 +87,7 @@ public class SoilThermometer extends FHBaseItem {
         if (entityplayer instanceof ServerPlayer) {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, Fluid.ANY);
             if (brtr.getType() == Type.MISS) return stack;
-            entityplayer.sendSystemMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(WorldTemperature.block(entityplayer.level(), brtr.getBlockPos()))));
+            entityplayer.sendSystemMessage(Lang.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(WorldTemperature.block(entityplayer.level(), brtr.getBlockPos()))));
         }
         return stack;
     }

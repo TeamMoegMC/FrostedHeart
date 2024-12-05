@@ -4,7 +4,7 @@ import com.google.gson.JsonElement;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.RenderHelper;
 import com.teammoeg.frostedheart.util.io.Writeable;
@@ -79,7 +79,7 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
         this.id = ID;
         this.color = color;
         this.target = target;
-        this.displayName = TranslateUtils.str(ID);
+        this.displayName = Lang.str(ID);
         this.focus = false;
         this.enable = true;
         this.valid = true;
@@ -218,11 +218,11 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     }
 
     protected MutableComponent distanceTranslation() {
-        return TranslateUtils.translateWaypoint("distance", (int)getDistance());
+        return Lang.translateWaypoint("distance", (int)getDistance());
     }
 
     protected MutableComponent posTranslation() {
-        return TranslateUtils.translateWaypoint("position", String.format("%.2f", getTarget().x), String.format("%.2f", getTarget().y), String.format("%.2f", getTarget().z));
+        return Lang.translateWaypoint("position", String.format("%.2f", getTarget().x), String.format("%.2f", getTarget().y), String.format("%.2f", getTarget().z));
     }
 
     @Override

@@ -75,8 +75,8 @@ import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
 import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.Point;
 
 import mezz.jei.api.IModPlugin;
@@ -139,7 +139,7 @@ public class JEICompat implements IModPlugin {
             }
         }
         infos.clear();
-        Component it = TranslateUtils.translate("gui.jei.info.require_research");
+        Component it = Lang.translate("gui.jei.info.require_research");
 		/*List<IngredientInfoRecipe<ItemStack>> rinfos=(List<IngredientInfoRecipe<ItemStack>>) man.getRecipes(man.getRecipeCategory(VanillaRecipeCategoryUid.INFORMATION));
 		for(IngredientInfoRecipe<ItemStack> info:rinfos) {
 			List<ItemStack> iss=info.getIngredients();
@@ -251,7 +251,7 @@ public class JEICompat implements IModPlugin {
 	        		else if(crafting.getUnlocks()!=null)
 	        			crafting.getUnlocks().stream().map(RecipeUtil::getResultItem).filter(t->t!=null&&!t.isEmpty()).map(ItemStack::getItem).forEach(item::add);
 	        		for(Item ix:item) {
-	        			JEICompat.research.computeIfAbsent(ix, i->new LinkedHashMap<>()).put(research.getId(), TranslateUtils.translateTooltip("research_unlockable", research.getName()));
+	        			JEICompat.research.computeIfAbsent(ix, i->new LinkedHashMap<>()).put(research.getId(), Lang.translateTooltip("research_unlockable", research.getName()));
 	        		}
 	        	}
         	}

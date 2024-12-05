@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.network.chat.MutableComponent;
@@ -82,23 +82,23 @@ public class EffectStats extends Effect {
 
     @Override
     public MutableComponent getDefaultName() {
-        return TranslateUtils.translateGui("effect.stats");
+        return Lang.translateGui("effect.stats");
     }
 
 
     @Override
     public List<Component> getDefaultTooltip() {
         List<Component> tooltip = new ArrayList<>();
-        tooltip.add(TranslateUtils.translateGui("effect.stats." + vars));
+        tooltip.add(Lang.translateGui("effect.stats." + vars));
         String vtext;
         if (isPercentage) {
             vtext = NumberFormat.getPercentInstance().format(val / 100);
         } else
             vtext = NumberFormat.getInstance().format(val);
         if (val > 0) {
-            tooltip.add(TranslateUtils.str("+" + vtext));
+            tooltip.add(Lang.str("+" + vtext));
         } else
-            tooltip.add(TranslateUtils.str(vtext));
+            tooltip.add(Lang.str(vtext));
         return tooltip;
     }
 

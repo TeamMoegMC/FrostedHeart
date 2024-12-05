@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
@@ -69,13 +69,13 @@ public class EffectExperience extends Effect {
 
     @Override
     public MutableComponent getDefaultName() {
-        return TranslateUtils.translateGui("effect.exp");
+        return Lang.translateGui("effect.exp");
     }
 
     @Override
     public List<Component> getDefaultTooltip() {
         List<Component> tooltip = new ArrayList<>();
-        tooltip.add(TranslateUtils.str("+" + exp));
+        tooltip.add(Lang.str("+" + exp));
         return tooltip;
     }
 

@@ -23,8 +23,8 @@ import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.LivingEntity;
@@ -39,8 +39,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
 
-import net.minecraft.world.item.Item.Properties;
-
 public class ThermometerItem extends FHBaseItem {
 
 
@@ -50,8 +48,8 @@ public class ThermometerItem extends FHBaseItem {
 
     @Override
     public void appendHoverText(ItemStack stack, Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
-        tooltip.add(TranslateUtils.translateTooltip("thermometer.usage").withStyle(ChatFormatting.GRAY));
-        tooltip.add(TranslateUtils.translateTooltip("meme.thermometerbody").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Lang.translateTooltip("thermometer.usage").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Lang.translateTooltip("meme.thermometerbody").withStyle(ChatFormatting.GRAY));
     }
 
     public int getTemperature(ServerPlayer p) {
@@ -79,7 +77,7 @@ public class ThermometerItem extends FHBaseItem {
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
-        playerIn.displayClientMessage(TranslateUtils.translateMessage("thermometer.testing"), true);
+        playerIn.displayClientMessage(Lang.translateMessage("thermometer.testing"), true);
         playerIn.startUsingItem(handIn);
         if (playerIn instanceof ServerPlayer && playerIn.getAbilities().instabuild) {
             TemperatureDisplayHelper.sendTemperature((ServerPlayer) playerIn, "info.thermometerbody", getTemperature((ServerPlayer) playerIn) / 10f + 37f);

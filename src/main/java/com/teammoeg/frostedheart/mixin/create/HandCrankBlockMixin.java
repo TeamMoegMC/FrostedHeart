@@ -19,13 +19,13 @@
 
 package com.teammoeg.frostedheart.mixin.create;
 
+import com.teammoeg.frostedheart.util.Lang;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.kinetics.crank.HandCrankBlock;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -50,7 +50,7 @@ public class HandCrankBlockMixin {
             ci.setReturnValue(InteractionResult.FAIL);
         } else if (player.getFoodData().getFoodLevel() < 4) {
             if (player.getCommandSenderWorld().isClientSide)
-                player.displayClientMessage(TranslateUtils.translateMessage("crank.feel_hunger"), true);
+                player.displayClientMessage(Lang.translateMessage("crank.feel_hunger"), true);
             ci.setReturnValue(InteractionResult.FAIL);
         }
     }

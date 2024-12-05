@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.town.house;
 import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.MathUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
@@ -61,18 +61,18 @@ public class HouseBlock extends AbstractTownWorkerBlock implements FHEntityBlock
                 return InteractionResult.FAIL;
             }
             te.refresh();
-            player.displayClientMessage(TranslateUtils.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.displayClientMessage(TranslateUtils.str(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
-            player.displayClientMessage(TranslateUtils.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.displayClientMessage(TranslateUtils.str("Raw temperature: " +
+            player.displayClientMessage(Lang.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            player.displayClientMessage(Lang.str(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
+            player.displayClientMessage(Lang.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(Lang.str("Raw temperature: " +
                     MathUtils.round(te.getTemperature(), 2)), false);
-            player.displayClientMessage(TranslateUtils.str("Temperature modifier: " +
+            player.displayClientMessage(Lang.str("Temperature modifier: " +
                     MathUtils.round(te.getTemperatureModifier(), 2)), false);
-            player.displayClientMessage(TranslateUtils.str("Effective temperature: " +
+            player.displayClientMessage(Lang.str("Effective temperature: " +
                     MathUtils.round(te.getEffectiveTemperature(), 2)), false);
-            player.displayClientMessage(TranslateUtils.str("Volume: " + (te.getVolume())), false);
-            player.displayClientMessage(TranslateUtils.str("Area: " + (te.getArea())), false);
-            player.displayClientMessage(TranslateUtils.str("Rating: " +
+            player.displayClientMessage(Lang.str("Volume: " + (te.getVolume())), false);
+            player.displayClientMessage(Lang.str("Area: " + (te.getArea())), false);
+            player.displayClientMessage(Lang.str("Rating: " +
                     MathUtils.round(te.getRating(), 2)), false);
             return InteractionResult.SUCCESS;
         }

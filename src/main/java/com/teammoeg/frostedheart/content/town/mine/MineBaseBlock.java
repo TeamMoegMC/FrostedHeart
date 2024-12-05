@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -30,13 +30,13 @@ public class MineBaseBlock extends AbstractTownWorkerBlock implements FHEntityBl
             if (te == null) {
                 return InteractionResult.FAIL;
             }
-            player.displayClientMessage(TranslateUtils.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.displayClientMessage(TranslateUtils.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.displayClientMessage(TranslateUtils.str("Area: " + (te.getArea())), false);
-            player.displayClientMessage(TranslateUtils.str("Volume: " + (te.getVolume())), false);
-            player.displayClientMessage(TranslateUtils.str("Chest: " + (te.getChest())), false);
-            player.displayClientMessage(TranslateUtils.str("Rack: " + (te.getRack())), false);
-            player.displayClientMessage(TranslateUtils.str("Linked mines: " + (te.linkedMines)), false);
+            player.displayClientMessage(Lang.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            player.displayClientMessage(Lang.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(Lang.str("Area: " + (te.getArea())), false);
+            player.displayClientMessage(Lang.str("Volume: " + (te.getVolume())), false);
+            player.displayClientMessage(Lang.str("Chest: " + (te.getChest())), false);
+            player.displayClientMessage(Lang.str("Rack: " + (te.getRack())), false);
+            player.displayClientMessage(Lang.str("Linked mines: " + (te.linkedMines)), false);
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

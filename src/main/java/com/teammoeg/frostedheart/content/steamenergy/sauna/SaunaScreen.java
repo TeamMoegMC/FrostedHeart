@@ -19,12 +19,9 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.client.FHGuiHelper;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.Point;
 import com.teammoeg.frostedheart.util.client.TexturedUV;
-import com.teammoeg.frostedheart.util.client.UV;
 import com.teammoeg.frostedheart.util.client.UV.Transition;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
@@ -37,7 +34,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 
 public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
-    private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("sauna_vent");
+    private static final ResourceLocation TEXTURE = Lang.makeTextureLocation("sauna_vent");
 
     private static final TexturedUV clock1 = new TexturedUV(TEXTURE,176, 0, 38, 38);
     private static final TexturedUV clock2 = new TexturedUV(TEXTURE,214, 0, 38, 38);

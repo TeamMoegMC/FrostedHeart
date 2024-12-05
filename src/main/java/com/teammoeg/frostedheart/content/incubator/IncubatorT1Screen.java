@@ -19,20 +19,16 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.client.FHGuiHelper;
+import com.teammoeg.frostedheart.util.Lang;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.info.FluidInfoArea;
 import blusunrize.immersiveengineering.client.gui.info.InfoArea;
-import blusunrize.immersiveengineering.client.utils.GuiHelper;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
@@ -40,7 +36,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 public class IncubatorT1Screen extends IEContainerScreen<IncubatorT1Container> {
-    private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("incubator");
+    private static final ResourceLocation TEXTURE = Lang.makeTextureLocation("incubator");
     private IncubatorTileEntity tile;
 
     public IncubatorT1Screen(IncubatorT1Container container, Inventory inv, Component title) {

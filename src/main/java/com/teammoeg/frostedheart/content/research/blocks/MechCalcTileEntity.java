@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.FHSoundEvents;
 import com.teammoeg.frostedheart.base.team.TeamDataClosure;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
@@ -68,16 +68,16 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
         boolean flag = true;
         float spd = Mth.abs(super.getSpeed());
         if (spd > 64) {
-            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.too_fast").withStyle(ChatFormatting.RED));
+            tooltip.add(Lang.translateTooltip("mechanical_calculator.too_fast").withStyle(ChatFormatting.RED));
             flag = false;
         }
         if (this.currentPoints >= maxPoints) {
-            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.full").withStyle(ChatFormatting.RED));
+            tooltip.add(Lang.translateTooltip("mechanical_calculator.full").withStyle(ChatFormatting.RED));
             flag = false;
         }
         if (flag && spd > 0)
-            tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.working").withStyle(ChatFormatting.GREEN));
-        tooltip.add(TranslateUtils.translateTooltip("mechanical_calculator.points", currentPoints, maxPoints));
+            tooltip.add(Lang.translateTooltip("mechanical_calculator.working").withStyle(ChatFormatting.GREEN));
+        tooltip.add(Lang.translateTooltip("mechanical_calculator.points", currentPoints, maxPoints));
         return true;
     }
 

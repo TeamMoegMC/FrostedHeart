@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.network.FHEnergyDataSyncPacket;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.utility.LeveledValue;
@@ -156,7 +156,7 @@ public class EnergyCore implements NBTSerializable {
     }
 
     public static void reportEnergy(Player player) {
-    	getCapability(player).ifPresent(data->player.sendSystemMessage(TranslateUtils.str("Energy:" + data.level + ",Persist Energy: " + data.persistLevel)));
+    	getCapability(player).ifPresent(data->player.sendSystemMessage(Lang.str("Energy:" + data.level + ",Persist Energy: " + data.persistLevel)));
     }
  
 

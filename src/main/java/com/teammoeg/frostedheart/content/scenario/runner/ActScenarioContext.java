@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.scenario.runner;
 
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -17,7 +17,7 @@ public class ActScenarioContext extends ScenarioContext {
 
 	@Override
 	public void sendMessage(String string) {
-		player.displayClientMessage(TranslateUtils.str(string), false);
+		player.displayClientMessage(Lang.str(string), false);
 	}
 
 	@Override

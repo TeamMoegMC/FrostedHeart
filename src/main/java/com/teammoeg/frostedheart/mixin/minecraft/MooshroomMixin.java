@@ -19,12 +19,11 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import com.teammoeg.frostedheart.util.Lang;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Animal;
@@ -53,9 +52,9 @@ public abstract class MooshroomMixin extends Animal {
             if (ot.milk <= 0) {
                 if (!level().isClientSide) {
                     if (ot.feeded <= 0)
-                        playerIn.displayClientMessage(TranslateUtils.translateMessage("cow.nomilk.hungry"), true);
+                        playerIn.displayClientMessage(Lang.translateMessage("cow.nomilk.hungry"), true);
                     else
-                        playerIn.displayClientMessage(TranslateUtils.translateMessage("cow.nomilk.digest"), true);
+                        playerIn.displayClientMessage(Lang.translateMessage("cow.nomilk.digest"), true);
                 }
                 cbi.setReturnValue(InteractionResult.PASS);
             }

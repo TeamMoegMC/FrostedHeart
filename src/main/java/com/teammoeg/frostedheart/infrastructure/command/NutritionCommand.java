@@ -25,7 +25,7 @@ import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.nutrition.capability.NutritionCapability;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -43,7 +43,7 @@ public class NutritionCommand {
                     .then(Commands.literal("get").executes(ct -> {
                         NutritionCapability.getCapability(ct.getSource().getPlayer()).ifPresent(data -> {
                             float value = getNutrientValue(data, nutrient);
-                            ct.getSource().sendSuccess(() -> TranslateUtils.str(capitalize(nutrient) + ": " + value).withStyle(ChatFormatting.GREEN), false);
+                            ct.getSource().sendSuccess(() -> Lang.str(capitalize(nutrient) + ": " + value).withStyle(ChatFormatting.GREEN), false);
                         });
                         return Command.SINGLE_SUCCESS;
                     }))
@@ -53,7 +53,7 @@ public class NutritionCommand {
                                 NutritionCapability.getCapability(ct.getSource().getPlayer()).ifPresent(data -> {
                                     float amount = ct.getArgument("amount", Float.class);
                                     addNutrientValue(data, nutrient, ct.getSource().getPlayer(), amount);
-                                    ct.getSource().sendSuccess(() -> TranslateUtils.str("Added " + amount + " to " + capitalize(nutrient)).withStyle(ChatFormatting.GREEN), false);
+                                    ct.getSource().sendSuccess(() -> Lang.str("Added " + amount + " to " + capitalize(nutrient)).withStyle(ChatFormatting.GREEN), false);
                                 });
                                 return Command.SINGLE_SUCCESS;
                             }))
@@ -64,7 +64,7 @@ public class NutritionCommand {
                                 NutritionCapability.getCapability(ct.getSource().getPlayer()).ifPresent(data -> {
                                     float amount = ct.getArgument("amount", Float.class);
                                     setNutrientValue(data, nutrient, amount);
-                                    ct.getSource().sendSuccess(() -> TranslateUtils.str("Set " + capitalize(nutrient) + " to " + amount).withStyle(ChatFormatting.GREEN), false);
+                                    ct.getSource().sendSuccess(() -> Lang.str("Set " + capitalize(nutrient) + " to " + amount).withStyle(ChatFormatting.GREEN), false);
                                 });
                                 return Command.SINGLE_SUCCESS;
                             }))
@@ -73,7 +73,7 @@ public class NutritionCommand {
                     .then(Commands.literal("fill").executes(ct -> {
                         NutritionCapability.getCapability(ct.getSource().getPlayer()).ifPresent(data -> {
                             setNutrientValue(data, nutrient, 10000.0f);
-                            ct.getSource().sendSuccess(() -> TranslateUtils.str(capitalize(nutrient) + " filled to max").withStyle(ChatFormatting.GREEN), false);
+                            ct.getSource().sendSuccess(() -> Lang.str(capitalize(nutrient) + " filled to max").withStyle(ChatFormatting.GREEN), false);
                         });
                         return Command.SINGLE_SUCCESS;
                     }));

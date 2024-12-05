@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.water.item.DrinkContainerItem;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import net.minecraft.core.NonNullList;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
@@ -106,7 +106,7 @@ public class FoodTemperatureHandler {
                 event.setDuration((int) (event.getDuration() * COLD_FOOD_EAT_DURATION_MODIFIER));
             } else if (temperature == FoodTemperatureHandler.FROZEN) {
                 // cannot eat frozen food
-                player.displayClientMessage(TranslateUtils.translateMessage("food.frozen"), true);
+                player.displayClientMessage(Lang.translateMessage("food.frozen"), true);
                 event.setCanceled(true);
             } else if (temperature == FoodTemperatureHandler.HOT) {
                 event.setDuration((int) (event.getDuration() * HOT_FOOD_EAT_DURATION_MODIFIER));
@@ -139,10 +139,10 @@ public class FoodTemperatureHandler {
         if (isFoodOrDrink(stack)) {
             byte temperature = FoodTemperatureHandler.getTemperature(stack);
             if (temperature == FoodTemperatureHandler.COLD) {
-                player.displayClientMessage(TranslateUtils.translateMessage("food.cold"), true);
+                player.displayClientMessage(Lang.translateMessage("food.cold"), true);
                 heat = DEFAULT_COLD_FOOD_HEAT;
             } else if (temperature == FoodTemperatureHandler.HOT) {
-                player.displayClientMessage(TranslateUtils.translateMessage("food.hot"), true);
+                player.displayClientMessage(Lang.translateMessage("food.hot"), true);
                 heat = DEFAULT_HOT_FOOD_HEAT;
             }
 

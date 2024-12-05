@@ -25,7 +25,7 @@ import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.Lang;
 
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -81,7 +81,7 @@ public class ChargerCookingCategory implements IRecipeCategory<SmokingRecipe> {
 
 
     public Component getTitle() {
-        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".charger_cooking"));
+        return (Lang.translate("gui.jei.category." + FHMain.MODID + ".charger_cooking"));
     }
 
     @Override

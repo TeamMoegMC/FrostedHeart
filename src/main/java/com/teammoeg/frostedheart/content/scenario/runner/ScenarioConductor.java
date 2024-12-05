@@ -20,20 +20,14 @@
 package com.teammoeg.frostedheart.content.scenario.runner;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ScenarioTarget;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.registry.IdRegistry;

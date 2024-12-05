@@ -14,8 +14,8 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.AtlasUV;
 import com.teammoeg.frostedheart.util.client.Point;
 import com.teammoeg.frostedheart.util.client.RotatableUV;
@@ -45,7 +45,7 @@ import net.minecraft.world.item.ItemStack;
 public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<T, R>> extends IEContainerScreen<GeneratorContainer<R, T>> {
     public static final int TEXW = 512;
     public static final int TEXH = 256;
-    private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("general_generator");
+    private static final ResourceLocation TEXTURE = Lang.makeTextureLocation("general_generator");
     private static final AtlasUV rangeicons = new AtlasUV(TEXTURE, 256, 0, 128, 64, 2, 5, TEXW, TEXH);
     private static final Point rangePoint = new Point(24, 61);
     private static final RotatableUV minorPointer = new RotatableUV(TEXTURE, 276, 192, 20, 20, 10, 10, TEXW, TEXH);
@@ -158,12 +158,12 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         Player player = ClientUtils.mc().player;
         costStr.clear();
         if (menu.isBroken.getValue()) {
-            costStr.add(TranslateUtils.translateGui("generator.repair_material"));
+            costStr.add(Lang.translateGui("generator.repair_material"));
             BitSet cost = FHUtils.checkItemList(ClientUtils.mc().player, tile.getRepairCost());
             int i = 0;
             for (IngredientWithSize iws : tile.getRepairCost()) {
                 ItemStack[] iss = iws.getMatchingStacks();
-                MutableComponent iftc = TranslateUtils.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
+                MutableComponent iftc = Lang.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
                 if (cost.get(i))
                     iftc = iftc.withStyle(ChatFormatting.GREEN);
                 else
@@ -182,15 +182,15 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
             hasResearch = ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock());
             Vec3i v3i = tile.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);
             if (!validStructure) {
-                costStr.add(TranslateUtils.translateGui("generator.no_enough_space", v3i.getX(), v3i.getY(), v3i.getZ()));
+                costStr.add(Lang.translateGui("generator.no_enough_space", v3i.getX(), v3i.getY(), v3i.getZ()));
             } else if (!hasResearch) {
-                costStr.add(TranslateUtils.translateGui("generator.incomplete_research"));
+                costStr.add(Lang.translateGui("generator.incomplete_research"));
             } else {
-                costStr.add(TranslateUtils.translateGui("generator.upgrade_material"));
+                costStr.add(Lang.translateGui("generator.upgrade_material"));
                 int i = 0;
                 for (IngredientWithSize iws : upgcost) {
                     ItemStack[] iss = iws.getMatchingStacks();
-                    MutableComponent iftc = TranslateUtils.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
+                    MutableComponent iftc = Lang.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
                     if (cost.get(i))
                         iftc = iftc.withStyle(ChatFormatting.GREEN);
                     else
@@ -216,29 +216,29 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         super.gatherAdditionalTooltips(mouseX, mouseY, addLine, addGray);
         if (isMouseIn(mouseX, mouseY, 5, 24, 11, 22)) {
             if (menu.isWorking.getValue()) {
-                addLine.accept(TranslateUtils.translateGui("generator.mode.off"));
+                addLine.accept(Lang.translateGui("generator.mode.off"));
             } else {
-                addLine.accept(TranslateUtils.translateGui("generator.mode.on"));
+                addLine.accept(Lang.translateGui("generator.mode.on"));
             }
         }
 
         if (isMouseIn(mouseX, mouseY, 160, 24, 11, 22)) {
             if (menu.isOverdrive.getValue()) {
-                addLine.accept(TranslateUtils.translateGui("generator.overdrive.off"));
+                addLine.accept(Lang.translateGui("generator.overdrive.off"));
             } else {
-                addLine.accept(TranslateUtils.translateGui("generator.overdrive.on"));
+                addLine.accept(Lang.translateGui("generator.overdrive.on"));
             }
         }
 
         if (isMouseIn(mouseX, mouseY, 63, 0, 50, 50)) {
-            addLine.accept(TranslateUtils.translateGui("generator.temperature.level").append(TemperatureDisplayHelper.toTemperatureDeltaIntString(menu.tempDegree.getValue())));
+            addLine.accept(Lang.translateGui("generator.temperature.level").append(TemperatureDisplayHelper.toTemperatureDeltaIntString(menu.tempDegree.getValue())));
         }
 
         if (isMouseIn(mouseX, mouseY, 18, 18, 32, 32)) {
-            addLine.accept(TranslateUtils.translateGui("generator.range.level").append(Integer.toString(menu.rangeBlock.getValue())));
+            addLine.accept(Lang.translateGui("generator.range.level").append(Integer.toString(menu.rangeBlock.getValue())));
         }
         if (isMouseIn(mouseX, mouseY, 124, 18, 32, 32)) {
-            addLine.accept(TranslateUtils.translateGui("generator.over.level", menu.overdrive.getValue() * 100));
+            addLine.accept(Lang.translateGui("generator.over.level", menu.overdrive.getValue() * 100));
         }
         if (isMouseIn(mouseX, mouseY, 75, 116, 26, 18)) {
             costStr.forEach(addLine);
