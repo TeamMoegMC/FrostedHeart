@@ -33,10 +33,10 @@ public class ThickLine {
     }
 
     public void draw(GuiGraphics matrixStack, int x, int y) {
-    	if(x==x2)
-    		matrixStack.vLine(x, y, y2, color.rgba());
+    	if(this.x==this.x2)
+    		matrixStack.fill(x+this.x-2, y+this.y-2, x+this.x+2, y+this.y2+2, color.rgba());
     	else
-    		matrixStack.hLine(x, x2, y,color.rgba());
+    		matrixStack.fill(x+this.x-2, y+this.y-2, x+this.x2+2, y+this.y+2, color.rgba());
         //FHGuiHelper.drawLine(matrixStack, color, x + this.x, y + this.y, x + this.x2, y + this.y2);
 
         // super.draw(matrixStack, theme, x, y, w, h);

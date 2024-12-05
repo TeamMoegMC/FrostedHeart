@@ -46,7 +46,8 @@ public abstract class EditDialog extends Panel {
     public void close(boolean refresh) {
         try {
             onClose();
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
+        	ex.printStackTrace();
             FHMain.LOGGER.error("Error closing dialog",ex);
         }
         try {
@@ -55,26 +56,32 @@ public abstract class EditDialog extends Panel {
                 sc.openDialog(previous, refresh);
             } else
                 sc.closeDialog(refresh);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             ex.printStackTrace();
             ClientUtils.getPlayer().sendSystemMessage(Lang.str("Fatal error on switching dialog! see log for details").withStyle(ChatFormatting.RED));
             sc.closeGui();
         }
         try {
             onClosed();
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
+        	ex.printStackTrace();
             throw new RuntimeException("Error on dialog close", ex);
         }
     }
 
     @Override
     public boolean keyPressed(Key key) {
-        if (key.esc()) {
-            close();
-            //this.closeGui(true);
-            return true;
-        }
-        return super.keyPressed(key);
+    	 try {
+	        if (key.esc()) {
+	            close();
+	            //this.closeGui(true);
+	            return true;
+	        }
+	        return super.keyPressed(key);
+    	 } catch (Throwable ex) {
+    		 ex.printStackTrace();
+             throw new RuntimeException("Error on dialog close", ex);
+         }
     }
 
     public abstract void onClose();

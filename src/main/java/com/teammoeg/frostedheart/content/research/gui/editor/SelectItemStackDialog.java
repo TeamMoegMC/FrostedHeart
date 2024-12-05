@@ -72,7 +72,8 @@ import net.minecraft.ChatFormatting;
  * @author LatvianModder, khjxiaogu
  */
 public class SelectItemStackDialog extends EditDialog {
-    private class ButtonCaps extends ButtonStackConfig {
+
+	private class ButtonCaps extends ButtonStackConfig {
         public ButtonCaps(Panel panel) {
             super(panel, Lang.translateKey("ftblibrary.select_item.caps"), ItemIcon.getItemIcon(Items.ANVIL));
         }
@@ -270,9 +271,9 @@ public class SelectItemStackDialog extends EditDialog {
         return thread;
     });
 
-    public static final List<ResourceSearchMode> modes = new ArrayList<>();
+    public final List<ResourceSearchMode> modes = new ArrayList<>();
 
-    static {
+    {
         modes.add(ResourceSearchMode.ALL_ITEMS);
         modes.add(ResourceSearchMode.INVENTORY);
         modes.add(new ResourceSearchMode() {
@@ -463,7 +464,7 @@ public class SelectItemStackDialog extends EditDialog {
         }
 
         for (ItemStack stack : items) {
-            if (!stack.isEmpty()) {
+            if (true) {
                 button = new ItemStackButton(panel, stack);
 
                 if (button.shouldAdd(search, mod)) {

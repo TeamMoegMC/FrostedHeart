@@ -300,7 +300,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
 
     };
 
-    public static final Editor<Collection<Effect>> EFFECT_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EffectEditor.EDITOR, Effect::getBrief, Effect::getIcon, c).open();
+    public static final Editor<Collection<Effect>> EFFECT_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, EffectEditor.EDITOR, Effect::getBrief, Effect::getFtbIcon, c).open();
 
     String lbl;
 

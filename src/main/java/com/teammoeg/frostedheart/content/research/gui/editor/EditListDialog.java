@@ -68,7 +68,7 @@ public class EditListDialog<T> extends EditDialog {
                 Color4I.WHITE.withAlpha(33).draw(matrixStack, x, y, w, h);
             }
 
-            theme.drawString(matrixStack, getTitle(), x + 4, y + 2, Color4I.BLACK, 0);
+            theme.drawString(matrixStack, getTitle(), x + 4, y + 2, Color4I.WHITE, 0);
             RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
         }
 
@@ -121,10 +121,10 @@ public class EditListDialog<T> extends EditDialog {
                 }
             }
 
-            theme.drawString(matrixStack, read.apply(list.get(index)), x + 4 + ioffset, y + 2, Color4I.BLACK, 0);
+            theme.drawString(matrixStack, read.apply(list.get(index)), x + 4 + ioffset, y + 2, Color4I.WHITE, 0);
 
             if (mouseOver) {
-                theme.drawString(matrixStack, "[-]", x + w - 16, y + 2, Color4I.BLACK, 0);
+                theme.drawString(matrixStack, "[-]", x + w - 16, y + 2, Color4I.WHITE, 0);
             }
 
             RenderSystem.setShaderColor(1F, 1F, 1F, 1F);

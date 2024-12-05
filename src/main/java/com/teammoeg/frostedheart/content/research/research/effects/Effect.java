@@ -45,6 +45,7 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.registry.TypedCodecRegistry;
 
+import dev.ftb.mods.ftblibrary.icon.Icon;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
@@ -227,6 +228,11 @@ public abstract class Effect extends AutoIDItem{
         if (icon == null)
             return getDefaultIcon();
         return icon;
+    }
+    public final Icon getFtbIcon() {
+        if (icon == null)
+            return getDefaultIcon().asFtbIcon();
+        return icon.asFtbIcon();
     }
 
     /**
