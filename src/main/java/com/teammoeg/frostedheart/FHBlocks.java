@@ -1260,15 +1260,15 @@ public class FHBlocks {
             .lang("Block of Invar")
             .register();
 
-    public static final BlockEntry<Block> TUNGSTEN_STEEL_BLOCK = REGISTRATE.block("tungstensteel_block", Block::new)
+    public static final BlockEntry<Block> TUNGSTEN_STEEL_BLOCK = REGISTRATE.block("tungsten_steel_block", Block::new)
             .initialProperties(() -> IRON_BLOCK)
             .properties(p -> p.mapColor(MapColor.COLOR_LIGHT_GRAY).requiresCorrectToolForDrops())
             .transform(pickaxeOnly())
             .tag(BlockTags.NEEDS_DIAMOND_TOOL)
             .tag(Tags.Blocks.STORAGE_BLOCKS)
             .tag(BlockTags.BEACON_BASE_BLOCKS)
-            .blockstate(FHBlockStateGen.simpleCubeAll("block/tungstensteel_block"))
-            .transform(tagBlockAndItem("storage_blocks/tungstensteel"))
+            .blockstate(FHBlockStateGen.simpleCubeAll("block/tungsten_steel_block"))
+            .transform(tagBlockAndItem("storage_blocks/tungsten_steel_block"))
             .tag(Tags.Items.STORAGE_BLOCKS)
             .build()
             .lang("Block of Tungsten Steel")
