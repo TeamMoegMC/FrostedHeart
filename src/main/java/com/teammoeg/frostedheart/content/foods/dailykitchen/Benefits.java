@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.item.Item;

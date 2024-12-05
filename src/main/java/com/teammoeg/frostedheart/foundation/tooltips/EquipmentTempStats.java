@@ -2,21 +2,17 @@ package com.teammoeg.frostedheart.foundation.tooltips;
 
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
-import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
-import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.lang.Components;
-import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import org.jetbrains.annotations.Nullable;
 

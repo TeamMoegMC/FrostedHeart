@@ -8,7 +8,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;

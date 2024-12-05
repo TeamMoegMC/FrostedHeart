@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 

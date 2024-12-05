@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.Point;
 import com.teammoeg.frostedheart.util.client.TexturedUV;
 import com.teammoeg.frostedheart.util.client.UV.Transition;

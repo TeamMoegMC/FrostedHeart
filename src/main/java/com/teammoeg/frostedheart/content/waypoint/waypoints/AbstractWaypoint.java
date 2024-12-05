@@ -4,7 +4,7 @@ import com.google.gson.JsonElement;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.RenderHelper;
 import com.teammoeg.frostedheart.util.io.Writeable;

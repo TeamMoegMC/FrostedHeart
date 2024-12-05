@@ -28,7 +28,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.IHeatArea;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

@@ -40,7 +40,7 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.FileUtil;
 

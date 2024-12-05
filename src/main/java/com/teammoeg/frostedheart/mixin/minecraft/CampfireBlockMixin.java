@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.mixin.minecraft;
 
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;

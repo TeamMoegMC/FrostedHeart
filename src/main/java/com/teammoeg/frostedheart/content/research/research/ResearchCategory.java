@@ -24,7 +24,7 @@ import java.util.Map;
 
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
 
 import net.minecraft.resources.ResourceLocation;

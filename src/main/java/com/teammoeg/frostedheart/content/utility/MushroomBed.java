@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.constants.EquipmentSlotType;
 
 import net.minecraft.world.item.TooltipFlag;

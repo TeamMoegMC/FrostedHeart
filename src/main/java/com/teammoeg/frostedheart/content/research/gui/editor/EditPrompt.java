@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;

@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 

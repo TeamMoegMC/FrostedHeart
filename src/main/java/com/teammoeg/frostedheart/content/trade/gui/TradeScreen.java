@@ -35,7 +35,7 @@ import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
@@ -154,7 +154,7 @@ public class TradeScreen extends BaseScreen {
         super.add(vptf);
 
         RTextField vltf = new RTextField(this).addFlags(Theme.CENTERED | Theme.SHADOW).setMaxWidth(56).setMinWidth(56)
-                .setMaxLine(1).setText(Lang.translate("merchant.level." + (cx.data.getTradeLevel() + 1)));
+                .setMaxLine(1).setText(Lang.translateKey("merchant.level." + (cx.data.getTradeLevel() + 1)));
         vltf.setPos(132, 34);
         super.add(vltf);
 

@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.waypoint.waypoints;
 
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.nbt.CompoundTag;

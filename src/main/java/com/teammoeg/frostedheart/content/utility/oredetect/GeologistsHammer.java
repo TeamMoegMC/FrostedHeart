@@ -26,7 +26,7 @@ import java.util.Random;
 
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.utility.FHLeveledTool;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -51,7 +51,7 @@ public class GeologistsHammer extends FHLeveledTool {
     public static InteractionResult doProspect(Player player, Level world, BlockPos blockpos, ItemStack is, InteractionHand h) {
         if (player != null && (!(player instanceof FakePlayer))) {//fake players does not deserve XD
             if (world.getBlockState(blockpos).is(itemTag)) {//early exit 'cause ore found
-                player.displayClientMessage(Lang.translate(world.getBlockState(blockpos).getBlock().getDescriptionId()).withStyle(ChatFormatting.GOLD), false);
+                player.displayClientMessage(Lang.translateKey(world.getBlockState(blockpos).getBlock().getDescriptionId()).withStyle(ChatFormatting.GOLD), false);
                 return InteractionResult.SUCCESS;
             }
             int x = blockpos.getX();
@@ -91,7 +91,7 @@ public class GeologistsHammer extends FHLeveledTool {
                                     if (err > 0)
                                         rval += rnd.nextInt(err * 2) - err;
                                 }
-                                s = s.append(Lang.translateMessage("vein_size.count", rval).append(Lang.translate(f.getKey()).withStyle(ChatFormatting.GREEN)).append(" "));
+                                s = s.append(Lang.translateMessage("vein_size.count", rval).append(Lang.translateKey(f.getKey()).withStyle(ChatFormatting.GREEN)).append(" "));
                                 count++;
                             }
                         }

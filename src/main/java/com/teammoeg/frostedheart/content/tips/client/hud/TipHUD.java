@@ -5,7 +5,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.gui.EmptyScreen;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -65,7 +65,7 @@ public class TipHUD {
                 if (descLines >= element.contents.size() && x > mainWindow.getX() * 0.5) {
                     extendedWidth += 24;
                 } else {
-                    FHGuiHelper.drawSplitTexts(graphics, Lang.translate("tips." + FHMain.MODID + ".too_long"),
+                    FHGuiHelper.drawSplitTexts(graphics, Lang.translateKey("tips." + FHMain.MODID + ".too_long"),
                             8, 8, element.fontColor, (int)(mainWindow.getX()*0.5F), lineSpace, true);
                 }
             }

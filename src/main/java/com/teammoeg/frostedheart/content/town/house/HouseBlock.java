@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.town.house;
 import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.MathUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.world.level.block.state.BlockState;

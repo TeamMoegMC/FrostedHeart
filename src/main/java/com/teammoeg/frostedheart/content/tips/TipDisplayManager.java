@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.tips;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.tips.client.hud.TipHUD;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.client.Minecraft;
 
 import java.util.HashMap;

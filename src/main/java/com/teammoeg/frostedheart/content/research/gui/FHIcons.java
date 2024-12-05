@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.gson.JsonElement;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;

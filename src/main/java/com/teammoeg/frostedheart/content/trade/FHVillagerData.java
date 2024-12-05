@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.Villager;

@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.steamenergy.debug;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.HeatHandler;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.entity.player.Player;

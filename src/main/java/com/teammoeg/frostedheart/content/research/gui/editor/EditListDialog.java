@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -53,7 +53,7 @@ public class EditListDialog<T> extends EditDialog {
         public ButtonAddValue(Panel panel) {
             super(panel);
             setHeight(12);
-            setTitle(Lang.str("+ ").append(Lang.translate("gui.add")));
+            setTitle(Lang.str("+ ").append(Lang.translateKey("gui.add")));
         }
 
         @Override
@@ -207,12 +207,12 @@ public class EditListDialog<T> extends EditDialog {
         };
 
         scroll = new PanelScrollBar(this, configPanel);
-        buttonAccept = new SimpleButton(this, Lang.translate("gui.accept"), Icons.ACCEPT, (widget, button) -> {
+        buttonAccept = new SimpleButton(this, Lang.translateKey("gui.accept"), Icons.ACCEPT, (widget, button) -> {
             callback.accept(list);
             modified = false;
             close();
         });
-        buttonCancel = new SimpleButton(this, Lang.translate("gui.cancel"), Icons.CANCEL, (widget, button) -> close());
+        buttonCancel = new SimpleButton(this, Lang.translateKey("gui.cancel"), Icons.CANCEL, (widget, button) -> close());
     }
 
     @Override

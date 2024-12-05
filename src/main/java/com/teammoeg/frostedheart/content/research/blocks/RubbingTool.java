@@ -24,7 +24,7 @@ import java.util.List;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.item.TooltipFlag;

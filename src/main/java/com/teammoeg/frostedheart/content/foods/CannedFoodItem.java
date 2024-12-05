@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.foods;
 import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.item.TooltipFlag;

@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.research.gui.editor;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;

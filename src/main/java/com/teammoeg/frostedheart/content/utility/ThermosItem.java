@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.content.water.item.DurableDrinkContainerItem;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.material.Fluid;

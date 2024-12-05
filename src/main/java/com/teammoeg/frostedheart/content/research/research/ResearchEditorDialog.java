@@ -39,7 +39,7 @@ import com.teammoeg.frostedheart.content.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectDialog;
 import com.teammoeg.frostedheart.content.research.research.clues.ClueEditor;
 import com.teammoeg.frostedheart.content.research.research.effects.EffectEditor;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;

@@ -75,7 +75,7 @@ import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
 import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.Point;
 
@@ -139,7 +139,7 @@ public class JEICompat implements IModPlugin {
             }
         }
         infos.clear();
-        Component it = Lang.translate("gui.jei.info.require_research");
+        Component it = Lang.translateKey("gui.jei.info.require_research");
 		/*List<IngredientInfoRecipe<ItemStack>> rinfos=(List<IngredientInfoRecipe<ItemStack>>) man.getRecipes(man.getRecipeCategory(VanillaRecipeCategoryUid.INFORMATION));
 		for(IngredientInfoRecipe<ItemStack> info:rinfos) {
 			List<ItemStack> iss=info.getIngredients();

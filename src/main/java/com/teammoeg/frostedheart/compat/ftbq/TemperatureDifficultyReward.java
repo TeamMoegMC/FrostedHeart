@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.compat.ftbq;
 
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
 import dev.ftb.mods.ftblibrary.config.NameMap;

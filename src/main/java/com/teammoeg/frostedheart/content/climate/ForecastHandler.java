@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.climate;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.foods.dailykitchen.DailyKitchen;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.server.level.ServerPlayer;

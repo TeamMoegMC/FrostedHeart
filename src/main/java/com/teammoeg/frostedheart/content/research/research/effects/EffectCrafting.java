@@ -40,7 +40,7 @@ import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import mezz.jei.library.util.RecipeUtil;
@@ -107,7 +107,7 @@ public class EffectCrafting extends Effect {
     @Override
     public String getBrief() {
         if (item != null)
-            return "Craft " + Lang.translate(item.getDescriptionId()).getString();
+            return "Craft " + Lang.translateKey(item.getDescriptionId()).getString();
         if (itemStack != null)
             return "Craft " + itemStack.getHoverName().getString();
         if (!unlocks.isEmpty())
@@ -144,7 +144,7 @@ public class EffectCrafting extends Effect {
         List<Component> tooltip = new ArrayList<>();
 
         if (item != null)
-            tooltip.add(Lang.translate(item.getDescriptionId()));
+            tooltip.add(Lang.translateKey(item.getDescriptionId()));
         else if (itemStack != null)
             tooltip.add(itemStack.getHoverName());
         else {

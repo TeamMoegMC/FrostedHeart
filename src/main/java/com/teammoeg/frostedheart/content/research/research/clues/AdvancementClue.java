@@ -24,7 +24,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
@@ -86,7 +86,7 @@ public class AdvancementClue extends TickListenerClue {
     public Component getName(Research parent) {
         if (name != null && !name.isEmpty())
             return super.getName(parent);
-        return Lang.translate("clue." + FHMain.MODID + ".advancement");
+        return Lang.translateKey("clue." + FHMain.MODID + ".advancement");
     }
 
     @Override

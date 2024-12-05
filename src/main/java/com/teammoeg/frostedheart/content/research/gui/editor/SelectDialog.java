@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;

@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.FHTags;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.foundation.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;

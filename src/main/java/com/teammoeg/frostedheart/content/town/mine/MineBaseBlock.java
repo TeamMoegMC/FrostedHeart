@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;

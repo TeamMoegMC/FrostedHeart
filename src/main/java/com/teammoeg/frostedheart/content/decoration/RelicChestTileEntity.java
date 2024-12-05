@@ -37,7 +37,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
@@ -71,7 +71,7 @@ public class RelicChestTileEntity extends RandomizableContainerBlockEntity imple
 
     @Override
     protected Component getDefaultName() {
-        return Lang.translate("container.relic_chest");
+        return Lang.translateKey("container.relic_chest");
     }
 
     @Nullable

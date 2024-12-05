@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.resources.ResourceLocation;

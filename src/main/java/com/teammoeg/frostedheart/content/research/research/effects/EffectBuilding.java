@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.api.ManualHelper;
@@ -97,7 +97,7 @@ public class EffectBuilding extends Effect {
         String namespace = raw.substring(0, raw.indexOf(':'));
         String multiblock = raw.substring(raw.indexOf('/') + 1);
         String key = "block." + namespace + "." + multiblock;
-        ar.add(Lang.translate(key));
+        ar.add(Lang.translateKey(key));
         return ar;
     }
 

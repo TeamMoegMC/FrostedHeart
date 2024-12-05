@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.GenerateInfo
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.ResearchGame;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
@@ -189,7 +189,7 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
 
 	@Override
 	public Component getDisplayName() {
-		return Lang.translate("gui.frostedheart.draw_desk");
+		return Lang.translateKey("gui.frostedheart.draw_desk");
 	}
 
 }

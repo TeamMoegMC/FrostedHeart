@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;

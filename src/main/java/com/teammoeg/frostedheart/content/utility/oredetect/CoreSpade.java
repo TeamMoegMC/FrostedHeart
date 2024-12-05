@@ -27,7 +27,7 @@ import java.util.function.Predicate;
 
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.utility.FHLeveledTool;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import net.minecraft.world.level.block.Block;
@@ -56,7 +56,7 @@ public class CoreSpade extends FHLeveledTool {
         if (player != null && (!(player instanceof FakePlayer))) {// fake players does not deserve XD
             if (!world.isClientSide && world.getBlockState(blockpos).is(otag)) {// early exit 'cause ore found
                 player.displayClientMessage(
-                        Lang.translate(world.getBlockState(blockpos).getBlock().getDescriptionId())
+                        Lang.translateKey(world.getBlockState(blockpos).getBlock().getDescriptionId())
                                 .withStyle(ChatFormatting.GOLD),
                         false);
                 return InteractionResult.SUCCESS;
@@ -102,7 +102,7 @@ public class CoreSpade extends FHLeveledTool {
                     MutableComponent s = Lang.translateMessage("corespade.ore");
                     for (Entry<String, Integer> f : founded.entrySet()) {
                         if (rnd.nextInt((int) (f.getValue() * corr)) != 0) {
-                            s = s.append(Lang.translate(f.getKey())
+                            s = s.append(Lang.translateKey(f.getKey())
                                     .withStyle(ChatFormatting.GREEN).append(","));
                             count++;
                         }

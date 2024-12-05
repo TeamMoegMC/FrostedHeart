@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IProcessBE;

@@ -24,7 +24,7 @@ import java.util.Arrays;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import mezz.jei.api.forge.ForgeTypes;
@@ -94,7 +94,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     }
 
     public Component getTitle() {
-        return (Lang.translate("gui.jei.category." + FHMain.MODID + ".incubator"));
+        return (Lang.translateKey("gui.jei.category." + FHMain.MODID + ".incubator"));
     }
 
 

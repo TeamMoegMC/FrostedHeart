@@ -52,7 +52,7 @@ import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import net.minecraft.commands.CommandSourceStack;
@@ -154,21 +154,21 @@ public class CommonEvents {
             event.getEntity().getInventory().add(
                     new ItemStack(RegistryUtils.getItem(new ResourceLocation("ftbquests", "book"))));
             event.getEntity().getInventory().armor.set(3, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_HELMET)
-                    .setHoverName(Lang.translate("itemname.frostedheart.start_head"))));
+                    .setHoverName(Lang.translateKey("itemname.frostedheart.start_head"))));
             event.getEntity().getInventory().armor.set(2, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_CHESTPLATE)
-                    .setHoverName(Lang.translate("itemname.frostedheart.start_chest"))));
+                    .setHoverName(Lang.translateKey("itemname.frostedheart.start_chest"))));
             event.getEntity().getInventory().armor.set(1, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_LEGGINGS)
-                    .setHoverName(Lang.translate("itemname.frostedheart.start_leg"))));
+                    .setHoverName(Lang.translateKey("itemname.frostedheart.start_leg"))));
             event.getEntity().getInventory().armor.set(0, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_BOOTS)
-                    .setHoverName(Lang.translate("itemname.frostedheart.start_foot"))));
+                    .setHoverName(Lang.translateKey("itemname.frostedheart.start_foot"))));
             if (event.getEntity().getAbilities().instabuild) {
-                event.getEntity().sendSystemMessage(Lang.translate("message.frostedheart.creative_help")
+                event.getEntity().sendSystemMessage(Lang.translateKey("message.frostedheart.creative_help")
                         .setStyle(Style.EMPTY.applyFormat(ChatFormatting.YELLOW)
                                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Lang.str("Click to use command")))
                                 .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/frostedheart research complete all"))));
             }
 
-            event.getEntity().sendSystemMessage(Lang.translate("message.frostedheart.temperature_help"));
+            event.getEntity().sendSystemMessage(Lang.translateKey("message.frostedheart.temperature_help"));
         }
     }
 /*
@@ -521,7 +521,7 @@ public class CommonEvents {
                 && ForgeRegistries.ITEMS.getHolder(event.getItem().getItem()).get().is(FHTags.Items.RAW_FOOD.tag)) {
             ServerPlayer player = (ServerPlayer) event.getEntity();
             player.addEffect(new MobEffectInstance(MobEffects.HUNGER, 400, 1));
-            player.displayClientMessage(Lang.translate("message.frostedheart.eaten_poisonous_food"), false);
+            player.displayClientMessage(Lang.translateKey("message.frostedheart.eaten_poisonous_food"), false);
         }
     }
 /*

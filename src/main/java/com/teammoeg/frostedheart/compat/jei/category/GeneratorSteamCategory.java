@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import mezz.jei.api.forge.ForgeTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
@@ -92,7 +92,7 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
     }
 
     public Component getTitle() {
-        return (Lang.translate("gui.jei.category." + FHMain.MODID + ".generator_steam"));
+        return (Lang.translateKey("gui.jei.category." + FHMain.MODID + ".generator_steam"));
     }
 
     @Override

@@ -4,7 +4,7 @@ import com.google.gson.*;
 import com.mojang.logging.LogUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.TipLockManager;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.FHColorHelper;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -93,9 +93,9 @@ public class TipElement implements Cloneable {
 
     public void replaceToError(File filePath, String type) {
         contents.clear();
-        contents.add(Lang.translate("tips." + FHMain.MODID + ".error." + type));
+        contents.add(Lang.translateKey("tips." + FHMain.MODID + ".error." + type));
         contents.add(Lang.str(filePath.getPath()));
-        contents.add(Lang.translate("tips." + FHMain.MODID + ".error.desc"));
+        contents.add(Lang.translateKey("tips." + FHMain.MODID + ".error.desc"));
         fontColor = FHColorHelper.RED;
         BGColor = FHColorHelper.BLACK;
         alwaysVisible = true;

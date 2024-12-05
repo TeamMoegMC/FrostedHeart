@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Iterators;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import dev.ftb.mods.ftblibrary.config.ui.ResourceSearchMode;
@@ -74,7 +74,7 @@ import net.minecraft.ChatFormatting;
 public class SelectItemStackDialog extends EditDialog {
     private class ButtonCaps extends ButtonStackConfig {
         public ButtonCaps(Panel panel) {
-            super(panel, Lang.translate("ftblibrary.select_item.caps"), ItemIcon.getItemIcon(Items.ANVIL));
+            super(panel, Lang.translateKey("ftblibrary.select_item.caps"), ItemIcon.getItemIcon(Items.ANVIL));
         }
 
         @Override
@@ -101,7 +101,7 @@ public class SelectItemStackDialog extends EditDialog {
     }
     private class ButtonCount extends ButtonStackConfig {
         public ButtonCount(Panel panel) {
-            super(panel, Lang.translate("ftblibrary.select_item.count"), ItemIcon.getItemIcon(Items.PAPER));
+            super(panel, Lang.translateKey("ftblibrary.select_item.count"), ItemIcon.getItemIcon(Items.PAPER));
         }
 
         @Override
@@ -143,7 +143,7 @@ public class SelectItemStackDialog extends EditDialog {
 
     private class ButtonNBT extends ButtonStackConfig {
         public ButtonNBT(Panel panel) {
-            super(panel, Lang.translate("ftblibrary.select_item.nbt"), ItemIcon.getItemIcon(Items.NAME_TAG));
+            super(panel, Lang.translateKey("ftblibrary.select_item.nbt"), ItemIcon.getItemIcon(Items.NAME_TAG));
         }
 
         @Override
@@ -192,7 +192,7 @@ public class SelectItemStackDialog extends EditDialog {
 
         @Override
         public Component getTitle() {
-            return Lang.translate("ftblibrary.select_item.list_mode");
+            return Lang.translateKey("ftblibrary.select_item.list_mode");
         }
 
         @Override
@@ -326,7 +326,7 @@ public class SelectItemStackDialog extends EditDialog {
 
         int bsize = width / 2 - 10;
 
-        buttonCancel = new SimpleTextButton(this, Lang.translate("gui.cancel"), Icon.empty()) {
+        buttonCancel = new SimpleTextButton(this, Lang.translateKey("gui.cancel"), Icon.empty()) {
             @Override
             public void onClicked(MouseButton button) {
                 playClickSound();
@@ -341,7 +341,7 @@ public class SelectItemStackDialog extends EditDialog {
 
         buttonCancel.setPosAndSize(27, height - 24, bsize, 16);
 
-        buttonAccept = new SimpleTextButton(this, Lang.translate("gui.accept"), Icon.empty()) {
+        buttonAccept = new SimpleTextButton(this, Lang.translateKey("gui.accept"), Icon.empty()) {
             @Override
             public void onClicked(MouseButton button) {
                 playClickSound();

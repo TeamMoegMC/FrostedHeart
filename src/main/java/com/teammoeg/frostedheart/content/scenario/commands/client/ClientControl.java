@@ -35,7 +35,7 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.Grap
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsLineContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsRectContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsTextContent;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.Point;
 import com.teammoeg.frostedheart.util.client.Rect;

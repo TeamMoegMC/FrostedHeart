@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -72,7 +72,7 @@ public class KillClue extends ListenerClue {
     public Component getName(Research parent) {
         if (name != null && !name.isEmpty())
             return super.getName(parent);
-        return Lang.translate("clue." + FHMain.MODID + ".kill");
+        return Lang.translateKey("clue." + FHMain.MODID + ".kill");
     }
 
     @Override

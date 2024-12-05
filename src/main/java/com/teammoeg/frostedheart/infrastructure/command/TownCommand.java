@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TownResourceType;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -100,7 +100,7 @@ public class TownCommand {
                     ct.getSource().sendSuccess(()-> Lang.str("Total blocks: " + town.getTownBlocks().size()), true);
                     town.getTownBlocks().forEach((k, v) -> {
                         String blockName = v.getType().getBlock().getDescriptionId();
-                        ct.getSource().sendSuccess(()-> Lang.translate(blockName).append(Lang.str(" at " + k)), true);
+                        ct.getSource().sendSuccess(()-> Lang.translateKey(blockName).append(Lang.str(" at " + k)), true);
                     });
                     return Command.SINGLE_SUCCESS;
                 });

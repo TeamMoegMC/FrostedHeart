@@ -14,7 +14,7 @@ import com.teammoeg.frostedheart.content.scenario.network.FHClientReadyPacket;
 import com.teammoeg.frostedheart.content.scenario.network.FHClientSettingsPacket;
 import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.utility.ReferenceValue;
 
@@ -31,7 +31,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 
 public class ClientScene implements IClientScene {
-	private static GuiMessageTag SCENARIO=new GuiMessageTag(13684944, (GuiMessageTag.Icon)null, Lang.translate("chat.tag.frostedheart.scenario"), "Scenario");
+	private static GuiMessageTag SCENARIO=new GuiMessageTag(13684944, (GuiMessageTag.Icon)null, Lang.translateKey("chat.tag.frostedheart.scenario"), "Scenario");
 	public static ClientScene INSTANCE;
 	public IScenarioDialog dialog;
 	public LinkedList<LayerManager> layers=new LinkedList<>();

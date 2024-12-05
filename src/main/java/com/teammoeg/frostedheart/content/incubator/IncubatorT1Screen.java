@@ -24,7 +24,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableList;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.info.FluidInfoArea;

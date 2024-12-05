@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.FHSoundEvents;
 import com.teammoeg.frostedheart.base.team.TeamDataClosure;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;

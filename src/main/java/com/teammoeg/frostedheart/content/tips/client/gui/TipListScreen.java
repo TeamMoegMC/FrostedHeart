@@ -5,7 +5,7 @@ import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
 import com.teammoeg.frostedheart.content.tips.TipLockManager;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
-import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.*;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -42,10 +42,10 @@ public class TipListScreen extends Screen {
 
 	@Override
     public void init() {
-        this.addRenderableWidget(new IconButton(0, 0, IconButton.Icon.CROSS, 0xFFC6FCFF, Lang.translate(FHMain.MODID + ".tips.gui.close"), (button) -> {
+        this.addRenderableWidget(new IconButton(0, 0, IconButton.Icon.CROSS, 0xFFC6FCFF, Lang.translateKey(FHMain.MODID + ".tips.gui.close"), (button) -> {
             onClose();
         }));
-        this.addRenderableWidget(new IconButton(0, 0, IconButton.Icon.LOCK, 0xFFC6FCFF, Lang.translate(FHMain.MODID + ".tips.gui.pin"), (button) -> {
+        this.addRenderableWidget(new IconButton(0, 0, IconButton.Icon.LOCK, 0xFFC6FCFF, Lang.translateKey(FHMain.MODID + ".tips.gui.pin"), (button) -> {
             TipDisplayManager.forceAdd(selectEle, true);
         }));
 
