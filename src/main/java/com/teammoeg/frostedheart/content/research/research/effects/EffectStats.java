@@ -25,6 +25,7 @@ import java.util.List;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
@@ -102,14 +103,14 @@ public class EffectStats extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
+    public boolean grant(TeamDataHolder team,TeamResearchData trd,  Player triggerPlayer, boolean isload) {
         if (isload) return false;
-        double var = team.getVariants().getDouble(vars);
+        double var = trd.getVariants().getDouble(vars);
         if (isPercentage)
             var += val / 100;
         else
             var += val;
-        team.getVariants().putDouble(vars, var);
+        trd.getVariants().putDouble(vars, var);
         return true;
     }
 

@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.minecraft.client.gui.GuiGraphics;
+
+import com.google.common.io.Files;
 import com.teammoeg.frostedheart.FHMain;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;

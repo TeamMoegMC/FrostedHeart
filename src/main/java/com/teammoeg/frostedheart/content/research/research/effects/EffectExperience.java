@@ -24,6 +24,7 @@ import java.util.List;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
@@ -79,7 +80,7 @@ public class EffectExperience extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
+    public boolean grant(TeamDataHolder team,TeamResearchData trd,  Player triggerPlayer, boolean isload) {
         if (triggerPlayer == null || isload)
             return false;
 

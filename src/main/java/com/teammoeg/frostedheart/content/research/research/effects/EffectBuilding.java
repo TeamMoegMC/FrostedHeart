@@ -25,7 +25,9 @@ import java.util.List;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
@@ -104,8 +106,8 @@ public class EffectBuilding extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
-        team.building.add(multiblock);
+    public boolean grant(TeamDataHolder team,TeamResearchData trd, Player triggerPlayer, boolean isload) {
+        trd.building.add(multiblock);
         return true;
 
     }
@@ -118,8 +120,8 @@ public class EffectBuilding extends Effect {
 
     @OnlyIn(Dist.CLIENT)
     @Override
-    public void onClick() {
-        if (this.isGranted() && ClientUtils.getPlayer().getInventory().hasAnyOf(ImmutableSet.of(IEItems.Tools.MANUAL.asItem()))) {
+    public void onClick(ResearchData data) {
+        if (data.isEffectGranted(this) && ClientUtils.getPlayer().getInventory().hasAnyOf(ImmutableSet.of(IEItems.Tools.MANUAL.asItem()))) {
             ResourceLocation loc = multiblock.getUniqueName();
             ResourceLocation manual = new ResourceLocation(loc.getNamespace(), loc.getPath().substring(loc.getPath().lastIndexOf("/") + 1));
             ManualScreen screen = ManualHelper.getManual().getGui();

@@ -23,13 +23,17 @@
 package com.teammoeg.frostedheart.base.team;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.frostedheart.content.research.research.Research;
+import com.teammoeg.frostedheart.content.research.research.clues.ItemClue;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import dev.ftb.mods.ftbteams.api.Team;
@@ -93,8 +97,9 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 	 * @param consumer the player consumer
 	 */
 	public void forEachOnline(Consumer<ServerPlayer> consumer) {
-        for (ServerPlayer spe : team.get().getOnlineMembers())
-        	consumer.accept(spe);
+		if(team.isPresent())
+	        for (ServerPlayer spe : team.get().getOnlineMembers())
+	        	consumer.accept(spe);
 	}
 	
 	/**
@@ -103,8 +108,9 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 	 * @param packet the packet
 	 */
 	public void sendToOnline(FHMessage packet) {
-        for (ServerPlayer spe : team.get().getOnlineMembers())
-        	FHNetwork.sendPlayer(spe, packet);
+		if(team.isPresent())
+	        for (ServerPlayer spe : team.get().getOnlineMembers())
+	        	FHNetwork.sendPlayer(spe, packet);
 	}
     public UUID getId() {
         return id;
@@ -135,4 +141,9 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 	public Collection<ServerPlayer> getOnlineMembers() {
 		return team.get().getOnlineMembers();
 	}
+	Map<SpecialDataType,TeamDataClosure> dataHolderCache=new HashMap<>();
+	public synchronized <U extends SpecialData> TeamDataClosure<U> getDataHolder(SpecialDataType<U> cap){
+		return dataHolderCache.computeIfAbsent(cap, t->new TeamDataClosure<>(this,t));
+	}
+
 }

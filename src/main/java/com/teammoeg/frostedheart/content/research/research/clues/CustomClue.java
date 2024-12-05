@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.research.research.clues;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.content.research.research.Research;
 
 /**
  * Very Custom Clue trigger by code or manually.
@@ -49,25 +50,21 @@ public class CustomClue extends Clue {
     }
 
     @Override
-    public void end(TeamDataHolder team) {
+    public void end(TeamDataHolder team,Research parent) {
     }
 
     @Override
-    public String getBrief() {
-        return "Custom " + getDescriptionString();
+    public String getBrief(Research parent) {
+        return "Custom " + getDescriptionString(parent);
+    }
+
+
+    @Override
+    public void init(Research parent) {
     }
 
     @Override
-    public String getId() {
-        return "custom";
-    }
-
-    @Override
-    public void init() {
-    }
-
-    @Override
-    public void start(TeamDataHolder team) {
+    public void start(TeamDataHolder team,Research parent) {
     }
 
 }

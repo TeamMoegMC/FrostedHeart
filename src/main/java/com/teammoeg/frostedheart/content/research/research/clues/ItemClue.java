@@ -22,8 +22,10 @@ package com.teammoeg.frostedheart.content.research.research.clues;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
@@ -59,19 +61,19 @@ public class ItemClue extends Clue {
     }
 
     @Override
-    public void end(TeamDataHolder team) {
+    public void end(TeamDataHolder team,Research parent) {
     }
 
     @Override
-    public String getBrief() {
+    public String getBrief(Research parent) {
         if (consume)
-            return "Submit item " + getDescriptionString();
-        return "Inspect item " + getDescriptionString();
+            return "Submit item " + getDescriptionString(parent);
+        return "Inspect item " + getDescriptionString(parent);
     }
 
     @Override
-    public Component getDescription() {
-        Component itc = super.getDescription();
+    public Component getDescription(Research parent) {
+        Component itc = super.getDescription(parent);
         if (itc != null || stack == null)
             return itc;
         if (stack.hasNoMatchingItems())
@@ -81,32 +83,28 @@ public class ItemClue extends Clue {
     }
 
     @Override
-    public String getId() {
-        return "item";
-    }
-
-    @Override
-    public Component getName() {
+    public Component getName(Research parent) {
         if (name != null && !name.isEmpty())
-            return super.getName();
+            return super.getName(parent);
         if (consume)
             return TranslateUtils.translate("clue." + FHMain.MODID + ".consume_item");
         return TranslateUtils.translate("clue." + FHMain.MODID + ".item");
     }
 
     @Override
-    public void init() {
+    public void init(Research parent) {
     }
 
     @Override
-    public void start(TeamDataHolder team) {
+    public void start(TeamDataHolder team,Research parent) {
     }
 
 
-    public int test(TeamResearchData t, ItemStack stack) {
-        if (!this.isCompleted(t))
+    public int test(TeamDataHolder t,Research r, ItemStack stack) {
+    	TeamResearchData trd=t.getData(SpecialDataTypes.RESEARCH_DATA);
+        if (!trd.isClueCompleted(r,this))
             if (this.stack.test(stack)) {
-                this.setCompleted(t, true);
+            	trd.setClueCompleted(t, r, 0, consume);
                 if (consume)
                     return this.stack.getCount();
             }

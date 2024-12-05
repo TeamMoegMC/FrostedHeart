@@ -86,8 +86,8 @@ public class ScenarioConductor implements NBTSerializable{
  
     	}
     }
-    public void initContext(ServerPlayer player) {
-    	context.setPlayer(player);
+    public void initContext(ServerPlayer player,String lang) {
+    	context.setPlayerAndLang(player,lang);
     }
     public ScenarioConductor() {
 		super();
@@ -96,13 +96,8 @@ public class ScenarioConductor implements NBTSerializable{
 		actids.register(init);
 	}
 
-    public void init(ServerPlayer player) {
-    	initContext(player);
-	}
-
-    public ScenarioConductor(ServerPlayer player) {
-		this();
-		this.initContext(player);
+    public void init(ServerPlayer player,String lang) {
+    	initContext(player,lang);
 	}
 	
 	public void notifyClientResponse(boolean isSkip,int status) {
@@ -133,7 +128,7 @@ public class ScenarioConductor implements NBTSerializable{
 		acts.get(init).jump(getContext(), scenario, null);
 	}
 	public void tick(ServerPlayer player) {
-		init(player);
+		init(player,null);
     	//detect triggers
 		//System.out.println("start tick==============");
 		

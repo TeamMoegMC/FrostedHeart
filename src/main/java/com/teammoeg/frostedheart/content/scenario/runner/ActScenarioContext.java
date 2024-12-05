@@ -27,17 +27,16 @@ public class ActScenarioContext extends ScenarioContext {
 
 	@Override
 	public String getLang() {
-		if(lang==null) {
-			lang=player.getLanguage();
-		}
 		return lang;
 	}
 	public ScenarioConductor conductor() {
 		return conductor;
 	}
 
-	public void setPlayer(ServerPlayer player) {
+	public void setPlayerAndLang(ServerPlayer player,String lang) {
 		this.player = player;
+		if(lang!=null)
+		this.lang=lang;
 	}
 
 }

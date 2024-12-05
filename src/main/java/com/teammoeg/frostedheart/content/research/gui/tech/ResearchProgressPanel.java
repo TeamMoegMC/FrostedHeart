@@ -42,7 +42,7 @@ public class ResearchProgressPanel extends Panel {
     public void addWidgets() {
         RTextField tf = new RTextField(this);
         tf.setMaxWidth(71).setMaxLine(2).setColor(TechIcons.text).setPos(40, 15);
-        Research inprog = ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
+        Research inprog = ClientResearchDataAPI.getData().get().getCurrentResearch().orElse(null);
         if (inprog != null)
             tf.setText(inprog.getName());
         else
@@ -66,13 +66,13 @@ public class ResearchProgressPanel extends Panel {
         // float progress = researchScreen.getInProgressResearch().getProgressFraction();
         // float reqTime = researchScreen.getInProgressResearch().getCurrentPoints();
         // float finTIme = researchScreen.getInProgressResearch().getRequiredPoints();
-        Research inprog = ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
+        Research inprog = ClientResearchDataAPI.getData().get().getCurrentResearch().orElse(null);
         if (inprog != null) {
             float prog = inprog.getProgressFraction();
             TechIcons.SLIDER_FRAME.draw(matrixStack, x + 40, y + 32, 70, 8);
             if (prog > 0)
                 TechIcons.drawTexturedRect(matrixStack, x + 41, y + 33, (int) (68f * prog), 6, true);
-            if (inprog.getData().canComplete())
+            if (inprog.getData().canComplete(inprog))
                 theme.drawString(matrixStack, NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, TechIcons.text, 0);
             else
                 theme.drawString(matrixStack, TranslateUtils.translateGui("research.required_clue"), x + 40, y + 40, TechIcons.text_red, 0);

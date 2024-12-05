@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.research.research.clues;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.network.chat.Component;
@@ -47,13 +48,8 @@ public class MinigameClue extends CustomClue {
     }
 
     @Override
-    public String getBrief() {
+    public String getBrief(Research parent) {
         return "Complete game level " + this.level;
-    }
-
-    @Override
-    public String getId() {
-        return "game";
     }
 
 
@@ -62,9 +58,9 @@ public class MinigameClue extends CustomClue {
     }
 
     @Override
-    public Component getName() {
+    public Component getName(Research parent) {
         if (name != null && !name.isEmpty())
-            return super.getName();
+            return super.getName(parent);
         return TranslateUtils.translate("clue." + FHMain.MODID + ".minigame.t" + level);
     }
 

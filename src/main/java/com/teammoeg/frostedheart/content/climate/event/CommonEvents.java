@@ -351,7 +351,7 @@ public class CommonEvents {
             FHResearch.sendSyncPacket(currentPlayer);
             for(DataType type:DataType.types)
             	FHNetwork.send(currentPlayer,new FHDatapackSyncPacket(type));
-            FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayer) event.getEntity())));
+            FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayer) event.getEntity()).get()));
             FHCapabilities.CLIMATE_DATA.getCapability(serverWorld).ifPresent((cap) -> FHNetwork.send(currentPlayer,new FHClimatePacket(cap)));
 
             FHNetwork.send(currentPlayer, new WaypointSyncAllPacket((ServerPlayer) event.getEntity()));
