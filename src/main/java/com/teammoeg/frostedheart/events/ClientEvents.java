@@ -110,8 +110,8 @@ public class ClientEvents {
                             .append(stableVersion.getOriginal()).withStyle(ChatFormatting.BOLD), 70);
                     int l = 0;
                     for (FormattedCharSequence line : list) {
-                        FHGuiHelper.drawLine(matrixStack.pose(), Color4I.rgba(0, 0, 0, 255), 0, gui.height / 2 - 1 + l, 72,
-                                gui.height / 2 + 9 + l);
+                        //TODO Uncomment after draw line fixed
+                    	//FHGuiHelper.drawLine(matrixStack, Color4I.rgba(0, 0, 0, 255), 0, gui.height / 2 - 1 + l, 72,gui.height / 2 + 9 + l);
                         matrixStack.drawString(ClientUtils.mc().font, line, 1, gui.height / 2.0F + l, 0xFFFFFF, true);
                         l += 9;
                     }

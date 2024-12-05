@@ -61,6 +61,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -382,7 +383,7 @@ public class FrostedHud {
 	            	if(ClientScene.INSTANCE.ticksActUpdate>0)
 	            		GuiHelper.popScissor(mc.getWindow());
 	            }
-	            FHGuiHelper.drawLine(stack.pose(), Color4I.rgba(255, 255, 6, 255),BasePos.act_split.getX(),BasePos.act_split.getY(), BasePos.act_split.getX()+deflen, BasePos.act_split.getY(),1000);
+	            stack.hLine(BasePos.act_split.getX(), BasePos.act_split.getX()+deflen, BasePos.act_split.getY(), 0xFFFFFF06);
 	            
 	            if(st!=null) {
 	            	int len=mc.font.width(st.getString());

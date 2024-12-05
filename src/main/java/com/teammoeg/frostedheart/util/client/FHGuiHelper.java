@@ -19,41 +19,40 @@
 
 package com.teammoeg.frostedheart.util.client;
 
-import java.util.*;
+import java.util.List;
+import java.util.OptionalDouble;
 import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.network.chat.FormattedText;
-import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
+
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.ForgeRenderTypes;
-
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 /**
  * Convenience functions for rendering
  * */
@@ -83,12 +82,24 @@ public class FHGuiHelper {
                 .createCompositeState(false);
             return RenderType.create("frostedheart_prerendered", DefaultVertexFormat.POSITION_COLOR_TEX, VertexFormat.Mode.QUADS, 256, false, true, rendertype$state);
         }
-
+        public static final RenderType BOLD_LINE_TYPE = RenderType.create("fh_line_bold",
+       		 DefaultVertexFormat.POSITION_COLOR,
+       		 VertexFormat.Mode.DEBUG_LINES,
+       		 256,
+       		 false,
+       		 false,
+       		 RenderType.CompositeState.builder()
+       		 .setShaderState(RenderStateShard.RENDERTYPE_LINES_SHADER)
+       		 .setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(4)))
+       		 //.setLayeringState(VIEW_OFFSET_Z_LAYERING)
+       		 //.setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+       		 .setOutputState(MAIN_TARGET)
+       		 //.setWriteMaskState(COLOR_DEPTH_WRITE)
+       		 //.setCullState(NO_CULL)
+       		 .createCompositeState(false));
     }
 
-    public static final RenderType BOLD_LINE_TYPE = RenderType.create("fh_line_bold",
-            DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.LINES, 128, false,false,RenderStateAccess.getLineState(4));
-    public static void drawItem(GuiGraphics guiGraphics,ItemStack stack,int x,int y,int zindex,float scaleX,float scaleY,boolean drawDecorations,@Nullable String countReplacement) {
+   public static void drawItem(GuiGraphics guiGraphics,ItemStack stack,int x,int y,int zindex,float scaleX,float scaleY,boolean drawDecorations,@Nullable String countReplacement) {
     	guiGraphics.pose().pushPose();
     	if(zindex!=0)
     	guiGraphics.pose().translate(0.0F, 0.0F, zindex);
@@ -103,7 +114,8 @@ public class FHGuiHelper {
     public static void drawTextShadow(GuiGraphics guiGraphics,String text,Point point,int color) {
     	guiGraphics.drawString(Minecraft.getInstance().font,text, point.getX(), point.getY() , color);
     }
-    private static void drawVertexLine(Matrix4f mat, VertexConsumer renderBuffer, Color4I color, int startX, int startY,
+    //TODO fix line drawing
+   /* private static void drawVertexLine(Matrix4f mat, VertexConsumer renderBuffer, Color4I color, int startX, int startY,
                                  int endX, int endY,float z) {
     	//RenderSystem.disableTexture();
         //RenderSystem.enableColorLogicOp();
@@ -129,18 +141,21 @@ public class FHGuiHelper {
     // draw a line from start to end by color, ABSOLUTE POSITION
     public static void drawLine(PoseStack matrixStack, Color4I color, int startX, int startY, int endX, int endY,float z) {
     	Tesselator t=Tesselator.getInstance();
+    	
         BufferBuilder vertexBuilderLines = t.getBuilder();
         vertexBuilderLines.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
         drawVertexLine(matrixStack.last().pose(), vertexBuilderLines, color, startX, startY, endX, endY,z);
         t.end();
-    }
+    }*/
 
     // draw a line from start to end by color, ABSOLUTE POSITION
-    public static void drawLine(PoseStack matrixStack, Color4I color, int startX, int startY, int endX, int endY) {
-        VertexConsumer vertexBuilderLines = Minecraft.getInstance().renderBuffers().bufferSource()
-                .getBuffer(BOLD_LINE_TYPE);
-        drawVertexLine(matrixStack.last().pose(), vertexBuilderLines, color, startX, startY, endX, endY,0f);
-    }
+  /*  public static void drawLine(GuiGraphics graphics, Color4I color, int startX, int startY, int endX, int endY) {
+    	
+        VertexConsumer vertexBuilderLines = graphics.bufferSource()
+                .getBuffer(RenderStateAccess.BOLD_LINE_TYPE);
+        drawVertexLine(graphics.pose().last().pose(), vertexBuilderLines, color, startX, startY, endX, endY,0f);
+      
+    }*/
 
     private static void drawRect(Matrix4f mat, VertexConsumer renderBuffer, Color4I color, int x, int y, int w, int h) {
         renderBuffer.vertex(mat, x, y, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
