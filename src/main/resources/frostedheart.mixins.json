@@ -19,7 +19,6 @@
     "create.MixinPulleyTileEntity",
     "create.MixinSawMovementBehaviour",
     "create.MixinSawTileEntity",
-    "ftb.IconMixin",
     "create.MixinToolboxInventory",
     "create.RecipeGridHandlerMixin",
     "forge.CapabilityManagerAccess",

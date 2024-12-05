@@ -117,11 +117,14 @@ public class ResearchCommand {
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("all").executes(ct -> {
                     TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    try {
                     for (Research r : FHResearch.getAllResearch()) {
                         if (r.isInCompletable()) continue;
                         trd.get().setResearchFinished(trd.team(), r, true);
                     }
+                    }catch(Throwable t) {t.printStackTrace();}
                     ct.getSource().sendSuccess(()-> Lang.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+
                     return Command.SINGLE_SUCCESS;
                 })))
                 .then(Commands.literal("transfer").then(Commands.argument("from", UuidArgument.uuid())
@@ -192,10 +195,12 @@ public class ResearchCommand {
                     trd.get().resetData(trd.team(),FHResearch.getResearch(rsn));
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("all").executes(ct -> {
-                    TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
-                    for (Research r : FHResearch.getAllResearch()) {
-                        trd.get().resetData(trd.team(),r);
-                    }
+                	try {
+	                    TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+	                    for (Research r : FHResearch.getAllResearch()) {
+	                        trd.get().resetData(trd.team(),r);
+	                    }
+	                }catch(Throwable t) {t.printStackTrace();}
                     return Command.SINGLE_SUCCESS;
                 })));
         dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermission(2)).then(add));

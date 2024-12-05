@@ -36,6 +36,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.config.ui.ResourceSearchMode;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -274,8 +275,40 @@ public class SelectItemStackDialog extends EditDialog {
     public final List<ResourceSearchMode> modes = new ArrayList<>();
 
     {
-        modes.add(ResourceSearchMode.ALL_ITEMS);
-        modes.add(ResourceSearchMode.INVENTORY);
+        modes.add(new ResourceSearchMode() {
+
+            @Override
+            public Collection<ItemStack> getAllResources() {
+                return RegistryUtils.getItems().stream().map(ItemStack::new).collect(Collectors.toList());
+            }
+
+            @Override
+            public MutableComponent getDisplayName() {
+                return Lang.str("ALL");
+            }
+
+            @Override
+            public Icon getIcon() {
+                return ItemIcon.getItemIcon(Blocks.STONE.asItem());
+            }
+        });
+        modes.add(new ResourceSearchMode() {
+
+            @Override
+            public Collection<ItemStack> getAllResources() {
+                return ClientUtils.getPlayer().getInventory().items.stream().map(ItemStack::copy).collect(Collectors.toList());
+            }
+
+            @Override
+            public MutableComponent getDisplayName() {
+                return Lang.str("Inventory");
+            }
+
+            @Override
+            public Icon getIcon() {
+                return ItemIcon.getItemIcon(Blocks.STONE.asItem());
+            }
+        });
         modes.add(new ResourceSearchMode() {
 
             @Override
