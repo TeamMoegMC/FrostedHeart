@@ -23,6 +23,7 @@ import com.teammoeg.frostedheart.compat.ftbq.FHGuiProviders;
 import com.teammoeg.frostedheart.foundation.model.DynamicModelSetup;
 import com.teammoeg.frostedheart.content.climate.client.FogModification;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
+import com.teammoeg.frostedheart.foundation.tooltips.FHTooltips;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;

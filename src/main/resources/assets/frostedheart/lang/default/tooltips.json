@@ -23,5 +23,7 @@
 
   "item.frostedheart.ice_skates.tooltip.summary": "A pair of skates for travelling on ice.",
   "item.frostedheart.ice_skates.tooltip.condition1": "When Worn While Walking on Ice",
-  "item.frostedheart.ice_skates.tooltip.behaviour1": "Increases _movement speed_."
+  "item.frostedheart.ice_skates.tooltip.behaviour1": "Increases _movement speed_.",
+
+  "frostedheart.tooltip.food_temp_change": "Temperature Change: "
 }

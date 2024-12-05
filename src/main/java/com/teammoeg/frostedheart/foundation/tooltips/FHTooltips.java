@@ -17,8 +17,12 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.foundation.tooltips;
 
+import com.simibubi.create.foundation.item.TooltipModifier;
+import com.teammoeg.frostedheart.FHItems;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHTags;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
@@ -28,23 +32,51 @@ import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.foundation.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler.*;
 
 public class FHTooltips {
 
+
+    /**
+     * Register all items that will have custom tooltips here.
+     * The actual tooltip is handled in various TooltipModifer classes.
+     * These modifiers are handled in sequence at FHMain.REGISTRATE.setTooltipModifierFactory()
+     */
+    public static void registerTooltipModifiers() {
+        // Register the tooltip modifier
+        register(Items.STICK);
+        register(Items.BEEF);
+        register(Items.COOKED_BEEF);
+        register(Items.POTION);
+    }
+
+    public static void register(Item item) {
+        Function<Item, TooltipModifier> factory = FHMain.REGISTRATE.getTooltipModifierFactory();
+        if (factory != null) {
+            TooltipModifier.REGISTRY.registerDeferred(RegistryUtils.getRegistryName(item), factory);
+        }
+    }
+
+
+    /**
+     * Custom tooltip handling.
+     */
     public static void onItemTooltip(ItemTooltipEvent event) {
         final ItemStack stack = event.getItemStack();
         final List<Component> text = event.getToolTip();
@@ -120,11 +152,12 @@ public class FHTooltips {
             float tspeed = (float) (double) FHConfig.SERVER.tempSpeed.get();
 
             // Food adjust temperature
-            ITempAdjustFood itf;
+            ITempAdjustFood itf = null;
             if (i instanceof ITempAdjustFood) {
                 itf = (ITempAdjustFood) i;
-            } else {
-                itf = FHDataManager.getFood(stack);
+            }
+            else {
+                itf = FHDataManager.getTempAdjustFood(stack);
             }
 
             // Handle ITF first
@@ -135,7 +168,7 @@ public class FHTooltips {
                 if (temp != 0)
                     if (temp > 0)
                         event.getToolTip()
-                                .add(TranslateUtils.translateTooltip("food_temp", "+" + TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.GOLD));
+                                .add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.GOLD));
                     else
                         event.getToolTip()
                                 .add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.AQUA));
@@ -146,7 +179,7 @@ public class FHTooltips {
                     byte temperature = getTemperature(stack);
                     if (temperature != -1) {
                         if (temperature == HOT) {
-                            text.add(TranslateUtils.translateTooltip("food_temp", "+" + TemperatureDisplayHelper.toTemperatureDeltaFloatString(DEFAULT_HOT_FOOD_HEAT)).withStyle(ChatFormatting.GOLD));
+                            text.add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(DEFAULT_HOT_FOOD_HEAT)).withStyle(ChatFormatting.GOLD));
                         } else if (temperature == COLD) {
                             text.add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(DEFAULT_COLD_FOOD_HEAT)).withStyle(ChatFormatting.AQUA));
                         }
@@ -222,7 +255,7 @@ public class FHTooltips {
                 if (temp != 0)
                     if (temp > 0)
                         event.getToolTip().add(
-                                TranslateUtils.translateTooltip("armor_heating", "+" + TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.GOLD));
+                                TranslateUtils.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.GOLD));
                     else
                         event.getToolTip()
                                 .add(TranslateUtils.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.AQUA));

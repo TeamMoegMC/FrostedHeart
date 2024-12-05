@@ -990,7 +990,11 @@ public class FHItems {
     public static RegistryObject<Item> rye_flour = register("rye_flour", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> raw_rye_bread = register("raw_rye_bread", n -> new FHBaseItem(createProps()));
     public static RegistryObject<Item> random_seeds = register("random_seeds", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> rye_bread = register("rye_bread", n -> new FHBaseItem(createProps().food(FHFoodProperties.RYE_BREAD)));
+    public static ItemEntry<Item> rye_bread = REGISTRATE
+            .item("rye_bread", Item::new)
+            .properties(p -> p.food(FHFoodProperties.RYE_BREAD))
+            .register();
+//    public static RegistryObject<Item> rye_bread = register("rye_bread", n -> new FHBaseItem(createProps().food(FHFoodProperties.RYE_BREAD)));
     public static RegistryObject<Item> black_bread = register("black_bread", n -> new FHBaseItem(createProps().food(FHFoodProperties.BLACK_BREAD)));
     public static RegistryObject<Item> vegetable_sawdust_soup = register("vegetable_sawdust_soup", n -> new FHSoupItem(createProps().stacksTo(1).food(FHFoodProperties.VEGETABLE_SAWDUST_SOUP), true));
     public static RegistryObject<Item> rye_sawdust_porridge = register("rye_sawdust_porridge", n -> new FHSoupItem(createProps().stacksTo(1).food(FHFoodProperties.RYE_SAWDUST_PORRIDGE), true));

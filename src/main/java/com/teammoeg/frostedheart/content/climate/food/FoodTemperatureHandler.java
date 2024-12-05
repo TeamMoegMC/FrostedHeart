@@ -128,7 +128,7 @@ public class FoodTemperatureHandler {
         if (it instanceof ITempAdjustFood) {
             adj = (ITempAdjustFood) it;
         } else {
-            adj = FHDataManager.getFood(stack);
+            adj = FHDataManager.getTempAdjustFood(stack);
         }
 
         // Depending on food temperature status, display message, and set default heat, which could be overridden if

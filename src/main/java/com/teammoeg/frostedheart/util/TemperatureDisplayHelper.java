@@ -74,9 +74,22 @@ public class TemperatureDisplayHelper {
 
     public static String toTemperatureDeltaFloatString(float celsus) {
         //celsus=Math.max(-273.15f, celsus);
+        float result;
+        String str = "";
+        if (FHConfig.CLIENT.useFahrenheit.get()) {
+            result = ((int) ((celsus * 9 / 5) * 10)) / 10f;
+        } else {
+            result = ((int) (celsus * 10)) / 10f;
+        }
+        if (result > 0) {
+            str += "+" + result;
+        } else {
+            str += result;
+        }
         if (FHConfig.CLIENT.useFahrenheit.get())
-            return ((int) ((celsus * 9 / 5) * 10)) / 10f + " °F";
-        return ((int) (celsus * 10)) / 10f + " °C";
+            return str + " °F";
+        else
+            return str + " °C";
     }
 
     public static String toTemperatureDeltaIntString(float celsus) {

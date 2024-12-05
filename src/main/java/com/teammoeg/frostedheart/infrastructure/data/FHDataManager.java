@@ -50,6 +50,7 @@ import com.teammoeg.frostedheart.util.mixin.StructureUtils;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.FriendlyByteBuf;
@@ -212,13 +213,24 @@ public class FHDataManager implements ResourceManagerReloadListener {
 	 * @param stack the item stack
 	 * @return the temperature adjuster
 	 */
-	public static @Nullable ITempAdjustFood getFood(ItemStack stack) {
-		CupData data = FHDataManager.get(Cup).get(RegistryUtils.getRegistryName(stack.getItem()));
+	public static @Nullable ITempAdjustFood getTempAdjustFood(ItemStack stack) {
+		return getTempAdjustFood(stack.getItem());
+	}
+
+	public static @Nullable ITempAdjustFood getTempAdjustFood(Item item) {
+		if (item instanceof ITempAdjustFood) {
+			return (ITempAdjustFood) item;
+		}
+		CupData data = FHDataManager.get(Cup).get(RegistryUtils.getRegistryName(item));
 		ResourceMap<FoodTempData> foodData = FHDataManager.get(Food);
 		if (data != null) {
-			return new CupTempAdjustProxy(data.getEfficiency(), foodData.get(RegistryUtils.getRegistryName(stack.getItem())));
+			return new CupTempAdjustProxy(data.getEfficiency(), foodData.get(RegistryUtils.getRegistryName(item)));
 		}
-        return foodData.get(RegistryUtils.getRegistryName(stack.getItem()));
+		return foodData.get(RegistryUtils.getRegistryName(item));
+	}
+
+	public static @Nullable FoodTempData getFoodTemp(Item item) {
+		return FHDataManager.get(Food).get(RegistryUtils.getRegistryName(item));
 	}
 
 	@Nonnull

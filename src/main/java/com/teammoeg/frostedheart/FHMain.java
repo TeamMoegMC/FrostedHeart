@@ -20,7 +20,9 @@
 package com.teammoeg.frostedheart;
 
 import com.simibubi.create.foundation.item.ItemDescription;
+import com.simibubi.create.foundation.item.KineticStats;
 import com.simibubi.create.foundation.item.TooltipHelper;
+import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.compat.CreateCompat;
@@ -29,6 +31,8 @@ import com.teammoeg.frostedheart.compat.ftbq.FHRewardTypes;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.research.FHResearch;
+import com.teammoeg.frostedheart.foundation.tooltips.FHTooltips;
+import com.teammoeg.frostedheart.foundation.tooltips.TemperatureStats;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
@@ -86,7 +90,10 @@ public class FHMain {
 
     static {
         REGISTRATE.setTooltipModifierFactory(item -> {
-            return new ItemDescription.Modifier(item, TooltipHelper.Palette.STANDARD_CREATE);
+            return new ItemDescription.Modifier(item, TooltipHelper.Palette.STANDARD_CREATE)
+                    .andThen(TooltipModifier.mapNull(KineticStats.create(item)))
+                    .andThen(TooltipModifier.mapNull(TemperatureStats.create(item)))
+                    ;
         });
     }
 
@@ -178,6 +185,7 @@ public class FHMain {
     private void setup(final FMLCommonSetupEvent event) {
         FHNetwork.register();
         FHCapabilities.setup();
+        FHTooltips.registerTooltipModifiers();
         // modify default value
         GameRules.GAME_RULE_TYPES.put(GameRules.RULE_SPAWN_RADIUS, IntegerValue.create(0));
 

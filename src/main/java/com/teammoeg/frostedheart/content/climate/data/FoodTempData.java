@@ -26,8 +26,11 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
+import lombok.Data;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
+@Data
 public class FoodTempData implements ITempAdjustFood {
 
 
@@ -36,9 +39,9 @@ public class FoodTempData implements ITempAdjustFood {
 		CodecUtil.defaultValue(Codec.FLOAT,-15f).fieldOf("min").forGetter(o->o.min),
 		CodecUtil.defaultValue(Codec.FLOAT,15f).fieldOf("max").forGetter(o->o.max)).apply(t, FoodTempData::new));
 
-    float heat;
-    float min;
-    float max;
+    private final float heat;
+    private final float min;
+    private final float max;
 	public FoodTempData(float heat, float min, float max) {
 		super();
 		this.heat = heat;
@@ -48,6 +51,11 @@ public class FoodTempData implements ITempAdjustFood {
     @Override
     public float getHeat(ItemStack is, float env) {
         return heat;
+    }
+
+    // rounded heat to 1 decimal place
+    public float getHeatRounded() {
+        return Math.round(heat * 10) / 10.0f;
     }
 
     @Override
