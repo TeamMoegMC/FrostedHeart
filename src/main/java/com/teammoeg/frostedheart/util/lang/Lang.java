@@ -1,8 +1,5 @@
-package com.teammoeg.frostedheart.foundation.tooltips;
+package com.teammoeg.frostedheart.util.lang;
 
-import com.simibubi.create.foundation.utility.Components;
-import com.simibubi.create.foundation.utility.LangBuilder;
-import com.simibubi.create.foundation.utility.LangNumberFormat;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -15,17 +12,7 @@ import java.util.List;
 import java.util.Locale;
 
 // Adapted from Create's Lang class
-public class FHLang {
-    /**
-     * legacy-ish. Use Lang.translate and other builder methods where possible
-     *
-     * @param key
-     * @param args
-     * @return
-     */
-    public static MutableComponent translateDirect(String key, Object... args) {
-        return Components.translatable(FHMain.MODID + "." + key, resolveBuilders(args));
-    }
+public class Lang {
 
     public static String asId(String name) {
         return name.toLowerCase(Locale.ROOT);
@@ -36,15 +23,6 @@ public class FHLang {
         return asId.endsWith("s") ? asId.substring(0, asId.length() - 1) : asId;
     }
 
-    public static List<Component> translatedOptions(String prefix, String... keys) {
-        List<Component> result = new ArrayList<>(keys.length);
-        for (String key : keys)
-            result.add(translate((prefix != null ? prefix + "." : "") + key).component());
-        return result;
-    }
-
-    //
-
     public static LangBuilder builder() {
         return new LangBuilder(FHMain.MODID);
     }
@@ -52,8 +30,6 @@ public class FHLang {
     public static LangBuilder builder(String namespace) {
         return new LangBuilder(namespace);
     }
-
-    //
 
     public static LangBuilder blockName(BlockState state) {
         return builder().add(state.getBlock()
@@ -76,6 +52,10 @@ public class FHLang {
 
     public static LangBuilder translate(String langKey, Object... args) {
         return builder().translate(langKey, args);
+    }
+
+    public static LangBuilder translate(String prefix, String suffix, Object... args) {
+        return builder().translate(prefix, suffix, args);
     }
 
     public static LangBuilder text(String text) {

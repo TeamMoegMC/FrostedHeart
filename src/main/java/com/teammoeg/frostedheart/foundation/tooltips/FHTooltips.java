@@ -37,6 +37,7 @@ import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -57,19 +58,25 @@ public class FHTooltips {
      * Register all items that will have custom tooltips here.
      * The actual tooltip is handled in various TooltipModifer classes.
      * These modifiers are handled in sequence at FHMain.REGISTRATE.setTooltipModifierFactory()
+     *
+     * For convenience we register all items and blocks here.
      */
     public static void registerTooltipModifiers() {
-        // Register the tooltip modifier
-        register(Items.STICK);
-        register(Items.BEEF);
-        register(Items.COOKED_BEEF);
-        register(Items.POTION);
+        ForgeRegistries.ITEMS.getKeys().forEach(FHTooltips::register);
+        ForgeRegistries.BLOCKS.getKeys().forEach(FHTooltips::register);
     }
 
     public static void register(Item item) {
         Function<Item, TooltipModifier> factory = FHMain.REGISTRATE.getTooltipModifierFactory();
         if (factory != null) {
             TooltipModifier.REGISTRY.registerDeferred(RegistryUtils.getRegistryName(item), factory);
+        }
+    }
+
+    public static void register(ResourceLocation key) {
+        Function<Item, TooltipModifier> factory = FHMain.REGISTRATE.getTooltipModifierFactory();
+        if (factory != null) {
+            TooltipModifier.REGISTRY.registerDeferred(key, factory);
         }
     }
 
@@ -149,43 +156,43 @@ public class FHTooltips {
                     break;
                 }
             }
-            float tspeed = (float) (double) FHConfig.SERVER.tempSpeed.get();
-
-            // Food adjust temperature
-            ITempAdjustFood itf = null;
-            if (i instanceof ITempAdjustFood) {
-                itf = (ITempAdjustFood) i;
-            }
-            else {
-                itf = FHDataManager.getTempAdjustFood(stack);
-            }
+//            float tspeed = (float) (double) FHConfig.SERVER.tempSpeed.get();
+//
+//            // Food adjust temperature
+//            ITempAdjustFood itf = null;
+//            if (i instanceof ITempAdjustFood) {
+//                itf = (ITempAdjustFood) i;
+//            }
+//            else {
+//                itf = FHDataManager.getTempAdjustFood(stack);
+//            }
 
             // Handle ITF first
-            if (itf != null) {
-                float temp = itf.getHeat(stack,
-                        event.getEntity() == null ? 37 : PlayerTemperatureData.getCapability(event.getEntity()).map(PlayerTemperatureData::getEnvTemp).orElse(0f)) * tspeed;
-                temp = (Math.round(temp * 1000)) / 1000.0F;// round
-                if (temp != 0)
-                    if (temp > 0)
-                        event.getToolTip()
-                                .add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.GOLD));
-                    else
-                        event.getToolTip()
-                                .add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.AQUA));
-            }
-            // If not ITF, apply the default temp modifier through temp status
-            else {
-                if (canChangeTemperatureFood(stack)) {
-                    byte temperature = getTemperature(stack);
-                    if (temperature != -1) {
-                        if (temperature == HOT) {
-                            text.add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(DEFAULT_HOT_FOOD_HEAT)).withStyle(ChatFormatting.GOLD));
-                        } else if (temperature == COLD) {
-                            text.add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(DEFAULT_COLD_FOOD_HEAT)).withStyle(ChatFormatting.AQUA));
-                        }
-                    }
-                }
-            }
+//            if (itf != null) {
+//                float temp = itf.getHeat(stack,
+//                        event.getEntity() == null ? 37 : PlayerTemperatureData.getCapability(event.getEntity()).map(PlayerTemperatureData::getEnvTemp).orElse(0f)) * tspeed;
+//                temp = (Math.round(temp * 1000)) / 1000.0F;// round
+//                if (temp != 0)
+//                    if (temp > 0)
+//                        event.getToolTip()
+//                                .add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.GOLD));
+//                    else
+//                        event.getToolTip()
+//                                .add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.AQUA));
+//            }
+//            // If not ITF, apply the default temp modifier through temp status
+//            else {
+//                if (canChangeTemperatureFood(stack)) {
+//                    byte temperature = getTemperature(stack);
+//                    if (temperature != -1) {
+//                        if (temperature == HOT) {
+//                            text.add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(DEFAULT_HOT_FOOD_HEAT)).withStyle(ChatFormatting.GOLD));
+//                        } else if (temperature == COLD) {
+//                            text.add(TranslateUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(DEFAULT_COLD_FOOD_HEAT)).withStyle(ChatFormatting.AQUA));
+//                        }
+//                    }
+//                }
+//            }
 
             // Equipment temperature
             //IWarmKeepingEquipment iwe = null;
@@ -227,18 +234,18 @@ public class FHTooltips {
             }*/
 
             // Block temperature
-            BlockTempData btd = FHDataManager.getBlockData(stack);
-            if (btd != null) {
-                float temp = btd.getTemp();
-                temp = (Math.round(temp * 100)) / 100.0F;// round
-                if (temp != 0)
-                    if (temp > 0)
-                        event.getToolTip()
-                                .add(TranslateUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).withStyle(ChatFormatting.GOLD));
-                    else
-                        event.getToolTip()
-                                .add(TranslateUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).withStyle(ChatFormatting.AQUA));
-            }
+//            BlockTempData btd = FHDataManager.getBlockData(stack);
+//            if (btd != null) {
+//                float temp = btd.getTemp();
+//                temp = (Math.round(temp * 100)) / 100.0F;// round
+//                if (temp != 0)
+//                    if (temp > 0)
+//                        event.getToolTip()
+//                                .add(TranslateUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).withStyle(ChatFormatting.GOLD));
+//                    else
+//                        event.getToolTip()
+//                                .add(TranslateUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).withStyle(ChatFormatting.AQUA));
+//            }
 
           /*  if (iwe != null) {
                 float temp = iwe.getFactor(null, stack);
@@ -249,17 +256,17 @@ public class FHTooltips {
             }*/
 
             // Heating equipment
-            if (i instanceof IHeatingEquipment) {
-                float temp = ((IHeatingEquipment) i).getEffectiveTempAdded(null, stack,0, 0);
-                temp = (Math.round(temp * 2000)) / 1000.0F;
-                if (temp != 0)
-                    if (temp > 0)
-                        event.getToolTip().add(
-                                TranslateUtils.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.GOLD));
-                    else
-                        event.getToolTip()
-                                .add(TranslateUtils.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.AQUA));
-            }
+//            if (i instanceof IHeatingEquipment) {
+//                float temp = ((IHeatingEquipment) i).getEffectiveTempAdded(null, stack,0, 0);
+//                temp = (Math.round(temp * 2000)) / 1000.0F;
+//                if (temp != 0)
+//                    if (temp > 0)
+//                        event.getToolTip().add(
+//                                TranslateUtils.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.GOLD));
+//                    else
+//                        event.getToolTip()
+//                                .add(TranslateUtils.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).withStyle(ChatFormatting.AQUA));
+//            }
 
             // Research tooltip
             Map<String, Component> rstooltip= JEICompat.research.get(i);

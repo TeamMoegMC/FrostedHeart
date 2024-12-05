@@ -136,4 +136,8 @@ public class TranslateUtils {
 	public static Component empty() {
 		return MutableComponent.create(LiteralContents.EMPTY);
 	}
+
+
+
+    // New
 }
