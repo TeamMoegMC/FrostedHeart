@@ -261,6 +261,7 @@ public class TeamResearchData implements SpecialData{
         if (rd.getTotalCommitted(r) >= r.getRequiredPoints() && flag) {
             rd.setFinished(true);
             this.grantEffects(team, null, r);
+            
             this.annouceResearchComplete(team,r);
             return true;
         }
@@ -268,9 +269,14 @@ public class TeamResearchData implements SpecialData{
     }
     public void setResearchFinished(TeamDataHolder team,Research rs,boolean data) {
     	ResearchData rd=getData(rs);
-    	rd.setFinished(true);
-        this.grantEffects(team, null, rs);
-        this.annouceResearchComplete(team,rs);
+    	//System.out.println(rs);
+    	rd.setFinished(data);
+    	
+    	if(data) {
+	        this.grantEffects(team, null, rs);
+	        this.sendResearchProgressPacket(team, rs);
+	        this.annouceResearchComplete(team,rs);
+    	}
     }
     /**
      * Grant effects.
@@ -333,8 +339,8 @@ public class TeamResearchData implements SpecialData{
      * @param len the len<br>
      */
     public void ensureResearch(int len) {
-        rdata.ensureCapacity(len);
-        while (rdata.size() < len)
+        rdata.ensureCapacity(len+1);
+        while (rdata.size() < len+1)
             rdata.add(null);
     }
 
@@ -356,19 +362,19 @@ public class TeamResearchData implements SpecialData{
      * @return data<br>
      */
     public ResearchData getData(int id) {
-        if (id <= 0) return null;
+        if (id < 0) return null;
         ensureResearch(id);
-        ResearchData rnd = rdata.get(id - 1);
+        ResearchData rnd = rdata.get(id );
         if (rnd == null) {
             rnd = new ResearchData();
-            rdata.set(id - 1, rnd);
+            rdata.set(id , rnd);
         }
         return rnd;
     }
     public ResearchData setData(int id,ResearchData rd) {
         if (id <= 0) return null;
         ensureResearch(id);
-        ResearchData rnd = rdata.set(id - 1,rd);
+        ResearchData rnd = rdata.set(id,rd);
         return rnd;
     }
     /**
@@ -639,7 +645,7 @@ public class TeamResearchData implements SpecialData{
 	public static final Codec<TeamResearchData> CODEC=RecordCodecBuilder.create(t->
 	t.group(
 		    CompoundTag.CODEC.fieldOf("vars").forGetter(o->o.variants),
-		    Codec.list(ResearchData.CODEC).fieldOf("researches").forGetter(o->o.rdata),
+		    CodecUtil.discreteList(ResearchData.CODEC).fieldOf("researches").forGetter(o->o.rdata),
             CodecUtil.defaultValue(Codec.INT, 0).fieldOf("active").forGetter(o->o.activeResearchId),
             CodecUtil.defaultValue(Codec.INT, 0).fieldOf("insight").forGetter(o->o.insight),
             CodecUtil.defaultValue(Codec.INT, 0).fieldOf("insightLevel").forGetter(o->o.insightLevel),

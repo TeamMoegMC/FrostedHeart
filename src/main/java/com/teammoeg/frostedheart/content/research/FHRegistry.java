@@ -207,7 +207,7 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
     }
     public void replace(T research) {
     	cache.remove(research.getId());
-    	items.set(this.getIntId(research),research);
+    	register(research);
     }
     public int getIntId(T obj) {
     	return getIntId(obj.getId());
@@ -279,11 +279,11 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
         ensure();
         if (index == -1) {
             rnames.put(item.getId(), rnamesl.size());
-            System.out.println(lid+" registered index"+rnamesl.size()+"");
+           // System.out.println(lid+" registered index"+rnamesl.size()+"");
             rnamesl.add(item.getId());
             items.add(item);
         } else {
-        	System.out.println(lid+" re-registered index"+index+"");
+        	//System.out.println(lid+" re-registered index"+index+"");
             items.set(index, item);
         }
     }
