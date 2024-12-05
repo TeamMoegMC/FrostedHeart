@@ -53,7 +53,7 @@ import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class ResearchEditorDialog extends BaseEditDialog {
-    public static final Editor<Collection<Research>> RESEARCH_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, SelectDialog.EDITOR_RESEARCH, e -> e.getName().getString(), Research::getFTBIcon, c).open();
+    public static final Editor<Collection<Research>> RESEARCH_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, null, SelectDialog.EDITOR_RESEARCH, e -> e.getName().getString(), Research::getIcon, c).open();
     Research r;
     LabeledTextBox id, name;
     LabeledSelection<ResearchCategory> cat;
@@ -98,7 +98,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
         add(pts);
         add(new OpenEditorButton<>(this, "Edit minigame", ClueEditor.RESEARCH_GAME, r, s -> {
         }));
-        add(new OpenEditorButton<>(this, "Set Icon", IconEditor.EDITOR, r.icon, r.icon.asFtbIcon(), s -> r.icon = s));
+        add(new OpenEditorButton<>(this, "Set Icon", IconEditor.EDITOR, r.icon, r.icon, s -> r.icon = s));
         add(cat);
 
         add(new OpenEditorButton<>(this, "Edit Description", EditListDialog.STRING_LIST, r.desc, s -> r.desc = new ArrayList<>(s)));
@@ -147,7 +147,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
         super.draw(matrixStack, theme, x, y, w, h);
         Research r = FHResearch.researches.getByName(id.getText());
         if (r != null && r != this.r)
-            theme.drawString(matrixStack, "ID Existed!", x + id.width + 10, y + 10, Color4I.RED, 0);
+            theme.drawString(matrixStack, "ID Existed!", x + id.width + 10, y + 27, Color4I.RED, 0);
     }
 
 

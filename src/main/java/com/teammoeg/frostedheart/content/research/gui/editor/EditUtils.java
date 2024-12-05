@@ -39,7 +39,7 @@ public class EditUtils {
 
     public static TextField getTitle(Panel p, String title) {
 
-        return new TextField(p).setMaxWidth(200).setText(title).setColor(Color4I.WHITE);
+        return new TextField(p).setMaxWidth(200).setText(title).setColor(Color4I.BLACK);
     }
 
     public static void saveResearch(Research r) {

@@ -108,15 +108,15 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
         return "";
     }
 
-    public void writeSupplier(FriendlyByteBuf pb, Supplier<T> s) {
+    public <T extends FHRegisteredItem> void writeSupplier(FriendlyByteBuf pb, Supplier<T> s) {
         if (s != null) {
             T t = s.get();
             if (t != null) {
-                pb.writeVarInt(getIntId(t));
+                pb.writeVarInt(rnames.get(t.getId()));
                 return;
             }
         }
-        pb.writeVarInt(-1);
+        pb.writeVarInt(0);
     }
 
     /**
@@ -201,14 +201,14 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
         return new RegisteredSupplier<>(id, strLazyGetter);
     }
     public int getIntId(String obj) {
-    	return rnames.getOrDefault(obj, -1);
+    	return rnames.getOrDefault(obj, 0);
     }
     public void replace(T research) {
     	cache.remove(research.getId());
-    	items.set(this.getIntId(research),research);
+    	items.set(this.getIntId(research) - 1,research);
     }
     public int getIntId(T obj) {
-    	return getIntId(obj.getId());
+    	return rnames.getOrDefault(obj.getId(), 0);
     }
     /**
      * Get by numeric id.
@@ -217,7 +217,7 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
      * @return by id<br>
      */
     public T getById(int id) {
-        return items.get(id);
+        return items.get(id - 1);
     }
 
     /**
@@ -227,7 +227,7 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
      * @return by name<br>
      */
     public T getByName(String lid) {
-        int index = getIntId(lid);
+        int index = rnames.getOrDefault(lid, -1);
         if (index != -1)
             return items.get(index);
         return null;
@@ -271,7 +271,7 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
      */
     public void register(T item) {
         String lid = item.getId();
-        int index = getIntId(lid);
+        int index = rnames.getOrDefault(lid, -1);
         System.out.println("re-registered index"+index+"");
         ensure();
         if (index == -1) {
@@ -285,7 +285,7 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
 
     public void remove(T item) {
         String lid = item.getId();
-        int index = getIntId(lid);
+        int index = rnames.getOrDefault(lid, -1);
         ensure();
         if (index != -1) {
             items.set(index, null);

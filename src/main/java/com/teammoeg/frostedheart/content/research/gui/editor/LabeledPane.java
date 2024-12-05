@@ -32,7 +32,7 @@ public class LabeledPane<T extends Widget> extends Panel {
 
     public LabeledPane(Panel panel, String lab) {
         super(panel);
-        label = new TextField(this).setMaxWidth(200).setTrim().setText(lab).setColor(Color4I.WHITE);
+        label = new TextField(this).setMaxWidth(200).setTrim().setText(lab).setColor(Color4I.BLACK);
 
     }
 
@@ -46,7 +46,5 @@ public class LabeledPane<T extends Widget> extends Panel {
     @Override
     public void alignWidgets() {
         setSize(super.align(WidgetLayout.HORIZONTAL), 20);
-        
-        label.setY((20-8)/2);
     }
 }

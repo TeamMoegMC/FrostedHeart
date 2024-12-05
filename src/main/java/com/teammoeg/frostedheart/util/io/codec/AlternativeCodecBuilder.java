@@ -10,23 +10,18 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 
 public class AlternativeCodecBuilder<A>{
-	public static record CodecType<A>(Class<? extends A> clazz,Codec<A> codec,boolean saveOnly) {}
-	List<CodecType<A>> codecs=new ArrayList<>();
+	List<Pair<Class<? extends A>,Codec<A>>> codecs=new ArrayList<>();
 	Class<A> def;
 	public AlternativeCodecBuilder(Class<A> clazz) {
 		super();
 		def=clazz;
 	}
 	public AlternativeCodecBuilder<A> add(Class<? extends A> clazz,Codec<? extends A> codec) {
-		this.codecs.add(new CodecType<>(clazz, (Codec<A>)codec,false));
-		return this;
-	}
-	public AlternativeCodecBuilder<A> addSaveOnly(Class<? extends A> clazz,Codec<? extends A> codec) {
-		this.codecs.add(new CodecType<>(clazz, (Codec<A>)codec,true));
+		this.codecs.add(Pair.of(clazz, (Codec<A>)codec));
 		return this;
 	}
 	public AlternativeCodecBuilder<A> add(Codec<? extends A> codec) {
-		this.codecs.add(new CodecType(def, (Codec<A>)codec,false));
+		this.codecs.add(Pair.of(def, (Codec<A>)codec));
 		return this;
 	}
 	public Codec<A> build() {
@@ -34,9 +29,9 @@ public class AlternativeCodecBuilder<A>{
 
 			@Override
 			public <T> DataResult<T> encode(A input, DynamicOps<T> ops, T prefix) {
-				for(CodecType<A> codec:codecs) {
-					if(codec.clazz().isInstance(input)) {
-						DataResult<T> result=codec.codec().encode(input, ops, prefix);
+				for(Pair<Class<? extends A>, Codec<A>> codec:codecs) {
+					if(codec.getFirst().isInstance(input)) {
+						DataResult<T> result=codec.getSecond().encode(input, ops, prefix);
 						if(result.result().isPresent())
 							return result;
 					}
@@ -46,10 +41,8 @@ public class AlternativeCodecBuilder<A>{
 		
 			@Override
 			public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
-				for(CodecType<A> codec:codecs) {
-					if(codec.saveOnly())
-						continue;
-					DataResult<Pair<A, T>> result=codec.codec().decode(ops, input);
+				for(Pair<Class<? extends A>, Codec<A>> codec:codecs) {
+					DataResult<Pair<A, T>> result=codec.getSecond().decode(ops, input);
 					
 					if(result.result().isPresent())
 						return result;
@@ -60,10 +53,10 @@ public class AlternativeCodecBuilder<A>{
 			@Override
 			public String toString() {
 				StringBuilder sb=new StringBuilder("AlternativeCodec[");
-				for(CodecType<A> cod:codecs) {
-					sb.append(cod.clazz().getSimpleName());
+				for(Pair<Class<? extends A>, Codec<A>> cod:codecs) {
+					sb.append(cod.getFirst().getSimpleName());
 					sb.append("-");
-					sb.append(cod.codec());
+					sb.append(cod.getSecond());
 					
 				}
 				sb.append("]");

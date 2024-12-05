@@ -76,8 +76,7 @@ import com.teammoeg.frostedheart.util.TranslateUtils;
  * @author LatvianModder, khjxiaogu
  */
 public class SelectItemStackDialog extends EditDialog {
-
-	private class ButtonCaps extends ButtonStackConfig {
+    private class ButtonCaps extends ButtonStackConfig {
         public ButtonCaps(Panel panel) {
             super(panel, TranslateUtils.translate("ftblibrary.select_item.caps"), ItemIcon.getItemIcon(Items.ANVIL));
         }
@@ -275,9 +274,9 @@ public class SelectItemStackDialog extends EditDialog {
         return thread;
     });
 
-    public final List<ResourceSearchMode> modes = new ArrayList<>();
+    public static final List<ResourceSearchMode> modes = new ArrayList<>();
 
-    {
+    static {
         modes.add(ResourceSearchMode.ALL_ITEMS);
         modes.add(ResourceSearchMode.INVENTORY);
         modes.add(new ResourceSearchMode() {
@@ -330,7 +329,7 @@ public class SelectItemStackDialog extends EditDialog {
         current = orig == null ? new ItemStack(Items.AIR) : orig.copy();
 
         int bsize = width / 2 - 10;
-       
+
         buttonCancel = new SimpleTextButton(this, TranslateUtils.translate("gui.cancel"), Icon.empty()) {
             @Override
             public void onClicked(MouseButton button) {
@@ -468,7 +467,7 @@ public class SelectItemStackDialog extends EditDialog {
         }
 
         for (ItemStack stack : items) {
-            if (true) {
+            if (!stack.isEmpty()) {
                 button = new ItemStackButton(panel, stack);
 
                 if (button.shouldAdd(search, mod)) {
