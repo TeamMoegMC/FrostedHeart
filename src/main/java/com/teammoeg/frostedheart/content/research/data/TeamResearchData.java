@@ -266,8 +266,11 @@ public class TeamResearchData implements SpecialData{
         }
         return false;
     }
-    public void setResearchFinished(TeamDataHolder holder,Research rs,boolean data) {
-    	
+    public void setResearchFinished(TeamDataHolder team,Research rs,boolean data) {
+    	ResearchData rd=getData(rs);
+    	rd.setFinished(true);
+        this.grantEffects(team, null, rs);
+        this.annouceResearchComplete(team,rs);
     }
     /**
      * Grant effects.
