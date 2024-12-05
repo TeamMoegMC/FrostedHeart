@@ -92,14 +92,14 @@ public class TemperatureDifficultyReward extends Reward {
             data.setDifficulty(temperatureDifficulty);
         });
         if (notify) {
-            new DisplayRewardToastMessage(id, Lang.ftbqReward("temperature_difficulty").append(": ").append(Component.literal(temperatureDifficulty.name()).withStyle(ChatFormatting.GREEN)), Color4I.empty()).sendTo(player);
+            new DisplayRewardToastMessage(id, Lang.questReward("insight").text(": +" + temperatureDifficulty.name()).style(ChatFormatting.GREEN).component(), Color4I.empty()).sendTo(player);
         }
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     public MutableComponent getAltTitle() {
-        return Lang.ftbqReward("temperature_difficulty").append(": ").append(Component.literal(temperatureDifficulty.name()).withStyle(ChatFormatting.GREEN));
+        return Lang.questReward("insight").text(": +" + temperatureDifficulty.name()).style(ChatFormatting.GREEN).component();
     }
 
     @Override

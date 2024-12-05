@@ -25,8 +25,6 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.FHMain;
 
-import com.teammoeg.frostedheart.util.lang.LangBuilder;
-import com.teammoeg.frostedheart.util.lang.LangNumberFormat;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -89,52 +87,57 @@ public class Lang {
         return str(sb.toString());
     }
 
+    @Deprecated
     public static MutableComponent translateKey(String string, Object... args) {
         return Component.translatable(string, args);
-//        return MutableComponent.create(new TranslatableContents(string,"", args));
     }
 
+    @Deprecated
     public static MutableComponent translateGui(String name, Object... args) {
-        return translateKey("gui." + FHMain.MODID + "." + name, args);
+        return gui(name, args).component();
     }
 
+    @Deprecated
     public static MutableComponent translateJeiCategory(String name, Object... args) {
-        return translateKey("gui.jei.category." + FHMain.MODID + "." + name, args);
+        return jeiCategory(name, args).component();
     }
 
+    @Deprecated
     public static MutableComponent translateMessage(String name, Object... args) {
-        return translateKey("message." + FHMain.MODID + "." + name, args);
+        return message(name, args).component();
     }
 
+    @Deprecated
     public static MutableComponent translateResearchCategoryDesc(String name, Object... args) {
-        return translateKey("research.category.desc." + FHMain.MODID + "." + name, args);
+        return researchCategoryDesc(name, args).component();
     }
 
+    @Deprecated
     public static MutableComponent translateResearchCategoryName(String name, Object... args) {
-        return translateKey("research.category." + FHMain.MODID + "." + name, args);
+        return researchCategoryName(name, args).component();
     }
 
+    @Deprecated
     public static MutableComponent translateResearchLevel(String name, Object... args) {
-        return translateKey("research.level." + FHMain.MODID + "." + name, args);
+        return researchLevel(name, args).component();
     }
 
+    @Deprecated
     public static MutableComponent translateTooltip(String name, Object... args) {
-        return translateKey("tooltip." + FHMain.MODID + "." + name, args);
+        return tooltip(name, args).component();
     }
 
+    @Deprecated
     public static MutableComponent translateTips(String name, Object... args) {
-        return translateKey("tips." + FHMain.MODID + "." + name, args);
+        return tips(name, args).component();
     }
 
+    @Deprecated
     public static MutableComponent translateWaypoint(String name, Object... args) {
-        return translateKey("waypoint." + FHMain.MODID + "." + name, args);
+        return waypoint(name, args).component();
     }
 
-    public static MutableComponent ftbqReward(String name, Object... args) {
-        return translateKey("ftbquests.reward." + FHMain.MODID + "." + name, args);
-    }
-
-    public static String rawFtbqReward(String name, Object... args) {
+    public static String rawQuestReward(String name, Object... args) {
         return "ftbquests.reward." + FHMain.MODID + "." + name;
     }
 
@@ -182,8 +185,12 @@ public class Lang {
         return builder().text(LangNumberFormat.format(d));
     }
 
-    public static LangBuilder translate(String langKey, Object... args) {
-        return builder().translate(langKey, args);
+    public static LangBuilder suffix(String langKey, Object... args) {
+        return builder().suffix(langKey, args);
+    }
+
+    public static LangBuilder prefix(String langKey, Object... args) {
+        return builder().prefix(langKey, args);
     }
 
     public static LangBuilder translate(String prefix, String suffix, Object... args) {
@@ -200,4 +207,47 @@ public class Lang {
                 args[i] = cb.component();
         return args;
     }
+
+    // wrapper methods
+    public static LangBuilder gui(String suffix, Object... args) {
+        return translate("gui", suffix, args);
+    }
+
+    public static LangBuilder jeiCategory(String suffix, Object... args) {
+        return translate("gui.jei.category", suffix, args);
+    }
+
+    public static LangBuilder message(String suffix, Object... args) {
+        return translate("message", suffix, args);
+    }
+
+    public static LangBuilder researchCategoryDesc(String suffix, Object... args) {
+        return translate("research.category.desc", suffix, args);
+    }
+
+    public static LangBuilder researchCategoryName(String suffix, Object... args) {
+        return translate("research.category", suffix, args);
+    }
+
+    public static LangBuilder researchLevel(String suffix, Object... args) {
+        return translate("research.level", suffix, args);
+    }
+
+    public static LangBuilder tooltip(String suffix, Object... args) {
+        return translate("tooltip", suffix, args);
+    }
+
+    public static LangBuilder tips(String suffix, Object... args) {
+        return translate("tips", suffix, args);
+    }
+
+    public static LangBuilder waypoint(String suffix, Object... args) {
+        return translate("waypoint", suffix, args);
+    }
+
+    public static LangBuilder questReward(String suffix, Object... args) {
+        return translate("ftbquests.reward", suffix, args);
+    }
+
+
 }

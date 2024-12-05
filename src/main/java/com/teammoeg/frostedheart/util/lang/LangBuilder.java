@@ -11,6 +11,15 @@ import net.minecraft.world.entity.player.Player;
 
 import java.util.List;
 
+/**
+ * A builder for creating localised components
+ *
+ * How to use?
+ *
+ * Example: Lang.builder().translate("prefix", "suffix", args).component()
+ *
+ * Only use .component() at end of chain
+ */
 public class LangBuilder {
     String namespace;
     MutableComponent component;
@@ -28,17 +37,42 @@ public class LangBuilder {
     }
 
     /**
+     * Appends a localised component.
+     *
+     * @param langKey simply key not processed
+     * @param args
+     * @return
+     */
+    public LangBuilder key(String langKey, Object... args) {
+        return add(Components.translatable(langKey, Lang.resolveBuilders(args)));
+    }
+
+    /**
      * Appends a localised component<br>
      * To add an independently formatted localised component, use add() and a nested
      * builder
      *
-     * @param langKey
+     * @param suffix a suffix to the namespace
      * @param args
      * @return
      */
-    public LangBuilder translate(String langKey, Object... args) {
-        return add(Components.translatable( namespace + "." + langKey, Lang.resolveBuilders(args)));
+    public LangBuilder suffix(String suffix, Object... args) {
+        return add(Components.translatable( namespace + "." + suffix, Lang.resolveBuilders(args)));
     }
+
+    /**
+     * Appends a localised component<br>
+     * To add an independently formatted localised component, use add() and a nested
+     * builder
+     *
+     * @param prefix a prefix to the namespace
+     * @param args
+     * @return
+     */
+    public LangBuilder prefix(String prefix, Object... args) {
+        return add(Components.translatable( prefix + "." + namespace, Lang.resolveBuilders(args)));
+    }
+
 
     /**
      * Appends a localised component with a prefix and suffix<br>
@@ -46,8 +80,8 @@ public class LangBuilder {
      * Example usage: translate("tooltip", "temp_change", args)
      * Gives "tooltip.namespace.temp_change" as key.
      *
-     * @param prefix normally a category
-     * @param suffix the key
+     * @param prefix a prefix to the namespace, normally a category
+     * @param suffix a suffix to the namespace, normally a description
      * @param args the arguments
      * @return this builder
      */

@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.compat.ftbq;
 
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.util.lang.Components;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -63,7 +64,7 @@ public class InsightReward extends Reward {
     @OnlyIn(Dist.CLIENT)
     public void fillConfigGroup(ConfigGroup config) {
         super.fillConfigGroup(config);
-        config.addInt("insight", insight, v -> insight = v, 100, 1, Integer.MAX_VALUE).setNameKey(Lang.rawFtbqReward("insight"));
+        config.addInt("insight", insight, v -> insight = v, 100, 1, Integer.MAX_VALUE).setNameKey(Lang.rawQuestReward("insight"));
     }
 
     @Override
@@ -71,14 +72,15 @@ public class InsightReward extends Reward {
         TeamResearchData trd = ResearchDataAPI.getData(player).get();
         trd.addInsight(insight);
         if (notify) {
-            new DisplayRewardToastMessage(id, Lang.ftbqReward("insight").append(": ").append(Component.literal("+" + insight).withStyle(ChatFormatting.GREEN)), Color4I.empty()).sendTo(player);
+            MutableComponent message = Lang.questReward("insight").text(": +" + insight).style(ChatFormatting.GREEN).component();
+            new DisplayRewardToastMessage(id, message, Color4I.empty()).sendTo(player);
         }
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     public MutableComponent getAltTitle() {
-        return Lang.ftbqReward("insight").append(": ").append(Component.literal("+" + insight).withStyle(ChatFormatting.GREEN));
+        return Lang.questReward("insight").text(": +" + insight).style(ChatFormatting.GREEN).component();
     }
 
     @Override
