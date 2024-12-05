@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.gui.EmptyScreen;
-import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
+import com.teammoeg.frostedheart.foundation.gui.widget.IconButton;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.*;
 import net.minecraft.client.Minecraft;

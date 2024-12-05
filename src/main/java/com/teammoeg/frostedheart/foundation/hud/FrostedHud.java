@@ -27,6 +27,8 @@ import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.mixin.client.BossHealthOverlayAccess;
+import com.teammoeg.frostedheart.util.client.*;
+import net.minecraft.client.gui.screens.Screen;
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -43,13 +45,6 @@ import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
-import com.teammoeg.frostedheart.util.client.AtlasUV;
-import com.teammoeg.frostedheart.util.client.FHGuiHelper;
-import com.teammoeg.frostedheart.util.client.Point;
-import com.teammoeg.frostedheart.util.client.PointSet;
-import com.teammoeg.frostedheart.util.client.TextPosition;
-import com.teammoeg.frostedheart.util.client.TexturedUV;
-import com.teammoeg.frostedheart.util.client.UV;
 import com.teammoeg.frostedheart.util.client.UV.Transition;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -226,6 +221,7 @@ public class FrostedHud {
     public static boolean renderFrozenVignette = true;
     public static boolean renderHeatVignette = true;
     public static boolean renderWaypoint = true;
+    public static boolean renderDebugOverlay = false;
 	public static float smoothedBody;
     static final ResourceLocation HUD_ELEMENTS = new ResourceLocation(FHMain.MODID, "textures/gui/hud/hudelements.png");
     // static final ResourceLocation FROZEN_OVERLAY_PATH = new
@@ -986,5 +982,16 @@ public class FrostedHud {
 
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
+    }
+
+    private static Screen previousScreen;
+    public static void renderDebugOverlay(GuiGraphics stack, Minecraft mc) {
+        Screen screen = mc.screen;
+        Component text = Component.literal("Current Screen: " + (screen == null ? "Null" : screen.getClass().getSimpleName()));
+        if (previousScreen != screen && mc.player != null) {
+            mc.player.sendSystemMessage(text);
+        }
+        stack.drawString(ClientUtils.font(), text, 1, 1, 0xFFFFFFFF);
+        previousScreen = screen;
     }
 }

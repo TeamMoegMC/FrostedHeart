@@ -54,6 +54,9 @@ public class ClientUtils {
     public static float partialTicks() {
     	return mc().getFrameTime();
     }
+    public static long gameTick() {
+        return getWorld().getLevelData().getGameTime();
+    }
     public static Minecraft mc() {
         return Minecraft.getInstance();
     }
@@ -152,5 +155,12 @@ public class ClientUtils {
 
     public static ResourceLocation getDimLocation() {
         return getWorld().dimension().location();
+    }
+
+    private static long previousTick = 0;
+    public static boolean isGameTimeUpdated() {
+        boolean flag = previousTick != gameTick();
+        previousTick = gameTick();
+        return flag;
     }
 }

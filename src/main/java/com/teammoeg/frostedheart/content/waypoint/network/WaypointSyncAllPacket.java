@@ -20,17 +20,17 @@ public class WaypointSyncAllPacket implements FHMessage {
     private Map<String, AbstractWaypoint> waypoints = new HashMap<>();
 
     public WaypointSyncAllPacket(ServerPlayer player) {
-        FHCapabilities.WAYPOINT.getCapability(player).ifPresent((cap) -> {
-            this.waypoints = cap.getWaypoints();
-        });
+        FHCapabilities.WAYPOINT.getCapability(player).ifPresent((cap) -> this.waypoints = cap.getWaypoints());
     }
 
     public WaypointSyncAllPacket(FriendlyByteBuf buffer) {
-        ListTag list = buffer.readNbt().getList("waypoints", Tag.TAG_COMPOUND);
-        for (Tag nbt : list) {
-            AbstractWaypoint waypoint = WaypointManager.registry.read((CompoundTag)nbt);
+        CompoundTag nbt = buffer.readNbt();
+        if (nbt == null) return;
+        ListTag list = nbt.getList("waypoints", Tag.TAG_COMPOUND);
+        for (Tag n : list) {
+            AbstractWaypoint waypoint = WaypointManager.registry.read((CompoundTag)n);
             if (waypoint != null) {
-                waypoints.put(waypoint.getID(), waypoint);
+                waypoints.put(waypoint.getId(), waypoint);
             }
         }
     }
@@ -46,9 +46,9 @@ public class WaypointSyncAllPacket implements FHMessage {
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> {
-            context.get().enqueueWork(() -> ClientWaypointManager.setWaypoints(waypoints));
-        });
+        context.get().enqueueWork(() ->
+            context.get().enqueueWork(() -> ClientWaypointManager.setWaypoints(waypoints))
+        );
         context.get().setPacketHandled(true);
     }
 }

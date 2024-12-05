@@ -6,12 +6,14 @@ import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.AbstractWaypoint;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.RawMouseHelper;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.phys.Vec2;
 import net.minecraftforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -22,40 +24,43 @@ public class ClientWaypointManager {
     /**
      * 客户端用于渲染的路径点列表
      */
+    @Setter
     private static Map<String, AbstractWaypoint> waypoints = new HashMap<>();
-    /**
-     * 是否更新路径点的悬停信息
-     */
-    public static boolean shouldUpdate;
-    /**
-     * 悬停时是否显示更详细的路径点信息
-     */
-    public static boolean shouldShowExtra;
     /**
      * 玩家当前注视或鼠标悬停在的路径点
      */
     @Nullable
-    public static AbstractWaypoint hoveredWaypoint;
+    private static AbstractWaypoint hoveredWaypoint;
+    /**
+     * 是否更新路径点的悬停信息
+     */
+    private static boolean shouldUpdate;
+    /**
+     * 悬停时是否显示更详细的路径点信息
+     */
+    private static boolean shouldShowExtra;
 
     /**
      * 渲染全部路径点
      */
     public static void renderAll(GuiGraphics graphics) {
-        if (isEmpty() || ClientUtils.getWorld() == null) return;
+        if (!hasWaypoint() || ClientUtils.getWorld() == null) return;
 
-        //每 2 tick 更新一次路径点悬停信息
-        shouldUpdate = ClientUtils.getWorld().getLevelData().getGameTime() % 2 == 1;
-        //Shift 键被按下或玩家潜行
+        // 每 tick 更新一次路径点悬停信息
+        shouldUpdate = ClientUtils.isGameTimeUpdated() || ClientUtils.mc().isPaused();
+
+        // Shift 键被按下或玩家潜行
         shouldShowExtra = ClientUtils.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT) || ClientUtils.getPlayer().isShiftKeyDown();
 
+        // 遍历所有路径点
         Iterator<Map.Entry<String, AbstractWaypoint>> iterator = waypoints.entrySet().iterator();
         while (iterator.hasNext()) {
             AbstractWaypoint waypoint = iterator.next().getValue();
-            //删除无效的路径点
-            if (!waypoint.valid) {
+            // 删除无效的路径点
+            if (!waypoint.isValid()) {
                 waypoint.onClientRemove();
                 iterator.remove();
-                //路径点是否启用并且和当前维度相符
+            // 路径点是否启用并且和当前维度相符
             } else if (waypoint.enable && waypoint.dimension.equals(ClientUtils.getDimLocation())){
                 waypoint.render(graphics);
                 updateHovered(waypoint);
@@ -68,11 +73,11 @@ public class ClientWaypointManager {
             hoveredWaypoint = null;
         }
 
-        //检查该路径点是否靠近玩家鼠标或屏幕中心区域
-        Vec2 screenPos = waypoint.screenPos;
+        // 检查该路径点是否靠近玩家鼠标或屏幕中心区域
+        Vec2 screenPos = waypoint.getScreenPos();
         boolean flag = false;
         if (!ClientUtils.mc().mouseHandler.isMouseGrabbed()) {
-            //鼠标
+            // 鼠标
             flag = RawMouseHelper.isMouseIn(RawMouseHelper.getScaledX(), RawMouseHelper.getScaledY(), (int)(screenPos.x-10), (int)(screenPos.y-10), 20, 20);
         }
         if (!flag) {
@@ -94,16 +99,16 @@ public class ClientWaypointManager {
 
         Vec2 pos;
         if (!ClientUtils.mc().mouseHandler.isMouseGrabbed()) {
-            //鼠标坐标
+            // 鼠标坐标
             pos = new Vec2(RawMouseHelper.getScaledX(), RawMouseHelper.getScaledY());
         } else {
-            //屏幕中心
+            // 屏幕中心
             pos = new Vec2(ClientUtils.screenWidth()*0.5F, ClientUtils.screenHeight()*0.5F);
         }
 
-        //对比两个路径点和目标在屏幕中的距离
+        // 对比两个路径点和目标在屏幕中的距离
         float current = screenPos.distanceToSqr(pos);
-        float hovered = hoveredWaypoint.screenPos.distanceToSqr(pos);
+        float hovered = hoveredWaypoint.getScreenPos().distanceToSqr(pos);
         hoveredWaypoint = current < hovered ? waypoint : hoveredWaypoint;
     }
 
@@ -113,7 +118,7 @@ public class ClientWaypointManager {
     }
 
     public static void putWaypointWithoutSendingPacket(AbstractWaypoint waypoint) {
-        waypoints.put(waypoint.getID(), waypoint);
+        waypoints.put(waypoint.getId(), waypoint);
     }
 
     public static void removeWaypoint(String id) {
@@ -124,25 +129,42 @@ public class ClientWaypointManager {
     }
 
     public static void removeWaypoint(AbstractWaypoint waypoint) {
-        FHNetwork.send(PacketDistributor.SERVER.noArg(), new WaypointRemovePacket(waypoint.getID()));
-        waypoint.setInvalid();
+        FHNetwork.send(PacketDistributor.SERVER.noArg(), new WaypointRemovePacket(waypoint.getId()));
+        waypoint.invalidate();
     }
 
     public static void removeWaypointWithoutSendingPacket(String id) {
         Optional<AbstractWaypoint> waypoint = Optional.of(waypoints.get(id));
-        waypoint.ifPresent(AbstractWaypoint::setInvalid);
+        waypoint.ifPresent(AbstractWaypoint::invalidate);
     }
 
-    public static void setWaypoints(Map<String, AbstractWaypoint> waypoints) {
-        ClientWaypointManager.waypoints = waypoints;
+    @Nullable
+    public static AbstractWaypoint getWaypoint(String id) {
+        return waypoints.get(id);
     }
 
-    public static boolean isEmpty() {
-        return waypoints.isEmpty();
+    public static Map<String, AbstractWaypoint> getAllWaypoints() {
+        return Collections.unmodifiableMap(waypoints);
+    }
+
+    public static Optional<AbstractWaypoint> getHovered() {
+        return Optional.ofNullable(hoveredWaypoint);
+    }
+
+    public static boolean containsWaypoint(String id) {
+        return waypoints.containsKey(id);
+    }
+
+    public static boolean hasWaypoint() {
+        return !waypoints.isEmpty();
     }
 
     public static boolean shouldUpdate() {
         return shouldUpdate;
+    }
+
+    public static boolean shouldShowExtra() {
+        return shouldShowExtra;
     }
 
     /**

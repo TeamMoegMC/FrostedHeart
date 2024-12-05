@@ -213,6 +213,8 @@ public class ClientEvents {
                     FrostedHud.renderHeatVignette(stack, anchorX, anchorY, mc, renderViewPlayer);
                 if (FrostedHud.renderWaypoint)
                     ClientWaypointManager.renderAll(stack);
+                if (FrostedHud.renderDebugOverlay)
+                    FrostedHud.renderDebugOverlay(stack, mc);
 
 
             }
@@ -455,7 +457,7 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void onWorldRender(RenderLevelStageEvent event) {
-        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_WEATHER) {
+        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_LEVEL) {
             //获取渲染信息
             RenderHelper.projectionMatrix = event.getProjectionMatrix();
             RenderHelper.poseStack = event.getPoseStack();
