@@ -3,6 +3,8 @@
     "frostedheart:blizzard",
     "frostedheart:radiation",
     "frostedheart:hyperthermia",
-    "frostedheart:hypothermia"
+    "frostedheart:hypothermia",
+    "frostedheart:hyperthermia_instant",
+    "frostedheart:hypothermia_instant"
   ]
 }

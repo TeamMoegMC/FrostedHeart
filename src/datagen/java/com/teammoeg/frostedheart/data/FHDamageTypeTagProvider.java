@@ -41,7 +41,23 @@ public class FHDamageTypeTagProvider  extends TagsProvider<DamageType> {
 
     @Override
     protected void addTags(HolderLookup.Provider pProvider) {
-        tag(DamageTypeTags.BYPASSES_ARMOR).add(FHDamageTypes.BLIZZARD, FHDamageTypes.RAD,
-                FHDamageTypes.HYPERTHERMIA, FHDamageTypes.HYPOTHERMIA);
+        tag(DamageTypeTags.BYPASSES_ARMOR).add(
+                FHDamageTypes.BLIZZARD,
+                FHDamageTypes.RAD,
+                FHDamageTypes.HYPERTHERMIA,
+                FHDamageTypes.HYPOTHERMIA,
+                FHDamageTypes.HYPERTHERMIA_INSTANT,
+                FHDamageTypes.HYPOTHERMIA_INSTANT);
+
+        tag(DamageTypeTags.IS_FREEZING).add(
+                FHDamageTypes.BLIZZARD,
+                FHDamageTypes.HYPOTHERMIA,
+                FHDamageTypes.HYPOTHERMIA_INSTANT
+        );
+
+        tag(DamageTypeTags.IS_FIRE).add(
+                FHDamageTypes.HYPERTHERMIA,
+                FHDamageTypes.HYPERTHERMIA_INSTANT
+        );
     }
 }
