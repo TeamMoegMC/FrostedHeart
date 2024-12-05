@@ -165,6 +165,7 @@ public class Research implements FHRegisteredItem {
 		this.category = category;
 		if(parents!=null)
 			this.parents.addAll(parents);
+		System.out.println(parents);
 		this.clues.addAll(clues);
 		this.requiredItems.addAll(requiredItems);
 		this.effects.addAll(effects);
@@ -421,6 +422,8 @@ public class Research implements FHRegisteredItem {
         return icon;
     }
     public Icon getFTBIcon() {
+    	if(icon==null)
+    		return null;
         return icon.asFtbIcon();
     }
 
@@ -610,7 +613,7 @@ public class Research implements FHRegisteredItem {
      * Packet init, this would be call after everything is ready and packet is taking effect.
      */
     public void packetInit() {
-        parents.clear();
+        //parents.clear();
     }
 
     /**

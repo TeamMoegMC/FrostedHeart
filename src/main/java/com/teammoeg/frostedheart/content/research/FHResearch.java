@@ -338,7 +338,8 @@ public class FHResearch {
 		clearCache();
 	}
 
-	public static void readOne(Research r) {
+	public static void readOne(String key, Research r) {
+		r.setId(key);
 		r.packetInit();
 		researches.register(r);
 	}
@@ -346,7 +347,8 @@ public class FHResearch {
 	public static void readAll(List<Research> rss) {
 
 		for (Research r : rss) {
-			readOne(r);
+			r.packetInit();
+			researches.register(r);
 		}
 	}
 

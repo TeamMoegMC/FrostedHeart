@@ -158,10 +158,11 @@ public class ResearchHierarchyPanel extends Panel {
         Research parent;
 
         public ResearchSimpleButton(ResearchHierarchyPanel panel, Research research) {
-            super(panel, research.getName(), research.getIcon().asFtbIcon());
+            super(panel, research.getName(), research.getFTBIcon());
             this.research = research;
             this.researchScreen = panel.researchPanel;
             setSize(24, 24);
+            
         }
 
         @Override
@@ -227,9 +228,14 @@ public class ResearchHierarchyPanel extends Panel {
                         // TODO Add parent
                         Research r = researchPanel.selectedResearch;
                         ResearchEditorDialog.RESEARCH_LIST.open(this, "Edit parents", r.getParents(), s -> {
+                        	try {
+                        		System.out.println(s);
                             r.setParents(s.stream().map(Research::getId).collect(Collectors.toList()));
                             FHResearch.reindex();
                             EditUtils.saveResearch(r);
+                        	}catch(Throwable t) {
+                        		t.printStackTrace();
+                        	}
                         });
                     }
                 };
@@ -305,6 +311,7 @@ public class ResearchHierarchyPanel extends Panel {
                 x = ButtonPos[4] + (k - 4) * 32;
             } else
                 x = ButtonPos[k];
+            System.out.println(parent);
             ResearchSimpleButton parentButton = new ResearchSimpleButton(this, parent);
             add(parentButton);
             parentButton.setPos(x, 16);
