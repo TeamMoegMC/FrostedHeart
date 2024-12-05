@@ -25,7 +25,9 @@ import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.FHSoundEvents;
+import com.teammoeg.frostedheart.base.team.TeamDataClosure;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.world.level.block.state.BlockState;
@@ -116,7 +118,8 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
 
     public InteractionResult onClick(Player pe) {
         if (!pe.level().isClientSide) {
-            currentPoints = (int) ResearchDataAPI.getData(pe).doResearch(currentPoints);
+        	TeamDataClosure<TeamResearchData> trd= ResearchDataAPI.getData(pe);
+            currentPoints = (int)trd.get().doResearch(trd.team(),currentPoints);
             updatePoints();
         }
         return InteractionResult.sidedSuccess(pe.level().isClientSide);

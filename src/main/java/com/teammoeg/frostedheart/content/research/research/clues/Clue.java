@@ -33,7 +33,7 @@ import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
-import com.teammoeg.frostedheart.content.research.network.FHClueProgressSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHS2CClueProgressSyncPacket;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.registry.TypedCodecRegistry;
@@ -47,7 +47,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * researches.6
  * Clue can be trigger if any research is researchable(finished item commit)
  */
-public abstract class Clue extends AutoIDItem{
+public abstract class Clue{
 	public static class BaseData{
 	    float contribution;// percentage, range (0,1]
 	    String name = "";
@@ -120,47 +120,48 @@ public abstract class Clue extends AutoIDItem{
         this.hint = hint;
         this.nonce = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
     }
-
-    private void deleteInTree() {
-        FHTeamDataManager.INSTANCE.getAllData().forEach(this::end);
-    }
     /**
      * Stop detection when clue is completed
      */
-    public abstract void end(TeamDataHolder team);
+    public abstract void end(TeamDataHolder team,Research parent);
 
     /**
      * Get brief string describe this clue for show in editor.
      *
      * @return brief<br>
      */
-    public abstract String getBrief();
+    public abstract String getBrief(Research parent);
 
     public String getBriefDesc() {
         return "   " + (this.required ? "required " : "") + "+" + (int) (this.contribution * 100) + "%";
     }
 
-	public Component getDescription() {
-        return FHTextUtil.getOptional(desc, "clue", () -> this.getId() + ".desc");
+	public Component getDescription(Research parent) {
+		if(parent==null||parent.getId()==null)
+			return null;
+        return FHTextUtil.getOptional(desc, "clue", () -> parent.getId()+".clue."+ this.getNonce() + ".desc");
     }
 
-    public String getDescriptionString() {
-        Component tc = getDescription();
+    public String getDescriptionString(Research parent) {
+		if(parent==null||parent.getId()==null)
+			return null;
+        Component tc = getDescription(parent);
 
         return tc != null ? tc.getString() : "";
     }
 
-    public Component getHint() {
-        return FHTextUtil.getOptional(hint, "clue", () -> this.getId() + ".hint");
+    public Component getHint(Research parent) {
+		if(parent==null||parent.getId()==null)
+			return null;
+        return FHTextUtil.getOptional(hint, "clue", () -> parent.getId()+".clue."+ this.getNonce() + ".hint");
     }
 
-    public abstract String getId();
-
-    public Component getName() {
-        return FHTextUtil.get(name, "clue", () -> this.getId() + ".name");
+    public Component getName(Research parent) {
+		if(parent==null||parent.getId()==null)
+			return null;
+        return FHTextUtil.get(name, "clue", () -> parent.getId()+".clue."+ this.getNonce() + ".name");
     }
 
-    @Override
     public String getNonce() {
         return nonce;
     }
@@ -169,85 +170,29 @@ public abstract class Clue extends AutoIDItem{
         return contribution;
     }
 
-    @Override
-    public final String getType() {
-        return "clue";
-    }
 
     /**
      * called when researches load finish
      */
-    public abstract void init();
-
-    @OnlyIn(Dist.CLIENT)
-    public boolean isCompleted() {
-        return ClientResearchDataAPI.getData().isClueTriggered(this);
-    }
-
-
-    public boolean isCompleted(TeamDataHolder team) {
-        return team.getData(SpecialDataTypes.RESEARCH_DATA).isClueTriggered(this);
-    }
-
-    public boolean isCompleted(TeamResearchData data) {
-        return data.isClueTriggered(this);
-    }
+    public abstract void init(Research parent);
 
     public boolean isRequired() {
         return required;
     }
-
-    /**
-     * send progress packet to client
-     * should not call manually
-     */
-    public void sendProgressPacket(TeamDataHolder team) {
-        FHClueProgressSyncPacket packet = new FHClueProgressSyncPacket(team, this);
-        team.sendToOnline(packet);
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public void setCompleted(boolean trig) {
-    	ClientResearchDataAPI.getData().setClueTriggered(this, trig);
-    }
-
-    public void setCompleted(TeamDataHolder team, boolean trig) {
-    	team.getData(SpecialDataTypes.RESEARCH_DATA).setClueTriggered(this, trig);
-        if (trig)
-            end(team);
-        else
-            start(team);
-        this.sendProgressPacket(team);
-    }
-
-    public void setCompleted(TeamResearchData trd, boolean trig) {
-        trd.setClueTriggered(this, trig);
-
-        if (trig)
-            end(trd.getHolder());
-        else
-            start(trd.getHolder());
-        this.sendProgressPacket(trd.getHolder());
-    }
-
-    void setNewId(String id) {
-        if (!id.equals(this.nonce)) {
-            delete();
-            this.nonce = id;
-            FHResearch.clues.register(this);
-            if (parent != null) {
-                Research r = parent.get();
-                if (r != null) {
-                    r.attachClue(this);
-                    r.doIndex();
-                }
-            }
-        }
+    ClueClosure cache;
+    public final ClueClosure getClueClosure(Research parent) {
+    	if(cache==null||cache.research()!=parent)
+    		cache=new ClueClosure(parent,this);
+    	return cache;
     }
 
     /**
      * called when this clue's research has started
      */
-    public abstract void start(TeamDataHolder team);
+    public abstract void start(TeamDataHolder team,Research parent);
+	public void setNonce(String text) {
+		this.nonce=text;
+		
+	}
 
 }

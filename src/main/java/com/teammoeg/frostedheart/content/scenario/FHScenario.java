@@ -67,9 +67,10 @@ public class FHScenario {
 	private static final List<ScenarioProvider> scenarioProviders = new ArrayList<>();
 	public static Map<Player,Map<EventTriggerType,List<IVarTrigger>>> triggers=new HashMap<>();
 	//private static Map<ServerPlayerEntity,ScenarioConductor> runners=new HashMap<>();
-	public static void startFor(ServerPlayer pe) {
+	public static void startFor(ServerPlayer pe,String lang) {
 		ScenarioConductor sr = get(pe);
-		sr.init(pe);
+		System.out.println("From saved: "+pe.getLanguage()+" From packet: "+lang);
+		sr.init(pe,lang);
 		
 
 		sr.run("init");

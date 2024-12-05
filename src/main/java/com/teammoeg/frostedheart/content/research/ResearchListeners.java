@@ -23,11 +23,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.base.team.TeamDataClosure;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.foundation.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
@@ -37,6 +40,7 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
+import com.teammoeg.frostedheart.content.research.research.clues.ClueClosure;
 import com.teammoeg.frostedheart.content.research.research.clues.ItemClue;
 import com.teammoeg.frostedheart.content.research.research.clues.KillClue;
 import com.teammoeg.frostedheart.content.research.research.clues.MinigameClue;
@@ -105,10 +109,10 @@ public class ResearchListeners {
     }
 
     private static class ListenerInfo<T extends Clue> {
-        T listener;
+    	ClueClosure<T> listener;
         List<UUID> trigger;
 
-        public ListenerInfo(T listener, UUID first) {
+        public ListenerInfo(ClueClosure<T> listener, UUID first) {
             super();
             this.listener = listener;
             if (first != null) {
@@ -122,7 +126,7 @@ public class ResearchListeners {
             return trigger.add(t);
         }
 
-        public T getListener() {
+        public ClueClosure<T> getListener() {
             return listener;
         }
 
@@ -147,10 +151,10 @@ public class ResearchListeners {
          */
         private static final long serialVersionUID = -5579427246923453321L;
 
-        public boolean add(T c, UUID t) {
+        public boolean add(ClueClosure<T> c, UUID t) {
             if (t != null) {
                 for (ListenerInfo<T> cl : this) {
-                    if (cl.getListener() == c)
+                    if (cl.getListener().equals(c))
                         return cl.add(t);
                 }
             } else
@@ -158,21 +162,29 @@ public class ResearchListeners {
             return super.add(new ListenerInfo<>(c, t));
         }
 
-        public void call(UUID t, Consumer<T> c) {
+        public void call(UUID t, Consumer<ClueClosure<T>> c) {
             for (ListenerInfo<T> cl : this) {
                 if (cl.shouldCall(t))
                     c.accept(cl.getListener());
             }
         }
-
-        public boolean remove(T c, UUID t) {
+        public void call(UUID t, Predicate<ClueClosure<T>> c) {
+            for (ListenerInfo<T> cl : this) {
+                if (cl.shouldCall(t)) {
+                	
+                    if(c.test(cl.getListener()))
+                    	cl.remove(t);
+                }
+            }
+        }
+        public boolean remove(ClueClosure<T> c, UUID t) {
             if (t != null)
                 for (ListenerInfo<T> cl : this) {
-                    if (cl.getListener() == c)
+                    if (cl.getListener().equals(c))
                         return cl.remove(t);
                 }
             else
-                this.removeIf(cl -> cl.getListener() == c);
+                this.removeIf(cl -> cl.getListener().equals(c));
             return false;
         }
     }
@@ -245,8 +257,8 @@ public class ResearchListeners {
         if (block.has(b)) {
             if (player instanceof FakePlayer) return false;
             if (player.getCommandSenderWorld().isClientSide)
-                return ClientResearchDataAPI.getData().block.has(b);
-            return ResearchDataAPI.getData(player).block.has(b);
+                return ClientResearchDataAPI.getData().get().block.has(b);
+            return ResearchDataAPI.getData(player).get().block.has(b);
         }
         return true;
 
@@ -254,7 +266,7 @@ public class ResearchListeners {
 
     public static boolean canUseRecipe(Recipe<?> r) {
         if (recipe.has(r)) {
-            return ClientResearchDataAPI.getData().crafting.has(r);
+            return ClientResearchDataAPI.getData().get().crafting.has(r);
         }
         return true;
     }
@@ -264,8 +276,8 @@ public class ResearchListeners {
             return canUseRecipe(r);
         if (recipe.has(r)) {
             if (s.getCommandSenderWorld().isClientSide)
-                return ClientResearchDataAPI.getData().crafting.has(r);
-            return ResearchDataAPI.getData(s).crafting.has(r);
+                return ClientResearchDataAPI.getData().get().crafting.has(r);
+            return ResearchDataAPI.getData(s).get().crafting.has(r);
         }
         return true;
     }
@@ -273,23 +285,22 @@ public class ResearchListeners {
     public static boolean canUseRecipe(UUID team, Recipe<?> r) {
         if (recipe.has(r)) {
             if (team == null) return false;
-            TeamResearchData trd=ResearchDataAPI.getData(team);
-            return trd!=null&&trd.crafting.has(r);
+            return ResearchDataAPI.getData(team).map(t->t.get().crafting.has(r)).orElse(false) ;
         }
         return true;
     }
 
     public static boolean commitGameLevel(ServerPlayer s, int lvl) {
-        TeamResearchData trd = ResearchDataAPI.getData(s);
-        OptionalLazy<Research> cur = trd.getCurrentResearch();
+    	TeamDataClosure<TeamResearchData> data=ResearchDataAPI.getData(s);
+        OptionalLazy<Research> cur = data.get().getCurrentResearch();
         if (cur.isPresent()) {
             Research rs = cur.orElse(null);
             if (rs != null) {
                 for (Clue cl : rs.getClues()) {
-                    if (trd.isClueTriggered(cl)) continue;
+                    if (data.get().isClueCompleted(rs,cl)) continue;
                     if (cl instanceof MinigameClue) {
                         if (((MinigameClue) cl).getLevel() <= lvl) {
-                            cl.setCompleted(trd, true);
+                            data.get().setClueCompleted(data.team(),rs,cl, true);
                             return true;
                         }
                     }
@@ -301,13 +312,13 @@ public class ResearchListeners {
 
     @OnlyIn(Dist.CLIENT)
     public static int fetchGameLevel() {
-        TeamResearchData trd = ClientResearchDataAPI.getData();
-        OptionalLazy<Research> cur = trd.getCurrentResearch();
+        TeamDataClosure<TeamResearchData> trd = ClientResearchDataAPI.getData();
+        OptionalLazy<Research> cur = trd.get().getCurrentResearch();
         if (cur.isPresent()) {
             Research rs = cur.orElse(null);
             if (rs != null) {
                 for (Clue cl : rs.getClues()) {
-                    if (trd.isClueTriggered(cl)) continue;
+                    if (trd.get().isClueCompleted(rs,cl)) continue;
                     if (cl instanceof MinigameClue) {
                         return ((MinigameClue) cl).getLevel();
                     }
@@ -318,15 +329,16 @@ public class ResearchListeners {
     }
 
     public static int fetchGameLevel(ServerPlayer s) {
-        TeamResearchData trd = ResearchDataAPI.getData(s);
+    	TeamDataHolder data=FHTeamDataManager.get(s);
+        TeamResearchData trd = data.getData(SpecialDataTypes.RESEARCH_DATA);
         OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent()) {
             Research rs = cur.orElse(null);
             if (rs != null) {
                 for (Clue cl : rs.getClues()) {
-                    if (trd.isClueTriggered(cl)) continue;
-                    if (cl instanceof MinigameClue) {
-                        return ((MinigameClue) cl).getLevel();
+                    if (trd.isClueCompleted(rs,cl)) continue;
+                    if (cl instanceof MinigameClue mgc) {
+                        return mgc.getLevel();
                     }
                 }
             }
@@ -343,8 +355,15 @@ public class ResearchListeners {
     }
 
     public static void kill(ServerPlayer s, LivingEntity e) {
-        TeamResearchData trd = ResearchDataAPI.getData(s);
-        killClues.call(trd.getId(), c -> c.isCompleted(trd, e));
+    	TeamDataClosure<TeamResearchData> data=ResearchDataAPI.getData(s);
+        killClues.call(data.getId(), c -> {
+        	
+        	if(data.get().isClueCompleted(c.research(), c.clue())) {
+        		data.get().setClueCompleted(data.team(), c.research(), c.clue(), true);
+        		return true;
+        	}
+        	return false;
+        });
     }
 
     public static void reload() {
@@ -359,11 +378,11 @@ public class ResearchListeners {
     public static boolean hasMultiblock(UUID rid,IETemplateMultiblock mb) {
         if (ResearchListeners.multiblock.has(mb))
             if (rid==null) {
-                if (!ClientResearchDataAPI.getData().building.has(mb)) {
+                if (!ClientResearchDataAPI.getData().get().building.has(mb)) {
                     return false;
                 }
             } else {
-                if (!ResearchDataAPI.getData(rid).building.has(mb)) {
+                if (!ResearchDataAPI.getData(rid).map(t->t.get().building.has(mb)).orElse(false)) {
                     return false;
                 }
 
@@ -382,16 +401,17 @@ public class ResearchListeners {
         FHTeamDataManager.INSTANCE.save();
         FHTeamDataManager.INSTANCE.load();
         FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
-        FHTeamDataManager.INSTANCE.getAllData(SpecialDataTypes.RESEARCH_DATA).forEach(TeamResearchData::sendUpdate);
+        FHTeamDataManager.INSTANCE.forAllData(SpecialDataTypes.RESEARCH_DATA,TeamResearchData::sendUpdate);
     }
 
     public static ItemStack submitItem(ServerPlayer s, ItemStack i) {
-        TeamResearchData trd = ResearchDataAPI.getData(s);
-        OptionalLazy<Research> cur = trd.getCurrentResearch();
+        TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(s);
+        OptionalLazy<Research> cur = trd.get().getCurrentResearch();
+        
         if (cur.isPresent())
-            for (Clue c : cur.orElse(null).getClues())
-                if (c instanceof ItemClue)
-                    i.shrink(((ItemClue) c).test(trd, i));
+            for (Clue c : cur.get().getClues())
+                if (c instanceof ItemClue ic)
+                    i.shrink(ic.test(trd.team(), cur.get(), i));
         if (!i.isEmpty() && i.getCount() > 0) {
             if (i.getItem() instanceof RubbingTool && ResearchDataAPI.isResearchComplete(s, "rubbing_tool")) {
                 if (RubbingTool.hasResearch(i)) {
@@ -399,14 +419,12 @@ public class ResearchListeners {
                     if (pts > 0) {
                         Research rs = FHResearch.getResearch(RubbingTool.getResearch(i));
                         if (rs != null && pts > 0) {
-                            ResearchData rd = trd.getData(rs);
-                            rd.commitPoints(pts);
-                            rd.sendProgressPacket();
+                            trd.get().doResearch(trd.team(), pts);
                         }
                     }
                     return new ItemStack(FHItems.rubbing_pad.get());
                 }
-                trd.getCurrentResearch().ifPresent(r -> RubbingTool.setResearch(i, r.getId()));
+                cur.ifPresent(r -> RubbingTool.setResearch(i, r.getId()));
             }
             for (InspireRecipe ir : FHUtils.filterRecipes(s.level().getRecipeManager(), InspireRecipe.TYPE)) {
                 if (ir.item.test(i)) {
@@ -422,8 +440,14 @@ public class ResearchListeners {
     }
 
     public static void tick(ServerPlayer s) {
-        TeamResearchData trd = ResearchDataAPI.getData(s);
-        tickClues.call(trd.getId(), e -> e.tick(trd, s));
+    	TeamDataClosure<TeamResearchData> data=ResearchDataAPI.getData(s);
+        tickClues.call(data.team().getId(), e -> {
+        	if(e.clue().isCompleted(data.get(), s)) {
+        		data.get().setClueCompleted(data.team(), e.research(), e.clue(), true);
+        		return true;
+        	}
+        	return false;
+        });
     }
 
     private ResearchListeners() {

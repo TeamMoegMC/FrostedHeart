@@ -219,6 +219,7 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
      * @return by id<br>
      */
     public T getById(int id) {
+    	if(id<0||id>=items.size())return null;
         return items.get(id);
     }
 
@@ -274,13 +275,15 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T>{
     public void register(T item) {
         String lid = item.getId();
         int index = getIntId(lid);
-        System.out.println("re-registered index"+index+"");
+        
         ensure();
         if (index == -1) {
             rnames.put(item.getId(), rnamesl.size());
+            System.out.println(lid+" registered index"+rnamesl.size()+"");
             rnamesl.add(item.getId());
             items.add(item);
         } else {
+        	System.out.println(lid+" re-registered index"+index+"");
             items.set(index, item);
         }
     }

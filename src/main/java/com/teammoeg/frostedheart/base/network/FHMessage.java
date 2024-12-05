@@ -20,7 +20,7 @@ public interface FHMessage {
 
 	void handle(Supplier<Context> context);
 	
-	default ResourceLocation id() {
+	default ResourceLocation packetId() {
 		return FHNetwork.getId(this.getClass());
 	}
 }

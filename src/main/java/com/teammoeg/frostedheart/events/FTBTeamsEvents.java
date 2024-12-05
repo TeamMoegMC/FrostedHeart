@@ -39,7 +39,7 @@ public class FTBTeamsEvents {
     public static void syncDataWhenTeamChange(PlayerChangedTeamEvent event) {
     	if(event.getPlayer()!=null)
     		FHNetwork.sendPlayer(event.getPlayer(),
-                new FHResearchDataSyncPacket(ResearchDataAPI.getData(event.getPlayer())));
+                new FHResearchDataSyncPacket(ResearchDataAPI.getData(event.getPlayer()).get()));
     }
 
     public static void syncDataWhenTeamCreated(TeamCreatedEvent event) {
@@ -49,7 +49,7 @@ public class FTBTeamsEvents {
             FHTeamDataManager.INSTANCE.transfer(orig.getId(), event.getTeam());
             for(ServerPlayer p:event.getTeam().getOnlineMembers()) {
 	            FHNetwork.sendPlayer(p,
-	                    new FHResearchDataSyncPacket(ResearchDataAPI.getData(p)));
+	                    new FHResearchDataSyncPacket(ResearchDataAPI.getData(p).get()));
             }
         }
 
@@ -63,7 +63,7 @@ public class FTBTeamsEvents {
             FHTeamDataManager.INSTANCE.transfer(event.getTeam().getId(), orig);
             for(ServerPlayer p:event.getTeam().getOnlineMembers()) {
 	            FHNetwork.sendPlayer(p,
-	                    new FHResearchDataSyncPacket(ResearchDataAPI.getData(p)));
+	                    new FHResearchDataSyncPacket(ResearchDataAPI.getData(p).get()));
             }
             
         }

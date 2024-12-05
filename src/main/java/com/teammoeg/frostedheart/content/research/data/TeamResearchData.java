@@ -31,19 +31,26 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.SpecialData;
 import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.content.research.FHRegistry;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchListeners.BlockUnlockList;
 import com.teammoeg.frostedheart.content.research.ResearchListeners.CategoryUnlockList;
 import com.teammoeg.frostedheart.content.research.ResearchListeners.MultiblockUnlockList;
 import com.teammoeg.frostedheart.content.research.ResearchListeners.RecipeUnlockList;
+import com.teammoeg.frostedheart.content.research.events.ResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.network.FHChangeActiveResearchPacket;
+import com.teammoeg.frostedheart.content.research.network.FHS2CClueProgressSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.content.research.network.FHResearchAttributeSyncPacket;
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
+import com.teammoeg.frostedheart.content.research.research.clues.ItemClue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
@@ -51,6 +58,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.MinecraftForge;
 
 
 /**
@@ -85,15 +93,6 @@ public class TeamResearchData implements SpecialData{
      * Completing one research would increment this value.
      */
     int usedInsightLevel = 0;
-    /**
-     * The clue complete.<br>
-     */
-    BitSet clueComplete = new BitSet();
-
-    /**
-     * The granted effects.<br>
-     */
-    BitSet grantedEffects = new BitSet();
 
     /**
      * The rdata.<br>
@@ -132,10 +131,7 @@ public class TeamResearchData implements SpecialData{
      */
     public CategoryUnlockList categories = new CategoryUnlockList();
 
-    TeamDataHolder holder;
     public TeamResearchData(SpecialDataHolder team) {
-    	if(team instanceof TeamDataHolder)
-    		holder=(TeamDataHolder) team;
     }
 
     /**
@@ -151,24 +147,23 @@ public class TeamResearchData implements SpecialData{
         }
         return false;
     }
-
+	public void setHolder(SpecialDataHolder holder) {};
     /**
      * Clear current research.
      *
      * @param sync send update packet
      */
-    public void clearCurrentResearch(boolean sync) {
+    public void clearCurrentResearch(TeamDataHolder team,boolean sync) {
         if (activeResearchId == 0) return;
         Research r = FHResearch.researches.getById(activeResearchId);
-        if (r != null) {
-			for (Clue c : r.getClues())
-				c.end(getHolder());
-        }
         activeResearchId = 0;
-        if (sync) {
-            FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket();
-            getHolder().sendToOnline(packet);
-        }
+        if (r != null)
+	        if (team!=null) {
+    			for (Clue c : r.getClues())
+    				c.end(team,r);
+    			if(sync)
+    				team.sendToOnline(new FHChangeActiveResearchPacket());
+	        }
     }
 
     /**
@@ -176,24 +171,10 @@ public class TeamResearchData implements SpecialData{
      *
      * @param r the r<br>
      */
+    @OnlyIn(Dist.CLIENT)
     public void clearCurrentResearch(Research r) {
         if (activeResearchId == FHResearch.researches.getIntId(r))
-            clearCurrentResearch(true);
-    }
-
-    public void clearData(Research r) {
-    	int index=FHResearch.researches.getIntId(r);
-        if (index <= this.rdata.size()) {
-            this.rdata.set(index - 1, null);
-            for (Clue c : r.getClues()) {
-                this.setClueTriggered(c, false);
-                c.sendProgressPacket(holder);
-            }
-            for (Effect e : r.getEffects()) {
-                this.setGrant(e, false);
-                e.sendProgressPacket(holder);
-            }
-        }
+        	activeResearchId=0;
     }
 
 
@@ -203,19 +184,131 @@ public class TeamResearchData implements SpecialData{
      * @param points the points<br>
      * @return unused points after commit to current research.
      */
-    public long doResearch(long points) {
+    public long doResearch(TeamDataHolder team,long points) {
         OptionalLazy<Research> rs = getCurrentResearch();
         if (rs.isPresent()) {
             Research r = rs.resolve().get();
             ResearchData rd = this.getData(r);
-            long remain = rd.commitPoints(points);
-            rd.sendProgressPacket();
-            return remain;
+            if (!rd.active || rd.finished)
+                return points;
+            return rd.commitPoints(r, points, ()->{
+            	checkResearchComplete(team,r);
+            	sendResearchProgressPacket(team, r);
+            });
         }
         return points;
     }
+    public boolean commitItem(ServerPlayer player,TeamDataHolder team,Research research) {
+        if (research.isInCompletable()) return false;
+        for (Research par : research.getParents()) {
+            if (!getData(par).isCompleted()) {
+                return false;
+            }
+        }
+        if(!research.getRequiredItems().isEmpty()&&!FHUtils.costItems(player,research.getRequiredItems()))
+        	return false;
+        getData(research).setActive();
+        this.sendResearchProgressPacket(team, research);
+        return true;
+    }
+	public boolean isClueCompleted(Research par,Clue clue) {
+		return getData(par).isClueTriggered(clue);
+	}
+    public void setClueCompleted(TeamDataHolder team,Research par,int clue, boolean trig) {
+    	
+    	Clue cl=par.getClues().get(clue);
+    	if(cl!=null) {
+    		if(isClueCompleted(par,cl)==trig)return;
+	    	getData(par).setClueTriggered(cl.getNonce(), trig);
+	        if (trig)
+	            cl.end(team,par);
+	        else
+	        	cl.start(team,par);
+	        sendClueProgressPacket(team,par,clue,trig);
+    	}
+    }
+    public void setClueCompleted(TeamDataHolder team,Research par,Clue clue, boolean trig) {
+    	if(isClueCompleted(par,clue)==trig)return;
+    	getData(par).setClueTriggered(clue.getNonce(), trig);
+        if (trig)
+        	clue.end(team,par);
+        else
+        	clue.start(team,par);
+        sendClueProgressPacket(team,par,par.getClues().indexOf(clue),trig);
+    }
 
+	public boolean isEffectGranted(Research research, Effect e) {
+		return getData(research).isEffectGranted(e);
+	}
+
+	public void setEffectGranted(Research rch, Effect effect, boolean b) {
+		
+		getData(rch).setEffectGranted(effect, b);
+		
+	}
+
+    public boolean checkResearchComplete(TeamDataHolder team, Research r) {
+    	ResearchData rd=getData(r);
+        if (rd.finished)
+            return false;
+        boolean flag = true;
+        for (Clue cl : r.getClues()) {
+            if (cl.isRequired() && !rd.isClueTriggered(cl)) {
+                flag = false;
+                break;
+            }
+        }
+        if (rd.getTotalCommitted(r) >= r.getRequiredPoints() && flag) {
+            rd.setFinished(true);
+            this.grantEffects(team, null, r);
+            this.annouceResearchComplete(team,r);
+            return true;
+        }
+        return false;
+    }
+    public void setResearchFinished(TeamDataHolder holder,Research rs,boolean data) {
+    	
+    }
     /**
+     * Grant effects.
+     *
+     * @param team the team<br>
+     * @param spe  the spe<br>
+     */
+    public void grantEffects(TeamDataHolder holder, ServerPlayer spe,Research rs) {
+        boolean granted = true;
+        ResearchData rd=getData(rs);
+        for (Effect e : rs.getEffects()) {
+            grantEffect(holder,rs,e, spe);
+            granted &= rd.isEffectGranted(e);
+        }
+        if (rs.isInfinite() && granted) {
+            int lvl = rd.getLevel();
+            this.resetData(holder, rs);
+            rd.setLevel(lvl + 1);
+        }
+
+    }
+    private void sendClueProgressPacket(TeamDataHolder team, Research par, int clue, boolean trig) {
+		team.sendToOnline(new FHS2CClueProgressSyncPacket(trig,FHResearch.researches.getIntId(par),clue));
+	}
+    /**
+     * Send effect progress packet for current effect to players in team.
+     * Useful for data sync. This would called automatically, Their's no need to call this in effect.
+     *
+     * @param team the team<br>
+     */
+    private void sendEffectProgressPacket(TeamDataHolder team, Research par, int effect, boolean trig) {
+        FHEffectProgressSyncPacket packet = new FHEffectProgressSyncPacket(trig,FHResearch.researches.getIntId(par),effect);
+        team.sendToOnline(packet);
+    }
+    private void annouceResearchComplete(TeamDataHolder team, Research par) {
+    	team.getTeam().ifPresent(e -> MinecraftForge.EVENT_BUS.post(new ResearchStatusEvent(par, e, getData(par).finished)));
+    }
+    private void sendResearchProgressPacket(TeamDataHolder team, Research par) {
+        team.sendToOnline(new FHResearchDataUpdatePacket(par,getData(par)));
+    }
+	/**
      * Ensure clue data length.
      *
      * @param len the len<br>
@@ -250,7 +343,7 @@ public class TeamResearchData implements SpecialData{
     public OptionalLazy<Research> getCurrentResearch() {
         if (activeResearchId == 0)
             return OptionalLazy.empty();
-        return OptionalLazy.of(() -> FHResearch.getResearch(activeResearchId).get());
+        return OptionalLazy.of(() -> FHResearch.getResearch(activeResearchId));
     }
 
     /**
@@ -264,12 +357,17 @@ public class TeamResearchData implements SpecialData{
         ensureResearch(id);
         ResearchData rnd = rdata.get(id - 1);
         if (rnd == null) {
-            rnd = new ResearchData(FHResearch.getResearch(id), this);
+            rnd = new ResearchData();
             rdata.set(id - 1, rnd);
         }
         return rnd;
     }
-
+    public ResearchData setData(int id,ResearchData rd) {
+        if (id <= 0) return null;
+        ensureResearch(id);
+        ResearchData rnd = rdata.set(id - 1,rd);
+        return rnd;
+    }
     /**
      * Get research data.
      *
@@ -323,17 +421,15 @@ public class TeamResearchData implements SpecialData{
      * @param e      the e<br>
      * @param player the player, only useful when player manually click "claim awards" or do similar things.<br>
      */
-    public void grantEffect(Effect e, @Nullable ServerPlayer player) {
-        int id = FHResearch.effects.getIntId(e);
-        ensureEffect(id);
-        if (id > 0)
-            if (!grantedEffects.get(id - 1)) {
-                grantedEffects.set(id - 1, e.grant(this, player, false));
-                e.sendProgressPacket(holder);
-            }
+    public void grantEffect(TeamDataHolder team,Research r,Effect e, @Nullable ServerPlayer player) {
+        if (!this.isEffectGranted(r, e)) {
+        	e.grant(team,this, player, false);
+            this.setEffectGranted(r, e, true);
+            sendEffectProgressPacket(team,r,r.getEffects().indexOf(e),true);
+        }
     }
 
-    public void sendVariantPacket() {
+    public void sendVariantPacket(TeamDataHolder holder) {
     	FHResearchAttributeSyncPacket pack=new FHResearchAttributeSyncPacket(variants);
     	holder.sendToOnline(pack);
     }
@@ -341,62 +437,6 @@ public class TeamResearchData implements SpecialData{
         return variants.contains(name.getToken());
     }
 
-    /**
-     * Checks if is clue triggered.<br>
-     *
-     * @param clue the clue<br>
-     * @return if is clue triggered,true.
-     */
-    public boolean isClueTriggered(Clue clue) {
-        return isClueTriggered(FHResearch.clues.getIntId(clue));
-    }
-
-    /**
-     * Checks if clue is triggered.<br>
-     *
-     * @param id the id<br>
-     * @return if is clue triggered,true.
-     */
-    public boolean isClueTriggered(int id) {
-        if (clueComplete.size() >= id && id > 0) {
-            Boolean b = clueComplete.get(id - 1);
-            return b != null && b;
-        }
-        return false;
-    }
-
-    /**
-     * Checks if is clue triggered.<br>
-     *
-     * @param lid the lid<br>
-     * @return if is clue triggered,true.
-     */
-    public boolean isClueTriggered(String lid) {
-        return isClueTriggered(FHResearch.clues.getByName(lid));
-    }
-
-    /**
-     * Checks if is effect granted.<br>
-     *
-     * @param e the e<br>
-     * @return if is effect granted,true.
-     */
-    public boolean isEffectGranted(Effect e) {
-        return isEffectGranted(FHResearch.effects.getIntId(e));
-    }
-
-    /**
-     * Checks if effect is granted.<br>
-     *
-     * @param id the id<br>
-     * @return if is effect granted,true.
-     */
-    public boolean isEffectGranted(int id) {
-        if (grantedEffects.size() >= id && id > 0) {
-            return grantedEffects.get(id - 1);
-        }
-        return false;
-    }
 
     public void putVariantDouble(ResearchVariant name, double val) {
         variants.putDouble(name.getToken(), val);
@@ -405,12 +445,12 @@ public class TeamResearchData implements SpecialData{
     public void putVariantLong(ResearchVariant name, long val) {
         variants.putLong(name.getToken(), val);
     }
-
+/*d
     public void reload() {
         crafting.reload();
         building.reload();
         sendUpdate();
-    }
+    }*/
 
     public void removeVariant(ResearchVariant name) {
         variants.remove(name.getToken());
@@ -421,69 +461,41 @@ public class TeamResearchData implements SpecialData{
      *
      * @param r the r<br>
      */
-    public void resetData(Research r, boolean causeUpdate) {
-    	int index=FHResearch.researches.getIntId(r);
-        if (index <= this.rdata.size()) {
-            this.rdata.set(index - 1, null);
-            for (Clue c : r.getClues()) {
-                this.setClueTriggered(c, false);
-                if (causeUpdate)
-                    c.sendProgressPacket(holder);
-            }
-            for (Effect e : r.getEffects()) {
-                this.setGrant(e, false);
-                e.revoke(this);
-                if (causeUpdate) {
-                    e.sendProgressPacket(holder);
-                }
-            }
-            if (causeUpdate) {
-                FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(index);
-                holder.sendToOnline(packet);
-            }
+    public void resetData(TeamDataHolder team,Research r) {
+    	ResearchData rd=getData(r);
+    	rd.reset();
+
+    	/*int i=0;
+        for (Clue c : r.getClues()) {
+        	if(team!=null) {
+        		c.end(team, r);
+                sendClueProgressPacket(team,r, i++, false);
+        	}
         }
+        i=0;
+        for (Effect e : r.getEffects()) {
+            //e.revoke(this);
+            if (team!=null) {
+            	sendEffectProgressPacket(team,r, i++, false);
+            }
+        }*/
+        if (team!=null) {
+        	for (Clue c : r.getClues()) {
+            	c.end(team, r);
+            }
+            this.sendResearchProgressPacket(team, r);
+        }
+        
     }
 
-    public void sendUpdate() {
+    public void sendUpdate(TeamDataHolder team) {
         FHResearchDataSyncPacket packet = new FHResearchDataSyncPacket(this);
-        holder.sendToOnline(packet);
+        team.sendToOnline(packet);
  
     }
 
 
-    /**
-     * Sets the clue triggered.
-     *
-     * @param clue the clue<br>
-     * @param trig the trig<br>
-     */
-    public void setClueTriggered(Clue clue, boolean trig) {
-        setClueTriggered(FHResearch.clues.getIntId(clue), trig);
-    }
 
-    /**
-     * Set clue is triggered, this would send packets and check current research's completion status if completed.
-     *
-     * @param id   the number id<br>
-     * @param trig new trigger status<br>
-     */
-    public void setClueTriggered(int id, boolean trig) {
-        ensureClue(id);
-        if (id > 0) {
-            clueComplete.set(id - 1, trig);
-            getCurrentResearch().ifPresent(r -> this.getData(r).checkComplete());
-        }
-    }
-
-    /**
-     * Sets the clue triggered.
-     *
-     * @param lid  the lid<br>
-     * @param trig the trig<br>
-     */
-    public void setClueTriggered(String lid, boolean trig) {
-        setClueTriggered(FHResearch.clues.getByName(lid), trig);
-    }
     @OnlyIn(Dist.CLIENT)
     public void setCurrentResearch(int id) {
     	this.activeResearchId=id;
@@ -493,67 +505,24 @@ public class TeamResearchData implements SpecialData{
      *
      * @param r value to set current research to.
      */
-    public void setCurrentResearch(Research r) {
+    public void setCurrentResearch(TeamDataHolder team,Research r) {
         ResearchData rd = this.getData(r);
         int index=FHResearch.researches.getIntId(r);
         if (rd.active && !rd.finished) {
             if (this.activeResearchId != index) {
                 if (this.activeResearchId != 0)
-                    clearCurrentResearch(false);
+                    clearCurrentResearch(team,false);
                 this.activeResearchId = index;
                 FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket(r);
-                holder.sendToOnline(packet);
+                team.sendToOnline(packet);
                 for (Clue c : r.getClues())
-                    c.start(holder);
+                    c.start(team,r);
                 
-                this.getData(r).checkComplete();
+                this.checkResearchComplete(team,r);
             }
         }
     }
 
-    /**
-     * Set effect granted state.
-     * This would not send packet, mostly for client use.
-     * See {@link #grantEffect(Effect, ServerPlayerEntity) for effect granting.}
-     *
-     * @param e    the e<br>
-     * @param flag operation flag
-     */
-    public void setGrant(Effect e, boolean flag) {
-        int id = FHResearch.effects.getIntId(e);
-        ensureEffect(id);
-        grantedEffects.set(id - 1, flag);
-
-    }
-
-
-
-    /**
-     * Trigger clue, similar to {@link #triggerClue(int)} but accept Clue.
-     *
-     * @param clue the clue<br>
-     */
-    public void triggerClue(Clue clue) {
-        triggerClue(FHResearch.clues.getIntId(clue));
-    }
-
-    /**
-     * Trigger clue, this would send packets and check current research's completion status if completed.
-     *
-     * @param id the number id<br>
-     */
-    public void triggerClue(int id) {
-        setClueTriggered(id, true);
-    }
-
-    /**
-     * Trigger clue, similar to {@link #triggerClue(int)} but accept its string name.
-     *
-     * @param lid the lid<br>
-     */
-    public void triggerClue(String lid) {
-        triggerClue(FHResearch.clues.getByName(lid));
-    }
 
 	public void setVariants(CompoundTag variants) {
 		this.variants = variants;
@@ -665,8 +634,7 @@ public class TeamResearchData implements SpecialData{
     }
 
 	public static final Codec<TeamResearchData> CODEC=RecordCodecBuilder.create(t->
-	t.group(CodecUtil.LONG_ARRAY_CODEC.fieldOf("clues").forGetter(o->o.clueComplete.toLongArray()),
-		    CodecUtil.LONG_ARRAY_CODEC.fieldOf("effects").forGetter(o->o.grantedEffects.toLongArray()),
+	t.group(
 		    CompoundTag.CODEC.fieldOf("vars").forGetter(o->o.variants),
 		    Codec.list(ResearchData.CODEC).fieldOf("researches").forGetter(o->o.rdata),
             CodecUtil.defaultValue(Codec.INT, 0).fieldOf("active").forGetter(o->o.activeResearchId),
@@ -680,44 +648,38 @@ public class TeamResearchData implements SpecialData{
 		).apply(t, TeamResearchData::new));
 
 	boolean isInited;
-	public TeamResearchData(long[] clueComplete, long[] grantedEffects, CompoundTag variants, List<ResearchData> rdata, int activeResearchId, int insight, int insightLevel, int usedInsightLevel) {
+	public TeamResearchData( CompoundTag variants, List<ResearchData> rdata, int activeResearchId, int insight, int insightLevel, int usedInsightLevel) {
 		super();
         crafting.clear();
         building.clear();
         block.clear();
         categories.clear();
-		this.clueComplete = BitSet.valueOf(clueComplete);
-		this.grantedEffects = BitSet.valueOf(grantedEffects);
 		this.rdata.addAll(rdata);
-        for (int i = 0; i < rdata.size(); i++) {
-            rdata.get(i).setParent(FHResearch.getResearch(i + 1), this);
-        }
 		this.activeResearchId = activeResearchId;
         this.insight = insight;
         this.insightLevel = insightLevel;
         this.usedInsightLevel = usedInsightLevel;
 		this.variants = variants;
-        for (int i = 0; i < this.grantedEffects.length(); i++) {
-            if (this.grantedEffects.get(i))
-                FHResearch.effects.runIfPresent(i + 1, e -> e.grant(this, null, true));
+
+	}
+
+	public void initResearch(TeamDataHolder team) {
+        for (Research r:FHResearch.getAllResearch()) {
+            ResearchData rd=getData(r);
+            if(rd.isCompleted()) {
+	            for(Effect e:r.getEffects())
+	                 e.grant(team,this, null, true);
+            }
         }
         
         if (activeResearchId != 0) {
             Research r = FHResearch.researches.getById(activeResearchId);
            
             for (Clue c : r.getClues())
-                c.start(holder);
+                c.start(team,r);
             
         }
 	}
-
-	public TeamDataHolder getHolder() {
-		return holder;
-	}
-	public UUID getId() {
-		return holder.getId();
-	}
-
     public void putVariantDouble(String name, double val) {
         variants.putDouble(name, val);
     }
@@ -726,8 +688,5 @@ public class TeamResearchData implements SpecialData{
         variants.putLong(name, val);
     }
 
-	@Override
-	public void setHolder(SpecialDataHolder holder) {
-		this.holder=(TeamDataHolder) holder;
-	}
+
 }

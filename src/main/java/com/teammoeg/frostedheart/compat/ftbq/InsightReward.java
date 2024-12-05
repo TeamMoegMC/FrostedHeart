@@ -67,7 +67,7 @@ public class InsightReward extends Reward {
 
     @Override
     public void claim(ServerPlayer player, boolean notify) {
-        TeamResearchData trd = ResearchDataAPI.getData(player);
+        TeamResearchData trd = ResearchDataAPI.getData(player).get();
         trd.addInsight(insight);
         if (notify) {
             new DisplayRewardToastMessage(id, Component.translatable("ftbquests.reward.frostedheart.insight").append(": ").append(Component.literal("+" + insight).withStyle(ChatFormatting.GREEN)), Color4I.empty()).sendTo(player);

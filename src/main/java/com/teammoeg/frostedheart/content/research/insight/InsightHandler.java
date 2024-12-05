@@ -37,7 +37,7 @@ public class InsightHandler {
         if (event.player instanceof ServerPlayer) {
             PacketDistributor.PacketTarget currentPlayer = PacketDistributor.PLAYER.with(
                     () -> (ServerPlayer) event.player);
-            FHNetwork.send(currentPlayer, new FHInsightSyncPacket(ResearchDataAPI.getData(event.player).getHolder()));
+            FHNetwork.send(currentPlayer, new FHInsightSyncPacket(ResearchDataAPI.getData(event.player).team()));
         }
     }
 }

@@ -33,8 +33,10 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
@@ -164,8 +166,8 @@ public class EffectCrafting extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
-        team.crafting.addAll(unlocks);
+    public boolean grant(TeamDataHolder team,TeamResearchData trd,  Player triggerPlayer, boolean isload) {
+        trd.crafting.addAll(unlocks);
         return true;
     }
 
@@ -195,8 +197,8 @@ public class EffectCrafting extends Effect {
 
     @OnlyIn(Dist.CLIENT)
     @Override
-    public void onClick() {
-        if (!this.isGranted()) return;
+    public void onClick(ResearchData parent) {
+        if (!parent.isEffectGranted(this)) return;
         if (item != null)
             JEICompat.showJEIFor(new ItemStack(item));
         else if (itemStack != null)

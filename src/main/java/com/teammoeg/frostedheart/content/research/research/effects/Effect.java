@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.AutoIDItem;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
+import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
@@ -181,16 +182,6 @@ public abstract class Effect extends AutoIDItem{
     public Effect(String name, List<String> tooltip, ItemStack icon) {
         this(name, tooltip, FHIcons.getIcon(icon));
     }
-
-    private void deleteInTree() {
-        FHTeamDataManager.INSTANCE.getAllData().forEach(t -> {
-            	TeamResearchData trd=t.getData(SpecialDataTypes.RESEARCH_DATA);
-                revoke(trd);
-
-                trd.setGrant(this, false);
-            
-        });
-    }
     /**
      * Called when effect is edited.
      */
@@ -295,7 +286,7 @@ public abstract class Effect extends AutoIDItem{
      * @param isload        true if this is run when loaded from disk<br>
      * @return true, if
      */
-    public abstract boolean grant(TeamResearchData team, @Nullable Player triggerPlayer, boolean isload);
+    public abstract boolean grant(TeamDataHolder team,TeamResearchData trd, @Nullable Player triggerPlayer, boolean isload);
 
     /**
      * Inits this effect globally.
@@ -303,15 +294,6 @@ public abstract class Effect extends AutoIDItem{
      */
     public abstract void init();
 
-    /**
-     * Checks if is granted for client.<br>
-     *
-     * @return if is granted,true.
-     */
-    @OnlyIn(Dist.CLIENT)
-    public boolean isGranted() {
-        return ClientResearchDataAPI.getData().isEffectGranted(this);
-    }
 
     /**
      * Checks if is hidden.<br>
@@ -323,7 +305,7 @@ public abstract class Effect extends AutoIDItem{
     }
 
     @OnlyIn(Dist.CLIENT)
-    public void onClick() {
+    public void onClick(ResearchData data) {
     }
 
     public void reload() {
@@ -338,27 +320,8 @@ public abstract class Effect extends AutoIDItem{
      */
     public abstract void revoke(TeamResearchData team);
 
-    /**
-     * Send effect progress packet for current effect to players in team.
-     * Useful for data sync. This would called automatically, Their's no need to call this in effect.
-     *
-     * @param team the team<br>
-     */
-    public void sendProgressPacket(TeamDataHolder team) {
-        FHEffectProgressSyncPacket packet = new FHEffectProgressSyncPacket(team, this);
-        team.sendToOnline(packet);
-    }
-
-
-    /**
-     * set granted.
-     *
-     * @param b value to set granted to.
-     */
-    @OnlyIn(Dist.CLIENT)
-    public void setGranted(boolean b) {
-        ClientResearchDataAPI.getData().setGrant(this, b);
-    }
-
+	public void setNonce(String text) {
+		this.nonce=text;
+	}
 
 }

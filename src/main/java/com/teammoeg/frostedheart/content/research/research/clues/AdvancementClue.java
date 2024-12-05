@@ -23,6 +23,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
@@ -63,13 +64,13 @@ public class AdvancementClue extends TickListenerClue {
     }
 
     @Override
-    public String getBrief() {
-        return "Advancement " + getDescriptionString();
+    public String getBrief(Research parent) {
+        return "Advancement " + getDescriptionString(parent);
     }
 
     @Override
-    public Component getDescription() {
-        Component itc = super.getDescription();
+    public Component getDescription(Research parent) {
+        Component itc = super.getDescription(parent);
         if (itc != null) return itc;
         ClientAdvancements cam = ClientUtils.getPlayer().connection.getAdvancements();
         Advancement adv = cam.getAdvancements().get(advancement);
@@ -80,15 +81,11 @@ public class AdvancementClue extends TickListenerClue {
 
     }
 
-    @Override
-    public String getId() {
-        return "advancement";
-    }
 
     @Override
-    public Component getName() {
+    public Component getName(Research parent) {
         if (name != null && !name.isEmpty())
-            return super.getName();
+            return super.getName(parent);
         return TranslateUtils.translate("clue." + FHMain.MODID + ".advancement");
     }
 

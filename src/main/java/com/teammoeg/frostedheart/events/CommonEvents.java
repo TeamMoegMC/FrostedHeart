@@ -391,11 +391,11 @@ public class CommonEvents {
         }
         if (ResearchListeners.multiblock.has(event.getMultiblock()))
             if (event.getEntity().getCommandSenderWorld().isClientSide) {
-                if (!ClientResearchDataAPI.getData().building.has(event.getMultiblock())) {
+                if (!ClientResearchDataAPI.getData().get().building.has(event.getMultiblock())) {
                     event.setCanceled(true);
                 }
             } else {
-                if (!ResearchDataAPI.getData(event.getEntity()).building.has(event.getMultiblock())) {
+                if (!ResearchDataAPI.getData(event.getEntity()).get().building.has(event.getMultiblock())) {
                     //event.getEntity().sendStatusMessage(GuiUtils.translateMessage("research.multiblock.cannot_build"), true);
                     event.setCanceled(true);
                 }

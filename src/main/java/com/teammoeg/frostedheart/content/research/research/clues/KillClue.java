@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
@@ -55,45 +56,40 @@ public class KillClue extends ListenerClue {
 	}
 
     @Override
-    public String getBrief() {
-        return "Kill " + getDescriptionString();
+    public String getBrief(Research parent) {
+        return "Kill " + getDescriptionString(parent);
     }
 
     @Override
-    public Component getDescription() {
-        Component itc = super.getDescription();
+    public Component getDescription(Research parent) {
+        Component itc = super.getDescription(parent);
         if (itc != null || type == null) return itc;
         return type.getDescription();
     }
 
-    @Override
-    public String getId() {
-        return "kill";
-    }
 
     @Override
-    public Component getName() {
+    public Component getName(Research parent) {
         if (name != null && !name.isEmpty())
-            return super.getName();
+            return super.getName(parent);
         return TranslateUtils.translate("clue." + FHMain.MODID + ".kill");
     }
 
     @Override
-    public void initListener(TeamDataHolder t) {
-        ResearchListeners.getKillClues().add(this, t.getId());
+    public void initListener(TeamDataHolder t,Research parent) {
+        ResearchListeners.getKillClues().add(super.getClueClosure(parent), t.getId());
     }
 
     public boolean isCompleted(TeamResearchData trd, LivingEntity e) {
         if (type != null && type.equals(e.getType())) {
-            this.setCompleted(trd, true);
             return true;
         }
         return false;
     }
 
     @Override
-    public void removeListener(TeamDataHolder t) {
-        ResearchListeners.getKillClues().remove(this, t.getId());
+    public void removeListener(TeamDataHolder t,Research parent) {
+        ResearchListeners.getKillClues().remove(super.getClueClosure(parent), t.getId());
     }
 
 }

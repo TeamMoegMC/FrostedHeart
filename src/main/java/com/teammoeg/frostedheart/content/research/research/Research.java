@@ -49,6 +49,8 @@ import com.teammoeg.frostedheart.content.research.number.IResearchNumber;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.frostedheart.util.utility.OptionalLazy;
+
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import net.minecraft.server.level.ServerPlayer;
@@ -81,7 +83,7 @@ public class Research implements FHRegisteredItem {
     	.flag("locked", o->o.inCompletable)
     	.flag("hidden", o->o.isHidden)
     	.flag("keepShow", o->o.alwaysShow)
-    	.flag("infinite", o->o.infinite).build(),
+    	.flag("infinite", o->o.isInfinite()).build(),
     	Codec.INT.fieldOf("points").forGetter(o->o.points)
     	).apply(t,Research::new));
     private String id;// id of this research
@@ -146,7 +148,7 @@ public class Research implements FHRegisteredItem {
     /**
      * The is infinite.<br>
      */
-    boolean infinite;
+    private boolean infinite;
 
     /**
      * Instantiates a new Research.<br>
@@ -174,7 +176,7 @@ public class Research implements FHRegisteredItem {
 		this.inCompletable = flags[2];
 		this.isHidden = flags[3];
 		this.alwaysShow = flags[4];
-		this.infinite = flags[5];
+		this.setInfinite(flags[5]);
 		this.points = points;
 	}
 
@@ -261,9 +263,9 @@ public class Research implements FHRegisteredItem {
      */
     public void delete() {
         deleteInTree();
-        this.effects.forEach(Effect::deleteSelf);
-        this.clues.forEach(Clue::deleteSelf);
-        FHTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
+        //this.effects.forEach(Effect::deleteSelf);
+        //this.clues.forEach(Clue::deleteSelf);
+        FHTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(e,this));
 
         FHResearch.delete(this);
     }
@@ -285,7 +287,9 @@ public class Research implements FHRegisteredItem {
         }
         int i = 0;
         effects.removeIf(Objects::isNull);
+        effects.forEach(t->t.init());
         clues.removeIf(Objects::isNull);
+        clues.forEach(t->t.init(this));
        /* for (Effect e : effects) {
             e.parent = this;
             FHResearch.effects.register(e);
@@ -355,9 +359,16 @@ public class Research implements FHRegisteredItem {
      */
     @OnlyIn(Dist.CLIENT)
     public long getCurrentPoints() {
-        return getData().getTotalCommitted();
+        return getData().getTotalCommitted(this);
     }
-
+    @OnlyIn(Dist.CLIENT)
+    public boolean isInProgress() {
+        OptionalLazy<Research> r = ClientResearchDataAPI.getData().get().getCurrentResearch();
+        if (r.isPresent()) {
+            return r.resolve().get().equals(this);
+        }
+        return false;
+    }
     /**
      * Get data.
      *
@@ -365,7 +376,7 @@ public class Research implements FHRegisteredItem {
      */
     @OnlyIn(Dist.CLIENT)
     public ResearchData getData() {
-        ResearchData rd = ClientResearchDataAPI.getData().getData(this);
+        ResearchData rd = ClientResearchDataAPI.getData().get().getData(this);
         if (rd == null)
             return ResearchData.EMPTY;
         return rd;
@@ -449,7 +460,9 @@ public class Research implements FHRegisteredItem {
     public Set<Research> getParents() {
         return parents.stream().filter(Objects::nonNull).map(FHResearch::getResearch).filter(Objects::nonNull).collect(Collectors.toSet());
     }
-
+    public Set<String> getParentIds() {
+        return parents;
+    }
     /**
      * Get progress fraction.
      *
@@ -457,7 +470,7 @@ public class Research implements FHRegisteredItem {
      */
     @OnlyIn(Dist.CLIENT)
     public float getProgressFraction() {
-        return getData().getProgress();
+        return getData().getProgress(this);
     }
 
     /**
@@ -479,25 +492,7 @@ public class Research implements FHRegisteredItem {
     }
 
 
-    /**
-     * Grant effects.
-     *
-     * @param team the team<br>
-     * @param spe  the spe<br>
-     */
-    public void grantEffects(TeamResearchData team, ServerPlayer spe) {
-        boolean granted = true;
-        for (Effect e : getEffects()) {
-            team.grantEffect(e, spe);
-            granted &= team.isEffectGranted(e);
-        }
-        if (infinite && granted) {
-            int lvl = team.getData(this).getLevel();
-            team.resetData(this, true);
-            team.getData(this).setLevel(lvl + 1);
-        }
 
-    }
 
     /**
      * Checks for unclaimed reward.<br>
@@ -506,9 +501,10 @@ public class Research implements FHRegisteredItem {
      */
     @OnlyIn(Dist.CLIENT)
     public boolean hasUnclaimedReward() {
+    	ResearchData rd=getData();
         if (!this.isCompleted()) return false;
         for (Effect e : this.getEffects())
-            if (!e.isGranted()) return true;
+            if (!rd.isEffectGranted(e)) return true;
         return false;
     }
 
@@ -571,7 +567,7 @@ public class Research implements FHRegisteredItem {
         Set<Research> rs = this.getParents();
         if (rs.isEmpty()) return true;
         for (Research parent : rs) {
-            if (parent.getData().isUnlocked()) {
+            if (parent.isUnlocked()) {
                 return true;
             }
         }
@@ -645,27 +641,7 @@ public class Research implements FHRegisteredItem {
      */
     @OnlyIn(Dist.CLIENT)
     public void resetData() {
-    	ClientResearchDataAPI.getData().resetData(this, false);
-    }
-
-    /**
-     * Send progress packet.
-     *
-     * @param team the team<br>
-     */
-    public void sendProgressPacket(TeamDataHolder team) {
-        sendProgressPacket(team, getData(team));
-    }
-
-    /**
-     * Send progress packet.
-     *
-     * @param team the team<br>
-     * @param rd   the rd<br>
-     */
-    public void sendProgressPacket(TeamDataHolder team, ResearchData rd) {
-        FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(rd);
-        team.sendToOnline(packet);
+    	ClientResearchDataAPI.getData().get().resetData(null,this);
     }
     /**
      * set category.
@@ -701,7 +677,7 @@ public class Research implements FHRegisteredItem {
      */
     public void setNewId(String nid) {
         if (!id.equals(nid)) {
-            FHTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(this, false));
+            FHTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(e, this));
             deleteInTree();//clear all reference, hope this could work
             FHResearch.delete(this);
             this.setId(nid);
@@ -743,5 +719,18 @@ public class Research implements FHRegisteredItem {
     public String toString() {
         return "Research[" + id + "]";
     }
+
+	public void addParent(Research r) {
+		addParent(r.getId());
+		
+	}
+
+	public boolean isInfinite() {
+		return infinite;
+	}
+
+	public void setInfinite(boolean infinite) {
+		this.infinite = infinite;
+	}
 
 }

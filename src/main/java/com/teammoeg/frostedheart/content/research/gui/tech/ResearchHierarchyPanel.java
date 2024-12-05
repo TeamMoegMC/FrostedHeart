@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -226,7 +227,7 @@ public class ResearchHierarchyPanel extends Panel {
                         // TODO Add parent
                         Research r = researchPanel.selectedResearch;
                         ResearchEditorDialog.RESEARCH_LIST.open(this, "Edit parents", r.getParents(), s -> {
-                            r.setParents(s.stream().map(Research::getSupplier).collect(Collectors.toList()));
+                            r.setParents(s.stream().map(Research::getId).collect(Collectors.toList()));
                             FHResearch.reindex();
                             EditUtils.saveResearch(r);
                         });
@@ -245,7 +246,7 @@ public class ResearchHierarchyPanel extends Panel {
                                 e.removeParent(r);
                                 EditUtils.saveResearch(e);
                             });
-                            s.forEach(e -> e.addParent(r.getSupplier()));
+                            s.forEach(e -> e.addParent(r));
                             FHResearch.reindex();
                             EditUtils.saveResearch(r);
                         });
@@ -344,7 +345,7 @@ public class ResearchHierarchyPanel extends Panel {
 
         // if (FHResearch.editor || researchPanel.selectedResearch.isUnlocked()) {
         boolean crunlocked = researchPanel.selectedResearch.isUnlocked();
-        Set<Research> children = researchPanel.selectedResearch.getChildren();
+        Collection<Research> children = researchPanel.selectedResearch.getChildren();
         for (Research child : children) {
             if (!crunlocked && !child.isShowable())
                 continue;

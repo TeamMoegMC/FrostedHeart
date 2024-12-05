@@ -19,64 +19,26 @@
 
 package com.teammoeg.frostedheart.content.research.data;
 
+import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
-
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.content.research.events.ResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
-import com.teammoeg.frostedheart.content.research.research.clues.ClueDatas;
-import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
-import com.teammoeg.frostedheart.util.io.codec.BooleansCodec;
-import com.teammoeg.frostedheart.util.utility.OptionalLazy;
-
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraft.nbt.Tag;
 
 public class ResearchData implements IEnvironment {
 
-    public static final ResearchData EMPTY = new ResearchData(null, null) {
-
-        @Override
-        public void announceCompletion() {
-        }
-
-        @Override
-        public boolean canComplete() {
-            return false;
-        }
+    public static final ResearchData EMPTY = new ResearchData() {
 
         @Override
         public boolean canResearch() {
             return false;
-        }
-
-        @Override
-        public void checkComplete() {
-        }
-
-        @Override
-        public boolean commitItem(ServerPlayer player) {
-            return false;
-        }
-
-        @Override
-        public long commitPoints(long pts) {
-            return pts;
-        }
-
-        @Override
-        public void deserialize(CompoundTag cn) {
-            super.deserialize(cn);
         }
 
         @Override
@@ -90,87 +52,128 @@ public class ResearchData implements IEnvironment {
         }
 
         @Override
-        public float getProgress() {
-            return 0;
-        }
-
-        @Override
-        public Research getResearch() {
-            return null;
-        }
-
-        @Override
-        public long getTotalCommitted() {
-            return 0;
-        }
-
-        @Override
         public boolean isCompleted() {
             return false;
         }
 
-        @Override
-        public boolean isInProgress() {
-            return false;
-        }
-
-        @Override
-        public boolean isUnlocked() {
-            return false;
-        }
-
-        @Override
-        public void read(FriendlyByteBuf pb) {
-            super.read(pb);
-        }
-
-        @Override
-        public void sendProgressPacket() {
-        }
-
-        @Override
-        public CompoundTag serialize() {
-            return super.serialize();
-        }
 
         @Override
         public void setActive() {
         }
 
         @Override
-        public void setFinished(boolean finished) {
-        }
-
-        @Override
         public void setLevel(int level) {
         }
 
-        @Override
-        public void write(FriendlyByteBuf pb) {
-            super.write(pb);
-        }
+		@Override
+		public void reset() {
+		}
+
+		@Override
+		public boolean canComplete(Research rs) {
+			return false;
+		}
+
+		@Override
+		public float getProgress(Research r) {
+			return 0;
+		}
+
+		@Override
+		public long getTotalCommitted(Research r) {
+			return 0;
+		}
+
+		@Override
+		public void setFinished(boolean finished) {
+		}
+
+		@Override
+		public Double getOptional(String key) {
+			return null;
+		}
+
+		@Override
+		public void set(String key, double v) {
+		}
+
+		@Override
+		public long commitPoints(Research r, long pts, Runnable onSuccess) {
+			return pts;
+		}
+
+		@Override
+		public double get(String key) {
+			return 0;
+		}
+
+		@Override
+		public void setClueTriggered(String id, boolean trig) {
+		}
+
+		@Override
+		public void setClueTriggered(Clue c, boolean trig) {
+		}
+
+		@Override
+		public boolean isClueTriggered(Clue clue) {
+			return false;
+		}
+
+		@Override
+		public boolean isClueTriggered(String id) {
+			return false;
+		}
+
+		@Override
+		public void setEffectGranted(String id, boolean trig) {
+		}
+
+		@Override
+		public void setEffectGranted(Effect e, boolean trig) {
+		}
+
+		@Override
+		public boolean isEffectGranted(Effect effect) {
+			return false;
+		}
+
+		@Override
+		public boolean isEffectGranted(String id) {
+			return false;
+		}
 
     };
+    public static record ResearchDataPacket(boolean active,boolean finished,int level,int committed,List<ClueData> clueData,BitSet effectData) {
+        public ResearchDataPacket(int committed, boolean[] flags, int level, List<ClueData> clueData,byte[] effectData) {
+    		this(flags[0],flags[1],level,committed,clueData,BitSet.valueOf(effectData));
+    	}
+    }
     boolean active;// is all items fulfilled?
     boolean finished;
-    private Supplier<Research> rs;
     int level;
     private int committed;// points committed
-    TeamResearchData parent;
-
-    private Map<Integer, ClueData> clueData = new HashMap<>();
-    private Map<Integer, Boolean> effectData = new HashMap<>();
+    private Map<String, ClueData> clueData = new HashMap<>();
+    private Map<String, Boolean> effectData = new HashMap<>();
     public static final Codec<ResearchData> CODEC=RecordCodecBuilder.create(t->t.group(
     	Codec.INT.fieldOf("committed").forGetter(o->o.committed),
     	CodecUtil.<ResearchData>booleans("flags")
     	.flag("active", o->o.active)
     	.flag("finished", o->o.finished).build(),
     	CodecUtil.defaultValue(Codec.INT, 0).fieldOf("level").forGetter(o->o.level),
-    	CodecUtil.mapCodec("id", Codec.INT, "data", ClueData.CODEC).fieldOf("clueData").forGetter(o->o.clueData),
-    	CodecUtil.mapCodec("id", Codec.INT, "data", Codec.BOOL).fieldOf("effectData").forGetter(o->o.effectData)
+    	CodecUtil.mapCodec("id", Codec.STRING, "data", ClueData.CODEC).fieldOf("clueData").forGetter(o->o.clueData),
+    	CodecUtil.mapCodec("id", Codec.STRING, "data", Codec.BOOL).fieldOf("effectData").forGetter(o->o.effectData)
     	).apply(t, ResearchData::new));
-    
-    public ResearchData(int committed, boolean[] flags, int level, Map<Integer, ClueData> clueData,Map<Integer, Boolean> effectData) {
+    public static final Codec<ResearchDataPacket> NETWORK_CODEC=RecordCodecBuilder.create(t->t.group(
+    	Codec.INT.fieldOf("committed").forGetter(o->o.committed()),
+    	CodecUtil.<ResearchDataPacket>booleans("flags")
+    	.flag("active", o->o.active())
+    	.flag("finished", o->o.finished()).build(),
+    	CodecUtil.defaultValue(Codec.INT, 0).fieldOf("level").forGetter(o->o.level()),
+    	Codec.list(ClueData.CODEC).fieldOf("clueData").forGetter(o->o.clueData()),
+    	CodecUtil.BYTE_ARRAY_CODEC.fieldOf("effectData").forGetter(o->o.effectData().toByteArray())
+    	).apply(t, ResearchDataPacket::new));
+    public ResearchData(int committed, boolean[] flags, int level, Map<String, ClueData> clueData,Map<String, Boolean> effectData) {
 		super();
 		this.active = flags[0];
 		this.finished = flags[1];
@@ -179,30 +182,47 @@ public class ResearchData implements IEnvironment {
 		this.clueData.putAll(clueData);
 		this.effectData.putAll(effectData);
 	}
-    public void setParent(Supplier<Research> r, TeamResearchData parent) {
-        this.rs = r;
-        this.parent = parent;
-    }
-    public ResearchData(Supplier<Research> r, CompoundTag nc, TeamResearchData parent) {
-        this(r, parent);
-        deserialize(nc);
-    }
-    
-    public ResearchData(Supplier<Research> r, TeamResearchData parent) {
-        this.rs = r;
-        this.parent = parent;
-    }
 
-    public void announceCompletion() {
-        sendProgressPacket();
-
-        parent.getHolder().getTeam()
-                .ifPresent(e -> MinecraftForge.EVENT_BUS.post(new ResearchStatusEvent(getResearch(), e, finished)));
+    public ResearchDataPacket write(Research r) {
+    	List<ClueData> clueData=new ArrayList<>(r.getClues().size());
+    	BitSet effectData=new BitSet(r.getEffects().size());
+    	for(Clue c:r.getClues())
+    		clueData.add(this.clueData.get(c.getNonce()));
+    	int i=0;
+    	for(Effect e:r.getEffects()) {
+    		effectData.set(i++,this.effectData.get(e.getNonce()));
+    	}
+    	return new ResearchDataPacket(active,finished,level,committed,clueData,effectData);
     }
-
-    public boolean canComplete() {
-        for (Clue cl : getResearch().getClues()) {
-            if (cl.isRequired() && !cl.isCompleted(parent)) {
+    public void read(Research r,ResearchDataPacket packet) {
+    	active=packet.active();
+    	finished=packet.finished();
+    	level=packet.level();
+    	committed=packet.committed();
+    	int i=0;
+    	for(Clue c:r.getClues()) {
+    		if(i>=packet.clueData().size())break;
+    		this.clueData.put(c.getNonce(), packet.clueData().get(i++));
+    	}
+    	i=0;
+    	for(Effect e:r.getEffects()) {
+    		if(i>=packet.effectData().size())break;
+    		this.effectData.put(e.getNonce(), packet.effectData().get(i++));
+    	}
+    }
+    public ResearchData() {
+    	
+    }
+    public void reset() {
+    	active=false;
+    	finished=false;
+    	committed=0;
+    	clueData.clear();
+    	effectData.clear();
+    }
+    public boolean canComplete(Research rs) {
+        for (Clue cl : rs.getClues()) {
+            if (cl.isRequired() && !clueData.get(cl.getNonce()).completed) {
                 return false;
             }
         }
@@ -217,60 +237,6 @@ public class ResearchData implements IEnvironment {
         return active;
     }
 
-    public void checkComplete() {
-        if (finished)
-            return;
-        Research r = getResearch();
-        boolean flag = true;
-        for (Clue cl : r.getClues()) {
-            if (cl.isRequired() && !cl.isCompleted(parent)) {
-                flag = false;
-                break;
-            }
-        }
-        if (getTotalCommitted() >= r.getRequiredPoints() && flag) {
-            setFinished(true);
-            this.announceCompletion();
-
-        }
-    }
-
-    public boolean commitItem(ServerPlayer player) {
-        Research research = getResearch();
-        if (research.isInCompletable()) return false;
-        for (Research par : research.getParents()) {
-            if (!parent.getData(par).isCompleted()) {
-                return false;
-            }
-        }
-        if(!research.getRequiredItems().isEmpty()&&!FHUtils.costItems(player,this.getResearch().getRequiredItems()))
-        	return false;
-        setActive();
-        return true;
-    }
-
-    public long commitPoints(long pts) {
-        if (!active || finished)
-            return pts;
-        long tocommit = Math.min(pts, getResearch().getRequiredPoints() - committed);
-        if (tocommit > 0) {
-            committed += tocommit;
-            checkComplete();
-            return pts - tocommit;
-        }
-        return pts;
-    }
-
-    public void deserialize(Research research,CompoundTag cn,boolean isNetwork) {
-        committed = cn.getInt("committed");
-        active = cn.getBoolean("active");
-        finished = cn.getBoolean("finished");
-        if (cn.contains("level"))
-            level = cn.getInt("level");
-        data.clear();
-        cn.getList("clues", Tag.TAG_COMPOUND).stream().map(t -> (CompoundTag) t).forEach(e -> data.put(e.getInt("id"), ClueDatas.read(e.getCompound("data"))));
-        // rs=FHResearch.getResearch(cn.getInt("research"));
-    }
 
 
 
@@ -290,23 +256,15 @@ public class ResearchData implements IEnvironment {
      *
      * @return 0.0F-1.0F fraction
      */
-    public float getProgress() {
-        return getTotalCommitted() * 1f / getResearch().getRequiredPoints();
+    public float getProgress(Research r) {
+        return getTotalCommitted(r) * 1f /r.getRequiredPoints();
     }
 
-    /**
-     * @return Research associated with this data
-     */
-    public Research getResearch() {
-        return rs.get();
-    }
-
-    public long getTotalCommitted() {
-        Research r = getResearch();
+    public long getTotalCommitted(Research r) {
         long currentProgress = committed;
         float contribution = 0;
         for (Clue ac : r.getClues())
-            if (ac.isCompleted(parent))
+            if (this.isClueTriggered(ac))
                 contribution += ac.getResearchContribution();
         if (contribution >= 0.999)
             return r.getRequiredPoints();
@@ -321,73 +279,25 @@ public class ResearchData implements IEnvironment {
         return finished;
     }
 
-    public boolean isInProgress() {
-        OptionalLazy<Research> r = parent.getCurrentResearch();
-        if (r.isPresent()) {
-            return r.resolve().get().equals(getResearch());
-        }
-        return false;
-    }
 
-    public boolean isUnlocked() {
-        Research research = getResearch();
-        for (Research par : research.getParents()) {
-            if (!parent.getData(par).isCompleted()) {
-                return false;
-            }
-        }
-        return true;
-    }
 
-    public void read(FriendlyByteBuf pb) {
-        committed = pb.readVarInt();
-        boolean[] bs = SerializeUtil.readBooleans(pb);
-        active = bs[0];
-        finished = bs[1];
-    }
 
-    public void sendProgressPacket() {
-        getResearch().sendProgressPacket(parent.getHolder(), this);
-    }
-
-    public CompoundTag serialize() {
-        CompoundTag cnbt = new CompoundTag();
-        cnbt.putLong("committed", committed);
-        cnbt.putBoolean("active", active);
-        cnbt.putBoolean("finished", finished);
-        if (level > 0)
-            cnbt.putInt("level", level);
-        cnbt.put("clues", SerializeUtil.toNBTList(data.entrySet(), (t,c) -> c.compound().putInt("id", t.getKey()).put("data", ClueDatas.write(t.getValue()))));
-        // cnbt.putInt("research",getResearch().getRId());
-        return cnbt;
-
-    }
 
     public void setActive() {
         if (active)
             return;
         active = true;
-        sendProgressPacket();
     }
 
     public void setFinished(boolean finished) {
         this.finished = finished;
-        if (finished) {
-            data.clear();
-            Research r = rs.get();
-            parent.clearCurrentResearch(r);
-            r.grantEffects(parent, null);
-
+        if (!finished){
+        	clueData.clear();
         }
     }
 
     public void setLevel(int level) {
         this.level = level;
-    }
-
-    public void write(FriendlyByteBuf pb) {
-        pb.writeVarInt(committed);
-        SerializeUtil.writeBooleans(pb, active, finished);
     }
 
 	@Override
@@ -402,7 +312,16 @@ public class ResearchData implements IEnvironment {
 		if (key.equals("level"))
 			this.level=(int) v;
 	}
-
+    public long commitPoints(Research r,long pts,Runnable onSuccess) {
+        long tocommit = Math.min(pts, r.getRequiredPoints() - committed);
+        if (tocommit > 0) {
+            committed += tocommit;
+            if(onSuccess!=null)
+            	onSuccess.run();
+            return pts - tocommit;
+        }
+        return pts;
+    }
 	@Override
 	public double get(String key) {
 		if (key.equals("level"))
@@ -410,5 +329,30 @@ public class ResearchData implements IEnvironment {
 		return 0;
 	}
 
-
+	public void setClueTriggered(String id, boolean trig) {
+		clueData.computeIfAbsent(id, s->new ClueData()).completed=trig;
+	}
+	public void setClueTriggered(Clue c, boolean trig) {
+		setClueTriggered(c.getNonce(),trig);
+	}
+	public boolean isClueTriggered(Clue clue) {
+		return isClueTriggered(clue.getNonce());
+	}
+	public boolean isClueTriggered(String id) {
+		ClueData data=clueData.get(id);
+		if(data==null)return false;
+		return data.completed;
+	}
+	public void setEffectGranted(String id, boolean trig) {
+		effectData.put(id, trig);
+	}
+	public void setEffectGranted(Effect e, boolean trig) {
+		setEffectGranted(e.getNonce(),trig);
+	}
+	public boolean isEffectGranted(Effect effect) {
+		return isEffectGranted(effect.getNonce());
+	}
+	public boolean isEffectGranted(String id) {
+		return effectData.getOrDefault(id, false);
+	}
 }

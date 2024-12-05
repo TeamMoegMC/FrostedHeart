@@ -202,9 +202,9 @@ public class DebugCommand {
 
                         for (Clue t : e.getClues()) {
                             JsonObject joc = new JsonObject();
-                            joc.addProperty("name", t.getName().getString());
-                            Component desc = t.getDescription();
-                            Component hint = t.getHint();
+                            joc.addProperty("name", t.getName(e).getString());
+                            Component desc = t.getDescription(e);
+                            Component hint = t.getHint(e);
                             if (desc != null)
                                 joc.addProperty("desc", desc.getString());
                             if (hint != null)

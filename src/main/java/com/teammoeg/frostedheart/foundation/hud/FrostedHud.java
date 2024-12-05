@@ -446,7 +446,7 @@ public class FrostedHud {
         RenderSystem.enableBlend();
 
         HUDElements.exp_bar_frame.blitAt(stack, x, y, BasePos.exp_bar);
-        TeamResearchData data = ClientResearchDataAPI.getData();
+        TeamResearchData data = ClientResearchDataAPI.getData().get();
         float progress = data.getInsightProgress();
         int level = data.getInsightLevel();
         if (progress > 0) {
@@ -894,7 +894,7 @@ public class FrostedHud {
         boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
         boolean forceEnables = FHConfig.COMMON.forceEnableTemperatureForecast.get();
         renderForecast = (forceEnables
-                || (configAllows && ClientResearchDataAPI.getData().getVariantDouble(ResearchVariant.HAS_FORECAST)>0))
+                || (configAllows && ClientResearchDataAPI.getData().get().getVariantDouble(ResearchVariant.HAS_FORECAST)>0))
         && ((BossHealthOverlayAccess) Minecraft.getInstance().gui.getBossOverlay()).getEvents().isEmpty(); // check if not boss fight
     }
 

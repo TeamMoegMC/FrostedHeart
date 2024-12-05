@@ -196,7 +196,7 @@ public class JEICompat implements IModPlugin {
             ItemStack irs = RecipeUtil.getResultItem(i);
            
             //Recipe<?> ovrd = overrides.get(i.getId());
-            if (!ClientResearchDataAPI.getData().crafting.has(i)) {
+            if (!ClientResearchDataAPI.getData().get().crafting.has(i)) {
             	Set<RecipeType<?>> type=types.get(i);
             	if(type!=null)
 	                for (RecipeType<?> rl : type) {
@@ -232,7 +232,7 @@ public class JEICompat implements IModPlugin {
         for (ResourceLocation rl : ResearchListeners.categories) {
         	RecipeType<?> type=man.getRecipeType(rl).orElse(null);
         	if(type!=null) {
-	            if (!ClientResearchDataAPI.getData().categories.has(rl)) {
+	            if (!ClientResearchDataAPI.getData().get().categories.has(rl)) {
 	                man.hideRecipeCategory(type);
 	            } else
 	                man.unhideRecipeCategory(type);
@@ -241,7 +241,7 @@ public class JEICompat implements IModPlugin {
         research.clear();
         for(Research research:FHResearch.getAllResearch()) {
         	for(Effect effect:research.getEffects()) {
-	        	if(effect.isGranted()&&effect instanceof EffectCrafting) {
+	        	if(ClientResearchDataAPI.getData().get().isEffectGranted(research, effect)&&effect instanceof EffectCrafting) {
 	        		Set<Item> item=new HashSet<>();
 	        		EffectCrafting crafting=(EffectCrafting) effect;
 	        		if(crafting.getItem()!=null)
@@ -251,7 +251,7 @@ public class JEICompat implements IModPlugin {
 	        		else if(crafting.getUnlocks()!=null)
 	        			crafting.getUnlocks().stream().map(RecipeUtil::getResultItem).filter(t->t!=null&&!t.isEmpty()).map(ItemStack::getItem).forEach(item::add);
 	        		for(Item ix:item) {
-	        			research.computeIfAbsent(ix, i->new LinkedHashMap<>()).put(effect.parent.get().getId(), TranslateUtils.translateTooltip("research_unlockable", effect.parent.get().getName()));
+	        			JEICompat.research.computeIfAbsent(ix, i->new LinkedHashMap<>()).put(research.getId(), TranslateUtils.translateTooltip("research_unlockable", research.getName()));
 	        		}
 	        	}
         	}

@@ -34,6 +34,10 @@ public class ClueData{
 	boolean completed;
 	CompoundTag data;
 	
+	public ClueData() {
+		super();
+	}
+
 	public ClueData(boolean completed, CompoundTag data) {
 		super();
 		
