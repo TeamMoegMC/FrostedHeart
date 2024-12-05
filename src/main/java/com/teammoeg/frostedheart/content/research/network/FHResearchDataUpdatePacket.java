@@ -19,58 +19,50 @@
 
 package com.teammoeg.frostedheart.content.research.network;
 
-import java.util.Optional;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.NullableNBTMessage;
+import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.research.FHResearch;
+import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
+import com.teammoeg.frostedheart.content.research.data.ResearchData.ResearchDataPacket;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.frostedheart.util.io.codec.DataOps;
+import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when data update
-public class FHResearchDataUpdatePacket extends NullableNBTMessage{
-    private final int id;
+public record FHResearchDataUpdatePacket(Object rd,int id) implements FHMessage{
 
-    public FHResearchDataUpdatePacket(int rid) {
-    	super(Optional.empty());
-        this.id = rid;
-    }
 
     public FHResearchDataUpdatePacket(FriendlyByteBuf buffer) {
-        super(buffer);
-        id = buffer.readVarInt();
+        this(ObjectWriter.readObject(buffer),buffer.readVarInt());
     }
 
-    public FHResearchDataUpdatePacket(ResearchData rd) {
-        super(Optional.of(rd.serialize()));
-        this.id = FHResearch.researches.getIntId(rd.getResearch());
+    public FHResearchDataUpdatePacket(Research rs,ResearchData rd) {
+        this(CodecUtil.encodeOrThrow(ResearchData.NETWORK_CODEC.encodeStart(DataOps.COMPRESSED, rd.write(rs))),FHResearch.researches.getIntId(rs));
     }
 
     public void encode(FriendlyByteBuf buffer) {
-        super.encode(buffer);
+        ObjectWriter.writeObject(buffer, rd);
         buffer.writeVarInt(id);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             Research rs = FHResearch.researches.getById(id);
-            if (this.getTag() == null) {
-                rs.resetData();
-                MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs, false, true));
-                return;
-            }
-            ResearchData datax = rs.getData();
-            boolean status = datax.isCompleted();
-            datax.deserialize(this.getTag());
+            ResearchData old=rs.getData();
+            ResearchDataPacket datax = CodecUtil.decodeOrThrow(ResearchData.NETWORK_CODEC.decode(DataOps.COMPRESSED, rd));
+            boolean status = old.isCompleted();
+            old.read(rs, datax);
             ClientUtils.refreshResearchGui();
-
-            MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs, datax.isCompleted(), status != datax.isCompleted()));
+            MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs, old.isCompleted(), status != old.isCompleted()));
 
 
         });

@@ -140,7 +140,7 @@ public class FHNetwork {
         registerMessage("research_sync_end", FHResearchSyncEndPacket.class);
         registerMessage("research_data", FHResearchDataSyncPacket.class);
         registerMessage("research_data_update", FHResearchDataUpdatePacket.class);
-        registerMessage("research_clue", FHClueProgressSyncPacket.class);
+        registerMessage("research_clue", FHS2CClueProgressSyncPacket.class);
         registerMessage("research_attribute", FHResearchAttributeSyncPacket.class);
         registerMessage("effect_trigger", FHEffectTriggerPacket.class);
         registerMessage("research_control", FHResearchControlPacket.class);

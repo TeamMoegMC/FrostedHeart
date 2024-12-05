@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.editor.BaseEditDialog;
@@ -45,6 +46,10 @@ import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 
 public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
+
+	public static Collection<ClueClosure> generate(Research r){
+		return r.getClues().stream().map(t->new ClueClosure(r,t)).collect(Collectors.toList());
+	}
     private static class Advancement extends Listener<AdvancementClue> {
 
         public Advancement(Widget panel, String lbl, AdvancementClue e, Consumer<AdvancementClue> cb) {
@@ -212,7 +217,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         else
             CUSTOM.open(p, l, (CustomClue) v, c::accept);
     };
-    public static final Editor<Collection<Clue>> EDITOR_LIST = (p, l, v, c) -> new EditListDialog<>(p, l, v, EDITOR, e -> e.getBrief() + e.getBriefDesc(), c).open();
+    public static final Editor<Collection<ClueClosure>> EDITOR_LIST = (p, l, v, c) -> new EditListDialog<ClueClosure>(p, l, v, (p2,l2,v2,c2)->EDITOR.open(p2,l2,v2.clue(),o->c2.accept(new ClueClosure(v2.research(),o))), e -> e.clue().getBrief(e.research()) + e.clue().getBriefDesc(), c).open();
     String lbl;
     T e;
     Consumer<T> cb;
@@ -267,7 +272,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         e.desc = desc.getText();
         e.hint = hint.getText();
         e.contribution = (float) cont.getNum() / 100f;
-        e.setNewId(nonce.getText());
+        e.setNonce(nonce.getText());
         e.required = req.getSelection();
         cb.accept(e);
 

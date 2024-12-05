@@ -31,6 +31,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -97,6 +98,16 @@ public class FHTeamDataManager {
     public <T extends SpecialData> Stream<T> getAllData(SpecialDataType<T> type) {
         return dataByFhId.values().stream().map(t->t.getOptional(type)).filter(Optional::isPresent).map(Optional::get);
     }
+    public <T extends SpecialData> void forAllData(SpecialDataType<T> type,BiConsumer<T,TeamDataHolder> consumer) {
+        dataByFhId.values().stream().forEach(t->{
+        	Optional<T> opt=t.getOptional(type);
+        	if(opt.isPresent()) {
+        		consumer.accept( opt.get(),t);
+        	}
+        	
+        });
+    }
+
 
     /**
      * Helper method to get the data from a team.
@@ -112,6 +123,7 @@ public class FHTeamDataManager {
      * @param id the research team id
      * @return data
      */
+    @Nullable
     public static TeamDataHolder getDataByResearchID(UUID id) {
     	return INSTANCE.get(id);
     }

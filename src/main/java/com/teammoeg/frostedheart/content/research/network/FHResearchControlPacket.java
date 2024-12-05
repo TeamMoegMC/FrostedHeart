@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.research.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.frostedheart.base.team.TeamDataClosure;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
@@ -63,22 +64,23 @@ public class FHResearchControlPacket implements FHMessage {
 
         context.get().enqueueWork(() -> {
             Research r = FHResearch.researches.getById(researchID);
+            if(r==null)return;
             ServerPlayer spe = context.get().getSender();
-            TeamResearchData trd = ResearchDataAPI.getData(spe);
+            TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(spe);
             switch (status) {
                 case COMMIT_ITEM:
 
-                    ResearchData rd = trd.getData(r);
+                    ResearchData rd = trd.get().getData(r);
                     if (rd.canResearch()) return;
-                    if (rd.commitItem(spe)) {
-                        trd.setCurrentResearch(r);
+                    if (trd.get().commitItem(spe,trd.team(),r)) {
+                        trd.get().setCurrentResearch(trd.team(),r);
                     }
                     return;
                 case START:
-                    trd.setCurrentResearch(r);
+                    trd.get().setCurrentResearch(trd.team(),r);
                     return;
                 case PAUSE:
-                    trd.clearCurrentResearch(r);
+                    trd.get().clearCurrentResearch(trd.team(),true);
             }
         });
         context.get().setPacketHandled(true);

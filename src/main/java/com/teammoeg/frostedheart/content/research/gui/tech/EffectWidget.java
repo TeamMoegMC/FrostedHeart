@@ -23,7 +23,9 @@ import java.util.List;
 
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
+import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
+import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
@@ -40,13 +42,14 @@ public class EffectWidget extends Widget {
     Component title;
     FHIcon icon;
     Effect e;
-
-    public EffectWidget(Panel panel, Effect e) {
+    Research r;
+    public EffectWidget(Panel panel, Effect e,Research r) {
         super(panel);
         tooltips = e.getTooltip();
         title = e.getName();
         icon = e.getIcon();
         this.e = e;
+        this.r=r;
         this.setSize(16, 16);
     }
 
@@ -61,7 +64,7 @@ public class EffectWidget extends Widget {
         GuiHelper.setupDrawing();
         TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
         icon.draw(matrixStack, x, y, w, h);
-        if (e.isGranted()) {
+        if (ClientResearchDataAPI.getData().get().isEffectGranted(r, e)) {
             matrixStack.pose().pushPose();
             matrixStack.pose().translate(0, 0, 300);
             GuiHelper.setupDrawing();
@@ -75,7 +78,7 @@ public class EffectWidget extends Widget {
         if (isMouseOver()) {
             if (getWidgetType() != WidgetType.DISABLED) {
                 //TODO edit effect
-                e.onClick();
+                e.onClick(r.getData());
             }
 
             return true;

@@ -111,7 +111,7 @@ public class ResearchDashboardPanel extends Panel {
         }
         techpoint.setText(toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
         add(techpoint);
-        TeamResearchData data = ClientResearchDataAPI.getData();
+        TeamResearchData data = ClientResearchDataAPI.getData().get();
         availableInsightLevel.setText(data.getAvailableInsightLevel() + "Insight Points");
         add(availableInsightLevel);
     }
@@ -127,13 +127,13 @@ public class ResearchDashboardPanel extends Panel {
 
         techpoint.setColor(TechIcons.text);
         if (rd.canResearch()) {
-            if (!rd.canComplete())
+            if (!rd.canComplete(detailPanel.research))
                 techpoint.setColor(TechIcons.text_red);
-            techpoint.setText(toReadable(rd.getTotalCommitted()) + "/" + toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
+            techpoint.setText(toReadable(rd.getTotalCommitted(detailPanel.research)) + "/" + toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
         }
         techpoint.setX(140 - techpoint.width);
 
-        TeamResearchData data = ClientResearchDataAPI.getData();
+        TeamResearchData data = ClientResearchDataAPI.getData().get();
         if (data.getAvailableInsightLevel() == 0) {
             availableInsightLevel.setColor(TechIcons.text_red);
         } else {
@@ -148,7 +148,7 @@ public class ResearchDashboardPanel extends Panel {
         TechIcons.SHADOW.draw(matrixStack, x + 1, y + 36, 36, 9);
         detailPanel.icon.draw(matrixStack, x + 3, y + 10, 32, 32);
         theme.drawString(matrixStack, TranslateUtils.translateGui("research.points"), x + 40, y + 19, TechIcons.text, 0);
-        if (rd.canResearch() && !rd.canComplete())
+        if (rd.canResearch() && !rd.canComplete(detailPanel.research))
             theme.drawString(matrixStack, TranslateUtils.translateGui("research.required_clue"), x + 40, y + 38, TechIcons.text_red, 0);
         GuiHelper.setupDrawing();
         TechIcons.HLINE_L.draw(matrixStack, x, y + 49, 140, 3);

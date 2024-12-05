@@ -23,6 +23,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 /**
@@ -70,26 +71,26 @@ public abstract class ListenerClue extends Clue {
     }
 
     @Override
-    public void end(TeamDataHolder team) {
+    public void end(TeamDataHolder team,Research parent) {
         if (!alwaysOn)
-            removeListener(team);
+            removeListener(team,parent);
     }
 
     @Override
-    public void init() {
+    public void init(Research parent) {
         if (alwaysOn)
-            initListener(null);
+            initListener(null,parent);
     }
 
-    public abstract void initListener(TeamDataHolder t);
+    public abstract void initListener(TeamDataHolder t,Research parent);
 
-    public abstract void removeListener(TeamDataHolder t);
+    public abstract void removeListener(TeamDataHolder t,Research parent);
 
 
     @Override
-    public void start(TeamDataHolder team) {
+    public void start(TeamDataHolder team,Research parent) {
         if (!alwaysOn)
-            initListener(team);
+            initListener(team,parent);
 
     }
 

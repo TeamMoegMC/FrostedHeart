@@ -60,7 +60,7 @@ public class IfNode implements Node {
     @Override
     public void run(ScenarioCommandContext runner) {
     	double val=runner.eval(exp);
-    	System.out.println(val+"/"+elseBlock);
+    	//System.out.println(val+"/"+elseBlock);
         if (val <= 0) {
         	//System.out.println("else");
         	for(Entry<String, Integer> ent:elsifs.entrySet()) {

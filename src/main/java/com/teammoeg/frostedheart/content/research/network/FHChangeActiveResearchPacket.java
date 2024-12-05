@@ -56,7 +56,7 @@ public class FHChangeActiveResearchPacket implements FHMessage {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            ClientResearchDataAPI.getData().setCurrentResearch(id);
+            ClientResearchDataAPI.getData().get().setCurrentResearch(id);
             ClientUtils.refreshResearchGui();
         });
         context.get().setPacketHandled(true);

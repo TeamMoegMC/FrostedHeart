@@ -81,7 +81,7 @@ public class RubbingTool extends FHBaseItem {
     @Override
     public void appendHoverText(ItemStack stack, Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
         if (hasResearch(stack)) {
-            Research rs = FHResearch.getResearch(getResearch(stack)).get();
+            Research rs = FHResearch.getResearch(getResearch(stack));
             if (rs != null)
                 tooltip.add(TranslateUtils.translateTooltip("rubbing.current", rs.getName()).withStyle(ChatFormatting.GOLD));
             else

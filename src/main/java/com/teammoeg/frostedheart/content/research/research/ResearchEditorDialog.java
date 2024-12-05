@@ -79,7 +79,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
         alt = LabeledSelection.createBool(this, "Show alt description before complete", r.showfdesc);
         hidden = LabeledSelection.createBool(this, "Hide this research in list", r.isHidden);
         locked = LabeledSelection.createBool(this, "Lock this research", r.isInCompletable());
-        inf = LabeledSelection.createBool(this, "Infinite", r.infinite);
+        inf = LabeledSelection.createBool(this, "Infinite", r.isInfinite());
 
     }
 
@@ -103,26 +103,26 @@ public class ResearchEditorDialog extends BaseEditDialog {
 
         add(new OpenEditorButton<>(this, "Edit Description", EditListDialog.STRING_LIST, r.desc, s -> r.desc = new ArrayList<>(s)));
         add(new OpenEditorButton<>(this, "Edit Alternative Description", EditListDialog.STRING_LIST, r.fdesc, s -> r.fdesc = new ArrayList<>(s)));
-        add(new OpenEditorButton<>(this, "Edit Parents", ResearchEditorDialog.RESEARCH_LIST, r.getParents(), s -> r.setParents(s.stream().map(Research::getSupplier).collect(Collectors.toList()))));
+        add(new OpenEditorButton<>(this, "Edit Parents", ResearchEditorDialog.RESEARCH_LIST, r.getParents(), s -> r.setParents(s.stream().map(Research::getId).collect(Collectors.toList()))));
         add(new OpenEditorButton<>(this, "Edit Children", ResearchEditorDialog.RESEARCH_LIST, r.getChildren(), s -> {
             r.getChildren().forEach(e -> e.removeParent(r));
             s.forEach(e -> {
-                e.addParent(r.getSupplier());
+                e.addParent(r);
                 e.doIndex();
             });
 
         }));
         add(new OpenEditorButton<>(this, "Edit Ingredients", IngredientEditor.LIST_EDITOR, r.getRequiredItems(), s -> r.requiredItems = new ArrayList<>(s)));
         add(new OpenEditorButton<>(this, "Edit Effects", EffectEditor.EFFECT_LIST, r.getEffects(), s -> {
-            r.getEffects().forEach(Effect::deleteSelf);
+            //r.getEffects().forEach(Effect::deleteSelf);
             r.getEffects().clear();
             r.getEffects().addAll(s);
             r.doIndex();
         }));
-        add(new OpenEditorButton<>(this, "Edit Clues", ClueEditor.EDITOR_LIST, r.getClues(), s -> {
-            r.getClues().forEach(Clue::deleteSelf);
+        add(new OpenEditorButton<>(this, "Edit Clues", ClueEditor.EDITOR_LIST, r.getClues().stream().map(to->to.getClueClosure(r)).collect(Collectors.toList()), s -> {
+           // r.getClues().forEach(Clue::deleteSelf);
             r.getClues().clear();
-            r.getClues().addAll(s);
+            s.forEach(t->r.getClues().add(t.clue()));
             r.doIndex();
         }));
         add(new SimpleTextButton(this, TranslateUtils.str("Remove"), Icon.empty()) {
@@ -164,7 +164,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
             r.hideEffects = hide.getSelection();
             r.showfdesc = alt.getSelection();
             r.isHidden = hidden.getSelection();
-            r.infinite = inf.getSelection();
+            r.setInfinite(inf.getSelection());
             r.setInCompletable(locked.getSelection());
 
             if (!id.getText().isEmpty()) {

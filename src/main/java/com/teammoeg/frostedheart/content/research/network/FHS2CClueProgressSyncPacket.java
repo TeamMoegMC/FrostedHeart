@@ -25,35 +25,40 @@ import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.FHResearch;
-import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
+import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-// send when player join
-public class FHClueProgressSyncPacket implements FHMessage {
-    private final boolean data;
-    private final int id;
+// send when clue progress updated
+public record FHS2CClueProgressSyncPacket(boolean data,int id,int index) implements FHMessage {
 
-    public FHClueProgressSyncPacket(FriendlyByteBuf buffer) {
-        data = buffer.readBoolean();
-        id = buffer.readVarInt();
+    public FHS2CClueProgressSyncPacket(FriendlyByteBuf buffer) {
+        this(buffer.readBoolean(),buffer.readVarInt(),buffer.readVarInt());
+        
     }
 
-    public FHClueProgressSyncPacket(TeamDataHolder team, Clue rs) {
-        TeamResearchData rd = team.getData(SpecialDataTypes.RESEARCH_DATA);
-        this.data = rd.isClueTriggered(rs);
-        this.id = FHResearch.clues.getIntId(rs);
+    public FHS2CClueProgressSyncPacket(TeamDataHolder team,Research rch,Clue clue) {
+    	this(team.getData(SpecialDataTypes.RESEARCH_DATA).getData(rch).isClueTriggered(clue),FHResearch.researches.getIntId(rch),rch.getClues().indexOf(clue));
     }
 
     public void encode(FriendlyByteBuf buffer) {
         buffer.writeBoolean(data);
         buffer.writeVarInt(id);
+        buffer.writeVarInt(index);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> FHResearch.clues.getById(id).setCompleted(data));
+        context.get().enqueueWork(() ->{
+        	Research rch=FHResearch.researches.get(id);
+        	if(rch!=null) {
+        		Clue cl=rch.getClues().get(index);
+        		ClientResearchDataAPI.getData().get().getData(id()).setClueTriggered(cl, data);
+        	}
+        	
+        });
         context.get().setPacketHandled(true);
     }
 }

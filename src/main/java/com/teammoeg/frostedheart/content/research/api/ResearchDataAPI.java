@@ -19,10 +19,13 @@
 
 package com.teammoeg.frostedheart.content.research.api;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.base.team.TeamDataClosure;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 
@@ -33,22 +36,26 @@ import net.minecraft.nbt.CompoundTag;
 
 public class ResearchDataAPI {
 
-    public static TeamResearchData getData(Player id) {
+    public static TeamDataClosure<TeamResearchData> getData(Player id) {
         if (id instanceof ServerPlayer)
-            return FHTeamDataManager.INSTANCE.get(FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer) id).get()).getData(SpecialDataTypes.RESEARCH_DATA);
+            return FHTeamDataManager.INSTANCE.get(FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer) id).get()).getDataHolder(SpecialDataTypes.RESEARCH_DATA);
        // return TeamResearchData.getClientInstance();
         return ClientResearchDataAPI.getData();
     }
-
-    public static TeamResearchData getData(UUID id) {
-        return FHTeamDataManager.INSTANCE.get(id).getData(SpecialDataTypes.RESEARCH_DATA);
+    
+    public static Optional<TeamDataClosure<TeamResearchData>> getData(UUID id) {
+        TeamDataHolder holder=FHTeamDataManager.INSTANCE.get(id);
+        if(holder==null)
+        	return Optional.empty();
+        
+    	return Optional.of(holder.getDataHolder(SpecialDataTypes.RESEARCH_DATA));
 
     }
 
     public static double getVariantDouble(Player id, ResearchVariant name) {
         if (id instanceof ServerPlayer)
-            return getData(id).getVariantDouble(name);
-        return ClientResearchDataAPI.getData().getVariantDouble(name);
+            return getData(id).get().getVariantDouble(name);
+        return ClientResearchDataAPI.getData().get().getVariantDouble(name);
 
     }
 
@@ -58,8 +65,8 @@ public class ResearchDataAPI {
 
     public static long getVariantLong(Player id, ResearchVariant name) {
         if (id instanceof ServerPlayer)
-            return getData(id).getVariantLong(name);
-        return ClientResearchDataAPI.getData().getVariantLong(name);
+            return getData(id).get().getVariantLong(name);
+        return ClientResearchDataAPI.getData().get().getVariantLong(name);
 
     }
 
@@ -69,28 +76,26 @@ public class ResearchDataAPI {
 
     public static CompoundTag getVariants(Player id) {
         if (id instanceof ServerPlayer)
-            return getData(id).getVariants();
-        return ClientResearchDataAPI.getData().getVariants();
+            return getData(id).get().getVariants();
+        return ClientResearchDataAPI.getData().get().getVariants();
 
     }
     
     public static CompoundTag getVariants(UUID id) {
-        TeamResearchData trd= getData(id);
-        if(trd!=null)
-        	return trd.getVariants();
-        return new CompoundTag();
+        return getData(id).map(t->t.get().getVariants()).orElseGet(CompoundTag::new);
 
     }
     public static void sendVariants(Player id) {
-        if (id instanceof ServerPlayer)
-        	getData(id).sendVariantPacket();
+        if (id instanceof ServerPlayer) {
+        	TeamDataClosure<TeamResearchData> closure=getData(id);
+        	closure.get().sendVariantPacket(closure.team());
+        }
 
     }
     
     public static void sendVariants(UUID id) {
-        TeamResearchData trd=getData(id);
-        if(trd!=null)
-        	trd.sendVariantPacket();
+        Optional<TeamDataClosure<TeamResearchData>> trd=getData(id);
+        trd.ifPresent(t->t.get().sendVariantPacket(t.team()));
 
     }
     
@@ -98,11 +103,11 @@ public class ResearchDataAPI {
     public static boolean isResearchComplete(Player id, String research) {
         if (id instanceof ServerPlayer)
             return FHTeamDataManager.INSTANCE.get(FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer) id).get()).getData(SpecialDataTypes.RESEARCH_DATA).getData(research).isCompleted();
-        return ClientResearchDataAPI.getData().getData(research).isCompleted();
+        return ClientResearchDataAPI.getData().get().getData(research).isCompleted();
     }
 
     public static void putVariantDouble(Player playerEntity, String key, double val) {
-    	getData(playerEntity).putVariantDouble(key, val);
+    	getData(playerEntity).get().putVariantDouble(key, val);
     	sendVariants(playerEntity);
     }
     public static void putVariantDouble(ServerPlayer id, String name, double val) {
@@ -110,8 +115,11 @@ public class ResearchDataAPI {
     	sendVariants(id);
     }
     public static void putVariantDouble(UUID id, ResearchVariant name, double val) {
-    	getData(id).putVariantDouble(name, val);
-    	sendVariants(id);
+    	getData(id).ifPresent(t->{
+    		t.get().putVariantDouble(name, val);
+    		sendVariants(id);
+    	}); 
+    	
     }
     public static void putVariantDouble(UUID id, String name, double val) {
         getVariants(id).putDouble(name, val);
@@ -120,7 +128,7 @@ public class ResearchDataAPI {
 
 
     public static void putVariantLong(ServerPlayer id, ResearchVariant name, long val) {
-    	getData(id).putVariantLong(name, val);
+    	getData(id).get().putVariantLong(name, val);
     	sendVariants(id);
     }
     public static void putVariantLong(ServerPlayer id, String name, long val) {
@@ -128,8 +136,11 @@ public class ResearchDataAPI {
     	sendVariants(id);
     }
     public static void putVariantLong(UUID id, ResearchVariant name, long val) {
-    	getData(id).putVariantLong(name, val);
-    	sendVariants(id);
+    	getData(id).ifPresent(t->{
+    		t.get().putVariantLong(name, val);
+    		sendVariants(id);
+    	});
+    	
     }
     public static void putVariantLong(UUID id, String name, long val) {
         getVariants(id).putLong(name, val);

@@ -24,8 +24,10 @@ import java.util.List;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
@@ -89,8 +91,8 @@ public class EffectShowCategory extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
-        team.categories.add(cate);
+    public boolean grant(TeamDataHolder team,TeamResearchData trd,  Player triggerPlayer, boolean isload) {
+        trd.categories.add(cate);
         return true;
     }
 
@@ -102,7 +104,7 @@ public class EffectShowCategory extends Effect {
 
     @OnlyIn(Dist.CLIENT)
     @Override
-    public void onClick() {
+    public void onClick(ResearchData data) {
         if (cate != null)
             JEICompat.showJEICategory(cate);
     }

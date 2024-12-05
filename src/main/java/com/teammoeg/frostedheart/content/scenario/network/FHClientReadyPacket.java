@@ -27,19 +27,10 @@ import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class FHClientReadyPacket implements FHMessage {
-    String lang;
-
+public record FHClientReadyPacket(String lang) implements FHMessage {
     public FHClientReadyPacket(FriendlyByteBuf buffer) {
-        lang = buffer.readUtf();
+        this(buffer.readUtf());
     }
-
-
-    public FHClientReadyPacket(String lang) {
-        super();
-        this.lang = lang;
-    }
-
 
     public void encode(FriendlyByteBuf buffer) {
         buffer.writeUtf(lang);
@@ -48,7 +39,7 @@ public class FHClientReadyPacket implements FHMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-            FHScenario.startFor(context.get().getSender());
+            FHScenario.startFor(context.get().getSender(),lang);
         });
         context.get().setPacketHandled(true);
     }

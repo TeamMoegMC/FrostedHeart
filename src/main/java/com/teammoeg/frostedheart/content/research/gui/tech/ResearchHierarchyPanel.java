@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -157,10 +158,11 @@ public class ResearchHierarchyPanel extends Panel {
         Research parent;
 
         public ResearchSimpleButton(ResearchHierarchyPanel panel, Research research) {
-            super(panel, research.getName(), research.getIcon().asFtbIcon());
+            super(panel, research.getName(), research.getFTBIcon());
             this.research = research;
             this.researchScreen = panel.researchPanel;
             setSize(24, 24);
+            
         }
 
         @Override
@@ -226,9 +228,14 @@ public class ResearchHierarchyPanel extends Panel {
                         // TODO Add parent
                         Research r = researchPanel.selectedResearch;
                         ResearchEditorDialog.RESEARCH_LIST.open(this, "Edit parents", r.getParents(), s -> {
-                            r.setParents(s.stream().map(Research::getSupplier).collect(Collectors.toList()));
+                        	try {
+                        		System.out.println(s);
+                            r.setParents(s.stream().map(Research::getId).collect(Collectors.toList()));
                             FHResearch.reindex();
                             EditUtils.saveResearch(r);
+                        	}catch(Throwable t) {
+                        		t.printStackTrace();
+                        	}
                         });
                     }
                 };
@@ -245,7 +252,7 @@ public class ResearchHierarchyPanel extends Panel {
                                 e.removeParent(r);
                                 EditUtils.saveResearch(e);
                             });
-                            s.forEach(e -> e.addParent(r.getSupplier()));
+                            s.forEach(e -> e.addParent(r));
                             FHResearch.reindex();
                             EditUtils.saveResearch(r);
                         });
@@ -304,6 +311,7 @@ public class ResearchHierarchyPanel extends Panel {
                 x = ButtonPos[4] + (k - 4) * 32;
             } else
                 x = ButtonPos[k];
+            System.out.println(parent);
             ResearchSimpleButton parentButton = new ResearchSimpleButton(this, parent);
             add(parentButton);
             parentButton.setPos(x, 16);
@@ -344,7 +352,7 @@ public class ResearchHierarchyPanel extends Panel {
 
         // if (FHResearch.editor || researchPanel.selectedResearch.isUnlocked()) {
         boolean crunlocked = researchPanel.selectedResearch.isUnlocked();
-        Set<Research> children = researchPanel.selectedResearch.getChildren();
+        Collection<Research> children = researchPanel.selectedResearch.getChildren();
         for (Research child : children) {
             if (!crunlocked && !child.isShowable())
                 continue;
