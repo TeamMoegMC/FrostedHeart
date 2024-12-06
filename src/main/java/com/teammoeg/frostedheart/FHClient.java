@@ -56,5 +56,6 @@ public class FHClient {
     public static void setup(FMLClientSetupEvent event) {
         LOGGER.info(CLIENT_SETUP, "Setting up client");
         FHGuiProviders.setRewardGuiProviders();
+        FHKeyMappings.init();
     }
 }

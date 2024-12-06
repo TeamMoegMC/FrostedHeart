@@ -34,8 +34,6 @@ import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
 import com.teammoeg.frostedheart.foundation.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.foundation.world.entities.CuriosityEntityRenderer;
 import net.minecraftforge.client.event.*;
-import net.minecraftforge.common.util.Lazy;
-import org.lwjgl.glfw.GLFW;
 
 import com.teammoeg.frostedheart.foundation.model.DynamicBlockModelReference;
 import com.teammoeg.frostedheart.foundation.model.LiningModel;
@@ -71,7 +69,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ArmorItem;
@@ -89,7 +86,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
-public class ClientRegistryEvents {
+public class FHClientEventsMod {
 
     private static Tree.InnerNode<ResourceLocation, ManualEntry> CATEGORY;
 
@@ -129,18 +126,12 @@ public class ClientRegistryEvents {
         return (c, i, t) -> new MenuScreenWrapper<>(factory.apply(c), c, i, t).disableSlotDrawing();
     }
 
-	public static Lazy<KeyMapping> key_skipDialog = Lazy.of(() -> new KeyMapping("key.frostedheart.skip_dialog",
-		GLFW.GLFW_KEY_Z, "key.categories.frostedheart"));
-
-    public static Lazy<KeyMapping> key_InfraredView = Lazy.of(() -> new KeyMapping("key.frostedheart.infrared_view",
-            GLFW.GLFW_KEY_I, "key.categories.frostedheart"));
-
-	@SubscribeEvent
+    @SubscribeEvent
 	public static void registerKeys(RegisterKeyMappingsEvent ev) {
-        key_skipDialog.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
-        key_InfraredView.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
-		ev.register(key_skipDialog.get());
-        ev.register(key_InfraredView.get());
+        FHKeyMappings.key_skipDialog.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
+        FHKeyMappings.key_InfraredView.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
+		ev.register(FHKeyMappings.key_skipDialog.get());
+        ev.register(FHKeyMappings.key_InfraredView.get());
 	}
 
 	@SubscribeEvent

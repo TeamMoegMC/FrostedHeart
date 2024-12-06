@@ -82,7 +82,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
-public class ClientEvents {
+public class FHClientEvents {
 
     @SuppressWarnings({"unchecked"})
     @SubscribeEvent
@@ -395,11 +395,11 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onClientKey(InputEvent.Key event) {
         if (event.getAction() == GLFW.GLFW_PRESS) {
-            if (ClientRegistryEvents.key_skipDialog.get().consumeClick()) {
+            if (FHKeyMappings.key_skipDialog.get().consumeClick()) {
                 if (ClientScene.INSTANCE != null)
                     ClientScene.INSTANCE.sendContinuePacket(true);
                 //event.setCanceled(true);
-            } else if (ModList.get().isLoaded("ldlib") && ClientRegistryEvents.key_InfraredView.get().consumeClick()) {
+            } else if (ModList.get().isLoaded("ldlib") && FHKeyMappings.key_InfraredView.get().consumeClick()) {
                 InfraredViewRenderer.toggleInfraredView();
             }
         }

@@ -12,10 +12,10 @@ import net.minecraftforge.fml.common.Mod;
 /**
  * Events fired only on logical server side.
  *
- * It really can be part of CommonEvents, but this is just for organization.
+ * It really can be part of FHCommonEvents, but this is just for organization.
  */
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
-public class ServerEvents {
+public class FHServerEvents {
     @SubscribeEvent
     public static void serverLevelSave(final LevelEvent.Save event) {
         if (FHTeamDataManager.INSTANCE != null) {

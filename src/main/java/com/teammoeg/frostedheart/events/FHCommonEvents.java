@@ -119,7 +119,7 @@ import top.theillusivec4.curios.api.event.DropRulesEvent;
 import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
-public class CommonEvents {
+public class FHCommonEvents {
 
     static ResourceLocation ft = new ResourceLocation("storagedrawers:drawers");
 

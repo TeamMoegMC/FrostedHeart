@@ -39,7 +39,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
-public class AttachCapabilityEvents {
+public class FHAttachCapabilityEvents {
 
     @SubscribeEvent
     public static void attachToChunk(AttachCapabilitiesEvent<LevelChunk> event) {

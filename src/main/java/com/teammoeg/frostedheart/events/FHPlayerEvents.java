@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,23 +19,28 @@
 
 package com.teammoeg.frostedheart.events;
 
-import com.teammoeg.frostedheart.FHMain;
+
+import com.teammoeg.frostedheart.*;
+import com.teammoeg.frostedheart.content.climate.ForecastHandler;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
-import com.teammoeg.frostedheart.content.foods.dailykitchen.DailyKitchen;
-import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
+import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
+import com.teammoeg.frostedheart.content.research.insight.InsightHandler;
+import com.teammoeg.frostedheart.content.utility.transportation.MovementModificationHandler;
+
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
-public class LivingEvents {
+public class FHPlayerEvents {
     @SubscribeEvent
-    public static void startUsingItems(LivingEntityUseItemEvent.Start event) {
-        FoodTemperatureHandler.checkFoodBeforeEating(event);
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        FoodTemperatureHandler.onPlayerTick(event);
+        ForecastHandler.sendForecastMessages(event);
+        MovementModificationHandler.movementModifier(event);
+        InsightHandler.onPlayerTick(event);
+        TemperatureUpdate.updateTemperature(event);
+        TemperatureUpdate.regulateTemperature(event);
     }
 
-    @SubscribeEvent
-    public static void finishUsingItems(LivingEntityUseItemEvent.Finish event) {
-        FoodTemperatureHandler.checkFoodAfterEating(event);
-        DailyKitchen.tryGiveBenefits(event);
-    }
 }
