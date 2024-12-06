@@ -23,11 +23,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.mixin.client.BossHealthOverlayAccess;
 import com.teammoeg.frostedheart.util.client.*;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.world.level.border.WorldBorder;
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -591,55 +593,39 @@ public class FrostedHud {
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
-    public static void renderFrozenOverlay(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
+    public static void renderFrozenOverlay(GuiGraphics pGuiGraphics, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_frozen");
         // render frozen overlay with alpha based on linear interpolation
         float tempDelta = Mth.clamp(Math.abs(PlayerTemperatureData.getCapability(player).map(t->t.smoothedBody).orElse(0F)), 0.5f, 5.0f);
-        float opacityDelta = (tempDelta - 0.5F) / 4.5F;
-        ResourceLocation texture;
+        float alpha = (tempDelta - 0.5F) / 4.5F;
         RenderSystem.enableBlend();
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
-        RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
-       // RenderSystem.disableAlphaTest();
-        texture = FROZEN_OVERLAY;
-        mc.getTextureManager().bindForSetup(texture);
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBuilder();
-        bufferbuilder.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
-        bufferbuilder.vertex(0.0D, y, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(0.0F, 1.0F).endVertex();
-        bufferbuilder.vertex((double) x * 2, y, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(1.0F, 1.0F).endVertex();
-        bufferbuilder.vertex((double) x * 2, 0.0D, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(1.0F, 0.0F).endVertex();
-        bufferbuilder.vertex(0.0D, 0.0D, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(0.0F, 0.0F).endVertex();
-        tessellator.end();
+        pGuiGraphics.setColor(1.0F, 1.0F, 1.0F, Math.min(alpha, 1));
+        pGuiGraphics.blit(FROZEN_OVERLAY, 0, 0, -90, 0.0F, 0.0F, pGuiGraphics.guiWidth(), pGuiGraphics.guiHeight(), pGuiGraphics.guiWidth(), pGuiGraphics.guiHeight());
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
-        //RenderSystem.enableAlphaTest();
+        pGuiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
     }
-    public static void renderFrozenVignette(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
+    public static void renderFrozenVignette(GuiGraphics pGuiGraphics, int x, int y, Minecraft mc, Player player) {
         mc.getProfiler().push("frostedheart_vignette");
+        /* TODO: Fix this
         float tempDelta = Mth.clamp(Math.abs(PlayerTemperatureData.getCapability(player).map(t->t.smoothedBody).orElse(0F)), 0.5f, 5.0f);
-        float opacityDelta = 0.5F * (tempDelta - 0.5F) / 4.5F;
+        float alpha = 0.5F * (tempDelta - 0.5F) / 4.5F;
         RenderSystem.enableBlend();
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
-        RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
-        //RenderSystem.disableAlphaTest();
-        mc.getTextureManager().bindForSetup(ICE_VIGNETTE);
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder buffer = tessellator.getBuilder();
-        buffer.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
-        buffer.vertex(0.0D, y, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(0.0F, 1.0F).endVertex();
-        buffer.vertex(x * 2, y, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(1.0F, 1.0F).endVertex();
-        buffer.vertex(x * 2, 0.0D, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(1.0F, 0.0F).endVertex();
-        buffer.vertex(0.0D, 0.0D, -90.0D).color(1f, 1f, 1f, Math.min(opacityDelta, 1)).uv(0.0F, 0.0F).endVertex();
-        tessellator.end();
+        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+        pGuiGraphics.setColor(1.0F, 1.0F, 1.0F, Math.min(alpha, 1));
+        pGuiGraphics.blit(ICE_VIGNETTE, 0, 0, -90, 0.0F, 0.0F, pGuiGraphics.guiWidth(), pGuiGraphics.guiHeight(), pGuiGraphics.guiWidth(), pGuiGraphics.guiHeight());
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
-        //RenderSystem.enableAlphaTest();
+        pGuiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.defaultBlendFunc();
         RenderSystem.disableBlend();
+        */
         mc.getProfiler().pop();
     }
     public static void renderHealth(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {
