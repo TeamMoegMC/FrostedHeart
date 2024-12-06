@@ -25,12 +25,15 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import com.teammoeg.frostedheart.content.research.gui.FHIcons;
+import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.IconEditor;
 import com.teammoeg.frostedheart.content.research.gui.editor.BaseEditDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditListDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditUtils;
 import com.teammoeg.frostedheart.content.research.gui.editor.Editor;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditorSelector;
+import com.teammoeg.frostedheart.content.research.gui.editor.IngredientEditor;
 import com.teammoeg.frostedheart.content.research.gui.editor.LabeledOpenEditorButton;
 import com.teammoeg.frostedheart.content.research.gui.editor.LabeledSelection;
 import com.teammoeg.frostedheart.content.research.gui.editor.LabeledTextBox;
@@ -45,6 +48,7 @@ import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.resources.ResourceLocation;
 
@@ -135,15 +139,15 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         public void addWidgets() {
             super.addWidgets();
             add(EditUtils.getTitle(this, "Only the first in the following takes effects"));
-            add(new OpenEditorButton<>(this, "Select Item", SelectItemStackDialog.EDITOR, e.item == null ? ItemStack.EMPTY : new ItemStack(e.item), e.item == null ? Icon.empty() : ItemIcon.getItemIcon(e.item), s -> e.item = s.getItem()));
-            add(new OpenEditorButton<>(this, "Edit ItemStack", SelectItemStackDialog.EDITOR, e.itemStack == null ? ItemStack.EMPTY : e.itemStack, e.itemStack == null ? Icon.empty() : ItemIcon.getItemIcon(e.itemStack), s -> {
-                e.item = null;
-                e.itemStack = s;
+            add(new OpenEditorButton<Ingredient>(this, "Edit Item",
+            		IngredientEditor.EDITOR_INGREDIENT,
+            		e.ingredient, s -> {
+                e.ingredient = s;
             }));
             add(new OpenEditorButton<>(this, "Edit Recipe IDs", EditListDialog.STRING_LIST, e.unlocks.stream().map(Recipe::getId).map(String::valueOf).collect(Collectors.toList()), s -> {
                 e.setList(s);
-                e.item = null;
-                e.itemStack = null;
+                e.ingredient = null;
+
             }));
 
         }

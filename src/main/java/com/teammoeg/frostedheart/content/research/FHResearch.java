@@ -345,7 +345,7 @@ public class FHResearch {
 	public static void readOne(String key, Research r) {
 		r.setId(key);
 		r.packetInit();
-		researches.register(r);
+		//researches.register(r);
 	}
 
 	public static void readAll(List<Research> rss) {

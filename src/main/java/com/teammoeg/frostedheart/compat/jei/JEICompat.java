@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -244,10 +245,8 @@ public class JEICompat implements IModPlugin {
 	        	if(ClientResearchDataAPI.getData().get().isEffectGranted(research, effect)&&effect instanceof EffectCrafting) {
 	        		Set<Item> item=new HashSet<>();
 	        		EffectCrafting crafting=(EffectCrafting) effect;
-	        		if(crafting.getItem()!=null)
-	        			item.add(crafting.getItem());
-	        		else if(crafting.getItemStack()!=null)
-	        			item.add(crafting.getItemStack().getItem());
+	        		if(crafting.getIngredient()!=null)
+	        			Stream.of(crafting.getIngredient().getItems()).map(t->t.getItem()).forEach(item::add);
 	        		else if(crafting.getUnlocks()!=null)
 	        			crafting.getUnlocks().stream().map(RecipeUtil::getResultItem).filter(t->t!=null&&!t.isEmpty()).map(ItemStack::getItem).forEach(item::add);
 	        		for(Item ix:item) {
