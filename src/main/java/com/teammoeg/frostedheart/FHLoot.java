@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart;
 import com.mojang.serialization.Codec;
 
 import com.teammoeg.frostedheart.content.loot.*;
-import com.teammoeg.frostedheart.foundation.loot.*;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
 import net.minecraftforge.common.loot.IGlobalLootModifier;
