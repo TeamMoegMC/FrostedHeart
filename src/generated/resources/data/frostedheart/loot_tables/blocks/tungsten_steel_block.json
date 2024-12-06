@@ -11,11 +11,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "frostedheart:tungstensteel_block"
+          "name": "frostedheart:tungsten_steel_block"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "frostedheart:blocks/tungstensteel_block"
+  "random_sequence": "frostedheart:blocks/tungsten_steel_block"
 }
