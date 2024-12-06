@@ -82,7 +82,7 @@ public abstract class Clue{
         register(KillClue.class, "kill", KillClue.CODEC);
         register(MinigameClue.class, "game", MinigameClue.CODEC);
     }
-    public static <T extends Clue> void register(Class<T> cls, String id, Codec<T> j) {
+    public static <T extends Clue> void register(Class<T> cls, String id, MapCodec<T> j) {
         registry.register(cls, id, j);
     }
     public final static Codec<Clue> CODEC=registry.codec();

@@ -24,6 +24,7 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableSet;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
@@ -53,7 +54,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * Allows forming multiblock
  */
 public class EffectBuilding extends Effect {
-	public static final Codec<EffectBuilding> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	public static final MapCodec<EffectBuilding> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
 	ResourceLocation.CODEC.xmap(MultiblockHandler::getByUniqueName, IMultiblock::getUniqueName).fieldOf("multiblock").forGetter(o->o.multiblock))
 	.apply(t,EffectBuilding::new));
     IMultiblock multiblock;

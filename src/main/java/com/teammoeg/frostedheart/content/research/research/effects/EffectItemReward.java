@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
@@ -42,7 +43,7 @@ import net.minecraft.network.chat.Component;
  * Reward the research team item rewards
  */
 public class EffectItemReward extends Effect {
-	public static final Codec<EffectItemReward> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	public static final MapCodec<EffectItemReward> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
 	Codec.list(CodecUtil.ITEMSTACK_CODEC).fieldOf("rewards").forGetter(o->o.rewards))
 	.apply(t,EffectItemReward::new));
     List<ItemStack> rewards;

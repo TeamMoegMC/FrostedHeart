@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.research.research.clues;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.research.Research;
@@ -28,7 +29,7 @@ import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.network.chat.Component;
 
 public class MinigameClue extends CustomClue {
-	public static final Codec<MinigameClue> CODEC=RecordCodecBuilder.create(t->t.group(
+	public static final MapCodec<MinigameClue> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
 		Clue.BASE_CODEC.forGetter(o->o.getData()),
 		Codec.INT.fieldOf("level").forGetter(o->o.level)
 		).apply(t,MinigameClue::new));

@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.research.research.clues;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.research.Research;
@@ -28,7 +29,7 @@ import com.teammoeg.frostedheart.content.research.research.Research;
  * Very Custom Clue trigger by code or manually.
  */
 public class CustomClue extends Clue {
-	public static final Codec<CustomClue> CODEC=RecordCodecBuilder.create(t->t.group(
+	public static final MapCodec<CustomClue> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
 		Clue.BASE_CODEC.forGetter(o->o.getData())
 		).apply(t,CustomClue::new));
     public CustomClue() {

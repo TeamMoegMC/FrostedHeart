@@ -4,23 +4,30 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.MapCodec;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
+import com.teammoeg.frostedheart.util.io.codec.KeyMapCodec;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.Mth;
 
 public class TypedCodecRegistry<T> extends TypeRegistry<T> {
-	Map<String,Codec<? extends T>> codecs=new HashMap<>();
-	List<Codec<? extends T>> codecList=new ArrayList<>();
-	Codec<T> byName=Codec.STRING.dispatch(o->this.typeOf(o.getClass()),this.codecs::get);
-	Codec<T> byInt=Codec.INT.dispatch(this::idOf,codecList::get);
-	public <A extends T> void register(Class<A> cls, String type,Codec<A> codec) {
-		codecs.put(type, codec);
-		codecList.add(codec);
+	Map<String,MapCodec<T>> codecs=new HashMap<>();
+	List<MapCodec<T>> codecList=new ArrayList<>();
+	List<Codec<T>> codecCodecList=new ArrayList<>();
+	Codec<T> byName=new KeyMapCodec<T,String>(Codec.STRING,o->this.typeOf(o.getClass()),this::getCodec);
+	Codec<T> byInt=Codec.INT.dispatch(this::idOf,codecCodecList::get);
+	public <A extends T> void register(Class<A> cls, String type,MapCodec<A> codec) {
+		codecs.put(type, (MapCodec<T>) codec);
+		codecList.add((MapCodec<T>) codec);
+		codecCodecList.add((Codec<T>)codec.codec());
 		super.register(cls, type);
+
 	}
 	public Codec<T> byNameCodec(){
 		return byName;
@@ -33,6 +40,11 @@ public class TypedCodecRegistry<T> extends TypeRegistry<T> {
 	}
 	public void write(T obj,FriendlyByteBuf buffer) {
 		CodecUtil.writeCodec(buffer, byInt, obj);
+	}
+	public MapCodec<T> getCodec(String name){
+		MapCodec<T> selected= codecs.get(name);
+		System.out.println(selected);
+		return selected;
 	}
 	public T read(FriendlyByteBuf buffer) {
 		return CodecUtil.readCodec(buffer, byInt);

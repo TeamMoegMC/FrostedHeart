@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
@@ -43,7 +44,7 @@ import net.minecraft.world.level.block.Block;
  * Allows the research team to use certain machines
  */
 public class EffectUse extends Effect {
-	public static final Codec<EffectUse> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	public static final MapCodec<EffectUse> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
 	Codec.list(CodecUtil.registryCodec(()->BuiltInRegistries.BLOCK)).fieldOf("blocks").forGetter(o->o.blocks))
 	.apply(t,EffectUse::new));
     List<Block> blocks;

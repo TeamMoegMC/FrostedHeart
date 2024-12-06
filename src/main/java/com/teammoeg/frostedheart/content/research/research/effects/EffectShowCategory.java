@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
@@ -45,7 +46,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * Allows the research team to use certain machines
  */
 public class EffectShowCategory extends Effect {
-	public static final Codec<EffectShowCategory> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	public static final MapCodec<EffectShowCategory> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
 	ResourceLocation.CODEC.fieldOf("category").forGetter(o->o.cate))
 	.apply(t,EffectShowCategory::new));
     ResourceLocation cate;

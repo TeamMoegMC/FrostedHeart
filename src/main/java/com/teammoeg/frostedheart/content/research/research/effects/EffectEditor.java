@@ -202,7 +202,11 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         public EffectItemReward createEffect() {
             return new EffectItemReward();
         }
-
+        @Override
+        public void onClose() {
+            super.onClose();
+            System.out.println(e.rewards);
+        }
     }
     private static class Stats extends EffectEditor<EffectStats> {
         LabeledSelection<Boolean> perc;
@@ -347,6 +351,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         e.name = name.getText();
         e.hidden = sd.getSelection();
         e.setNonce(nonce.getText());
+        
         cb.accept(e);
 
     }

@@ -253,7 +253,7 @@ public class FHResearch {
 		
 				Research.CODEC.parse(JsonOps.INSTANCE, je).resultOrPartial(FHMain.LOGGER::error).map(o -> {
 					o.setId(r.getId());
-					System.out.println(o);
+					//System.out.println(o);
 					return o;
 				}).ifPresent(researches::replace);
 				;

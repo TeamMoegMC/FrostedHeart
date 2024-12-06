@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
@@ -39,7 +40,7 @@ import net.minecraft.network.chat.Component;
  * Reward the research team executes command
  */
 public class EffectExperience extends Effect {
-	public static final Codec<EffectExperience> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	public static final MapCodec<EffectExperience> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
 	Codec.INT.fieldOf("experience").forGetter(o->o.exp))
 	.apply(t,EffectExperience::new));
     int exp;

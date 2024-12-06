@@ -31,6 +31,8 @@ import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.ListBuilder;
 import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.MapLike;
+import com.mojang.serialization.RecordBuilder;
 import com.mojang.serialization.codecs.EitherMapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
@@ -254,6 +256,55 @@ public class CodecUtil {
 				return Either.left(va);
 			return Either.right(fb.apply(o));
 		});
+	}
+	public static <A> Codec<A> debugCodec(Codec<A> codec){
+		return new Codec<>() {
+
+			@Override
+			public <T> DataResult<T> encode(A input, DynamicOps<T> ops, T prefix) {
+				DataResult<T> res=codec.encode(input, ops, prefix);
+				System.out.println(res);
+				return res;
+			}
+
+			@Override
+			public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
+				DataResult<Pair<A, T>> res=codec.decode(ops,input);
+				System.out.println(res);
+				return res;
+			}
+			@Override
+			public String toString() {
+				return codec.toString();
+			}
+		};
+	}
+	public static <A> MapCodec<A> debugCodec(MapCodec<A> codec){
+		return new MapCodec<>() {
+
+			@Override
+			public <T> DataResult<A> decode(DynamicOps<T> ops, MapLike<T> input) {
+				DataResult<A> res=codec.decode(ops, input);
+				System.out.println(res);
+				return res;
+			}
+
+			@Override
+			public <T> RecordBuilder<T> encode(A input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
+				RecordBuilder<T> res=codec.encode(input, ops, prefix);
+				System.out.println(res.build(ops.empty()));
+				return res;
+			}
+
+			@Override
+			public <T> Stream<T> keys(DynamicOps<T> ops) {
+				return codec.keys(ops);
+			}
+			@Override
+			public String toString() {
+				return codec.toString();
+			}
+		};
 	}
 	public static <O,A,B,C> RecordCodecBuilder<O, Either<A, Either<B, C>>> either(
 			MapCodec<A> a,MapCodec<B> b,MapCodec<C> c,
