@@ -4,6 +4,8 @@
     "frostedheart:compressed_biscuits",
     "frostedheart:packed_nuts",
     "frostedheart:dried_vegetables",
-    "frostedheart:chocolate"
+    "frostedheart:chocolate",
+    "minecraft:cookie",
+    "minecraft:dried_kelp"
   ]
 }

@@ -31,33 +31,13 @@ import net.minecraft.world.item.Item.Properties;
 
 public class FHSoupItem extends FHBaseItem {
 
-    private final boolean isPoor;
-
-    public FHSoupItem(Properties properties, boolean isPoorlyMade) {
+    public FHSoupItem(Properties properties) {
         super( properties);
-        isPoor = isPoorlyMade;
-    }
-
-    public boolean isPoor() {
-        return isPoor;
     }
 
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
         ItemStack itemstack = super.finishUsingItem(stack, worldIn, entityLiving);
-
-        // Punish the player since soup item is not properly made
-        /*if (this.isPoor && entityLiving instanceof ServerPlayerEntity) {
-            ServerPlayerEntity player = (ServerPlayerEntity) entityLiving;
-            if (worldIn.getRandom().nextInt(3) == 0) {
-                player.addPotionEffect(new EffectInstance(Effects.HUNGER, 100, 1));
-                player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 40, 1));
-                IDietTracker idt = DietCapability.get(player).orElse(null);
-                float nv = idt.getValue("protein") - 0.01f;
-                idt.setValue("protein", nv > 0 ? nv : 0);
-            }
-        }*/
-
         return entityLiving instanceof Player && ((Player) entityLiving).getAbilities().instabuild ? itemstack : new ItemStack(Items.BOWL);
     }
 }

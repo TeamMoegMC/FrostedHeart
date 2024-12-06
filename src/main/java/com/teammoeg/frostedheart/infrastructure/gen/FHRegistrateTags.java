@@ -164,18 +164,6 @@ public class FHRegistrateTags {
                 .add(Items.IRON_NUGGET);
 
         prov.tag(FHTags.Items.REFUGEE_NEEDS.tag)
-                .add(FHItems.military_rations.get())
-                .add(FHItems.compressed_biscuits_pack.get())
-                .add(FHItems.compressed_biscuits.get())
-                .add(FHItems.packed_nuts.get())
-                .add(FHItems.dried_vegetables.get())
-                .add(FHItems.chocolate.get())
-                .add(FHItems.black_bread.get())
-                .add(FHItems.rye_bread.get())
-                .add(FHItems.rye_porridge.get())
-                .add(FHItems.rye_sawdust_porridge.get())
-                .add(FHItems.vegetable_sawdust_soup.get())
-                .add(FHItems.vegetable_soup.get())
                 .add(Items.COOKED_PORKCHOP)
                 .add(Items.COOKED_BEEF)
                 .add(Items.COOKED_CHICKEN)
@@ -192,14 +180,8 @@ public class FHRegistrateTags {
                 .add(Items.PUMPKIN_PIE);
 
         prov.tag(FHTags.Items.DRY_FOOD.tag)
-                .add(FHItems.compressed_biscuits_pack.get())
-                .add(FHItems.compressed_biscuits.get())
-                .add(FHItems.packed_nuts.get())
-                .add(FHItems.dried_vegetables.get())
-                .add(FHItems.chocolate.get());
-
-        prov.tag(FHTags.Items.INSULATED_FOOD.tag)
-                .add(FHItems.military_rations.get());
+                .add(Items.COOKIE)
+                .add(Items.DRIED_KELP);
 
         prov.tag(forgeItemTag("crushed_raw_materials/copper"))
                 .add(AllItems.CRUSHED_COPPER.asItem());

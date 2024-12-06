@@ -973,96 +973,331 @@ public class FHItems {
     }
 
     // Misc
-    public static RegistryObject<Item> generator_ash = register("generator_ash", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> raw_hide = register("raw_hide", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> makeshift_core_broken = register("makeshift_core_broken", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> handheld_core = register("handheld_core", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> energy_core = register("energy_core", n -> new FHBaseItem(createProps()));
+    public static ItemEntry<Item> generator_ash = REGISTRATE
+            .item("generator_ash", Item::new)
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<Item> raw_hide = REGISTRATE
+            .item("raw_hide", Item::new)
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<Item> makeshift_core_broken = REGISTRATE
+            .item("makeshift_core_broken", Item::new)
+            .model(AssetLookup.existingItemModel())
+            .lang("Broken Makeshift Core")
+            .register();
+    public static ItemEntry<Item> handheld_core = REGISTRATE
+            .item("handheld_core", Item::new)
+            .model(AssetLookup.existingItemModel())
+            .lang("Repaired Makeshift Core")
+            .register();
+    public static ItemEntry<Item> energy_core = REGISTRATE
+            .item("energy_core", Item::new)
+            .model(AssetLookup.existingItemModel())
+            .register();
+
 
     static {
         REGISTRATE.setCreativeTab(FHTabs.FOODS);
     }
 
     // Foods and plants
-    public static RegistryObject<Item> dried_wolfberries = register("dried_wolfberries", n -> new FHBaseItem(createProps().food(FHFoodProperties.DRIED_WOLFBERRIES)));
-    public static RegistryObject<Item> rye = register("rye", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> frozen_seeds = register("frozen_seeds", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> rye_flour = register("rye_flour", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> raw_rye_bread = register("raw_rye_bread", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> random_seeds = register("random_seeds", n -> new FHBaseItem(createProps()));
+    public static ItemEntry<Item> dried_wolfberries = REGISTRATE
+            .item("dried_wolfberries", Item::new)
+            .model(AssetLookup.existingItemModel())
+            .properties(p -> p.food(FHFoodProperties.DRIED_WOLFBERRIES))
+            .register();
+    public static ItemEntry<Item> rye = REGISTRATE
+            .item("rye", Item::new)
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<Item> frozen_seeds = REGISTRATE
+            .item("frozen_seeds", Item::new)
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<Item> rye_flour = REGISTRATE
+            .item("rye_flour", Item::new)
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<Item> raw_rye_bread = REGISTRATE
+            .item("raw_rye_bread", Item::new)
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<Item> random_seeds = REGISTRATE
+            .item("random_seeds", Item::new)
+            .model(AssetLookup.existingItemModel())
+            .register();
     public static ItemEntry<Item> rye_bread = REGISTRATE
             .item("rye_bread", Item::new)
+            .tag(FHTags.Items.REFUGEE_NEEDS.tag)
             .properties(p -> p.food(FHFoodProperties.RYE_BREAD))
             .register();
-//    public static RegistryObject<Item> rye_bread = register("rye_bread", n -> new FHBaseItem(createProps().food(FHFoodProperties.RYE_BREAD)));
-    public static RegistryObject<Item> black_bread = register("black_bread", n -> new FHBaseItem(createProps().food(FHFoodProperties.BLACK_BREAD)));
-    public static RegistryObject<Item> vegetable_sawdust_soup = register("vegetable_sawdust_soup", n -> new FHSoupItem(createProps().stacksTo(1).food(FHFoodProperties.VEGETABLE_SAWDUST_SOUP), true));
-    public static RegistryObject<Item> rye_sawdust_porridge = register("rye_sawdust_porridge", n -> new FHSoupItem(createProps().stacksTo(1).food(FHFoodProperties.RYE_SAWDUST_PORRIDGE), true));
-    public static RegistryObject<Item> rye_porridge = register("rye_porridge", n -> new FHSoupItem(createProps().stacksTo(1).food(FHFoodProperties.RYE_SAWDUST_PORRIDGE), false));
-    public static RegistryObject<Item> vegetable_soup = register("vegetable_soup", n -> new FHSoupItem(createProps().stacksTo(1).food(FHFoodProperties.VEGETABLE_SAWDUST_SOUP), false));
-    public static RegistryObject<Item> military_rations = register("military_rations", n -> new CannedFoodItem(createProps().food(new FoodProperties.Builder().nutrition(6).saturationMod(0.6f).build())));
-    public static RegistryObject<Item> compressed_biscuits_pack = register("compressed_biscuits_pack", n -> new CannedFoodItem(createProps().food(Foods.BREAD)));
-    public static RegistryObject<Item> compressed_biscuits = register("compressed_biscuits", n -> new CannedFoodItem(createProps().food(Foods.BREAD)));
-    public static RegistryObject<Item> packed_nuts = register("packed_nuts", n -> new CannedFoodItem(createProps().food((new FoodProperties.Builder()).nutrition(2).saturationMod(0.8F).build()), false));
-    public static RegistryObject<Item> dried_vegetables = register("dried_vegetables", n -> new CannedFoodItem(createProps().food((new FoodProperties.Builder()).nutrition(4).saturationMod(0.6F).build())));
-    public static RegistryObject<Item> chocolate = register("chocolate", n -> new FHBaseItem(createProps().food((new FoodProperties.Builder()).nutrition(4).saturationMod(0.8F).meat().fast().build())));
-
+    public static ItemEntry<Item> black_bread = REGISTRATE
+            .item("black_bread", Item::new)
+            .tag(FHTags.Items.REFUGEE_NEEDS.tag)
+            .model(AssetLookup.existingItemModel())
+            .properties(p -> p.food(FHFoodProperties.BLACK_BREAD))
+            .register();
+    public static ItemEntry<FHSoupItem> vegetable_sawdust_soup = REGISTRATE
+            .item("vegetable_sawdust_soup", FHSoupItem::new)
+            .tag(FHTags.Items.REFUGEE_NEEDS.tag)
+            .model(AssetLookup.existingItemModel())
+            .properties(p -> p.stacksTo(1).food(FHFoodProperties.VEGETABLE_SAWDUST_SOUP))
+            .register();
+    public static ItemEntry<FHSoupItem> rye_sawdust_porridge = REGISTRATE
+            .item("rye_sawdust_porridge", FHSoupItem::new)
+            .tag(FHTags.Items.REFUGEE_NEEDS.tag)
+            .model(AssetLookup.existingItemModel())
+            .properties(p -> p.stacksTo(1).food(FHFoodProperties.RYE_SAWDUST_PORRIDGE))
+            .register();
+    public static ItemEntry<FHSoupItem> rye_porridge = REGISTRATE
+            .item("rye_porridge", FHSoupItem::new)
+            .tag(FHTags.Items.REFUGEE_NEEDS.tag)
+            .model(AssetLookup.existingItemModel())
+            .properties(p -> p.stacksTo(1).food(FHFoodProperties.RYE_SAWDUST_PORRIDGE))
+            .register();
+    public static ItemEntry<FHSoupItem> vegetable_soup = REGISTRATE
+            .item("vegetable_soup", FHSoupItem::new)
+            .tag(FHTags.Items.REFUGEE_NEEDS.tag)
+            .model(AssetLookup.existingItemModel())
+            .properties(p -> p.stacksTo(1).food(FHFoodProperties.VEGETABLE_SAWDUST_SOUP))
+            .register();
+    public static ItemEntry<CannedFoodItem> military_rations = REGISTRATE
+            .item("military_rations", CannedFoodItem::new)
+            .tag(FHTags.Items.REFUGEE_NEEDS.tag)
+            .tag(FHTags.Items.INSULATED_FOOD.tag)
+            .model(AssetLookup.existingItemModel())
+            .properties(p -> p.food(new FoodProperties.Builder().nutrition(6).saturationMod(0.6f).build()))
+            .register();
+    public static ItemEntry<CannedFoodItem> compressed_biscuits_pack = REGISTRATE
+            .item("compressed_biscuits_pack", CannedFoodItem::new)
+            .tag(FHTags.Items.REFUGEE_NEEDS.tag)
+            .tag(FHTags.Items.DRY_FOOD.tag)
+            .model(AssetLookup.existingItemModel())
+            .properties(p -> p.food(Foods.BREAD))
+            .register();
+    public static ItemEntry<CannedFoodItem> compressed_biscuits = REGISTRATE
+            .item("compressed_biscuits", CannedFoodItem::new)
+            .tag(FHTags.Items.REFUGEE_NEEDS.tag)
+            .tag(FHTags.Items.DRY_FOOD.tag)
+            .model(AssetLookup.existingItemModel())
+            .properties(p -> p.food(Foods.BREAD))
+            .register();
+    public static ItemEntry<CannedFoodItem> packed_nuts = REGISTRATE
+            .item("packed_nuts", CannedFoodItem::new)
+            .tag(FHTags.Items.REFUGEE_NEEDS.tag)
+            .tag(FHTags.Items.DRY_FOOD.tag)
+            .model(AssetLookup.existingItemModel())
+            .properties(p -> p.food((new FoodProperties.Builder()).nutrition(2).saturationMod(0.8F).build()))
+            .register();
+    public static ItemEntry<CannedFoodItem> dried_vegetables = REGISTRATE
+            .item("dried_vegetables", CannedFoodItem::new)
+            .tag(FHTags.Items.REFUGEE_NEEDS.tag)
+            .tag(FHTags.Items.DRY_FOOD.tag)
+            .model(AssetLookup.existingItemModel())
+            .properties(p -> p.food((new FoodProperties.Builder()).nutrition(4).saturationMod(0.6F).build()))
+            .register();
+    public static ItemEntry<Item> chocolate = REGISTRATE
+            .item("chocolate", Item::new)
+            .tag(FHTags.Items.REFUGEE_NEEDS.tag)
+            .tag(FHTags.Items.DRY_FOOD.tag)
+            .model(AssetLookup.existingItemModel())
+            .properties(p -> p.food((new FoodProperties.Builder()).nutrition(4).saturationMod(0.8F).meat().fast().build()))
+            .register();
 
     static {
         REGISTRATE.setCreativeTab(FHTabs.TOOLS);
     }
 
     // Equipment and tools
-//    public static RegistryObject<Item> hand_stove = register("hand_stove", n -> new CoalHandStove(createProps().defaultDurability(10)));
-    // switch to registrate style
     public static ItemEntry<CoalHandStove> hand_stove = REGISTRATE.item("hand_stove", CoalHandStove::new)
             .properties(p -> p.defaultDurability(10))
             .model(AssetLookup.existingItemModel())
             .lang("Copper Hand Stove")
             .register();
-    public static RegistryObject<Item> debug_item = register("debug_item", n -> new DebugItem(createProps()));
-    public static RegistryObject<Item> coal_stick = register("coal_stick", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> charcoal_stick = register("charcoal_stick", n -> new FHBaseItem(createProps()));
-    public static RegistryObject<Item> mercury_body_thermometer = register("mercury_body_thermometer", n -> new ThermometerItem(createProps()));
-    public static RegistryObject<Item> steam_bottle = register("steam_bottle", n -> new SteamBottleItem(createProps().stacksTo(1)));
-    public static RegistryObject<Item> rubbing_tool = register("rubbing_tool", n -> new RubbingTool(createProps().durability(5).setNoRepair()));
-    public static RegistryObject<Item> rubbing_pad = register("rubbing_pad", n -> new FHBaseItem(createProps().stacksTo(1)));
-    public static RegistryObject<Item> buff_coat = register("buff_coat", n -> new FHBaseItem(createProps().defaultDurability(384)).setRepairItem(raw_hide.get()));
-    public static RegistryObject<Item> gambeson = register("gambeson", n -> new FHBaseItem(createProps().defaultDurability(384)).setRepairItem(Items.WHITE_WOOL));
-    public static RegistryObject<Item> kelp_lining = register("kelp_lining", n -> new FHBaseItem(createProps().defaultDurability(256)).setRepairItem(Items.KELP));
-    public static RegistryObject<Item> straw_lining = register("straw_lining", n -> new FHBaseItem(createProps().defaultDurability(256)));
-    public static RegistryObject<Item> hay_boots = register("hay_boots", n -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.BOOTS, createProps()));
-    public static RegistryObject<Item> hay_hat = register("hay_hat", n -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.HELMET, createProps()));
-    public static RegistryObject<Item> hay_jacket = register("hay_jacket", n -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.CHESTPLATE, createProps()));
-    public static RegistryObject<Item> hay_pants = register("hay_pants", n -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.LEGGINGS, createProps()));
-    public static RegistryObject<Item> wool_boots = register("wool_boots", n -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.BOOTS, createProps()));
-    public static RegistryObject<Item> wool_hat = register("wool_hat", n -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.HELMET, createProps()));
-    public static RegistryObject<Item> wool_jacket = register("wool_jacket", n -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.CHESTPLATE, createProps()));
-    public static RegistryObject<Item> wool_pants = register("wool_pants", n -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.LEGGINGS, createProps()));
-    public static RegistryObject<Item> hide_boots = register("hide_boots", n -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.BOOTS, createProps()));
-    public static RegistryObject<Item> hide_hat = register("hide_hat", n -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.HELMET, createProps()));
-    public static RegistryObject<Item> hide_jacket = register("hide_jacket", n -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.CHESTPLATE, createProps()));
-    public static RegistryObject<Item> hide_pants = register("hide_pants", n -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.LEGGINGS, createProps()));
-    public static RegistryObject<HeaterVestItem> heater_vest = register("heater_vest", n -> new HeaterVestItem(createProps().stacksTo(1).setNoRepair()));
-    public static RegistryObject<Item> copper_pro_pick = register("copper_pro_pick", n -> new ProspectorPick(1, createProps().defaultDurability(128)));
-    public static RegistryObject<Item> iron_pro_pick = register("iron_pro_pick", n -> new ProspectorPick(2, createProps().defaultDurability(192)));
-    public static RegistryObject<Item> steel_pro_pick = register("steel_pro_pick", n -> new ProspectorPick(3, createProps().defaultDurability(256)));
-    public static RegistryObject<Item> copper_core_spade = register("copper_core_spade", n -> new CoreSpade(1, createProps().defaultDurability(96)));
-    public static RegistryObject<Item> iron_core_spade = register("iron_core_spade", n -> new CoreSpade(2, createProps().defaultDurability(128)));
-    public static RegistryObject<Item> steel_core_spade = register("steel_core_spade", n -> new CoreSpade(3, createProps().defaultDurability(160)));
-    public static RegistryObject<Item> copper_geologists_hammer = register("copper_geologists_hammer", n -> new GeologistsHammer(1, createProps().defaultDurability(96)));
-    public static RegistryObject<Item> iron_geologists_hammer = register("iron_geologists_hammer", n -> new GeologistsHammer(2, createProps().defaultDurability(128)));
-    public static RegistryObject<Item> steel_geologists_hammer = register("steel_geologists_hammer", n -> new GeologistsHammer(3, createProps().defaultDurability(160)));
-    public static RegistryObject<Item> soil_thermometer = register("soil_thermometer", n -> new SoilThermometer(createProps()));
-    public static RegistryObject<Item> heat_debuger = register("heat_debugger", n -> new HeatDebugItem());
-    public static RegistryObject<Item> red_mushroombed = register("straw_briquette_red_mushroom", n -> new MushroomBed(Items.RED_MUSHROOM, createProps().defaultDurability(4800)));
-    public static RegistryObject<Item> brown_mushroombed = register("straw_briquette_brown_mushroom", n -> new MushroomBed(Items.BROWN_MUSHROOM, createProps().defaultDurability(4800)));
-    public static RegistryObject<Item> ceramic_bucket = register("ceramic_bucket", n -> new CeramicBucket(createProps().stacksTo(1)));
-    public static RegistryObject<Item> charcoal = register("charcoal", n -> new FHBasePen(createProps().durability(50).setNoRepair()));
-    public static RegistryObject<Item> quill_and_ink = register("quill_and_ink", n -> new FHReusablePen(createProps().durability(101).setNoRepair(), 1));
-    public static RegistryObject<Item> weatherHelmet = register("weather_helmet", n -> new FHBaseArmorItem(FHArmorMaterial.WEATHER, Type.HELMET, createProps()));
-    public static RegistryObject<Item> weatherRadar = register("weather_radar", n -> new FHBaseItem(createProps().stacksTo(1)));
-    public static RegistryObject<Item> temperatureProbe = register("temperature_probe", n -> new FHBaseItem(createProps().stacksTo(1)));
+    public static ItemEntry<DebugItem> debug_item = REGISTRATE
+            .item("debug_item", DebugItem::new)
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<Item> coal_stick = REGISTRATE
+            .item("coal_stick", Item::new)
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<Item> charcoal_stick = REGISTRATE
+            .item("charcoal_stick", Item::new)
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<ThermometerItem> mercury_body_thermometer = REGISTRATE
+            .item("mercury_body_thermometer", ThermometerItem::new)
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<SteamBottleItem> steam_bottle = REGISTRATE
+            .item("steam_bottle", SteamBottleItem::new)
+            .properties(p -> p.stacksTo(1))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<RubbingTool> rubbing_tool = REGISTRATE
+            .item("rubbing_tool", RubbingTool::new)
+            .properties(p -> p.durability(5).setNoRepair())
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<Item> rubbing_pad = REGISTRATE
+            .item("rubbing_pad", Item::new)
+            .properties(p -> p.stacksTo(1))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseItem> buff_coat = REGISTRATE
+            .item("buff_coat", p -> new FHBaseItem(createProps().defaultDurability(384)).setRepairItem(raw_hide.get()))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseItem> gambeson = REGISTRATE
+            .item("gambeson", p -> new FHBaseItem(createProps().defaultDurability(384)).setRepairItem(Items.WHITE_WOOL))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseItem> kelp_lining = REGISTRATE
+            .item("kelp_lining", p -> new FHBaseItem(createProps().defaultDurability(256)).setRepairItem(Items.KELP))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<Item> straw_lining = REGISTRATE
+            .item("straw_lining", Item::new)
+            .properties(p -> p.defaultDurability(256))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseArmorItem> hay_boots = REGISTRATE
+            .item("hay_boots", p -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.BOOTS, createProps()))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseArmorItem> hay_hat = REGISTRATE
+            .item("hay_hat", p -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.HELMET, createProps()))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseArmorItem> hay_jacket = REGISTRATE
+            .item("hay_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.CHESTPLATE, createProps()))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseArmorItem> hay_pants = REGISTRATE
+            .item("hay_pants", p -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.LEGGINGS, createProps()))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseArmorItem> wool_boots = REGISTRATE
+            .item("wool_boots", p -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.BOOTS, createProps()))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseArmorItem> wool_hat = REGISTRATE
+            .item("wool_hat", p -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.HELMET, createProps()))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseArmorItem> wool_jacket = REGISTRATE
+            .item("wool_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.CHESTPLATE, createProps()))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseArmorItem> wool_pants = REGISTRATE
+            .item("wool_pants", p -> new FHBaseArmorItem(FHArmorMaterial.WOOL, Type.LEGGINGS, createProps()))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseArmorItem> hide_boots = REGISTRATE
+            .item("hide_boots", p -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.BOOTS, createProps()))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseArmorItem> hide_hat = REGISTRATE
+            .item("hide_hat", p -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.HELMET, createProps()))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseArmorItem> hide_jacket = REGISTRATE
+            .item("hide_jacket", p -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.CHESTPLATE, createProps()))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseArmorItem> hide_pants = REGISTRATE
+            .item("hide_pants", p -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.LEGGINGS, createProps()))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<HeaterVestItem> heater_vest = REGISTRATE
+            .item("heater_vest", HeaterVestItem::new)
+            .properties(p -> p.stacksTo(1).setNoRepair())
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<ProspectorPick> copper_pro_pick = REGISTRATE
+            .item("copper_pro_pick", p -> new ProspectorPick(1, createProps().defaultDurability(128)))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<ProspectorPick> iron_pro_pick = REGISTRATE
+            .item("iron_pro_pick", p -> new ProspectorPick(2, createProps().defaultDurability(192)))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<ProspectorPick> steel_pro_pick = REGISTRATE
+            .item("steel_pro_pick", p -> new ProspectorPick(3, createProps().defaultDurability(256)))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<CoreSpade> copper_core_spade = REGISTRATE
+            .item("copper_core_spade", p -> new CoreSpade(1, createProps().defaultDurability(96)))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<CoreSpade> iron_core_spade = REGISTRATE
+            .item("iron_core_spade", p -> new CoreSpade(2, createProps().defaultDurability(128)))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<CoreSpade> steel_core_spade = REGISTRATE
+            .item("steel_core_spade", p -> new CoreSpade(3, createProps().defaultDurability(160)))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<GeologistsHammer> copper_geologists_hammer = REGISTRATE
+            .item("copper_geologists_hammer", p -> new GeologistsHammer(1, createProps().defaultDurability(96)))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<GeologistsHammer> iron_geologists_hammer = REGISTRATE
+            .item("iron_geologists_hammer", p -> new GeologistsHammer(2, createProps().defaultDurability(128)))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<GeologistsHammer> steel_geologists_hammer = REGISTRATE
+            .item("steel_geologists_hammer", p -> new GeologistsHammer(3, createProps().defaultDurability(160)))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<SoilThermometer> soil_thermometer = REGISTRATE
+            .item("soil_thermometer", SoilThermometer::new)
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<HeatDebugItem> heat_debugger = REGISTRATE
+            .item("heat_debugger", p -> new HeatDebugItem())
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<MushroomBed> red_mushroombed = REGISTRATE
+            .item("straw_briquette_red_mushroom", p -> new MushroomBed(Items.RED_MUSHROOM, createProps().defaultDurability(4800)))
+            .model(AssetLookup.existingItemModel())
+            .lang("Red Fungus Bed")
+            .register();
+    public static ItemEntry<MushroomBed> brown_mushroombed = REGISTRATE
+            .item("straw_briquette_brown_mushroom", p -> new MushroomBed(Items.BROWN_MUSHROOM, createProps().defaultDurability(4800)))
+            .model(AssetLookup.existingItemModel())
+            .lang("Brown Fungus Bed")
+            .register();
+    public static ItemEntry<CeramicBucket> ceramic_bucket = REGISTRATE
+            .item("ceramic_bucket", CeramicBucket::new)
+            .properties(p -> p.stacksTo(1))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBasePen> charcoal = REGISTRATE
+            .item("charcoal", FHBasePen::new)
+            .properties(p -> p.durability(50).setNoRepair())
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHReusablePen> quill_and_ink = REGISTRATE
+            .item("quill_and_ink", p -> new FHReusablePen(createProps().durability(101).setNoRepair(), 1))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<FHBaseArmorItem> weatherHelmet = REGISTRATE
+            .item("weather_helmet", p -> new FHBaseArmorItem(FHArmorMaterial.WEATHER, Type.HELMET, createProps()))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<Item> weatherRadar = REGISTRATE
+            .item("weather_radar", Item::new)
+            .properties(p -> p.stacksTo(1))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<Item> temperatureProbe = REGISTRATE
+            .item("temperature_probe", Item::new)
+            .properties(p -> p.stacksTo(1))
+            .model(AssetLookup.existingItemModel())
+            .register();
 
     // Thermos
     public static ItemEntry<ThermosItem> thermos = REGISTRATE

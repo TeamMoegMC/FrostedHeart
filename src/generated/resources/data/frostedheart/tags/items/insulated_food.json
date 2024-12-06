@@ -1,5 +1,6 @@
 {
   "values": [
+    "frostedheart:military_rations",
     "frostedheart:thermos",
     "frostedheart:advanced_thermos",
     "frostedheart:white_thermos",
@@ -33,7 +34,6 @@
     "frostedheart:brown_advanced_thermos",
     "frostedheart:green_advanced_thermos",
     "frostedheart:red_advanced_thermos",
-    "frostedheart:black_advanced_thermos",
-    "frostedheart:military_rations"
+    "frostedheart:black_advanced_thermos"
   ]
 }
