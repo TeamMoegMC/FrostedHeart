@@ -17,7 +17,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ServerEvents {
     @SubscribeEvent
-    public void serverLevelSave(final LevelEvent.Save event) {
+    public static void serverLevelSave(final LevelEvent.Save event) {
         if (FHTeamDataManager.INSTANCE != null) {
             FHResearch.save();
             FHTeamDataManager.INSTANCE.save();
@@ -28,7 +28,7 @@ public class ServerEvents {
     // Server Lifecycle Events
 
     @SubscribeEvent
-    public void serverAboutToStart(final ServerAboutToStartEvent event) {
+    public static void serverAboutToStart(final ServerAboutToStartEvent event) {
         new FHTeamDataManager(event.getServer());
         FHResearch.load();
         FHTeamDataManager.INSTANCE.load();
@@ -36,22 +36,22 @@ public class ServerEvents {
     }
 
     @SubscribeEvent
-    public void serverStarting(final ServerStartingEvent event) {
+    public static void serverStarting(final ServerStartingEvent event) {
 
     }
 
     @SubscribeEvent
-    public void serverStarted(final ServerStartedEvent event) {
+    public static void serverStarted(final ServerStartedEvent event) {
 
     }
 
     @SubscribeEvent
-    public void serverStopping(final ServerStoppingEvent event) {
+    public static void serverStopping(final ServerStoppingEvent event) {
 
     }
 
     @SubscribeEvent
-    public void serverStopped(final ServerStoppedEvent event) {
+    public static void serverStopped(final ServerStoppedEvent event) {
         FHTeamDataManager.INSTANCE = null;
     }
 }

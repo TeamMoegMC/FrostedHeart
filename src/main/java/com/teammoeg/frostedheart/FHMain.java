@@ -160,6 +160,8 @@ public class FHMain {
             FTBTeamsEvents.init();
 
         // Deferred Registration
+        // Order doesn't matter here, as that's why we use deferred registers
+        // See ForgeRegistries for more info
         LOGGER.info(COMMON_INIT, "Registering Deferred Registers");
         FHEntityTypes.ENTITY_TYPES.register(mod);
         FHFluids.FLUIDS.register(mod);
