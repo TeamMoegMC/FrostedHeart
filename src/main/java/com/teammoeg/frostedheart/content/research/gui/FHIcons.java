@@ -29,6 +29,7 @@ import com.google.gson.JsonElement;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.research.gui.editor.BaseEditDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditListDialog;
@@ -66,15 +67,15 @@ public class FHIcons {
     private static final TypedCodecRegistry<FHIcon> serializers = new TypedCodecRegistry<>();
 	public static final Codec<FHIcon> CODEC=new AlternativeCodecBuilder<FHIcon>(FHIcon.class)
 		.fallback(()->FHNopIcon.INSTANCE)
-		.addSaveOnly(FHNopIcon.class ,FHNopIcon.CODEC)
+		.addSaveOnly(FHNopIcon.class ,FHNopIcon.CODEC.codec())
 		.add(FHItemIcon.class, FHItemIcon.ICON_CODEC)
-		.add(FHItemIcon.class,FHItemIcon.CODEC)
+		.add(FHItemIcon.class,FHItemIcon.CODEC.codec())
 		.add(FHAnimatedIcon.class,FHAnimatedIcon.ICON_CODEC)
 		.add(serializers.codec())
-		.add(FHNopIcon.CODEC)
+		.add(FHNopIcon.CODEC.codec())
 		.build();
     private static class FHAnimatedIcon extends FHIcon {
-        private static final Codec<FHAnimatedIcon> CODEC=RecordCodecBuilder.create(t->t.group(
+        private static final MapCodec<FHAnimatedIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
         	Codec.list(FHIcons.CODEC).fieldOf("icons").forGetter(o->o.icons)
         	).apply(t, FHAnimatedIcon::new));
         private static final Codec<FHAnimatedIcon> ICON_CODEC=Codec.list(FHIcons.CODEC).xmap(FHAnimatedIcon::new, o->o.icons);
@@ -104,7 +105,7 @@ public class FHIcons {
     }
 
     private static class FHCombinedIcon extends FHIcon {
-        private static final Codec<FHCombinedIcon> CODEC=RecordCodecBuilder.create(t->t.group(
+        private static final MapCodec<FHCombinedIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
         	FHIcons.CODEC.fieldOf("base").forGetter(o->o.large),
         	FHIcons.CODEC.fieldOf("small").forGetter(o->o.small)
         	).apply(t, FHCombinedIcon::new));
@@ -131,7 +132,7 @@ public class FHIcons {
     }
 
     private static class FHDelegateIcon extends FHIcon {
-        private static final Codec<FHDelegateIcon> CODEC=RecordCodecBuilder.create(t->t.group(
+        private static final MapCodec<FHDelegateIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
         	Codec.STRING.fieldOf("name").forGetter(o->o.name)
         	).apply(t, FHDelegateIcon::new));
         String name;
@@ -187,7 +188,7 @@ public class FHIcons {
     }
 
     private static class FHIngredientIcon extends FHAnimatedIcon {
-        private static final Codec<FHIngredientIcon> CODEC=RecordCodecBuilder.create(t->t.group(
+        private static final MapCodec<FHIngredientIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
         	CodecUtil.INGREDIENT_CODEC.fieldOf("ingredient").forGetter(o->o.igd)
         	).apply(t, FHIngredientIcon::new));
         Ingredient igd;
@@ -204,7 +205,7 @@ public class FHIcons {
     }
 
     private static class FHItemIcon extends FHIcon {
-        private static final Codec<FHItemIcon> CODEC=RecordCodecBuilder.create(t->t.group(
+        private static final MapCodec<FHItemIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
         	CodecUtil.ITEMSTACK_CODEC.fieldOf("item").forGetter(o->o.stack)
         	).apply(t, FHItemIcon::new));
         private static final Codec<FHItemIcon> ICON_CODEC=
@@ -247,7 +248,7 @@ public class FHIcons {
     private static class FHNopIcon extends FHIcon {
        
         public static final FHNopIcon INSTANCE = new FHNopIcon();
-        private static final Codec<FHNopIcon> CODEC=new NopCodec<>(INSTANCE);
+        private static final MapCodec<FHNopIcon> CODEC=MapCodec.unit(INSTANCE);
 
 
         private FHNopIcon() {
@@ -261,7 +262,7 @@ public class FHIcons {
     }
 
     private static class FHTextIcon extends FHIcon {
-        private static final Codec<FHTextIcon> CODEC=RecordCodecBuilder.create(t->t.group(
+        private static final MapCodec<FHTextIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
         	Codec.STRING.fieldOf("text").forGetter(o->o.text)
         	).apply(t, FHTextIcon::new));
         String text;
@@ -290,7 +291,7 @@ public class FHIcons {
     }
 
     private static class FHTextureIcon extends FHIcon {
-        private static final Codec<FHTextureIcon> CODEC=RecordCodecBuilder.create(t->t.group(
+        private static final MapCodec<FHTextureIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
         	ResourceLocation.CODEC.fieldOf("location").forGetter(o->o.rl)
         	).apply(t, FHTextureIcon::new));
         Icon nested;
@@ -310,7 +311,7 @@ public class FHIcons {
     }
 
     private static class FHTextureUVIcon extends FHIcon {
-        private static final Codec<FHTextureUVIcon> CODEC=RecordCodecBuilder.create(t->t.group(
+        private static final MapCodec<FHTextureUVIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
         	ResourceLocation.CODEC.fieldOf("location").forGetter(o->o.rl),
         	Codec.INT.fieldOf("x") .forGetter(o->o.x),
         	Codec.INT.fieldOf("y") .forGetter(o->o.y),

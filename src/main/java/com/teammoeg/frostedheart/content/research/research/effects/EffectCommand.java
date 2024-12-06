@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
@@ -46,7 +47,7 @@ import net.minecraft.network.chat.Component;
  * Reward the research team executes command
  */
 public class EffectCommand extends Effect {
-	public static final Codec<EffectCommand> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	public static final MapCodec<EffectCommand> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
 	Codec.list(Codec.STRING).fieldOf("rewards").forGetter(o->o.rewards))
 	.apply(t,EffectCommand::new));
 

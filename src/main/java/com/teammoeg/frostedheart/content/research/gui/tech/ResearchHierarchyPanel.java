@@ -229,7 +229,7 @@ public class ResearchHierarchyPanel extends Panel {
                         Research r = researchPanel.selectedResearch;
                         ResearchEditorDialog.RESEARCH_LIST.open(this, "Edit parents", r.getParents(), s -> {
                         	try {
-                        		System.out.println(s);
+                        		//System.out.println(s);
                             r.setParents(s.stream().map(Research::getId).collect(Collectors.toList()));
                             FHResearch.reindex();
                             EditUtils.saveResearch(r);
@@ -311,7 +311,7 @@ public class ResearchHierarchyPanel extends Panel {
                 x = ButtonPos[4] + (k - 4) * 32;
             } else
                 x = ButtonPos[k];
-            System.out.println(parent);
+            //System.out.println(parent);
             ResearchSimpleButton parentButton = new ResearchSimpleButton(this, parent);
             add(parentButton);
             parentButton.setPos(x, 16);

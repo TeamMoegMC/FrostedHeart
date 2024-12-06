@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.research.research.clues;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
@@ -34,7 +35,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.chat.Component;
 
 public class ItemClue extends Clue {
-	public static final Codec<ItemClue> CODEC=RecordCodecBuilder.create(t->t.group(
+	public static final MapCodec<ItemClue> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
 		Clue.BASE_CODEC.forGetter(o->o.getData()),
 		CodecUtil.defaultValue(Codec.BOOL, false).fieldOf("consume").forGetter(o->o.consume),
 		CodecUtil.INGREDIENT_SIZE_CODEC.fieldOf("item").forGetter(o->o.stack)

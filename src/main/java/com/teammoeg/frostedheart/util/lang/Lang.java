@@ -87,7 +87,6 @@ public class Lang {
         return str(sb.toString());
     }
 
-    @Deprecated
     public static MutableComponent translateKey(String string, Object... args) {
         return Component.translatable(string, args);
     }

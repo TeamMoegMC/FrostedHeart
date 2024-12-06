@@ -44,10 +44,12 @@ public record FHResearchSyncPacket(Object data,String key) implements FHMessage 
 
     public void encode(FriendlyByteBuf buffer) {
     	ObjectWriter.writeObject(buffer, data);
+    	System.out.println("encoded "+data);
         buffer.writeUtf(key);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
+    	System.out.println("decoded "+data);
         context.get().enqueueWork(() -> FHResearch.readOne(key,CodecUtil.decodeOrThrow(Research.CODEC.decode(DataOps.COMPRESSED, data))));
         context.get().setPacketHandled(true);
     }

@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -69,7 +70,7 @@ public class Research implements FHRegisteredItem {
     	Codec.list(Codec.STRING).optionalFieldOf("parents",Arrays.asList()).forGetter(o->new ArrayList<>(o.parents)),
     	Codec.list(Clue.CODEC).optionalFieldOf("clues",Arrays.asList()).forGetter(o->o.clues),
     	Codec.list(CodecUtil.INGREDIENT_SIZE_CODEC).optionalFieldOf("ingredients",Arrays.asList()).forGetter(o->o.requiredItems),
-    	Codec.list(Effect.CODEC).optionalFieldOf("effects",Arrays.asList()).forGetter(o->o.effects),
+    	Codec.list(Effect.CODEC).optionalFieldOf("effects").forGetter(o->o.effects.size()>0?Optional.of(o.effects):Optional.empty()),
     	Codec.STRING.optionalFieldOf("name","").forGetter(o->o.name),
     	Codec.list(Codec.STRING).optionalFieldOf("desc",Arrays.asList()).forGetter(o->o.desc),
     	Codec.list(Codec.STRING).optionalFieldOf("descAlt",Arrays.asList()).forGetter(o->o.fdesc),
@@ -154,17 +155,19 @@ public class Research implements FHRegisteredItem {
         this.icon = FHIcons.nop();
     }
 
-    public Research(FHIcon icon, ResearchCategory category, List<String> parents, List<Clue> clues, List<IngredientWithSize> requiredItems, List<Effect> effects, String name,
+    public Research(FHIcon icon, ResearchCategory category, List<String> parents, List<Clue> clues, List<IngredientWithSize> requiredItems, Optional<List<Effect>> effects, String name,
 		List<String> desc, List<String> fdesc, boolean[] flags, int points) {
 		super();
 		this.icon = icon;
 		this.category = category;
 		if(parents!=null)
 			this.parents.addAll(parents);
-		System.out.println(parents);
+		//System.out.println(parents);
 		this.clues.addAll(clues);
+		
 		this.requiredItems.addAll(requiredItems);
-		this.effects.addAll(effects);
+		effects.ifPresent(this.effects::addAll);
+
 		this.name = name;
 		this.desc.addAll(desc);
 		this.fdesc.addAll(fdesc);
@@ -175,6 +178,7 @@ public class Research implements FHRegisteredItem {
 		this.alwaysShow = flags[4];
 		this.setInfinite(flags[5]);
 		this.points = points;
+		System.out.println(effects);
 	}
 
     /**

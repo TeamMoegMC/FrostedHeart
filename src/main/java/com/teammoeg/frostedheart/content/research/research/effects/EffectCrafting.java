@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
@@ -41,6 +42,7 @@ import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import mezz.jei.library.util.RecipeUtil;
@@ -58,7 +60,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class EffectCrafting extends Effect {
-	public static final Codec<EffectCrafting> CODEC=RecordCodecBuilder.create(t->t.group(
+	public static final MapCodec<EffectCrafting> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
 		Effect.BASE_CODEC.forGetter(Effect::getBaseData),
 		CodecUtil.<EffectCrafting,Item,ItemStack,List<ResourceLocation>>either(
 			CodecUtil.registryCodec(()->BuiltInRegistries.ITEM).fieldOf("item"),
@@ -66,8 +68,8 @@ public class EffectCrafting extends Effect {
 			Codec.list(ResourceLocation.CODEC).fieldOf("recipes"),
 			o->o.item,
 			o->o.itemStack,
-			o->o.unlocks.stream().map(Recipe::getId).collect(Collectors.toList()))
-		)
+			o->o.unlocks.stream().map(Recipe::getId).collect(Collectors.toList())
+		))
 	.apply(t,EffectCrafting::new));
     List<Recipe<?>> unlocks = new ArrayList<>();
     ItemStack itemStack = null;
@@ -89,9 +91,9 @@ public class EffectCrafting extends Effect {
 
     public EffectCrafting(BaseData data,Either<Item,Either<ItemStack,List<ResourceLocation>>> unlocks) {
 		super(data);
-		unlocks.ifLeft(t->{this.item=t;initItem();});
+		unlocks.ifLeft(t->{this.item=t;});
 		unlocks.ifRight(t->{
-			t.ifLeft(o->{this.itemStack=o;initStack();});
+			t.ifLeft(o->{this.itemStack=o;});
 			t.ifRight(o->o.stream().map(FHTeamDataManager.getRecipeManager()::byKey).filter(Optional::isPresent).map(Optional::get).forEach(this.unlocks::add));
 		});
 
@@ -173,13 +175,17 @@ public class EffectCrafting extends Effect {
 
     @Override
     public void init() {
+    	if(item!=null)
+    		initItem();
+    	if(itemStack!=null)
+    		initStack();
         ResearchListeners.recipe.addAll(unlocks);
     }
 
     private void initItem() {
         unlocks.clear();
         for (Recipe<?> r : FHTeamDataManager.getRecipeManager().getRecipes()) {
-            if (RecipeUtil.getResultItem(r).getItem().equals(this.item)) {
+            if (r.getResultItem(RegistryUtils.getAccess()).getItem().equals(this.item)) {
                 unlocks.add(r);
             }
         }
@@ -189,7 +195,7 @@ public class EffectCrafting extends Effect {
     private void initStack() {
         unlocks.clear();
         for (Recipe<?> r : FHTeamDataManager.getRecipeManager().getRecipes()) {
-            if (RecipeUtil.getResultItem(r).equals(item)) {
+            if (r.getResultItem(RegistryUtils.getAccess()).equals(item)) {
                 unlocks.add(r);
             }
         }

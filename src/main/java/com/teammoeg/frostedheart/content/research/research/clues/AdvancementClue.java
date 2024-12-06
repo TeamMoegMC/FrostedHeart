@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.research.research.clues;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
@@ -37,7 +38,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 
 public class AdvancementClue extends TickListenerClue {
-	public static final Codec<AdvancementClue> CODEC=RecordCodecBuilder.create(t->t.group(
+	public static final MapCodec<AdvancementClue> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
 		ListenerClue.BASE_CODEC.forGetter(o->o.getData()),
 		ResourceLocation.CODEC.fieldOf("advancement").forGetter(o->o.advancement),
 		CodecUtil.defaultValue(Codec.STRING, "").fieldOf("criterion").forGetter(o->o.criterion)

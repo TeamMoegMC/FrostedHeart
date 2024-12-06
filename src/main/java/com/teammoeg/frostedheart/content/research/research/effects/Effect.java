@@ -20,7 +20,9 @@
 package com.teammoeg.frostedheart.content.research.research.effects;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -63,30 +65,22 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * @date 2022/09/02
  */
 public abstract class Effect extends AutoIDItem{
-	public static class BaseData{
-	    String name = "";
-	    List<String> tooltip;
-	    FHIcon icon;
-	    String nonce;
-	    boolean hidden;
-		public BaseData(String name, List<String> tooltip, FHIcon icon, String nonce, boolean hidden) {
-			super();
-			this.name = name;
-			this.tooltip = tooltip;
-			this.icon = icon;
-			this.nonce = nonce;
-			this.hidden = hidden;
+	public static record BaseData(String name,List<String> tooltip,FHIcon icon,String nonce,boolean hidden){
+
+		public BaseData(String name, List<String> tooltip, Optional<FHIcon> icon, String nonce, boolean hidden) {
+			this(name,tooltip,icon.orElse(null),nonce,hidden);
 		}
 	    
 	}
-	public static final MapCodec<BaseData> BASE_CODEC=RecordCodecBuilder.mapCodec(t->
-	t.group(CodecUtil.defaultValue(Codec.STRING,"").fieldOf("name").forGetter(o->o.name),
-		CodecUtil.defaultSupply(Codec.list(Codec.STRING),ArrayList::new).fieldOf("tooltip").forGetter(o->o.tooltip),
-		FHIcons.CODEC.fieldOf("icon").forGetter(o->o.icon),
+	public static final MapCodec<BaseData> BASE_CODEC=CodecUtil.debugCodec(RecordCodecBuilder.mapCodec(t->
+	t.group(
+		Codec.STRING.optionalFieldOf("name","").forGetter(o->o.name),
+		Codec.list(Codec.STRING).optionalFieldOf("tooltip",Arrays.asList()).forGetter(o->o.tooltip),
+		FHIcons.CODEC.optionalFieldOf("icon").forGetter(o->Optional.ofNullable(o.icon)),
 		Codec.STRING.fieldOf("id").forGetter(o->o.nonce),
-		Codec.BOOL.fieldOf("hidden").forGetter(o->o.hidden)).apply(t, BaseData::new));
+		Codec.BOOL.optionalFieldOf("hidden",false).forGetter(o->o.hidden)).apply(t, BaseData::new)));
     private static TypedCodecRegistry<Effect> registry = new TypedCodecRegistry<>();
-    public static final Codec<Effect> CODEC=registry.codec();
+    public static final Codec<Effect> CODEC=CodecUtil.debugCodec(registry.codec());
     static {
     	registerEffectType(EffectBuilding.class, "multiblock", EffectBuilding.CODEC);
         registerEffectType(EffectCrafting.class, "recipe", EffectCrafting.CODEC);
@@ -97,8 +91,8 @@ public abstract class Effect extends AutoIDItem{
         registerEffectType(EffectCommand.class, "command", EffectCommand.CODEC);
         registerEffectType(EffectExperience.class, "experience", EffectExperience.CODEC);
     }
-    public static <T extends Effect> void registerEffectType(Class<T> cls, String type, Codec<T> json) {
-        registry.register(cls, type, json);
+    public static <T extends Effect> void registerEffectType(Class<T> cls, String type, MapCodec<T> json) {
+        registry.register(cls, type, CodecUtil.debugCodec(json));
     }
 
     String name = "";
@@ -125,7 +119,7 @@ public abstract class Effect extends AutoIDItem{
      */
     public Effect(BaseData data) {
     	name=data.name;
-    	tooltip=data.tooltip;
+    	tooltip=new ArrayList<>(data.tooltip);
     	icon=data.icon;
     	nonce=data.nonce;
     	hidden=data.hidden;

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
@@ -40,7 +41,7 @@ import net.minecraft.network.chat.Component;
  */
 public class EffectStats extends Effect {
     private static FHIcon addIcon = FHIcons.getDelegateIcon("plus");
-	public static final Codec<EffectStats> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	public static final MapCodec<EffectStats> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
 	Codec.STRING.fieldOf("vars").forGetter(o->o.vars),
 	Codec.DOUBLE.fieldOf("val").forGetter(o->o.val),
 	Codec.BOOL.fieldOf("percent").forGetter(o->o.isPercentage)

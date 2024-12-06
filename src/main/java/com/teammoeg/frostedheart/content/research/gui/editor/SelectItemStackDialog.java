@@ -279,24 +279,24 @@ public class SelectItemStackDialog extends EditDialog {
 
             @Override
             public Collection<ItemStack> getAllResources() {
-                return RegistryUtils.getItems().stream().map(ItemStack::new).collect(Collectors.toList());
+                return RegistryUtils.getItems().stream().filter(t->t!=null&&t!=Items.AIR).map(ItemStack::new).collect(Collectors.toList());
             }
 
             @Override
             public MutableComponent getDisplayName() {
-                return Lang.str("ALL");
+                return Lang.translateKey("ftblibrary.select_item.list_mode.all");
             }
 
             @Override
             public Icon getIcon() {
-                return ItemIcon.getItemIcon(Blocks.STONE.asItem());
+                return Icons.COMPASS;
             }
         });
         modes.add(new ResourceSearchMode() {
 
             @Override
             public Collection<ItemStack> getAllResources() {
-                return ClientUtils.getPlayer().getInventory().items.stream().map(ItemStack::copy).collect(Collectors.toList());
+                return ClientUtils.getPlayer().getInventory().items.stream().filter(t->t!=null&&!t.isEmpty()).map(ItemStack::copy).collect(Collectors.toList());
             }
 
             @Override
@@ -306,14 +306,14 @@ public class SelectItemStackDialog extends EditDialog {
 
             @Override
             public Icon getIcon() {
-                return ItemIcon.getItemIcon(Blocks.STONE.asItem());
+                return ItemIcon.getItemIcon(Items.CHEST);
             }
         });
         modes.add(new ResourceSearchMode() {
 
             @Override
             public Collection<ItemStack> getAllResources() {
-                return RegistryUtils.getBlocks().stream().map(Block::asItem).filter(Objects::nonNull).map(ItemStack::new).collect(Collectors.toList());
+                return RegistryUtils.getBlocks().stream().map(Block::asItem).filter(Objects::nonNull).filter(t->t!=Items.AIR).map(ItemStack::new).collect(Collectors.toList());
             }
 
             @Override
@@ -485,7 +485,6 @@ public class SelectItemStackDialog extends EditDialog {
         List<Widget> widgets = new ArrayList<>(search.isEmpty() ? items.size() + 1 : 64);
 
         String mod = "";
-
         if (search.startsWith("@")) {
             mod = search.substring(1);
         }
