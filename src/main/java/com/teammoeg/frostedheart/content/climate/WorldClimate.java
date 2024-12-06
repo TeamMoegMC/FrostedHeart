@@ -39,8 +39,8 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.DayTemperatureData.HourData;
+import com.teammoeg.frostedheart.content.climate.event.ClimateCommonEvents;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
-import com.teammoeg.frostedheart.content.climate.event.CommonEvents;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
@@ -80,11 +80,11 @@ import net.minecraftforge.network.PacketDistributor;
  * <p>
  * To ensure time synchronization, we also implemented {@link WorldClockSource} as a universal timestamp generator.
  * Hence, the clock source is updated each second on server side:
- * {@link CommonEvents#onServerTick(TickEvent.LevelTickEvent)}
+ * {@link ClimateCommonEvents#onServerTick(TickEvent.LevelTickEvent)}
  * <p>
  * To improve performance, we introduced a cache system for temperature data for {@link #DAY_CACHE_LENGTH} days.
  * Hence, the cache is updated each second on server side:
- * {@link CommonEvents#onServerTick(TickEvent.LevelTickEvent)}
+ * {@link ClimateCommonEvents#onServerTick(TickEvent.LevelTickEvent)}
  * <p>
  *
  * @author yuesha-yc

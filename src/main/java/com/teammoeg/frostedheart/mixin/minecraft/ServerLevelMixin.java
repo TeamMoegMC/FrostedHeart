@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import com.teammoeg.frostedheart.content.climate.event.CommonEvents;
+import com.teammoeg.frostedheart.content.climate.event.ClimateCommonEvents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,6 +34,6 @@ public abstract class ServerLevelMixin {
             at = {@At("RETURN")}
     )
     public void placeExtraSnow(LevelChunk chunk, int tickSpeed, CallbackInfo ci) {
-        CommonEvents.placeExtraSnow((ServerLevel) (Object) this, chunk);
+        ClimateCommonEvents.placeExtraSnow((ServerLevel) (Object) this, chunk);
     }
 }

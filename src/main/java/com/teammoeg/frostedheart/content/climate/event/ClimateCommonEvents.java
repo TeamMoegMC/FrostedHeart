@@ -97,7 +97,7 @@ import net.minecraftforge.network.PacketDistributor.PacketTarget;
 import static com.teammoeg.frostedheart.content.climate.WorldTemperature.SNOW_TEMPERATURE;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
-public class CommonEvents {
+public class ClimateCommonEvents {
     @SubscribeEvent
     public static void insulationDataAttr(ItemAttributeModifierEvent event) {
         ArmorTempData data=FHDataManager.getArmor(event.getItemStack());
