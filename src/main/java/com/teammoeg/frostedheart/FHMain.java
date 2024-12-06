@@ -23,14 +23,11 @@ import com.simibubi.create.foundation.item.ItemDescription;
 import com.simibubi.create.foundation.item.KineticStats;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.compat.ftbq.FHRewardTypes;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
-import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
-import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.foundation.tooltips.BlockTempStats;
 import com.teammoeg.frostedheart.foundation.tooltips.EquipmentTempStats;
 import com.teammoeg.frostedheart.foundation.tooltips.FHTooltips;
@@ -48,8 +45,6 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameRules.IntegerValue;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.event.server.*;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
@@ -196,7 +191,7 @@ public class FHMain {
 
         // Client setup
         LOGGER.info(COMMON_INIT, "Proceeding to Client Initialization");
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClient::setupClient);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClient::init);
     }
 
     /**

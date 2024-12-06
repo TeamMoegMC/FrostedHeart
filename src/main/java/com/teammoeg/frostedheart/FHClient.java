@@ -29,25 +29,32 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
+import static com.teammoeg.frostedheart.FHMain.*;
+
 public class FHClient {
     public FHClient() {
 
     }
 
-    public static void setupClient() {
-        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
-        IEventBus forgeBus = MinecraftForge.EVENT_BUS;
+    public static void init() {
+        IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
+        IEventBus forge = MinecraftForge.EVENT_BUS;
 
+        LOGGER.info(CLIENT_INIT, "Initializing client");
         DynamicModelSetup.setup();
         KGlyphProvider.addListener();
-        forgeBus.addListener(FogModification::renderFogColors);
-        forgeBus.addListener(FogModification::renderFogDensity);
-        forgeBus.addListener(FHTooltips::onItemTooltip);
 
-        modBus.addListener(FHClient::onClientSetup);
+        LOGGER.info(CLIENT_INIT, "Registering client forge event listeners");
+        forge.addListener(FogModification::renderFogColors);
+        forge.addListener(FogModification::renderFogDensity);
+        forge.addListener(FHTooltips::onItemTooltip);
+
+        LOGGER.info(CLIENT_INIT, "Registering client mod event listeners");
+        mod.addListener(FHClient::setup);
     }
 
-    public static void onClientSetup(FMLClientSetupEvent event) {
+    public static void setup(FMLClientSetupEvent event) {
+        LOGGER.info(CLIENT_SETUP, "Setting up client");
         FHGuiProviders.setRewardGuiProviders();
     }
 }
