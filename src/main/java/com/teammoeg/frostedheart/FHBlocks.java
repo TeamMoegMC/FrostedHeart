@@ -77,19 +77,22 @@ import static net.minecraft.world.level.block.Blocks.*;
 
 public class FHBlocks {
 
-    static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
+    protected static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
 
-    public static <T extends Block> RegistryObject<T> register(String name, Supplier<T> block, String itemName, Function<T, Item> item) {
+    @Deprecated
+    protected static <T extends Block> RegistryObject<T> register(String name, Supplier<T> block, String itemName, Function<T, Item> item) {
         RegistryObject<T> blk = BLOCKS.register(name, block);
         FHItems.ITEMS.register(itemName, () -> item.apply(blk.get()));
         return blk;
     }
 
-    public static <T extends Block> RegistryObject<T> register(String name, Supplier<T> block) {
+    @Deprecated
+    protected static <T extends Block> RegistryObject<T> register(String name, Supplier<T> block) {
         return register(name, block, name, FHBlockItem::new);
     }
 
-    public static <T extends Block> RegistryObject<T> register(String name, Supplier<T> block, Function<T, Item> item) {
+    @Deprecated
+    protected static <T extends Block> RegistryObject<T> register(String name, Supplier<T> block, Function<T, Item> item) {
         return register(name, block, name, item);
     }
 

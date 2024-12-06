@@ -71,21 +71,19 @@ import static com.teammoeg.frostedheart.FHTags.forgeItemTag;
  */
 public class FHItems {
 
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
+    protected static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
 
-    // helper method: use FHBaseItem as the item class
-    public static RegistryObject<Item> register(String name) {
+    @Deprecated
+    protected static RegistryObject<Item> register(String name) {
         return register(name, n -> new FHBaseItem(createProps()));
     }
 
-    static <T extends Item> RegistryObject<T> register(String name, Function<String, T> supplier) {
-        return ITEMS.register(name, () -> {
-            //item.setRegistryName(FHMain.MODID, name);
-            return supplier.apply(name);
-        });
+    @Deprecated
+    protected static <T extends Item> RegistryObject<T> register(String name, Function<String, T> supplier) {
+        return ITEMS.register(name, () -> supplier.apply(name));
     }
 
-    static Properties createProps() {
+    protected static Properties createProps() {
         return new Item.Properties();
     }
 
@@ -1449,10 +1447,39 @@ public class FHItems {
                     .tag(ItemTags.PICKAXES, forgeItemTag("hammers"), forgeItemTag("hammers/bronze"))
                     .register();
 
-    //WaterSource section
-    public final static RegistryObject<Item> fluid_bottle = register("fluid_bottle", (s) -> new FluidBottleItem(new Item.Properties().stacksTo(16)));
-    public final static RegistryObject<Item> wooden_cup = register("wooden_cup", (s) -> new WoodenCupItem(new Item.Properties(), 250) {@Override public ICapabilityProvider initCapabilities(@Nonnull ItemStack stack, @Nullable CompoundTag nbt) {return super.initCapabilities(new ItemStack(wooden_cup_drink.get()), nbt);}});
-    public final static RegistryObject<Item> wooden_cup_drink = register("wooden_cup_drink", (s) -> new WoodenCupItem(new Item.Properties().stacksTo(1), 250));
-    public final static RegistryObject<Item> LEATHER_WATER_BAG = register("leather_water_bag", (s) -> new LeatherWaterBagItem(new Item.Properties().stacksTo(1).setNoRepair(), 1500));
-    public final static RegistryObject<Item> IRON_BOTTLE = register("iron_bottle", (s) -> new IronBottleItem(new Item.Properties().stacksTo(1).setNoRepair(), 1500));
+    public static ItemEntry<FluidBottleItem> fluid_bottle = REGISTRATE
+            .item("fluid_bottle", FluidBottleItem::new)
+            .properties(p -> p.stacksTo(16))
+            .model(AssetLookup.existingItemModel())
+            .register();
+    public static ItemEntry<WoodenCupItem> wooden_cup = REGISTRATE
+            .item("wooden_cup", p -> new WoodenCupItem(new Item.Properties(), 250)
+            /* TODO: @yuqijun I can't add this somehow. Any other way to avoid this kind of definition?
+             {
+                @Override
+                public ICapabilityProvider initCapabilities(@Nonnull ItemStack stack, @Nullable CompoundTag nbt) {
+                    return super.initCapabilities(new ItemStack(wooden_cup_drink.get()), nbt);
+                }
+            }
+             */
+            )
+            .model(AssetLookup.existingItemModel())
+            .lang("Wooden Cup")
+            .register();
+    public static ItemEntry<WoodenCupItem> wooden_cup_drink = REGISTRATE
+            .item("wooden_cup_drink", p -> new WoodenCupItem(new Item.Properties().stacksTo(1), 250))
+            .model(AssetLookup.existingItemModel())
+            .lang("Wooden Cup With Drink")
+            .register();
+    public static ItemEntry<LeatherWaterBagItem> LEATHER_WATER_BAG = REGISTRATE
+            .item("leather_water_bag", p -> new LeatherWaterBagItem(new Item.Properties().stacksTo(1).setNoRepair(), 1500))
+            .model(AssetLookup.existingItemModel())
+            .lang("Leather Water Bag")
+            .register();
+    public static ItemEntry<IronBottleItem> IRON_BOTTLE = REGISTRATE
+            .item("iron_bottle", p -> new IronBottleItem(new Item.Properties().stacksTo(1).setNoRepair(), 1500))
+            .model(AssetLookup.existingItemModel())
+            .lang("Iron Bottle")
+            .register();
+
 }
