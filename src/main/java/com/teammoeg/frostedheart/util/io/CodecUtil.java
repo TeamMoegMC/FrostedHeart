@@ -1,74 +1,41 @@
 package com.teammoeg.frostedheart.util.io;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.mojang.datafixers.util.Either;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.*;
+import com.mojang.serialization.codecs.EitherMapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.ConstructorCodec;
+import com.teammoeg.frostedheart.util.io.codec.*;
+import com.teammoeg.frostedheart.util.io.codec.BooleansCodec.BooleanCodecBuilder;
+import io.netty.handler.codec.DecoderException;
+import io.netty.handler.codec.EncoderException;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.MappedRegistry;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.mojang.datafixers.util.Either;
-import com.mojang.datafixers.util.Pair;
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
-import com.mojang.serialization.DynamicOps;
-import com.mojang.serialization.JsonOps;
-import com.mojang.serialization.ListBuilder;
-import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.MapLike;
-import com.mojang.serialization.RecordBuilder;
-import com.mojang.serialization.codecs.EitherMapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
-import com.teammoeg.frostedheart.util.ConstructorCodec;
-import com.teammoeg.frostedheart.util.io.codec.AlternativeCodecBuilder;
-import com.teammoeg.frostedheart.util.io.codec.BooleansCodec.BooleanCodecBuilder;
-import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
-import com.teammoeg.frostedheart.util.io.codec.CustomListCodec;
-import com.teammoeg.frostedheart.util.io.codec.DataOps;
-import com.teammoeg.frostedheart.util.io.codec.RegistryCodec;
-import com.teammoeg.frostedheart.util.io.codec.KeysCodec;
-import com.teammoeg.frostedheart.util.io.codec.MapPathCodec;
-import com.teammoeg.frostedheart.util.io.codec.DefaultValueCodec;
-import com.teammoeg.frostedheart.util.io.codec.DiscreteListCodec;
-import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
-import com.teammoeg.frostedheart.util.io.codec.PacketOrSchemaCodec;
-import com.teammoeg.frostedheart.util.io.codec.StreamCodec;
-
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import io.netty.handler.codec.DecoderException;
-import io.netty.handler.codec.EncoderException;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.MappedRegistry;
 
 public class CodecUtil {
 	static final Function<DynamicOps<?>, Codec<?>> schCodec=SerializeUtil.cached(CodecUtil::scCodec);
@@ -465,6 +432,6 @@ public class CodecUtil {
 		
 	}
 	public static void main(String[] args) throws Exception {
-		System.out.println(GeneratorData.CODEC.encodeStart(NbtOps.INSTANCE, new GeneratorData((SpecialDataHolder)null)));
+//		System.out.println(GeneratorData.CODEC.encodeStart(NbtOps.INSTANCE, new GeneratorData((SpecialDataHolder)null)));
 	}
 }

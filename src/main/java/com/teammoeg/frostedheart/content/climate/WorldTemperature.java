@@ -24,13 +24,14 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
-import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.Level;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.*;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.levelgen.Heightmap;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * World Temperature API on the server side.
@@ -68,6 +69,65 @@ import net.minecraft.world.level.biome.Biome;
  * </p>
  */
 public class WorldTemperature {
+    public static boolean canTreeGrow(LevelAccessor worldIn, BlockPos p, RandomSource rand) {
+        float temp = block(worldIn, p);
+        if (temp <= -6 || WorldClimate.isBlizzard(worldIn))
+            return false;
+        if (temp > VANILLA_PLANT_GROW_TEMPERATURE_MAX)
+            return false;
+        if (temp > 0)
+            return true;
+        return rand.nextInt(Math.max(1, Mth.ceil(-temp / 2))) == 0;
+    }
+
+    public static boolean isBlizzardHarming(LevelAccessor iWorld, BlockPos p) {
+        return WorldClimate.isBlizzard(iWorld) && isBlizzardVulnerable(iWorld,p);
+    }
+
+    public static boolean isBlizzardVulnerable(LevelAccessor iWorld, BlockPos p) {
+        return iWorld.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) <= p.getY();
+    }
+
+    public static boolean isRainingAt(BlockPos pos, Level world) {
+
+        if (!world.isRaining()) {
+            return false;
+        } else if (!world.canSeeSky(pos)) {
+            return false;
+        } else return world.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos).getY() <= pos.getY();
+    }
+
+    public static boolean canBigTreeGenerate(Level w, BlockPos p, RandomSource r) {
+
+        return canTreeGenerate(w, p, r, 7);
+
+    }
+
+    public static void canBigTreeGenerate(Level w, BlockPos p, RandomSource r, CallbackInfoReturnable<Boolean> cr) {
+        if (!canBigTreeGenerate(w, p, r))
+            cr.setReturnValue(false);
+    }
+
+    public static boolean canGrassSurvive(LevelReader world, BlockPos pos) {
+        float t = block(world, pos);
+        return t >= HEMP_GROW_TEMPERATURE && t <= VANILLA_PLANT_GROW_TEMPERATURE_MAX;
+    }
+
+    public static boolean canNetherTreeGrow(BlockGetter w, BlockPos p) {
+        if (!(w instanceof LevelAccessor)) {
+            return false;
+        }
+        float temp = block((LevelAccessor) w, p);
+        if (temp <= 300)
+            return false;
+        return !(temp > 300 + VANILLA_PLANT_GROW_TEMPERATURE_MAX);
+    }
+
+    public static boolean canTreeGenerate(Level w, BlockPos p, RandomSource r, int chance) {
+        return r.nextInt(chance) == 0;
+
+    }
+
     public enum TemperatureCheckResult{
     	INVALID,
     	BLIZZARD_HARM,
@@ -319,7 +379,7 @@ public class WorldTemperature {
         	float temp=0;
         	if(climate!=null) {
 	        	if(climate.getHourData().getType() == ClimateType.BLIZZARD)//always too cold in blizzard
-	        		return FHUtils.isBlizzardVulnerable(l,pos)?TemperatureCheckResult.BLIZZARD_HARM:TemperatureCheckResult.TOO_COLD;
+	        		return isBlizzardVulnerable(l,pos)?TemperatureCheckResult.BLIZZARD_HARM:TemperatureCheckResult.TOO_COLD;
 	        	temp=climate.getTemp();
         	}
         	float block=(dimension(w) + biome(w, pos) + temp * CLIMATE_BLOCK_AFFECTION + heat(w,pos));

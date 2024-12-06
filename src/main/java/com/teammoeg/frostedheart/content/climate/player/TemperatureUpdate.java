@@ -179,7 +179,7 @@ public class TemperatureUpdate {
 
                     // Weather temperature modifier
                     float weatherMultiplier = 1.0F;
-                    if (world.isRaining() && FHUtils.isRainingAt(player.blockPosition(), world)) {
+                    if (world.isRaining() && WorldTemperature.isRainingAt(player.blockPosition(), world)) {
                         envtemp -= SNOW_TEMP_MODIFIER;
                         if (world.isThundering()) {
                             envtemp -= BLIZZARD_TEMP_MODIFIER;

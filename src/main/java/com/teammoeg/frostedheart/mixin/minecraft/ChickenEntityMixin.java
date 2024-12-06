@@ -28,7 +28,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.teammoeg.frostedheart.FHDamageTypes;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
 import net.minecraft.world.entity.EntityType;
@@ -144,7 +143,7 @@ public abstract class ChickenEntityMixin extends Animal implements IFeedStore {
                 digestTimer = 6000;
             }
 
-            if (FHUtils.isBlizzardHarming(level(), this.blockPosition())) {
+            if (WorldTemperature.isBlizzardHarming(level(), this.blockPosition())) {
                 if (hxteTimer < 20) {
                     hxteTimer++;
                 } else {

@@ -17,9 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.util.mixin;
-
-import com.teammoeg.frostedheart.content.trade.FHVillagerData;
+package com.teammoeg.frostedheart.content.trade;
 
 public interface VillagerDataHolder {
     FHVillagerData getFHData();

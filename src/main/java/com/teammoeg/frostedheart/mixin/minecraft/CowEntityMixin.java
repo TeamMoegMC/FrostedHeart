@@ -26,7 +26,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import com.teammoeg.frostedheart.FHDamageTypes;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 import com.teammoeg.frostedheart.util.mixin.IMilkable;
 
@@ -195,7 +194,7 @@ public abstract class CowEntityMixin extends Animal implements IMilkable, IFeedS
             } else if (feeded > 0) {
                 digestTimer = 14400;
             }
-            if (FHUtils.isBlizzardHarming(level(), this.blockPosition())) {
+            if (WorldTemperature.isBlizzardHarming(level(), this.blockPosition())) {
                 if (hxteTimer < 20) {
                     hxteTimer++;
                 } else {

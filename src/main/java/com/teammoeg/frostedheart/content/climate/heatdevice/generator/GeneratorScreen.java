@@ -15,7 +15,7 @@ import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
+import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.client.AtlasUV;
 import com.teammoeg.frostedheart.util.client.Point;
 import com.teammoeg.frostedheart.util.client.RotatableUV;

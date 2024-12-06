@@ -26,7 +26,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.FHDamageTypes;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
 import net.minecraft.world.entity.EntityType;
@@ -62,7 +61,7 @@ public class CoolableAnimals extends Mob {
         super.tick();
         if (!this.level().isClientSide) {
 
-            if (FHUtils.isBlizzardHarming(level(), this.blockPosition())) {
+            if (WorldTemperature.isBlizzardHarming(level(), this.blockPosition())) {
                 if (hxteTimer < 20) {
                     hxteTimer++;
                 } else {

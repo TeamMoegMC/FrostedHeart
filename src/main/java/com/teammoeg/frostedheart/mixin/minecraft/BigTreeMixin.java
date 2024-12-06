@@ -19,12 +19,11 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -41,6 +40,6 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 public abstract class BigTreeMixin extends AbstractTreeGrower {
     @Inject(at = @At("HEAD"), method = "placeMega", cancellable = true)
     public void placeMega(ServerLevel pLevel, ChunkGenerator pGenerator, BlockPos pPos, BlockState pState, RandomSource pRandom, int pBranchX, int pBranchY,CallbackInfoReturnable<Boolean> cr) {
-        FHUtils.canBigTreeGenerate(pLevel, pPos, pRandom, cr);
+        WorldTemperature.canBigTreeGenerate(pLevel, pPos, pRandom, cr);
     }
 }

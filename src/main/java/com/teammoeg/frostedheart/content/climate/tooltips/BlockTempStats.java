@@ -5,7 +5,7 @@ import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
+import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.lang.Components;
 import com.teammoeg.frostedheart.util.lang.LangBuilder;
 import net.minecraft.ChatFormatting;

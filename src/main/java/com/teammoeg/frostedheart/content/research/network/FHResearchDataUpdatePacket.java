@@ -23,12 +23,11 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.research.FHResearch;
-import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
+import com.teammoeg.frostedheart.content.research.ResearchUtils;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.ResearchData.ResearchDataPacket;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.codec.DataOps;
 import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
@@ -61,7 +60,7 @@ public record FHResearchDataUpdatePacket(Object rd,int id) implements FHMessage{
             ResearchDataPacket datax = CodecUtil.decodeOrThrow(ResearchData.NETWORK_CODEC.decode(DataOps.COMPRESSED, rd));
             boolean status = old.isCompleted();
             old.read(rs, datax);
-            ClientUtils.refreshResearchGui();
+            ResearchUtils.refreshResearchGui();
             MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs, old.isCompleted(), status != old.isCompleted()));
 
 

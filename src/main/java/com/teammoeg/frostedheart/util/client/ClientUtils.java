@@ -21,13 +21,9 @@ package com.teammoeg.frostedheart.util.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.teammoeg.frostedheart.FHParticleTypes;
-import com.teammoeg.frostedheart.content.research.gui.ResearchGui;
 
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.IScreenWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
@@ -62,16 +58,6 @@ public class ClientUtils {
     }
     public static Font font() {
         return mc().font;
-    }
-    public static void refreshResearchGui() {
-        Screen cur = mc().screen;
-        if (cur instanceof IScreenWrapper) {
-            BaseScreen bs = ((IScreenWrapper) cur).getGui();
-            if (bs instanceof ResearchGui) {
-                bs.refreshWidgets();
-            }
-        }
-        mc().getLanguageManager();
     }
 
     public static void spawnFireParticles(Level worldIn, BlockPos pos) {

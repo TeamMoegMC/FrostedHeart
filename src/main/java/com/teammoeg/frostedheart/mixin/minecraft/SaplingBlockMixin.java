@@ -19,12 +19,11 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
@@ -47,10 +46,10 @@ public abstract class SaplingBlockMixin extends BushBlock implements Bonemealabl
 
     @Inject(at = @At("HEAD"), method = "randomTick", cancellable = true)
     public void fh$randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random, CallbackInfo cbi) {
-        if (FHUtils.isBlizzardHarming(worldIn, pos)) {
+        if (WorldTemperature.isBlizzardHarming(worldIn, pos)) {
             worldIn.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
             cbi.cancel();
-        } else if (!FHUtils.canTreeGrow(worldIn, pos, random))
+        } else if (!WorldTemperature.canTreeGrow(worldIn, pos, random))
             cbi.cancel();
     }
 

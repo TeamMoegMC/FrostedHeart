@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.TradeHandler;
-import com.teammoeg.frostedheart.util.mixin.VillagerDataHolder;
+import com.teammoeg.frostedheart.content.trade.VillagerDataHolder;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.AbstractVillager;

@@ -470,10 +470,10 @@ public class ClimateCommonEvents {
         LevelAccessor worldIn=event.getLevel();
         RandomSource rand=event.getRandomSource();
         BlockState sapling=event.getLevel().getBlockState(pos);
-        if (FHUtils.isBlizzardHarming(worldIn, pos)) {
+        if (WorldTemperature.isBlizzardHarming(worldIn, pos)) {
             worldIn.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
             event.setResult(Event.Result.DENY);
-        } else if (!FHUtils.canTreeGrow(worldIn, pos, rand))
+        } else if (!WorldTemperature.canTreeGrow(worldIn, pos, rand))
             event.setResult(Event.Result.DENY);
     }
 

@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.content.research.ResearchUtils;
 import com.teammoeg.frostedheart.content.research.network.FHDrawingDeskOperationPacket;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.core.BlockPos;
 
@@ -48,7 +48,7 @@ public class ClientResearchGame implements Consumer<ResearchGame> {
     @Override
     public void accept(ResearchGame t) {
         this.calculateCardNum();
-        ClientUtils.refreshResearchGui();
+        ResearchUtils.refreshResearchGui();
     }
 
     public void attach() {

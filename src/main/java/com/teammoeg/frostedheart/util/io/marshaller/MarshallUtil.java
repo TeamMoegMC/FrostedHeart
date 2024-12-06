@@ -1,32 +1,19 @@
 package com.teammoeg.frostedheart.util.io.marshaller;
 
+import com.mojang.serialization.Codec;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.frostedheart.util.io.codec.NBTCodec;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.*;
+import net.minecraft.world.item.ItemStack;
+
 import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-
-import com.mojang.serialization.Codec;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.CubicHeatArea;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
-import com.teammoeg.frostedheart.util.io.codec.NBTCodec;
-
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.ByteArrayTag;
-import net.minecraft.nbt.ByteTag;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.DoubleTag;
-import net.minecraft.nbt.FloatTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.nbt.IntArrayTag;
-import net.minecraft.nbt.IntTag;
-import net.minecraft.nbt.LongArrayTag;
-import net.minecraft.nbt.LongTag;
-import net.minecraft.nbt.ShortTag;
-import net.minecraft.nbt.StringTag;
-import net.minecraft.core.BlockPos;
 
 public class MarshallUtil {
 
@@ -139,8 +126,8 @@ public class MarshallUtil {
     	
     }
     public static void main(String[] args) {
-    	Tag data=serialize(new CubicHeatArea(new BlockPos(10,20,30),40,50));
-    	System.out.println(data);
-    	System.out.println(deserialize(CubicHeatArea.class,data));
+//    	Tag data=serialize(new CubicHeatArea(new BlockPos(10,20,30),40,50));
+//    	System.out.println(data);
+//    	System.out.println(deserialize(CubicHeatArea.class,data));
     }
 }
