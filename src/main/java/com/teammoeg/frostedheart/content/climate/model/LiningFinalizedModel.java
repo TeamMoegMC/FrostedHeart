@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.foundation.model;
+package com.teammoeg.frostedheart.content.climate.model;
 
 import java.awt.Color;
 import java.util.ArrayList;

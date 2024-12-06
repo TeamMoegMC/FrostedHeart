@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.foundation.recipes;
+package com.teammoeg.frostedheart.content.utility.recipe;
 
 import javax.annotation.Nullable;
 

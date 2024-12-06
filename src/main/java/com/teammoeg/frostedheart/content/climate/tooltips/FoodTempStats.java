@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.foundation.tooltips;
+package com.teammoeg.frostedheart.content.climate.tooltips;
 
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;

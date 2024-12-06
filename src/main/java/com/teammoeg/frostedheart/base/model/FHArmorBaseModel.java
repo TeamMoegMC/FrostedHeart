@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.foundation.model;
+package com.teammoeg.frostedheart.base.model;
 
 import java.util.function.Function;
 

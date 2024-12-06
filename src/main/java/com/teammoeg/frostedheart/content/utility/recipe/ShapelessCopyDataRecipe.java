@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.foundation.recipes;
+package com.teammoeg.frostedheart.content.utility.recipe;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
-import com.teammoeg.frostedheart.foundation.recipes.CampfireDefrostRecipe;
+import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.util.lang.Lang;
 
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;

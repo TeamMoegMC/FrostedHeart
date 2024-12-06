@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.teammoeg.frostedheart.foundation.recipes.DismantleInnerRecipe;
+import com.teammoeg.frostedheart.content.climate.recipe.DismantleInnerRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.world.entity.LivingEntity;

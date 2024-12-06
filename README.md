@@ -69,9 +69,6 @@ or more precisely game mechanics and systems. It is divided by
 subtopics, such as `agriculture`, `town`, `steamenergy`. If you
 want to add a new game mechanic, this is the place to put it.
   (maybe we should name as `mechanics` instead of `content`?)
-- `foundation`: The foundation package contains the foundation
-  of the game, such as the worldgen, effects, loots, models, recipes, etc.
-These are stuff not packaged by topic, but by functionality.
 - `infrastructure`: The infrastructure package contains the
   infrastructure of the game, such as commands, data, gen, config.
 - `compat`: Compatibility for other mods.

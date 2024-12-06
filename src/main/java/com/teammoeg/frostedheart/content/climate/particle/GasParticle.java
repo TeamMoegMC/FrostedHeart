@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.foundation.particles;
+package com.teammoeg.frostedheart.content.climate.particle;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
 

@@ -17,14 +17,14 @@
  *
  */
 
-package com.teammoeg.frostedheart.foundation.model;
+package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorRenderer;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
+import com.teammoeg.frostedheart.base.model.DynamicBlockModelReference;
 
-public class DynamicModelSetup {
+public class FHDynamicModels {
     public static void setup() {
         T1GeneratorRenderer.FUEL = DynamicBlockModelReference.getModelCached(FHMain.MODID, "block/multiblocks/generator_fuel.obj");
         T2GeneratorRenderer.FUEL = DynamicBlockModelReference.getModelCached(FHMain.MODID, "block/multiblocks/generator_t2_fuel.obj" );

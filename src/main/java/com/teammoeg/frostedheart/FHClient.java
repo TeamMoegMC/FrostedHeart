@@ -39,7 +39,6 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyph
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatScreen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
-import com.teammoeg.frostedheart.foundation.model.DynamicModelSetup;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -70,7 +69,7 @@ public class FHClient {
         IEventBus forge = MinecraftForge.EVENT_BUS;
 
         LOGGER.info(CLIENT_INIT, "Initializing client");
-        DynamicModelSetup.setup();
+        FHDynamicModels.setup();
         KGlyphProvider.addListener();
 
         LOGGER.info(CLIENT_INIT, "Registering client forge event listeners");

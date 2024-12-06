@@ -61,10 +61,10 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorS
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
-import com.teammoeg.frostedheart.foundation.recipes.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.foundation.recipes.InstallInnerRecipe;
-import com.teammoeg.frostedheart.foundation.recipes.ModifyDamageRecipe;
-import com.teammoeg.frostedheart.foundation.recipes.SmokingDefrostRecipe;
+import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
+import com.teammoeg.frostedheart.content.climate.recipe.InstallInnerRecipe;
+import com.teammoeg.frostedheart.content.utility.recipe.ModifyDamageRecipe;
+import com.teammoeg.frostedheart.content.climate.recipe.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;

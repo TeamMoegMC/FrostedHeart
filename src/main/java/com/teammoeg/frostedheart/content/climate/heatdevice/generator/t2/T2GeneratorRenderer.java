@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.frostedheart.foundation.model.DynamicBlockModelReference;
+import com.teammoeg.frostedheart.base.model.DynamicBlockModelReference;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 
