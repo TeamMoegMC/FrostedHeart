@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.tips;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.foundation.gui.DebugScreen;
 import com.teammoeg.frostedheart.foundation.gui.widget.IconButton;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -22,7 +23,7 @@ import net.minecraftforge.fml.common.Mod;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mod.EventBusSubscriber(value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class TipRenderer {
     private static final Minecraft mc = Minecraft.getInstance();
     public static final List<TipElement> renderQueue = new ArrayList<>();

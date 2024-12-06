@@ -44,7 +44,7 @@ import net.minecraftforge.network.PacketDistributor;
 import java.util.Random;
 
 
-@Mod.EventBusSubscriber(modid = FHMain.MODID)
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class WaterEventHandler {
     static int tick = 0;
 
