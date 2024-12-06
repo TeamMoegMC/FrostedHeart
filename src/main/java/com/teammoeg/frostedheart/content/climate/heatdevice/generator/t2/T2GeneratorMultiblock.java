@@ -23,7 +23,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks.Logic;
 import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.util.FHMultiblockHelper;
+import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;

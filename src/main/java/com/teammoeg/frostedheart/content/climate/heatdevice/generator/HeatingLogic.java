@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.util.FHMultiblockHelper;
+import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IClientTickableComponent;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IServerTickableComponent;

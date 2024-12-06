@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.util.mixin;
+package com.teammoeg.frostedheart.compat.create;
 
 import org.apache.commons.lang3.tuple.MutablePair;
 

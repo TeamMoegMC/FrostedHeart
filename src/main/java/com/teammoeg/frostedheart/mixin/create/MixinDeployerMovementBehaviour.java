@@ -20,19 +20,11 @@
 package com.teammoeg.frostedheart.mixin.create;
 
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.behaviour.MovementBehaviour;
-import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import com.simibubi.create.content.kinetics.deployer.DeployerMovementBehaviour;
-import com.teammoeg.frostedheart.util.mixin.ISpeedContraption;
-
-import net.minecraft.util.Mth;
 
 @Mixin(DeployerMovementBehaviour.class)
 public abstract class MixinDeployerMovementBehaviour implements MovementBehaviour {

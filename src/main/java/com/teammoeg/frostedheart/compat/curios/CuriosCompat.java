@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.compat;
+package com.teammoeg.frostedheart.compat.curios;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;

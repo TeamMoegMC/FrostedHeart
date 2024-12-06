@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.util;
 
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import blusunrize.immersiveengineering.common.util.Utils;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTags;
@@ -91,18 +89,29 @@ public class FHUtils {
     	BlockPos delt=from.subtract(to);
     	return Direction.fromDelta(Mth.clamp(delt.getX(), -1, 1), Mth.clamp(delt.getY(), -1, 1), Mth.clamp(delt.getZ(), -1, 1));
     }
+
+    public static BlockEntity getExistingTileEntity(Level world, BlockPos pos)
+    {
+        if(world==null)
+            return null;
+        if(world.hasChunkAt(pos))
+            return world.getBlockEntity(pos);
+        return null;
+    }
+
     public static BlockEntity getExistingTileEntity(LevelAccessor w,BlockPos pos) {
 		if(w==null)
 			return null;
     	BlockEntity te=null;
     	if(w instanceof Level) {
-    		te=Utils.getExistingTileEntity((Level) w, pos);
+    		te= getExistingTileEntity((Level) w, pos);
     	}else {
 			if(w.hasChunkAt(pos))
 				te=w.getBlockEntity(pos);
     	}
     	return te;
     }
+
     public static <T> T getExistingTileEntity(LevelAccessor w,BlockPos pos,Class<T> type) {
     	BlockEntity te=getExistingTileEntity(w,pos);
     	if(type.isInstance(te))
@@ -117,79 +126,6 @@ public class FHUtils {
     	return null;
     }
 
-    public static boolean hasItems(Player player,List<IngredientWithSize> costList) {
-    	int i=0;
-        for (IngredientWithSize iws : costList) {
-            int count = iws.getCount();
-            for (ItemStack it : player.getInventory().items) {
-                if (iws.testIgnoringSize(it)) {
-                    count -= it.getCount();
-                    if (count <= 0)
-                        break;
-                }
-            }
-            if (count > 0) {
-            	return false;
-            }
-        }
-        return true;
-    }
-    public static BitSet checkItemList(Player player,List<IngredientWithSize> costList) {
-    	BitSet bs=new BitSet(costList.size());
-    	int i=0;
-        for (IngredientWithSize iws : costList) {
-            int count = iws.getCount();
-            for (ItemStack it : player.getInventory().items) {
-                if (iws.testIgnoringSize(it)) {
-                    count -= it.getCount();
-                    if (count <= 0)
-                        break;
-                }
-            }
-            if (count > 0) {
-            	bs.set(i++,false);
-            } else {
-            	bs.set(i++, true);
-            }
-        }
-        return bs;
-    }
-    public static boolean costItems(Player player,List<IngredientWithSize> costList) {
-        // first do simple verify
-        for (IngredientWithSize iws : costList) {
-            int count = iws.getCount();
-            for (ItemStack it : player.getInventory().items) {
-                if (iws.testIgnoringSize(it)) {
-                    count -= it.getCount();
-                    if (count <= 0)
-                        break;
-                }
-            }
-            if (count > 0)
-                return false;
-        }
-        //System.out.println("test");
-        // then really consume item
-        List<ItemStack> ret = new ArrayList<>();
-        for (IngredientWithSize iws : costList) {
-            int count = iws.getCount();
-            for (ItemStack it : player.getInventory().items) {
-                if (iws.testIgnoringSize(it)) {
-                    int redcount = Math.min(count, it.getCount());
-                    ret.add(it.split(redcount));
-                    count -= redcount;
-                    if (count <= 0)
-                        break;
-                }
-            }
-            if (count > 0) {// wrong, revert.
-                for (ItemStack it : ret)
-                    FHUtils.giveItem(player, it);
-                return false;
-            }
-        }
-        return true;
-    }
     public static Ingredient createIngredient(ItemStack is) {
 
         return Ingredient.of(is);
@@ -197,14 +133,6 @@ public class FHUtils {
 
     public static Ingredient createIngredient(ResourceLocation tag) {
         return Ingredient.of(ItemTags.create(tag));
-    }
-
-    public static IngredientWithSize createIngredientWithSize(ItemStack is) {
-        return new IngredientWithSize(createIngredient(is), is.getCount());
-    }
-
-    public static IngredientWithSize createIngredientWithSize(ResourceLocation tag, int count) {
-        return new IngredientWithSize(createIngredient(tag), count);
     }
 
     public static ResourceLocation getEmptyLoot() {

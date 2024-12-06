@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.simibubi.create.content.contraptions.ControlledContraptionEntity;
 import com.simibubi.create.content.contraptions.bearing.ClockworkBearingBlockEntity;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
-import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
+import com.teammoeg.frostedheart.compat.create.ContraptionCostUtils;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;

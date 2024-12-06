@@ -27,7 +27,7 @@ import com.simibubi.create.content.contraptions.behaviour.MovementBehaviour;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import com.simibubi.create.content.kinetics.base.BlockBreakingMovementBehaviour;
 import com.simibubi.create.foundation.utility.BlockHelper;
-import com.teammoeg.frostedheart.util.mixin.ISpeedContraption;
+import com.teammoeg.frostedheart.compat.create.ISpeedContraption;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.FallingBlock;

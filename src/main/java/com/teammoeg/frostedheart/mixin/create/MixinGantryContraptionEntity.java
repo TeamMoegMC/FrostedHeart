@@ -28,7 +28,7 @@ import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.gantry.GantryContraption;
 import com.simibubi.create.content.contraptions.gantry.GantryContraptionEntity;
 import com.simibubi.create.content.kinetics.gantry.GantryShaftBlockEntity;
-import com.teammoeg.frostedheart.util.mixin.IGantryShaft;
+import com.teammoeg.frostedheart.compat.create.IGantryShaft;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.entity.BlockEntity;

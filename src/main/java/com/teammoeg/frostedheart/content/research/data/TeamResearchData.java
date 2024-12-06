@@ -20,9 +20,7 @@
 package com.teammoeg.frostedheart.content.research.data;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -31,9 +29,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.SpecialData;
 import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
-import com.teammoeg.frostedheart.content.research.FHRegistry;
+import com.teammoeg.frostedheart.compat.ie.IngredientUtils;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchListeners.BlockUnlockList;
 import com.teammoeg.frostedheart.content.research.ResearchListeners.CategoryUnlockList;
@@ -48,9 +45,7 @@ import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPack
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
-import com.teammoeg.frostedheart.content.research.research.clues.ItemClue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
@@ -205,7 +200,7 @@ public class TeamResearchData implements SpecialData{
                 return false;
             }
         }
-        if(!research.getRequiredItems().isEmpty()&&!FHUtils.costItems(player,research.getRequiredItems()))
+        if(!research.getRequiredItems().isEmpty()&&!IngredientUtils.costItems(player,research.getRequiredItems()))
         	return false;
         getData(research).setActive();
         this.sendResearchProgressPacket(team, research);

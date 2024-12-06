@@ -25,7 +25,7 @@ import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.FHMobEffects;
-import com.teammoeg.frostedheart.compat.CuriosCompat;
+import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;

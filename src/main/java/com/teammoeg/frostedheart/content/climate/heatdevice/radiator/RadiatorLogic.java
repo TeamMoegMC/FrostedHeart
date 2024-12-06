@@ -25,7 +25,7 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.util.CapabilityPos
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.ShapeType;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.HeatingLogic;
-import com.teammoeg.frostedheart.util.FHMultiblockHelper;
+import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;

@@ -11,9 +11,9 @@ import java.util.function.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.compat.ie.IngredientUtils;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
-import com.teammoeg.frostedheart.util.FHMultiblockHelper;
-import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.client.AtlasUV;
@@ -159,7 +159,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         costStr.clear();
         if (menu.isBroken.getValue()) {
             costStr.add(Lang.translateGui("generator.repair_material"));
-            BitSet cost = FHUtils.checkItemList(ClientUtils.mc().player, tile.getRepairCost());
+            BitSet cost = IngredientUtils.checkItemList(ClientUtils.mc().player, tile.getRepairCost());
             int i = 0;
             for (IngredientWithSize iws : tile.getRepairCost()) {
                 ItemStack[] iss = iws.getMatchingStacks();
@@ -178,7 +178,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         } else if (tile.getNextLevelMultiblock() != null) {
             validStructure = tile.nextLevelHasValidStructure(Minecraft.getInstance().level, helper);
             List<IngredientWithSize> upgcost = tile.getUpgradeCost(Minecraft.getInstance().level, helper);
-            BitSet cost = FHUtils.checkItemList(ClientUtils.mc().player, upgcost);
+            BitSet cost = IngredientUtils.checkItemList(ClientUtils.mc().player, upgcost);
             hasResearch = ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock());
             Vec3i v3i = tile.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);
             if (!validStructure) {

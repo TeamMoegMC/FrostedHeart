@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.compat;
+package com.teammoeg.frostedheart.compat.create;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.kinetics.BlockStressDefaults;

@@ -9,7 +9,7 @@ import java.util.Locale;
 public class LangNumberFormat {
 
     private NumberFormat format = NumberFormat.getNumberInstance(Locale.ROOT);
-    public static com.simibubi.create.foundation.utility.LangNumberFormat numberFormat = new com.simibubi.create.foundation.utility.LangNumberFormat();
+    public static LangNumberFormat numberFormat = new LangNumberFormat();
 
     public NumberFormat get() {
         return format;

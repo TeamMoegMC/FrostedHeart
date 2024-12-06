@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.compat;
+package com.teammoeg.frostedheart.compat.create;
 
 import com.simibubi.create.content.kinetics.BlockStressValues.IStressValueProvider;
 import com.simibubi.create.foundation.utility.Couple;

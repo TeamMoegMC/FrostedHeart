@@ -17,14 +17,12 @@
  *
  */
 
-package com.teammoeg.frostedheart.util.mixin;
+package com.teammoeg.frostedheart.compat.create;
 
-public interface IStressContraption {
+public interface ISpeedContraption {
+    void contributeSpeed(float s);
 
-    float getActorCost();
+    float getSpeed();
 
-    float getRotationStressCost();
-
-    float getStressCost();
-
+    void setSpeed(float spd);
 }

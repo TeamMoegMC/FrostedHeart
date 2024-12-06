@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.compat.ie;
 
 import java.util.Optional;
 
@@ -6,6 +6,7 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockBEH
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockLevel;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockBE;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockLogic;
+import com.teammoeg.frostedheart.util.FHUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.Level;

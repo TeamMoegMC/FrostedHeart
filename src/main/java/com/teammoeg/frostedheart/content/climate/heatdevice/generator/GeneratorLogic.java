@@ -25,10 +25,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.compat.ie.IngredientUtils;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
-import com.teammoeg.frostedheart.util.FHMultiblockHelper;
+import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
+import com.teammoeg.frostedheart.compat.ie.MultiBlockAccess;
 
 import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -100,7 +101,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
             return;
         if (!ResearchListeners.hasMultiblock(ctx.getState().getOwner(), getNextLevelMultiblock()))
             return;
-        if (!FHUtils.costItems(entityplayer, getUpgradeCost(ctx.getLevel().getRawLevel(), helper)))
+        if (!IngredientUtils.costItems(entityplayer, getUpgradeCost(ctx.getLevel().getRawLevel(), helper)))
             return;
         BlockPos negMasterOffset = FHMultiblockHelper.getMasterPos(ctx.getLevel()).subtract(getNextLevelMultiblock().getMasterFromOriginOffset());
         Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, ctx.getLevel().getOrientation().front());
@@ -112,7 +113,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
     public void repairStructure(IMultiblockContext<R> ctx, ServerPlayer entityplayer) {
         if (!getData(ctx).map(t -> t.isBroken).orElse(false))
             return;
-        if (!FHUtils.costItems(entityplayer, getRepairCost()))
+        if (!IngredientUtils.costItems(entityplayer, getRepairCost()))
             return;
         getData(ctx).ifPresent(t -> {
             t.isBroken = false;

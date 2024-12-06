@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -17,17 +17,14 @@
  *
  */
 
-package com.teammoeg.frostedheart.util.mixin;
+package com.teammoeg.frostedheart.compat.create;
 
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
+public interface IStressContraption {
 
-public interface MultiBlockAccess {
-    void callForm(Level world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit);
-    void setPlayer(ServerPlayer spe);
+    float getActorCost();
+
+    float getRotationStressCost();
+
+    float getStressCost();
+
 }
-

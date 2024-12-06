@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.base.menu.FHBaseContainer;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.util.FHContainerData;
 import com.teammoeg.frostedheart.util.FHContainerData.FHDataSlot;
-import com.teammoeg.frostedheart.util.FHMultiblockHelper;
+import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.client.Point;
 
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;

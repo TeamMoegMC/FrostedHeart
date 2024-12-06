@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.util.mixin;
+package com.teammoeg.frostedheart.compat.create;
 
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 
