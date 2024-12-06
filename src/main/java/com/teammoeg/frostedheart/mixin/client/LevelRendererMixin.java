@@ -30,7 +30,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.FHSoundEvents;
-import com.teammoeg.frostedheart.foundation.renderer.InfraredViewRenderer;
+import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.ParticleStatus;

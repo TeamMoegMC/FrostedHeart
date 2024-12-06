@@ -19,70 +19,38 @@
 
 package com.teammoeg.frostedheart.events;
 
-import java.util.function.Function;
-
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.base.creativeTab.ICreativeModeTabItem;
-import com.teammoeg.frostedheart.foundation.particles.WetSteamParticle;
-import com.teammoeg.frostedheart.content.climate.client.SnowParticle;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorLogic;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorLogic;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorState;
+import com.teammoeg.frostedheart.foundation.particles.SnowParticle;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorRenderer;
+import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorRenderer;
+import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
-import com.teammoeg.frostedheart.foundation.world.entities.CuriosityEntityModel;
-import com.teammoeg.frostedheart.foundation.world.entities.CuriosityEntityRenderer;
-import net.minecraftforge.client.event.*;
-
+import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestExtension;
+import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestModel;
 import com.teammoeg.frostedheart.foundation.model.DynamicBlockModelReference;
 import com.teammoeg.frostedheart.foundation.model.LiningModel;
 import com.teammoeg.frostedheart.foundation.particles.BreathParticle;
 import com.teammoeg.frostedheart.foundation.particles.SteamParticle;
-import com.teammoeg.frostedheart.compat.tetra.TetraClient;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorScreen;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorRenderer;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorRenderer;
-import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
-import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
-import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
-import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
-import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskScreen;
-import com.teammoeg.frostedheart.content.steamenergy.HeatStatScreen;
-import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
-import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
-import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestExtension;
-import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestModel;
+import com.teammoeg.frostedheart.foundation.particles.WetSteamParticle;
+import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityModel;
+import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-
-import blusunrize.immersiveengineering.api.ManualHelper;
-import blusunrize.immersiveengineering.client.manual.ManualElementMultiblock;
-import blusunrize.lib.manual.ManualEntry;
-import blusunrize.lib.manual.ManualEntry.SpecialElementData;
-import blusunrize.lib.manual.ManualInstance;
-import blusunrize.lib.manual.Tree;
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.EntityRenderersEvent.AddLayers;
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterLayerDefinitions;
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**

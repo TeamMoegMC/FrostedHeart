@@ -48,7 +48,7 @@ import com.teammoeg.frostedheart.content.town.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerBlock;
-import com.teammoeg.frostedheart.foundation.loot.FHLootGen;
+import com.teammoeg.frostedheart.infrastructure.gen.FHLootGen;
 import com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen;
 import com.tterrag.registrate.providers.loot.RegistrateBlockLootTables;
 import com.tterrag.registrate.util.entry.BlockEntry;

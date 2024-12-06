@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import com.teammoeg.frostedheart.foundation.world.FHFeatures;
+import com.teammoeg.frostedheart.content.world.FHFeatures;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

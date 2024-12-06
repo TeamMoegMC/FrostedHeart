@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
-import com.teammoeg.frostedheart.foundation.hud.FrostedHud;
-import com.teammoeg.frostedheart.foundation.renderer.InfraredViewRenderer;
+import com.teammoeg.frostedheart.FrostedHud;
+import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;

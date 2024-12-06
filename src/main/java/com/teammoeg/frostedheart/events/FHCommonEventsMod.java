@@ -23,7 +23,7 @@ import com.teammoeg.frostedheart.FHAttributes;
 import com.teammoeg.frostedheart.FHEntityTypes;
 import com.teammoeg.frostedheart.FHMain;
 
-import com.teammoeg.frostedheart.foundation.world.entities.CuriosityEntity;
+import com.teammoeg.frostedheart.content.world.entities.CuriosityEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;

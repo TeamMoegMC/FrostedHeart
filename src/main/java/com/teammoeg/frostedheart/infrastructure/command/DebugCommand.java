@@ -44,7 +44,7 @@ import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.FileUtil;
 
-import com.teammoeg.frostedheart.foundation.world.FHFeatures;
+import com.teammoeg.frostedheart.content.world.FHFeatures;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;

@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart;
 
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import com.teammoeg.frostedheart.content.utility.SpearEntity;
-import com.teammoeg.frostedheart.foundation.world.entities.CuriosityEntity;
+import com.teammoeg.frostedheart.content.world.entities.CuriosityEntity;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;

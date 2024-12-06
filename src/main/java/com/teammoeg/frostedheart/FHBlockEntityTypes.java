@@ -26,8 +26,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.kinetics.base.HalfShaftInstance;
-import com.simibubi.create.content.kinetics.base.HorizontalHalfShaftInstance;
-import com.teammoeg.frostedheart.foundation.renderer.HalfShaftRenderer;
+import com.teammoeg.frostedheart.content.steamenergy.steamcore.HalfShaftRenderer;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
@@ -49,7 +48,6 @@ import com.teammoeg.frostedheart.content.utility.incinerator.GasVentTileEntity;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerTileEntity;
 import com.tterrag.registrate.util.entry.BlockEntityEntry;
 
-import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;

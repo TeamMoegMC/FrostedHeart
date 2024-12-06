@@ -2,8 +2,8 @@ package com.teammoeg.frostedheart.content.tips;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.foundation.gui.DebugScreen;
-import com.teammoeg.frostedheart.foundation.gui.widget.IconButton;
+import com.teammoeg.frostedheart.content.waypoint.gui.DebugScreen;
+import com.teammoeg.frostedheart.content.waypoint.gui.widget.IconButton;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.tips.client.gui.EmptyScreen;
