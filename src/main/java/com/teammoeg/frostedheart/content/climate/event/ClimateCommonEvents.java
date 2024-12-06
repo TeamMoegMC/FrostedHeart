@@ -29,6 +29,15 @@ import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.climate.ArmorTempCurios;
+import com.teammoeg.frostedheart.content.climate.ForecastHandler;
+import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
+import com.teammoeg.frostedheart.content.health.dailykitchen.DailyKitchen;
+import com.teammoeg.frostedheart.content.research.insight.InsightHandler;
+import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
+import com.teammoeg.frostedheart.content.utility.transportation.MovementModificationHandler;
 import com.teammoeg.frostedheart.infrastructure.command.HeatAdjustCommand;
 import com.teammoeg.frostedheart.infrastructure.command.ClimateCommand;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
@@ -59,6 +68,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -70,6 +80,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.DigDurabilityEnchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
@@ -84,10 +95,12 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.*;
 import net.minecraftforge.event.TickEvent.Phase;
+import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.event.level.SaplingGrowTreeEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -436,5 +449,46 @@ public class ClimateCommonEvents {
             }
         }
 
+    }
+
+    @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        FoodTemperatureHandler.onPlayerTick(event);
+        ForecastHandler.sendForecastMessages(event);
+        TemperatureUpdate.updateTemperature(event);
+        TemperatureUpdate.regulateTemperature(event);
+    }
+
+    @SubscribeEvent
+    public static void startUsingItems(LivingEntityUseItemEvent.Start event) {
+        FoodTemperatureHandler.checkFoodBeforeEating(event);
+    }
+
+    @SubscribeEvent
+    public static void finishUsingItems(LivingEntityUseItemEvent.Finish event) {
+        FoodTemperatureHandler.checkFoodAfterEating(event);
+    }
+
+    @SubscribeEvent
+    public static void saplingGrow(SaplingGrowTreeEvent event) {
+        BlockPos pos=event.getPos();
+        LevelAccessor worldIn=event.getLevel();
+        RandomSource rand=event.getRandomSource();
+        BlockState sapling=event.getLevel().getBlockState(pos);
+        if (FHUtils.isBlizzardHarming(worldIn, pos)) {
+            worldIn.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+            event.setResult(Event.Result.DENY);
+        } else if (!FHUtils.canTreeGrow(worldIn, pos, rand))
+            event.setResult(Event.Result.DENY);
+    }
+
+    @SubscribeEvent
+    public static void respawn(PlayerEvent.PlayerRespawnEvent event) {
+        if (event.getEntity() instanceof ServerPlayer && !(event.getEntity() instanceof FakePlayer)) {
+            ServerLevel serverWorld = ((ServerPlayer) event.getEntity()).serverLevel();
+            FHNetwork.sendPlayer( (ServerPlayer) event.getEntity(),
+                    new FHClimatePacket(WorldClimate.get(serverWorld)));
+            PlayerTemperatureData.getCapability(event.getEntity()).ifPresent(PlayerTemperatureData::reset);
+        }
     }
 }
