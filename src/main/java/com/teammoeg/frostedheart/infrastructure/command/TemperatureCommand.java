@@ -25,7 +25,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
+import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.world.entity.player.Player;

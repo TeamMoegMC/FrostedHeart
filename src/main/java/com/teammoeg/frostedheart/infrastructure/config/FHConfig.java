@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.infrastructure.config;
 
-import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
+import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraftforge.common.ForgeConfigSpec;

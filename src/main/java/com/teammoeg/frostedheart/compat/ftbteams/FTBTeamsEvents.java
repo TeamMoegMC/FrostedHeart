@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.events;
+package com.teammoeg.frostedheart.compat.ftbteams;
 
 import java.util.UUID;
 
@@ -35,6 +35,13 @@ import dev.ftb.mods.ftbteams.api.event.TeamEvent;
 import net.minecraft.server.level.ServerPlayer;
 
 public class FTBTeamsEvents {
+
+    public static void init() {
+        TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
+        TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
+        TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);
+        TeamEvent.OWNERSHIP_TRANSFERRED.register(FTBTeamsEvents::syncDataWhenTeamTransfer);
+    }
 
     public static void syncDataWhenTeamChange(PlayerChangedTeamEvent event) {
     	if(event.getPlayer()!=null)

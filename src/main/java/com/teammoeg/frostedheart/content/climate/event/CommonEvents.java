@@ -49,7 +49,7 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.foundation.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.constants.EquipmentSlotType;
+import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;

@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.compat.ftbq;
 
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
+import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
 import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -14,7 +14,6 @@ import dev.ftb.mods.ftbquests.quest.reward.RewardType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;

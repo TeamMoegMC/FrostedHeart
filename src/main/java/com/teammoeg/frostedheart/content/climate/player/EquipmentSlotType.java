@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.util.constants;
+package com.teammoeg.frostedheart.content.climate.player;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -7,7 +7,7 @@ import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.util.Mth;
-import top.theillusivec4.curios.api.SlotTypePreset;
+
 /**
  * used to store uuids for frosted heart equipment attributes 
  * 

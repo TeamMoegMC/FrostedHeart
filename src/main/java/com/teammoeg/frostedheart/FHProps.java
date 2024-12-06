@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.util.constants;
+package com.teammoeg.frostedheart;
 
 import com.teammoeg.frostedheart.FHMain;
 

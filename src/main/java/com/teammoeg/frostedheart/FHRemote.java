@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.util.version;
+package com.teammoeg.frostedheart;
 
 import java.io.File;
 import java.io.FileReader;
@@ -26,12 +26,13 @@ import java.net.URLConnection;
 import java.util.Scanner;
 
 import com.google.gson.JsonParser;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.io.FileUtil;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
 
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;
+
+import static com.teammoeg.frostedheart.FHMain.*;
 
 public class FHRemote {
     public static class FHLocal extends FHRemote {
@@ -39,16 +40,16 @@ public class FHRemote {
         public void doFetch() {
             fromTLV();
             if (this.stableVersion != null) {
-                FHMain.LOGGER.info("[TWR Version Check] Fetched FH local version from .twrlastversion: " + this.stableVersion);
+                LOGGER.info(VERSION_CHECK, "Fetched FH local version from .twrlastversion: " + this.stableVersion);
                 return;
             }
             // fromCFM();
             // if (this.stableVersion != null) return;
             fromModVersion();
             if (this.stableVersion != null) {
-                FHMain.LOGGER.info("[TWR Version Check] Fetched FH local version from mod version: " + this.stableVersion);
+                LOGGER.info(VERSION_CHECK, "Fetched FH local version from mod version: " + this.stableVersion);
             } else {
-                FHMain.LOGGER.info("[TWR Version Check] Failed to fetch FH local version, check your installation.");
+                LOGGER.info(VERSION_CHECK, "Failed to fetch FH local version, check your installation.");
                 this.stableVersion = "";
             }
         }
@@ -66,16 +67,18 @@ public class FHRemote {
                         this.stableVersion = parser.parse(fr).getAsJsonObject().get("version").getAsString();
                     }
                 } catch (Throwable e) {
-                    FHMain.LOGGER.error("[TWR Version Check] Error fetching FH local version from curseforge manifest", e);
+                    LOGGER.error(VERSION_CHECK, "Error fetching FH local version from curseforge manifest", e);
+                    throw new RuntimeException("[TWR Version Check] Error fetching FH local version from curseforge manifest", e);
                 }
             }
         }
 
         private void fromModVersion() {
             try {
-                String versionWithMC = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
+                String versionWithMC = ModList.get().getModContainerById(MODID).get().getModInfo().getVersion().toString();
                 this.stableVersion = versionWithMC.substring(versionWithMC.indexOf('-') + 1);
             } catch (Throwable e) {
+                LOGGER.error(VERSION_CHECK, "Error fetching FH local version from mod version", e);
                 throw new RuntimeException("[TWR Version Check] Error fetching FH local version from mod version", e);
             }
         }
@@ -86,6 +89,7 @@ public class FHRemote {
                 try {
                     this.stableVersion = FileUtil.readString(vers);
                 } catch (Throwable e) {
+                    LOGGER.error(VERSION_CHECK, "Error fetching FH local version from .twrlastversion", e);
                     throw new RuntimeException("[TWR Version Check] Error fetching FH local version from .twrlastversion", e);
                 }
             }

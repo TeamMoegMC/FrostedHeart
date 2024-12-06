@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.util.constants;
+package com.teammoeg.frostedheart.content.climate;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import net.minecraft.server.level.ServerPlayer;

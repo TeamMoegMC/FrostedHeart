@@ -6,7 +6,7 @@ import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.base.item.FHBaseClothesItem;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
+import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import lombok.Getter;

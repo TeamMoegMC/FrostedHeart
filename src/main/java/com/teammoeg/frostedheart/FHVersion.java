@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.util.version;
+package com.teammoeg.frostedheart;
 
 import java.util.Arrays;
 

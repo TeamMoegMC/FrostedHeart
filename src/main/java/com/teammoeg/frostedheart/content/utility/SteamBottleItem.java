@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.constants.EquipmentSlotType;
+import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.world.item.TooltipFlag;
