@@ -36,23 +36,18 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.foods.dailykitchen;
+package com.teammoeg.frostedheart.content.health.dailykitchen;
 
-
-import java.util.HashSet;
-import java.util.Set;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 
 public class DailyKitchen {
     /**
-     * This function generates 1-3 foods that player wants to eat.It should be called once every morning(in frostedheart.events.FHPlayerEvents.sendForecastMessages).
+     * This function generates 1-3 foods that player wants to eat.It should be called once every morning(in frostedheart.events.FHCommonEvents.sendForecastMessages).
      * It records how many kinds of foods the player have eaten in wantedFoodCapability(It seems that diet mod doesn't record this), eatenFoodsAmount WON'T be changed until this function is called again. So the player will get same effect in one day.
      */
     public static void generateWantedFood(Player player){

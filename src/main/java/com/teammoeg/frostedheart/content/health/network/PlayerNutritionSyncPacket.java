@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.nutrition.network;
+package com.teammoeg.frostedheart.content.health.network;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import net.minecraft.network.FriendlyByteBuf;

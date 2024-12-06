@@ -36,7 +36,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.foods.dailykitchen;
+package com.teammoeg.frostedheart.content.health.dailykitchen;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -52,7 +52,6 @@ import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.nbt.Tag;
 
 
 public class WantedFoodCapability implements NBTSerializable{

@@ -23,10 +23,12 @@ import blusunrize.immersiveengineering.common.blocks.plant.HempBlock;
 import blusunrize.immersiveengineering.common.register.IEBlocks;
 import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.*;
+import com.teammoeg.frostedheart.base.capability.CurioCapabilityProvider;
 import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.content.climate.ArmorTempCurios;
 import com.teammoeg.frostedheart.infrastructure.command.HeatAdjustCommand;
 import com.teammoeg.frostedheart.infrastructure.command.ClimateCommand;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
@@ -58,6 +60,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -76,11 +79,10 @@ import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.event.ItemAttributeModifierEvent;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.event.*;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
@@ -98,6 +100,38 @@ import static com.teammoeg.frostedheart.content.climate.WorldTemperature.SNOW_TE
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ClimateCommonEvents {
+    @SubscribeEvent
+    public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
+        //Common capabilities
+        event.addCapability(new ResourceLocation(FHMain.MODID, "temperature"), FHCapabilities.PLAYER_TEMP.provider());
+
+    }
+    @SubscribeEvent
+    public static void attachToWorld(AttachCapabilitiesEvent<Level> event) {
+        // only attach to dimension with skylight (i.e. overworld)
+        if (!event.getObject().dimensionType().hasFixedTime()) {
+            event.addCapability(new ResourceLocation(FHMain.MODID, "climate_data"),FHCapabilities.CLIMATE_DATA.provider());
+        }
+    }
+
+    @SubscribeEvent
+    public static void attachToItem(AttachCapabilitiesEvent<ItemStack> event) {
+        ArmorTempData amd=FHDataManager.getArmor(event.getObject());
+        if (amd!=null) {
+            event.addCapability(new ResourceLocation(FHMain.MODID, "armor_warmth"),new CurioCapabilityProvider(()->new ArmorTempCurios(amd,event.getObject())));
+        }
+    }
+
+    @SubscribeEvent
+    public static void attachToChunk(AttachCapabilitiesEvent<LevelChunk> event) {
+        if (!event.getObject().isEmpty()) {
+            Level world = event.getObject().getLevel();
+            if (!world.isClientSide) {
+                event.addCapability(new ResourceLocation(FHMain.MODID, "chunk_data"), FHCapabilities.CHUNK_HEAT.provider());
+            }
+        }
+    }
+
     @SubscribeEvent
     public static void insulationDataAttr(ItemAttributeModifierEvent event) {
         ArmorTempData data=FHDataManager.getArmor(event.getItemStack());

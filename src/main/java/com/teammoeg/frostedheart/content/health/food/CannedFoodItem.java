@@ -17,27 +17,44 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.foods;
+package com.teammoeg.frostedheart.content.health.food;
+
+import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 
-import net.minecraft.world.item.Item.Properties;
+public class CannedFoodItem extends FHBaseItem {
 
-public class FHSoupItem extends FHBaseItem {
+    boolean showtt = true;
 
-    public FHSoupItem(Properties properties) {
+    public CannedFoodItem(Properties properties) {
+        super(properties);
+    }
+
+    public CannedFoodItem(Properties properties, boolean showtt) {
         super( properties);
+        this.showtt = showtt;
+    }
+
+    @Override
+    public void appendHoverText(ItemStack stack, Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+        if (showtt)
+            tooltip.add(Lang.translateTooltip("canned_food").withStyle(ChatFormatting.GRAY));
     }
 
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level worldIn, LivingEntity entityLiving) {
         ItemStack itemstack = super.finishUsingItem(stack, worldIn, entityLiving);
-        return entityLiving instanceof Player && ((Player) entityLiving).getAbilities().instabuild ? itemstack : new ItemStack(Items.BOWL);
+        //entityLiving.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(e -> e.reduceLevel(this.getFoodProperties().getNutrition()));
+        return itemstack;
     }
+
 }

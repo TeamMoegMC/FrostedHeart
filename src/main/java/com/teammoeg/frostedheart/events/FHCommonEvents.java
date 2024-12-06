@@ -26,6 +26,12 @@ import javax.annotation.Nonnull;
 import com.google.common.collect.Sets;
 import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.FHCapabilities;
+import com.teammoeg.frostedheart.content.climate.ForecastHandler;
+import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
+import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
+import com.teammoeg.frostedheart.content.health.dailykitchen.DailyKitchen;
+import com.teammoeg.frostedheart.content.research.insight.InsightHandler;
+import com.teammoeg.frostedheart.content.utility.transportation.MovementModificationHandler;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.FHMain;
@@ -88,12 +94,11 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.util.FakePlayer;
-import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.event.AnvilUpdateEvent;
-import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.*;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -124,6 +129,35 @@ public class FHCommonEvents {
     static ResourceLocation ft = new ResourceLocation("storagedrawers:drawers");
 
     private static final Set<EntityType<?>> VANILLA_ENTITIES = Sets.newHashSet(EntityType.COW, EntityType.SHEEP, EntityType.PIG, EntityType.CHICKEN);
+
+
+    @SubscribeEvent
+    public static void attachToChunk(AttachCapabilitiesEvent<LevelChunk> event) {
+
+    }
+
+    @SubscribeEvent
+    public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
+        if (event.getObject() instanceof ServerPlayer) {//server-side only capabilities
+            ServerPlayer player = (ServerPlayer) event.getObject();
+            if (!(player instanceof FakePlayer)) {
+                event.addCapability(new ResourceLocation(FHMain.MODID, "death_inventory"), FHCapabilities.DEATH_INV.provider());
+            }
+        }
+        //Common capabilities
+
+    }
+
+    @SubscribeEvent
+    public static void attachToItem(AttachCapabilitiesEvent<ItemStack> event) {
+
+    }
+
+    @SubscribeEvent
+    public static void attachToWorld(AttachCapabilitiesEvent<Level> event) {
+
+    }
+
     @SubscribeEvent
     public static void checkSleep(SleepingTimeCheckEvent event) {
         if (event.getEntity().getSleepTimer() >= 100 && !event.getEntity().getCommandSenderWorld().isClientSide) {
@@ -598,5 +632,26 @@ public class FHCommonEvents {
             event.setResult(Result.DENY);
         } else if (!FHUtils.canTreeGrow(worldIn, pos, rand))
         	event.setResult(Result.DENY);
+    }
+
+    @SubscribeEvent
+    public static void startUsingItems(LivingEntityUseItemEvent.Start event) {
+        FoodTemperatureHandler.checkFoodBeforeEating(event);
+    }
+
+    @SubscribeEvent
+    public static void finishUsingItems(LivingEntityUseItemEvent.Finish event) {
+        FoodTemperatureHandler.checkFoodAfterEating(event);
+        DailyKitchen.tryGiveBenefits(event);
+    }
+
+    @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        FoodTemperatureHandler.onPlayerTick(event);
+        ForecastHandler.sendForecastMessages(event);
+        MovementModificationHandler.movementModifier(event);
+        InsightHandler.onPlayerTick(event);
+        TemperatureUpdate.updateTemperature(event);
+        TemperatureUpdate.regulateTemperature(event);
     }
 }

@@ -1,9 +1,9 @@
-package com.teammoeg.frostedheart.content.nutrition.capability;
+package com.teammoeg.frostedheart.content.health.capability;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.content.nutrition.network.PlayerNutritionSyncPacket;
-import com.teammoeg.frostedheart.content.nutrition.recipe.NutritionRecipe;
+import com.teammoeg.frostedheart.content.health.network.PlayerNutritionSyncPacket;
+import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.nbt.CompoundTag;

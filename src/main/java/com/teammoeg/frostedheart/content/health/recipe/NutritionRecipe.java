@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.nutrition.recipe;
+package com.teammoeg.frostedheart.content.health.recipe;
 
 import com.google.gson.JsonObject;
 import net.minecraft.core.RegistryAccess;

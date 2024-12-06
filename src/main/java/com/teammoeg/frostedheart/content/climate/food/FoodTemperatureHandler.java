@@ -51,7 +51,7 @@ public class FoodTemperatureHandler {
     public static final float DEFAULT_COLD_FOOD_HEAT = -0.5F;
     public static final float DEFAULT_HOT_FOOD_HEAT = 0.5F;
 
-    // Called in FHPlayerEvents
+    // Called in FHCommonEvents
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer) {
             ServerPlayer player = (ServerPlayer) event.player;

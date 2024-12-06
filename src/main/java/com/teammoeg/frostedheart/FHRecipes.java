@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
-import com.teammoeg.frostedheart.content.nutrition.recipe.NutritionRecipe;
+import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.content.water.recipe.WaterLevelAndEffectRecipe;
 import com.teammoeg.frostedheart.foundation.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.foundation.recipes.DismantleInnerRecipe;

@@ -13,8 +13,8 @@ import com.teammoeg.frostedheart.base.capability.nonpresistent.FHTransientCapabi
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.content.foods.dailykitchen.WantedFoodCapability;
-import com.teammoeg.frostedheart.content.nutrition.capability.NutritionCapability;
+import com.teammoeg.frostedheart.content.health.dailykitchen.WantedFoodCapability;
+import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.robotics.logistics.RobotChunk;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;

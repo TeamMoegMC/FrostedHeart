@@ -1,6 +1,6 @@
-package com.teammoeg.frostedheart.content.nutrition.network;
+package com.teammoeg.frostedheart.content.health.network;
 
-import com.teammoeg.frostedheart.content.nutrition.capability.NutritionCapability;
+import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.network.NetworkEvent;
 

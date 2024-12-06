@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.foods.dailykitchen;
+package com.teammoeg.frostedheart.content.health.dailykitchen;
 
 import java.util.Random;
 

@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.water.event;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.FHMain;
@@ -9,6 +10,7 @@ import com.teammoeg.frostedheart.content.water.network.PlayerDrinkWaterMessage;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.content.water.util.WaterLevelUtil;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -30,6 +32,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
@@ -45,8 +48,14 @@ import java.util.Random;
 
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
-public class WaterEventHandler {
+public class WaterCommonEvents {
     static int tick = 0;
+
+    @SubscribeEvent
+    public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
+        //Common capabilities
+        event.addCapability(new ResourceLocation(FHMain.MODID, "water_level"), FHCapabilities.PLAYER_WATER_LEVEL.provider());
+    }
 
     @SubscribeEvent
     public static void onLivingEntityUseItemEventFinish(LivingEntityUseItemEvent.Finish event) {
