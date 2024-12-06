@@ -19,32 +19,22 @@
 
 package com.teammoeg.frostedheart.events;
 
-import java.util.Set;
-
-import javax.annotation.Nonnull;
-
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import com.google.common.collect.Sets;
 import com.mojang.brigadier.CommandDispatcher;
-import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.content.climate.ForecastHandler;
-import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
-import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
-import com.teammoeg.frostedheart.content.health.dailykitchen.DailyKitchen;
-import com.teammoeg.frostedheart.content.research.insight.InsightHandler;
-import com.teammoeg.frostedheart.content.utility.transportation.MovementModificationHandler;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.FHMobEffects;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.FHTags;
-import com.teammoeg.frostedheart.infrastructure.command.*;
+import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
+import com.teammoeg.frostedheart.content.climate.ForecastHandler;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
+import com.teammoeg.frostedheart.content.health.dailykitchen.DailyKitchen;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.content.research.insight.InsightHandler;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
@@ -55,44 +45,46 @@ import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
+import com.teammoeg.frostedheart.content.utility.transportation.MovementModificationHandler;
+import com.teammoeg.frostedheart.infrastructure.command.*;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
+import com.teammoeg.frostedheart.util.lang.Lang;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.ReloadableServerResources;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Entity.RemovalReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.server.ReloadableServerResources;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.Style;
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.ClickEvent;
-import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -123,13 +115,14 @@ import se.mickelus.tetra.items.modular.IModularItem;
 import top.theillusivec4.curios.api.event.DropRulesEvent;
 import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
 
+import javax.annotation.Nonnull;
+import java.util.Set;
+
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class FHCommonEvents {
 
-    static ResourceLocation ft = new ResourceLocation("storagedrawers:drawers");
-
     private static final Set<EntityType<?>> VANILLA_ENTITIES = Sets.newHashSet(EntityType.COW, EntityType.SHEEP, EntityType.PIG, EntityType.CHICKEN);
-
+    static ResourceLocation ft = new ResourceLocation("storagedrawers:drawers");
 
     @SubscribeEvent
     public static void attachToChunk(AttachCapabilitiesEvent<LevelChunk> event) {
@@ -205,34 +198,6 @@ public class FHCommonEvents {
             event.getEntity().sendSystemMessage(Lang.translateKey("message.frostedheart.temperature_help"));
         }
     }
-/*
-    @SubscribeEvent(priority = EventPriority.LOW)
-    public static void addOreGenFeatures(BiomeEvent. event) {
-        if (event.getName() != null) {
-            Biome.BiomeCategory category = event.getCategory();
-            if (category != Biome.BiomeCategory.NETHER && category != Biome.BiomeCategory.THEEND) {
-                FHGeneration.generate_overworld_ores(event);
-            }
-            //else if(category == NETHER) { generate_nether_ores(event);
-
-            //Structures
-            FHGeneration.generate_overworld_structures(event);
-        }
-    }
-
-    @SubscribeEvent
-    public static void addDimensionalSpacing(final LevelEvent.Load event){
-        if(event.getLevel() instanceof ServerLevel) {
-            ServerLevel serverWorld = (ServerLevel) event.getLevel();
-
-
-            Map<StructureFeature<?>, StructureFeatureConfiguration> tempMap =
-                    new HashMap<>(serverWorld.getChunkSource().generator.getSettings().structureConfig());
-            tempMap.putIfAbsent(FHStructures.DESTROYED_GENERATOR.get(),
-                    StructureSettings.DEFAULTS.get(FHStructures.DESTROYED_GENERATOR.get()));
-            serverWorld.getChunkSource().generator.getSettings().structureConfig = tempMap;
-        }
-    }*/
 
     @SubscribeEvent
     public static void addReloadListeners(AddReloadListenerEvent event) {
@@ -248,17 +213,7 @@ public class FHCommonEvents {
         ReloadableServerResources dataPackRegistries = event.getServerResources();
         event.addListener(new FHRecipeCachingReloadListener(dataPackRegistries));
     }
-/*
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void biomeLoadingEventRemove(@Nonnull BiomeLoadingEvent event) {
-        MobSpawnInfoBuilder spawns = event.getSpawns();
 
-        for (MobCategory en : MobCategory.values()) {
-            spawns.getSpawner(en).removeIf(entry -> VANILLA_ENTITIES.contains(entry.type));
-            
-        }
-
-    }*/
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void doPlayerInteract(PlayerInteractEvent ite) {
     	if(ite.getEntity() instanceof ServerPlayer&&!(ite.getEntity() instanceof FakePlayer)) {
@@ -558,34 +513,6 @@ public class FHCommonEvents {
             player.displayClientMessage(Lang.translateKey("message.frostedheart.eaten_poisonous_food"), false);
         }
     }
-/*
-    @SubscribeEvent
-    public static void removeSpawnVillage(LevelEvent.CreateSpawnPosition event) {
-        if (event.getLevel() instanceof ServerLevel) {
-            ServerLevel serverWorld = (ServerLevel) event.getLevel();
-            try {
-                serverWorld.getChunkSource().getGenerator().getSettings().structureConfig().keySet()
-                        .remove(StructureFeature.VILLAGE);
-            } catch (UnsupportedOperationException e) {
-                FHMain.LOGGER.error("Failed to remove vanilla village structures", e);
-            }
-        }
-    }
-*/
-/*
-    @SubscribeEvent
-    public static void removeVanillaVillages(WorldEvent.Load event) {
-        if (event.getWorld() instanceof ServerLevel) {
-            ServerLevel serverWorld = (ServerLevel) event.getWorld();
-            try {
-                serverWorld.getChunkSource().generator.getSettings().structureConfig().keySet()
-                        .remove(StructureFeature.VILLAGE);
-            } catch (UnsupportedOperationException e) {
-                FHMain.LOGGER.error("Failed to remove vanilla village structures", e);
-            }
-        }
-    }
-*/
     
     @SubscribeEvent
     public static void respawn(PlayerRespawnEvent event) {
@@ -604,15 +531,6 @@ public class FHCommonEvents {
             
         }
     }
-/*
-    @SubscribeEvent
-    public static void setKeepInventory(FMLServerStartedEvent event) {
-        if (FHConfig.SERVER.alwaysKeepInventory.get()) {
-            for (ServerLevel world : event.getServer().getAllLevels()) {
-                world.getGameRules().getRule(GameRules.RULE_KEEPINVENTORY).set(true, event.getServer());
-            }
-        }
-    }*/
 
     @SubscribeEvent
     public static void tickResearch(PlayerTickEvent event) {

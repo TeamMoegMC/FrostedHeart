@@ -34,6 +34,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
@@ -42,6 +44,7 @@ import java.util.function.Function;
 
 import static com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler.*;
 
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class FHTooltips {
 
 
@@ -75,6 +78,7 @@ public class FHTooltips {
     /**
      * Custom tooltip handling.
      */
+    @SubscribeEvent
     public static void onItemTooltip(ItemTooltipEvent event) {
         final ItemStack stack = event.getItemStack();
         final List<Component> text = event.getToolTip();

@@ -90,9 +90,6 @@ import net.minecraftforge.registries.ForgeRegistries;
  */
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class FHClientEventsMod {
-
-    private static Tree.InnerNode<ResourceLocation, ManualEntry> CATEGORY;
-
 	@SubscribeEvent
 	public static void onCreativeTabContents(BuildCreativeModeTabContentsEvent event) {
 		CreativeTabItemHelper helper = new CreativeTabItemHelper(event.getTabKey(), event.getTab());
@@ -104,30 +101,6 @@ public class FHClientEventsMod {
 		helper.register(event);
 
 	}
-
-    public static void addManual() {
-        ManualInstance man = ManualHelper.getManual();
-        CATEGORY = man.getRoot().getOrCreateSubnode(new ResourceLocation(FHMain.MODID, "main"), 110);
-        {
-            ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
-
-            builder.addSpecialElement(new SpecialElementData("generator", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.Multiblock.GENERATOR_T1)));
-            builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator"));
-            man.addEntry(CATEGORY, builder.create(), 0);
-        }
-        {
-            ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
-            builder.addSpecialElement(new SpecialElementData("generator_2", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.Multiblock.GENERATOR_T2)));
-            builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator_t2"));
-            man.addEntry(CATEGORY, builder.create(), 1);
-        }
-    }
-
-    public static <C extends AbstractContainerMenu, S extends BaseScreen> MenuScreens.ScreenConstructor<C, MenuScreenWrapper<C>>
-
-    FTBScreenFactory(Function<C, S> factory) {
-        return (c, i, t) -> new MenuScreenWrapper<>(factory.apply(c), c, i, t).disableSlotDrawing();
-    }
 
     @SubscribeEvent
 	public static void registerKeys(RegisterKeyMappingsEvent ev) {
@@ -160,50 +133,6 @@ public class FHClientEventsMod {
         event.registerBlockEntityRenderer(FHMultiblocks.Logic.GENERATOR_T2.masterBE().get(), T2GeneratorRenderer::new);
         event.registerBlockEntityRenderer(FHBlockEntityTypes.MECH_CALC.get(), MechCalcRenderer::new);
 	}
-
-    @SubscribeEvent
-    public static void onClientSetup(final FMLClientSetupEvent event) {
-        // Register screens
-    	MenuScreens.register(FHMenuTypes.GENERATOR_T1.getType(), GeneratorScreen<T1GeneratorState, T1GeneratorLogic>::new);
-    	MenuScreens.register(FHMenuTypes.GENERATOR_T2.getType(), GeneratorScreen<T2GeneratorState, T2GeneratorLogic>::new);
-    	MenuScreens.register(FHMenuTypes.RELIC_CHEST.get(), RelicChestScreen::new);
-    	registerFTBScreen(FHMenuTypes.DRAW_DESK.get(), DrawDeskScreen::new);
-        registerFTBScreen(FHMenuTypes.TRADE_GUI.get(), TradeScreen::new);
-        registerFTBScreen(FHMenuTypes.HEAT_STAT.get(), HeatStatScreen::new);
-        MenuScreens.register(FHMenuTypes.SAUNA.get(), SaunaScreen::new);
-        MenuScreens.register(FHMenuTypes.INCUBATOR_T1.get(), IncubatorT1Screen::new);
-        MenuScreens.register(FHMenuTypes.INCUBATOR_T2.get(), IncubatorT2Screen::new);
-
-        // Register translucent render type
-        //TODO: specify in model files
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.RYE_BLOCK.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.WHITE_TURNIP_BLOCK.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.WOLFBERRY_BUSH_BLOCK.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.DRAWING_DESK.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.CHARGER.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.MECHANICAL_CALCULATOR.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.STEAM_CORE.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.DEBUG_HEATER.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(FHBlocks.RELIC_CHEST.get(), RenderType.cutout());
-//        ItemBlockRenderTypes.setRenderLayer(FHBlocks.fluorite_ore.get(), RenderType.cutout());
-//        ItemBlockRenderTypes.setRenderLayer(FHBlocks.halite_ore.get(), RenderType.cutout());
-/*
-        RenderTypeLookup.setRenderLayer(FHBlocks.blood_block, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.bone_block, RenderType.getCutout());
-        //RenderTypeLookup.setRenderLayer(FHBlocks.desk, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.small_garage, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.package_block, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.pebble_block, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.odd_mark, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.wooden_box, RenderType.getCutout());*/
-
-        
-        // Register layers
-
-        addManual();
-        if (ModList.get().isLoaded("tetra"))
-            TetraClient.init();
-    }
 
     @SubscribeEvent
     public static void onModelBake(ModelEvent.ModifyBakingResult event) {
@@ -263,10 +192,7 @@ public class FHClientEventsMod {
         }
     }
 */
-    public static <C extends AbstractContainerMenu, S extends BaseScreen> void
-    registerFTBScreen(MenuType<C> type, Function<C, S> factory) {
-        MenuScreens.register(type, FTBScreenFactory(factory));
-    }
+
 
     /*public static <C extends AbstractContainerMenu, S extends Screen & MenuAccess<C>> void
     registerIEScreen(ResourceLocation containerName, MenuScreens.ScreenConstructor<C, S> factory) {
