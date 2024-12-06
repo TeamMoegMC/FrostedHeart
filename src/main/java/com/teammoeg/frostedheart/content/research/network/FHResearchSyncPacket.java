@@ -49,8 +49,8 @@ public record FHResearchSyncPacket(Object data,String key) implements FHMessage 
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
-    	System.out.println("decoded "+data);
-        context.get().enqueueWork(() -> FHResearch.readOne(key,CodecUtil.decodeOrThrow(Research.CODEC.decode(DataOps.COMPRESSED, data))));
+    	
+        context.get().enqueueWork(() -> {System.out.println("decoded "+key+":"+data);FHResearch.readOne(key,CodecUtil.decodeOrThrow(Research.CODEC.decode(DataOps.COMPRESSED, data)));});
         context.get().setPacketHandled(true);
     }
 }

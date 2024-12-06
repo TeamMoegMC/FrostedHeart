@@ -43,6 +43,7 @@ import com.teammoeg.frostedheart.content.research.gui.editor.NumberBox;
 import com.teammoeg.frostedheart.content.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectItemStackDialog;
+import com.teammoeg.frostedheart.util.MathUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
@@ -98,7 +99,7 @@ public class FHIcons {
         public void draw(GuiGraphics ms, int x, int y, int w, int h) {
             if (!icons.isEmpty()) {
                 GuiHelper.setupDrawing();
-                icons.get((int) ((System.currentTimeMillis() / 1000) % icons.size())).draw(ms, x, y, w, h);
+                MathUtils.selectElementByTime(icons).draw(ms, x, y, w, h);
             }
         }
 

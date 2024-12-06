@@ -135,8 +135,12 @@ public class CodecUtil {
 	public static final Codec<Integer> POSITIVE_INT = Codec.intRange(0, Integer.MAX_VALUE);
 	public static final Codec<BlockPos> BLOCKPOS = alternative(BlockPos.class).add(BlockPos.CODEC).add(Codec.LONG.xmap(BlockPos::of, BlockPos::asLong)).build();
 	
-	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(JsonOps.INSTANCE,Ingredient::toJson,Ingredient::fromJson,Ingredient::toNetwork,Ingredient::fromNetwork);
-	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=new PacketOrSchemaCodec<>(JsonOps.INSTANCE,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
+	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(JsonOps.INSTANCE,o2->DataResult.success(o2.toJson()),o->{
+		if(o.isJsonArray()||o.isJsonObject())
+			return DataResult.success(Ingredient.fromJson(o));
+		return DataResult.error(()->"Not a ingredient");
+	},Ingredient::toNetwork,Ingredient::fromNetwork);
+	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=PacketOrSchemaCodec.create(JsonOps.INSTANCE,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
 	public static final Codec<MobEffectInstance> MOB_EFFECT_CODEC = COMPOUND_TAG_CODEC.xmap(o->MobEffectInstance.load(o),t->t.save(new CompoundTag()));
 	public static final Codec<boolean[]> BOOLEANS = Codec.BYTE.xmap(SerializeUtil::readBooleans, SerializeUtil::writeBooleans);
 
@@ -230,6 +234,7 @@ public class CodecUtil {
 			@Override
 			public <T> DataResult<T> encode(A input, DynamicOps<T> ops, T prefix) {
 				DataResult<T> res=codec.encode(input, ops, prefix);
+				System.out.println(codec);
 				System.out.println(res);
 				return res;
 			}
@@ -237,6 +242,7 @@ public class CodecUtil {
 			@Override
 			public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
 				DataResult<Pair<A, T>> res=codec.decode(ops,input);
+				System.out.println(codec);
 				System.out.println(res);
 				return res;
 			}
@@ -252,6 +258,7 @@ public class CodecUtil {
 			@Override
 			public <T> DataResult<A> decode(DynamicOps<T> ops, MapLike<T> input) {
 				DataResult<A> res=codec.decode(ops, input);
+				System.out.println(codec);
 				System.out.println(res);
 				return res;
 			}
@@ -259,6 +266,7 @@ public class CodecUtil {
 			@Override
 			public <T> RecordBuilder<T> encode(A input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
 				RecordBuilder<T> res=codec.encode(input, ops, prefix);
+				System.out.println(codec);
 				System.out.println(res.build(ops.empty()));
 				return res;
 			}
