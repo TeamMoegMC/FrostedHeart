@@ -67,19 +67,27 @@ import net.minecraft.resources.ResourceLocation;
 public class FHIcons {
     private static final TypedCodecRegistry<FHIcon> serializers = new TypedCodecRegistry<>();
 	public static final Codec<FHIcon> CODEC=new AlternativeCodecBuilder<FHIcon>(FHIcon.class)
-		.fallback(()->FHNopIcon.INSTANCE)
 		.addSaveOnly(FHNopIcon.class ,FHNopIcon.CODEC.codec())
 		.add(FHItemIcon.class, FHItemIcon.ICON_CODEC)
 		.add(FHItemIcon.class,FHItemIcon.CODEC.codec())
 		.add(FHAnimatedIcon.class,FHAnimatedIcon.ICON_CODEC)
 		.add(serializers.codec())
-		.add(FHNopIcon.CODEC.codec())
+		.addSaveOnly(FHIcon.class,FHNopIcon.CODEC.codec())
 		.build();
+	public static final Codec<FHIcon> DEFAULT_CODEC=new AlternativeCodecBuilder<FHIcon>(FHIcon.class)
+			.fallback(()->FHNopIcon.INSTANCE)
+			.addSaveOnly(FHNopIcon.class ,FHNopIcon.CODEC.codec())
+			.add(FHItemIcon.class, FHItemIcon.ICON_CODEC)
+			.add(FHItemIcon.class,FHItemIcon.CODEC.codec())
+			.add(FHAnimatedIcon.class,FHAnimatedIcon.ICON_CODEC)
+			.add(serializers.codec())
+			.add(FHNopIcon.CODEC.codec())
+			.build();
     private static class FHAnimatedIcon extends FHIcon {
         private static final MapCodec<FHAnimatedIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-        	Codec.list(FHIcons.CODEC).fieldOf("icons").forGetter(o->o.icons)
+        	Codec.list(FHIcons.DEFAULT_CODEC).fieldOf("icons").forGetter(o->o.icons)
         	).apply(t, FHAnimatedIcon::new));
-        private static final Codec<FHAnimatedIcon> ICON_CODEC=Codec.list(FHIcons.CODEC).xmap(FHAnimatedIcon::new, o->o.icons);
+        private static final Codec<FHAnimatedIcon> ICON_CODEC=Codec.list(FHIcons.DEFAULT_CODEC).xmap(FHAnimatedIcon::new, o->o.icons);
         List<FHIcon> icons;
         public FHAnimatedIcon() {
             icons = new ArrayList<>();
@@ -107,8 +115,8 @@ public class FHIcons {
 
     private static class FHCombinedIcon extends FHIcon {
         private static final MapCodec<FHCombinedIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-        	FHIcons.CODEC.fieldOf("base").forGetter(o->o.large),
-        	FHIcons.CODEC.fieldOf("small").forGetter(o->o.small)
+        	FHIcons.CODEC.optionalFieldOf("base",FHNopIcon.INSTANCE).forGetter(o->o.large),
+        	FHIcons.CODEC.optionalFieldOf("small",FHNopIcon.INSTANCE).forGetter(o->o.small)
         	).apply(t, FHCombinedIcon::new));
         FHIcon large;
         FHIcon small;

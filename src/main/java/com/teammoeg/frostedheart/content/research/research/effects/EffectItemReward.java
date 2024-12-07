@@ -44,7 +44,7 @@ import net.minecraft.network.chat.Component;
  */
 public class EffectItemReward extends Effect {
 	public static final MapCodec<EffectItemReward> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
-	Codec.list(CodecUtil.ITEMSTACK_CODEC).fieldOf("rewards").forGetter(o->o.rewards))
+	Codec.list(CodecUtil.ITEMSTACK_STRING_CODEC).fieldOf("rewards").forGetter(o->o.rewards))
 	.apply(t,EffectItemReward::new));
     List<ItemStack> rewards;
 

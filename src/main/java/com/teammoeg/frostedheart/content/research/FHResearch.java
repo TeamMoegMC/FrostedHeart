@@ -83,7 +83,8 @@ public class FHResearch {
 
 	// clear cache when modification applied
 	public static void clearCache() {
-		allResearches = OptionalLazy.of(() -> researches.all());
+		if(allResearches.isResolved())
+			allResearches = OptionalLazy.of(() -> researches.all());
 	}
 
 	public static void delete(Research r) {
@@ -202,6 +203,7 @@ public class FHResearch {
 		// no need
 		FHResearch.clearAll();
 		prepareReload();
+		//clearCache();
 		MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
 		FHResearch.load(data);
 	}
@@ -345,7 +347,8 @@ public class FHResearch {
 	public static void readOne(String key, Research r) {
 		r.setId(key);
 		r.packetInit();
-		//researches.register(r);
+		researches.register(r);
+		clearCache();
 	}
 
 	public static void readAll(List<Research> rss) {

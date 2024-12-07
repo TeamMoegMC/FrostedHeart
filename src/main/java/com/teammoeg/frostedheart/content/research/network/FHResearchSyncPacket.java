@@ -44,7 +44,7 @@ public record FHResearchSyncPacket(Object data,String key) implements FHMessage 
 
     public void encode(FriendlyByteBuf buffer) {
     	ObjectWriter.writeObject(buffer, data);
-    	System.out.println("encoded "+data);
+    	System.out.println("encoded "+key+":"+data);
         buffer.writeUtf(key);
     }
 

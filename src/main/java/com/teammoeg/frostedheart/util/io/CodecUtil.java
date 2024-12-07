@@ -6,14 +6,17 @@ import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.*;
+import com.mojang.serialization.DataResult.PartialResult;
 import com.mojang.serialization.codecs.EitherMapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.ConstructorCodec;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.codec.*;
 import com.teammoeg.frostedheart.util.io.codec.BooleansCodec.BooleanCodecBuilder;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
+import net.minecraft.ResourceLocationException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
@@ -23,8 +26,11 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 
 import java.lang.reflect.Array;
@@ -127,6 +133,14 @@ public class CodecUtil {
 			tag.ifPresent(n->out.setTag(n));
 			return out;
 		}));
+	public static final Codec<ItemStack>  ITEMSTACK_STRING_CODEC = new AlternativeCodecBuilder<>(ItemStack.class)
+			.add(ITEMSTACK_CODEC)
+			.add(ResourceLocation.CODEC.comapFlatMap(t->{
+				Item it=RegistryUtils.getItem(t);
+				if(it==Items.AIR||it==null)return DataResult.error(()->"Not a item");
+				return DataResult.success(new ItemStack(it,1));
+				
+			}, t->RegistryUtils.getRegistryName(t.getItem()))).build();
 	public static final Codec<CompoundTag> COMPOUND_TAG_CODEC=CodecUtil.convertSchema(NbtOps.INSTANCE).comapFlatMap(t->{
 		if(t instanceof CompoundTag)
 			return DataResult.success((CompoundTag)t);
@@ -138,6 +152,15 @@ public class CodecUtil {
 	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(JsonOps.INSTANCE,o2->DataResult.success(o2.toJson()),o->{
 		if(o.isJsonArray()||o.isJsonObject())
 			return DataResult.success(Ingredient.fromJson(o));
+		if(o.isJsonPrimitive()) {
+			try {
+			Item i=RegistryUtils.getItem(new ResourceLocation(o.getAsString()));
+			if(i!=null&&i!=Items.AIR)
+				return DataResult.success(Ingredient.of(i));
+			}catch(ResourceLocationException rle) {
+				
+			}
+		}
 		return DataResult.error(()->"Not a ingredient");
 	},Ingredient::toNetwork,Ingredient::fromNetwork);
 	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=PacketOrSchemaCodec.create(JsonOps.INSTANCE,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
@@ -228,6 +251,11 @@ public class CodecUtil {
 			return Either.right(fb.apply(o));
 		});
 	}
+	public static <S,A> RecordCodecBuilder<S, A> poly(
+			MapCodec<A> readWrite,MapCodec<A> readOnly,
+			Function<S,A> getter){
+		return new EitherMapCodec<>(readWrite,readOnly).xmap(t->t.left().or(()->t.right()).get(), t->Either.left(t)).forGetter(getter);
+	}
 	public static <A> Codec<A> debugCodec(Codec<A> codec){
 		return new Codec<>() {
 
@@ -267,7 +295,7 @@ public class CodecUtil {
 			public <T> RecordBuilder<T> encode(A input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
 				RecordBuilder<T> res=codec.encode(input, ops, prefix);
 				System.out.println(codec);
-				System.out.println(res.build(ops.empty()));
+				//System.out.println(res.build(ops.empty()));
 				return res;
 			}
 

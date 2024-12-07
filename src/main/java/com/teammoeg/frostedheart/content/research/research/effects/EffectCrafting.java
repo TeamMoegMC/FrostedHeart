@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.research.research.effects;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -48,14 +49,12 @@ import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import mezz.jei.library.util.RecipeUtil;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
@@ -63,13 +62,14 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class EffectCrafting extends Effect {
 	public static final MapCodec<EffectCrafting> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
-		Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+		
 		CodecUtil.<EffectCrafting,Ingredient,List<ResourceLocation>>either(
 			CodecUtil.INGREDIENT_CODEC.fieldOf("item"),
-			Codec.list(ResourceLocation.CODEC).fieldOf("recipes"),
+			Codec.list(ResourceLocation.CODEC).optionalFieldOf("recipes",Arrays.asList()),
 			o->o.ingredient,
 			o->o.unlocks.stream().map(Recipe::getId).collect(Collectors.toList())
-		))
+		),
+		Effect.BASE_CODEC.forGetter(Effect::getBaseData))
 	.apply(t,EffectCrafting::new));
     List<Recipe<?>> unlocks = new ArrayList<>();
     Ingredient ingredient = null;
@@ -88,11 +88,11 @@ public class EffectCrafting extends Effect {
         this.ingredient = Ingredient.of(item);
     }
 
-    public EffectCrafting(BaseData data,Either<Ingredient,List<ResourceLocation>> unlocks) {
+    public EffectCrafting(Either<Ingredient,List<ResourceLocation>> unlocks,BaseData data) {
 		super(data);
+		
 		unlocks.ifLeft(t->{this.ingredient=t;});
 		unlocks.ifRight(o->o.stream().map(FHTeamDataManager.getRecipeManager()::byKey).filter(Optional::isPresent).map(Optional::get).forEach(this.unlocks::add));
-
 	}
 
     public EffectCrafting(ResourceLocation recipe) {
@@ -219,6 +219,12 @@ public class EffectCrafting extends Effect {
 
 	public Ingredient getIngredient() {
 		return ingredient;
+	}
+
+	@Override
+	public String toString() {
+		return "EffectCrafting [name=" + name + ", tooltip=" + tooltip + ", icon=" + icon + ", nonce=" + nonce
+				+ ", hidden=" + hidden + "]";
 	}
 
 }

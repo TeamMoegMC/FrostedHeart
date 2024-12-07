@@ -248,4 +248,8 @@ public class OptionalLazy<T> {
             return val;
         throw new NoSuchElementException("Object not present");
     }
+
+	public boolean isResolved() {
+		return isResolved;
+	}
 }

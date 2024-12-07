@@ -45,6 +45,8 @@ import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.content.research.network.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
+import com.teammoeg.frostedheart.util.io.codec.CompressDifferMapCodec;
 import com.teammoeg.frostedheart.util.io.registry.TypedCodecRegistry;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -125,7 +127,9 @@ public abstract class Effect extends AutoIDItem{
     	hidden=data.hidden;
     }
     public BaseData getBaseData() {
-    	return new BaseData(name, tooltip, icon, nonce, hidden);
+    	BaseData bd= new BaseData(name, tooltip, icon, nonce, hidden);
+    	System.out.println(bd);
+    	return bd;
     }
     /**
      * Instantiates a new Effect.<br>
