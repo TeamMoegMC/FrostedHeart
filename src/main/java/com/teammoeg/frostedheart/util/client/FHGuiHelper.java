@@ -135,17 +135,20 @@ public class FHGuiHelper {
 		// }else {
 		// guiGraphics.renderItem( stack, 0, 0,0,-50);
 		// }c
-		Matrix4f matrix4f = new Matrix4f(guiGraphics.pose().last().pose()).rotationYXZ(1.0821041F, 3.2375858F, 0.0F).rotateYXZ((-(float)Math.PI / 8F), 2.3561945F, 0.0F);
-	     
+		Matrix4f matrix4f = null;
 		if (!stack.isEmpty()) {
 			BakedModel bakedmodel = ClientUtils.mc().getItemRenderer().getModel(stack, ClientUtils.mc().level,
 					ClientUtils.mc().player, 0);
+			boolean flag = !bakedmodel.usesBlockLight();
+			if(!flag) {
+				matrix4f=new Matrix4f(guiGraphics.pose().last().pose()).rotationYXZ(1.0821041F, 3.2375858F, 0.0F).rotateYXZ((-(float)Math.PI / 8F), 2.3561945F, 0.0F);
+			}
 			guiGraphics.pose().pushPose();
-			guiGraphics.pose().translate((float) (8), (float) (8), (float) (150 + (bakedmodel.isGui3d() ? -50 : 0)));
+			guiGraphics.pose().translate((float) (8), (float) (8), (float) (150 + (bakedmodel.isGui3d() ? 0 : 0)));
 
 			guiGraphics.pose().mulPoseMatrix((new Matrix4f()).scaling(1.0F, -1.0F, 1.0F));
 			guiGraphics.pose().scale(16.0F, 16.0F, 16.0F);
-			boolean flag = !bakedmodel.usesBlockLight();
+			
 			if (flag) {
 				Lighting.setupForFlatItems();
 			}else {
