@@ -72,12 +72,11 @@ public abstract class MixinServerWorld extends Level {
     /**
      * @author yuesha-yc
      * @reason this allows us to add our own weather logic since we disabled it
-     * @see GameRulesMixin#disableWeatherCycle
      */
     @Overwrite
     private void advanceWeatherCycle() {
         // Vanilla game rule logic
-        if (!((BooleanValue)(((GameRuleAccessor)this.getGameRules()).getRules().get(GameRules.RULE_WEATHER_CYCLE))).get())
+        if (!this.getGameRules().getBoolean(GameRules.RULE_WEATHER_CYCLE))
             return;
 
         // Only in overworld

@@ -43,8 +43,6 @@
     "minecraft.CowEntityMixin",
     "minecraft.CraftResultInventoryMixin",
     "minecraft.FoodAccess",
-    "minecraft.GameRuleAccessor",
-    "minecraft.GameRulesMixin",
     "minecraft.IceMixin",
     "minecraft.ItemStackMixin",
     "minecraft.MinecraftServerMixin",
