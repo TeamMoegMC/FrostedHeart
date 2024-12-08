@@ -158,9 +158,7 @@ public class FHGuiHelper {
 			ClientUtils.mc().getItemRenderer().render(stack, ItemDisplayContext.GUI, false, guiGraphics.pose(),
 					guiGraphics.bufferSource(), 15728880, OverlayTexture.NO_OVERLAY, bakedmodel);
 			guiGraphics.flush();
-			if (flag) {
-				Lighting.setupFor3DItems();
-			}
+			Lighting.setupFor3DItems();
 			guiGraphics.pose().popPose();
 		}
 		if(drawDecorations)

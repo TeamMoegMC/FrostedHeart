@@ -132,7 +132,7 @@ public class FHIcons {
             if (large != null)
                 large.draw(ms, x, y, w, h);
             ms.pose().pushPose();
-            ms.pose().translate(0, 0, 50);// let's get top most
+            ms.pose().translate(0, 0, 110);// let's get top most
             GuiHelper.setupDrawing();
             if (small != null)
                 small.draw(ms, x + w / 2, y + h / 2, w / 2, h / 2);
