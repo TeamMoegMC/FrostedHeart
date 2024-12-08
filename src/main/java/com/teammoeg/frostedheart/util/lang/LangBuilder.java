@@ -11,6 +11,8 @@ import net.minecraft.world.entity.player.Player;
 
 import java.util.List;
 
+import com.teammoeg.frostedheart.util.lang.FHTextIcon.TextIconType;
+
 /**
  * A builder for creating localised components
  *
@@ -130,7 +132,10 @@ public class LangBuilder {
     public LangBuilder add(LangBuilder otherBuilder) {
         return add(otherBuilder.component());
     }
-
+    public LangBuilder add(TextIconType icon) {
+        return add(icon.getIcon());
+    }
+    
     /**
      * Appends a component
      *
