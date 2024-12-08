@@ -2,6 +2,9 @@
     "providers": [
         {
             "type": "reference",
+            "id": "minecraft:default"
+        },{
+            "type": "reference",
             "id": "frostedheart:include/thermometer"
         }
     ]
