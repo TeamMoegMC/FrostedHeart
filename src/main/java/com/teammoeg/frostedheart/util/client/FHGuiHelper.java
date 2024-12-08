@@ -135,6 +135,8 @@ public class FHGuiHelper {
 		// }else {
 		// guiGraphics.renderItem( stack, 0, 0,0,-50);
 		// }c
+		Matrix4f matrix4f = new Matrix4f(guiGraphics.pose().last().pose()).rotationYXZ(1.0821041F, 3.2375858F, 0.0F).rotateYXZ((-(float)Math.PI / 8F), 2.3561945F, 0.0F);
+	     
 		if (!stack.isEmpty()) {
 			BakedModel bakedmodel = ClientUtils.mc().getItemRenderer().getModel(stack, ClientUtils.mc().level,
 					ClientUtils.mc().player, 0);
@@ -147,8 +149,7 @@ public class FHGuiHelper {
 			if (flag) {
 				Lighting.setupForFlatItems();
 			}else {
-			      Matrix4f matrix4f = (new Matrix4f()).rotationYXZ(1.0821041F, 3.2375858F, 0.0F).rotateYXZ((-(float)Math.PI / 8F), 2.3561945F, 0.0F).translate(0, 0, 150);
-			      Lighting.setupLevel(matrix4f);
+			       Lighting.setupLevel(matrix4f);
 			}
 
 			ClientUtils.mc().getItemRenderer().render(stack, ItemDisplayContext.GUI, false, guiGraphics.pose(),
@@ -159,7 +160,8 @@ public class FHGuiHelper {
 			}
 			guiGraphics.pose().popPose();
 		}
-		guiGraphics.renderItemDecorations(ClientUtils.mc().font, stack, 0, 0, countReplacement);
+		if(drawDecorations)
+			guiGraphics.renderItemDecorations(ClientUtils.mc().font, stack, 0, 0, countReplacement);
 		guiGraphics.pose().popPose();
 	}
 
