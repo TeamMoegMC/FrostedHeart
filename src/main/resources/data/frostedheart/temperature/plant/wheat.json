@@ -1,8 +1,11 @@
 {
   "id": "minecraft:wheat",
-  "survive": 0,
-  "grow": 10,
-  "bonemeal": 20,
+  "min_survive": 0,
+  "min_grow": 10,
+  "min_fertilize": 20,
+  "max_survive": 40,
+  "max_grow": 30,
+  "max_fertilize": 20,
   "snow_vulnerable": true,
   "blizzard_vulnerable": true
 }

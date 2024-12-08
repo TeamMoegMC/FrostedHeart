@@ -27,7 +27,6 @@
     "forge.ServerLifecycleHooksMixin",
     "immersiveengineering.AssemblerLogicMixin",
     "immersiveengineering.CrafterPatternInventoryMixin",
-    "immersiveengineering.HempBlockMixin",
     "immersiveengineering.TemplateMultiblockMixin",
     "minecraft.AbstractTopPlantBlockMixin",
     "minecraft.AnimalEntityMixin",

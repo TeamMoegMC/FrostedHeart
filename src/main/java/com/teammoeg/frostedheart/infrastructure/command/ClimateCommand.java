@@ -31,9 +31,15 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.storage.ServerLevelData;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ClimateCommand {
-    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+    @SubscribeEvent
+    public static void register(RegisterCommandsEvent event) {
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         LiteralArgumentBuilder<CommandSourceStack> get = Commands.literal("get")
                 .executes((ct) -> {
                     try {

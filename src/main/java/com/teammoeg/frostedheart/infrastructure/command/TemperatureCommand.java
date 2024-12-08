@@ -29,9 +29,15 @@ import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class TemperatureCommand {
-    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+    @SubscribeEvent
+    public static void register(RegisterCommandsEvent event) {
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
 
         // Use capability PlayerTemperatureData
 

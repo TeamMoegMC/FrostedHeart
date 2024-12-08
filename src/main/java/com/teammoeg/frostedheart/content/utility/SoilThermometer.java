@@ -19,28 +19,28 @@
 
 package com.teammoeg.frostedheart.content.utility;
 
-import java.util.List;
-
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.lang.Lang;
-
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.ClipContext.Fluid;
-import net.minecraft.world.phys.HitResult.Type;
-import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult.Type;
+
+import java.util.List;
+
+import static com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper.toTemperatureFloatString;
 
 public class SoilThermometer extends FHBaseItem {
     public SoilThermometer(Properties properties) {
@@ -73,7 +73,7 @@ public class SoilThermometer extends FHBaseItem {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, playerIn, Fluid.ANY);
             if (brtr.getType() != Type.MISS) {
 
-            	playerIn.sendSystemMessage(Lang.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(WorldTemperature.block(playerIn.level(), brtr.getBlockPos()))));
+                playerIn.sendSystemMessage(Lang.translateMessage("info.soil_thermometerbody", toTemperatureFloatString(WorldTemperature.block(playerIn.level(), brtr.getBlockPos()))));
             }
 
         }
@@ -87,7 +87,7 @@ public class SoilThermometer extends FHBaseItem {
         if (entityplayer instanceof ServerPlayer) {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, Fluid.ANY);
             if (brtr.getType() == Type.MISS) return stack;
-            entityplayer.sendSystemMessage(Lang.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(WorldTemperature.block(entityplayer.level(), brtr.getBlockPos()))));
+            entityplayer.sendSystemMessage(Lang.translateMessage("info.soil_thermometerbody", toTemperatureFloatString(WorldTemperature.block(entityplayer.level(), brtr.getBlockPos()))));
         }
         return stack;
     }

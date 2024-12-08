@@ -3,8 +3,10 @@ package com.teammoeg.frostedheart.content.climate.tooltips;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
+import com.teammoeg.frostedheart.util.FHTooltipHelper;
 import com.teammoeg.frostedheart.util.lang.Components;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.lang.LangBuilder;
@@ -47,58 +49,93 @@ public class PlantTempStats implements TooltipModifier {
         }
     }
 
+
+
     public static List<Component> getStats(Block block, ItemStack stack, Player player) {
         List<Component> list = new ArrayList<>();
-        PlantTempData data = FHDataManager.getPlantData(block);
+        PlantTempData data = WorldTemperature.getPlantDataWithDefault(block);
         if (data != null) {
-            float temp = data.getSurvive();
-            temp = (Math.round(temp * 10)) / 10.0F;// round
-            String s = TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp);
-            Lang.translate("tooltip", "temp.plant.survive")
-                    .style(ChatFormatting.GRAY)
-                    .addTo(list);
+            // maps 0-10 to 0-3
             int barlength = 3;
-            int progress = Mth.ceil(Mth.clamp(Math.abs(temp) * 0.1, 0, barlength));
+            float barfactor = 0.1F;
+
+            float minSurviveTemp = (Math.round(data.getMinSurvive() * 10)) / 10.0F;
+            float maxSurviveTemp = (Math.round(data.getMaxSurvive() * 10)) / 10.0F;
+            Lang.translate("tooltip", "temp.plant.survive").style(ChatFormatting.GRAY).addTo(list);
+            int maxProgress = Mth.ceil(Mth.clamp(Math.abs(maxSurviveTemp) * barfactor, 0, barlength));
+            int minProgress = Mth.ceil(Mth.clamp(Math.abs(minSurviveTemp) * barfactor, 0, barlength));
+
             LangBuilder builder = Lang.builder()
-                    .add(Lang.text(s + " " + TooltipHelper.makeProgressBar(barlength, progress))
-                            .style(temp <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD));
+                    .add(Lang.text(TemperatureDisplayHelper.toTemperatureFloatString(minSurviveTemp))
+                            .style(minSurviveTemp <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD))
+                    .add(Lang.text(" - ").style(ChatFormatting.GRAY))
+                    .add(Lang.text(TemperatureDisplayHelper.toTemperatureFloatString(maxSurviveTemp))
+                            .style(maxSurviveTemp <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD))
+                    .add(Lang.text(" "))
+                    .add(Lang.text(FHTooltipHelper.makeProgressBarReversed(barlength, minProgress))
+                            .style(minSurviveTemp <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD))
+                    .add(Lang.text(FHTooltipHelper.makeProgressBar(barlength, maxProgress))
+                            .style(maxSurviveTemp <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD));
             builder.addTo(list);
 
-            temp = data.getGrow();
-            temp = (Math.round(temp * 10)) / 10.0F;// round
-            s = TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp);
-            Lang.translate("tooltip", "temp.plant.grow")
-                    .style(ChatFormatting.GRAY)
-                    .addTo(list);
-            barlength = 3;
-            progress = Mth.ceil(Mth.clamp(Math.abs(temp) * 0.1, 0, barlength));
+            float minGrowTemp = (Math.round(data.getMinGrow() * 10)) / 10.0F;
+            float maxGrowTemp = (Math.round(data.getMaxGrow() * 10)) / 10.0F;
+            Lang.translate("tooltip", "temp.plant.grow").style(ChatFormatting.GRAY).addTo(list);
+            maxProgress = Mth.ceil(Mth.clamp(Math.abs(maxGrowTemp) * barfactor, 0, barlength));
+            minProgress = Mth.ceil(Mth.clamp(Math.abs(minGrowTemp) * barfactor, 0, barlength));
             builder = Lang.builder()
-                    .add(Lang.text(s + " " + TooltipHelper.makeProgressBar(barlength, progress))
-                            .style(temp <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD));
+                    .add(Lang.text(TemperatureDisplayHelper.toTemperatureFloatString(minGrowTemp))
+                            .style(minGrowTemp <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD))
+                    .add(Lang.text(" - ").style(ChatFormatting.GRAY))
+                    .add(Lang.text(TemperatureDisplayHelper.toTemperatureFloatString(maxGrowTemp))
+                            .style(maxGrowTemp <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD))
+                    .add(Lang.text(" "))
+                    .add(Lang.text(FHTooltipHelper.makeProgressBarReversed(barlength, minProgress))
+                            .style(minGrowTemp <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD))
+                    .add(Lang.text(FHTooltipHelper.makeProgressBar(barlength, maxProgress))
+                            .style(maxGrowTemp <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD));
             builder.addTo(list);
 
-            temp = data.getBonemeal();
-            temp = (Math.round(temp * 10)) / 10.0F;// round
-            s = TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp);
-            Lang.translate("tooltip", "temp.plant.bonemeal")
-                    .style(ChatFormatting.GRAY)
-                    .addTo(list);
-            barlength = 3;
-            progress = Mth.ceil(Mth.clamp(Math.abs(temp) * 0.1, 0, barlength));
+            float minFertilizeTemp = (Math.round(data.getMinFertilize() * 10)) / 10.0F;
+            float maxFertilizeTemp = (Math.round(data.getMaxFertilize() * 10)) / 10.0F;
+            Lang.translate("tooltip", "temp.plant.fertilize").style(ChatFormatting.GRAY).addTo(list);
+            maxProgress = Mth.ceil(Mth.clamp(Math.abs(maxFertilizeTemp) * barfactor, 0, barlength));
+            minProgress = Mth.ceil(Mth.clamp(Math.abs(minFertilizeTemp) * barfactor, 0, barlength));
             builder = Lang.builder()
-                    .add(Lang.text(s + " " + TooltipHelper.makeProgressBar(barlength, progress))
-                            .style(temp <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD));
+                    .add(Lang.text(TemperatureDisplayHelper.toTemperatureFloatString(minFertilizeTemp))
+                            .style(minFertilizeTemp <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD))
+                    .add(Lang.text(" - ").style(ChatFormatting.GRAY))
+                    .add(Lang.text(TemperatureDisplayHelper.toTemperatureFloatString(maxFertilizeTemp))
+                            .style(maxFertilizeTemp <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD))
+                    .add(Lang.text(" "))
+                    .add(Lang.text(FHTooltipHelper.makeProgressBarReversed(barlength, minProgress))
+                            .style(minFertilizeTemp <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD))
+                    .add(Lang.text(FHTooltipHelper.makeProgressBar(barlength, maxProgress))
+                            .style(maxFertilizeTemp <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD));
             builder.addTo(list);
+
 
             boolean vulnerableSnow = data.isSnowVulnerable();
-            Lang.translate("tooltip", "temp.plant.snow_vulnerable")
-                    .style(vulnerableSnow ? ChatFormatting.RED : ChatFormatting.GREEN)
-                    .addTo(list);
+            if (vulnerableSnow) {
+                Lang.translate("tooltip", "temp.plant.snow_vulnerable")
+                        .style(ChatFormatting.RED)
+                        .addTo(list);
+            } else {
+                Lang.translate("tooltip", "temp.plant.snow_resistant")
+                        .style(ChatFormatting.GREEN)
+                        .addTo(list);
+            }
 
             boolean vulnerableBlizzard = data.isBlizzardVulnerable();
-            Lang.translate("tooltip", "temp.plant.blizzard_vulnerable")
-                    .style(vulnerableBlizzard ? ChatFormatting.RED : ChatFormatting.GREEN)
-                    .addTo(list);
+            if (vulnerableBlizzard) {
+                Lang.translate("tooltip", "temp.plant.blizzard_vulnerable")
+                        .style(ChatFormatting.RED)
+                        .addTo(list);
+            } else {
+                Lang.translate("tooltip", "temp.plant.blizzard_resistant")
+                        .style(ChatFormatting.GREEN)
+                        .addTo(list);
+            }
 
         }
         return list;

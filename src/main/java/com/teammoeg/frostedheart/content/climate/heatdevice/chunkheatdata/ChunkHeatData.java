@@ -252,14 +252,6 @@ public class ChunkHeatData {
         return FHCapabilities.CHUNK_HEAT.getCapability(chunk);
     }
 
-    public static String toDisplaySoil(float temp) {
-        temp = Math.max(temp, -20);
-        temp = Math.min(temp, 30);
-        temp += 20;
-        temp *= 2;
-        return (int) temp + "%";
-    }
-
     /**
      * Used on a ServerWorld context to set temperature in certain 3D region in a
      * ChunkData instance

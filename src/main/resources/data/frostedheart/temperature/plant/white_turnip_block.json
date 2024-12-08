@@ -1,0 +1,11 @@
+{
+  "id": "frostedheart:white_turnip_block",
+  "min_survive": -30,
+  "min_grow": -20,
+  "min_fertilize": -10,
+  "max_survive": 30,
+  "max_grow": 20,
+  "max_fertilize": 10,
+  "snow_vulnerable": false,
+  "blizzard_vulnerable": true
+}

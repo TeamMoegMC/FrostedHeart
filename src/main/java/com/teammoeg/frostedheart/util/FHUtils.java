@@ -306,7 +306,7 @@ public class FHUtils {
         }
         return false;
     }
-    public static void setToAirPreserveFluid(Level l,BlockPos pos) {
+    public static void setToAirPreserveFluid(LevelAccessor l,BlockPos pos) {
     	FluidState curstate=l.getFluidState(pos);
     	if(curstate.isEmpty())
     		l.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);

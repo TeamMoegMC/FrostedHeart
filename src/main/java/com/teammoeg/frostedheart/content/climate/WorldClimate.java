@@ -343,7 +343,7 @@ public class WorldClimate implements NBTSerializable {
         return getCapability(world).map(t->t.getHourData().getType() == ClimateType.BLIZZARD).orElse(false);
     }
 
-    public static boolean isCloudy(Level world) {
+    public static boolean isCloudy(LevelAccessor world) {
         return getCapability(world).map(t->t.getHourData().getType() == ClimateType.CLOUDY).orElse(false);
     }
 
@@ -378,7 +378,7 @@ public class WorldClimate implements NBTSerializable {
         return getFutureBlizzard(get(world), deltaDays, deltaHours);
     }
 
-    public static boolean isSnowing(Level world) {
+    public static boolean isSnowing(LevelAccessor world) {
         return getCapability(world).map(t->t.getHourData().getType() == ClimateType.SNOW).orElse(false);
     }
 

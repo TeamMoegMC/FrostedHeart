@@ -19,9 +19,6 @@
 
 package com.teammoeg.frostedheart.content.climate.event;
 
-import blusunrize.immersiveengineering.common.blocks.plant.HempBlock;
-import blusunrize.immersiveengineering.common.register.IEBlocks;
-import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.base.capability.CurioCapabilityProvider;
 import com.teammoeg.frostedheart.base.event.PerformBonemealEvent;
@@ -31,34 +28,26 @@ import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.climate.ArmorTempCurios;
 import com.teammoeg.frostedheart.content.climate.ForecastHandler;
-import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
-import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
-import com.teammoeg.frostedheart.infrastructure.command.HeatAdjustCommand;
-import com.teammoeg.frostedheart.infrastructure.command.ClimateCommand;
-import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
-import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.WorldTemperature.TemperatureCheckResult;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.network.FHDatapackSyncPacket;
+import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
+import com.teammoeg.frostedheart.content.climate.recipe.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
-import com.teammoeg.frostedheart.infrastructure.command.TemperatureCommand;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager.DataType;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.content.climate.recipe.InstallInnerRecipe;
 import com.teammoeg.frostedheart.mixin.minecraft.ServerLevelMixin_PlaceExtraSnow;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
-import net.minecraft.commands.CommandSourceStack;
+import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -82,19 +71,19 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.BonemealableBlock;
-import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.common.util.FakePlayer;
-import net.minecraftforge.event.*;
+import net.minecraftforge.event.AddReloadListenerEvent;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.ItemAttributeModifierEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.entity.player.BonemealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.SaplingGrowTreeEvent;
@@ -105,6 +94,8 @@ import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.PacketDistributor.PacketTarget;
+
+import java.util.function.Supplier;
 
 import static com.teammoeg.frostedheart.content.climate.WorldTemperature.SNOW_TEMPERATURE;
 
@@ -168,33 +159,31 @@ public class ClimateCommonEvents {
         event.addListener(FHDataManager.INSTANCE);
     }
 
-//    @SubscribeEvent
-//    public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
-//        Block growBlock = event.getState().getBlock();
-//        BlockPos belowPos=event.getPos().below();
-//        Block belowGrowBlock=event.getLevel().getBlockState(belowPos).getBlock();
-//
-//        if (growBlock instanceof FHCropBlock||growBlock instanceof FHBerryBushBlock||growBlock instanceof HempBlock) {
-//        }  else if(growBlock instanceof BonemealableBlock){
-//        	TemperatureCheckResult temp = WorldTemperature.isSuitableForCrop(event.getLevel(),event.getPos(), WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE, WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE-10);
-//            if (temp.isRipedOff()) {
-//            	if(event.getLevel() instanceof Level l)
-//            		FHUtils.setToAirPreserveFluid(l, event.getPos());
-//            }else if(temp.isDeadly()) {
-//            	if (event.getLevel().getRandom().nextInt(3) == 0) {
-//                    BlockState cbs = event.getLevel().getBlockState(event.getPos());
-//                    if (cbs.is(growBlock) && cbs != growBlock.defaultBlockState())
-//                        event.getLevel().setBlock(event.getPos(), growBlock.defaultBlockState(), 2);
-//                }
-//            }
-//            if(!temp.isSuitable())
-//            	event.setResult(Event.Result.DENY);
-//        }else {
-//        	TemperatureCheckResult temp = WorldTemperature.isSuitableForCrop(event.getLevel(),event.getPos(), WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE, WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE-10);
-//        	if (!temp.isSuitable())
-//        		event.setResult(Event.Result.DENY);
-//        }
-//    }
+    /**
+     * Controls the growth of crops based on the temperature.
+     */
+    @SubscribeEvent
+    public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
+        BlockState state = event.getState();
+        Block crop = state.getBlock();
+        BlockPos pos = event.getPos();
+        LevelAccessor level = event.getLevel();
+        WorldTemperature.PlantStatus status = WorldTemperature.checkPlantStatus(level, pos, crop);
+        if (status.canGrow()) {
+            event.setResult(Event.Result.DEFAULT);
+        }
+        if (status.canSurvive()) {
+            if (event.getLevel().getRandom().nextInt(3) == 0) {
+                if (state.is(crop) && state != crop.defaultBlockState())
+                    event.getLevel().setBlock(event.getPos(), crop.defaultBlockState(), 2);
+            }
+            event.setResult(Event.Result.DENY);
+        }
+        if (status.willDie()) {
+            FHUtils.setToAirPreserveFluid(level, event.getPos());
+            event.setResult(Event.Result.DENY);
+        }
+    }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onArmorDamage(LivingHurtEvent event) {
@@ -268,53 +257,6 @@ public class ClimateCommonEvents {
         }
     }
 
-//    @SubscribeEvent
-//    public static void onEntityPlaceBlock(BlockEvent.EntityPlaceEvent event) {
-//        if (event.getEntity() instanceof ServerPlayer) {
-//            ServerPlayer player = (ServerPlayer) event.getEntity();
-//            Block growBlock = event.getPlacedBlock().getBlock();
-//            float temp = WorldTemperature.block(event.getLevel(), event.getPos());
-//            if (growBlock instanceof BonemealableBlock) {
-//                if (growBlock instanceof SaplingBlock) {
-//                    if (temp < -5) {
-//                    	player.displayClientMessage(Lang.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(-6)), true);
-//                    }
-//                } else if (growBlock instanceof FHCropBlock) {
-//                    int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
-//                    if (temp < growTemp) {
-//                        event.setCanceled(true);
-//                        player.displayClientMessage(Lang.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(growTemp)), true);
-//                    }
-//                } else if (growBlock instanceof FHBerryBushBlock) {
-//                    int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature();
-//                    if (temp < growTemp) {
-//                        event.setCanceled(true);
-//                        player.displayClientMessage(Lang.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(growTemp)), true);
-//                    }
-//                } else if (growBlock==(IEBlocks.Misc.HEMP_PLANT.get())) {
-//                    if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE) {
-//                        event.setCanceled(true);
-//                        player.displayClientMessage(Lang.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(WorldTemperature.HEMP_GROW_TEMPERATURE)), true);
-//                    }
-//                } else if (growBlock == Blocks.NETHERRACK) {
-//
-//                } else if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE) {
-//                    event.setCanceled(true);
-//                    player.displayClientMessage(Lang.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE)), true);
-//
-//                }
-//            }
-//        }
-//    }
-
-    @SubscribeEvent
-    public static void onRegisterCommands(RegisterCommandsEvent event) {
-        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-        HeatAdjustCommand.register(dispatcher);
-        ClimateCommand.register(dispatcher);
-        TemperatureCommand.register(dispatcher);
-    }
-
     @SubscribeEvent
     public static void onServerTick(TickEvent.LevelTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.START) {
@@ -358,43 +300,18 @@ public class ClimateCommonEvents {
         }
     }
 
-    // Cancel bonemeal if the temperature is too low
+    /**
+     * Prevents bonemeal from being used on plants that are not in the right temperature range.
+     */
     @SubscribeEvent
     public static void onPerformBonemeal(PerformBonemealEvent event) {
         if (event.getLevel() instanceof ServerLevel level) {
-            event.setCanceled(WorldTemperature.bonemealable(level, event.getPos(), event.getState().getBlock()));
+            WorldTemperature.PlantStatus status = WorldTemperature.checkPlantStatus(level, event.getPos(), event.getState().getBlock());
+            if (!status.canFertilize()) {
+                event.setCanceled(true);
+            }
         }
     }
-
-//    @SubscribeEvent
-//    public static void onUseBoneMeal(BonemealEvent event) {
-//        if (event.getEntity() instanceof ServerPlayer) {
-//            ServerPlayer player = (ServerPlayer) event.getEntity();
-//            Block growBlock = event.getBlock().getBlock();
-//            float temp = WorldTemperature.block(event.getLevel(), event.getPos());
-//            if (growBlock instanceof FHCropBlock) {
-//                int growTemp = ((FHCropBlock) growBlock).getGrowTemperature() + WorldTemperature.BONEMEAL_TEMPERATURE;
-//                if (temp < growTemp) {
-//                    event.setCanceled(true);
-//                    player.displayClientMessage(Lang.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(growTemp)), true);
-//                }
-//            } else if (growBlock instanceof FHBerryBushBlock) {
-//                int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature() + WorldTemperature.BONEMEAL_TEMPERATURE;
-//                if (temp < growTemp) {
-//                    event.setCanceled(true);
-//                    player.displayClientMessage(Lang.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(growTemp)), true);
-//                }
-//            } else if (growBlock==(IEBlocks.Misc.HEMP_PLANT.get())) {
-//                if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE) {
-//                    event.setCanceled(true);
-//                    player.displayClientMessage(Lang.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(WorldTemperature.HEMP_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE)), true);
-//                }
-//            } else if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE) {
-//                event.setCanceled(true);
-//                player.displayClientMessage(Lang.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE)), true);
-//            }
-//        }
-//    }
 
     @SubscribeEvent
     public static void syncDataToClient(PlayerEvent.PlayerLoggedInEvent event) {
@@ -443,15 +360,21 @@ public class ClimateCommonEvents {
                     level.setBlockAndUpdate(pos, state.setValue(BlockStateProperties.LAYERS, 1 + layers));
                 }
 
-                // Replacing terrain. Do not use for now.
-//                BlockPos belowPos = pos.below();
-//                BlockState belowState = level.getBlockState(belowPos);
-//                Block replacementBlock = (Block)((Supplier) PrimalWinterBlocks.SNOWY_TERRAIN_BLOCKS.getOrDefault(belowState.getBlock(), () -> {
-//                    return null;
-//                })).get();
-//                if (replacementBlock != null) {
-//                    level.setBlockAndUpdate(belowPos, replacementBlock.defaultBlockState());
-//                }
+                // Replacing terrain.
+                BlockPos belowPos = pos.below();
+                BlockState belowState = level.getBlockState(belowPos);
+                Supplier<? extends Block> replacement = FHBlocks.SNOWY_TERRAIN_BLOCKS.get(belowState.getBlock());
+                if (replacement != null) {
+                    BlockState state1 = replacement.get().defaultBlockState();
+                    if (state1.hasProperty(BlockStateProperties.SNOWY)) {
+                        state1.setValue(BlockStateProperties.SNOWY, true);
+                    }
+                    level.setBlockAndUpdate(belowPos, state1);
+                } else {
+                    if (belowState.hasProperty(BlockStateProperties.SNOWY)) {
+                        belowState.setValue(BlockStateProperties.SNOWY, true);
+                    }
+                }
             }
         }
 

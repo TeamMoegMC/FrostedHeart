@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart;
 
+import com.google.common.collect.ImmutableMap;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.ModelGen;
@@ -67,6 +68,8 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -1056,7 +1059,7 @@ public class FHBlocks {
             .loot((lt, b) -> lt.add(b,
                     lt.createSingleItemTableWithSilkTouch(b, Items.RAW_COPPER, ConstantValue.exactly(1))))
             .register();
-    public static final BlockEntry<RyeBlock> RYE_BLOCK = REGISTRATE.block("rye_block", p -> new RyeBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps))
+    public static final BlockEntry<RyeBlock> RYE_BLOCK = REGISTRATE.block("rye_block", p -> new RyeBlock(FHProps.cropProps))
             .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
             .item()
             .model(AssetLookup.existingItemModel())
@@ -1066,7 +1069,7 @@ public class FHBlocks {
             .register();
 
     public static final BlockEntry<WolfBerryBushBlock> WOLFBERRY_BUSH_BLOCK = REGISTRATE.block("wolfberry_bush_block",
-                    p -> new WolfBerryBushBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.berryBushBlocks, 2))
+                    p -> new WolfBerryBushBlock(FHProps.berryBushBlocks))
             .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
             .item()
             .model(AssetLookup.existingItemModel())
@@ -1076,7 +1079,7 @@ public class FHBlocks {
             .register();
 
     public static final BlockEntry<WhiteTurnipBlock> WHITE_TURNIP_BLOCK = REGISTRATE.block("white_turnip_block",
-                    p -> new WhiteTurnipBlock(WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, FHProps.cropProps))
+                    p -> new WhiteTurnipBlock(FHProps.cropProps))
             .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
             .item()
             .model(AssetLookup.existingItemModel())
@@ -1880,4 +1883,21 @@ public class FHBlocks {
             .register();
 
     public static void init() { }
+
+    public static final Map<Block, Supplier<? extends Block>> SNOWY_TERRAIN_BLOCKS = new HashMap<>(new ImmutableMap.Builder<Block, Supplier<? extends Block>>()
+            .put(Blocks.DIRT, DIRT_PERMAFROST)
+            .put(Blocks.PODZOL, PODZOL_PERMAFROST)
+            .put(Blocks.MYCELIUM, MYCELIUM_PERMAFROST)
+            .put(Blocks.COARSE_DIRT, COARSE_DIRT_PERMAFROST)
+            .put(Blocks.SAND, SAND_PERMAFROST)
+            .put(Blocks.RED_SAND, RED_SAND_PERMAFROST)
+            .put(Blocks.GRAVEL, GRAVEL_PERMAFROST)
+            .put(Blocks.CLAY, CLAY_PERMAFROST)
+            .put(Blocks.ROOTED_DIRT, ROOTED_DIRT_PERMAFROST)
+            .put(Blocks.MUD, MUD_PERMAFROST)
+//            .put(FHBlocks.KAOLIN.get(), KAOLIN_PERMAFROST)
+//            .put(FHBlocks.BAUXITE.get(), BAUXITE_PERMAFROST)
+//            .put(FHBlocks.PEAT.get(), PEAT_PERMAFROST)
+            .build()
+    );
 }

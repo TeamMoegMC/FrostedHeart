@@ -34,10 +34,15 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class HeatAdjustCommand {
-    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-
+    @SubscribeEvent
+    public static void register(RegisterCommandsEvent event) {
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         // Remove
         LiteralArgumentBuilder<CommandSourceStack> remove = Commands.literal("remove")
                 .then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ct) -> {
