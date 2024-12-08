@@ -45,7 +45,7 @@ import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager.DataType;
-import com.teammoeg.frostedheart.mixin.minecraft.ServerLevelMixin_PlaceExtraSnow;
+import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_PlaceExtraSnow;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.core.BlockPos;

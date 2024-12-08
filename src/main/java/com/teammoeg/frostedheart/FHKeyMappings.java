@@ -1,6 +1,8 @@
 package com.teammoeg.frostedheart;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.util.Lazy;
 import org.lwjgl.glfw.GLFW;
 
@@ -12,5 +14,9 @@ public class FHKeyMappings {
 
     public static void init() {
 
+    }
+
+    public static boolean hasSDown() {
+        return InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_S);
     }
 }

@@ -913,5 +913,11 @@
   "temperature_difficulty.frostedheart.easy": "Easy",
   "temperature_difficulty.frostedheart.hard": "Hard",
   "temperature_difficulty.frostedheart.normal": "Normal",
-  "temperature_difficulty.frostedheart.hardcore": "Hardcore"
+  "temperature_difficulty.frostedheart.hardcore": "Hardcore",
+  "tooltip.frostedheart.holdForDescription": "按住 [%1$s] 可查看概要",
+  "tooltip.frostedheart.holdForControls": "按住 [%1$s] 可查看控制信息",
+  "tooltip.frostedheart.holdForTemperature": "按住 [%1$s] 可查看温度信息",
+  "tooltip.frostedheart.keyShift": "Shift",
+  "tooltip.frostedheart.keyCtrl": "Ctrl",
+  "tooltip.frostedheart.keyS": "S"
 }

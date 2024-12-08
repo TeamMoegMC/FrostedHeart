@@ -2,8 +2,10 @@ package com.teammoeg.frostedheart.content.climate.tooltips;
 
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
+import com.teammoeg.frostedheart.base.tooltip.KeyControlledDesc;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
+import com.teammoeg.frostedheart.util.lang.FHTextIcon;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.lang.Components;
@@ -40,10 +42,11 @@ public class BlockTempStats implements TooltipModifier {
     @Override
     public void modify(ItemTooltipEvent context) {
         List<Component> stats = getStats(block, context.getItemStack(), context.getEntity());
+        KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>());
         if (!stats.isEmpty()) {
             List<Component> tooltip = context.getToolTip();
             tooltip.add(Components.immutableEmpty());
-            tooltip.addAll(stats);
+            tooltip.addAll(desc.getCurrentLines());
         }
     }
 
@@ -61,7 +64,8 @@ public class BlockTempStats implements TooltipModifier {
             int progress = Mth.ceil(Mth.clamp(Math.abs(heat) * 0.1, 0, 3));
 
             LangBuilder builder = Lang.builder()
-                    .add(Lang.text(s + " " + TooltipHelper.makeProgressBar(3, progress))
+                    .add(FHTextIcon.thermometer)
+                    .add(Lang.text(" " + s + " " + TooltipHelper.makeProgressBar(3, progress))
                             .style(heat < 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD));
             builder.addTo(list);
         }

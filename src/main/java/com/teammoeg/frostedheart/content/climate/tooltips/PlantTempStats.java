@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.content.climate.tooltips;
 
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
+import com.teammoeg.frostedheart.base.tooltip.KeyControlledDesc;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
@@ -9,6 +10,7 @@ import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.util.FHTooltipHelper;
 import com.teammoeg.frostedheart.util.MathUtils;
 import com.teammoeg.frostedheart.util.lang.Components;
+import com.teammoeg.frostedheart.util.lang.FHTextIcon;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
@@ -51,10 +53,11 @@ public class PlantTempStats implements TooltipModifier {
     @Override
     public void modify(ItemTooltipEvent context) {
         List<Component> stats = getStats(block, context.getItemStack(), context.getEntity());
+        KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>());
         if (!stats.isEmpty()) {
             List<Component> tooltip = context.getToolTip();
             tooltip.add(Components.immutableEmpty());
-            tooltip.addAll(stats);
+            tooltip.addAll(desc.getCurrentLines());
         }
     }
 
@@ -70,7 +73,8 @@ public class PlantTempStats implements TooltipModifier {
         String s2 = s.substring(3);
 
         LangBuilder builder = Lang.builder()
-                .add(Lang.text(TemperatureDisplayHelper.toTemperatureFloatString(min))
+                .add(FHTextIcon.thermometer)
+                .add(Lang.text(" " + TemperatureDisplayHelper.toTemperatureFloatString(min))
                         .style(min <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD))
                 .add(Lang.text(" - ").style(ChatFormatting.GRAY))
                 .add(Lang.text(TemperatureDisplayHelper.toTemperatureFloatString(max))
