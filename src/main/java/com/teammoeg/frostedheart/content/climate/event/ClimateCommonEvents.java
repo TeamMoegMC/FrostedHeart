@@ -180,7 +180,10 @@ public class ClimateCommonEvents {
             event.setResult(Event.Result.DENY);
         }
         if (status.willDie()) {
-            FHUtils.setToAirPreserveFluid(level, event.getPos());
+            if (level.getBlockState(pos.below()).is(Blocks.FARMLAND)) {
+                level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
+            }
+            level.setBlock(pos, Blocks.DEAD_BUSH.defaultBlockState(), 2);
             event.setResult(Event.Result.DENY);
         }
     }

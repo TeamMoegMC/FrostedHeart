@@ -30,16 +30,16 @@ public class PlantTempData {
 	public static final float DEFAULT_BONEMEAL_TEMP = 10;
 	public static final float DEFAULT_GROW_TEMP = 0;
 	public static final float DEFAULT_SURVIVE_TEMP = -10;
-	public static final float DEFAULT_BONEMEAL_MAX_TEMP = 30;
-	public static final float DEFAULT_GROW_MAX_TEMP = 50;
-	public static final float DEFAULT_SURVIVE_MAX_TEMP = 50;
+	public static final float DEFAULT_BONEMEAL_MAX_TEMP = 40;
+	public static final float DEFAULT_GROW_MAX_TEMP = 40;
+	public static final float DEFAULT_SURVIVE_MAX_TEMP = 40;
 	public static final boolean DEFAULT_SNOW_VULNERABLE = true;
 	public static final boolean DEFAULT_BLIZZARD_VULNERABLE = true;
 
 	public static final MapCodec<PlantTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
 			// min
 			CodecUtil.defaultValue(Codec.FLOAT,DEFAULT_BONEMEAL_TEMP).fieldOf("min_fertilize").forGetter(o->o.minFertilize),
-			CodecUtil.defaultValue(Codec.FLOAT,DEFAULT_BONEMEAL_TEMP).fieldOf("min_grow").forGetter(o->o.minGrow),
+			CodecUtil.defaultValue(Codec.FLOAT,DEFAULT_GROW_TEMP).fieldOf("min_grow").forGetter(o->o.minGrow),
 			CodecUtil.defaultValue(Codec.FLOAT,DEFAULT_SURVIVE_TEMP).fieldOf("min_survive").forGetter(o->o.minSurvive),
 			// max
 			CodecUtil.defaultValue(Codec.FLOAT,DEFAULT_BONEMEAL_MAX_TEMP).fieldOf("max_fertilize").forGetter(o->o.maxFertilize),

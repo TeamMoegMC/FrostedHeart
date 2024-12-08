@@ -34,7 +34,10 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraftforge.common.IPlantable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import javax.annotation.Nonnull;
 
 /**
  * World Temperature API on the server side.
@@ -367,11 +370,13 @@ public class WorldTemperature {
         return 0;
     }
 
+    @Nonnull
     public static PlantTempData getPlantDataWithDefault(Block block) {
         PlantTempData data = FHDataManager.getPlantData(block);
-        if (data == null && block instanceof BonemealableBlock) {
+        // We can't really do any instanceof check here, since so many potential blocks
+        // may be invoked with the crop event.
+        if (data == null)
             return new PlantTempData();
-        }
         return data;
     }
 

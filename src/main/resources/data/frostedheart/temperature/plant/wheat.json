@@ -5,7 +5,7 @@
   "min_fertilize": 20,
   "max_survive": 40,
   "max_grow": 30,
-  "max_fertilize": 20,
+  "max_fertilize": 30,
   "snow_vulnerable": true,
   "blizzard_vulnerable": true
 }
