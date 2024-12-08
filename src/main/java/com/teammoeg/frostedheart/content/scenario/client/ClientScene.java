@@ -13,7 +13,7 @@ import com.teammoeg.frostedheart.content.scenario.network.ClientScenarioResponse
 import com.teammoeg.frostedheart.content.scenario.network.FHClientReadyPacket;
 import com.teammoeg.frostedheart.content.scenario.network.FHClientSettingsPacket;
 import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
-import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
+import com.teammoeg.frostedheart.mixin.minecraft.accessors.NewChatGuiAccessor;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.utility.ReferenceValue;
