@@ -1,0 +1,8 @@
+{
+  "id": "minecraft:wheat",
+  "survive": 0,
+  "grow": 10,
+  "bonemeal": 20,
+  "snow_vulnerable": true,
+  "blizzard_vulnerable": true
+}

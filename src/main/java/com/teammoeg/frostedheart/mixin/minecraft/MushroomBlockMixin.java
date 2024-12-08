@@ -38,12 +38,15 @@ import net.minecraft.util.RandomSource;
  * Disable mushroom from spreading in low
  * */
 @Mixin({MushroomBlock.class})
-public abstract class SaplingBlockMixin extends BushBlock implements BonemealableBlock {
+public abstract class MushroomBlockMixin extends BushBlock implements BonemealableBlock {
 
-    public SaplingBlockMixin(Properties properties) {
+    public MushroomBlockMixin(Properties properties) {
         super(properties);
     }
 
+    /**
+     * Disable sapling growth.
+     */
     @Inject(at = @At("HEAD"), method = "randomTick", cancellable = true)
     public void fh$randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random, CallbackInfo cbi) {
         if (WorldTemperature.isBlizzardHarming(worldIn, pos)) {

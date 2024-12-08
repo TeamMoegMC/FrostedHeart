@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerLevel.class)
-public abstract class ServerLevelMixin {
+public abstract class ServerLevelMixin_PlaceExtraSnow {
     @Inject(
             method = {"tickChunk"},
             at = {@At("RETURN")}

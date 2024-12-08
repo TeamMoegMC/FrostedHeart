@@ -1,0 +1,8 @@
+{
+  "id": "minecraft:grass_block",
+  "survive": 10,
+  "grow": 20,
+  "bonemeal": 30,
+  "snow_vulnerable": false,
+  "blizzard_vulnerable": true
+}

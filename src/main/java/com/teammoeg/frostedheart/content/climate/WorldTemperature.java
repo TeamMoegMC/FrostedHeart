@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.climate;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 
@@ -30,6 +31,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -81,10 +83,10 @@ public class WorldTemperature {
     }
 
     public static boolean isBlizzardHarming(LevelAccessor iWorld, BlockPos p) {
-        return WorldClimate.isBlizzard(iWorld) && isBlizzardVulnerable(iWorld,p);
+        return WorldClimate.isBlizzard(iWorld) && openToAir(iWorld,p);
     }
 
-    public static boolean isBlizzardVulnerable(LevelAccessor iWorld, BlockPos p) {
+    public static boolean openToAir(LevelAccessor iWorld, BlockPos p) {
         return iWorld.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) <= p.getY();
     }
 
@@ -379,7 +381,7 @@ public class WorldTemperature {
         	float temp=0;
         	if(climate!=null) {
 	        	if(climate.getHourData().getType() == ClimateType.BLIZZARD)//always too cold in blizzard
-	        		return isBlizzardVulnerable(l,pos)?TemperatureCheckResult.BLIZZARD_HARM:TemperatureCheckResult.TOO_COLD;
+	        		return openToAir(l,pos)?TemperatureCheckResult.BLIZZARD_HARM:TemperatureCheckResult.TOO_COLD;
 	        	temp=climate.getTemp();
         	}
         	float block=(dimension(w) + biome(w, pos) + temp * CLIMATE_BLOCK_AFFECTION + heat(w,pos));
@@ -393,5 +395,82 @@ public class WorldTemperature {
         	return TemperatureCheckResult.SUITABLE;
         }
         return TemperatureCheckResult.INVALID;
+    }
+
+    /**
+     * Get the temperature above which when bonemeal is applicable to a block.
+     *
+     * First, it will check if the block has a PlantTempData, if not, it will return the default value.
+     *
+     * @param block should be a BonemealableBlock.
+     */
+    public static final float DEFAULT_BONEMEAL_TEMP = 10;
+    public static float getBonemealTemperature(Block block) {
+        PlantTempData data = FHDataManager.getPlantData(block);
+        if (data != null) {
+            return data.getBonemeal();
+        } else {
+            return DEFAULT_BONEMEAL_TEMP;
+        }
+    }
+
+    public static final float DEFAULT_GROW_TEMP = 0;
+    public static float getGrowTemperature(Block block) {
+        PlantTempData data = FHDataManager.getPlantData(block);
+        if (data != null) {
+            return data.getGrow();
+        } else {
+            return DEFAULT_GROW_TEMP;
+        }
+    }
+
+    public static final float DEFAULT_SURVIVE_TEMP = -10;
+    public static float getSurviveTemperature(Block block) {
+        PlantTempData data = FHDataManager.getPlantData(block);
+        if (data != null) {
+            return data.getSurvive();
+        } else {
+            return DEFAULT_SURVIVE_TEMP;
+        }
+    }
+
+    public static final boolean DEFAULT_SNOW_VULNERABLE = true;
+    public static boolean isSnowVulnerable(Block block) {
+        PlantTempData data = FHDataManager.getPlantData(block);
+        if (data != null) {
+            return data.isSnowVulnerable();
+        } else {
+            return DEFAULT_SNOW_VULNERABLE;
+        }
+    }
+
+    public static final boolean DEFAULT_BLIZZARD_VULNERABLE = true;
+    public static boolean isBlizzardVulnerable(Block block) {
+        PlantTempData data = FHDataManager.getPlantData(block);
+        if (data != null) {
+            return data.isBlizzardVulnerable();
+        } else {
+            return DEFAULT_BLIZZARD_VULNERABLE;
+        }
+    }
+
+    public static boolean bonemealable(Level level, BlockPos pos, Block block) {
+        return getBonemealTemperature(block) > block(level, pos);
+    }
+
+    public static boolean growable(Level level, BlockPos pos, Block block) {
+        return getGrowTemperature(block) > block(level, pos);
+    }
+
+    public static boolean survivable(Level level, BlockPos pos, Block block) {
+        return getSurviveTemperature(block) > block(level, pos);
+    }
+
+    public static boolean snowVulnerable(Level level, BlockPos pos, Block block) {
+        return isSnowVulnerable(block) && WorldClimate.isBlizzard(level) && openToAir(level, pos);
+    }
+
+    public static boolean blizzardVulnerable(Level level, BlockPos pos, Block block) {
+        return isBlizzardVulnerable(block) && WorldClimate.isBlizzard(level) && openToAir(level, pos);
     }
 }

@@ -34,14 +34,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
-import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
-import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
-import com.teammoeg.frostedheart.content.climate.data.CupData;
-import com.teammoeg.frostedheart.content.climate.data.CupTempAdjustProxy;
-import com.teammoeg.frostedheart.content.climate.data.DrinkTempData;
-import com.teammoeg.frostedheart.content.climate.data.FoodTempData;
-import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
+import com.teammoeg.frostedheart.content.climate.data.*;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
@@ -126,6 +119,7 @@ public class FHDataManager implements ResourceManagerReloadListener {
 
 	public static final DataType<ArmorTempData> Armor = (new DataType<>(ArmorTempData.class, "temperature", "armor", ArmorTempData.CODEC));
 	public static final DataType<BiomeTempData> Biome = (new DataType<>(BiomeTempData.class, "temperature", "biome", BiomeTempData.CODEC));
+	public static final DataType<PlantTempData> Plant = (new DataType<>(PlantTempData.class, "temperature", "plant", PlantTempData.CODEC));
 	public static final DataType<FoodTempData> Food = (new DataType<>(FoodTempData.class, "temperature", "food", FoodTempData.CODEC));
 	public static final DataType<BlockTempData> Block = (new DataType<>(BlockTempData.class, "temperature", "block", BlockTempData.CODEC));
 	public static final DataType<DrinkTempData> Drink = (new DataType<>(DrinkTempData.class, "temperature", "drink", DrinkTempData.CODEC));
@@ -187,6 +181,11 @@ public class FHDataManager implements ResourceManagerReloadListener {
 		if (data != null)
 			return data.getTemp();
 		return 0F;
+	}
+
+	@Nullable
+	public static PlantTempData getPlantData(Block b) {
+		return FHDataManager.get(Plant).get(RegistryUtils.getRegistryName(b));
 	}
 
 	public static BlockTempData getBlockData(Block b) {
