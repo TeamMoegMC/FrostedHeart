@@ -62,7 +62,7 @@
     "minecraft.temperature.SnowLayerBlockMixin_Melt",
     "minecraft.research.BlockEntityMixin_Research",
     "minecraft.temperature.VillagerMixin",
-    "noremap.NonvanillaBonemealableBlockMixin_CheckTemp"
+    "caupona.CauponaBonemealableBlockMixin_CheckTemp"
   ],
   "client": [
     "client.BossHealthOverlayAccess",
