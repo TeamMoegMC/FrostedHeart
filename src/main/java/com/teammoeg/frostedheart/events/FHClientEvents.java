@@ -23,6 +23,8 @@ import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
+import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
@@ -32,10 +34,6 @@ import com.teammoeg.frostedheart.content.research.research.effects.EffectCraftin
 import com.teammoeg.frostedheart.content.research.research.effects.EffectShowCategory;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
-import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
-import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
-import com.teammoeg.frostedheart.content.tips.TipLockManager;
-import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.lang.Lang;
@@ -66,7 +64,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -460,52 +457,32 @@ public class FHClientEvents {
 
     @SubscribeEvent
     public static void onPlayerLoggedIn(ClientPlayerNetworkEvent.LoggingIn event) {
-        // write a default tip with form { "contents": ["Default Tip."] } in config/fhtips/tips/default.json
-        File filePath = new File(TipLockManager.TIPS, "default.json");
-        if (!filePath.exists()) {
-
-            // Write the file to the file system as a json file
-            String content = "{\"contents\": [\"Default Tip.\"]}";
-            // Write the file to the file system as a json file
-            // Use raw java methods
-            try {
-                Files.write(Paths.get(filePath.getAbsolutePath()), content.getBytes());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
+        // default tip
+        if (!TipManager.INSTANCE.hasTip("default")) {
+            Tip.builder("default").line(Lang.str("Default Tip")).build().saveAsFile();
+            TipManager.INSTANCE.loadFromFile();
         }
-        TipDisplayManager.clearRenderQueue();
-        TipDisplayManager.displayTip("default", false);
-//        TipDisplayManager.displayTip("default2", false);
+        TipManager.INSTANCE.display().clearRenderQueue();
+        TipManager.INSTANCE.display().general("default");
 //        if (Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MUSIC) == 0) {
 //            TipDisplayManager.displayTip("music_warning", false);
 //        }
     }
 
     @SubscribeEvent
-    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        TipDisplayManager.clearRenderQueue();
+    public static void onPlayerLoggedOut(ClientPlayerNetworkEvent.LoggingOut event) {
+        TipManager.INSTANCE.display().clearRenderQueue();
         ClientWaypointManager.clear();
     }
 
-    @SubscribeEvent
-    public static void onGUIOpen(ScreenEvent.Opening event) {
-        if (event.getScreen() instanceof TitleScreen) {
-            if (!TipLockManager.errorType.isEmpty()) {
-                TipElement ele = new TipElement();
-                ele.replaceToError(TipLockManager.UNLOCKED_FILE, TipLockManager.errorType);
-                TipDisplayManager.displayTip(ele, true);
-                TipLockManager.errorType = "";
-            }
-        }
-    }
-
 //    @SubscribeEvent
-//    public static void onGUIRender(ScreenEvent.Render event) {
-//        if (event.getScreen() instanceof SoundOptionsScreen) {
-//            if (Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC) <= 0) {
-//                TipDisplayManager.displayTip("music_warning", false);
+//    public static void onGUIOpen(ScreenEvent.Opening event) {
+//        if (event.getScreen() instanceof TitleScreen) {
+//            if (!TipLockManager.errorType.isEmpty()) {
+//                TipElement ele = new TipElement();
+//                ele.replaceToError(TipLockManager.UNLOCKED_FILE, TipLockManager.errorType);
+//                TipDisplayManager.displayTip(ele, true);
+//                TipLockManager.errorType = "";
 //            }
 //        }
 //    }

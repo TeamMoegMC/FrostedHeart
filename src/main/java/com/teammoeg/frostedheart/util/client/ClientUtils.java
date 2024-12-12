@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.util.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.teammoeg.frostedheart.FHParticleTypes;
 
+import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.player.LocalPlayer;
@@ -148,5 +149,11 @@ public class ClientUtils {
         boolean flag = previousTick != gameTick();
         previousTick = gameTick();
         return flag;
+    }
+
+    public static void openDebugScreen() {
+        if (Minecraft.getInstance().player != null) {
+            Minecraft.getInstance().setScreen(new DebugScreen());
+        }
     }
 }

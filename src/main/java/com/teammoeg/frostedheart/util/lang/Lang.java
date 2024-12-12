@@ -25,6 +25,7 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.FHMain;
 
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -89,6 +90,10 @@ public class Lang {
 
     public static MutableComponent translateKey(String string, Object... args) {
         return Component.translatable(string, args);
+    }
+
+    public static MutableComponent translateOrElseStr(String string) {
+        return I18n.exists(string) ? translateKey(string) : str(string);
     }
 
     @Deprecated

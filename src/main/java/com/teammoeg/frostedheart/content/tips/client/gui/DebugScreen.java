@@ -1,13 +1,12 @@
-package com.teammoeg.frostedheart.content.waypoint.gui;
+package com.teammoeg.frostedheart.content.tips.client.gui;
 
-import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
-import com.teammoeg.frostedheart.content.tips.TipLockManager;
-import com.teammoeg.frostedheart.content.waypoint.gui.widget.IconButton;
+import com.teammoeg.frostedheart.FrostedHud;
+import com.teammoeg.frostedheart.content.tips.TipManager;
+import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.ColumbiatWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.SunStationWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.Waypoint;
-import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.FHColorHelper;
 import net.minecraft.client.gui.GuiGraphics;
@@ -32,14 +31,17 @@ public class DebugScreen extends Screen {
 
     @Override
     public void init() {
-        addButton(IconButton.Icon.TRASH_CAN, FHColorHelper.CYAN, "Clear Tip Cache", (b) ->
-                TipDisplayManager.clearCache()
-        );
         addButton(IconButton.Icon.CROSS, FHColorHelper.CYAN, "Clear Tip Render Queue", (b) ->
-                TipDisplayManager.clearRenderQueue()
+            TipManager.INSTANCE.display().clearRenderQueue()
         );
-        addButton(IconButton.Icon.HISTORY, FHColorHelper.RED, "Reset Lock State For All Tips", (b) ->
-                TipLockManager.manager.createFile()
+        addButton(IconButton.Icon.HISTORY, FHColorHelper.RED, "Reset StateManager For All Tips", (b) ->
+            TipManager.INSTANCE.state().resetAll()
+        );
+        addButton(IconButton.Icon.HISTORY, FHColorHelper.CYAN, "Reload All Tips", (b) ->
+            TipManager.INSTANCE.loadFromFile()
+        );
+        addButton(IconButton.Icon.WRENCH, FHColorHelper.CYAN, "Open Tip Editor UI", (b) ->
+            ClientUtils.mc().setScreen(new TipEditorScreen())
         );
         addButton(IconButton.Icon.BOX_ON, FHColorHelper.CYAN, "Create a Random Waypoint", (b) -> {
             Random random = new Random();
@@ -49,13 +51,13 @@ public class DebugScreen extends Screen {
             ClientWaypointManager.putWaypoint(waypoint);
         });
         addButton(IconButton.Icon.BOX_ON, 0xFFFFDA64, "Create Sun Station Waypoint", (b) ->
-                ClientWaypointManager.putWaypoint(new SunStationWaypoint())
+            ClientWaypointManager.putWaypoint(new SunStationWaypoint())
         );
         addButton(IconButton.Icon.BOX_ON, 0xFFF6F1D5, "Create Columbiat Waypoint", (b) ->
-                ClientWaypointManager.putWaypoint(new ColumbiatWaypoint())
+            ClientWaypointManager.putWaypoint(new ColumbiatWaypoint())
         );
         addButton(IconButton.Icon.BOX, FHColorHelper.RED, "Remove The Waypoint You Are Looking At", (b) ->
-                ClientWaypointManager.getHovered().ifPresent((hovered) -> ClientWaypointManager.removeWaypoint(hovered.getId()))
+            ClientWaypointManager.getHovered().ifPresent((hovered) -> ClientWaypointManager.removeWaypoint(hovered.getId()))
         );
         addButton(IconButton.Icon.SIGHT, FHColorHelper.CYAN, "Create a Waypoint From The Block You Are Looking At", (b) -> {
             HitResult block = ClientUtils.getPlayer().pick(128, ClientUtils.partialTicks(), false);
@@ -67,7 +69,7 @@ public class DebugScreen extends Screen {
             }
         });
         addButton(IconButton.Icon.TRADE, FHColorHelper.CYAN, "Toggle Debug Overlay", (b) ->
-                FrostedHud.renderDebugOverlay = !FrostedHud.renderDebugOverlay
+            FrostedHud.renderDebugOverlay = !FrostedHud.renderDebugOverlay
         );
 //        addRenderableWidget(new TextLabelWidget(10, 10, 50, 50, Component.literal("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), ClientUtils.font()));
     }

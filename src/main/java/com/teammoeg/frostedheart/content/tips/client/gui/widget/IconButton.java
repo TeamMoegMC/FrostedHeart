@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.waypoint.gui.widget;
+package com.teammoeg.frostedheart.content.tips.client.gui.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHMain;
@@ -26,7 +26,6 @@ public class IconButton extends Button {
      */
     public IconButton(int x, int y, Icon icon, int color, Component title, OnPress pressedAction) {
         super(x, y, 10, 10, title, pressedAction, Button.DEFAULT_NARRATION);
-        builder(title,pressedAction).build();
         this.color = color;
         this.currentIcon = icon;
     }

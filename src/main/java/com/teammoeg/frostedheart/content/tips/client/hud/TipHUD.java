@@ -2,11 +2,14 @@ package com.teammoeg.frostedheart.content.tips.client.hud;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.tips.client.TipElement;
-import com.teammoeg.frostedheart.content.tips.client.gui.EmptyScreen;
-import com.teammoeg.frostedheart.content.waypoint.gui.widget.IconButton;
+import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.client.gui.WheelSelectorScreen;
+import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
+import com.teammoeg.frostedheart.util.client.AnimationUtil;
+import com.teammoeg.frostedheart.util.client.FHGuiHelper;
+import com.teammoeg.frostedheart.util.client.Point;
+import com.teammoeg.frostedheart.util.client.RawMouseHelper;
 import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.client.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -16,7 +19,7 @@ import java.util.List;
 
 public class TipHUD {
     private final Minecraft MC = Minecraft.getInstance();
-    private final TipElement element;
+    private final Tip element;
     private final int lineSpace = 12;
     private final boolean alwaysVisible;
 
@@ -30,17 +33,17 @@ public class TipHUD {
 
     public boolean visible = true;
 
-    public TipHUD(TipElement element) {
+    public TipHUD(Tip element) {
         resetAnimation();
         this.element = element;
-        this.alwaysVisible = element.alwaysVisible;
+        this.alwaysVisible = element.isAlwaysVisible();
     }
 
     public void render(GuiGraphics graphics, boolean isGUI) {
         if (!visible) return;
 
         float fadeProgress = 1.0F;
-        float defaultBGAlpha = isGUI ? 0.75F : 0.3F;
+        float defaultBGAlpha = isGUI ? 0.75F : 0.5F;
         float BGAlpha = defaultBGAlpha;
         float fontAlpha = 1.0F;
 
@@ -58,15 +61,15 @@ public class TipHUD {
 
         //文本超出窗口时调整尺寸
         if ((descLines + titleLines+1)*lineSpace + y > mainWindow.getY()) {
-            if (descLines >= element.contents.size() && y > 40) {
+            if (descLines >= element.getContents().size() && y > 40) {
                 extendedHeight += 24;
 
             } else if ((descLines + titleLines+1)*lineSpace + y > mainWindow.getY()) {
-                if (descLines >= element.contents.size() && x > mainWindow.getX() * 0.5) {
+                if (descLines >= element.getContents().size() && x > mainWindow.getX() * 0.5) {
                     extendedWidth += 24;
                 } else {
                     FHGuiHelper.drawSplitTexts(graphics, Lang.translateKey("tips." + FHMain.MODID + ".too_long"),
-                            8, 8, element.fontColor, (int)(mainWindow.getX()*0.5F), lineSpace, true);
+                            8, 8, element.getFontColor(), (int)(mainWindow.getX()*0.5F), lineSpace, true);
                 }
             }
         }
@@ -94,8 +97,8 @@ public class TipHUD {
             }
         }
 
-        int BGColor = (int)(BGAlpha * 255.0F) << 24 | element.BGColor & 0x00FFFFFF;
-        int fontColor = (int)(fontAlpha * 255.0F) << 24 | element.fontColor & 0x00FFFFFF;
+        int BGColor = (int)(BGAlpha * 255.0F) << 24 | element.getBackgroundColor() & 0x00FFFFFF;
+        int fontColor = (int)(fontAlpha * 255.0F) << 24 | element.getFontColor() & 0x00FFFFFF;
         float yaw = 0;
         float pitch = 0;
         if (MC.player != null) {
@@ -111,15 +114,15 @@ public class TipHUD {
         }
 
         graphics.pose().pushPose();
-        graphics.pose().translate(-yaw*0.05F + fadeProgress*16 - 16, -pitch*0.05F, 1000);
+        graphics.pose().translate(-yaw*0.05F + fadeProgress*16 - 16, -pitch*0.05F, 800);
 
-        renderContent(graphics, element.contents, x, y, fontColor, renderPos2, BGColor);
+        renderContent(graphics, element.getContents(), x, y, fontColor, renderPos2, BGColor);
 
         renderButton(graphics, renderPos2.getX() - 13, y-1, fontColor);
 
         if (!isAlwaysVisible() && fadeProgress == 1.0F) {
             //进度条
-            float lineProgress = 1-AnimationUtil.progress(element.visibleTime, "TipVisibleTime", false);
+            float lineProgress = 1-AnimationUtil.progress(element.getDisplayTime(), "TipVisibleTime", false);
             int lx = x-4;
             int ly = y + (titleLines+1)*lineSpace;
             int x2 = renderPos2.getX() - lx;
@@ -141,6 +144,7 @@ public class TipHUD {
     }
 
     private void renderContent(GuiGraphics graphics, List<Component> texts, int x, int y, int fontColor, Point renderPos2, int BGColor) {
+        if (texts.isEmpty()) return;
         int BGPosX = x - 4;
         int width = renderPos2.getX()- BGPosX;
         if (texts.size() > 1) {
@@ -173,7 +177,7 @@ public class TipHUD {
         //TODO 按键绑定
         if (!isFading() && (MC.screen != null || InputConstants.isKeyDown(MC.getWindow().getWindow(), 258))) {
             if (MC.screen == null)
-                MC.setScreen(new EmptyScreen());
+                MC.setScreen(new WheelSelectorScreen());
 
             if (IconButton.renderIconButton(graphics, IconButton.Icon.CROSS, RawMouseHelper.getScaledX(), RawMouseHelper.getScaledY(), x, y, color, 0)) {
                 fadeOut = true;

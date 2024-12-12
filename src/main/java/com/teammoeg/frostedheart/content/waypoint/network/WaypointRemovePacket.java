@@ -9,15 +9,10 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class WaypointRemovePacket implements FHMessage {
-    String id;
-
-    public WaypointRemovePacket(String id) {
-        this.id = id;
-    }
+public record WaypointRemovePacket(String id) implements FHMessage {
 
     public WaypointRemovePacket(FriendlyByteBuf buffer) {
-        this.id = buffer.readUtf();
+        this(buffer.readUtf());
     }
 
     @Override

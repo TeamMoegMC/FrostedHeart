@@ -1,19 +1,22 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
-import com.teammoeg.frostedheart.content.tips.TipLockManager;
-import com.teammoeg.frostedheart.content.tips.client.TipElement;
-import com.teammoeg.frostedheart.content.waypoint.gui.widget.IconButton;
+import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.TipManager;
+import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
+import com.teammoeg.frostedheart.util.client.AnimationUtil;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.FHColorHelper;
+import com.teammoeg.frostedheart.util.client.FHGuiHelper;
+import com.teammoeg.frostedheart.util.client.RawMouseHelper;
 import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.client.*;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +27,7 @@ public class TipListScreen extends Screen {
     private final Map<String, List<String>> customTipList = new HashMap<>();
 
     private List<String> tipList;
-    private TipElement selectEle = null;
+    private Tip selectEle = null;
     private int GuiHeight = 0;
     private int listHeight = 0;
     private int textHeight = 0;
@@ -46,14 +49,14 @@ public class TipListScreen extends Screen {
             onClose();
         }));
         this.addRenderableWidget(new IconButton(0, 0, IconButton.Icon.LOCK, 0xFFC6FCFF, Lang.translateKey(FHMain.MODID + ".tips.gui.pin"), (button) -> {
-            TipDisplayManager.forceAdd(selectEle, true);
+            TipManager.INSTANCE.display().force(selectEle);
         }));
 
-        tipList = new ArrayList<>(TipLockManager.manager.getVisible());
-        TipLockManager.manager.getCustom().forEach((c) -> {
-            customTipList.put(c.get(0), c);
-            tipList.add(c.get(0));
-        });
+//        tipList = new ArrayList<>(TipStateManager.manager.getVisible());
+//        TipStateManager.manager.getCustom().forEach((c) -> {
+//            customTipList.put(c.get(0), c);
+//            tipList.add(c.get(0));
+//        });
 
         if (!tipList.contains(select)) {
             select = "";
@@ -198,65 +201,66 @@ public class TipListScreen extends Screen {
 
     private void renderTipContent(GuiGraphics graphics, int x, int y) { //TODO 搜索和分组
         boolean custom = select.startsWith("*custom*");
-        if (selectEle == null || !selectEle.ID.equals(select)) {
+        if (selectEle == null || !selectEle.getId().equals(select)) {
             if (custom) {
-                TipElement ele = new TipElement();
-                try {
-                    ele.ID = customTipList.get(select).get(0);
-                    ele.visibleTime = Integer.parseInt(customTipList.get(select).get(1));
-                    for (int i = 2; i < customTipList.get(select).size(); i++) {
-                        ele.contents.add(Lang.str(customTipList.get(select).get(i)));
-                    }
-                    ele.alwaysVisible = ele.visibleTime < 0;
-                    selectEle = ele;
-                } catch (Exception e) {
-                    //移除有问题的自定义提示
-                    remove(customTipList.get(select).get(0));
-                    return;
-                }
+//                Tip ele = Tip.newTip();
+//                try {
+//                    ele.id = customTipList.get(select).get(0);
+//                    ele.displayTime = Integer.parseInt(customTipList.get(select).get(1));
+//                    for (int i = 2; i < customTipList.get(select).size(); i++) {
+//                        ele.contents.add(Lang.str(customTipList.get(select).get(i)));
+//                    }
+//                    ele.alwaysVisible = ele.displayTime < 0;
+//                    selectEle = ele;
+//                } catch (Exception e) {
+//                    //移除有问题的自定义提示
+//                    remove(customTipList.get(select).get(0));
+//                    return;
+//                }
 
             } else {
-                selectEle = TipDisplayManager.getTipEle(select);
+                selectEle = TipManager.INSTANCE.getTip(select);
             }
         }
 
         //移除不应该存在的提示
-        if (selectEle.hide) {
-            remove(selectEle.ID);
+        if (selectEle.isHide()) {
+            remove(selectEle.getId());
             return;
         }
 
         float textFading = AnimationUtil.fadeIn(200, "TipListTextFading", false);
-        int textColor = Math.max((int)(textFading * 255), 0x04) << 24 | selectEle.fontColor & 0x00FFFFFF;
+        int textColor = Math.max((int)(textFading * 255), 0x04) << 24 | selectEle.getFontColor() & 0x00FFFFFF;
         int boxWidth = (int)(width*0.4F);
 
         graphics.pose().pushPose();
         int textMinY = height/10+4;
-        if (font.width(selectEle.contents.get(0).getString()) > x-32 - boxWidth) {
+        var contents = selectEle.getContents();
+        if (font.width(contents.get(0).getString()) > x-32 - boxWidth) {
             graphics.pose().translate(0, displayTextScroll, 0);
             graphics.enableScissor(0, textMinY, width, GuiHeight+textMinY -8);
             int line = 0;
-            for (int i = 0; i < selectEle.contents.size(); i++) {
-                line += 1 + FHGuiHelper.drawSplitTexts(graphics, selectEle.contents.get(i), boxWidth + 4, y+4 + line*12,
-                        textColor, x-8 - boxWidth, 12, false);
+            for (Component content : contents) {
+                line += 1 + FHGuiHelper.drawSplitTexts(graphics, content, boxWidth + 4, y + 4 + line * 12,
+                        textColor, x - 8 - boxWidth, 12, false);
             }
             textHeight = line*12;
             graphics.disableScissor();
 
-        } else if (selectEle.contents.size() > 1) {
-            graphics.drawString(minecraft.font, selectEle.contents.get(0), boxWidth + 4, y - 12, textColor);
+        } else if (contents.size() > 1) {
+            graphics.drawString(ClientUtils.font(), contents.get(0), boxWidth + 4, y - 12, textColor);
             graphics.pose().translate(0, displayTextScroll, 0);
             graphics.enableScissor(0, textMinY, width, GuiHeight+textMinY -8);
             int line = 0;
-            for (int i = 1; i < selectEle.contents.size(); i++) {
-                line += 1 + FHGuiHelper.drawSplitTexts(graphics, selectEle.contents.get(i), boxWidth + 4, y+4 + line*12,
+            for (int i = 1; i < contents.size(); i++) {
+                line += 1 + FHGuiHelper.drawSplitTexts(graphics, contents.get(i), boxWidth + 4, y+4 + line*12,
                         textColor, x-8 - boxWidth, 12, false);
             }
             textHeight = line*12;
             graphics.disableScissor();
 
         } else {
-            graphics.drawString(minecraft.font, selectEle.contents.get(0), boxWidth + 4, y - 12, textColor);
+            graphics.drawString(ClientUtils.font(), contents.get(0), boxWidth + 4, y - 12, textColor);
         }
         graphics.pose().popPose();
 
@@ -312,7 +316,7 @@ public class TipListScreen extends Screen {
     }
 
     private void remove(String ID) {
-        TipLockManager.manager.removeUnlocked(ID);
+//        TipStateManager.manager.removeUnlocked(ID);
         tipList.remove(select);
         setSelect("");
         listHeight = tipList.size()*16;
