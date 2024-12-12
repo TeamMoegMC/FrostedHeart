@@ -2,8 +2,6 @@ package com.teammoeg.frostedheart.compat.ftbq;
 
 import dev.ftb.mods.ftblibrary.config.IntConfig;
 import dev.ftb.mods.ftblibrary.config.ui.EditStringConfigOverlay;
-import dev.ftb.mods.ftbquests.quest.reward.RewardTypes;
-import dev.ftb.mods.ftbquests.quest.reward.XPReward;
 
 public class FHGuiProviders {
     public static void setRewardGuiProviders() {

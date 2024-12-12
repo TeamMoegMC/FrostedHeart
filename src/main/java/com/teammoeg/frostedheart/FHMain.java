@@ -53,6 +53,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -191,7 +192,9 @@ public class FHMain {
 
         // Client setup
         LOGGER.info(COMMON_INIT, "Proceeding to Client Initialization");
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> FHClient::init);
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            FHClient.init();
+        }
     }
 
     /**

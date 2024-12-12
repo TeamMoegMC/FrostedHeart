@@ -22,6 +22,9 @@ package com.teammoeg.frostedheart.events;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.base.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.frostedheart.compat.ftbq.FHGuiProviders;
+import com.teammoeg.frostedheart.compat.ie.FHManual;
+import com.teammoeg.frostedheart.compat.tetra.TetraClient;
 import com.teammoeg.frostedheart.content.climate.particle.SnowParticle;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorRenderer;
@@ -50,14 +53,31 @@ import net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import static com.teammoeg.frostedheart.FHMain.CLIENT_SETUP;
+import static com.teammoeg.frostedheart.FHMain.LOGGER;
 
 /**
  * Client side events fired on mod bus.
  */
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class FHClientEventsMod {
+    @SubscribeEvent
+    public static void setup(FMLClientSetupEvent event) {
+        LOGGER.info(CLIENT_SETUP, "Setting up client");
+        FHKeyMappings.init();
+        if (ModList.get().isLoaded("immersiveengineering"))
+            FHManual.init();
+        if (ModList.get().isLoaded("tetra"))
+            TetraClient.init();
+        if (ModList.get().isLoaded("ftbquests"))
+            FHGuiProviders.setRewardGuiProviders();
+    }
+
 	@SubscribeEvent
 	public static void onCreativeTabContents(BuildCreativeModeTabContentsEvent event) {
 		CreativeTabItemHelper helper = new CreativeTabItemHelper(event.getTabKey(), event.getTab());
