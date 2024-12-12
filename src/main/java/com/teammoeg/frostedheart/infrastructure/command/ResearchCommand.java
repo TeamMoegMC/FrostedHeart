@@ -44,9 +44,15 @@ import net.minecraft.commands.arguments.UuidArgument;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.ChatFormatting;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ResearchCommand {
-    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+    @SubscribeEvent
+    public static void register(RegisterCommandsEvent event) {
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("research")
                 // add insight
                 .then(Commands.literal("insight").then(Commands.literal("add").then(Commands.argument("amount", IntegerArgumentType.integer(0)).executes(ct -> {
@@ -203,6 +209,8 @@ public class ResearchCommand {
 	                }catch(Throwable t) {t.printStackTrace();}
                     return Command.SINGLE_SUCCESS;
                 })));
-        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermission(2)).then(add));
+        for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
+            dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(add));
+        }
     }
 }

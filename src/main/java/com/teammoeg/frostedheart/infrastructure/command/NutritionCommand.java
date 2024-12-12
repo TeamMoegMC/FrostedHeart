@@ -29,9 +29,15 @@ import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class NutritionCommand {
-    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+    @SubscribeEvent
+    public static void register(RegisterCommandsEvent event) {
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         // Define nutrients
         String[] nutrients = {"fat", "carbohydrate", "protein", "vegetable"};
 
@@ -81,7 +87,9 @@ public class NutritionCommand {
             nutrition.then(nutrientCommand);
         }
 
-        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermission(2)).then(nutrition));
+        for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
+            dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(nutrition));
+        }
     }
 
     private static float getNutrientValue(NutritionCapability data, String nutrient) {

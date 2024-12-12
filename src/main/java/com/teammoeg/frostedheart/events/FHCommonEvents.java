@@ -331,18 +331,6 @@ public class FHCommonEvents {
     }
 
     @SubscribeEvent
-    public static void onRegisterCommands(RegisterCommandsEvent event) {
-        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-        ResearchCommand.register(dispatcher);
-        DebugCommand.register(dispatcher);
-        ScenarioCommand.register(dispatcher);
-        TownCommand.register(dispatcher);
-        TipCommand.register(dispatcher);
-        WaterCommand.register(dispatcher);
-        NutritionCommand.register(dispatcher);
-    }
-
-    @SubscribeEvent
     public static void tickPlayer(PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayer player) {

@@ -54,10 +54,16 @@ import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLPaths;
 
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class DebugCommand {
-    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+    @SubscribeEvent
+    public static void register(RegisterCommandsEvent event) {
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("debug")
                 .then(Commands.literal("generate_airship").executes(ct -> {
                     FHFeatures.SPACECRAFT.get().place(NoneFeatureConfiguration.INSTANCE, ((ServerLevel) ct.getSource().getPlayerOrException().level()), ((ServerLevel) ct.getSource().getPlayerOrException().level()).getChunkSource().getGenerator(), ct.getSource().getPlayerOrException().level().random,
@@ -270,7 +276,9 @@ public class DebugCommand {
                     return Command.SINGLE_SUCCESS;
                 }))*/;
 
-        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermission(2)).then(add));
+        for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
+            dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(add));
+        }
     }
 
 }

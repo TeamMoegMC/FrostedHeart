@@ -100,6 +100,11 @@ public class ClimateCommand {
                     return Command.SINGLE_SUCCESS;
                 });
 
-        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermission(2)).then(Commands.literal("climate").then(get).then(init).then(rebuild).then(reset).then(app)));
+        for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
+            dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(Commands.literal("climate").then(get).then(init).then(rebuild).then(reset).then(app)));
+        }
+
+        // register a simple /climate comand to skip /fh climate
+        dispatcher.register(Commands.literal("climate").requires(s -> s.hasPermission(2)).then(get).then(init).then(rebuild).then(reset).then(app));
     }
 }

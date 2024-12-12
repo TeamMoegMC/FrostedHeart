@@ -34,9 +34,15 @@ import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class TownCommand {
-    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+    @SubscribeEvent
+    public static void register(RegisterCommandsEvent event) {
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
 
         LiteralArgumentBuilder<CommandSourceStack> name =
                 Commands.literal("name")
@@ -105,21 +111,40 @@ public class TownCommand {
                     return Command.SINGLE_SUCCESS;
                 });
 
-        dispatcher.register(Commands.literal(FHMain.MODID)
+        for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
+            dispatcher.register(Commands.literal(string)
+                    .requires(s -> s.hasPermission(2))
+                    .then(Commands.literal("town")
+                            .then(name)
+                            .then(Commands.literal("resources")
+                                    .then(listResources)
+                                    .then(addResources)
+                            )
+                            .then(Commands.literal("residents")
+                                    .then(listResidents)
+                                    .then(addResident)
+                            )
+                            .then(Commands.literal("blocks")
+                                    .then(listBlocks)
+                            )
+                    )
+            );
+        }
+
+        // alias without modid
+        dispatcher.register(Commands.literal("town")
                 .requires(s -> s.hasPermission(2))
-                .then(Commands.literal("town")
-                        .then(name)
-                        .then(Commands.literal("resources")
-                                .then(listResources)
-                                .then(addResources)
-                        )
-                        .then(Commands.literal("residents")
-                                .then(listResidents)
-                                .then(addResident)
-                        )
-                        .then(Commands.literal("blocks")
-                                .then(listBlocks)
-                        )
+                .then(name)
+                .then(Commands.literal("resources")
+                        .then(listResources)
+                        .then(addResources)
+                )
+                .then(Commands.literal("residents")
+                        .then(listResidents)
+                        .then(addResident)
+                )
+                .then(Commands.literal("blocks")
+                        .then(listBlocks)
                 )
         );
     }
