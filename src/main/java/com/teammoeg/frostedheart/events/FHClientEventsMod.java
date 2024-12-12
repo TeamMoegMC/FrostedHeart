@@ -68,14 +68,26 @@ import static com.teammoeg.frostedheart.FHMain.LOGGER;
 public class FHClientEventsMod {
     @SubscribeEvent
     public static void setup(FMLClientSetupEvent event) {
-        LOGGER.info(CLIENT_SETUP, "Setting up client");
+        LOGGER.info(CLIENT_SETUP, "FML Client setup event started");
+
+        LOGGER.info(CLIENT_SETUP, "Initializing Key Mappings");
         FHKeyMappings.init();
-        if (ModList.get().isLoaded("immersiveengineering"))
+        LOGGER.info(CLIENT_SETUP, "Initializing Screens");
+        FHScreens.init();
+
+        if (ModList.get().isLoaded("immersiveengineering")) {
+            LOGGER.info(CLIENT_SETUP, "Initializing IE Manual");
             FHManual.init();
-        if (ModList.get().isLoaded("tetra"))
+        }
+        if (ModList.get().isLoaded("tetra")) {
+            LOGGER.info(CLIENT_SETUP, "Initializing Tetra Client");
             TetraClient.init();
-        if (ModList.get().isLoaded("ftbquests"))
+        }
+        if (ModList.get().isLoaded("ftbquests")) {
+            LOGGER.info(CLIENT_SETUP, "Initializing FTB Quests");
             FHGuiProviders.setRewardGuiProviders();
+        }
+        LOGGER.info(CLIENT_SETUP, "FML Client setup event finished");
     }
 
 	@SubscribeEvent

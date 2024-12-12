@@ -57,6 +57,8 @@ public class FHClient {
         LOGGER.info(CLIENT_INIT, "Registering client forge event listeners");
 
         LOGGER.info(CLIENT_INIT, "Registering client mod event listeners");
+
+        LOGGER.info(CLIENT_INIT, "Finished initializing client");
     }
 
 
