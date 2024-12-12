@@ -70,7 +70,7 @@ public class FHClient {
 
         LOGGER.info(CLIENT_INIT, "Initializing client");
         FHDynamicModels.setup();
-        
+        KGlyphProvider.addListener();
 
         LOGGER.info(CLIENT_INIT, "Registering client forge event listeners");
         // example: forge.addListener(ModuleClientEventHandler::render);
@@ -83,7 +83,7 @@ public class FHClient {
         LOGGER.info(CLIENT_SETUP, "Setting up client");
         FHGuiProviders.setRewardGuiProviders();
         FHKeyMappings.init();
-        KGlyphProvider.addListener();
+        
         // Register screens
         MenuScreens.register(FHMenuTypes.GENERATOR_T1.getType(), GeneratorScreen<T1GeneratorState, T1GeneratorLogic>::new);
         MenuScreens.register(FHMenuTypes.GENERATOR_T2.getType(), GeneratorScreen<T2GeneratorState, T2GeneratorLogic>::new);
