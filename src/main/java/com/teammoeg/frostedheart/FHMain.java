@@ -191,7 +191,7 @@ public class FHMain {
 
         // Client setup
         LOGGER.info(COMMON_INIT, "Proceeding to Client Initialization");
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClient::init);
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> FHClient::init);
     }
 
     /**
