@@ -52,7 +52,8 @@ public class FHClient {
 
         LOGGER.info(CLIENT_INIT, "Initializing client");
         FHDynamicModels.setup();
-        KGlyphProvider.addListener();
+        // Moved to FHClientEventsMod
+//        KGlyphProvider.addListener();
 
         LOGGER.info(CLIENT_INIT, "Registering client forge event listeners");
 

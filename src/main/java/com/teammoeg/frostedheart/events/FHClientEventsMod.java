@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.content.climate.particle.SnowParticle;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorRenderer;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
+import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestExtension;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestModel;
@@ -88,6 +89,11 @@ public class FHClientEventsMod {
             FHGuiProviders.setRewardGuiProviders();
         }
         LOGGER.info(CLIENT_SETUP, "FML Client setup event finished");
+    }
+
+    @SubscribeEvent
+    public static void registerReloadListeners(RegisterClientReloadListenersEvent event) {
+        event.registerReloadListener(KGlyphProvider.INSTANCE);
     }
 
 	@SubscribeEvent

@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.content.research.research.effects.EffectCraftin
 import com.teammoeg.frostedheart.content.research.research.effects.EffectShowCategory;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
+import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
 import com.teammoeg.frostedheart.content.tips.TipLockManager;
 import com.teammoeg.frostedheart.content.tips.client.TipElement;
@@ -328,13 +329,6 @@ public class FHClientEvents {
                                         .applyFormat(ChatFormatting.UNDERLINE))),
                         false);
             }
-
-    }
-
-    @SubscribeEvent
-    public static void addReloadListeners(AddReloadListenerEvent event) {
-
-        // event.addListener(KGlyphProvider.INSTANCE);
 
     }
 
