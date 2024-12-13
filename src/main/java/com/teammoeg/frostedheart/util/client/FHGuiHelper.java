@@ -120,7 +120,7 @@ public class FHGuiHelper {
 	public static void drawItem(GuiGraphics guiGraphics, ItemStack stack, int x, int y, int zindex, float scaleX,
 			float scaleY, boolean drawDecorations, @Nullable String countReplacement) {
 		guiGraphics.pose().pushPose();
-		guiGraphics.pose().translate(x, y, zindex);
+		guiGraphics.pose().translate(x, y, zindex+150);
 		guiGraphics.pose().scale(scaleX, scaleY, scaleX);
 		/*
 		 * guiGraphics.renderItem(stack, 0, 0, 0,300);
@@ -144,7 +144,7 @@ public class FHGuiHelper {
 				matrix4f=new Matrix4f(guiGraphics.pose().last().pose()).rotationYXZ(1.0821041F, 3.2375858F, 0.0F).rotateYXZ((-(float)Math.PI / 8F), 2.3561945F, 0.0F);
 			}
 			guiGraphics.pose().pushPose();
-			guiGraphics.pose().translate((float) (8), (float) (8), (float) (150 + (bakedmodel.isGui3d() ? 0 : 0)));
+			guiGraphics.pose().translate(8f, 8f,0f);
 
 			guiGraphics.pose().mulPoseMatrix((new Matrix4f()).scaling(1.0F, -1.0F, 1.0F));
 			guiGraphics.pose().scale(16.0F, 16.0F, 16.0F);
