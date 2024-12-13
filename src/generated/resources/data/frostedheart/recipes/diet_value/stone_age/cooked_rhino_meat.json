@@ -1,8 +1,10 @@
 {
   "type": "frostedheart:diet_override",
-  "groups": {
-    "proteins": 0.05335812,
-    "vitamin": 0.055246934
+  "group": {
+    "carbohydrate": 0.0,
+    "fat": 0.0,
+    "protein": 0.05335812,
+    "vegetable": 0.0
   },
-  "item": "stone_age:cooked_rhino_meat"
+  "item": "minecraft:air"
 }
