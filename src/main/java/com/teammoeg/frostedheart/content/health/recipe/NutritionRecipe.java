@@ -98,7 +98,7 @@ public class NutritionRecipe implements Recipe<Inventory> {
 
     @Override
     public ItemStack getResultItem(RegistryAccess registryAccess) {
-        return null;
+        return ItemStack.EMPTY;
     }
 
     @Override

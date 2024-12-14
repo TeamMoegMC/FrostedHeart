@@ -261,7 +261,7 @@ public class WaterLevelAndEffectRecipe implements Recipe<Inventory>, Comparable<
 
     @Override
     public ItemStack getResultItem(RegistryAccess registryAccess) {
-        return null;
+        return ItemStack.EMPTY;
     }
 
     @Override

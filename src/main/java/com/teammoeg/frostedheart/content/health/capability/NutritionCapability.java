@@ -35,10 +35,10 @@ public class NutritionCapability implements NBTSerializable {
         setVegetable(nbt.getFloat("vegetable"));
     }
 
-    private float fat = 10000.0f;
-    private float carbohydrate = 10000.0f;
-    private float protein = 10000.0f;
-    private float vegetable = 10000.0f;
+    private float fat = 0.0f;
+    private float carbohydrate = 0.0f;
+    private float protein = 0.0f;
+    private float vegetable = 0.0f;
 
     public void addFat(Player player, float add) {
         this.fat += add;

@@ -27,11 +27,11 @@ public class HealthCommonEvents {
         if (event.getObject() instanceof ServerPlayer) {//server-side only capabilities
             ServerPlayer player = (ServerPlayer) event.getObject();
             if (!(player instanceof FakePlayer)) {
-                event.addCapability(new ResourceLocation(FHMain.MODID, "wanted_food"    ), FHCapabilities.WANTED_FOOD.provider());
+                event.addCapability(FHMain.rl("wanted_food"    ), FHCapabilities.WANTED_FOOD.provider());
             }
         }
         //Common capabilities
-        event.addCapability(new ResourceLocation(FHMain.MODID, "nutrition"  ), FHCapabilities.PLAYER_NUTRITION.provider());
+        event.addCapability(FHMain.rl("nutrition"  ), FHCapabilities.PLAYER_NUTRITION.provider());
     }
 
     @SubscribeEvent
