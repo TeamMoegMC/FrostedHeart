@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHMultiblocks.Logic;
 import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks.Logic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
 import net.minecraft.core.Direction;

@@ -38,10 +38,10 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
-import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.compat.jei.category.CampfireDefrostCategory;
 import com.teammoeg.frostedheart.compat.jei.category.ChargerCategory;
 import com.teammoeg.frostedheart.compat.jei.category.ChargerCookingCategory;

@@ -17,9 +17,11 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.reference;
 
 import com.simibubi.create.foundation.utility.Lang;
+import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;

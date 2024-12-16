@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.util.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.teammoeg.frostedheart.FHParticleTypes;
+import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;

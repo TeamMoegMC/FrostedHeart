@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.climate.effect;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-import com.teammoeg.frostedheart.FHDamageTypes;
+import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.server.level.ServerPlayer;

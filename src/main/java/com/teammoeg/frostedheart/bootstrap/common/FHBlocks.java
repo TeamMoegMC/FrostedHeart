@@ -17,13 +17,18 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.google.common.collect.ImmutableMap;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.ModelGen;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags.Blocks;
 import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
 import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;

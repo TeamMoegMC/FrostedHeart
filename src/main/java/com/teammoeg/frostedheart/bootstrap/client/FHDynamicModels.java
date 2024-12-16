@@ -17,11 +17,12 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.client;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorRenderer;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.model.DynamicBlockModelReference;
 
 public class FHDynamicModels {

@@ -22,10 +22,10 @@ package com.teammoeg.frostedheart.content.steamenergy.charger;
 import java.util.Collection;
 import java.util.List;
 
-import com.teammoeg.frostedheart.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;

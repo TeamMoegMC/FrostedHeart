@@ -17,7 +17,9 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.reference;
+
+import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;

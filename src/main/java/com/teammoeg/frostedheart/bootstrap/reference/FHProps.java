@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.reference;
 
 import com.teammoeg.frostedheart.FHMain;
 

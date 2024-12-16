@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.reference;
 
 import net.minecraft.world.food.FoodProperties;
 

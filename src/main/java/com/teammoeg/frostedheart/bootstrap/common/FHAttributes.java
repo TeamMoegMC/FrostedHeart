@@ -1,7 +1,9 @@
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.common;
 
 import java.util.UUID;
 import java.util.function.Function;
+
+import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;

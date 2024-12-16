@@ -23,8 +23,8 @@ import java.util.Arrays;
 
 import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
-import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.util.lang.Lang;

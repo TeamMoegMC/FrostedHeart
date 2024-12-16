@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.events;
 
 import com.google.common.collect.Sets;
 import com.mojang.brigadier.CommandDispatcher;
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHMobEffects;
-import com.teammoeg.frostedheart.FHTags;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;

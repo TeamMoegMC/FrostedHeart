@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.compat.jei.CuttingRecipe;
 import com.teammoeg.frostedheart.util.lang.Lang;
 

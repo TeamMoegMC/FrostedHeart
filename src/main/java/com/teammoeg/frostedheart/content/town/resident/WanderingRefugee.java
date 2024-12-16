@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town.resident;
 
-import com.teammoeg.frostedheart.FHTags;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.nbt.CompoundTag;

@@ -17,9 +17,12 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.reference;
 
 import net.minecraft.core.particles.SimpleParticleType;
+
+import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.core.particles.ParticleType;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;

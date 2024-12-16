@@ -21,9 +21,8 @@
 
 package com.teammoeg.frostedheart.data;
 
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.tterrag.registrate.util.entry.ItemEntry;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.resources.ResourceLocation;

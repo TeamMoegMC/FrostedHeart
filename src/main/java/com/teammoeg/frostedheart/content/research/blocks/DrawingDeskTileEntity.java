@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.research.blocks;
 import java.util.Optional;
 import java.util.Random;
 
-import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.research.recipe.ResearchPaperRecipe;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardPos;

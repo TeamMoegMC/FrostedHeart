@@ -19,9 +19,10 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
-import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.FHParticleTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
+
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;

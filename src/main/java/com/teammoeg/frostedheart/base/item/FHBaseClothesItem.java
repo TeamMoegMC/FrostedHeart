@@ -2,7 +2,8 @@ package com.teammoeg.frostedheart.base.item;
 
 
 import blusunrize.immersiveengineering.common.register.IEBlocks;
-import com.teammoeg.frostedheart.FHItems;
+
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.LiteralContents;

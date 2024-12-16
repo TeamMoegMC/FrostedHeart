@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.water.item;
 
-import com.teammoeg.frostedheart.FHTags;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.water.util.FluidHelper;
 import net.minecraft.ChatFormatting;

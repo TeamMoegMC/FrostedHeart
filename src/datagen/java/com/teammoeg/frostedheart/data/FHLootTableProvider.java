@@ -19,9 +19,10 @@
 
 package com.teammoeg.frostedheart.data;
 
-import com.teammoeg.frostedheart.FHEntityTypes;
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.data.loot.LootTableSubProvider;

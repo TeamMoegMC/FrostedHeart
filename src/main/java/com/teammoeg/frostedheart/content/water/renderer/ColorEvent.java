@@ -1,7 +1,8 @@
 package com.teammoeg.frostedheart.content.water.renderer;
 
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+
 import net.minecraft.client.color.item.ItemColor;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;

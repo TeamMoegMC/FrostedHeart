@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.climate.render;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.frostedheart.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;

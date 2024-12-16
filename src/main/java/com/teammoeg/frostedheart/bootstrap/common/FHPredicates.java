@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.teammoeg.frostedheart.util.utility.BlackListPredicate;
 import net.minecraft.advancements.critereon.ItemPredicate;

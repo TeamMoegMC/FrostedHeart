@@ -22,10 +22,10 @@ package com.teammoeg.frostedheart.content.utility;
 import java.util.List;
 
 import com.mojang.datafixers.util.Either;
-import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;

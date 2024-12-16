@@ -38,6 +38,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.climate.ClientClimateData;
 import com.teammoeg.frostedheart.content.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.content.climate.TemperatureFrame.FrameType;

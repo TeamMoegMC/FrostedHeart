@@ -4,8 +4,8 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.util.lang.Lang;

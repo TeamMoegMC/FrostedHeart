@@ -19,12 +19,12 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
-import com.teammoeg.frostedheart.FHAttributes;
-import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
+import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 

@@ -17,11 +17,14 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.client;
 
 import com.simibubi.create.foundation.item.TagDependentIngredientItem;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.base.creativeTab.TabType;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import com.tterrag.registrate.util.entry.ItemEntry;

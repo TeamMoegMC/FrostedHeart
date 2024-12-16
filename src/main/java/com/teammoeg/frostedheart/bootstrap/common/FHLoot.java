@@ -17,10 +17,10 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.mojang.serialization.Codec;
-
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.loot.*;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;

@@ -19,8 +19,13 @@
 
 package com.teammoeg.frostedheart.infrastructure.gen;
 
+import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.*;
+
 import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.*;
+import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.tterrag.registrate.providers.ProviderType;
 import com.tterrag.registrate.providers.RegistrateTagsProvider;
 import net.minecraft.core.registries.Registries;
@@ -38,8 +43,6 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
-
-import static com.teammoeg.frostedheart.FHTags.forgeItemTag;
 
 /**
  * See CreateRegistrateTags for reference.

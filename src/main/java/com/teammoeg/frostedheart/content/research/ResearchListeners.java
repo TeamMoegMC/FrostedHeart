@@ -25,12 +25,12 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataClosure;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.research.recipe.InspireRecipe;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;

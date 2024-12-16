@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.teammoeg.frostedheart.FHAttributes;
+import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 
 import net.minecraft.world.entity.ai.attributes.Attribute;

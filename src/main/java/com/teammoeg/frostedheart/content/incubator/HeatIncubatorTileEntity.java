@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.incubator;
 
 import javax.annotation.Nonnull;
 
-import com.teammoeg.frostedheart.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 
 import net.minecraft.world.item.ItemStack;

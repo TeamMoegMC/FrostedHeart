@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.compat.jei.extension;
 import java.util.Arrays;
 import java.util.Collections;
 
-import com.teammoeg.frostedheart.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.utility.handstoves.CoalHandStove;
 import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
 

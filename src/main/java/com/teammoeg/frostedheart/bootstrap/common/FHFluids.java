@@ -17,9 +17,12 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.simibubi.create.content.fluids.VirtualFluid;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.tterrag.registrate.util.entry.FluidEntry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.material.Fluid;

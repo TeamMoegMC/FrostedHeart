@@ -1,8 +1,9 @@
 package com.teammoeg.frostedheart.data;
 
-import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHTags;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.DataGenerator;

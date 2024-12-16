@@ -19,8 +19,9 @@
 
 package com.teammoeg.frostedheart.data;
 
-import com.teammoeg.frostedheart.FHDamageTypes;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
+
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;

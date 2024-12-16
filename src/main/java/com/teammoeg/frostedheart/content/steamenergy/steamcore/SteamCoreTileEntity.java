@@ -4,10 +4,10 @@ import java.util.Objects;
 
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 
 import net.minecraft.world.level.block.state.BlockState;

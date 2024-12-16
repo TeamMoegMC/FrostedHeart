@@ -21,7 +21,8 @@ package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
-import com.teammoeg.frostedheart.FrostedHud;
+import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
+import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -39,10 +40,10 @@ import com.teammoeg.frostedheart.content.tips.client.TipElement;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.FHVersion;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.GuiClickedEvent;
 import com.teammoeg.frostedheart.util.client.RenderHelper;
-import com.teammoeg.frostedheart.FHVersion;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;

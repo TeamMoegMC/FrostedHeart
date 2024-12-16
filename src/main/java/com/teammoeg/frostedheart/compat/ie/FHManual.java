@@ -6,7 +6,8 @@ import blusunrize.lib.manual.ManualEntry;
 import blusunrize.lib.manual.ManualInstance;
 import blusunrize.lib.manual.Tree;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
+
 import net.minecraft.resources.ResourceLocation;
 
 public class FHManual {

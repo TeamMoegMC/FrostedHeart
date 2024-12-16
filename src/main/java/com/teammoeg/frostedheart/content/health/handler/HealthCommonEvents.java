@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.content.health.handler;
 
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHTags;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.health.dailykitchen.DailyKitchen;
 import com.teammoeg.frostedheart.content.research.insight.InsightHandler;
 import com.teammoeg.frostedheart.content.utility.transportation.MovementModificationHandler;

@@ -25,7 +25,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 
 import blusunrize.immersiveengineering.api.crafting.FluidTagInput;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;

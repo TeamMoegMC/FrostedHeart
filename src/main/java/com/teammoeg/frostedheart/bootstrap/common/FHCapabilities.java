@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.common;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.serialization.Codec;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.capability.IFHCapability;
 import com.teammoeg.frostedheart.base.capability.codec.FHCodecCapability;
 import com.teammoeg.frostedheart.base.capability.nbt.FHNBTCapability;

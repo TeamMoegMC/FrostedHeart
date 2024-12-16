@@ -35,9 +35,9 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.DayTemperatureData.HourData;
 import com.teammoeg.frostedheart.content.climate.event.ClimateCommonEvents;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;

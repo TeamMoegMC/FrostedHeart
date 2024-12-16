@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town.house;
 
-import com.teammoeg.frostedheart.FHTags;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.RegistryUtils;

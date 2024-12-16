@@ -23,8 +23,9 @@ import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;

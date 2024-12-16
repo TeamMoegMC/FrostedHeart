@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.health.dailykitchen;
 
 import java.util.Random;
 
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.lang.Lang;

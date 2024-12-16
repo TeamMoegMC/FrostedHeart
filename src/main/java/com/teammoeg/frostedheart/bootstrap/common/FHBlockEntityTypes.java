@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.common;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.kinetics.base.HalfShaftInstance;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.HalfShaftRenderer;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;

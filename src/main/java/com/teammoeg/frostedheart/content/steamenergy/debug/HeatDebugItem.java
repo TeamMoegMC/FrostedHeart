@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.debug;
 
-import com.teammoeg.frostedheart.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.HeatHandler;
 import com.teammoeg.frostedheart.util.lang.Lang;

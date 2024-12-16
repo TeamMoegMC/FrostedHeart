@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;

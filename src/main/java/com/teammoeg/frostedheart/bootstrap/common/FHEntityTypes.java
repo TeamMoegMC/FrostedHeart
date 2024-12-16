@@ -17,8 +17,9 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.common;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import com.teammoeg.frostedheart.content.utility.SpearEntity;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntity;

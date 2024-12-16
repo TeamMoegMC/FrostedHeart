@@ -1,9 +1,9 @@
 package com.teammoeg.frostedheart.content.water.capability;
 
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.core.Holder;

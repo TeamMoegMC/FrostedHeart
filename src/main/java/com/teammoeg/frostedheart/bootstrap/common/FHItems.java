@@ -17,13 +17,18 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.simibubi.create.AllTags;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.item.ItemDescription;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.*;
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags.Items;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.health.food.CannedFoodItem;
 import com.teammoeg.frostedheart.content.health.food.FHSoupItem;
@@ -60,7 +65,7 @@ import net.minecraftforge.registries.RegistryObject;
 import java.util.function.Function;
 
 import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
-import static com.teammoeg.frostedheart.FHTags.forgeItemTag;
+import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.*;
 
 /**
  * All items.

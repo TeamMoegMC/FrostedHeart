@@ -24,8 +24,8 @@ import java.util.List;
 import org.joml.Quaternionf;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.base.model.DynamicBlockModelReference;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 
 import blusunrize.immersiveengineering.api.IEProperties.VisibilityList;
 import blusunrize.immersiveengineering.client.models.obj.callback.DynamicSubmodelCallbacks;

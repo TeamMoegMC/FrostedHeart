@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.world.Container;

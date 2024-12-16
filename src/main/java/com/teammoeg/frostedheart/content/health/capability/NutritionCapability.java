@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.health.capability;
 
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.health.network.PlayerNutritionSyncPacket;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;

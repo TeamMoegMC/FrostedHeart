@@ -21,9 +21,8 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.radiator;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
-
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.Direction;

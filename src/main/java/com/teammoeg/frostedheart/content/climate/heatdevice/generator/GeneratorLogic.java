@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.compat.ie.IngredientUtils;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.compat.ie.MultiBlockAccess;
