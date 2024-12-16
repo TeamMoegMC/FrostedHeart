@@ -30,6 +30,7 @@ sourceSets {
             srcDirs = [
                     "$rootDir/src/main/resources",
             ]
+            exclude 'assets/frostedheart/lang/**/'
         }
     }
     noDatagen{java{srcDirs=[]} resources{srcDirs=[]}}
@@ -42,6 +43,7 @@ sourceSets {
             srcDirs = [
                     "$rootDir/src/datagen/resources",
             ]
+            exclude 'assets/frostedheart/lang/**/'
         }
     }
 }
@@ -304,25 +306,28 @@ dependencies {
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 tasks.register('joinLangTask') {
-	inputs.dir "$rootDir/src/main/resources/assets/frostedheart/lang"
-	new File("$rootDir/src/main/resources/assets/frostedheart/lang").listFiles({ f -> f.isDirectory() } as FileFilter).each(t->outputs.file(t.getAbsolutePath()+".json"))
-
+	ext {
+        buildDir=new File(project.buildDir,"jointLang");
+    }
+	inputs.dir "$rootDir/src/main/resources/assets/frostedheart/lang" 
+	inputs.dir "$rootDir/src/generated/resources/assets/frostedheart/lang"
+	outputs.dir buildDir
+	
     doLast{
-    	def resourcesDir = new File("$rootDir/src/generated/resources/")
-        resourcesDir.mkdirs()
-        def langDir=new File(resourcesDir,"assets/frostedheart/lang/")
-        
         def langList=new File("$rootDir/src/main/resources/assets/frostedheart/lang").listFiles({ f -> f.isDirectory() } as FileFilter)
         langList.each{fn->
         	
         	def langFile=new TreeMap<String, String>();
+        	def generatedLang=new File("$rootDir/src/generated/resources/assets/frostedheart/lang/"+fn+".json")
+        	if(generatedLang.exists())
+        		new JsonSlurper().parse().each{key,value->langFile.put(key,value)}
         	//files in alphabetical order
         	fileTree(fn).files.sort().each { childFile -> 
 			    new JsonSlurper().parse(childFile).each{key,value->langFile.put(key,value)}
 			}
 			//write to output
-			langDir.mkdirs()
-			new File(langDir,fn.name+".json").text=JsonOutput.prettyPrint(JsonOutput.toJson(langFile))
+			buildDir.mkdirs()
+			new File(buildDir,fn.name+".json").text=JsonOutput.prettyPrint(JsonOutput.toJson(langFile))
         
         }
     }
@@ -330,7 +335,7 @@ tasks.register('joinLangTask') {
 processResources.dependsOn(joinLangTask)
 tasks.processResources {
     duplicatesStrategy = DuplicatesStrategy.WARN
-    exclude 'assets/frostedheart/lang/**/'
+    from( tasks.joinLangTask.buildDir){ into 'assets/frostedheart/lang/'}
 }
 jar {
     manifest {
