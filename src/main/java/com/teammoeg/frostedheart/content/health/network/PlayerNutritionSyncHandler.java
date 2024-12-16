@@ -10,10 +10,7 @@ public class PlayerNutritionSyncHandler {
 
     public static void handle(Supplier<NetworkEvent.Context> context, PlayerNutritionSyncPacket packet){
         context.get().enqueueWork(() -> NutritionCapability.getCapability(Minecraft.getInstance().player).ifPresent(data -> {
-            data.setCarbohydrate(packet.carbohydrate);
-            data.setProtein(packet.protein);
-            data.setVegetable(packet.vegetable);
-            data.setFat(packet.fat);
+            data.set(packet.getNutrition());
         }));
         context.get().setPacketHandled(true);
 

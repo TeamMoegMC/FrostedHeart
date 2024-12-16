@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.health.network;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
@@ -15,6 +16,10 @@ public class PlayerNutritionSyncPacket implements FHMessage {
         carbohydrate = buffer.readFloat();
         protein = buffer.readFloat();
         vegetable = buffer.readFloat();
+    }
+
+    public PlayerNutritionSyncPacket(NutritionCapability.Nutrition nutrition) {
+        this(nutrition.fat(),nutrition.carbohydrate(),nutrition.protein(),nutrition.vegetable());
     }
 
      public PlayerNutritionSyncPacket(float fat ,float carbohydrate ,float portein,float vegetable) {
@@ -37,5 +42,9 @@ public class PlayerNutritionSyncPacket implements FHMessage {
         if (context.get().getDirection() == NetworkDirection.PLAY_TO_CLIENT) {
             PlayerNutritionSyncHandler.handle(context, this);
         }
+    }
+
+    public NutritionCapability.Nutrition getNutrition(){
+        return new NutritionCapability.Nutrition(fat,carbohydrate,protein,vegetable);
     }
 }
