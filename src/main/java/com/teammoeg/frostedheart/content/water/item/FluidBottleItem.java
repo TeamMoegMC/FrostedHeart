@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.water.item;
 
-import com.teammoeg.frostedheart.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;

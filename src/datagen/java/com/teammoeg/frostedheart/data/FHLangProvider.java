@@ -19,7 +19,8 @@
 
 package com.teammoeg.frostedheart.data;
 
-import com.teammoeg.frostedheart.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.common.data.LanguageProvider;

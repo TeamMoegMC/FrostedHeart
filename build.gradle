@@ -30,6 +30,7 @@ sourceSets {
             srcDirs = [
                     "$rootDir/src/main/resources",
             ]
+            exclude 'assets/frostedheart/lang/**'
         }
     }
     noDatagen{java{srcDirs=[]} resources{srcDirs=[]}}
@@ -42,6 +43,7 @@ sourceSets {
             srcDirs = [
                     "$rootDir/src/datagen/resources",
             ]
+            exclude 'assets/frostedheart/lang/**'
         }
     }
 }
@@ -122,9 +124,7 @@ minecraft {
 sourceSets.main.resources {
     srcDir 'src/generated/resources'
 }
-tasks.processResources {
-    duplicatesStrategy = DuplicatesStrategy.WARN
-}
+
 mixin {
     add sourceSets.main, "frostedheart.refmap.json"
 }
@@ -299,8 +299,38 @@ dependencies {
     // FG5 requires 0.8.3
     annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
     testAnnotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
-}
+	//gradle data processing
+	implementation 'org.codehaus.groovy:groovy-json:3.0.9'
 
+}
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+tasks.processResources {
+    duplicatesStrategy = DuplicatesStrategy.WARN
+    // automatically join lang files
+    doLast{
+    	def resourcesDir = sourceSets.main.output.resourcesDir
+        resourcesDir.mkdirs()
+        def langDir=new File(resourcesDir,"assets/frostedheart/lang/")
+        langDir.mkdirs()
+        def langList=new File("$rootDir/src/main/resources/assets/frostedheart/lang").listFiles({ f -> f.isDirectory() } as FileFilter)
+        langList.each{fn->
+        	
+        	def langFile=new TreeMap<String, String>();
+        	//generated file, lowest priority
+        	def generatedLang=new File("$rootDir/src/generated/resources/assets/frostedheart/lang/"+fn+".json")
+        	if(generatedLang.exists())
+        		new JsonSlurper().parse().each{key,value->langFile.put(key,value)}
+        	//files in alphabetical order
+        	fileTree(fn).files.sort().each { childFile -> 
+			    new JsonSlurper().parse(childFile).each{key,value->langFile.put(key,value)}
+			}
+			//write to output
+			new File(langDir,fn.name+".json").text=JsonOutput.prettyPrint(JsonOutput.toJson(langFile))
+        
+        }
+    }
+}
 jar {
     manifest {
         attributes([

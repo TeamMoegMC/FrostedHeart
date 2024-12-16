@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.base.item;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import net.minecraft.world.entity.EquipmentSlot;

@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.util;
 
 import java.io.File;
 import java.io.FileReader;

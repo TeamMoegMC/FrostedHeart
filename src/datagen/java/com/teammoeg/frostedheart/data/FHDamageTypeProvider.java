@@ -21,7 +21,8 @@ package com.teammoeg.frostedheart.data;
 
 import java.util.function.Function;
 
-import com.teammoeg.frostedheart.FHDamageTypes;
+import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
+
 import net.minecraft.data.worldgen.BootstapContext;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.damagesource.DamageEffects;

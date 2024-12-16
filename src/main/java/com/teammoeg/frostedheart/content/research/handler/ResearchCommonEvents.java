@@ -1,9 +1,10 @@
 package com.teammoeg.frostedheart.content.research.handler;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
-import com.teammoeg.frostedheart.FHCapabilities;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;

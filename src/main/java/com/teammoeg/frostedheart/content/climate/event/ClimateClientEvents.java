@@ -2,8 +2,8 @@ package com.teammoeg.frostedheart.content.climate.event;
 
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHParticleTypes;
-import com.teammoeg.frostedheart.FHSoundEvents;
+import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
+import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorScreen;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.util.client.ClientUtils;

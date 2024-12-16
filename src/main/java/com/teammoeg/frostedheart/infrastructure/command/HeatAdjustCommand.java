@@ -96,5 +96,8 @@ public class HeatAdjustCommand {
         for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
             dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(Commands.literal("heat_adjust").then(add).then(get).then(remove)));
         }
+
+        // simple alias to skip modid
+        dispatcher.register(Commands.literal("heat_adjust").requires(s -> s.hasPermission(2)).then(add).then(get).then(remove));
     }
 }

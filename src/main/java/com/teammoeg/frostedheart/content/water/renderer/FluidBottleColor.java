@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.water.renderer;
 
-import com.teammoeg.frostedheart.FHFluids;
+import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import com.teammoeg.frostedheart.content.water.util.FluidHelper;
 import net.minecraft.client.color.item.ItemColor;
 import net.minecraft.world.item.ItemStack;

@@ -1,10 +1,10 @@
 package com.teammoeg.frostedheart.content.water.event;
 
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.water.network.PlayerDrinkWaterMessage;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
@@ -54,7 +54,7 @@ public class WaterCommonEvents {
     @SubscribeEvent
     public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
         //Common capabilities
-        event.addCapability(new ResourceLocation(FHMain.MODID, "water_level"), FHCapabilities.PLAYER_WATER_LEVEL.provider());
+        event.addCapability(FHMain.rl("water_level"), FHCapabilities.PLAYER_WATER_LEVEL.provider());
     }
 
     @SubscribeEvent

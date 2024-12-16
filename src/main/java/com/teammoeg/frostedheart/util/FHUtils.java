@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.util;
 
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHTags;
 import com.teammoeg.frostedheart.base.capability.nbt.FHNBTCapability;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;

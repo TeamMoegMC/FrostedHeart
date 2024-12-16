@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.health.capability;
 
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.health.network.PlayerNutritionSyncPacket;
 import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
@@ -35,10 +35,10 @@ public class NutritionCapability implements NBTSerializable {
         setVegetable(nbt.getFloat("vegetable"));
     }
 
-    private float fat = 10000.0f;
-    private float carbohydrate = 10000.0f;
-    private float protein = 10000.0f;
-    private float vegetable = 10000.0f;
+    private float fat = 0.0f;
+    private float carbohydrate = 0.0f;
+    private float protein = 0.0f;
+    private float vegetable = 0.0f;
 
     public void addFat(Player player, float add) {
         this.fat += add;

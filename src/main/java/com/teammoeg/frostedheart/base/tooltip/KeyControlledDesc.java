@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.base.tooltip;
 
 import com.simibubi.create.foundation.utility.Components;
-import com.teammoeg.frostedheart.FHKeyMappings;
+import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;

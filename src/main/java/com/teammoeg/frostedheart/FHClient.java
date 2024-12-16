@@ -40,6 +40,8 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 import static com.teammoeg.frostedheart.FHMain.*;
 
+import com.teammoeg.frostedheart.bootstrap.client.FHDynamicModels;
+
 @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class FHClient {
     public FHClient() {

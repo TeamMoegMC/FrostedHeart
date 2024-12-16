@@ -21,7 +21,8 @@ package com.teammoeg.frostedheart.content.utility;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.teammoeg.frostedheart.FHEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;

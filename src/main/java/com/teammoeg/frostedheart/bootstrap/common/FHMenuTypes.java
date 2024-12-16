@@ -17,11 +17,12 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.common;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.menu.ClientContainerConstructor;
 import com.teammoeg.frostedheart.base.menu.MultiBlockMenuConstructor;
 import com.teammoeg.frostedheart.base.menu.MultiblockContainer;

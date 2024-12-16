@@ -25,8 +25,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-import com.teammoeg.frostedheart.FHDamageTypes;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
 
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.HolderLookup.Provider;

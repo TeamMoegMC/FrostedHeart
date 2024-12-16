@@ -169,7 +169,7 @@ public class ResearchDetailPanel extends Panel {
             return;
         }
         matrixStack.pose().pushPose();
-        matrixStack.pose().translate(0, 0, 180);
+        matrixStack.pose().translate(0, 0, 500);
         super.draw(matrixStack, theme, x, y, w, h);
         matrixStack.pose().popPose();
     }

@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.steamenergy;
 
 import java.util.Collection;
 
-import com.teammoeg.frostedheart.FHMenuTypes;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.world.entity.player.Player;

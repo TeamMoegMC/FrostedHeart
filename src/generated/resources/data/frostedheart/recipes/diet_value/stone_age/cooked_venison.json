@@ -1,8 +1,10 @@
 {
   "type": "frostedheart:diet_override",
-  "groups": {
-    "proteins": 0.01778604,
-    "vitamin": 0.01841565
+  "group": {
+    "carbohydrate": 0.0,
+    "fat": 0.0,
+    "protein": 0.01778604,
+    "vegetable": 0.0
   },
-  "item": "stone_age:cooked_venison"
+  "item": "minecraft:air"
 }

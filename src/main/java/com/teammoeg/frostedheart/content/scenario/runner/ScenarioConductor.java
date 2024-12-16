@@ -24,8 +24,8 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ScenarioTarget;
 import com.teammoeg.frostedheart.util.io.CodecUtil;

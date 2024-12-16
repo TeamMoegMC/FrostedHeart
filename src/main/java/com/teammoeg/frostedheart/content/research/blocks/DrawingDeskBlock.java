@@ -25,7 +25,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;

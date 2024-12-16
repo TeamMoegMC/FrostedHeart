@@ -39,7 +39,7 @@
 package com.teammoeg.frostedheart.content.health.dailykitchen;
 
 
-import com.teammoeg.frostedheart.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;

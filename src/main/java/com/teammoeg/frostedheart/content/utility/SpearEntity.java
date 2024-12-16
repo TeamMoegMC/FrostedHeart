@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.utility;
 
-import com.teammoeg.frostedheart.FHItems;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
@@ -49,6 +48,8 @@ import net.minecraftforge.network.NetworkHooks;
 import net.minecraftforge.network.PlayMessages;
 
 import javax.annotation.Nullable;
+
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 
 public class SpearEntity extends AbstractArrow {
     private static final EntityDataAccessor<Byte> LOYALTY_LEVEL = SynchedEntityData.defineId(SpearEntity.class, EntityDataSerializers.BYTE);

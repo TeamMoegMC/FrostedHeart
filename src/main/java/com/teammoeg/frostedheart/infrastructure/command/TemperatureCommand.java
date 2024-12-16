@@ -96,5 +96,11 @@ public class TemperatureCommand {
                     )
             );
         }
+
+        dispatcher.register(Commands.literal("temperature")
+                .requires(s -> s.hasPermission(2))
+                .then(get)
+                .then(set)
+        );
     }
 }

@@ -17,9 +17,12 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.client;
 
 import com.simibubi.create.foundation.item.TooltipModifier;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags.Items;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.recipe.InspireRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;

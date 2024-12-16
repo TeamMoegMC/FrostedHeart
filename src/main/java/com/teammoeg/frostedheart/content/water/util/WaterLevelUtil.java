@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.water.util;
 
-import com.teammoeg.frostedheart.FHMobEffects;
-import com.teammoeg.frostedheart.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.water.recipe.WaterLevelAndEffectRecipe;
 import net.minecraft.sounds.SoundEvents;

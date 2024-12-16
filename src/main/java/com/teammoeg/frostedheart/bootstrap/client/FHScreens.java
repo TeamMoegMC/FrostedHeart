@@ -1,5 +1,6 @@
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.bootstrap.client;
 
+import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorScreen;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;

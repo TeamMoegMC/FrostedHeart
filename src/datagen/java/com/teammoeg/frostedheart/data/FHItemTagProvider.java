@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.data;
 
 import com.simibubi.create.AllItems;
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.tterrag.registrate.util.entry.ItemEntry;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;

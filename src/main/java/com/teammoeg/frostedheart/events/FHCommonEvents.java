@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.events;
 
 import com.google.common.collect.Sets;
 import com.mojang.brigadier.CommandDispatcher;
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHMobEffects;
-import com.teammoeg.frostedheart.FHTags;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
@@ -328,18 +328,6 @@ public class FHCommonEvents {
         if (event.getEffect() == FHMobEffects.ION.get())
             event.setCanceled(true);
 
-    }
-
-    @SubscribeEvent
-    public static void onRegisterCommands(RegisterCommandsEvent event) {
-        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-        ResearchCommand.register(dispatcher);
-        DebugCommand.register(dispatcher);
-        ScenarioCommand.register(dispatcher);
-        TownCommand.register(dispatcher);
-        TipCommand.register(dispatcher);
-        WaterCommand.register(dispatcher);
-        NutritionCommand.register(dispatcher);
     }
 
     @SubscribeEvent

@@ -1,8 +1,10 @@
 {
   "type": "frostedheart:diet_override",
-  "groups": {
-    "proteins": 0.00880195,
-    "vitamin": 0.013559129
+  "group": {
+    "carbohydrate": 0.0,
+    "fat": 0.0,
+    "protein": 0.00880195,
+    "vegetable": 0.0
   },
-  "item": "stone_age:auroch_meat"
+  "item": "minecraft:air"
 }

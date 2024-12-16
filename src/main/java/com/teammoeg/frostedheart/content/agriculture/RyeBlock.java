@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.agriculture;
 
-import com.teammoeg.frostedheart.FHBlocks;
-
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.Block;
@@ -29,6 +27,9 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.ItemLike;
+
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.shapes.CollisionContext;
