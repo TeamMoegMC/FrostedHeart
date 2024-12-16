@@ -111,7 +111,9 @@ public class Waypoint extends AbstractWaypoint {
         if (ClientWaypointManager.shouldShowExtra()) {
             addInfoLine(null, -1);
             addInfoLine(distanceTranslation(), -1);
-            addInfoLine(posTranslation(), -1);
+            if (ClientUtils.getPlayer().isCreative()) {
+                addInfoLine(posTranslation(), -1);
+            }
         }
 
         List<FormattedCharSequence> lines;

@@ -11,6 +11,7 @@ import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.FHColorHelper;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.BlockHitResult;
@@ -34,7 +35,7 @@ public class DebugScreen extends Screen {
         addButton(IconButton.Icon.CROSS, FHColorHelper.CYAN, "Clear Tip Render Queue", (b) ->
             TipManager.INSTANCE.display().clearRenderQueue()
         );
-        addButton(IconButton.Icon.HISTORY, FHColorHelper.RED, "Reset StateManager For All Tips", (b) ->
+        addButton(IconButton.Icon.HISTORY, FHColorHelper.RED, "Reset State For All Tips", (b) ->
             TipManager.INSTANCE.state().resetAll()
         );
         addButton(IconButton.Icon.HISTORY, FHColorHelper.CYAN, "Reload All Tips", (b) ->
@@ -71,6 +72,7 @@ public class DebugScreen extends Screen {
         addButton(IconButton.Icon.TRADE, FHColorHelper.CYAN, "Toggle Debug Overlay", (b) ->
             FrostedHud.renderDebugOverlay = !FrostedHud.renderDebugOverlay
         );
+        super.init();
 //        addRenderableWidget(new TextLabelWidget(10, 10, 50, 50, Component.literal("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), ClientUtils.font()));
     }
 
@@ -90,15 +92,22 @@ public class DebugScreen extends Screen {
         for (int i = 0; i < size; i++) {
             IconButton button = this.buttons.get(i);
             if (i == 0) {
-                button.setXY(centerX-5, centerY-30);
+                button.setPosition(centerX-5, centerY-30);
             } else if (i % 2 == 0) {
-                button.setXY(centerX-5-(i*8), centerY-30);
+                button.setPosition(centerX-5-(i*8), centerY-30);
             } else {
-                button.setXY(centerX+5+(i*8), centerY-30);
+                button.setPosition(centerX+5+(i*8), centerY-30);
             }
             button.render(graphics, mouseX, mouseY, partialTicks);
         }
-        this.renderables.get(renderables.size()-1).render(graphics, mouseX, mouseY, partialTicks);
+        buttons.get(size-1).render(graphics, mouseX, mouseY, partialTicks);
+
+
+        var others = new ArrayList<>(this.renderables);
+        others.removeAll(buttons);
+        for(Renderable renderable : others) {
+            renderable.render(graphics, mouseX, mouseY, partialTicks);
+        }
     }
 
     @Override

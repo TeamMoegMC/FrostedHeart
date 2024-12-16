@@ -25,6 +25,7 @@ import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.client.gui.Font;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
@@ -39,18 +40,12 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import net.minecraft.CrashReport;
-import net.minecraft.CrashReportCategory;
-import net.minecraft.ReportedException;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
@@ -60,13 +55,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.ForgeRenderTypes;
-import net.minecraftforge.client.model.data.ModelData;
 
 /**
  * Convenience functions for rendering
@@ -352,13 +343,19 @@ public class FHGuiHelper {
 
 	}
 
-	public static int drawSplitTexts(GuiGraphics graphics, FormattedText text, int x, int y, int color, int maxWidth,
-			int lineSpace, boolean shadow) {
-		List<FormattedCharSequence> texts = ClientUtils.font().split(text, maxWidth);
-		for (int i = 0; i < texts.size(); i++) {
-			graphics.drawString(ClientUtils.font(), texts.get(i), x, y + i * lineSpace, color, shadow);
-		}
+	public static int drawStrings(GuiGraphics graphics, Font font, FormattedText text, int x, int y, int color,
+								  int maxWidth, int lineSpace, boolean shadow)
+	{
+		List<FormattedCharSequence> texts = font.split(text, maxWidth);
+		drawStrings(graphics, font, texts, x, y, color, lineSpace, shadow);
 		return texts.size();
+	}
+
+	public static void drawStrings(GuiGraphics graphics, Font font, List<FormattedCharSequence> texts, int x, int y,
+								   int color, int lineSpace, boolean shadow)
+	{
+		for (int i = 0; i < texts.size(); i++)
+			graphics.drawString(font, texts.get(i), x, y + i * lineSpace, color, shadow);
 	}
 
 	/**

@@ -53,7 +53,7 @@ public class Tip {
      */
     private final String nextTip;
     /**
-     * 图像
+     * 显示的图像
      */
     @Nullable
     private final ResourceLocation image;
@@ -136,11 +136,9 @@ public class Tip {
         nbt.putInt("displayTime", displayTime);
         nbt.putInt("fontColor", fontColor);
         nbt.putInt("backgroundColor", backgroundColor);
-        ListTag contents = new ListTag();
-        for (Component content : this.contents) {
-            contents.add(StringTag.valueOf(content.getString()));
-        }
-        nbt.put("contents", contents);
+        var toAddContents = new ListTag();
+        this.contents.stream().map(content -> StringTag.valueOf(getKeyOrElseStr(content))).forEach(toAddContents::add);
+        nbt.put("contents", toAddContents);
         return nbt;
     }
 
@@ -158,16 +156,18 @@ public class Tip {
         json.addProperty("displayTime", displayTime);
         json.addProperty("fontColor", Integer.toHexString(fontColor).toUpperCase());
         json.addProperty("backgroundColor", Integer.toHexString(backgroundColor).toUpperCase());
-        var contents = new JsonArray();
-        for (Component content : this.contents) {
-            if (content instanceof MutableComponent component && (component.getContents() instanceof TranslatableContents translatable)) {
-                contents.add(translatable.getKey());
-            } else {
-                contents.add(content.getString());
-            }
-        }
-        json.add("contents", contents);
+        var toAddContents = new JsonArray();
+        this.contents.stream().map(Tip::getKeyOrElseStr).forEach(toAddContents::add);
+        json.add("contents", toAddContents);
         return json;
+    }
+
+    private static String getKeyOrElseStr(Component component) {
+        if (component instanceof MutableComponent c && (c.getContents() instanceof TranslatableContents t)) {
+            return t.getKey();
+        } else {
+            return component.getString();
+        }
     }
 
     public static Tip.Builder builder(String id) {
@@ -176,7 +176,7 @@ public class Tip {
 
     protected static Tip fromJsonFile(File filePath) {
         LOGGER.debug("Loading tip '{}'", filePath.getName());
-        Tip.Builder builder = builder("temp");
+        Tip.Builder builder = builder("exception");
         if (!filePath.exists()) {
             LOGGER.error("File does not exists '{}'", filePath);
             builder.error(ErrorType.NOT_EXISTS);
@@ -306,7 +306,6 @@ public class Tip {
         }
 
         public Builder fromJson(JsonObject json) {
-            if (json.has("id"             )) this.id            = json.get("id").getAsString();
             if (json.has("category"       )) this.category      = json.get("category").getAsString();
             if (json.has("next"           )) this.nextTip       = json.get("next").getAsString();
             if (json.has("alwaysVisible"  )) this.alwaysVisible = json.get("alwaysVisible").getAsBoolean();
@@ -314,15 +313,21 @@ public class Tip {
             if (json.has("hide"           )) this.hide          = json.get("hide").getAsBoolean();
             if (json.has("pin"            )) this.pin           = json.get("pin").getAsBoolean();
             if (json.has("visibleTime"    )) this.displayTime   = Math.max(json.get("visibleTime").getAsInt(), 0);
-            if (json.has("fontColor"      )) this.fontColor     = Integer.parseUnsignedInt(json.get("fontColor").getAsString(), 16);
-            if (json.has("backgroundColor")) this.BGColor       = Integer.parseUnsignedInt(json.get("backgroundColor").getAsString(), 16);
+            if (json.has("fontColor"      )) this.fontColor     = tryGetColorOrElse(json, "fontColor", FHColorHelper.CYAN);
+            if (json.has("backgroundColor")) this.BGColor       = tryGetColorOrElse(json, "backgroundColor", FHColorHelper.BLACK);
+            if (json.has("id")) {
+                this.id = json.get("id").getAsString();
+            } else {
+                error(ErrorType.OTHER, Lang.str("This tip has no id"));
+                return this;
+            }
             if (json.has("image")) {
-                Optional.ofNullable(ResourceLocation.tryParse(json.get("image").getAsString())).ifPresentOrElse(this::image, () -> error(ErrorType.INVALID_IMAGE));
+                Optional.ofNullable(ResourceLocation.tryParse(json.get("image").getAsString())).ifPresentOrElse(this::image, () -> error(ErrorType.OTHER, Lang.str("Invalid ResourceLocation")));
                 ResourceLocation image = ResourceLocation.tryParse(json.get("image").getAsString());
                 if (image != null) {
                     this.image = image;
                 } else {
-                    error(ErrorType.INVALID_IMAGE);
+                    error(ErrorType.OTHER, Lang.str("Invalid ResourceLocation"));
                     return this;
                 }
             }
@@ -339,6 +344,15 @@ public class Tip {
             }
 
             return this;
+        }
+
+        private int tryGetColorOrElse(JsonObject json, String name, int defColor) {
+            try {
+                return Integer.parseUnsignedInt(json.get(name).getAsString(), 16);
+            } catch (NumberFormatException e) {
+                error(ErrorType.OTHER, e);
+                return defColor;
+            }
         }
 
         public Builder fromNBT(CompoundTag nbt) {

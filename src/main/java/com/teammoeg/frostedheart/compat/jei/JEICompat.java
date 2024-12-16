@@ -64,6 +64,7 @@ import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.InstallInnerRecipe;
+import com.teammoeg.frostedheart.content.tips.TipRenderer;
 import com.teammoeg.frostedheart.content.utility.recipe.ModifyDamageRecipe;
 import com.teammoeg.frostedheart.content.climate.recipe.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.research.FHResearch;
@@ -84,6 +85,7 @@ import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.gui.handlers.IGlobalGuiHandler;
 import mezz.jei.api.gui.handlers.IGuiClickableArea;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import mezz.jei.api.helpers.IGuiHelper;
@@ -99,6 +101,7 @@ import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import mezz.jei.library.ingredients.IngredientInfoRecipe;
 import mezz.jei.library.util.RecipeUtil;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -109,6 +112,7 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 @JeiPlugin
 public class JEICompat implements IModPlugin {
@@ -310,6 +314,13 @@ public class JEICompat implements IModPlugin {
 		});
         registry.addRecipeClickArea(IncubatorT1Screen.class, 80, 28, 32, 29, IncubatorCategory.UID);
         registry.addRecipeClickArea(IncubatorT2Screen.class, 107, 28, 14, 29, IncubatorCategory.UID);
+
+        registry.addGlobalGuiHandler(new IGlobalGuiHandler() {
+            @Override
+            public @NotNull Collection<Rect2i> getGuiExtraAreas() {
+                return Collections.singletonList(TipRenderer.TIP_WIDGET.getRect());
+            }
+        });
     }
 
     @Override

@@ -30,11 +30,6 @@ public class IconButton extends Button {
         this.currentIcon = icon;
     }
 
-    public void setXY(int x, int y) {
-        this.setX(x);
-        this.setY(y);
-    }
-
     @Override
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         if (isHoveredOrFocused()) {

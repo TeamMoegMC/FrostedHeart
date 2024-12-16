@@ -6,6 +6,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
@@ -22,7 +23,7 @@ public class WheelSelectorScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
     }
 
     @Override
@@ -80,11 +81,6 @@ public class WheelSelectorScreen extends Screen {
                 }
                 case RENDERABLE -> ((Renderable)icon).render(graphics, pMouseX, pMouseY, pPartialTick);
             }
-        }
-
-        public void setXY(int x, int y) {
-            this.setX(x);
-            this.setY(y);
         }
 
         protected Selection(int pX, int pY, int pWidth, int pHeight, Component pMessage, OnPress pOnPress, CreateNarration pCreateNarration) {

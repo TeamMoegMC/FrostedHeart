@@ -3,11 +3,13 @@ package com.teammoeg.frostedheart.content.tips;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
 import com.mojang.logging.LogUtils;
-import com.teammoeg.frostedheart.content.tips.client.hud.TipHUD;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.slf4j.Logger;
 
@@ -30,8 +32,9 @@ import java.util.stream.Collectors;
  * <p>
  * 注意：仅客户端
  */
+@OnlyIn(Dist.CLIENT)
 public class TipManager {
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
     private static final Logger LOGGER = LogUtils.getLogger();
     public static final File CONFIG_PATH = new File(FMLPaths.CONFIGDIR.get().toFile(), "fhtips");
     public static final File TIP_PATH = new File(CONFIG_PATH, "tips");
@@ -89,7 +92,6 @@ public class TipManager {
         TIP_PATH.mkdirs();
         display.clearRenderQueue();
         loadedTips.clear();
-        state.tipStates.clear();
 
         // 加载所有 tip 文件
         List<File> files = new ArrayList<>();
@@ -145,7 +147,7 @@ public class TipManager {
             }
 
             if (tip.isPin()) {
-                TipRenderer.currentTip = null;
+                TipRenderer.removeCurrent();
                 TipRenderer.renderQueue.add(0, tip);
             } else {
                 TipRenderer.renderQueue.add(tip);
@@ -164,7 +166,7 @@ public class TipManager {
          */
         public void force(Tip tip) {
             if (tip.isPin()) {
-                TipRenderer.currentTip = null;
+                TipRenderer.removeCurrent();
                 TipRenderer.renderQueue.add(0, tip);
             } else {
                 TipRenderer.renderQueue.add(tip);
@@ -198,7 +200,6 @@ public class TipManager {
                 Tip tip = iterator.next();
                 if (tip.getId().equals(id)) {
                     iterator.remove();
-                    TipHUD.resetAnimation();
                     list.add(0, tip);
                     return;
                 }
@@ -209,9 +210,7 @@ public class TipManager {
          * 移除当前显示的 tip
          */
         public void removeCurrent() {
-            TipRenderer.renderQueue.remove(0);
-            TipHUD.resetAnimation();
-            TipRenderer.currentTip = null;
+            TipRenderer.removeCurrent();
         }
 
         /**
@@ -219,7 +218,7 @@ public class TipManager {
          */
         public void clearRenderQueue() {
             TipRenderer.renderQueue.clear();
-            TipRenderer.currentTip = null;
+            TipRenderer.removeCurrent();
         }
     }
 
@@ -236,6 +235,7 @@ public class TipManager {
          * 加载 {@code tip_states.json} 文件
          */
         protected void loadFromFile() {
+            tipStates.clear();
             // 为所有已加载的tip创建空的TipState
             manager.loadedTips.forEach((id, tip) -> tipStates.put(tip, new State(tip)));
             try (FileReader reader = new FileReader(TIP_STATE_FILE)) {
@@ -263,7 +263,7 @@ public class TipManager {
          */
         public void saveToFile() {
             try (FileWriter writer = new FileWriter(TIP_STATE_FILE)) {
-                String json = GSON.toJson(tipStates.values());
+                String json = GSON.toJson(tipStates.values().stream().filter(s -> s.unlocked || s.viewed).toList());
                 writer.write(json);
             } catch (IOException e) {
                 LOGGER.error("Unable to save file: '{}'", TIP_STATE_FILE, e);
@@ -339,9 +339,12 @@ public class TipManager {
         @Getter
         @Setter
         public static class State {
-            private final String id;
             private final Tip tip;
+            @Expose
+            private final String id;
+            @Expose
             private boolean unlocked;
+            @Expose
             private boolean viewed;
 
             protected State(Tip tip) {
