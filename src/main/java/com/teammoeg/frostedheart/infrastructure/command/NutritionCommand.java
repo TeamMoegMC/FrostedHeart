@@ -95,13 +95,13 @@ public class NutritionCommand {
     private static float getNutrientValue(NutritionCapability data, String nutrient) {
         switch (nutrient) {
             case "fat":
-                return data.getFat();
+                return data.get().fat();
             case "carbohydrate":
-                return data.getCarbohydrate();
+                return data.get().carbohydrate();
             case "protein":
-                return data.getProtein();
+                return data.get().protein();
             case "vegetable":
-                return data.getVegetable();
+                return data.get().vegetable();
             default:
                 return 0.0f;
         }

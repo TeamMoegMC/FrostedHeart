@@ -28,7 +28,6 @@ import com.teammoeg.frostedheart.base.item.*;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.bootstrap.reference.FHTags.Items;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.health.food.CannedFoodItem;
 import com.teammoeg.frostedheart.content.health.food.FHSoupItem;
@@ -65,14 +64,14 @@ import net.minecraftforge.registries.RegistryObject;
 import java.util.function.Function;
 
 import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
-import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.*;
+import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.forgeItemTag;
 
 /**
  * All items.
  */
 public class FHItems {
 
-    protected static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
 
     @Deprecated
     protected static RegistryObject<Item> register(String name) {

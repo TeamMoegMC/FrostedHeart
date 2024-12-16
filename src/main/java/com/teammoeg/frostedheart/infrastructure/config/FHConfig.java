@@ -258,6 +258,9 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Integer> minBodyTempChange;
         public final ForgeConfigSpec.ConfigValue<Integer> maxBodyTempChange;
 
+        public final ForgeConfigSpec.ConfigValue<Float> nutritionConsumptionRate;
+
+
         Server(ForgeConfigSpec.Builder builder) {
             builder.push("Temperature");
             tdiffculty = builder.comment("Temperature System difficulty", "easy=Strong body", "normal=Average", "hard=Reality", "hardcore=Sick body")
@@ -298,13 +301,15 @@ public class FHConfig {
                     .defineInRange("maxBodyTempChange", 10, -100, 100);
             builder.pop();
 
-            builder.push("Water");
+            builder.push("Water & Nutrition");
             waterReducingRate = builder.comment("finalReducingValue = basicValue * waterReducingRate.(DoubleValue)")
                     .defineInRange("waterReducingRate", 1.0D, 0d, 1000D);
             weaknessEffectAmplifier = builder.comment("It is the weakness effect amplifier of the effect punishment when player's water level is too low. -1 means canceling this effect. Default:0")
                     .defineInRange("weaknessEffectAmplifier", 0, -1, 999999);
             resetWaterLevelInDeath = builder.comment("It decides if players' water level would reset in death.")
                     .define("resetWaterLevelInDeath", true);
+            nutritionConsumptionRate = builder.comment("The rate of nutrition consumption.")
+                    .define("nutritionConsumptionRate", 1.0f);
             builder.pop();
 
             builder.push("Worldgen");

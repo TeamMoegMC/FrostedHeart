@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.health.recipe;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -127,5 +128,9 @@ public class NutritionRecipe implements Recipe<Inventory> {
             }
         }
         return null;
+    }
+
+    public NutritionCapability.Nutrition getNutrition() {
+        return new NutritionCapability.Nutrition(fat,carbohydrate,protein,vegetable);
     }
 }
