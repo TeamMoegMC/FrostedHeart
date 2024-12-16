@@ -233,14 +233,14 @@ public class FHGuiHelper {
 	 * }
 	 */
 
-	private static void drawRect(Matrix4f mat, VertexConsumer renderBuffer, Color4I color, int x, int y, int w, int h) {
-		renderBuffer.vertex(mat, x, y, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+	private static void drawRect(Matrix4f mat, BufferBuilder renderBuffer, int x, int y, int w, int h,int color) {
+		renderBuffer.vertex(mat, x, y, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color), FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color))
 				.endVertex();
-		renderBuffer.vertex(mat, x + w, y, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+		renderBuffer.vertex(mat, x + w, y, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color), FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color))
 				.endVertex();
-		renderBuffer.vertex(mat, x, y + h, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+		renderBuffer.vertex(mat, x, y + h, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color), FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color))
 				.endVertex();
-		renderBuffer.vertex(mat, x + w, y + h, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+		renderBuffer.vertex(mat, x + w, y + h, 0F).color(FastColor.ARGB32.red(color), FastColor.ARGB32.green(color), FastColor.ARGB32.blue(color), FastColor.ARGB32.alpha(color))
 				.endVertex();
 	}
 
@@ -270,6 +270,19 @@ public class FHGuiHelper {
 		BufferBuilder bufferbuilder = tessellator.getBuilder();
 		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 		fillGradient(matrixStack.last().pose(), bufferbuilder, x1, y1, x2, y2, colorFrom, colorTo);
+		tessellator.end();
+		RenderSystem.disableBlend();
+	}
+	// draw a rectangle
+	public static void fillRect(PoseStack matrixStack, int x1, int y1, int w, int h, int color) {
+		RenderSystem.enableDepthTest();
+		RenderSystem.enableBlend();
+		RenderSystem.defaultBlendFunc();
+		RenderSystem.setShader(GameRenderer::getPositionColorShader);
+		Tesselator tessellator = Tesselator.getInstance();
+		BufferBuilder bufferbuilder = tessellator.getBuilder();
+		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+		drawRect(matrixStack.last().pose(), bufferbuilder, x1, y1, w, h, color);
 		tessellator.end();
 		RenderSystem.disableBlend();
 	}
