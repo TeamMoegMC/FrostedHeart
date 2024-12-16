@@ -303,13 +303,12 @@ dependencies {
 }
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
-tasks.processResources {
-    duplicatesStrategy = DuplicatesStrategy.WARN
-    exclude 'assets/frostedheart/lang/**'
-    new File("$rootDir/src/main/resources/assets/frostedheart/lang").listFiles({ f -> f.isDirectory() } as FileFilter).each(t->outputs.file(t.getAbsolutePath()+".json"))
-    // automatically join lang files
+tasks.register('joinLangTask') {
+	inputs.dir "$rootDir/src/main/resources/assets/frostedheart/lang"
+	new File("$rootDir/src/main/resources/assets/frostedheart/lang").listFiles({ f -> f.isDirectory() } as FileFilter).each(t->outputs.file(t.getAbsolutePath()+".json"))
+
     doLast{
-    	def resourcesDir = sourceSets.main.output.resourcesDir
+    	def resourcesDir = new File("$rootDir/src/generated/resources/")
         resourcesDir.mkdirs()
         def langDir=new File(resourcesDir,"assets/frostedheart/lang/")
         
@@ -317,10 +316,6 @@ tasks.processResources {
         langList.each{fn->
         	
         	def langFile=new TreeMap<String, String>();
-        	//generated file, lowest priority
-        	def generatedLang=new File("$rootDir/src/generated/resources/assets/frostedheart/lang/"+fn+".json")
-        	if(generatedLang.exists())
-        		new JsonSlurper().parse().each{key,value->langFile.put(key,value)}
         	//files in alphabetical order
         	fileTree(fn).files.sort().each { childFile -> 
 			    new JsonSlurper().parse(childFile).each{key,value->langFile.put(key,value)}
@@ -331,6 +326,11 @@ tasks.processResources {
         
         }
     }
+}
+processResources.dependsOn(joinLangTask)
+tasks.processResources {
+    duplicatesStrategy = DuplicatesStrategy.WARN
+    exclude 'assets/frostedheart/lang/**/'
 }
 jar {
     manifest {
