@@ -46,8 +46,13 @@ public class TipWidget extends AbstractWidget {
     @Getter
     private float progress;
 
-    public TipWidget() {
-        super(ClientUtils.screenWidth(), ClientUtils.screenHeight(), 0, 0, Component.literal("tip"));
+    /**
+     * TipWidget实例
+     */
+    public static final TipWidget INSTANCE = new TipWidget();
+
+    private TipWidget() {
+        super(0, 0, 0, 0, Component.literal("tip"));
         this.closeButton = new IconButton(0, 0, IconButton.Icon.CROSS, FHColorHelper.CYAN, Lang.gui("close").component(),
                 b -> state = State.FADING_OUT
         );

@@ -4,7 +4,6 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.FHColorHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -20,13 +19,9 @@ import net.minecraftforge.fml.common.Mod;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(value = Dist.CLIENT)
 public class TipRenderer {
 
-    /**
-     * TipWidget实例
-     */
-    public static final TipWidget TIP_WIDGET = new TipWidget();
     /**
      * tip渲染队列
      */
@@ -43,7 +38,7 @@ public class TipRenderer {
      * @return 是否正在渲染tip
      */
     public static boolean isTipRendering() {
-        return TIP_WIDGET.getState() != TipWidget.State.IDLE;
+        return TipWidget.INSTANCE.getState() != TipWidget.State.IDLE;
     }
 
     /**
@@ -51,7 +46,7 @@ public class TipRenderer {
      */
     public static void removeCurrent() {
         if (!TIP_QUEUE.isEmpty()) TIP_QUEUE.remove(0);
-        TIP_WIDGET.setState(TipWidget.State.FADING_OUT);
+        TipWidget.INSTANCE.setState(TipWidget.State.FADING_OUT);
     }
 
     @SubscribeEvent
@@ -62,10 +57,10 @@ public class TipRenderer {
             return;
 
         // 将TipWidget添加到当前screen中
-        if (!event.getListenersList().contains(TIP_WIDGET)) {
-            event.addListener(TIP_WIDGET.closeButton);
-            event.addListener(TIP_WIDGET.pinButton);
-            event.addListener(TIP_WIDGET);
+        if (!event.getListenersList().contains(TipWidget.INSTANCE)) {
+            event.addListener(TipWidget.INSTANCE.closeButton);
+            event.addListener(TipWidget.INSTANCE.pinButton);
+            event.addListener(TipWidget.INSTANCE);
 
             // 原版的物品和tooltip顺序可能在screen渲染之后,
             // 而我为了确保tip始终渲染在所有layout的最上层将
@@ -73,9 +68,9 @@ public class TipRenderer {
             // 染顺序而剔除这些元素
             //
             // 将tipWidget和按钮从screen的渲染列表中移除
-            event.getScreen().renderables.remove(TIP_WIDGET.closeButton);
-            event.getScreen().renderables.remove(TIP_WIDGET.pinButton);
-            event.getScreen().renderables.remove(TIP_WIDGET);
+            event.getScreen().renderables.remove(TipWidget.INSTANCE.closeButton);
+            event.getScreen().renderables.remove(TipWidget.INSTANCE.pinButton);
+            event.getScreen().renderables.remove(TipWidget.INSTANCE);
         }
     }
 
@@ -100,7 +95,7 @@ public class TipRenderer {
 //            }
 //        }
 
-        TIP_WIDGET.renderWidget(event.getGuiGraphics(), -1, -1, MC.getPartialTick());
+        TipWidget.INSTANCE.renderWidget(event.getGuiGraphics(), -1, -1, MC.getPartialTick());
         update();
     }
 
@@ -108,7 +103,7 @@ public class TipRenderer {
     public static void onGuiRender(ScreenEvent.Render.Post event) {
         if (!FHConfig.CLIENT.renderTips.get() || TIP_QUEUE.isEmpty())
             return;
-        if (!event.getScreen().children().contains(TIP_WIDGET))
+        if (!event.getScreen().children().contains(TipWidget.INSTANCE))
             return;
 
         // 避免点击tip后聊天栏无法编辑
@@ -120,17 +115,17 @@ public class TipRenderer {
             }
         }
 
-        TIP_WIDGET.renderWidget(event.getGuiGraphics(), event.getMouseX(), event.getMouseY(), event.getPartialTick());
+        TipWidget.INSTANCE.renderWidget(event.getGuiGraphics(), event.getMouseX(), event.getMouseY(), event.getPartialTick());
         update();
     }
 
     private static void update() {
-        if (TIP_WIDGET.getState() == TipWidget.State.IDLE) {
-            TIP_QUEUE.remove(TIP_WIDGET.lastTip);
-            TIP_WIDGET.lastTip = null;
+        if (TipWidget.INSTANCE.getState() == TipWidget.State.IDLE) {
+            TIP_QUEUE.remove(TipWidget.INSTANCE.lastTip);
+            TipWidget.INSTANCE.lastTip = null;
             // 切换下一个
             if (!TIP_QUEUE.isEmpty()) {
-                TIP_WIDGET.setTip(TIP_QUEUE.get(0));
+                TipWidget.INSTANCE.setTip(TIP_QUEUE.get(0));
             }
         }
     }
