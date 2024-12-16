@@ -82,7 +82,8 @@ public class TipCommand {
                         return i;
                     }
         ))))));
-for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
+
+        for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
             dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(run));
         }
     }

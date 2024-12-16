@@ -134,7 +134,7 @@ public class TipManager {
             if (tip.isOnceOnly() && manager.state.isUnlocked(tip)) return;
 
             // 渲染队列已有此 tip 时返回
-            for (Tip queue : TipRenderer.renderQueue) {
+            for (Tip queue : TipRenderer.TIP_QUEUE) {
                 if (queue.getId().equals(tip.getId())) return;
             }
 
@@ -148,9 +148,9 @@ public class TipManager {
 
             if (tip.isPin()) {
                 TipRenderer.removeCurrent();
-                TipRenderer.renderQueue.add(0, tip);
+                TipRenderer.TIP_QUEUE.add(0, tip);
             } else {
-                TipRenderer.renderQueue.add(tip);
+                TipRenderer.TIP_QUEUE.add(tip);
             }
         }
 
@@ -167,9 +167,9 @@ public class TipManager {
         public void force(Tip tip) {
             if (tip.isPin()) {
                 TipRenderer.removeCurrent();
-                TipRenderer.renderQueue.add(0, tip);
+                TipRenderer.TIP_QUEUE.add(0, tip);
             } else {
-                TipRenderer.renderQueue.add(tip);
+                TipRenderer.TIP_QUEUE.add(tip);
             }
         }
 
@@ -177,13 +177,13 @@ public class TipManager {
          * 使 tip 永久显示，即 {@code alwaysVisible = true}
          */
         public void alwaysVisible(Tip tip) {
-            var list = TipRenderer.renderQueue;
+            var list = TipRenderer.TIP_QUEUE;
             if (list.size() <= 1 || list.get(0) == tip) return;
             for (int i = 0; i < list.size(); i++) {
                 Tip t = list.get(i);
                 if (t == tip) {
                     Tip clone = Tip.builder("").copy(t).alwaysVisible(true).build();
-                    TipRenderer.renderQueue.set(i, clone);
+                    TipRenderer.TIP_QUEUE.set(i, clone);
                     return;
                 }
             }
@@ -193,7 +193,7 @@ public class TipManager {
          * 置顶 tip
          */
         public void pin(String id) {
-            var list = TipRenderer.renderQueue;
+            var list = TipRenderer.TIP_QUEUE;
             if (list.size() <= 1 || list.get(0).getId().equals(id)) return;
             Iterator<Tip> iterator = list.iterator();
             while (iterator.hasNext()) {
@@ -217,7 +217,7 @@ public class TipManager {
          * 清除 tip 队列
          */
         public void clearRenderQueue() {
-            TipRenderer.renderQueue.clear();
+            TipRenderer.TIP_QUEUE.clear();
             TipRenderer.removeCurrent();
         }
     }
@@ -244,7 +244,7 @@ public class TipManager {
                     // 文件存在但是无法正确读取
                     if (TIP_STATE_FILE.exists()) {
                         String message = "The file '" + TIP_STATE_FILE + "' already exists but cannot be read correctly, it may be corrupted";
-                        manager.displayException(Tip.ErrorType.OTHER, new Exception(message));
+                        manager.displayException(Tip.ErrorType.LOAD, new Exception(message));
                         LOGGER.warn(message);
                     }
                     return;

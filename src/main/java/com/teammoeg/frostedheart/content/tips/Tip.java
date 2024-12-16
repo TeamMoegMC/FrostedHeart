@@ -318,16 +318,16 @@ public class Tip {
             if (json.has("id")) {
                 this.id = json.get("id").getAsString();
             } else {
-                error(ErrorType.OTHER, Lang.str("This tip has no id"));
+                error(ErrorType.LOAD, Lang.str("This tip cannot be loaded because there is no id in its file"));
+                id = "exception";
                 return this;
             }
             if (json.has("image")) {
-                Optional.ofNullable(ResourceLocation.tryParse(json.get("image").getAsString())).ifPresentOrElse(this::image, () -> error(ErrorType.OTHER, Lang.str("Invalid ResourceLocation")));
                 ResourceLocation image = ResourceLocation.tryParse(json.get("image").getAsString());
                 if (image != null) {
                     this.image = image;
                 } else {
-                    error(ErrorType.OTHER, Lang.str("Invalid ResourceLocation"));
+                    error(ErrorType.LOAD, Lang.str("The image ResourceLocation is invalid"));
                     return this;
                 }
             }
@@ -350,7 +350,7 @@ public class Tip {
             try {
                 return Integer.parseUnsignedInt(json.get(name).getAsString(), 16);
             } catch (NumberFormatException e) {
-                error(ErrorType.OTHER, e);
+                error(ErrorType.LOAD, e, Lang.str("'" + name + "' is not a valid hexadecimal number"));
                 return defColor;
             }
         }
@@ -385,7 +385,6 @@ public class Tip {
         SAVE("save"),
         EMPTY("empty"),
         INVALID("invalid"),
-        INVALID_IMAGE("invalid_image"),
         NOT_EXISTS("not_exists");
 
         final String key;

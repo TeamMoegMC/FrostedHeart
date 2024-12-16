@@ -1,21 +1,8 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.frostedheart.content.tips.TipManager;
-import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
-import com.teammoeg.frostedheart.util.client.AnimationUtil;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.FHColorHelper;
-import com.teammoeg.frostedheart.util.client.FHGuiHelper;
-import com.teammoeg.frostedheart.util.client.RawMouseHelper;
 import com.teammoeg.frostedheart.util.lang.Lang;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.resources.language.I18n;
-import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
 import java.util.List;

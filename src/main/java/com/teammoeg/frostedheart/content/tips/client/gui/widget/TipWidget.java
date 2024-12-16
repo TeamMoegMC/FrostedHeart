@@ -1,16 +1,14 @@
 package com.teammoeg.frostedheart.content.tips.client.gui.widget;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.frostedheart.content.tips.TipRenderer;
 import com.teammoeg.frostedheart.util.client.AnimationUtil;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.FHColorHelper;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -36,10 +34,7 @@ public class TipWidget extends AbstractWidget {
     private static final int MAX_WIDTH = 360;
     public final IconButton closeButton;
     public final IconButton pinButton;
-    /**
-     * -- SETTER --
-     *  更改当前显示的 tip
-     */
+    public Tip lastTip;
     @Setter
     @Getter
     @Nullable
@@ -53,10 +48,10 @@ public class TipWidget extends AbstractWidget {
 
     public TipWidget() {
         super(ClientUtils.screenWidth(), ClientUtils.screenHeight(), 0, 0, Component.literal("tip"));
-        this.closeButton = new IconButton(0, 0, IconButton.Icon.CROSS, FHColorHelper.CYAN, Component.translatable("gui.close"),
+        this.closeButton = new IconButton(0, 0, IconButton.Icon.CROSS, FHColorHelper.CYAN, Lang.gui("close").component(),
                 b -> state = State.FADING_OUT
         );
-        this.pinButton = new IconButton(0, 0, IconButton.Icon.LOCK, FHColorHelper.CYAN, Component.translatable("gui.frostedheart.tip_list.pin"),
+        this.pinButton = new IconButton(0, 0, IconButton.Icon.LOCK, FHColorHelper.CYAN, Lang.gui("pin").component(),
                 b -> this.alwaysVisibleOverride = true
         );
         this.closeButton.visible = false;
@@ -135,16 +130,10 @@ public class TipWidget extends AbstractWidget {
         setPosition((screenW - width - 8 + (int)yaw), ((int)(screenH * 0.3F) + (int)pitch));
         PoseStack pose = graphics.pose();
         pose.pushPose();
-        pose.translate((yaw - (int)yaw), (pitch - (int)pitch), isGuiOpened() ? 800/*确保显示在最上层*/ : 0);
+        pose.translate((yaw - (int)yaw), (pitch - (int)pitch), 800);
 
         // 背景
-        RenderSystem.enableBlend();
-//        RenderSystem.blendFunc(770, 771);
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableDepthTest();
         graphics.fill(getX()-BACKGROUND_BORDER, getY()-BACKGROUND_BORDER, getX()+width+BACKGROUND_BORDER, getY()+getHeight() + (contentLines.isEmpty() ? 1 : 6), backgroundColor);
-        RenderSystem.enableDepthTest();
-        RenderSystem.disableBlend();
 
         // 进度条
         if (state != State.FADING_OUT) {
@@ -164,11 +153,12 @@ public class TipWidget extends AbstractWidget {
         FHGuiHelper.drawStrings(graphics, ClientUtils.font(), contentLines, getX(), getY()+6 + (titleLines.size() * LINE_SPACE), fontColor, LINE_SPACE, false);
 
         // 按钮
+        pose.translate(0, 0, 100);
         closeButton.color = fontColor;
         closeButton.visible = true;
         closeButton.setPosition(getX() + super.getWidth() - 10, getY());
         closeButton.render(graphics, mouseX, mouseY, partialTick);
-        if (isGuiOpened() && !isAlwaysVisible()) {
+        if (isGuiOpened() && !isAlwaysVisible() && state != State.FADING_OUT) {
             pinButton.color = fontColor;
             pinButton.visible = true;
             pinButton.setPosition(getX() + super.getWidth() - 22, getY());
@@ -177,6 +167,43 @@ public class TipWidget extends AbstractWidget {
             pinButton.visible = false;
         }
         pose.popPose();
+    }
+
+    /**
+     * 当前是否有打开 Gui
+     */
+    public boolean isGuiOpened() {
+        return ClientUtils.mc().screen != null;
+    }
+
+    /**
+     * 重置状态
+     */
+    public void resetState() {
+        lastTip = tip;
+        tip = null;
+        progress = 0;
+        state = State.IDLE;
+        alwaysVisibleOverride = false;
+        pinButton.visible = false;
+        closeButton.visible = false;
+        pinButton.setFocused(false);
+        closeButton.setFocused(false);
+        // 将位置设置到屏幕外避免影响屏幕内的元素
+        setPosition(ClientUtils.screenWidth(), ClientUtils.screenHeight());
+        AnimationUtil.remove(ANIMATION_FADE_NAME);
+        AnimationUtil.remove(ANIMATION_PROGRESS_NAME);
+    }
+
+    /**
+     * 是否始终显示
+     */
+    public boolean isAlwaysVisible() {
+        return alwaysVisibleOverride || (tip != null && tip.isAlwaysVisible());
+    }
+
+    public Rect2i getRect() {
+        return new Rect2i(getX(), getY(), getWidth(), getHeight());
     }
 
     @Override
@@ -199,48 +226,9 @@ public class TipWidget extends AbstractWidget {
         return super.getWidth();
     }
 
-    /**
-     * 当前是否有打开 Gui
-     */
-    public boolean isGuiOpened() {
-        return ClientUtils.mc().screen != null;
-    }
-
-    /**
-     * 移除当前显示的 tip
-     */
-    public void removeTip() {
-        tip = null;
-    }
-
-    /**
-     * 重置状态，不移除当前 tip
-     */
-    public void resetState() {
-        ClientUtils.getPlayer().sendSystemMessage(Component.literal("resetting, P: " + progress + ", mile: " + Util.getMillis()));
-        ClientUtils.getPlayer().sendSystemMessage(Component.literal( "size: " + TipRenderer.renderQueue.size() + ", next: " + (TipRenderer.renderQueue.isEmpty() ? "empty" : TipRenderer.renderQueue.get(0).getId())));
-        progress = 0;
-        state = State.IDLE;
-        alwaysVisibleOverride = false;
-        pinButton.visible = false;
-        pinButton.setFocused(false);
-        closeButton.visible = false;
-        closeButton.setFocused(false);
-        // 将位置设置到屏幕外避免影响屏幕内的元素
-        setPosition(ClientUtils.screenWidth(), ClientUtils.screenHeight());
-        AnimationUtil.remove(ANIMATION_FADE_NAME);
-        AnimationUtil.remove(ANIMATION_PROGRESS_NAME);
-    }
-
-    /**
-     * 是否始终显示
-     */
-    public boolean isAlwaysVisible() {
-        return alwaysVisibleOverride || (tip != null && tip.isAlwaysVisible());
-    }
-
-    public Rect2i getRect() {
-        return new Rect2i(getX(), getY(), getWidth(), getHeight());
+    @Override
+    protected boolean isValidClickButton(int pButton) {
+        return false;
     }
 
     @Override

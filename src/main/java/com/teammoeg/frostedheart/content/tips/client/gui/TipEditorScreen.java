@@ -35,8 +35,8 @@ public class TipEditorScreen extends Screen {
     @Override
     protected void init() {
         addRenderableWidget(new IconButton(50, 50, IconButton.Icon.CHECK, FHColorHelper.CYAN, Component.translatable("gui.yes"), (b) -> {
-            if (!TipRenderer.renderQueue.isEmpty()) {
-                TipRenderer.renderQueue.get(0).saveAsFile();
+            if (!TipRenderer.TIP_QUEUE.isEmpty()) {
+                TipRenderer.TIP_QUEUE.get(0).saveAsFile();
             }
         }));
     }
