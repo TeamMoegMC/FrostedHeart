@@ -310,6 +310,7 @@ tasks.register('joinLangTask') {
         buildDir=new File(project.buildDir,"jointLang");
     }
 	inputs.dir "$rootDir/src/main/resources/assets/frostedheart/lang" 
+	if(new File("$rootDir/src/generated/resources/assets/frostedheart/lang").exists())
 	inputs.dir "$rootDir/src/generated/resources/assets/frostedheart/lang"
 	outputs.dir buildDir
 	
