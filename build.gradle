@@ -30,7 +30,6 @@ sourceSets {
             srcDirs = [
                     "$rootDir/src/main/resources",
             ]
-            exclude 'assets/frostedheart/lang/**'
         }
     }
     noDatagen{java{srcDirs=[]} resources{srcDirs=[]}}
@@ -43,7 +42,6 @@ sourceSets {
             srcDirs = [
                     "$rootDir/src/datagen/resources",
             ]
-            exclude 'assets/frostedheart/lang/**'
         }
     }
 }
@@ -307,12 +305,14 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 tasks.processResources {
     duplicatesStrategy = DuplicatesStrategy.WARN
+    exclude 'assets/frostedheart/lang/**'
+    new File("$rootDir/src/main/resources/assets/frostedheart/lang").listFiles({ f -> f.isDirectory() } as FileFilter).each(t->outputs.file(t.getAbsolutePath()+".json"))
     // automatically join lang files
     doLast{
     	def resourcesDir = sourceSets.main.output.resourcesDir
         resourcesDir.mkdirs()
         def langDir=new File(resourcesDir,"assets/frostedheart/lang/")
-        langDir.mkdirs()
+        
         def langList=new File("$rootDir/src/main/resources/assets/frostedheart/lang").listFiles({ f -> f.isDirectory() } as FileFilter)
         langList.each{fn->
         	
@@ -326,6 +326,7 @@ tasks.processResources {
 			    new JsonSlurper().parse(childFile).each{key,value->langFile.put(key,value)}
 			}
 			//write to output
+			langDir.mkdirs()
 			new File(langDir,fn.name+".json").text=JsonOutput.prettyPrint(JsonOutput.toJson(langFile))
         
         }
