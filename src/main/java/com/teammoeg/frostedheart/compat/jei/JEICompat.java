@@ -190,6 +190,8 @@ public class JEICompat implements IModPlugin {
     }
 
     public static void syncJEI() {
+        if (Minecraft.getInstance().level == null)
+            return;
         if (man == null)
             return;
         if (cachedInfoAdd)
