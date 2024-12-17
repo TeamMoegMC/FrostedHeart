@@ -296,7 +296,7 @@ public class FHResearch {
 	}
 
 	public static void main(String[] args) {
-		System.out.println(Research.CODEC);
+//		System.out.println(Research.CODEC);
 		File rf = new File("run/config/fhresearches");
 		rf.mkdirs();
 		JsonParser jp = new JsonParser();
@@ -319,21 +319,21 @@ public class FHResearch {
 			}
 
 		}
-		System.out.println(CodecUtil.INGREDIENT_CODEC.encodeStart(DataOps.COMPRESSED, Ingredient.of(Items.ACACIA_BOAT)));
+//		System.out.println(CodecUtil.INGREDIENT_CODEC.encodeStart(DataOps.COMPRESSED, Ingredient.of(Items.ACACIA_BOAT)));
 		FriendlyByteBuf pb=new FriendlyByteBuf(Unpooled.buffer());
 		Object prein=Research.CODEC.encodeStart(DataOps.COMPRESSED, new Research()).resultOrPartial(System.out::println).get();
-		System.out.println(prein);
+//		System.out.println(prein);
 		ObjectWriter.writeObject(pb,prein);
-		System.out.println();
-		System.out.println(pb.writerIndex());
-		for(int i=0;i<pb.writerIndex();i++) {
-			System.out.print(String.format("%2x ", pb.getByte(i)));
-		}
+//		System.out.println();
+//		System.out.println(pb.writerIndex());
+//		for(int i=0;i<pb.writerIndex();i++) {
+//			System.out.print(String.format("%2x ", pb.getByte(i)));
+//		}
 		pb.resetReaderIndex();
 		Object in=ObjectWriter.readObject(pb);
-		System.out.println();
-		System.out.println(in);
-		System.out.println(Research.CODEC.parse(DataOps.COMPRESSED,in));
+//		System.out.println();
+//		System.out.println(in);
+//		System.out.println(Research.CODEC.parse(DataOps.COMPRESSED,in));
 	}
 
 	// called before reload
