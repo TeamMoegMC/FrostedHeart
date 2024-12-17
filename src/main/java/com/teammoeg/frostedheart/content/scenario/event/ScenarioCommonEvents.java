@@ -5,6 +5,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -31,7 +32,7 @@ public class ScenarioCommonEvents {
 
     @SubscribeEvent
     public static void tickPlayer(TickEvent.PlayerTickEvent event) {
-        if (event.side == LogicalSide.SERVER && event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer player) {
+        if (FHConfig.COMMON.enableScenario.get() && event.side == LogicalSide.SERVER && event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer player) {
             // Scenario runner
             ScenarioConductor runner= FHScenario.getNullable(player);
             if (runner != null)
@@ -41,7 +42,7 @@ public class ScenarioCommonEvents {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void doPlayerInteract(PlayerInteractEvent ite) {
-        if(ite.getEntity() instanceof ServerPlayer&&!(ite.getEntity() instanceof FakePlayer)) {
+        if(FHConfig.COMMON.enableScenario.get() && ite.getEntity() instanceof ServerPlayer&&!(ite.getEntity() instanceof FakePlayer)) {
             FHScenario.trigVar(ite.getEntity(), EventTriggerType.PLAYER_INTERACT);
         }
     }

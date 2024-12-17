@@ -176,6 +176,7 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Double> flintIgnitionChance;
         public final ForgeConfigSpec.ConfigValue<Double> stickIgnitionChance;
         public final ForgeConfigSpec.ConfigValue<Double> consumeChanceWhenIgnited;
+        public final ForgeConfigSpec.ConfigValue<Boolean> enableScenario;
 
 
         Common(ForgeConfigSpec.Builder builder) {
@@ -215,6 +216,9 @@ public class FHConfig {
             enableDailyKitchen = builder
                     .comment("Enables sending wanted food message. ")
                     .define("enableDailyKitchen", true);
+            enableScenario = builder
+                    .comment("Enables the scenario system. ")
+                    .define("enableScenario", true);
             builder.pop();
 
         }
