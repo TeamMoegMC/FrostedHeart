@@ -69,8 +69,8 @@ public class ScenarioParser {
     	
     	
     }
-    private NodeInfo createCommand(String command, Map<String, String> params,ParserState state) {
-        return new NodeInfo(createCommandNode(command,params),state);
+    private NodeInfo createCommand(String command, Map<String, String> params,ParserState state,String text) {
+        return new NodeInfo(createCommandNode(command,params,text),state);
     }
     public static final Map<String,BiFunction<String,Map<String, String>,Node>> nodeFactory=new HashMap<>();
     static {
@@ -82,16 +82,16 @@ public class ScenarioParser {
 	    nodeFactory.put("emb",EmbNode::new);
 	    nodeFactory.put("label",LabelNode::new);
 	    //nodeFactory.put("p",ParagraphNode::new);
-	    nodeFactory.put("save",SavepointNode::new);
+	    //nodeFactory.put("save",SavepointNode::new);
 	    nodeFactory.put("sharp",ShpNode::new);
 	    nodeFactory.put("include",IncludeNode::new);
 	    nodeFactory.put("call",CallNode::new);
     }
-    private Node createCommandNode(String command, Map<String, String> params) {
+    private Node createCommandNode(String command, Map<String, String> params,String text) {
         BiFunction<String, Map<String, String>, Node> factory=nodeFactory.get(command);
         if(factory!=null)
         	return factory.apply(command, params);
-        return new CommandNode(command, params);
+        return new CommandNode(command, params,text);
 
     }
     public Scenario parseString(String name,List<String> code) {
@@ -169,7 +169,7 @@ public class ScenarioParser {
         String command = parseLiteralOrString(reader, -1);
         reader.skipWhitespace();
         //System.out.println("cmd:"+command);
-        if(!reader.has()) return createCommand(command, params,state);
+        if(!reader.has()) return createCommand(command, params,state,reader.fromStart());
         while (reader.has()) {
             String name = parseLiteralOrString(reader, '=');
             reader.skipWhitespace();
@@ -182,7 +182,7 @@ public class ScenarioParser {
             params.put(name, val);
             reader.skipWhitespace();
             
-            if (!reader.has()||reader.eat('#')) return createCommand(command, params,state);
+            if (!reader.has()||reader.eat('#')) return createCommand(command, params,state,reader.fromStart());
         }
         return new NodeInfo(new LiteralNode(reader.fromStart()),state);
 
@@ -194,7 +194,7 @@ public class ScenarioParser {
         String command = parseLiteralOrString(reader, ']');
         reader.skipWhitespace();
         
-        if(reader.eat(']')) return createCommand(command, params,state);
+        if(reader.eat(']')) return createCommand(command, params,state,reader.fromStart());
         while (reader.has()) {
             String name = parseLiteralOrString(reader, '=');
             reader.skipWhitespace();
@@ -205,7 +205,7 @@ public class ScenarioParser {
             String val = parseLiteralOrString(reader, ']');
             params.put(name, val);
             reader.skipWhitespace();
-            if(reader.eat(']'))return createCommand(command, params,state);
+            if(reader.eat(']'))return createCommand(command, params,state,reader.fromStart());
         }
         return new NodeInfo(new LiteralNode(reader.fromStart()),state);
     }

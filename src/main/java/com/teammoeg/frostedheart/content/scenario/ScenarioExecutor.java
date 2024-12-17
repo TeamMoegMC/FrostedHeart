@@ -236,7 +236,7 @@ public class ScenarioExecutor<T> {
     public void callCommand(String name, T scenarioVM, Map<String, String> params) {
         ScenarioMethod<T> command = commands.get(name);
         if (command == null) {
-            throw new ScenarioExecutionException("Can not find command " + name);
+            throw new CommandNotFoundException("Can not find command " + name);
         }
         command.execute(scenarioVM, params);
     }

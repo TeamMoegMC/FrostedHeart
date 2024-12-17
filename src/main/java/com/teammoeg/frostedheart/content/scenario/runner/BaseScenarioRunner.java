@@ -28,6 +28,7 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.teammoeg.frostedheart.content.scenario.CommandNotFoundException;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import com.teammoeg.frostedheart.content.scenario.ScenarioExecutionException;
 import com.teammoeg.frostedheart.content.scenario.parser.Node;
@@ -318,6 +319,10 @@ public class BaseScenarioRunner implements ScenarioThread{
     	}
 		return false;
 	}
+	@Override
+	public void appendLiteral(String text) {
+		scene.appendLiteral(text);
+	}
 	public void tickMain(ScenarioContext ctx) {
 		runIfNeeded(ctx);
 		tickWaitIfNeeded();
@@ -398,6 +403,7 @@ public class BaseScenarioRunner implements ScenarioThread{
 			jump(ctx.context(),ctx.context().macros.get(name));
 		}else
 			FHScenario.callCommand(name, ctx, cparams);
+			
 	}
 	
     
