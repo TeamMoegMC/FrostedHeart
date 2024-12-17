@@ -42,6 +42,7 @@ import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestItem;
 import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
+import com.teammoeg.frostedheart.content.utility.transportation.PowderedSnowWalkable;
 import com.teammoeg.frostedheart.content.water.item.FluidBottleItem;
 import com.teammoeg.frostedheart.content.water.item.IronBottleItem;
 import com.teammoeg.frostedheart.content.water.item.LeatherWaterBagItem;
@@ -1348,8 +1349,9 @@ public class FHItems {
     });
 
     // Equipment
-    public static final ItemEntry<FHBaseArmorItem> SNOWSHOES =
-            REGISTRATE.item("snowshoes", p -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)))
+    public static final ItemEntry<PowderedSnowWalkable> SNOWSHOES =
+            REGISTRATE.item("snowshoes", p -> new PowderedSnowWalkable(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)))
+                    .tag(FHTags.Items.POWDERED_SNOW_WALKABLE.tag)
                     .register();
     public static final ItemEntry<FHBaseArmorItem> ICE_SKATES =
             REGISTRATE.item("ice_skates", p -> new FHBaseArmorItem(ArmorMaterials.LEATHER, Type.BOOTS, new Item.Properties().stacksTo(1)))
