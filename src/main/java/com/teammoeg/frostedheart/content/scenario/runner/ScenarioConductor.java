@@ -38,6 +38,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.ListTag;
 import net.minecraftforge.common.util.LazyOptional;
+import org.apache.logging.log4j.MarkerManager;
 
 /**
  * ScenarioConductor
@@ -270,7 +271,7 @@ public class ScenarioConductor implements NBTSerializable{
 	public void load(CompoundTag data, boolean isPacket) {
 		getContext().varData.load(data.getCompound("vars"));
     	getContext().takeSnapshot();
-    	System.out.println(data.getCompound("vars"));
+    	FHMain.LOGGER.info(MarkerManager.getMarker("Scenario Conductor"), data.getCompound("vars"));
     	ListTag lacts=data.getList("acts", Tag.TAG_COMPOUND);
     	//Act initact=acts.get(init);
     	for(Tag v:lacts) {

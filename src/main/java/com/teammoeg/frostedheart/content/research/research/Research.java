@@ -178,7 +178,7 @@ public class Research implements FHRegisteredItem {
 		this.alwaysShow = flags[4];
 		this.setInfinite(flags[5]);
 		this.points = points;
-		System.out.println(effects);
+//		System.out.println(effects);
 	}
 
     /**

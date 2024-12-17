@@ -43,7 +43,7 @@ public class TypedCodecRegistry<T> extends TypeRegistry<T> {
 	}
 	public MapCodec<T> getCodec(String name){
 		MapCodec<T> selected= codecs.get(name);
-		System.out.println(selected);
+//		System.out.println(selected);
 		return selected;
 	}
 	public T read(FriendlyByteBuf buffer) {

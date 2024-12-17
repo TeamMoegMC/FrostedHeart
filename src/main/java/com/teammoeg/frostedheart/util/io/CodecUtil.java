@@ -378,15 +378,15 @@ public class CodecUtil {
 	public static <T> void writeCodec(FriendlyByteBuf pb, Codec<T> codec, T obj) {
 		DataResult<Object> ob = codec.encodeStart(DataOps.COMPRESSED, obj);
 		Optional<Object> ret = ob.resultOrPartial(t->{throw new EncoderException(t);});
-		System.out.println(ret.get());
+//		System.out.println(ret.get());
 		ObjectWriter.writeObject(pb, ret.get());
 	}
 	public static <T> T readCodec(FriendlyByteBuf pb, Codec<T> codec) {
 		
 		Object readed = ObjectWriter.readObject(pb);
-		System.out.println(readed);
+//		System.out.println(readed);
 		DataResult<T> ob = codec.parse(DataOps.COMPRESSED, readed);
-		System.out.println(ob);
+//		System.out.println(ob);
 		Optional<T> ret = ob.resultOrPartial(FHMain.LOGGER::info);
 		return ret.get();
 	}

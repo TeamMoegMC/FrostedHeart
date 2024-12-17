@@ -209,7 +209,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         @Override
         public void onClose() {
             super.onClose();
-            System.out.println(e.rewards);
+//            System.out.println(e.rewards);
         }
     }
     private static class Stats extends EffectEditor<EffectStats> {

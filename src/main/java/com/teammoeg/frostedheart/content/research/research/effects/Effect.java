@@ -128,7 +128,7 @@ public abstract class Effect extends AutoIDItem{
     }
     public BaseData getBaseData() {
     	BaseData bd= new BaseData(name, tooltip, icon, nonce, hidden);
-    	System.out.println(bd);
+//    	System.out.println(bd);
     	return bd;
     }
     /**
