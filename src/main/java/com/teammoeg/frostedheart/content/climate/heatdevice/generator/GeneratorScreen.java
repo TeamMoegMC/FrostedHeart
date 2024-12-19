@@ -270,7 +270,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
                 RenderSystem.blendFunc(770, 771);
                 int u = texU + (offsetDir == 0 ? width : offsetDir == 2 ? -width : 0) * getStateAsInt();
                 int v = texV + (offsetDir == 1 ? height : offsetDir == 3 ? -height : 0) * getStateAsInt();
-                graphics.blit(texture, getX(), getY(), u, v, width, height, TEXH, TEXW);
+                graphics.blit(texture, getX(), getY(), u, v, width, height, TEXW, TEXH);
                 if (!getMessage().getString().isEmpty()) {
                     int txtCol = 0xE0E0E0;
                     if (!this.active)
@@ -303,7 +303,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
                 RenderSystem.blendFunc(770, 771);
                 int u = texU + (offsetDir == 0 ? width : offsetDir == 2 ? -width : 0) * getStateAsInt();
                 int v = texV + (offsetDir == 1 ? height : offsetDir == 3 ? -height : 0) * getStateAsInt();
-                graphics.blit(texture, getX(), getY(), u, v, width, height, TEXH, TEXW);
+                graphics.blit(texture, getX(), getY(), u, v, width, height, TEXW, TEXH);
                 if (!getMessage().getString().isEmpty()) {
                     int txtCol = 0xE0E0E0;
                     if (!this.active)
