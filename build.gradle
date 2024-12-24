@@ -269,7 +269,7 @@ dependencies {
 
     // Caupona
     compileOnly fg.deobf("curse.maven:caupona-656147:5116975")
-    datagenImplementation fg.deobf("curse.maven:caupona-656147:5116975")
+    implementation fg.deobf("curse.maven:caupona-656147:5116975")
 
     // LDLib
     compileOnly fg.deobf("com.lowdragmc.ldlib:ldlib-forge-${minecraft_version}:${ldlib_version}") { transitive = false }
