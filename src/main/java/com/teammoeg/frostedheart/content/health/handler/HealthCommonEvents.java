@@ -43,6 +43,11 @@ public class HealthCommonEvents {
     @SubscribeEvent
     public static void finishUsingItems(LivingEntityUseItemEvent.Finish event) {
         DailyKitchen.tryGiveBenefits(event);
+        if(event.getEntity() instanceof Player player) {
+            NutritionCapability.getCapability(player).ifPresent(
+                    e->e.eat(player,event.getItem())
+            );
+        }
     }
 
     @SubscribeEvent
