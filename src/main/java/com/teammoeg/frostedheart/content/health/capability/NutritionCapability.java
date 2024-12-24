@@ -43,6 +43,9 @@ public class NutritionCapability implements NBTSerializable {
         public float getNutritionValue(){
             return fat + carbohydrate + protein + vegetable;
         }
+        public boolean isZero(){
+            return fat == 0 && carbohydrate == 0 && protein == 0 && vegetable == 0;
+        }
     }
 
     @Override

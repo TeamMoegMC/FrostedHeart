@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 
@@ -174,6 +175,17 @@ public class LangBuilder {
         return this;
     }
 
+    /**
+     * Applies the format to all added components
+     *
+     * @param style
+     * @return
+     */
+    public LangBuilder style(Style style) {
+        assertComponent();
+        component = component.withStyle(style);
+        return this;
+    }
     /**
      * Applies the color to all added components
      *

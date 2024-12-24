@@ -51,6 +51,7 @@ import com.teammoeg.frostedheart.content.climate.tooltips.BlockTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.EquipmentTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
+import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
 import com.teammoeg.frostedheart.util.FHRemote;
@@ -118,6 +119,7 @@ public class FHMain {
         REGISTRATE.setTooltipModifierFactory(item -> {
             return new ItemDescription.Modifier(item, TooltipHelper.Palette.STANDARD_CREATE)
                     .andThen(new FoodTempStats(item))
+                    .andThen(new FoodNutritionStats(item))
                     .andThen(TooltipModifier.mapNull(PlantTempStats.create(item)))
                     .andThen(TooltipModifier.mapNull(BlockTempStats.create(item)))
                     .andThen(TooltipModifier.mapNull(EquipmentTempStats.create(item)))
