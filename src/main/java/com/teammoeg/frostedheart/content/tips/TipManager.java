@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.mojang.logging.LogUtils;
+import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import lombok.Getter;
 import lombok.Setter;
@@ -152,7 +153,7 @@ public class TipManager {
 
             if (tip.isPin() && !TipRenderer.TIP_QUEUE.isEmpty()) {
                 Tip last = TipRenderer.TIP_QUEUE.get(0);
-                TipRenderer.removeCurrent();
+                TipWidget.INSTANCE.close();
                 TipRenderer.TIP_QUEUE.add(0, last);
                 TipRenderer.TIP_QUEUE.add(0, tip);
             } else {
@@ -182,7 +183,8 @@ public class TipManager {
 
             if (tip.isPin()) {
                 Tip last = TipRenderer.TIP_QUEUE.get(0);
-                TipRenderer.removeCurrent();
+                TipWidget.INSTANCE.close();
+                TipRenderer.TIP_QUEUE.add(0, last);
                 TipRenderer.TIP_QUEUE.add(0, last);
                 TipRenderer.TIP_QUEUE.add(0, tip);
             } else {

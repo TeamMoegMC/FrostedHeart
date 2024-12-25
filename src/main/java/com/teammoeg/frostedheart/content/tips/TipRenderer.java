@@ -44,7 +44,6 @@ public class TipRenderer {
      * 移除当前显示的tip
      */
     public static void removeCurrent() {
-        if (!TIP_QUEUE.isEmpty()) TIP_QUEUE.remove(0);
         TipWidget.INSTANCE.close();
     }
 
@@ -75,7 +74,7 @@ public class TipRenderer {
 
     @SubscribeEvent
     public static void onHudRender(RenderGuiEvent.Post event) {
-        if (!FHConfig.CLIENT.renderTips.get() || TIP_QUEUE.isEmpty())
+        if (!FHConfig.CLIENT.renderTips.get() || (TIP_QUEUE.isEmpty() && !isTipRendering()))
             return;
         Minecraft MC = ClientUtils.mc();
         if (MC.screen != null && !SCREEN_BLACKLIST.contains(MC.screen.getClass()))
@@ -100,7 +99,7 @@ public class TipRenderer {
 
     @SubscribeEvent
     public static void onGuiRender(ScreenEvent.Render.Post event) {
-        if (!FHConfig.CLIENT.renderTips.get() || TIP_QUEUE.isEmpty())
+        if (!FHConfig.CLIENT.renderTips.get() || (TIP_QUEUE.isEmpty() && !isTipRendering()))
             return;
         if (!event.getScreen().children().contains(TipWidget.INSTANCE))
             return;

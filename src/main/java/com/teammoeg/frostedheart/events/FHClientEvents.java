@@ -19,15 +19,14 @@
 
 package com.teammoeg.frostedheart.events;
 
-import com.teammoeg.frostedheart.*;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
-import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
-import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.gui.ResearchToast;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
@@ -35,14 +34,15 @@ import com.teammoeg.frostedheart.content.research.research.effects.EffectCraftin
 import com.teammoeg.frostedheart.content.research.research.effects.EffectShowCategory;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
+import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.FHVersion;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.GuiClickedEvent;
 import com.teammoeg.frostedheart.util.client.RenderHelper;
-
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -54,15 +54,20 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.*;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.level.LevelEvent;
@@ -74,10 +79,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import org.lwjgl.glfw.GLFW;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
@@ -460,7 +461,7 @@ public class FHClientEvents {
     public static void onPlayerLoggedIn(ClientPlayerNetworkEvent.LoggingIn event) {
         // default tip
         if (!TipManager.INSTANCE.hasTip("default")) {
-            Tip.builder("default").line(Lang.str("Default Tip")).build().saveAsFile();
+            Tip.builder("default").line(Lang.str("Default Tip")).image(new ResourceLocation(FHMain.MODID, "textures/item/debug_item.png")).build().saveAsFile();
             TipManager.INSTANCE.loadFromFile();
         }
         TipManager.INSTANCE.display().clearRenderQueue();

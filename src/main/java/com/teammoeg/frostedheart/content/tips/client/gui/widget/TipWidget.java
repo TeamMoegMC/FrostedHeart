@@ -132,7 +132,7 @@ public class TipWidget extends AbstractWidget {
             FHGuiHelper.blitColored(
                     pose,
                     getX() + (super.getWidth() / 2) - (context.imageSize.width / 2),
-                    getY() + border + (context.titleLines.size() + context.contentLines.size()) * RenderContext.LINE_SPACE,
+                    getY() + border + (context.totalLineSize * RenderContext.LINE_SPACE),
                     context.imageSize.width, context.imageSize.height,
                     0, 0,
                     context.imageSize.width, context.imageSize.height,
