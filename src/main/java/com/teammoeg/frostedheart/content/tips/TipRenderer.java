@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.content.tips;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -46,7 +45,7 @@ public class TipRenderer {
      */
     public static void removeCurrent() {
         if (!TIP_QUEUE.isEmpty()) TIP_QUEUE.remove(0);
-        TipWidget.INSTANCE.setState(TipWidget.State.FADING_OUT);
+        TipWidget.INSTANCE.close();
     }
 
     @SubscribeEvent
@@ -120,12 +119,12 @@ public class TipRenderer {
     }
 
     private static void update() {
-        if (TipWidget.INSTANCE.getState() == TipWidget.State.IDLE) {
+        if (!isTipRendering()) {
             TIP_QUEUE.remove(TipWidget.INSTANCE.lastTip);
             TipWidget.INSTANCE.lastTip = null;
             // 切换下一个
             if (!TIP_QUEUE.isEmpty()) {
-                TipWidget.INSTANCE.setTip(TIP_QUEUE.get(0));
+                TipWidget.INSTANCE.tip = TIP_QUEUE.get(0);
             }
         }
     }

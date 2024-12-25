@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -75,14 +74,14 @@ public class TipManager {
         if (tip != null) {
             return tip;
         }
-        return Tip.builder(id).error(Tip.ErrorType.NOT_EXISTS, Lang.str(TIP_PATH.toString() + "\\" + id + ".json")).build();
+        return Tip.builder(id).error(Tip.ErrorType.OTHER, Lang.str(id), Lang.tips("error.tip_not_exists").component()).build();
     }
 
     /**
-     * 返回对应的 tip 实例是否存在
+     * 对应的 tip 是否存在
      */
     public boolean hasTip(String id) {
-        return loadedTips.containsKey(id);
+        return id != null && loadedTips.containsKey(id);
     }
 
     /**
@@ -98,17 +97,25 @@ public class TipManager {
         File[] general = TIP_PATH.listFiles();
         if (general != null) files.addAll(List.of(general));
         if (!files.isEmpty()) {
+            int sum = 0;
             for (File tipFile : files) {
                 Tip tip = Tip.fromJsonFile(tipFile);
-                loadedTips.put(tip.getId(), tip);
+                if (loadedTips.containsKey(tip.getId())) {
+                    // 重复id
+                    Tip d = Tip.builder("duplicate").error(Tip.ErrorType.LOAD, Lang.str(tip.getId()), Lang.tips("error.load.duplicate_id").component()).build();
+                    display.force(d);
+                } else {
+                    loadedTips.put(tip.getId(), tip);
+                    sum++;
+                }
             }
-            state.loadFromFile();
+            LOGGER.debug("{} tips loaded", sum);
         }
-        LOGGER.debug("Loaded {} tips", files.size());
+        state.loadFromFile();
     }
 
-    private void displayException(Tip.ErrorType type, Exception e) {
-        Tip exception = Tip.builder("exception").error(type, e).build();
+    private void displayException(Tip.ErrorType type, String id, Exception e) {
+        Tip exception = Tip.builder("exception").error(type, e, Lang.str(id)).build();
         display.force(exception);
     }
 
@@ -140,17 +147,21 @@ public class TipManager {
 
             // 更改非临时 tip 的状态
             if (!tip.isTemporary()) {
-//                if (tip.id.startsWith("*custom*")) {
-//                    TipStateManager.manager.unlockCustom(tip);
-//                }
                 manager.state.setLockState(tip, true);
             }
 
-            if (tip.isPin()) {
+            if (tip.isPin() && !TipRenderer.TIP_QUEUE.isEmpty()) {
+                Tip last = TipRenderer.TIP_QUEUE.get(0);
                 TipRenderer.removeCurrent();
+                TipRenderer.TIP_QUEUE.add(0, last);
                 TipRenderer.TIP_QUEUE.add(0, tip);
             } else {
                 TipRenderer.TIP_QUEUE.add(tip);
+            }
+
+            // 添加下一个tip
+            if (!tip.getNextTip().isEmpty()) {
+                general(tip.getNextTip());
             }
         }
 
@@ -165,8 +176,14 @@ public class TipManager {
          * 无视 tip 的状态，在渲染队列中强制添加此 tip
          */
         public void force(Tip tip) {
+            if (!tip.isTemporary()) {
+                manager.state.setLockState(tip, true);
+            }
+
             if (tip.isPin()) {
+                Tip last = TipRenderer.TIP_QUEUE.get(0);
                 TipRenderer.removeCurrent();
+                TipRenderer.TIP_QUEUE.add(0, last);
                 TipRenderer.TIP_QUEUE.add(0, tip);
             } else {
                 TipRenderer.TIP_QUEUE.add(tip);
@@ -177,12 +194,14 @@ public class TipManager {
          * 使 tip 永久显示，即 {@code alwaysVisible = true}
          */
         public void alwaysVisible(Tip tip) {
+            if (TipRenderer.TIP_QUEUE.isEmpty()) return;
+
             var list = TipRenderer.TIP_QUEUE;
             if (list.size() <= 1 || list.get(0) == tip) return;
             for (int i = 0; i < list.size(); i++) {
                 Tip t = list.get(i);
                 if (t == tip) {
-                    Tip clone = Tip.builder("").copy(t).alwaysVisible(true).build();
+                    Tip clone = Tip.builder("copy").copy(t).alwaysVisible(true).build();
                     TipRenderer.TIP_QUEUE.set(i, clone);
                     return;
                 }
@@ -192,15 +211,14 @@ public class TipManager {
         /**
          * 置顶 tip
          */
-        public void pin(String id) {
+        public void pin(Tip tip) {
             var list = TipRenderer.TIP_QUEUE;
-            if (list.size() <= 1 || list.get(0).getId().equals(id)) return;
-            Iterator<Tip> iterator = list.iterator();
-            while (iterator.hasNext()) {
-                Tip tip = iterator.next();
-                if (tip.getId().equals(id)) {
-                    iterator.remove();
-                    list.add(0, tip);
+            if (list.size() <= 1 || list.get(0) == tip) return;
+
+            for (Tip t : list) {
+                if (t == tip) {
+                    TipRenderer.TIP_QUEUE.remove(t);
+                    force(tip);
                     return;
                 }
             }
@@ -244,7 +262,7 @@ public class TipManager {
                     // 文件存在但是无法正确读取
                     if (TIP_STATE_FILE.exists()) {
                         String message = "The file '" + TIP_STATE_FILE + "' already exists but cannot be read correctly, it may be corrupted";
-                        manager.displayException(Tip.ErrorType.LOAD, new Exception(message));
+                        manager.displayException(Tip.ErrorType.LOAD, "tip_states.json", new Exception(message));
                         LOGGER.warn(message);
                     }
                     return;
@@ -254,7 +272,7 @@ public class TipManager {
                         .collect(Collectors.toMap(state -> manager.getTip(state.id), s -> s)));
             } catch (IOException e) {
                 LOGGER.error("Unable to load file: '{}'", TIP_STATE_FILE, e);
-                manager.displayException(Tip.ErrorType.LOAD, e);
+                manager.displayException(Tip.ErrorType.LOAD, "tip_states.json", e);
             }
         }
 
@@ -267,7 +285,7 @@ public class TipManager {
                 writer.write(json);
             } catch (IOException e) {
                 LOGGER.error("Unable to save file: '{}'", TIP_STATE_FILE, e);
-                manager.displayException(Tip.ErrorType.SAVE, e);
+                manager.displayException(Tip.ErrorType.SAVE, "tip_states.json", e);
             }
         }
 
