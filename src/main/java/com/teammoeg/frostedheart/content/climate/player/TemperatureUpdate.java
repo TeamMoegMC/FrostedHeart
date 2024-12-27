@@ -148,9 +148,9 @@ public class TemperatureUpdate {
                         }
                         MobEffectInstance current = player.getEffect(FHMobEffects.WET.get());
                         if (hasArmor)
-                            player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(), FHConfig.SERVER.wetEffectDuration.get() * FHConfig.SERVER.wetClothesDurationMultiplier.get(), 0));// punish for wet clothes
+                            player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(), FHConfig.SERVER.wetEffectDuration.get() * FHConfig.SERVER.wetClothesDurationMultiplier.get(), 0, false ,false));// punish for wet clothes
                         else if (current == null || current.getDuration() < FHConfig.SERVER.wetEffectDuration.get())
-                            player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(), FHConfig.SERVER.wetEffectDuration.get(), 0));
+                            player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(), FHConfig.SERVER.wetEffectDuration.get(), 0, false ,false));
                     }
 
                     /* Initialization */
