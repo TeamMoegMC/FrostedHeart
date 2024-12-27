@@ -76,8 +76,7 @@
     "client.PrimaryLevelDataMixin",
     "client.ToastComponentMixin",
     "create.MixinOpenConfigButtonHandler",
-    "oculus.IrisRenderingPipelineAccess",
-    "client.MixinBitmapProviderDefinition"
+    "oculus.IrisRenderingPipelineAccess"
   ],
   "injectors": {
     "defaultRequire": 1

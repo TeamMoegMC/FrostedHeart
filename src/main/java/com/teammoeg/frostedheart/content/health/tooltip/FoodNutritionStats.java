@@ -73,7 +73,7 @@ public class FoodNutritionStats implements TooltipModifier {
             if(nutrition.vegetable()>0) {
             	builder.addElement(VEGETABLE_COLOR, "\uF503",nutrition.vegetable());
             }
-            list.addAll(builder.build());
+            list.add(builder.build());
         }
         return list;
     }

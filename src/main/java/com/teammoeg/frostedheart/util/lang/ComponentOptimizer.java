@@ -15,12 +15,11 @@ public class ComponentOptimizer {
 		
 	}
 	public void appendChar(String ch,Style style) {
-		if(style==sty) {
-			sb.append(ch);
-		}else {
+		if(style!=sty) {
 			createComponent();
 			sty=style;
 		}
+		sb.append(ch);
 	}
 	public void createComponent() {
 		if(sb.length()!=0) {

@@ -4,7 +4,7 @@
             "type": "bitmap",
             "file": "frostedheart:font/white_blank.png",
             "height":8,
-            "ascent":519,
+            "ascent":7,
             "chars":[
             "\uF512"
             ]

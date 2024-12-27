@@ -28,35 +28,58 @@ public class FineProgressBarBuilder {
 		elm.add(new ProgressElement(color,rounder.getPercentRounded(percent),icon));
 		return this;
 	}
-	public List<Component> build() {
+	public Component build() {
 		if(elm.isEmpty()) {
-			return Arrays.asList(Lang.str("\uF510"+"\uF512".repeat(len-2)+"\uF510").withStyle(def_style),Component.empty());
+			return Lang.str("\uF510\uF513"+"\uF512\uF513".repeat(len-2)+"\uF510").withStyle(def_style);
 		}
-		List<Component> siblings=new ArrayList<>();
-		StringBuilder sb=new StringBuilder();
+		int lastIconReminder=0;
+		int progressedLength=0;
+		List<Integer> iconPoss=new ArrayList<>();
 		int total=0;
 		for(ProgressElement pe:elm) {
-			siblings.add(Lang.str("\uF510".repeat(pe.len())).withStyle(t->t.withColor(pe.color)));
+			if(pe.icon!=null) {
+				int remlen=(pe.len()-8)/2;
+				if(remlen<lastIconReminder)
+					remlen=lastIconReminder;
+				lastIconReminder=remlen+8-pe.len();
+				if(lastIconReminder<0)lastIconReminder=0;
+				iconPoss.add(remlen+progressedLength);
+				progressedLength+=pe.len();
+			}else {
+				iconPoss.add(-1);
+			}
 			total+=pe.len();
 			//System.out.println(pe.len);
-			int prelen=(pe.len()-8)/2;
-			for(int i=0;i<pe.len();i++) {
-				if(i==prelen&&pe.icon()!=null) {
-					sb.append(pe.icon());
-					i+=8;
-				}else {
-					sb.append("\uF511");
-				}
-			}
 		}
-
+		Iterator<ProgressElement> celm=elm.iterator();
+		ProgressElement cur=celm.next();
+		Style cstyle=def_style.withColor(cur.color());
+		int offset=0;
+		
+		//StringBuilder iconBuilder=new StringBuilder();
+		ComponentOptimizer co=new ComponentOptimizer();
+		for(int i=0;i<len;i++) {
+			int iconPos=iconPoss.indexOf(i-8);
+			if(iconPos!=-1) {
+				//System.out.println("Appending icon "+iconPos);
+				co.appendChar("\uF511"+elm.get(iconPos).icon+"\uF513", def_style);
+			}
+			if(i-offset>=cur.len()) {
+				offset+=cur.len();
+				if(!celm.hasNext())
+					break;
+				cur=celm.next();
+				cstyle=def_style.withColor(cur.color());
+			}
+			co.appendChar("\uF510\uF513", cstyle);
+		}
 		int remainLen=len-total;
 		if(remainLen>0) {
-			siblings.add(Lang.str("\uF512".repeat(remainLen-1)+"\uF510"));
+			//System.out.println(remainLen);
+			co.appendChar("\uF512\uF513".repeat(remainLen-1), def_style);
+			co.appendChar("\uF510", def_style);
 		}
-		MutableComponent mstr=Lang.str("").withStyle(def_style);
-		siblings.forEach(mstr::append);
-		return Arrays.asList(mstr,Lang.str(sb.toString()).withStyle(def_style));
+		return co.build();
 	}
 
 }
