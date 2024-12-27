@@ -188,6 +188,8 @@ public class TipWidget extends AbstractWidget {
         closeButton.visible = false;
         pinButton.setFocused(false);
         closeButton.setFocused(false);
+        pinButton.setAlpha(1F);
+        closeButton.setAlpha(1F);
         AnimationUtil.remove(RenderContext.FADE_ANIM_NAME);
         AnimationUtil.remove(RenderContext.PROGRESS_ANIM_NAME);
         // 将位置设置到屏幕外避免影响屏幕内的元素

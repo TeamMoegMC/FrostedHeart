@@ -202,17 +202,16 @@ public class Tip {
 
             } catch (JsonSyntaxException e) {
                 LOGGER.error("Invalid JSON format '{}'", filePath, e);
-                builder.error(ErrorType.LOAD, e, Lang.str(builder.getId()), Lang.tips("error.invalid_json").component());
+                builder.error(ErrorType.LOAD, e, Lang.str(builder.id), Lang.tips("error.invalid_json").component());
 
             } catch (Exception e) {
                 LOGGER.error("Unable to load file '{}'", filePath, e);
-                builder.error(ErrorType.LOAD, e, Lang.str(builder.getId()), Lang.tips("error.other").component());
+                builder.error(ErrorType.LOAD, e, Lang.str(builder.id), Lang.tips("error.other").component());
             }
         }
         return builder.build();
     }
 
-    @Getter
     public static class Builder {
         private final List<Component> contents = new ArrayList<>();
         private String id;
@@ -393,13 +392,13 @@ public class Tip {
             if (json.has("id")) {
                 String s = json.get("id").getAsString();
                 if (s.isBlank()) {
-                    error(ErrorType.LOAD, Lang.str(getId()), Lang.tips("error.no_id").component());
+                    error(ErrorType.LOAD, Lang.str(id), Lang.tips("error.no_id").component());
                     id = "exception";
                     return this;
                 }
                 id = s;
             } else {
-                error(ErrorType.LOAD, Lang.str(getId()), Lang.tips("error.no_id").component());
+                error(ErrorType.LOAD, Lang.str(id), Lang.tips("error.no_id").component());
                 id = "exception";
                 return this;
             }
@@ -414,7 +413,7 @@ public class Tip {
                 }
             }
             if (this.contents.isEmpty()) {
-                error(ErrorType.LOAD, Lang.str(getId()), Lang.tips("error.empty").component());
+                error(ErrorType.LOAD, Lang.str(id), Lang.tips("error.empty").component());
                 return this;
             }
 
@@ -425,7 +424,7 @@ public class Tip {
                     if (image != null) {
                         image(image);
                     } else {
-                        error(ErrorType.LOAD, Lang.str(getId()), Lang.tips("error.invalid_image", location).component());
+                        error(ErrorType.LOAD, Lang.str(id), Lang.tips("error.invalid_image", location).component());
                         return this;
                     }
                 }
