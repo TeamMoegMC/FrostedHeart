@@ -58,7 +58,7 @@ public class FoodNutritionStats implements TooltipModifier {
                 .style(ChatFormatting.GRAY)
                 .addTo(list);
         if (foodNutrition != null&&stack.isEdible()) {
-            NutritionCapability.Nutrition nutrition = foodNutrition.scale(1/foodNutrition.getNutritionValue()).scale(0.75f);
+            NutritionCapability.Nutrition nutrition = foodNutrition.scale(1/foodNutrition.getNutritionValue());
             FineProgressBarBuilder builder=new FineProgressBarBuilder(PROGRESS_LENGTH);
             //list.add(Lang.str("\uF504").withStyle(FHTextIcon.applyFont(Style.EMPTY)));
             if(nutrition.fat()>0) {
