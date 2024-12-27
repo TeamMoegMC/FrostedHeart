@@ -3,9 +3,38 @@
         {
             "type": "reference",
             "id": "minecraft:default"
-        },{
+        },
+        {
             "type": "reference",
             "id": "frostedheart:include/thermometer"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/grains"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/fruit_and_vegs"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/plant_oil"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/protein"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/white"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/white_back"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/white_blank"
         }
     ]
 }

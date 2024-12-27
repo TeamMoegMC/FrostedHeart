@@ -31,6 +31,7 @@ sourceSets {
                     "$rootDir/src/main/resources",
             ]
             exclude 'assets/frostedheart/lang/**/'
+            exclude 'assets/frostedheart/font/unifont/*'
         }
     }
     noDatagen{java{srcDirs=[]} resources{srcDirs=[]}}
@@ -305,7 +306,7 @@ dependencies {
 }
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
-tasks.register('joinLangTask') {
+tasks.register('joinLang') {
 	ext {
         buildDir=new File(project.buildDir,"jointLang");
     }
@@ -333,10 +334,24 @@ tasks.register('joinLangTask') {
         }
     }
 }
-processResources.dependsOn(joinLangTask)
+tasks.register('zipUnifont', Zip) {
+	ext {
+        buildDir=new File(project.buildDir,"zipUnifont");
+    }
+    inputs.dir "$rootDir/src/main/resources/assets/frostedheart/font/unifont" 
+	outputs.dir buildDir
+    archiveFileName = "default.zip"
+    destinationDirectory = buildDir
+
+    from new File("$rootDir/src/main/resources/assets/frostedheart/font/unifont")
+}
+
+processResources.dependsOn(joinLang)
+processResources.dependsOn(zipUnifont)
 tasks.processResources {
     duplicatesStrategy = DuplicatesStrategy.WARN
-    from( tasks.joinLangTask.buildDir){ into 'assets/frostedheart/lang/'}
+    from( tasks.joinLang.buildDir){ into 'assets/frostedheart/lang/'}
+    from( tasks.zipUnifont.buildDir){ into 'assets/frostedheart/font/'}
 }
 jar {
     manifest {

@@ -12,6 +12,7 @@ import net.minecraft.world.entity.player.Player;
 
 import java.util.List;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.lang.FHTextIcon.TextIconType;
 
 /**
@@ -30,7 +31,9 @@ public class LangBuilder {
     public LangBuilder(String namespace) {
         this.namespace = namespace;
     }
-
+    public LangBuilder() {
+        this.namespace = FHMain.MODID;
+    }
     public LangBuilder space() {
         return text(" ");
     }

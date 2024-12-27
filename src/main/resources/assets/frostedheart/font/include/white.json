@@ -1,0 +1,13 @@
+{
+    "providers": [
+        {
+            "type": "bitmap",
+            "file": "frostedheart:font/white.png",
+            "height":8,
+            "ascent":519,
+            "chars":[
+            "\uF510"
+            ]
+        }
+    ]
+}
