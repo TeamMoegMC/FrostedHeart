@@ -237,11 +237,15 @@ public class GeneratorData implements SpecialData {
             return false;
         boolean hasFuel = true;
         overdriveLevel -= 5 * (teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER) + 1);
+
+        	
         if (isOverdrive) {
             while (process <= 1 && hasFuel) {
                 hasFuel = consumesFuel(w);
             }
             overdriveLevel += 20;
+            if(overdriveLevel<0)
+            	overdriveLevel=0;
             if (overdriveLevel >= this.getMaxOverdrive()) {
                 isBroken = true;
             }
@@ -252,6 +256,8 @@ public class GeneratorData implements SpecialData {
 
 
         } else {
+            if(overdriveLevel<0)
+            	overdriveLevel=0;
             while (process <= 0 && hasFuel) {
                 hasFuel = consumesFuel(w);
             }
@@ -297,6 +303,36 @@ public class GeneratorData implements SpecialData {
 
     public int getMaxOverdrive() {
         return 240400;
+    }
+    /**
+     * Get the actual range of the heating device.
+     * The range is calculated by the formula:
+     * 12 + 4 * (rangeLevel - 1) if rangeLevel>1
+     * <p>
+     * The Base range at level 1 is 12 blocks.
+     * For each additional level, the range increases by 4 blocks.
+     *
+     * @return in blocks
+     */
+    public int getRadius() {
+        float rlevel = RLevel;
+        if (rlevel <= 1)
+            return (int) (12 * rlevel);
+        return (int) (12 + (rlevel - 1) * 4);
+    }
+
+    /**
+     * Get the actual temperature modification of the heating device.
+     * The temperature modification is calculated by the formula:
+     * 10 * temperatureLevel
+     * <p>
+     * The Base temperature modification at level 1 is 10.
+     * For each additional level, the temperature modification increases by 10.
+     *
+     * @return in degrees
+     */
+    public int getTempMod() {
+        return (int) (TLevel * 10);
     }
 
     @Override
