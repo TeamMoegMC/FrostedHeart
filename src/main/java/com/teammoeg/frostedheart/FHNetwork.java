@@ -65,6 +65,7 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraftforge.registries.MissingMappingsEvent;
 
 public class FHNetwork {
 
@@ -78,7 +79,7 @@ public class FHNetwork {
     private static int iid = 0;
 
     /**
-     * Register Message Type, would automatically use method in FHMessage as serializer and <init>(PacketBuffer) as deserializer
+     * Register Message Type, would automatically use method in FHMessage as serializer and &lt;init&gt;(PacketBuffer) as deserializer
      */
     public static synchronized <T extends FHMessage> void registerMessage(String name, Class<T> msg) {
         classesId.put(msg, FHMain.rl(name));

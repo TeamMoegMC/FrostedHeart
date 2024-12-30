@@ -310,17 +310,17 @@ tasks.register('joinLang') {
 	ext {
         buildDir=new File(project.buildDir,"jointLang");
     }
-	inputs.dir "$rootDir/src/main/resources/assets/frostedheart/lang" 
-	if(new File("$rootDir/src/generated/resources/assets/frostedheart/lang").exists())
-	inputs.dir "$rootDir/src/generated/resources/assets/frostedheart/lang"
+	inputs.dir "$rootDir/src/main/resources/assets/$mod_id/lang" 
+	if(new File("$rootDir/src/generated/resources/assets/$mod_id/lang").exists())
+		inputs.dir "$rootDir/src/generated/resources/assets/$mod_id/lang"
 	outputs.dir buildDir
 	
     doLast{
-        def langList=new File("$rootDir/src/main/resources/assets/frostedheart/lang").listFiles({ f -> f.isDirectory() } as FileFilter)
+        def langList=new File("$rootDir/src/main/resources/assets/$mod_id/lang").listFiles({ f -> f.isDirectory() } as FileFilter)
         langList.each{fn->
         	
         	def langFile=new TreeMap<String, String>();
-        	def generatedLang=new File("$rootDir/src/generated/resources/assets/frostedheart/lang/"+fn+".json")
+        	def generatedLang=new File("$rootDir/src/generated/resources/assets/$mod_id/lang/"+fn+".json")
         	if(generatedLang.exists())
         		new JsonSlurper().parse().each{key,value->langFile.put(key,value)}
         	//files in alphabetical order

@@ -104,18 +104,18 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         int inarryl = 76 - ininvarrx;
         int outarryl = out.getX() - 2 - outinvarrx;
         // arrows
-        matrixStack.blit(TEXTURE,leftPos+ ininvarrx,topPos+ ininvarry, inarryl, 4, 511 - inarryl, 132,TEXW,TEXH);
-        matrixStack.blit(TEXTURE,leftPos+ outinvarrx,topPos+  outinvarry, outarryl, 4, 511 - outarryl, 132,TEXW,TEXH);
+        matrixStack.blit(TEXTURE,leftPos+ ininvarrx,topPos+ ininvarry, 511 - inarryl, 132, inarryl, 4,TEXW,TEXH);
+        matrixStack.blit(TEXTURE,leftPos+ outinvarrx,topPos+  outinvarry, 511 - outarryl, 132, outarryl, 4,TEXW,TEXH);
         // slot background
-        matrixStack.blit(TEXTURE,leftPos+ in.getX() - 2,topPos+  in.getY() - 2, 20, 20, 404, 128,TEXW,TEXH);
-        matrixStack.blit(TEXTURE,leftPos+ out.getX() - 2,topPos+  out.getY() - 2, 20, 20, 424, 128,TEXW,TEXH);
+        matrixStack.blit(TEXTURE,leftPos+ in.getX() - 2,topPos+  in.getY() - 2, 404, 128, 20, 20,TEXW,TEXH);
+        matrixStack.blit(TEXTURE,leftPos+ out.getX() - 2,topPos+  out.getY() - 2, 424, 128, 20, 20,TEXW,TEXH);
         if (menu.getTank() != null) {
-            matrixStack.blit(TEXTURE,leftPos+ 133,topPos+  55, 20, 64, 384, 128,TEXW,TEXH);
-            matrixStack.blit(TEXTURE,leftPos+ 98,topPos+  84, 34, 4, 444, 128,TEXW,TEXH);
+            matrixStack.blit(TEXTURE,leftPos+ 133,topPos+  55,384, 128, 20, 64,TEXW,TEXH);
+            matrixStack.blit(TEXTURE,leftPos+ 98,topPos+  84, 444, 128, 34, 4,TEXW,TEXH);
         }
 
         // upgrade arrow
-        matrixStack.blit(TEXTURE,leftPos+ 85,topPos+  93, 6, 22, 412, 148,TEXW,TEXH);
+        matrixStack.blit(TEXTURE,leftPos+ 85,topPos+  93, 412, 148, 6, 22,TEXW,TEXH);
 
         // generator symbol
         generatorSymbol.blitAtlas(matrixStack, leftPos, topPos, generatorPos, (menu.isWorking.getValue() && menu.process.getValue() > 0) ? 2 : 1, (menu.getTier() - 1));
