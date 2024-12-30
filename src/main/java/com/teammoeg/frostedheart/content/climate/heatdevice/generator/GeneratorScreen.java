@@ -134,11 +134,11 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         // this.font.drawText(matrixStack, this.playerInventory.getDisplayName(),
         // this.playerInventoryTitleX, this.playerInventoryTitleY+5, 0xff404040);
         // temp level
-        matrixStack.drawCenteredString(this.font, TemperatureDisplayHelper.toTemperatureDeltaInt(menu.tempDegree.getValue()) + "", 88, 40, 0xffffffff);
+        matrixStack.drawCenteredString(this.font, TemperatureDisplayHelper.toTemperatureDeltaInt(menu.tempDegree.getValue()) + "", 88, 38, 0xffffffff);
         // range level
-        matrixStack.drawCenteredString(this.font, menu.rangeBlock.getValue() + "", 35, 45, 0xffffffff);
+        matrixStack.drawCenteredString(this.font, menu.rangeBlock.getValue() + "", 35, 41, 0xffffffff);
         // overdrive level
-        matrixStack.drawCenteredString(this.font, menu.overdrive.getValue() * 100 + "", 141, 45, 0xffffffff);
+        matrixStack.drawCenteredString(this.font, menu.overdrive.getValue() * 100 + "", 141, 41, 0xffffffff);
     }
 
     @Override

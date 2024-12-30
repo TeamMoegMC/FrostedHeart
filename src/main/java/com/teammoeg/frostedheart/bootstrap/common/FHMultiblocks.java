@@ -61,7 +61,7 @@ public class FHMultiblocks {
 			.component(FHMenuTypes.GENERATOR_T1.createComponent())
 			.build();
 		public static final MultiblockRegistration<T2GeneratorState> GENERATOR_T2 = metal(new T2GeneratorLogic(), "generator_t2")
-			.structure(() -> FHMultiblocks.Multiblock.GENERATOR_T1)
+			.structure(() -> FHMultiblocks.Multiblock.GENERATOR_T2)
 			.notMirrored()
 			.component(FHMenuTypes.GENERATOR_T2.createComponent())
 			.build();
