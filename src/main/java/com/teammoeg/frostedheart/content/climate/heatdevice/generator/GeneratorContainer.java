@@ -72,10 +72,11 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
             tempDegree.bind(() -> state.getTempMod());
             rangeBlock.bind(() -> state.getRadius());
             isBroken.bind(() -> data.isBroken);
-            isWorking.bind(() -> data.isWorking, t -> data.isWorking = t);
+            isWorking.bind(() -> data.isWorking, t -> {data.isWorking = t;System.out.println("set working "+t);});
             isOverdrive.bind(() -> data.isOverdrive, t -> data.isOverdrive = t);
-
+            System.out.println(" binded ");
         });
+        System.out.println(optdata);
         pos.bind(() -> ctx.clickedPos());
         this.validator = new Validator(ctx.clickedPos(), 8).and(ctx.mbContext().isValid());
         IItemHandler handler = state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel())).map(t -> t.inventory).orElseGet(() -> new ItemStackHandler(2));
@@ -108,8 +109,9 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
     public abstract int getTier();
 
     public abstract FluidTank getTank();
-
+    @Override
     public void receiveMessage(short btn, int state) {
+    	//System.out.println("id "+btn+" state "+state);
         switch (btn) {
             case 1:
                 isWorking.setValue(state > 0);
@@ -118,6 +120,7 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
                 isOverdrive.setValue(state > 0);
                 break;
         }
+        
        /* if (message.contains("temperatureLevel", Tag.TAG_INT))
             setTemperatureLevel(message.getInt("temperatureLevel"));
         if (message.contains("rangeLevel", Tag.TAG_INT))

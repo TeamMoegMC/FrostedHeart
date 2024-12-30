@@ -173,7 +173,7 @@ public abstract class FHBaseContainer extends AbstractContainerMenu {
 	public boolean moveItemStackTo(ItemStack pStack, int pStartIndex, int pEndIndex, boolean pReverseDirection) {
 		return super.moveItemStackTo(pStack, pStartIndex, pEndIndex, pReverseDirection);
 	}
-	public void reciveMessage(short btnId,int state) {
+	public void receiveMessage(short btnId,int state) {
 		
 	}
 	public void sendMessage(int btnId,int state) {

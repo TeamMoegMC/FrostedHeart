@@ -76,7 +76,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
     protected List<InfoArea> makeInfoAreas() {
         if (menu.getTank() == null)
             return super.makeInfoAreas();
-        return ImmutableList.of(new FluidInfoArea(menu.getTank(), new Rect2i(135, 27, 16, 60), 0, 0, 0, 0, TEXTURE));
+        return ImmutableList.of(new FluidInfoArea(menu.getTank(), new Rect2i(leftPos+135,topPos+ 27, 16, 60), 0, 0, 0, 0, TEXTURE));
     }
     @Override
 	protected void drawBackgroundTexture(GuiGraphics graphics)
@@ -134,11 +134,11 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         // this.font.drawText(matrixStack, this.playerInventory.getDisplayName(),
         // this.playerInventoryTitleX, this.playerInventoryTitleY+5, 0xff404040);
         // temp level
-        matrixStack.drawCenteredString(this.font, TemperatureDisplayHelper.toTemperatureDeltaInt(menu.tempDegree.getValue()) + "", 88, 38, 0xffffffff);
+        matrixStack.drawCenteredString(this.font, TemperatureDisplayHelper.toTemperatureDeltaInt(menu.tempDegree.getValue()) + "", 88, 37, 0xffffffff);
         // range level
-        matrixStack.drawCenteredString(this.font, menu.rangeBlock.getValue() + "", 35, 41, 0xffffffff);
+        matrixStack.drawCenteredString(this.font, menu.rangeBlock.getValue() + "", 35, 40, 0xffffffff);
         // overdrive level
-        matrixStack.drawCenteredString(this.font, menu.overdrive.getValue() * 100 + "", 141, 41, 0xffffffff);
+        matrixStack.drawCenteredString(this.font, (int)(menu.overdrive.getValue() * 100) + "", 141, 40, 0xffffffff);
     }
 
     @Override

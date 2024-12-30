@@ -170,7 +170,7 @@ public class ResearchData implements IEnvironment {
     	.flag("active", o->o.active())
     	.flag("finished", o->o.finished()).build(),
     	CodecUtil.defaultValue(Codec.INT, 0).fieldOf("level").forGetter(o->o.level()),
-    	Codec.list(ClueData.CODEC).fieldOf("clueData").forGetter(o->o.clueData()),
+    	CodecUtil.discreteList(ClueData.CODEC).fieldOf("clueData").forGetter(o->o.clueData()),
     	CodecUtil.BYTE_ARRAY_CODEC.fieldOf("effectData").forGetter(o->o.effectData().toByteArray())
     	).apply(t, ResearchDataPacket::new));
     public ResearchData(int committed, boolean[] flags, int level, Map<String, ClueData> clueData,Map<String, Boolean> effectData) {

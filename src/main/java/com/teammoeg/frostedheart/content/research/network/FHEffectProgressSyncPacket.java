@@ -49,6 +49,7 @@ public record FHEffectProgressSyncPacket(boolean data,int id,int index) implemen
     public void encode(FriendlyByteBuf buffer) {
         buffer.writeBoolean(data);
         buffer.writeVarInt(id);
+        buffer.writeVarInt(index);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
