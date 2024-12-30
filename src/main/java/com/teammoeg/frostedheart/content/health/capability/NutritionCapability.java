@@ -131,13 +131,13 @@ public class NutritionCapability implements NBTSerializable {
         NutritionRecipe wRecipe = NutritionRecipe.getRecipeFromItem(level, food);
         int nutrition = food.getFoodProperties(player).getNutrition();
         //因为只看食物自己的属性会比较低，加的点数不够一分钟的消耗，所以需要再乘一个系数
-        Nutrition n = wRecipe.getNutrition().scale(nutrition).scale(10.0f);
+        Nutrition n = wRecipe.getNutrition().scale(nutrition).scale(40.0f);
         modifyNutrition(player, n);
     }
 
     public void consume(Player player) {
         // 这个比例可以放到Config里
-        float radio = 0.1f * FHConfig.SERVER.nutritionConsumptionRate.get();
+        float radio = - 0.1f * FHConfig.SERVER.nutritionConsumptionRate.get();
 
         Nutrition nutrition = get();
         modifyNutrition(player, nutrition.scale(radio / nutrition.getNutritionValue()));

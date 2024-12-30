@@ -77,14 +77,14 @@ public class FoodNutritionStats implements TooltipModifier {
         }
         return list;
     }
-    
-    private static void addLine(List<Component> list,String suffix,float value,int color) {
-
-        int progress = Mth.ceil(Mth.clamp(value * 3, 0, 3));
-
-        LangBuilder builder = Lang.translate("tooltip", "nutrition."+suffix)
-                .add(Lang.text(" " + TooltipHelper.makeProgressBar(3, progress))
-                        .style(Style.EMPTY.withColor(color)));
-        builder.addTo(list);
-    }
+//
+//    private static void addLine(List<Component> list,String suffix,float value,int color) {
+//
+//        int progress = Mth.ceil(Mth.clamp(value * 3, 0, 3));
+//
+//        LangBuilder builder = Lang.translate("tooltip", "nutrition."+suffix)
+//                .add(Lang.text(" " + TooltipHelper.makeProgressBar(3, progress))
+//                        .style(Style.EMPTY.withColor(color)));
+//        builder.addTo(list);
+//    }
 }
