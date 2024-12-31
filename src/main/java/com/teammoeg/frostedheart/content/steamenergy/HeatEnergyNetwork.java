@@ -61,7 +61,7 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
     private transient Consumer<BiConsumer<BlockPos, Direction>> onConnect;
     transient Level world;
     transient BlockEntity cur;
-
+    transient boolean isBound;
     transient PriorityQueue<HeatEndpoint> endpoints=new PriorityQueue<>(Comparator.comparingInt(HeatEndpoint::getPriority).reversed().thenComparing(HeatEndpoint::getDistance));
     public Map<HeatEndpoint,EndPointData> data=new HashMap<>();
     public Set<EndPointData> epdataset=new HashSet<>();
@@ -94,15 +94,16 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
 	}
     private BiConsumer<BlockPos, Direction> connect = (pos, d) -> {
     	if(getWorld()!=null) {
+    		System.out.println("running");
 	        BlockEntity te = Utils.getExistingTileEntity(getWorld(), pos);
 	        if (te instanceof INetworkConsumer)
 	            ((INetworkConsumer) te).tryConnectAt(this,d, 1);
 	        else if(te!=null)
-	        	te.getCapability(FHCapabilities.HEAT_EP.capability(),d).ifPresent(t->t.reciveConnection(getWorld(),pos,this,d,1));
+	        	FHCapabilities.HEAT_EP.getCapability(te,d).ifPresent(t->t.reciveConnection(getWorld(),pos,this,d,1));
 	        if(cur instanceof INetworkConsumer) {
 	        	((INetworkConsumer) cur).tryConnectAt(this, d.getOpposite(), 0);
 	        }else if(cur!=null) {
-	        	cur.getCapability(FHCapabilities.HEAT_EP.capability(),d.getOpposite()).ifPresent(t->t.reciveConnection(getWorld(),cur.getBlockPos(),this,d.getOpposite(),0));
+	        	FHCapabilities.HEAT_EP.getCapability(cur,d.getOpposite()).ifPresent(t->t.reciveConnection(getWorld(),cur.getBlockPos(),this,d.getOpposite(),0));
 	        }
     	}
     };
@@ -153,13 +154,12 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
     public AbstractContainerMenu createMenu(int p1, Inventory p2, Player p3) {
         return new HeatStatContainer(p1,p3,this);
     }
-    /**
-     * Instantiates a new HeatProviderManager.<br>
-     *
-     * @param cur the current tile entity<br>
-     * @param con the function that called when refresh is required. Should provide connect direction and location when called.<br>
-     */
-    public HeatEnergyNetwork(BlockEntity cur, Consumer<BiConsumer<BlockPos, Direction>> con) {
+
+    public boolean hasBounded() {
+    	return isBound;
+    }
+    public void bind(BlockEntity cur, Consumer<BiConsumer<BlockPos, Direction>> con) {
+    	isBound=true;
     	this.cur=cur;
         this.onConnect = con;
     }
@@ -184,6 +184,7 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
         if (interval > 0) {
             interval--;
         }else if(interval==0){
+        	//System.out.println("run network");
         	for(BlockPos bp:propagated.keySet()) {
         		HeatPipeTileEntity hpte=FHUtils.getExistingTileEntity(getWorld(), bp, HeatPipeTileEntity.class);
         		if(hpte!=null) {
@@ -195,7 +196,8 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
         		bp.clearConnection();
         	}
         	data.clear();
-            onConnect.accept(connect);
+        	if(onConnect!=null)
+        		onConnect.accept(connect);
             dataModified=true;
             interval = -1;
         }

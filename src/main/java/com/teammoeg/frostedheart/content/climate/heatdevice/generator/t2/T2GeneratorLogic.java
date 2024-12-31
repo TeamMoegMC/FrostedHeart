@@ -52,12 +52,10 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2GeneratorState> {
-    private static final MultiblockFace REDSTONE_OFFSET = new MultiblockFace(1, 1, 2, RelativeBlockFace.BACK);
+    private static final MultiblockFace REDSTONE_OFFSET = new MultiblockFace(1, 1, 0, RelativeBlockFace.FRONT);
     // TODO: Check if FRONT is correct
-    private static final MultiblockFace NETWORK_OFFSET = new MultiblockFace(1, 0, 0, RelativeBlockFace.FRONT);
-    private static final CapabilityPosition NETWORK_CAP = CapabilityPosition.opposing(NETWORK_OFFSET);
-    private static final MultiblockFace FLUID_INPUT_OFFSET = new MultiblockFace(1, 0, 2, RelativeBlockFace.BACK);
-    private static final CapabilityPosition FLUID_INPUT_CAP = CapabilityPosition.opposing(FLUID_INPUT_OFFSET);
+    private static final CapabilityPosition NETWORK_CAP = new CapabilityPosition(1, 0, 2, RelativeBlockFace.BACK);
+    private static final CapabilityPosition FLUID_INPUT_CAP = new CapabilityPosition(1, 0, 0, RelativeBlockFace.FRONT);
     
     public T2GeneratorLogic() {
         super();
@@ -85,7 +83,9 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
 
     @Override
     public <C> LazyOptional<C> getCapability(IMultiblockContext<T2GeneratorState> ctx, CapabilityPosition position, Capability<C> capability) {
-        if (capability == FHCapabilities.HEAT_EP.capability() && NETWORK_CAP.equals(position)) {
+    	//System.out.println(position);
+    	//System.out.println(capability);
+        if (FHCapabilities.HEAT_EP.isCapability(capability) && NETWORK_CAP.equalsOrNullFace(position)) {
            return getData(ctx).map(t -> t.epcap).orElseGet(LazyOptional::empty).cast();
         } else if (capability == ForgeCapabilities.FLUID_HANDLER && FLUID_INPUT_CAP.equals(position)) {
             LazyOptional<IFluidHandler> tankCap = ctx.getState().tankCap;
@@ -96,13 +96,12 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
 
     @Override
     protected boolean tickFuel(IMultiblockContext<T2GeneratorState> ctx) {
-        if (ctx.getState().manager == null) {
-            ctx.getState().manager = new HeatEnergyNetwork(ctx.getLevel().getBlockEntity(BlockPos.ZERO), c -> {
-                BlockPos pos = FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel());
-                BlockPos networkPos = pos.offset(NETWORK_OFFSET.posInMultiblock());
-                Direction dir = ctx.getLevel().getOrientation().front();
-                c.accept(networkPos.relative(dir.getOpposite()), dir.getOpposite());
-
+        if (!ctx.getState().manager.hasBounded()) {
+            ctx.getState().manager.bind(ctx.getLevel().getBlockEntity(BlockPos.ZERO), c -> {
+                BlockPos networkPos = ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock());
+                Direction dir = NETWORK_CAP.side().forFront(ctx.getLevel().getOrientation());
+               // System.out.println(networkPos.relative(dir)+"-"+dir);
+                c.accept(networkPos.relative(dir), dir);
             });
         }
         if ((!getData(ctx).map(t -> t.ep.hasValidNetwork()).orElse(true) || ctx.getState().manager.data.size() <= 1) && !ctx.getState().manager.isUpdateRequested()) {

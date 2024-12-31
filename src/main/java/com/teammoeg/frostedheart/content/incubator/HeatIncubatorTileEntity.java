@@ -44,7 +44,7 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity{
     LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
     @Nonnull
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
-		if(capability==FHCapabilities.HEAT_EP.capability()&&facing == this.getBlockState().getValue(IncubatorBlock.HORIZONTAL_FACING)) {
+		if(FHCapabilities.HEAT_EP.isCapability(capability)&&facing == this.getBlockState().getValue(IncubatorBlock.HORIZONTAL_FACING)) {
 			return heatcap.cast();
 		}
 		return super.getCapability(capability, facing);
