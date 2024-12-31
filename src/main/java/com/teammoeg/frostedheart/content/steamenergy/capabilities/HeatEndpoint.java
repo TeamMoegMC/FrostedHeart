@@ -18,7 +18,12 @@ public abstract class HeatEndpoint implements NBTSerializable{
      */
 	protected HeatEnergyNetwork network;
 
-    /**
+    @Override
+	public String toString() {
+		return "HeatEndpoint [distance=" + distance + ", tempLevel=" + tempLevel + "]";
+	}
+
+	/**
      * The distance.<br>
      */
     protected int distance=-1;
@@ -58,7 +63,7 @@ public abstract class HeatEndpoint implements NBTSerializable{
      * @return true, if successful
      */
     public boolean reciveConnection(Level w,BlockPos pos,HeatEnergyNetwork manager,Direction d,int dist) {
-    	return manager.addEndpoint(pos, this,dist);
+    	return manager.addEndpoint(w,pos, this,dist);
     }
     
     /**

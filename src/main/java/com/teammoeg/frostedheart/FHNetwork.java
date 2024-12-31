@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.teammoeg.frostedheart.base.network.FHContainerDataSync;
 import com.teammoeg.frostedheart.base.network.FHContainerOperation;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHBodyDataSyncPacket;
@@ -90,7 +91,8 @@ public class FHNetwork {
                     return ctor.newInstance(pb);
                 } catch (IllegalAccessException | IllegalArgumentException | InstantiationException |
                          InvocationTargetException e) {
-                    throw new RuntimeException("Can not create message " + msg.getSimpleName(), e);
+                	e.printStackTrace();
+                    throw new RuntimeException("Can not create message " + msg.getSimpleName()+e.getMessage(), e);
                 }
             }, FHMessage::handle);
         } catch (NoSuchMethodException | SecurityException e1) {
@@ -127,6 +129,7 @@ public class FHNetwork {
         // TemperatureChangePacket::handle);
         //Fundamental Message
         registerMessage("container_operation", FHContainerOperation.class);
+        registerMessage("container_sync",FHContainerDataSync.class);
 
         //Climate Messages
         registerMessage("body_data", FHBodyDataSyncPacket.class);

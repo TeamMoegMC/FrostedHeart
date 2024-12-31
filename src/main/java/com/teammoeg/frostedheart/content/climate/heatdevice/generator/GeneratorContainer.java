@@ -72,7 +72,7 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
             tempDegree.bind(() -> data.getTempMod());
             rangeBlock.bind(() -> data.getRadius());
             isBroken.bind(() -> data.isBroken);
-            isWorking.bind(() -> data.isWorking, t -> {data.isWorking = t;System.out.println("set working "+t);});
+            isWorking.bind(() -> data.isWorking, t -> {data.isWorking = t;});
             isOverdrive.bind(() -> data.isOverdrive, t -> data.isOverdrive = t);
             System.out.println(" binded ");
         });

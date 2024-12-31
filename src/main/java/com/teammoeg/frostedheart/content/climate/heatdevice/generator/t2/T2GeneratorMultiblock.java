@@ -51,7 +51,7 @@ public class T2GeneratorMultiblock extends FHBaseMultiblock {
             T2GeneratorState state = (T2GeneratorState) te.getState();
             if (state != null) {
             	if(state.manager!=null)
-            		state.manager.invalidate();
+            		state.manager.invalidate(world);
             }else
                 FHMain.LOGGER.error("T2GeneratorState is null when disassembling T2GeneratorMultiblock.");
         });

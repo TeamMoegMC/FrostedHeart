@@ -30,6 +30,7 @@ import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.lang.Lang;
@@ -57,8 +58,11 @@ import net.minecraft.world.level.Level;
  * Integrated manager for heat providers
  */
 public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
+	public static interface HeatConnector{
+		void connect(Level l,BlockPos b, Direction d);
+	}
     private transient int interval = 0;
-    private transient Consumer<BiConsumer<BlockPos, Direction>> onConnect;
+    private transient Consumer<HeatConnector> onConnect;
     transient Level world;
     transient BlockEntity cur;
     transient boolean isBound;
@@ -68,6 +72,14 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
     Map<BlockPos,Integer> propagated=new HashMap<>();
     boolean dataModified=true;
 	private boolean isValid = true;
+	public HeatEnergyNetwork() {
+		
+	}
+	public HeatEnergyNetwork(BlockEntity cur, Consumer<HeatConnector> con) {
+		this();
+		bind(cur,con);
+	}
+
 	@Override
 	public void save(CompoundTag nbt, boolean isPacket) {
 		nbt.put("pipes",
@@ -92,20 +104,18 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
 					BlockPos.of(ccnbt.getLong("pos"))));
 		}
 	}
-    private BiConsumer<BlockPos, Direction> connect = (pos, d) -> {
-    	if(getWorld()!=null) {
-    		System.out.println("running");
-	        BlockEntity te = Utils.getExistingTileEntity(getWorld(), pos);
-	        if (te instanceof INetworkConsumer)
-	            ((INetworkConsumer) te).tryConnectAt(this,d, 1);
-	        else if(te!=null)
-	        	FHCapabilities.HEAT_EP.getCapability(te,d).ifPresent(t->t.reciveConnection(getWorld(),pos,this,d,1));
-	        if(cur instanceof INetworkConsumer) {
-	        	((INetworkConsumer) cur).tryConnectAt(this, d.getOpposite(), 0);
-	        }else if(cur!=null) {
-	        	FHCapabilities.HEAT_EP.getCapability(cur,d.getOpposite()).ifPresent(t->t.reciveConnection(getWorld(),cur.getBlockPos(),this,d.getOpposite(),0));
-	        }
-    	}
+    private HeatConnector connect = (level,pos, d) -> {
+        BlockEntity te = Utils.getExistingTileEntity(level, pos);
+        if (te instanceof INetworkConsumer)
+            ((INetworkConsumer) te).tryConnectAt(this,d, 1);
+        else if(te!=null)
+        	FHCapabilities.HEAT_EP.getCapability(te,d).ifPresent(t->t.reciveConnection(level,pos,this,d,1));
+        if(cur instanceof INetworkConsumer) {
+        	((INetworkConsumer) cur).tryConnectAt(this, d.getOpposite(), 0);
+        }else if(cur!=null) {
+        	FHCapabilities.HEAT_EP.getCapability(cur,d.getOpposite()).ifPresent(t->t.reciveConnection(level,cur.getBlockPos(),this,d.getOpposite(),0));
+        }
+    	
     };
     @Override
 	public String toString() {
@@ -126,7 +136,7 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
     public int getNetworkSize() {
     	return data.size()+propagated.size();
     }
-    public boolean addEndpoint(BlockPos pos,HeatEndpoint heatEndpoint,int dist) {
+    public boolean addEndpoint(Level l,BlockPos pos,HeatEndpoint heatEndpoint,int dist) {
     	if(data.containsKey(heatEndpoint)) {
     		if(dist<heatEndpoint.getDistance()) {
     			heatEndpoint.connect(this, dist);
@@ -135,7 +145,7 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
     		}
     	}else {
     		heatEndpoint.connect(this, dist);
-    		data.put(heatEndpoint, new EndPointData(getWorld().getBlockState(pos).getBlock(),pos));
+    		data.put(heatEndpoint, new EndPointData(l.getBlockState(pos).getBlock(),pos));
     		dataModified=true;
     		return true;
     	}
@@ -158,15 +168,10 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
     public boolean hasBounded() {
     	return isBound;
     }
-    public void bind(BlockEntity cur, Consumer<BiConsumer<BlockPos, Direction>> con) {
+    public void bind(BlockEntity cur, Consumer<HeatConnector> con) {
     	isBound=true;
     	this.cur=cur;
         this.onConnect = con;
-    }
-    public Level getWorld() {
-    	if(world==null && cur != null)
-            this.world = cur.getLevel();
-    	return world;
     }
     public void requestUpdate() {
     	interval=10;
@@ -180,13 +185,13 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
     /**
      * Tick.
      */
-    public void tick() {
+    public void tick(Level level) {
         if (interval > 0) {
             interval--;
         }else if(interval==0){
         	//System.out.println("run network");
         	for(BlockPos bp:propagated.keySet()) {
-        		HeatPipeTileEntity hpte=FHUtils.getExistingTileEntity(getWorld(), bp, HeatPipeTileEntity.class);
+        		HeatPipeTileEntity hpte=FHUtils.getExistingTileEntity(level, bp, HeatPipeTileEntity.class);
         		if(hpte!=null) {
         			hpte.ntwk=null;
         		}
@@ -234,9 +239,9 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
     	data.values().forEach(EndPointData::pushData);
     }
 
-    public void invalidate() {
+    public void invalidate(Level l) {
     	for(BlockPos bp:propagated.keySet()) {
-    		HeatPipeTileEntity hpte=FHUtils.getExistingTileEntity(getWorld(), bp, HeatPipeTileEntity.class);
+    		HeatPipeTileEntity hpte=FHUtils.getExistingTileEntity(l, bp, HeatPipeTileEntity.class);
     		if(hpte!=null) {
     			hpte.ntwk=null;
     		}

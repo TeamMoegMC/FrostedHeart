@@ -97,17 +97,23 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
     @Override
     protected boolean tickFuel(IMultiblockContext<T2GeneratorState> ctx) {
         if (!ctx.getState().manager.hasBounded()) {
-            ctx.getState().manager.bind(ctx.getLevel().getBlockEntity(BlockPos.ZERO), c -> {
+            ctx.getState().manager.bind(ctx.getLevel().forciblyGetBlockEntity(BlockPos.ZERO), c -> {
                 BlockPos networkPos = ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock());
                 Direction dir = NETWORK_CAP.side().forFront(ctx.getLevel().getOrientation());
                // System.out.println(networkPos.relative(dir)+"-"+dir);
-                c.accept(networkPos.relative(dir), dir);
+                c.connect(ctx.getLevel().getRawLevel(),networkPos.relative(dir), dir);
             });
         }
-        if ((!getData(ctx).map(t -> t.ep.hasValidNetwork()).orElse(true) || ctx.getState().manager.data.size() <= 1) && !ctx.getState().manager.isUpdateRequested()) {
+       
+        getData(ctx).ifPresent(t->{
+        	if(!t.ep.hasValidNetwork())
+        		ctx.getState().manager.addEndpoint(ctx.getLevel().getRawLevel(),  ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock()), t.ep, 0);
+        });
+        if (ctx.getState().manager.data.size() <= 1 && !ctx.getState().manager.isUpdateRequested()) {
             ctx.getState().manager.requestSlowUpdate();
+            
         }
-        ctx.getState().manager.tick();
+        ctx.getState().manager.tick(ctx.getLevel().getRawLevel());
         boolean active = super.tickFuel(ctx);
         if (active)
             this.tickLiquid(ctx);
@@ -118,9 +124,7 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
     private void tickLiquid(IMultiblockContext<T2GeneratorState> ctx) {
         Optional<GeneratorData> data = getData(ctx);
         ctx.getState().liquidtick = data.map(t -> t.steamProcess).orElse(0);
-        if (!ctx.getState().isActive())
-            return;
-        float rt = ctx.getState().getTempLevel();
+        float rt = data.map(t->t.TLevel).orElse(0f);
         /*if (rt == 0) {
             this.spowerMod = 0;
             this.slevelMod = 0;

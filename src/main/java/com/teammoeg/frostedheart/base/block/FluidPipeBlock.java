@@ -32,6 +32,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -194,8 +196,9 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends PipeBlock imple
 		PipeTileEntity te=FHUtils.getExistingTileEntity(world, pos, PipeTileEntity.class);
 		if(te!=null) {
 			for (Direction d : Direction.values()) {
-				if(old.getValue(PROPERTY_BY_DIRECTION.get(d))!=neo.getValue(PROPERTY_BY_DIRECTION.get(d)))
-					te.onFaceChange(d, neo.getValue(PROPERTY_BY_DIRECTION.get(d)));
+				BooleanProperty prop=PROPERTY_BY_DIRECTION.get(d);
+				if(old.getValue(prop)!=neo.getValue(prop))
+					te.onFaceChange(d, neo.getValue(prop));
 			}
 		}
 	}
@@ -237,9 +240,25 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends PipeBlock imple
 		boolean isMoving) {
 		super.neighborChanged(state, worldIn, pos, blockIn, fromPos, isMoving);
 		//Direction d = FHUtils.dirBetween(fromPos, pos);
+		//System.out.println("changed")2
+		if(!worldIn.isClientSide)
+		worldIn.scheduleTick(pos, this, 10);
+
+	}
+
+	@Override 
+	public void tick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource pRandom) {
+		//System.out.println("ticked "+pos);
+		super.tick(state, worldIn, pos, pRandom);
 		BlockState updated=updateBlockState(state, null, null, worldIn, pos);
 		checkNewConnection(worldIn,pos,state,updated);
-		worldIn.setBlockAndUpdate(pos,updated);
+		//System.out.println(pos+" requested update "+updated.getValue(PROPERTY_BY_DIRECTION.get(Direction.UP)));
+		//if(state!=updated) {
+			//System.out.println("requested update "+updated.getValue(PROPERTY_BY_DIRECTION.get(Direction.UP)));
+		//worldIn.blockUpdated(pos, null);
+			worldIn.setBlock(pos, updated, 2);
+			worldIn.sendBlockUpdated(pos, state, updated, 2);
+		//}
 	}
 
 	@Override

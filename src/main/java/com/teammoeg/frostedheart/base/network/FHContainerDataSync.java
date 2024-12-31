@@ -14,9 +14,9 @@ import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent.Context;
 
-public class FHContainerDataSync implements FHMessage {
+public record FHContainerDataSync(List<ContainerDataPair> data) implements FHMessage {
 
-	static record ContainerDataPair(int slotIndex,OtherDataSlotEncoder<?> conv,Object data){
+	private static record ContainerDataPair(int slotIndex,OtherDataSlotEncoder<?> conv,Object data){
 		public ContainerDataPair(FriendlyByteBuf buf,int slotIndex,OtherDataSlotEncoder<?> conv) {
 			this(slotIndex,conv,conv.read(buf));
 		}
@@ -27,39 +27,37 @@ public class FHContainerDataSync implements FHMessage {
 			((OtherDataSlotEncoder)conv).write(buffer, data);
 		}
 	}
-	List<ContainerDataPair> data=new ArrayList<>();
+	
 	public FHContainerDataSync() {
-		super();
+		this(new ArrayList<>());
 	}
 	public void add(int slotIndex,OtherDataSlotEncoder<?> conv,Object data) {
-		this.getData().add(new ContainerDataPair(slotIndex,conv,data));
+		this.data.add(new ContainerDataPair(slotIndex,conv,data));
 	}
 	
 	public void forEach(BiConsumer<Integer,Object> t) {
 		data.forEach(o->t.accept(o.slotIndex, o.data));
 	}
 	public boolean hasData() {
-		return !this.getData().isEmpty();
+		return !this.data.isEmpty();
 	}
 
 	public FHContainerDataSync(FriendlyByteBuf buf) {
-		SerializeUtil.readList(buf, t->new ContainerDataPair(buf,buf.readVarInt(),FHContainerData.encoders.read(buf)));
+		this(SerializeUtil.readList(buf, t->new ContainerDataPair(buf,buf.readVarInt(),FHContainerData.encoders.read(buf))));
 	}
 
 	@Override
 	public void encode(FriendlyByteBuf buffer) {
-		SerializeUtil.writeList(buffer, getData(), ContainerDataPair::write);
+		SerializeUtil.writeList(buffer, data, ContainerDataPair::write);
 	}
 	@Override
 	public void handle(Supplier<Context> context) {
 		context.get().enqueueWork(()->{
 			if(ClientUtils.getPlayer().containerMenu instanceof FHBaseContainer container) {
 				container.processPacket(this);
+				context.get().setPacketHandled(true);
 			}
 		});
-	}
-	public List<ContainerDataPair> getData() {
-		return data;
 	}
 
 }

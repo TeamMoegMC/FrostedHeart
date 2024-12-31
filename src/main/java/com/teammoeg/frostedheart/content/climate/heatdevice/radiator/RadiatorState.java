@@ -42,6 +42,12 @@ public class RadiatorState extends HeatingState {
     }
 
     @Override
+	public void writeSyncNBT(CompoundTag nbt) {
+		super.writeSyncNBT(nbt);
+		nbt.putBoolean("_", true);
+	}
+
+	@Override
     public int getDownwardRange() {
         return 1;
     }

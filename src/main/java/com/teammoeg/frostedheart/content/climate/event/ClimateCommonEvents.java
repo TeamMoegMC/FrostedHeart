@@ -265,7 +265,7 @@ public class ClimateCommonEvents {
 
     @SubscribeEvent
     public static void onServerTick(TickEvent.LevelTickEvent event) {
-        if (event.side == LogicalSide.SERVER && event.phase == Phase.START) {
+        if (event.side == LogicalSide.SERVER && event.phase == Phase.START&&FHTeamDataManager.INSTANCE!=null) {
             Level world = event.level;
             if (!world.isClientSide && world instanceof ServerLevel) {
                 ServerLevel serverWorld = (ServerLevel) world;

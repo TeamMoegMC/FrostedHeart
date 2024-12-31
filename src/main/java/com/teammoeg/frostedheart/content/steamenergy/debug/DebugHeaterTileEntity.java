@@ -37,7 +37,7 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements  FHTicka
 
     HeatEnergyNetwork manager = new HeatEnergyNetwork(this, c -> {
         for (Direction d : Direction.values()) {
-            c.accept(worldPosition.relative(d), d.getOpposite());
+            c.connect(level,worldPosition.relative(d), d.getOpposite());
         }
     });
     HeatProviderEndPoint endpoint=new HeatProviderEndPoint(-1, Integer.MAX_VALUE, Integer.MAX_VALUE);
@@ -56,7 +56,7 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements  FHTicka
         	manager.requestSlowUpdate();
         }
         endpoint.addHeat(Integer.MAX_VALUE);
-    	manager.tick();
+    	manager.tick(level);
         
     }
     LazyOptional<HeatProviderEndPoint> heatcap=LazyOptional.of(()->endpoint);
