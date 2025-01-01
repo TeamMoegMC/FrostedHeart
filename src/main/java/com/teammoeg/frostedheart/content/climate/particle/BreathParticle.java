@@ -50,26 +50,26 @@ public class BreathParticle extends GasParticle {
         super(world, x, y, z, motionX, motionY, motionZ);
         this.gravity = 0.0F;
         this.rCol = this.gCol = this.bCol = (float) (Math.random() * 0.2) + 0.8f;
-        this.initialScale = 0.05F;
+        this.initialScale = 0.03F;
         this.lifetime = (int) (40.0D / (Math.random() * 0.2D + 0.8D));
         // physical properties of breath
         this.density = 0.6;
-        this.temperature = 373;
-        this.airResistance = 0.02;
+        this.temperature = 273 + 37;
+        this.airResistance = 0.2;
         // breadth initial velocity is slow
         this.xd *= 0.1;
         this.yd *= 0.1;
         this.zd *= 0.1;
         // must call this after setting the physical properties
-        this.gravity = getEffectiveGravity();
+        this.gravity = 0;
     }
 
     @Override
     public void render(VertexConsumer worldRendererIn, Camera entityIn, float pt) {
         float age = (this.age + pt) / lifetime * 32.0F;
         age = Mth.clamp(age, 0.0F, 1.0F);
-        float alpha = 0.8F * (1 - (this.age + pt) / lifetime);
-        super.alpha = Mth.clamp(alpha, 0.0F, 0.8F);
+        float alpha = 0.3F * (1 - (this.age + pt) / lifetime);
+        super.alpha = Mth.clamp(alpha, 0.0F, 0.3F);
         super.quadSize = initialScale * (age + this.age * 0.0375F) * 0.5F;
         super.render(worldRendererIn, entityIn, pt);
     }
