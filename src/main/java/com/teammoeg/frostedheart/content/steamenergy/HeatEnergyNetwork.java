@@ -25,12 +25,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
-import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.lang.Lang;
@@ -218,19 +215,19 @@ public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
         		float provided=endpoint.provideHeat();
         		data.get(endpoint).intake=provided;
         		value+=provided;
-        		tlevel=Math.max(endpoint.getTemperatureLevel(), tlevel);
+        		tlevel=Math.max(endpoint.getTempLevel(), tlevel);
         	}
         }
         boolean shouldFill=true;
     	while(shouldFill) {
     		shouldFill=false;
 	    	for(HeatEndpoint endpoint:endpoints) {
-	    		if(endpoint.canSendHeat()) {
+	    		if(endpoint.canReceiveHeat()) {
 	    			float oldval=value;
-		    		value=endpoint.sendHeat(value,tlevel);
+		    		value=endpoint.receiveHeat(value,tlevel);
 		    		data.get(endpoint).applyOutput(oldval-value,endpoint.getMaxIntake());
 		    		
-		    		shouldFill|=endpoint.canSendHeat();
+		    		shouldFill|=endpoint.canReceiveHeat();
 	    		}
 	    		
 	    	}

@@ -19,7 +19,7 @@ import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.robotics.logistics.RobotChunk;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.content.town.ChunkTownResourceCapability;

@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.radiator;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.HeatingState;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.util.LazyOptional;
 

@@ -17,7 +17,9 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.steamenergy.capabilities;
+package com.teammoeg.frostedheart.content.steamenergy;
+
+import lombok.ToString;
 
 /**
  * Class SteamNetworkConsumer.
@@ -25,7 +27,8 @@ package com.teammoeg.frostedheart.content.steamenergy.capabilities;
  * Integrated power cache manager for power devices
  * A device should properly "request" power from the network
  */
-public class HeatConsumerEndpoint extends HeatPowerEndpoint{
+@ToString(callSuper = true)
+public class HeatConsumerEndpoint extends HeatCapacityEndpoint {
     /**
      * The max intake value.<br>
      */
@@ -44,8 +47,7 @@ public class HeatConsumerEndpoint extends HeatPowerEndpoint{
     }
     /**
      * Instantiates a new SteamNetworkConsumer with recommended cache value.<br>
-     * MaxIntake defaults 4 times maxIntake. <br>
-     * @param priority consumer priority, if power is low, endpoint with lower priority would detach first
+     * maxPower defaults to four times maxIntake. <br>
      * @param maxIntake the max heat requested from network<br>
      */
     public HeatConsumerEndpoint(float maxIntake) {
@@ -60,21 +62,21 @@ public class HeatConsumerEndpoint extends HeatPowerEndpoint{
      * @return the heat actually drain
      */
     public float drainHeat(float val) {
-        float drained = Math.min(power, val);
-        power -= drained;
+        float drained = Math.min(heat, val);
+        heat -= drained;
         return drained;
     }
 
-    public float sendHeat(float filled,int level) {
-    	float required=Math.min(maxIntake, maxPower-power);
+    public float receiveHeat(float filled, int level) {
+    	float required=Math.min(maxIntake, capacity - heat);
     	tempLevel=level;
     	if(required>0) {
 	    	if(filled>=required) {
 	    		filled-=required;
-	    		power+=required;
+	    		heat +=required;
 	    		return filled;
 	    	}
-	    	power+=filled;
+	    	heat +=filled;
 	    	return 0;
     	}
     	return filled;
@@ -89,8 +91,8 @@ public class HeatConsumerEndpoint extends HeatPowerEndpoint{
      * @return true, if the heat value can all drained
      */
     public boolean tryDrainHeat(float val) {
-        if (power >= val) {
-            power -= val;
+        if (heat >= val) {
+            heat -= val;
             return true;
         }
         return false;
@@ -98,10 +100,7 @@ public class HeatConsumerEndpoint extends HeatPowerEndpoint{
 	public boolean canProvideHeat() {
 		return false;
 	}
-    @Override
-	public String toString() {
-		return "SteamNetworkConsumer [maxPower=" + maxPower + ", maxIntake=" + maxIntake + ", power=" + power + ", persist=" + persist + ", dist=" + distance + "]";
-	}
+
 	@Override
 	public float provideHeat() {
 		return 0;

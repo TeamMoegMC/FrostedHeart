@@ -32,7 +32,7 @@ import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -243,7 +243,7 @@ public class FountainTileEntity extends IEBaseBlockEntity implements
     }
 
     private void adjustHeat(int range) {
-        float networkTemp = network.getTemperatureLevel();
+        float networkTemp = network.getTempLevel();
         if (lastTemp == networkTemp && heatAdjusted && range == heatRange) return;
 
         lastTemp = networkTemp;

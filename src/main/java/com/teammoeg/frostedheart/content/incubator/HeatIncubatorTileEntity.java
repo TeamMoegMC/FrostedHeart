@@ -23,7 +23,7 @@ import javax.annotation.Nonnull;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
 
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;

@@ -34,7 +34,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -156,7 +156,7 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBloc
     }
 
     public float getPowerFraction() {
-        return network.getPower() / network.getMaxPower();
+        return network.getHeat() / network.getCapacity();
     }
 
     @Override

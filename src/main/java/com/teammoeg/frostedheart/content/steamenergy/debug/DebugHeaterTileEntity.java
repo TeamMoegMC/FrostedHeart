@@ -23,7 +23,7 @@ import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatProviderEndPoint;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import net.minecraft.nbt.CompoundTag;

@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.steamenergy.capabilities;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.util.FHUtils;

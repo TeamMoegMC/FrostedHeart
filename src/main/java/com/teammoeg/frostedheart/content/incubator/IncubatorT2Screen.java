@@ -60,8 +60,8 @@ public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
             int w = (int) (14 * (tile.process / (float) tile.processMax));
             transform.blit(TEXTURE, leftPos + 107, topPos + 28, 176, 0, 14 - w, 29);
         }
-        if (tile.network.getPower() > 0) {
-            float v = tile.network.getPower() / tile.network.getMaxPower();
+        if (tile.network.getHeat() > 0) {
+            float v = tile.network.getHeat() / tile.network.getCapacity();
             boolean a = false, b = false;
             if (v > 0.75) {
                 a = b = true;

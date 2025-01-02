@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.town.hunting;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockScanner;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
@@ -139,7 +139,7 @@ public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity {
         assert level != null;
         if (!level.isClientSide) {
             if (endpoint.tryDrainHeat(1)) {
-                temperatureModifier = Math.max(endpoint.getTemperatureLevel() * 10, HouseBlockEntity.COMFORTABLE_TEMP_HOUSE);
+                temperatureModifier = Math.max(endpoint.getTempLevel() * 10, HouseBlockEntity.COMFORTABLE_TEMP_HOUSE);
                 if (setActive(true)) {
                     setChanged();
                 }
