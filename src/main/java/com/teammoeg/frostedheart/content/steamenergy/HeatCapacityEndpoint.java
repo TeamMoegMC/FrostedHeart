@@ -7,6 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 
 /**
  * Defines a HeatEndpoint with a capacity to store, provide, and receive heat.
+ * The capacity effectively serves as a cache.
  */
 @Getter
 @ToString(callSuper = true)

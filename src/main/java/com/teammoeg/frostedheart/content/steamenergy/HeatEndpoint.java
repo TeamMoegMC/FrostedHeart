@@ -9,8 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
 /**
- * The Endpoint base for heat network.
- * 
+ * An abstract Endpoint for A Heat Network.
  */
 @Getter
 @ToString()

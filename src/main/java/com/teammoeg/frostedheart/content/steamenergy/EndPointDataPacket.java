@@ -19,15 +19,14 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import java.util.Collection;
-import java.util.function.Supplier;
-
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.trade.ClientHeatHandler;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
-
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
+
+import java.util.Collection;
+import java.util.function.Supplier;
 
 // send when player join
 public class EndPointDataPacket implements FHMessage {

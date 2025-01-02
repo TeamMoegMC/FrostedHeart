@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.steamenergy;
 import lombok.ToString;
 
 /**
- * Integrated power cache manager for power generating devices
- * A device should properly "gives" power from the network
+ * A heat endpoint for heat generating devices.
+ * A device should properly provide power to the network.
  */
 @ToString(callSuper = true)
 public class HeatProviderEndPoint extends HeatCapacityEndpoint {
@@ -54,7 +54,7 @@ public class HeatProviderEndPoint extends HeatCapacityEndpoint {
     }
 
 	public HeatProviderEndPoint(float capacity, float maxOutput) {
-		super(0, capacity);
+		super(0, Math.max(capacity, maxOutput));
 		this.maxOutput = maxOutput;
 	}
 
