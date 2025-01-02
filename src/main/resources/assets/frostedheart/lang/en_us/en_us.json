@@ -420,6 +420,7 @@
   "tooltip.frostedheart.keyCtrl": "Ctrl",
   "tooltip.frostedheart.keyS": "S",
   "tooltip.frostedheart.nutrition": "Nutrition",
+  "frostedheart.tooltip.food_temp_change": "Temperature Change: ",
   "waypoint.frostedheart.columbiat": "Columbiat",
   "waypoint.frostedheart.distance": "Distance: %d blocks",
   "waypoint.frostedheart.entity_health": "❤ %s / %s",
