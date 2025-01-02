@@ -28,36 +28,36 @@ import net.minecraft.core.Direction;
 public interface INetworkConsumer {
 
     /**
-     * Check can recive connect from direction.<br>
+     * Check if this can connect to a certain direction.
      *
-     * @param to the to<br>
-     * @return true, if can recive connect from direction
+     * @param to the direction to connect to.
+     * @return true, if this can connect to the direction.
      */
-    boolean canConnectAt(Direction to);
+    boolean canConnectTo(Direction to);
 
 
     /**
-     * Recived Connection from any heat provider.<br>
-     * Usually you should call reciveConnection of your holder
+     * Received Connection from any heat provider.<br>
+     * Usually you should call receiveConnection.
      *
-     * @param d        the direction connection from<br>
-     * @param distance the distance<br>
-     * @return true, if connected
+     * @param d the direction connection from
+     * @param distance the distance
+     * @return true, if connected successfully
      */
     boolean connect(HeatEnergyNetwork network, Direction d, int distance);
 
 
     /**
-     * Try to connect at.<br>
-     * Provider should use this to connect to devices
+     * Try to connect to a certain direction.<br>
+     * Provider should use this to connect to devices.
      *
-     * @param d        the d<br>
-     * @param distance the distance<br>
-     * @return true, if
+     * @param dir the direction
+     * @param distance the distance
+     * @return true, if connected successfully
      */
-    default boolean tryConnectAt(HeatEnergyNetwork network, Direction d, int distance) {
-        if (canConnectAt(d))
-            return connect(network, d, distance);
+    default boolean tryConnectTo(HeatEnergyNetwork network, Direction dir, int distance) {
+        if (canConnectTo(dir))
+            return connect(network, dir, distance);
         return false;
     }
 }

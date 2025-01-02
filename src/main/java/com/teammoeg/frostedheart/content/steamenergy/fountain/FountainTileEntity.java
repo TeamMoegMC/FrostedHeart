@@ -76,7 +76,7 @@ public class FountainTileEntity extends IEBaseBlockEntity implements
     }
 
     @Override
-    public boolean canConnectAt(Direction to) {
+    public boolean canConnectTo(Direction to) {
         return to == Direction.DOWN;
     }
 

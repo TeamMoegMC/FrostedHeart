@@ -39,7 +39,7 @@ public class HeatCapabilities {
             if (ep.isPresent())
                 return ep.orElse(null).reciveConnection(w, pos, network, d, distance);
             if (te instanceof INetworkConsumer)
-                return ((INetworkConsumer) te).tryConnectAt(network, d, distance);
+                return ((INetworkConsumer) te).tryConnectTo(network, d, distance);
         }
         return false;
     }

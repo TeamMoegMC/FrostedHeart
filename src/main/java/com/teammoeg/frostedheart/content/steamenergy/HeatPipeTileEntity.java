@@ -38,7 +38,7 @@ public class HeatPipeTileEntity extends PipeTileEntity implements FHTickableBloc
     }
 
     @Override
-    public boolean canConnectAt(Direction to) {
+    public boolean canConnectTo(Direction to) {
         return true;
     }
 

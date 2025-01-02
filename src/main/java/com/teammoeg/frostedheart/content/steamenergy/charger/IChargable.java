@@ -17,10 +17,13 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.steamenergy;
+package com.teammoeg.frostedheart.content.steamenergy.charger;
 
 import net.minecraft.world.item.ItemStack;
 
+/**
+ * An interface for items that can be charged.
+ */
 public interface IChargable {
     float charge(ItemStack stack, float value);
 }
