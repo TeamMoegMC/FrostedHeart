@@ -320,9 +320,9 @@ tasks.register('joinLang') {
         langList.each{fn->
         	
         	def langFile=new TreeMap<String, String>();
-        	def generatedLang=new File("$rootDir/src/generated/resources/assets/$mod_id/lang/"+fn+".json")
+        	def generatedLang=new File("$rootDir/src/generated/resources/assets/$mod_id/lang/"+fn.name+".json")
         	if(generatedLang.exists())
-        		new JsonSlurper().parse().each{key,value->langFile.put(key,value)}
+        		new JsonSlurper().parse(generatedLang).each{key,value->langFile.put(key,value)}
         	//files in alphabetical order
         	fileTree(fn).files.sort().each { childFile -> 
 			    new JsonSlurper().parse(childFile).each{key,value->langFile.put(key,value)}
