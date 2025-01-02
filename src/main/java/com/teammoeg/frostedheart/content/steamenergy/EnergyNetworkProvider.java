@@ -20,5 +20,5 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 public interface EnergyNetworkProvider {
-	HeatEnergyNetwork getNetwork();
+    HeatEnergyNetwork getNetwork();
 }

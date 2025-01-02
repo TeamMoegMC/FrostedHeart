@@ -19,27 +19,54 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
+import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
-import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.util.GsonHelper;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
 import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.registries.RegistryObject;
 
 public class SaunaRecipe extends IESerializableRecipe {
+    public static RegistryObject<RecipeType<SaunaRecipe>> TYPE;
+    public static Lazy<TypeWithClass<SaunaRecipe>> IEType = Lazy.of(() -> new TypeWithClass<>(TYPE, SaunaRecipe.class));
+    public static RegistryObject<IERecipeSerializer<SaunaRecipe>> SERIALIZER;
+    public final Ingredient input;
+    public final int time;
+    public final MobEffect effect;
+    public final int duration;
+    public final int amplifier;
+
+    public SaunaRecipe(ResourceLocation id, Ingredient input, int time, MobEffect effect, int duration, int amplifier) {
+        super(Lazy.of(() -> ItemStack.EMPTY), IEType.get(), id);
+        this.input = input;
+        this.time = time;
+        this.effect = effect;
+        this.duration = duration;
+        this.amplifier = amplifier;
+    }
+
+    @Override
+    protected IERecipeSerializer getIESerializer() {
+        return SERIALIZER.get();
+    }
+
+    @Override
+    public ItemStack getResultItem(RegistryAccess ra) {
+        return ItemStack.EMPTY;
+    }
+
     public static class Serializer extends IERecipeSerializer<SaunaRecipe> {
 
 
@@ -68,7 +95,7 @@ public class SaunaRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public SaunaRecipe readFromJson(ResourceLocation id, JsonObject json,IContext ctx) {
+        public SaunaRecipe readFromJson(ResourceLocation id, JsonObject json, IContext ctx) {
             // read effect from json
             MobEffect effect = null;
             int duration = 0, amplifier = 0;
@@ -100,34 +127,5 @@ public class SaunaRecipe extends IESerializableRecipe {
             recipe.input.toNetwork(buffer);
         }
 
-    }
-    public static RegistryObject<RecipeType<SaunaRecipe>> TYPE;
-    public static Lazy<TypeWithClass<SaunaRecipe>> IEType=Lazy.of(()->new TypeWithClass<>(TYPE, SaunaRecipe.class));
-    public static RegistryObject<IERecipeSerializer<SaunaRecipe>> SERIALIZER;
-    public final Ingredient input;
-    public final int time;
-    public final MobEffect effect;
-    public final int duration;
-
-    public final int amplifier;
-
-
-    public SaunaRecipe(ResourceLocation id, Ingredient input, int time, MobEffect effect, int duration, int amplifier) {
-        super(Lazy.of(()->ItemStack.EMPTY), IEType.get(), id);
-        this.input = input;
-        this.time = time;
-        this.effect = effect;
-        this.duration = duration;
-        this.amplifier = amplifier;
-    }
-
-    @Override
-    protected IERecipeSerializer getIESerializer() {
-        return SERIALIZER.get();
-    }
-
-    @Override
-    public ItemStack getResultItem(RegistryAccess ra) {
-        return ItemStack.EMPTY;
     }
 }

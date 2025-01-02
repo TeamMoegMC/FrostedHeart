@@ -36,8 +36,8 @@ public class HeatProviderEndPoint extends HeatCapacityEndpoint {
     /**
      * Instantiates HeatProviderEndPoint.<br>
      *
-     * @param priority if power is low, endpoint with lower priority would detach first
-     * @param capacity the max power to store<br>
+     * @param priority  if power is low, endpoint with lower priority would detach first
+     * @param capacity  the max power to store<br>
      * @param maxOutput the max heat put to network<br>
      */
     public HeatProviderEndPoint(int priority, float capacity, float maxOutput) {
@@ -53,10 +53,10 @@ public class HeatProviderEndPoint extends HeatCapacityEndpoint {
         this.maxOutput = maxOutput;
     }
 
-	public HeatProviderEndPoint(float capacity, float maxOutput) {
-		super(0, Math.max(capacity, maxOutput));
-		this.maxOutput = maxOutput;
-	}
+    public HeatProviderEndPoint(float capacity, float maxOutput) {
+        super(0, Math.max(capacity, maxOutput));
+        this.maxOutput = maxOutput;
+    }
 
     public boolean canReceiveHeat() {
         return false;
@@ -75,11 +75,11 @@ public class HeatProviderEndPoint extends HeatCapacityEndpoint {
         heat = Math.min(capacity, heat + added);
     }
 
-	/**
-	 * Provide heat bounded by the maximum output.
-	 *
-	 * @return the amount of heat actually provided
-	 */
+    /**
+     * Provide heat bounded by the maximum output.
+     *
+     * @return the amount of heat actually provided
+     */
     @Override
     public float provideHeat() {
         float provided = Math.min(heat, maxOutput);

@@ -24,16 +24,16 @@ import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
 import com.teammoeg.frostedheart.base.block.PipeTileEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
-
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.state.BlockState;
 
-public class HeatPipeTileEntity extends PipeTileEntity implements FHTickableBlockEntity,EnergyNetworkProvider, INetworkConsumer {
-	HeatEnergyNetwork ntwk;
-	int cnt=1;
-	public HeatPipeTileEntity(BlockPos l,BlockState state) {
+public class HeatPipeTileEntity extends PipeTileEntity implements FHTickableBlockEntity, EnergyNetworkProvider, INetworkConsumer {
+    HeatEnergyNetwork ntwk;
+    int cnt = 1;
+
+    public HeatPipeTileEntity(BlockPos l, BlockState state) {
         super(FHBlockEntityTypes.HEATPIPE.get(), l, state);
     }
 
@@ -42,26 +42,28 @@ public class HeatPipeTileEntity extends PipeTileEntity implements FHTickableBloc
         return true;
     }
 
-    public boolean connect(HeatEnergyNetwork network,Direction to, int ndist) {
-        if(ntwk==null||ntwk.getNetworkSize()<network.getNetworkSize()) {
-        	ntwk=network;
+    public boolean connect(HeatEnergyNetwork network, Direction to, int ndist) {
+        if (ntwk == null || ntwk.getNetworkSize() < network.getNetworkSize()) {
+            ntwk = network;
         }
-    	if (ntwk.shouldPropagate(getBlockPos(),ndist)) {
-	        this.propagate(to, ntwk, ndist);
+        if (ntwk.shouldPropagate(getBlockPos(), ndist)) {
+            this.propagate(to, ntwk, ndist);
         }
         return true;
     }
-    public void connectTo(Direction d, HeatEnergyNetwork network, int lengthx) {
-    	BlockPos n = this.getBlockPos().relative(d);
 
-        d=d.getOpposite();
-        HeatCapabilities.connect(network, getLevel(), n, d, lengthx+1);
+    public void connectTo(Direction d, HeatEnergyNetwork network, int lengthx) {
+        BlockPos n = this.getBlockPos().relative(d);
+
+        d = d.getOpposite();
+        HeatCapabilities.connect(network, getLevel(), n, d, lengthx + 1);
 
     }
+
     protected void propagate(Direction from, HeatEnergyNetwork network, int lengthx) {
         for (Direction d : Direction.values()) {
             if (from == d) continue;
-            connectTo(d,network,lengthx);
+            connectTo(d, network, lengthx);
         }
     }
 
@@ -73,16 +75,16 @@ public class HeatPipeTileEntity extends PipeTileEntity implements FHTickableBloc
 
     @Override
     public void tick() {
-        if(cnt>0) {
-        	cnt--;
-        }else {
-        	cnt=10;
-        	BlockState bs=this.getBlockState();
-        	for(Direction dir:Direction.values()) {
-        		if(bs.getValue(FluidPipeBlock.PROPERTY_BY_DIRECTION.get(dir))) {
-        			onFaceChange(dir,true);
-        		}
-        	}
+        if (cnt > 0) {
+            cnt--;
+        } else {
+            cnt = 10;
+            BlockState bs = this.getBlockState();
+            for (Direction dir : Direction.values()) {
+                if (bs.getValue(FluidPipeBlock.PROPERTY_BY_DIRECTION.get(dir))) {
+                    onFaceChange(dir, true);
+                }
+            }
         }
     }
 
@@ -92,17 +94,17 @@ public class HeatPipeTileEntity extends PipeTileEntity implements FHTickableBloc
         }
     }
 
-	@Override
-	public void onFaceChange(Direction dir, boolean isConnect) {
-		if(ntwk==null)return;
-		if(isConnect)
-			ntwk.startPropagation(this, dir);
-		else
-			ntwk.requestUpdate();
-	}
+    @Override
+    public void onFaceChange(Direction dir, boolean isConnect) {
+        if (ntwk == null) return;
+        if (isConnect)
+            ntwk.startPropagation(this, dir);
+        else
+            ntwk.requestUpdate();
+    }
 
-	@Override
-	public HeatEnergyNetwork getNetwork() {
-		return ntwk;
-	}
+    @Override
+    public HeatEnergyNetwork getNetwork() {
+        return ntwk;
+    }
 }

@@ -19,19 +19,18 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import java.util.Collection;
-
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
-
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.PacketDistributor;
-import net.minecraft.network.FriendlyByteBuf;
+
+import java.util.Collection;
 
 public class HeatStatContainer extends AbstractContainerMenu {
     public static final int RELATION_TO_TRADE = -30;
@@ -39,38 +38,40 @@ public class HeatStatContainer extends AbstractContainerMenu {
     HeatEnergyNetwork network;
     int counter;
     ServerPlayer openedPlayer;
+
     public HeatStatContainer(int id, Inventory inventoryPlayer, FriendlyByteBuf pb) {
         this(id);
-        data=SerializeUtil.readList(pb, EndPointData::readNetwork);
+        data = SerializeUtil.readList(pb, EndPointData::readNetwork);
     }
 
     public HeatStatContainer(int id) {
         super(FHMenuTypes.HEAT_STAT.get(), id);
     }
-    public HeatStatContainer(int id,Player opener,HeatEnergyNetwork mng) {
+
+    public HeatStatContainer(int id, Player opener, HeatEnergyNetwork mng) {
         super(FHMenuTypes.HEAT_STAT.get(), id);
-        network=mng;
-        if(opener instanceof ServerPlayer)
-        	openedPlayer=(ServerPlayer) opener;
+        network = mng;
+        if (opener instanceof ServerPlayer)
+            openedPlayer = (ServerPlayer) opener;
     }
-    
+
 
     public boolean stillValid(Player playerIn) {
         return true;
     }
 
     public void tick() {
-    	counter++;
-    	if(counter>=20) {
-    		counter=0;
-    		EndPointDataPacket epp=new EndPointDataPacket(network);
-    		FHNetwork.send(PacketDistributor.PLAYER.with(()->openedPlayer), epp);
-    	}
+        counter++;
+        if (counter >= 20) {
+            counter = 0;
+            EndPointDataPacket epp = new EndPointDataPacket(network);
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> openedPlayer), epp);
+        }
     }
 
-	@Override
-	public ItemStack quickMoveStack(Player pPlayer, int pIndex) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public ItemStack quickMoveStack(Player pPlayer, int pIndex) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

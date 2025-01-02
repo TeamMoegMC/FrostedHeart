@@ -44,7 +44,7 @@ public interface INetworkConsumer {
      * @param distance the distance<br>
      * @return true, if connected
      */
-    boolean connect(HeatEnergyNetwork network,Direction d, int distance);
+    boolean connect(HeatEnergyNetwork network, Direction d, int distance);
 
 
     /**
@@ -55,9 +55,9 @@ public interface INetworkConsumer {
      * @param distance the distance<br>
      * @return true, if
      */
-    default boolean tryConnectAt(HeatEnergyNetwork network,Direction d, int distance) {
+    default boolean tryConnectAt(HeatEnergyNetwork network, Direction d, int distance) {
         if (canConnectAt(d))
-            return connect(network,d, distance);
+            return connect(network, d, distance);
         return false;
     }
 }

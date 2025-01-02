@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
-
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkHooks;
 

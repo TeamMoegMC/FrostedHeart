@@ -19,243 +19,252 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Set;
-import java.util.function.Consumer;
-
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
-
-import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+
+import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * Class HeatProviderManager.
  * <p>
  * Integrated manager for heat providers
  */
-public class HeatEnergyNetwork  implements MenuProvider,NBTSerializable{
-	public static interface HeatConnector{
-		void connect(Level l,BlockPos b, Direction d);
-	}
-    private transient int interval = 0;
-    private transient Consumer<HeatConnector> onConnect;
+public class HeatEnergyNetwork implements MenuProvider, NBTSerializable {
+    public Map<HeatEndpoint, EndPointData> data = new HashMap<>();
+    public Set<EndPointData> epdataset = new HashSet<>();
     transient Level world;
     transient BlockEntity cur;
     transient boolean isBound;
-    transient PriorityQueue<HeatEndpoint> endpoints=new PriorityQueue<>(Comparator.comparingInt(HeatEndpoint::getPriority).reversed().thenComparing(HeatEndpoint::getDistance));
-    public Map<HeatEndpoint,EndPointData> data=new HashMap<>();
-    public Set<EndPointData> epdataset=new HashSet<>();
-    Map<BlockPos,Integer> propagated=new HashMap<>();
-    boolean dataModified=true;
-	private boolean isValid = true;
-	public HeatEnergyNetwork() {
-		
-	}
-	public HeatEnergyNetwork(BlockEntity cur, Consumer<HeatConnector> con) {
-		this();
-		bind(cur,con);
-	}
-
-	@Override
-	public void save(CompoundTag nbt, boolean isPacket) {
-		nbt.put("pipes",
-		SerializeUtil.toNBTList(propagated.entrySet(),(t,p)->p.compound().putLong("pos",t.getKey().asLong()).putInt("len", t.getValue())));
-		nbt.put("endpoints",
-		SerializeUtil.toNBTList(data.entrySet(),(t,p)->p.compound().putLong("pos",t.getValue().pos.asLong()).putString("blk", RegistryUtils.getRegistryName(t.getValue().blk).toString())));
-	}
-
-	@Override
-	public void load(CompoundTag nbt, boolean isPacket) {
-		propagated.clear();
-		ListTag cn=nbt.getList("pipes", Tag.TAG_COMPOUND);
-		for(Tag ccn:cn) {
-			CompoundTag ccnbt=((CompoundTag)ccn);
-			propagated.put(BlockPos.of(ccnbt.getLong("pos")), ccnbt.getInt("len"));
-		}
-		epdataset.clear();
-		ListTag cn2=nbt.getList("endpoints", Tag.TAG_COMPOUND);
-		for(Tag ccn:cn2) {
-			CompoundTag ccnbt=((CompoundTag)ccn);
-			epdataset.add(new EndPointData(RegistryUtils.getBlock(new ResourceLocation(ccnbt.getString("blk"))),
-					BlockPos.of(ccnbt.getLong("pos"))));
-		}
-	}
-    private HeatConnector connect = (level,pos, d) -> {
+    transient PriorityQueue<HeatEndpoint> endpoints = new PriorityQueue<>(Comparator.comparingInt(HeatEndpoint::getPriority).reversed().thenComparing(HeatEndpoint::getDistance));
+    Map<BlockPos, Integer> propagated = new HashMap<>();
+    boolean dataModified = true;
+    private transient int interval = 0;
+    private transient Consumer<HeatConnector> onConnect;
+    private boolean isValid = true;
+    private HeatConnector connect = (level, pos, d) -> {
         BlockEntity te = Utils.getExistingTileEntity(level, pos);
         if (te instanceof INetworkConsumer)
-            ((INetworkConsumer) te).tryConnectAt(this,d, 1);
-        else if(te!=null)
-        	FHCapabilities.HEAT_EP.getCapability(te,d).ifPresent(t->t.reciveConnection(level,pos,this,d,1));
-        if(cur instanceof INetworkConsumer) {
-        	((INetworkConsumer) cur).tryConnectAt(this, d.getOpposite(), 0);
-        }else if(cur!=null) {
-        	FHCapabilities.HEAT_EP.getCapability(cur,d.getOpposite()).ifPresent(t->t.reciveConnection(level,cur.getBlockPos(),this,d.getOpposite(),0));
+            ((INetworkConsumer) te).tryConnectAt(this, d, 1);
+        else if (te != null)
+            FHCapabilities.HEAT_EP.getCapability(te, d).ifPresent(t -> t.reciveConnection(level, pos, this, d, 1));
+        if (cur instanceof INetworkConsumer) {
+            ((INetworkConsumer) cur).tryConnectAt(this, d.getOpposite(), 0);
+        } else if (cur != null) {
+            FHCapabilities.HEAT_EP.getCapability(cur, d.getOpposite()).ifPresent(t -> t.reciveConnection(level, cur.getBlockPos(), this, d.getOpposite(), 0));
         }
-    	
-    };
-    @Override
-	public String toString() {
-		return "HeatEnergyNetwork [endpoints=" + endpoints + "]";
-	}
 
-    public boolean shouldPropagate(BlockPos pos,int dist) {
-    	int odist=propagated.getOrDefault(pos,-1);
-    	if(odist>dist||odist==-1) {
-    		propagated.put(pos, dist);
-    		return true;
-    	}
-    	return false;
+    };
+
+    public HeatEnergyNetwork() {
+
     }
-    public void startPropagation(HeatPipeTileEntity hpte,Direction dir) {
-    	hpte.connectTo(dir, this, propagated.getOrDefault(hpte.getBlockPos(),-1));
+
+    public HeatEnergyNetwork(BlockEntity cur, Consumer<HeatConnector> con) {
+        this();
+        bind(cur, con);
     }
+
+    @Override
+    public void save(CompoundTag nbt, boolean isPacket) {
+        nbt.put("pipes",
+                SerializeUtil.toNBTList(propagated.entrySet(), (t, p) -> p.compound().putLong("pos", t.getKey().asLong()).putInt("len", t.getValue())));
+        nbt.put("endpoints",
+                SerializeUtil.toNBTList(data.entrySet(), (t, p) -> p.compound().putLong("pos", t.getValue().pos.asLong()).putString("blk", RegistryUtils.getRegistryName(t.getValue().blk).toString())));
+    }
+
+    @Override
+    public void load(CompoundTag nbt, boolean isPacket) {
+        propagated.clear();
+        ListTag cn = nbt.getList("pipes", Tag.TAG_COMPOUND);
+        for (Tag ccn : cn) {
+            CompoundTag ccnbt = ((CompoundTag) ccn);
+            propagated.put(BlockPos.of(ccnbt.getLong("pos")), ccnbt.getInt("len"));
+        }
+        epdataset.clear();
+        ListTag cn2 = nbt.getList("endpoints", Tag.TAG_COMPOUND);
+        for (Tag ccn : cn2) {
+            CompoundTag ccnbt = ((CompoundTag) ccn);
+            epdataset.add(new EndPointData(RegistryUtils.getBlock(new ResourceLocation(ccnbt.getString("blk"))),
+                    BlockPos.of(ccnbt.getLong("pos"))));
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "HeatEnergyNetwork [endpoints=" + endpoints + "]";
+    }
+
+    public boolean shouldPropagate(BlockPos pos, int dist) {
+        int odist = propagated.getOrDefault(pos, -1);
+        if (odist > dist || odist == -1) {
+            propagated.put(pos, dist);
+            return true;
+        }
+        return false;
+    }
+
+    public void startPropagation(HeatPipeTileEntity hpte, Direction dir) {
+        hpte.connectTo(dir, this, propagated.getOrDefault(hpte.getBlockPos(), -1));
+    }
+
     public int getNetworkSize() {
-    	return data.size()+propagated.size();
+        return data.size() + propagated.size();
     }
-    public boolean addEndpoint(Level l,BlockPos pos,HeatEndpoint heatEndpoint,int dist) {
-    	if(data.containsKey(heatEndpoint)) {
-    		if(dist<heatEndpoint.getDistance()) {
-    			heatEndpoint.connect(this, dist);
-    			dataModified=true;
-    			return true;
-    		}
-    	}else {
-    		heatEndpoint.connect(this, dist);
-    		data.put(heatEndpoint, new EndPointData(l.getBlockState(pos).getBlock(),pos));
-    		dataModified=true;
-    		return true;
-    	}
-    	return false;
+
+    public boolean addEndpoint(Level l, BlockPos pos, HeatEndpoint heatEndpoint, int dist) {
+        if (data.containsKey(heatEndpoint)) {
+            if (dist < heatEndpoint.getDistance()) {
+                heatEndpoint.connect(this, dist);
+                dataModified = true;
+                return true;
+            }
+        } else {
+            heatEndpoint.connect(this, dist);
+            data.put(heatEndpoint, new EndPointData(l.getBlockState(pos).getBlock(), pos));
+            dataModified = true;
+            return true;
+        }
+        return false;
     }
-    public boolean removeEndpoint(BlockPos pos,HeatEndpoint heatEndpoint) {
-    	Object dat= data.remove(heatEndpoint);
-    	if(dat!=null) {
-    		dataModified=true;
-    		return true;
-    	}
-    	return false;
-    	
+
+    public boolean removeEndpoint(BlockPos pos, HeatEndpoint heatEndpoint) {
+        Object dat = data.remove(heatEndpoint);
+        if (dat != null) {
+            dataModified = true;
+            return true;
+        }
+        return false;
+
     }
+
     @Override
     public AbstractContainerMenu createMenu(int p1, Inventory p2, Player p3) {
-        return new HeatStatContainer(p1,p3,this);
+        return new HeatStatContainer(p1, p3, this);
     }
 
     public boolean hasBounded() {
-    	return isBound;
+        return isBound;
     }
+
     public void bind(BlockEntity cur, Consumer<HeatConnector> con) {
-    	isBound=true;
-    	this.cur=cur;
+        isBound = true;
+        this.cur = cur;
         this.onConnect = con;
     }
+
     public void requestUpdate() {
-    	interval=10;
+        interval = 10;
     }
+
     public void requestSlowUpdate() {
-    	interval=20;
+        interval = 20;
     }
+
     public boolean isUpdateRequested() {
-    	return interval>=0;
+        return interval >= 0;
     }
+
     /**
      * Tick.
      */
     public void tick(Level level) {
         if (interval > 0) {
             interval--;
-        }else if(interval==0){
-        	//System.out.println("run network");
-        	for(BlockPos bp:propagated.keySet()) {
-        		HeatPipeTileEntity hpte=FHUtils.getExistingTileEntity(level, bp, HeatPipeTileEntity.class);
-        		if(hpte!=null) {
-        			hpte.ntwk=null;
-        		}
-        	}
-        	propagated.clear();
-        	for(HeatEndpoint bp:data.keySet()) {
-        		bp.clearConnection();
-        	}
-        	data.clear();
-        	if(onConnect!=null)
-        		onConnect.accept(connect);
-            dataModified=true;
+        } else if (interval == 0) {
+            //System.out.println("run network");
+            for (BlockPos bp : propagated.keySet()) {
+                HeatPipeTileEntity hpte = FHUtils.getExistingTileEntity(level, bp, HeatPipeTileEntity.class);
+                if (hpte != null) {
+                    hpte.ntwk = null;
+                }
+            }
+            propagated.clear();
+            for (HeatEndpoint bp : data.keySet()) {
+                bp.clearConnection();
+            }
+            data.clear();
+            if (onConnect != null)
+                onConnect.accept(connect);
+            dataModified = true;
             interval = -1;
         }
-        float value=0;
-        int tlevel=1;
-        if(dataModified) {
-        	dataModified=false;
-        	endpoints.clear();
-        	endpoints.addAll(data.keySet());
+        float value = 0;
+        int tlevel = 1;
+        if (dataModified) {
+            dataModified = false;
+            endpoints.clear();
+            endpoints.addAll(data.keySet());
         }
-        for(HeatEndpoint endpoint:endpoints) {
-        	if(endpoint.canProvideHeat()) {
-        		float provided=endpoint.provideHeat();
-        		data.get(endpoint).intake=provided;
-        		value+=provided;
-        		tlevel=Math.max(endpoint.getTempLevel(), tlevel);
-        	}
+        for (HeatEndpoint endpoint : endpoints) {
+            if (endpoint.canProvideHeat()) {
+                float provided = endpoint.provideHeat();
+                data.get(endpoint).intake = provided;
+                value += provided;
+                tlevel = Math.max(endpoint.getTempLevel(), tlevel);
+            }
         }
-        boolean shouldFill=true;
-    	while(shouldFill) {
-    		shouldFill=false;
-	    	for(HeatEndpoint endpoint:endpoints) {
-	    		if(endpoint.canReceiveHeat()) {
-	    			float oldval=value;
-		    		value=endpoint.receiveHeat(value,tlevel);
-		    		data.get(endpoint).applyOutput(oldval-value,endpoint.getMaxIntake());
-		    		
-		    		shouldFill|=endpoint.canReceiveHeat();
-	    		}
-	    		
-	    	}
-	    	if(value<=0)break;
-    	}
-    	data.values().forEach(EndPointData::pushData);
+        boolean shouldFill = true;
+        while (shouldFill) {
+            shouldFill = false;
+            for (HeatEndpoint endpoint : endpoints) {
+                if (endpoint.canReceiveHeat()) {
+                    float oldval = value;
+                    value = endpoint.receiveHeat(value, tlevel);
+                    data.get(endpoint).applyOutput(oldval - value, endpoint.getMaxIntake());
+
+                    shouldFill |= endpoint.canReceiveHeat();
+                }
+
+            }
+            if (value <= 0) break;
+        }
+        data.values().forEach(EndPointData::pushData);
     }
 
     public void invalidate(Level l) {
-    	for(BlockPos bp:propagated.keySet()) {
-    		HeatPipeTileEntity hpte=FHUtils.getExistingTileEntity(l, bp, HeatPipeTileEntity.class);
-    		if(hpte!=null) {
-    			hpte.ntwk=null;
-    		}
-    	}
-    	propagated.clear();
-    	for(HeatEndpoint bp:data.keySet()) {
-    		bp.clearConnection();
-    	}
-    	data.clear();
-    	interval=-1;
-    	isValid=false;
-    	dataModified=true;
+        for (BlockPos bp : propagated.keySet()) {
+            HeatPipeTileEntity hpte = FHUtils.getExistingTileEntity(l, bp, HeatPipeTileEntity.class);
+            if (hpte != null) {
+                hpte.ntwk = null;
+            }
+        }
+        propagated.clear();
+        for (HeatEndpoint bp : data.keySet()) {
+            bp.clearConnection();
+        }
+        data.clear();
+        interval = -1;
+        isValid = false;
+        dataModified = true;
     }
-	@Override
-	public Component getDisplayName() {
-		return Lang.translateGui("heat_stat");
-	}
+
+    @Override
+    public Component getDisplayName() {
+        return Lang.translateGui("heat_stat");
+    }
+
+    public static interface HeatConnector {
+        void connect(Level l, BlockPos b, Direction d);
+    }
 
 
 }
