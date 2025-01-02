@@ -159,7 +159,7 @@ public class TemperatureGoogleRenderer {
         boolean addedBlockTempInfo = false;
         // block temperature
         if (wearingTemperatureProbe && hasBlockTempInfo) {
-            boolean isNotLit = state.hasProperty(BlockStateProperties.LIT) && state.getValue(BlockStateProperties.LIT);
+            boolean isNotLit = state.hasProperty(BlockStateProperties.LIT) && !state.getValue(BlockStateProperties.LIT);
             boolean requiresLit = blockData.isLit();
             List<Component> stats = BlockTempStats.getStats(block, null, mc.player);
             if (!stats.isEmpty() && !(requiresLit && isNotLit)) {

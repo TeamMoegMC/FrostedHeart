@@ -415,7 +415,7 @@
   "tooltip.frostedheart.holdForDescription": "Hold [%1$s] for Summary",
   "tooltip.frostedheart.holdForControls": "Hold [%1$s] for Controls",
   "tooltip.frostedheart.holdForTemperature": "Hold [%1$s] for Temperature Info",
-  "tooltip.frostedheart.holdForNutrition": "Hold [%1%s] for Nutrition Info",
+  "tooltip.frostedheart.holdForNutrition": "Hold [%1$s] for Nutrition Info",
   "tooltip.frostedheart.keyShift": "Shift",
   "tooltip.frostedheart.keyCtrl": "Ctrl",
   "tooltip.frostedheart.keyS": "S",
