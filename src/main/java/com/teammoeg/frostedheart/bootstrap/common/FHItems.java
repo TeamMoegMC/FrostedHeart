@@ -965,14 +965,9 @@ public class FHItems {
             );
     public static ItemEntry<Item> REFRACTORY_BRICK =
             ingredient("refractory_brick");
+    public static ItemEntry<Item> FLUX =
+            ingredient("flux");
 
-    // OLD FORGE LIKE REGISTRY - TRY NOT USE THIS, USE REGISTRATE like above
-
-    static {
-        REGISTRATE.setCreativeTab(FHTabs.MISC);
-    }
-
-    // Misc
     public static ItemEntry<Item> generator_ash = REGISTRATE
             .item("generator_ash", Item::new)
             .model(AssetLookup.existingItemModel())
