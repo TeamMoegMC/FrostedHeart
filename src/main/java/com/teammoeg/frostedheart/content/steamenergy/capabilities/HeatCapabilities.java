@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.steamenergy.capabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
-import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
+import com.teammoeg.frostedheart.content.steamenergy.NetworkConnector;
 import com.teammoeg.frostedheart.util.FHUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -20,7 +20,7 @@ public class HeatCapabilities {
      * @return true, if can recive connect from direction
      */
     public static boolean canConnectAt(LevelAccessor world, BlockPos pos, Direction to) {
-        return FHUtils.getExistingTileEntity(world, pos, INetworkConsumer.class) != null || FHUtils.getCapability(world, pos, to, FHCapabilities.HEAT_EP.capability()) != null;
+        return FHUtils.getExistingTileEntity(world, pos, NetworkConnector.class) != null || FHUtils.getCapability(world, pos, to, FHCapabilities.HEAT_EP.capability()) != null;
 
     }
 
@@ -38,8 +38,8 @@ public class HeatCapabilities {
             LazyOptional<HeatEndpoint> ep = te.getCapability(FHCapabilities.HEAT_EP.capability(), d);
             if (ep.isPresent())
                 return ep.orElse(null).reciveConnection(w, pos, network, d, distance);
-            if (te instanceof INetworkConsumer)
-                return ((INetworkConsumer) te).tryConnectTo(network, d, distance);
+            if (te instanceof NetworkConnector)
+                return ((NetworkConnector) te).tryConnectTo(network, d, distance);
         }
         return false;
     }

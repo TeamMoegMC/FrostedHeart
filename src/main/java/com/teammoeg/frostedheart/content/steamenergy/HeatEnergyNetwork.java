@@ -62,12 +62,12 @@ public class HeatEnergyNetwork implements MenuProvider, NBTSerializable {
     private boolean isValid = true;
     private HeatConnector connect = (level, pos, d) -> {
         BlockEntity te = Utils.getExistingTileEntity(level, pos);
-        if (te instanceof INetworkConsumer)
-            ((INetworkConsumer) te).tryConnectTo(this, d, 1);
+        if (te instanceof NetworkConnector)
+            ((NetworkConnector) te).tryConnectTo(this, d, 1);
         else if (te != null)
             FHCapabilities.HEAT_EP.getCapability(te, d).ifPresent(t -> t.reciveConnection(level, pos, this, d, 1));
-        if (cur instanceof INetworkConsumer) {
-            ((INetworkConsumer) cur).tryConnectTo(this, d.getOpposite(), 0);
+        if (cur instanceof NetworkConnector) {
+            ((NetworkConnector) cur).tryConnectTo(this, d.getOpposite(), 0);
         } else if (cur != null) {
             FHCapabilities.HEAT_EP.getCapability(cur, d.getOpposite()).ifPresent(t -> t.reciveConnection(level, cur.getBlockPos(), this, d.getOpposite(), 0));
         }

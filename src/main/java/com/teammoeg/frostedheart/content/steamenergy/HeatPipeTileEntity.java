@@ -29,7 +29,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class HeatPipeTileEntity extends PipeTileEntity implements FHTickableBlockEntity, EnergyNetworkProvider, INetworkConsumer {
+public class HeatPipeTileEntity extends PipeTileEntity implements FHTickableBlockEntity, EnergyNetworkProvider, NetworkConnector {
     HeatEnergyNetwork ntwk;
     int cnt = 1;
 

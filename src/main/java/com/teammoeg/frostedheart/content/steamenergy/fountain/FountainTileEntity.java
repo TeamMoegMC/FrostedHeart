@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
-import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
+import com.teammoeg.frostedheart.content.steamenergy.NetworkConnector;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -46,8 +46,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
-public class FountainTileEntity extends IEBaseBlockEntity implements
-        INetworkConsumer, FHTickableBlockEntity, FHBlockInterfaces.IActiveState {
+public class FountainTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity, FHBlockInterfaces.IActiveState {
 
     public static final int RANGE_PER_NOZZLE = 1;
     public static final int MAX_HEIGHT = 5;
@@ -73,16 +72,6 @@ public class FountainTileEntity extends IEBaseBlockEntity implements
             return heatcap.cast();
         }
         return super.getCapability(capability, facing);
-    }
-
-    @Override
-    public boolean canConnectTo(Direction to) {
-        return to == Direction.DOWN;
-    }
-
-    @Override
-    public boolean connect(HeatEnergyNetwork network, Direction d, int distance) {
-        return false;
     }
 
     public boolean isWorking() {

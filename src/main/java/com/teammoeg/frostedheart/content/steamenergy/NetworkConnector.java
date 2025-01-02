@@ -22,10 +22,9 @@ package com.teammoeg.frostedheart.content.steamenergy;
 import net.minecraft.core.Direction;
 
 /**
- * Interface INetworkConsumer.
- * For any heat powered device
+ * Any HeatPipe-like BlockEntity that actively connects to a network.
  */
-public interface INetworkConsumer {
+public interface NetworkConnector {
 
     /**
      * Check if this can connect to a certain direction.
