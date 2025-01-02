@@ -1,29 +1,21 @@
 package com.teammoeg.frostedheart.content.health.tooltip;
 
-import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.base.tooltip.KeyControlledDesc;
-import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
-import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
-import com.teammoeg.frostedheart.util.MultipleRoundHelper;
 import com.teammoeg.frostedheart.util.lang.Components;
-import com.teammoeg.frostedheart.util.lang.FHTextIcon;
 import com.teammoeg.frostedheart.util.lang.FineProgressBarBuilder;
 import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import org.lwjgl.glfw.GLFW;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,10 +25,19 @@ public class FoodNutritionStats implements TooltipModifier {
         this.item = item;
     }
 
+    @Nullable
+    public static FoodNutritionStats create(Item item) {
+        return new FoodNutritionStats(item);
+    }
+
     @Override
     public void modify(ItemTooltipEvent context) {
         List<Component> stats = getFoodStats(item, context.getItemStack(), context.getEntity());
-        KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>());
+        KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>(),
+                GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_LEFT_CONTROL,
+                "A", "Ctrl",
+                "holdForNutrition", "holdForControls"
+                );
         if (!stats.isEmpty()) {
             List<Component> tooltip = context.getToolTip();
             tooltip.add(Components.immutableEmpty());
@@ -54,10 +55,10 @@ public class FoodNutritionStats implements TooltipModifier {
         if(player == null) return list;
         NutritionCapability.Nutrition foodNutrition = NutritionCapability.getFoodNutrition(player.level(), stack);
 
-        Lang.translate("tooltip", "nutrition")
-                .style(ChatFormatting.GRAY)
-                .addTo(list);
-        if (foodNutrition != null&&stack.isEdible()) {
+        if (FoodTemperatureHandler.isFoodOrDrink(stack) && foodNutrition != null) {
+            Lang.translate("tooltip", "nutrition")
+                    .style(ChatFormatting.GRAY)
+                    .addTo(list);
             NutritionCapability.Nutrition nutrition = foodNutrition.scale(1/foodNutrition.getNutritionValue());
             FineProgressBarBuilder builder=new FineProgressBarBuilder(PROGRESS_LENGTH);
             //list.add(Lang.str("\uF504").withStyle(FHTextIcon.applyFont(Style.EMPTY)));

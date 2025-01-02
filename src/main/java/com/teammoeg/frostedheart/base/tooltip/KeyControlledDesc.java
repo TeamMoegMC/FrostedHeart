@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.base.tooltip;
 import com.simibubi.create.foundation.utility.Components;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.util.lang.Lang;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
@@ -18,25 +17,39 @@ public class KeyControlledDesc {
     List<Component> lines;
     List<Component> linesOnS;
     List<Component> linesOnCtrl;
+    int key1;
+    int key2;
+    String key1Desc;
+    String key2Desc;
+    String key1Translation;
+    String key2Translation;
 
     // initialize with empty lines
-    public KeyControlledDesc(List<Component> shiftLines, List<Component> ctrlLines) {
+    public KeyControlledDesc(List<Component> shiftLines, List<Component> ctrlLines, int key1, int key2,
+                             String key1Desc, String key2Desc,
+                             String key1Translation, String key2Translation) {
         this.lines = new ArrayList<>();
         this.linesOnS = shiftLines;
         this.linesOnCtrl = ctrlLines;
+        this.key1 = key1;
+        this.key2 = key2;
+        this.key1Desc = key1Desc;
+        this.key2Desc = key2Desc;
+        this.key1Translation = key1Translation;
+        this.key2Translation = key2Translation;
 
         boolean hasDescription = !this.linesOnS.isEmpty();
         boolean hasControls = !this.linesOnCtrl.isEmpty();
 
         if (hasDescription || hasControls) {
-            String[] holdDesc = Lang.translateTooltip("holdForTemperature", "$")
+            String[] holdDesc = Lang.translateTooltip(this.key1Translation, "$")
                     .getString()
                     .split("\\$");
-            String[] holdCtrl = Lang.translateTooltip("holdForControls", "$")
+            String[] holdCtrl = Lang.translateTooltip(this.key2Translation, "$")
                     .getString()
                     .split("\\$");
-            MutableComponent keyShift = Lang.translateTooltip("keyS");
-            MutableComponent keyCtrl = Lang.translateTooltip("keyCtrl");
+            MutableComponent keyShiftTooltip = Lang.text(this.key1Desc).component();
+            MutableComponent keyCtrlTooltip = Lang.text(this.key2Desc).component();
 
             for (List<Component> list : Arrays.asList(lines, this.linesOnS, this.linesOnCtrl)) {
                 boolean shift = list == this.linesOnS;
@@ -49,7 +62,7 @@ public class KeyControlledDesc {
                 if (hasControls) {
                     MutableComponent tabBuilder = Components.empty();
                     tabBuilder.append(Components.literal(holdCtrl[0]).withStyle(DARK_GRAY));
-                    tabBuilder.append(keyCtrl.plainCopy()
+                    tabBuilder.append(keyCtrlTooltip.plainCopy()
                             .withStyle(ctrl ? WHITE : GRAY));
                     tabBuilder.append(Components.literal(holdCtrl[1]).withStyle(DARK_GRAY));
                     list.add(0, tabBuilder);
@@ -58,7 +71,7 @@ public class KeyControlledDesc {
                 if (hasDescription) {
                     MutableComponent tabBuilder = Components.empty();
                     tabBuilder.append(Components.literal(holdDesc[0]).withStyle(DARK_GRAY));
-                    tabBuilder.append(keyShift.plainCopy()
+                    tabBuilder.append(keyShiftTooltip.plainCopy()
                             .withStyle(shift ? WHITE : GRAY));
                     tabBuilder.append(Components.literal(holdDesc[1]).withStyle(DARK_GRAY));
                     list.add(0, tabBuilder);
@@ -81,9 +94,9 @@ public class KeyControlledDesc {
     }
 
     public List<Component> getCurrentLines() {
-        if (FHKeyMappings.hasSDown()) {
+        if (FHKeyMappings.isDown(key1)) {
             return linesOnS;
-        } else if (Screen.hasControlDown()) {
+        } else if (FHKeyMappings.isDown(key2)) {
             return linesOnCtrl;
         } else {
             return lines;

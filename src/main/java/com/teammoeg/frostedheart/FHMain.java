@@ -61,6 +61,7 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.world.FHBiomeModifiers;
 import com.teammoeg.frostedheart.content.world.FHBiomes;
 import com.teammoeg.frostedheart.content.world.FHFeatures;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameRules.IntegerValue;
@@ -119,7 +120,7 @@ public class FHMain {
         REGISTRATE.setTooltipModifierFactory(item -> {
             return new ItemDescription.Modifier(item, TooltipHelper.Palette.STANDARD_CREATE)
                     .andThen(new FoodTempStats(item))
-                    .andThen(new FoodNutritionStats(item))
+                    .andThen(TooltipModifier.mapNull(FoodNutritionStats.create(item)))
                     .andThen(TooltipModifier.mapNull(PlantTempStats.create(item)))
                     .andThen(TooltipModifier.mapNull(BlockTempStats.create(item)))
                     .andThen(TooltipModifier.mapNull(EquipmentTempStats.create(item)))

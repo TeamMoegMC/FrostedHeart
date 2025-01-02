@@ -20,6 +20,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +43,11 @@ public class BlockTempStats implements TooltipModifier {
     @Override
     public void modify(ItemTooltipEvent context) {
         List<Component> stats = getStats(block, context.getItemStack(), context.getEntity());
-        KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>());
+        KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>(),
+                GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_LEFT_CONTROL,
+                "S", "Ctrl",
+                "holdForTemperature", "holdForControls"
+        );
         if (!stats.isEmpty()) {
             List<Component> tooltip = context.getToolTip();
             tooltip.add(Components.immutableEmpty());
@@ -50,7 +55,7 @@ public class BlockTempStats implements TooltipModifier {
         }
     }
 
-    public static List<Component> getStats(Block block, ItemStack stack, Player player) {
+    public static List<Component> getStats(Block block, @Nullable ItemStack stack, @Nullable Player player) {
         List<Component> list = new ArrayList<>();
         BlockTempData data = FHDataManager.getBlockData(block);
         if (data != null) {

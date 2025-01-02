@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.climate.event;
 
+import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
@@ -12,6 +13,8 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -80,8 +83,16 @@ public class ClimateClientEvents {
         }
     }
     @SubscribeEvent
-    public void onWorldLoad(LevelEvent.Load event) {
+    public static void onWorldLoad(LevelEvent.Load event) {
     	forstedSoundCd=0;
+    }
+
+    @Mod.EventBusSubscriber(modid = FHMain.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+    public static class ModBusEvents {
+        @SubscribeEvent
+        public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
+            event.registerAboveAll("temperature_google_info", TemperatureGoogleRenderer.OVERLAY);
+        }
     }
     
 

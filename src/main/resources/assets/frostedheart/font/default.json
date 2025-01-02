@@ -35,6 +35,10 @@
         {
             "type": "reference",
             "id": "frostedheart:include/white_blank"
+        },
+        {
+            "type": "reference",
+            "id": "frostedheart:include/soil_thermometer"
         }
     ]
 }

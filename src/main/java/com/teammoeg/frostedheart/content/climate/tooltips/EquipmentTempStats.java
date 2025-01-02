@@ -18,6 +18,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import org.checkerframework.checker.units.qual.K;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,11 @@ public class EquipmentTempStats implements TooltipModifier {
     @Override
     public void modify(ItemTooltipEvent context) {
         List<Component> stats = getStats(item, context.getItemStack(), context.getEntity());
-        KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>());
+        KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>(),
+                GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_LEFT_CONTROL,
+                "S", "Ctrl",
+                "holdForTemperature", "holdForControls"
+        );
         if (!stats.isEmpty()) {
             List<Component> tooltip = context.getToolTip();
             tooltip.add(Components.immutableEmpty());
