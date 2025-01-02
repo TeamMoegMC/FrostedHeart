@@ -91,12 +91,12 @@ public class HeatStatScreen extends BaseScreen {
     }
 
     public static class EndPointSlot extends Panel {
-        EndPointData epd;
+        HeatEndpoint epd;
         Icon ic;
         String val;
         boolean isIntake;
 
-        public EndPointSlot(Panel panel, EndPointData epd, boolean isIntake) {
+        public EndPointSlot(Panel panel, HeatEndpoint epd, boolean isIntake) {
             super(panel);
             this.epd = epd;
             ic = ItemIcon.getItemIcon(epd.blk.asItem());
@@ -130,13 +130,13 @@ public class HeatStatScreen extends BaseScreen {
     }
 
     public static class EndPointList extends Panel {
-        public HeatStatScreen tradeScreen;
+        public HeatStatScreen screen;
         public PanelScrollBar scroll;
         boolean isIntake;
 
         public EndPointList(HeatStatScreen panel, boolean isIntake) {
             super(panel);
-            tradeScreen = panel;
+            screen = panel;
             this.isIntake = isIntake;
             this.scroll = new PanelScrollBar(panel, this);
             this.setWidth(100);
@@ -146,7 +146,7 @@ public class HeatStatScreen extends BaseScreen {
         public void addWidgets() {
             int offset = 0;
             int i = 0;
-            for (EndPointData r : tradeScreen.cx.data) {
+            for (HeatEndpoint r : screen.cx.data) {
                 if ((isIntake && r.avgIntake == -1) || (!isIntake && r.avgOutput == -1)) continue;
                 EndPointSlot button = new EndPointSlot(this, r, isIntake);
                 add(button);

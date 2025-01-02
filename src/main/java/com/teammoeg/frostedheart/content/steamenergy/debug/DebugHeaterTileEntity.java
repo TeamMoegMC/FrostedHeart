@@ -20,10 +20,11 @@
 package com.teammoeg.frostedheart.content.steamenergy.debug;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.HeatProviderEndPoint;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -34,17 +35,19 @@ import net.minecraftforge.common.util.LazyOptional;
 
 public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity {
 
-    HeatEnergyNetwork manager = new HeatEnergyNetwork(this, c -> {
-        for (Direction d : Direction.values()) {
-            c.connect(level, worldPosition.relative(d), d.getOpposite());
-        }
-    });
-    HeatProviderEndPoint endpoint = new HeatProviderEndPoint(-1, Integer.MAX_VALUE, Integer.MAX_VALUE);
-    LazyOptional<HeatProviderEndPoint> heatcap = LazyOptional.of(() -> endpoint);
-
+    HeatNetwork manager;
+    HeatProviderEndPoint endpoint;
+    LazyOptional<HeatProviderEndPoint> heatcap;
 
     public DebugHeaterTileEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.DEBUGHEATER.get(), pos, state);
+        manager = new HeatNetwork(this, c -> {
+            for (Direction d : Direction.values()) {
+                c.connect(level, worldPosition.relative(d), d.getOpposite());
+            }
+        });
+        endpoint = new HeatProviderEndPoint(-1, Integer.MAX_VALUE, Integer.MAX_VALUE);
+        heatcap = LazyOptional.of(() -> endpoint);
     }
 
     @Override
@@ -53,12 +56,11 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickab
 
     @Override
     public void tick() {
-        if ((!endpoint.hasValidNetwork() || manager.data.size() <= 1) && !manager.isUpdateRequested()) {
+        if ((!endpoint.hasValidNetwork() || manager.getNumEndpoints() <= 1) && !manager.isUpdateRequested()) {
             manager.requestSlowUpdate();
         }
         endpoint.addHeat(Integer.MAX_VALUE);
         manager.tick(level);
-
     }
 
     @Override

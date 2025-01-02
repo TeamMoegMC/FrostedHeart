@@ -1,49 +1,150 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * An abstract Endpoint for A Heat Network.
  */
 @Getter
 @ToString()
-public abstract class HeatEndpoint implements NBTSerializable {
+public class HeatEndpoint implements NBTSerializable {
 
     /**
      * The main network.
      */
     @ToString.Exclude
-    protected HeatEnergyNetwork network;
-
+    HeatNetwork network;
     /**
-     * The distance to center.
+     * The distance of this endpoint to network center.
      */
-    protected int distance = -1;
-
+    int distance = -1;
     /**
      * Temperature level of the network.
      * <p>
      * This is normally defined by the Generator, or a Heat Debugger.
      */
-    protected int tempLevel;
+    int tempLevel = 1;
+    /**
+     * The max capacity to store heat.
+     */
+    final float capacity;
+    /**
+     * Detach priority.
+     * Consumer priority, if power is low, endpoint with lower priority would detach first
+     * -- GETTER --
+     *  Gets the detach priority.
+     *
+     * @return the priority to detatch
+
+     */
+    @Getter
+    final int priority;
+    /**
+     * Current heat stored.
+     * Sometimes it is referred to as "power".
+     */
+    @Setter
+    float heat = 0;
+    /**
+     * The Block and Position of this endpoint.
+     * These are maintained by the network, so we default them here.
+     */
+    Block blk = Blocks.AIR;
+    BlockPos pos = BlockPos.ZERO;
+    /**
+     * The heat intake from the network at this tick.
+     */
+    float intake = -1;
+    /**
+     * The heat output to the network at this tick.
+     */
+    float output = -1;
+    /**
+     * The recent average intake from the network maintained by the network.
+     */
+    float avgIntake = -1;
+    /**
+     * The recent average output to the network maintained by the network.
+     */
+    float avgOutput = -1;
+    /**
+     * The maximum intake when receiving heat.<br>
+     * -- GETTER --
+     *  The maximum heat to receive from the network.
+     *
+     * @return the max intake
+
+     */
+    @Getter
+    float maxIntake = -1;
+    /**
+     * The maximum heat output of this provider.<br>
+     * -- GETTER --
+     *  The maximum heat to provide to the network.
+     *
+     * @return the max output
+
+     */
+    @Getter
+    float maxOutput = -1;
+    /**
+     * Whether this endpoint receives more heat than it provides.
+     */
+    boolean canCostMore = false;
+
+    public HeatEndpoint(Block block, BlockPos pos, int priority, float capacity) {
+        this.blk = block;
+        this.pos = pos;
+        this.priority = priority;
+        this.capacity = capacity;
+    }
+
+    public HeatEndpoint(Block block, BlockPos pos, float capacity) {
+        this.blk = block;
+        this.pos = pos;
+        this.priority = 0;
+        this.capacity = capacity;
+    }
+
+    public HeatEndpoint(int priority, float capacity) {
+        this.priority = priority;
+        this.capacity = capacity;
+    }
+
+    public HeatEndpoint(float capacity) {
+        this.priority = 0;
+        this.capacity = capacity;
+    }
+
+    public HeatEndpoint() {
+        this.priority = 0;
+        this.capacity = 0;
+    }
 
     /**
      * Recive connection from network.
      *
-     * @param w       current world
+     * @param level       current world
      * @param pos     current pos
      * @param manager the network
-     * @param d       direction from
      * @param dist    the distance to central
      * @return true, if successful
      */
-    public boolean reciveConnection(Level w, BlockPos pos, HeatEnergyNetwork manager, Direction d, int dist) {
-        return manager.addEndpoint(w, pos, this, dist);
+    public boolean reciveConnection(Level level, BlockPos pos, HeatNetwork manager, Direction dir, int dist) {
+        return manager.addEndpoint(this, dist, level, pos);
     }
 
     /**
@@ -52,9 +153,11 @@ public abstract class HeatEndpoint implements NBTSerializable {
      * @param network  the network
      * @param distance the distance
      */
-    public void connect(HeatEnergyNetwork network, int distance) {
+    public void connect(HeatNetwork network, int distance, BlockPos pos, Level level) {
         this.network = network;
         this.distance = distance;
+        this.pos = pos;
+        this.blk = level.getBlockState(pos).getBlock();
     }
 
     /**
@@ -76,7 +179,9 @@ public abstract class HeatEndpoint implements NBTSerializable {
      *
      * @return true, if successful
      */
-    protected abstract boolean canReceiveHeat();
+    public boolean canReceiveHeat() {
+        return heat < capacity;
+    }
 
     /**
      * Receive heat from the network.
@@ -89,7 +194,9 @@ public abstract class HeatEndpoint implements NBTSerializable {
      * @param level  the actual temperature level, which my differ from HeatEndpoint#tempLevel
      * @return the amount of heat actually filled
      */
-    protected abstract float receiveHeat(float filled, int level);
+    protected float receiveHeat(float filled, int level) {
+        return 0;
+    }
 
     /**
      * Whether this endpoint can provide heat to the network.
@@ -101,7 +208,9 @@ public abstract class HeatEndpoint implements NBTSerializable {
      *
      * @return true, if successful
      */
-    protected abstract boolean canProvideHeat();
+    public boolean canProvideHeat() {
+        return heat > 0;
+    }
 
     /**
      * Provide heat to the network.
@@ -110,7 +219,9 @@ public abstract class HeatEndpoint implements NBTSerializable {
      *
      * @return the amount of heat actually provided
      */
-    protected abstract float provideHeat();
+    protected float provideHeat() {
+        return 0;
+    }
 
     /**
      * Checks if the network valid.
@@ -121,17 +232,52 @@ public abstract class HeatEndpoint implements NBTSerializable {
         return network != null;
     }
 
-    /**
-     * The maximum heat to receive from the network.
-     *
-     * @return the max intake
-     */
-    public abstract float getMaxIntake();
+    public void pushData() {
+        if (avgIntake < 0)
+            avgIntake = intake;
+        else
+            avgIntake = avgIntake * .95f + Math.max(0, intake) * .05f;
+        if (avgOutput < 0)
+            avgOutput = output;
+        else
+            avgOutput = avgOutput * .95f + Math.max(0, output) * .05f;
+        canCostMore = Math.round(avgOutput * 10) / 10f < maxIntake;
+        intake = -1;
+        output = -1;
+        maxIntake = -1;
+        maxOutput = -1;
+    }
 
-    /**
-     * Gets the detach priority.
-     *
-     * @return the priority to detatch
-     */
-    public abstract int getPriority();
+    public void writeNetwork(FriendlyByteBuf pb) {
+        pb.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS, blk);
+        pb.writeBlockPos(pos);
+        pb.writeFloat(capacity);
+        pb.writeFloat(avgIntake);
+        pb.writeFloat(avgOutput);
+        pb.writeBoolean(canCostMore);
+    }
+
+    public static HeatEndpoint readNetwork(FriendlyByteBuf pb) {
+        HeatEndpoint dat = new HeatEndpoint(
+                pb.readRegistryIdUnsafe(ForgeRegistries.BLOCKS),
+                pb.readBlockPos(),
+                pb.readFloat()
+        );
+        dat.avgIntake = pb.readFloat();
+        dat.avgOutput = pb.readFloat();
+        dat.canCostMore = pb.readBoolean();
+        return dat;
+    }
+
+    public void load(CompoundTag nbt, boolean isPacket) {
+        heat = nbt.getFloat("net_power");
+        pos = BlockPos.of(nbt.getLong("pos"));
+        blk = RegistryUtils.getBlock(new ResourceLocation(nbt.getString("block")));
+    }
+
+    public void save(CompoundTag nbt, boolean isPacket) {
+        nbt.putFloat("net_power", heat);
+        nbt.putLong("pos", pos.asLong());
+        nbt.putString("block", RegistryUtils.getRegistryName(blk).toString());
+    }
 }

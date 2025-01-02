@@ -20,19 +20,19 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.lang.Lang;
+import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -40,7 +40,10 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.function.Consumer;
 
 /**
@@ -48,19 +51,23 @@ import java.util.function.Consumer;
  * <p>
  * Integrated manager for heat providers
  */
-public class HeatEnergyNetwork implements MenuProvider, NBTSerializable {
-    public Map<HeatEndpoint, EndPointData> data = new HashMap<>();
-    public Set<EndPointData> epdataset = new HashSet<>();
-    transient Level world;
+public class HeatNetwork implements MenuProvider, NBTSerializable {
     transient BlockEntity cur;
     transient boolean isBound;
+    /**
+     * All Endpoints of the network.
+     */
     transient PriorityQueue<HeatEndpoint> endpoints = new PriorityQueue<>(Comparator.comparingInt(HeatEndpoint::getPriority).reversed().thenComparing(HeatEndpoint::getDistance));
     Map<BlockPos, Integer> propagated = new HashMap<>();
-    boolean dataModified = true;
+    /**
+     * Interval ticks to re-scan network.
+     */
     private transient int interval = 0;
+    /**
+     * Network connection handler.
+     */
     private transient Consumer<HeatConnector> onConnect;
-    private boolean isValid = true;
-    private HeatConnector connect = (level, pos, d) -> {
+    private final HeatConnector connect = (level, pos, d) -> {
         BlockEntity te = Utils.getExistingTileEntity(level, pos);
         if (te instanceof NetworkConnector)
             ((NetworkConnector) te).tryConnectTo(this, d, 1);
@@ -74,43 +81,54 @@ public class HeatEnergyNetwork implements MenuProvider, NBTSerializable {
 
     };
 
-    public HeatEnergyNetwork() {
+    /**
+     * Network current pressure: The
+     */
+    @Getter
+    private float totalEndpointOutput;
+    @Getter
+    private float totalEndpointIntake;
+
+    public HeatNetwork() {
 
     }
 
-    public HeatEnergyNetwork(BlockEntity cur, Consumer<HeatConnector> con) {
+    public HeatNetwork(BlockEntity cur, Consumer<HeatConnector> con) {
         this();
         bind(cur, con);
     }
 
     @Override
     public void save(CompoundTag nbt, boolean isPacket) {
+        FHMain.LOGGER.debug("HeatNetwork save");
         nbt.put("pipes",
                 SerializeUtil.toNBTList(propagated.entrySet(), (t, p) -> p.compound().putLong("pos", t.getKey().asLong()).putInt("len", t.getValue())));
-        nbt.put("endpoints",
-                SerializeUtil.toNBTList(data.entrySet(), (t, p) -> p.compound().putLong("pos", t.getValue().pos.asLong()).putString("blk", RegistryUtils.getRegistryName(t.getValue().blk).toString())));
+        FHMain.LOGGER.debug("HeatNetwork pipes saved");
+        nbt.putFloat("totalEndpointOutput", totalEndpointOutput);
+        FHMain.LOGGER.debug("HeatNetwork totalEndpointOutput saved");
+        nbt.putFloat("totalEndpointIntake", totalEndpointIntake);
+        FHMain.LOGGER.debug("HeatNetwork totalEndpointIntake saved");
     }
 
     @Override
     public void load(CompoundTag nbt, boolean isPacket) {
+        FHMain.LOGGER.debug("HeatNetwork load");
         propagated.clear();
         ListTag cn = nbt.getList("pipes", Tag.TAG_COMPOUND);
         for (Tag ccn : cn) {
             CompoundTag ccnbt = ((CompoundTag) ccn);
             propagated.put(BlockPos.of(ccnbt.getLong("pos")), ccnbt.getInt("len"));
         }
-        epdataset.clear();
-        ListTag cn2 = nbt.getList("endpoints", Tag.TAG_COMPOUND);
-        for (Tag ccn : cn2) {
-            CompoundTag ccnbt = ((CompoundTag) ccn);
-            epdataset.add(new EndPointData(RegistryUtils.getBlock(new ResourceLocation(ccnbt.getString("blk"))),
-                    BlockPos.of(ccnbt.getLong("pos"))));
-        }
+        FHMain.LOGGER.debug("HeatNetwork pipes loaded");
+        totalEndpointOutput = nbt.getFloat("totalEndpointOutput");
+        FHMain.LOGGER.debug("HeatNetwork totalEndpointOutput loaded");
+        totalEndpointIntake = nbt.getFloat("totalEndpointIntake");
+        FHMain.LOGGER.debug("HeatNetwork totalEndpointIntake loaded");
     }
 
     @Override
     public String toString() {
-        return "HeatEnergyNetwork [endpoints=" + endpoints + "]";
+        return "HeatNetwork [endpoints=" + endpoints + "]";
     }
 
     public boolean shouldPropagate(BlockPos pos, int dist) {
@@ -127,33 +145,25 @@ public class HeatEnergyNetwork implements MenuProvider, NBTSerializable {
     }
 
     public int getNetworkSize() {
-        return data.size() + propagated.size();
+        return endpoints.size() + propagated.size();
     }
 
-    public boolean addEndpoint(Level l, BlockPos pos, HeatEndpoint heatEndpoint, int dist) {
-        if (data.containsKey(heatEndpoint)) {
+    public int getNumEndpoints() {
+        return endpoints.size();
+    }
+
+    public boolean addEndpoint(HeatEndpoint heatEndpoint, int dist, Level level, BlockPos pos) {
+        if (endpoints.contains(heatEndpoint)) {
             if (dist < heatEndpoint.getDistance()) {
-                heatEndpoint.connect(this, dist);
-                dataModified = true;
+                heatEndpoint.connect(this, dist, pos, level);
                 return true;
             }
         } else {
-            heatEndpoint.connect(this, dist);
-            data.put(heatEndpoint, new EndPointData(l.getBlockState(pos).getBlock(), pos));
-            dataModified = true;
+            heatEndpoint.connect(this, dist, pos, level);
+            endpoints.add(heatEndpoint);
             return true;
         }
         return false;
-    }
-
-    public boolean removeEndpoint(BlockPos pos, HeatEndpoint heatEndpoint) {
-        Object dat = data.remove(heatEndpoint);
-        if (dat != null) {
-            dataModified = true;
-            return true;
-        }
-        return false;
-
     }
 
     @Override
@@ -187,57 +197,65 @@ public class HeatEnergyNetwork implements MenuProvider, NBTSerializable {
      * Tick.
      */
     public void tick(Level level) {
+        // Do update if requested
         if (interval > 0) {
             interval--;
         } else if (interval == 0) {
-            //System.out.println("run network");
+            // Check pipes
             for (BlockPos bp : propagated.keySet()) {
                 HeatPipeTileEntity hpte = FHUtils.getExistingTileEntity(level, bp, HeatPipeTileEntity.class);
                 if (hpte != null) {
                     hpte.ntwk = null;
                 }
             }
+            // Clear pipes
             propagated.clear();
-            for (HeatEndpoint bp : data.keySet()) {
+            // Clear endpoints
+            for (HeatEndpoint bp : endpoints) {
                 bp.clearConnection();
             }
-            data.clear();
+            endpoints.clear();
+            // Connect all pipes and endpoints again
             if (onConnect != null)
                 onConnect.accept(connect);
-            dataModified = true;
             interval = -1;
         }
-        float value = 0;
+
+        // Heat accumulated this tick!
         int tlevel = 1;
-        if (dataModified) {
-            dataModified = false;
-            endpoints.clear();
-            endpoints.addAll(data.keySet());
-        }
+
+        // Provide heat from the endpoints
+        float accumulated = 0;
+        totalEndpointOutput = 0;
         for (HeatEndpoint endpoint : endpoints) {
             if (endpoint.canProvideHeat()) {
+                // logic
                 float provided = endpoint.provideHeat();
-                data.get(endpoint).intake = provided;
-                value += provided;
+                accumulated += provided;
+                // fetch the highest tLevel
                 tlevel = Math.max(endpoint.getTempLevel(), tlevel);
+                // update display data
+                endpoint.output = provided;
             }
         }
-        boolean shouldFill = true;
-        while (shouldFill) {
-            shouldFill = false;
-            for (HeatEndpoint endpoint : endpoints) {
-                if (endpoint.canReceiveHeat()) {
-                    float oldval = value;
-                    value = endpoint.receiveHeat(value, tlevel);
-                    data.get(endpoint).applyOutput(oldval - value, endpoint.getMaxIntake());
 
-                    shouldFill |= endpoint.canReceiveHeat();
-                }
+        totalEndpointOutput = accumulated;
 
+        // Distribute heat to the endpoints
+        totalEndpointIntake = 0;
+        for (HeatEndpoint endpoint : endpoints) {
+            while (accumulated > 0 && endpoint.canReceiveHeat()) {
+                // logic
+                float received = endpoint.receiveHeat(accumulated, tlevel);
+                totalEndpointIntake += received;
+                accumulated -= received;
+                endpoint.intake = accumulated;
             }
-            if (value <= 0) break;
         }
-        data.values().forEach(EndPointData::pushData);
+
+        // Process data
+        endpoints.forEach(HeatEndpoint::pushData);
+
     }
 
     public void invalidate(Level l) {
@@ -248,13 +266,11 @@ public class HeatEnergyNetwork implements MenuProvider, NBTSerializable {
             }
         }
         propagated.clear();
-        for (HeatEndpoint bp : data.keySet()) {
+        for (HeatEndpoint bp : endpoints) {
             bp.clearConnection();
         }
-        data.clear();
+        endpoints.clear();
         interval = -1;
-        isValid = false;
-        dataModified = true;
     }
 
     @Override

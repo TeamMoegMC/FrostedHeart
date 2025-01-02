@@ -43,7 +43,7 @@ public interface NetworkConnector {
      * @param distance the distance
      * @return true, if connected successfully
      */
-    boolean connect(HeatEnergyNetwork network, Direction d, int distance);
+    boolean connect(HeatNetwork network, Direction d, int distance);
 
 
     /**
@@ -54,7 +54,7 @@ public interface NetworkConnector {
      * @param distance the distance
      * @return true, if connected successfully
      */
-    default boolean tryConnectTo(HeatEnergyNetwork network, Direction dir, int distance) {
+    default boolean tryConnectTo(HeatNetwork network, Direction dir, int distance) {
         if (canConnectTo(dir))
             return connect(network, dir, distance);
         return false;

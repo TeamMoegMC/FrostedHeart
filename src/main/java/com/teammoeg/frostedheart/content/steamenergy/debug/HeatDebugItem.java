@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.steamenergy.debug;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.HeatHandler;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.core.BlockPos;
@@ -61,11 +61,11 @@ public class HeatDebugItem extends Item {
             if (playerIn instanceof ServerPlayer) {
                 BlockPos blockpos = raytraceresult.getBlockPos();
                 BlockEntity te = Utils.getExistingTileEntity(worldIn, blockpos);
-                if (te instanceof EnergyNetworkProvider) {
-                    if (((EnergyNetworkProvider) te).getNetwork() != null)
-                        HeatHandler.openHeatScreen((ServerPlayer) playerIn, ((EnergyNetworkProvider) te).getNetwork());
+                if (te instanceof HeatNetworkProvider) {
+                    if (((HeatNetworkProvider) te).getNetwork() != null)
+                        HeatHandler.openHeatScreen((ServerPlayer) playerIn, ((HeatNetworkProvider) te).getNetwork());
                     else
-                        playerIn.sendSystemMessage(Lang.str("EnergyNetwork " + ((EnergyNetworkProvider) te).getNetwork()));
+                        playerIn.sendSystemMessage(Lang.str("EnergyNetwork " + ((HeatNetworkProvider) te).getNetwork()));
                 } else if (te != null) {
                     playerIn.sendSystemMessage(Lang.str("EnergyEndpoint " + te.getCapability(FHCapabilities.HEAT_EP.capability(), raytraceresult.getDirection()).orElse(null)));
                 }

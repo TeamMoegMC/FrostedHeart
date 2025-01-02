@@ -79,8 +79,6 @@ public class TemperatureGoogleRenderer {
 
     public static void renderOverlay(ForgeGui gui, GuiGraphics graphics, float partialTicks, int width,
                                      int height) {
-        FHMain.LOGGER.info("Render Temperature Overlay Started.");
-
         Minecraft mc = Minecraft.getInstance();
         if (mc.options.hideGui || mc.gameMode.getPlayerMode() == GameType.SPECTATOR)
             return;

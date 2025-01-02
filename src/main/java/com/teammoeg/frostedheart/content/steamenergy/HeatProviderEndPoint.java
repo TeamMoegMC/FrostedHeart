@@ -26,12 +26,8 @@ import lombok.ToString;
  * A device should properly provide power to the network.
  */
 @ToString(callSuper = true)
-public class HeatProviderEndPoint extends HeatCapacityEndpoint {
+public class HeatProviderEndPoint extends HeatEndpoint {
 
-    /**
-     * The maximum heat output of this provider.<br>
-     */
-    public final float maxOutput;
 
     /**
      * Instantiates HeatProviderEndPoint.<br>
@@ -91,5 +87,10 @@ public class HeatProviderEndPoint extends HeatCapacityEndpoint {
     @Override
     public float getMaxIntake() {
         return 0;
+    }
+
+    @Override
+    public float getMaxOutput() {
+        return maxOutput;
     }
 }

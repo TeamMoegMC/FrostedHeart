@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.steamenergy.capabilities;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
-import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.NetworkConnector;
 import com.teammoeg.frostedheart.util.FHUtils;
 import net.minecraft.core.BlockPos;
@@ -32,7 +32,7 @@ public class HeatCapabilities {
      * @param distance the distance<br>
      * @return true, if connected
      */
-    public static boolean connect(HeatEnergyNetwork network, Level w, BlockPos pos, Direction d, int distance) {
+    public static boolean connect(HeatNetwork network, Level w, BlockPos pos, Direction d, int distance) {
         BlockEntity te = FHUtils.getExistingTileEntity(w, pos);
         if (te != null) {
             LazyOptional<HeatEndpoint> ep = te.getCapability(FHCapabilities.HEAT_EP.capability(), d);

@@ -26,14 +26,8 @@ import lombok.ToString;
  * A heat endpoint for heat consuming devices.
  * A device should properly receive power from the network.
  */
-@Getter
 @ToString(callSuper = true)
-public class HeatConsumerEndpoint extends HeatCapacityEndpoint {
-    /**
-     * The maximum intake when receiving heat.<br>
-     */
-    public final float maxIntake;
-
+public class HeatConsumerEndpoint extends HeatEndpoint {
     /**
      * Instantiates a new SteamNetworkConsumer.<br>
      *
@@ -111,6 +105,16 @@ public class HeatConsumerEndpoint extends HeatCapacityEndpoint {
     // Consumer cannot provide heat
     @Override
     public float provideHeat() {
+        return 0;
+    }
+
+    @Override
+    public float getMaxIntake() {
+        return maxIntake;
+    }
+
+    @Override
+    public float getMaxOutput() {
         return 0;
     }
 }

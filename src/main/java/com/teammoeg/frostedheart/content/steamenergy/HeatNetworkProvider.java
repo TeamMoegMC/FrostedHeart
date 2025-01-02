@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 /**
- * For any BlockEntity that provides a HeatEnergyNetwork.
+ * For any BlockEntity that provides a HeatNetwork.
  */
-public interface EnergyNetworkProvider {
-    HeatEnergyNetwork getNetwork();
+public interface HeatNetworkProvider {
+    HeatNetwork getNetwork();
 }

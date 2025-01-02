@@ -33,22 +33,21 @@ import net.minecraftforge.network.PacketDistributor;
 import java.util.Collection;
 
 public class HeatStatContainer extends AbstractContainerMenu {
-    public static final int RELATION_TO_TRADE = -30;
-    public Collection<EndPointData> data;
-    HeatEnergyNetwork network;
+    public Collection<HeatEndpoint> data;
+    HeatNetwork network;
     int counter;
     ServerPlayer openedPlayer;
 
     public HeatStatContainer(int id, Inventory inventoryPlayer, FriendlyByteBuf pb) {
         this(id);
-        data = SerializeUtil.readList(pb, EndPointData::readNetwork);
+        data = SerializeUtil.readList(pb, HeatEndpoint::readNetwork);
     }
 
     public HeatStatContainer(int id) {
         super(FHMenuTypes.HEAT_STAT.get(), id);
     }
 
-    public HeatStatContainer(int id, Player opener, HeatEnergyNetwork mng) {
+    public HeatStatContainer(int id, Player opener, HeatNetwork mng) {
         super(FHMenuTypes.HEAT_STAT.get(), id);
         network = mng;
         if (opener instanceof ServerPlayer)
