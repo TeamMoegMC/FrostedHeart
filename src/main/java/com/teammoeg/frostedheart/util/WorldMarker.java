@@ -43,13 +43,11 @@ public class WorldMarker {
 			return ((x&15)<<8)+((y&15)<<4)+(z&15);
 		}
 		public boolean getBit(int x,int y,int z) {
-			if(y<0||y>=256)return false;
-			if(sections[y>>4]==null)return false;
-			return sections[y>>4].get(getBitIndex(x,y,z));
+			if(sections[y>>4+4]==null)return false;
+			return sections[y>>4+4].get(getBitIndex(x,y,z));
 		}
 		public void setBit(int x,int y,int z,boolean data) {
-			if(y<0||y>=256)return;
-			getOrCreateSection(y>>4).set(getBitIndex(x,y,z), data);
+			getOrCreateSection(y>>4+4).set(getBitIndex(x,y,z), data);
 		}
 		public void setBit(BlockPos pos,boolean data) {
 			setBit(pos.getX(),pos.getY(),pos.getZ(),data);
