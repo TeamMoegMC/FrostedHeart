@@ -63,6 +63,8 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
@@ -1163,6 +1165,8 @@ public class FHItems {
             .properties(p -> p.defaultDurability(256))
             .model(AssetLookup.existingItemModel())
             .register();
+
+    /*
     public static ItemEntry<FHBaseArmorItem> hay_boots = REGISTRATE
             .item("hay_boots", p -> new FHBaseArmorItem(FHArmorMaterial.HAY, Type.BOOTS, createProps()))
             .model(AssetLookup.existingItemModel())
@@ -1211,6 +1215,7 @@ public class FHItems {
             .item("hide_pants", p -> new FHBaseArmorItem(FHArmorMaterial.HIDE, Type.LEGGINGS, createProps()))
             .model(AssetLookup.existingItemModel())
             .register();
+     */
     public static ItemEntry<HeaterVestItem> heater_vest = REGISTRATE
             .item("heater_vest", HeaterVestItem::new)
             .properties(p -> p.stacksTo(1).setNoRepair())
@@ -1359,34 +1364,50 @@ public class FHItems {
 
     // Clothes
     public static final ItemEntry<FHBaseClothesItem> DEBUG_CLOTH = REGISTRATE
-            .item("debug_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.5f, 100.0f, PlayerTemperatureData.BodyPart.BODY))
-            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
-            .register();
-    public static final ItemEntry<FHBaseClothesItem> HAY_CLOTH= REGISTRATE
-            .item("hay_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.2f, 200.0f, PlayerTemperatureData.BodyPart.BODY))
-            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
-            .register();
-    public static final ItemEntry<FHBaseClothesItem> HIDE_CLOTH = REGISTRATE
-            .item("hide_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 1.0f, 300.0f, PlayerTemperatureData.BodyPart.BODY))
-            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
-            .register();
-    public static final ItemEntry<FHBaseClothesItem> COTTON_CLOTH = REGISTRATE
-            .item("cotton_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.3f, 400.0f, PlayerTemperatureData.BodyPart.BODY))
-            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
-            .register();
-    public static final ItemEntry<FHBaseClothesItem> WOOL_CLOTH = REGISTRATE
-            .item("wool_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.5f, 500.0f, PlayerTemperatureData.BodyPart.BODY))
-            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
-            .register();
-    public static final ItemEntry<FHBaseClothesItem> DOWN_CLOTH = REGISTRATE
-            .item("down_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.7f, 600.0f, PlayerTemperatureData.BodyPart.BODY))
-            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
-            .register();
-    public static final ItemEntry<FHBaseClothesItem> REMOVE_ALL = REGISTRATE
-            .item("debug_remove_all_cloth", n-> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.0f, 0.0f, PlayerTemperatureData.BodyPart.REMOVEALL))
-            .model((ctx, prov) -> prov.getExistingFile(prov.modLoc("item/hay_jacket")))
+            .item("debug_cloth", n -> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.5f, 100.0f, PlayerTemperatureData.BodyPart.TORSO))
             .register();
 
+    public static final ItemEntry<FHBaseClothesItem> REMOVE_ALL = REGISTRATE
+            .item("debug_remove_all_cloth", n-> new FHBaseClothesItem(new Item.Properties().stacksTo(1), 0.0f, 0.0f, PlayerTemperatureData.BodyPart.REMOVEALL))
+            .register();
+
+    public static final Map<String, ItemEntry<FHBaseClothesItem>> FH_CLOTHES = new HashMap<>();
+    static {
+        // Define item properties for each type of clothing material
+        // {windproof, insulation}
+        Map<String, Float[]> materials = Map.of(
+                "hay", new Float[]{0.2f, 200.0f},
+                "hide", new Float[]{1.0f, 300.0f},
+                "cotton", new Float[]{0.3f, 400.0f},
+                "wool", new Float[]{0.5f, 500.0f},
+                "down", new Float[]{0.7f, 600.0f}
+        );
+
+        // Define body parts
+        Map<String, PlayerTemperatureData.BodyPart> bodyParts = Map.of(
+                "jacket", PlayerTemperatureData.BodyPart.TORSO,
+                "pants", PlayerTemperatureData.BodyPart.LEGS,
+                "boots", PlayerTemperatureData.BodyPart.FEET,
+                "hat", PlayerTemperatureData.BodyPart.HEAD,
+                "glove", PlayerTemperatureData.BodyPart.HANDS
+        );
+
+        // Loop through materials and body parts to register items
+        materials.forEach((materialName, properties) -> {
+            bodyParts.forEach((bodyPartName, bodyPart) -> {
+                String itemName = materialName + "_" + bodyPartName;
+                FH_CLOTHES.put(itemName, REGISTRATE
+                        .item(itemName, n -> new FHBaseClothesItem(
+                                new Item.Properties().stacksTo(1),
+                                properties[0],
+                                properties[1],
+                                bodyPart
+                        ))
+                        .model(AssetLookup.existingItemModel())
+                        .register());
+            });
+        });
+    }
 
     // Tools
     public static final ItemEntry<KnifeItem> MAKESHIFT_KNIFE =
