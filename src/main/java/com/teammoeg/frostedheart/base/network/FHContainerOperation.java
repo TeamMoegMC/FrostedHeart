@@ -26,8 +26,11 @@ public record FHContainerOperation(int containerId, short buttonId, int state) i
 		context.get().enqueueWork(()->{
 			Context ctx=context.get();
 			ServerPlayer player=ctx.getSender();
+			//System.out.print("received operation packet "+this);
+			//System.out.print("player container "+player.containerMenu.containerId+ ":"+player.containerMenu);
 			if(player.containerMenu.containerId==containerId&&player.containerMenu instanceof FHBaseContainer container) {
-				container.reciveMessage(buttonId, state);
+				//System.out.println("calling message received");
+				container.receiveMessage(buttonId, state);
 			}
 		});
 	}

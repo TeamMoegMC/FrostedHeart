@@ -49,9 +49,10 @@ public class T2GeneratorMultiblock extends FHBaseMultiblock {
         ChunkHeatData.removeTempAdjust(world, origin.offset(master));
         FHMultiblockHelper.getBEHelper(world, origin.offset(master)).ifPresent(te -> {
             T2GeneratorState state = (T2GeneratorState) te.getState();
-            if (state != null)
-                state.manager.invalidate();
-            else
+            if (state != null) {
+            	if(state.manager!=null)
+            		state.manager.invalidate(world);
+            }else
                 FHMain.LOGGER.error("T2GeneratorState is null when disassembling T2GeneratorMultiblock.");
         });
         super.disassemble(world, origin, mirrored, clickDirectionAtCreation);

@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
-import com.teammoeg.frostedheart.content.steamenergy.IChargable;
+import com.teammoeg.frostedheart.content.steamenergy.charger.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;

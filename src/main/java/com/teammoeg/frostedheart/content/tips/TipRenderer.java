@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.content.tips;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -45,8 +44,7 @@ public class TipRenderer {
      * 移除当前显示的tip
      */
     public static void removeCurrent() {
-        if (!TIP_QUEUE.isEmpty()) TIP_QUEUE.remove(0);
-        TipWidget.INSTANCE.setState(TipWidget.State.FADING_OUT);
+        TipWidget.INSTANCE.close();
     }
 
     @SubscribeEvent
@@ -76,7 +74,7 @@ public class TipRenderer {
 
     @SubscribeEvent
     public static void onHudRender(RenderGuiEvent.Post event) {
-        if (!FHConfig.CLIENT.renderTips.get() || TIP_QUEUE.isEmpty())
+        if (!FHConfig.CLIENT.renderTips.get() || (TIP_QUEUE.isEmpty() && !isTipRendering()))
             return;
         Minecraft MC = ClientUtils.mc();
         if (MC.screen != null && !SCREEN_BLACKLIST.contains(MC.screen.getClass()))
@@ -101,7 +99,7 @@ public class TipRenderer {
 
     @SubscribeEvent
     public static void onGuiRender(ScreenEvent.Render.Post event) {
-        if (!FHConfig.CLIENT.renderTips.get() || TIP_QUEUE.isEmpty())
+        if (!FHConfig.CLIENT.renderTips.get() || (TIP_QUEUE.isEmpty() && !isTipRendering()))
             return;
         if (!event.getScreen().children().contains(TipWidget.INSTANCE))
             return;
@@ -120,12 +118,12 @@ public class TipRenderer {
     }
 
     private static void update() {
-        if (TipWidget.INSTANCE.getState() == TipWidget.State.IDLE) {
+        if (!isTipRendering()) {
             TIP_QUEUE.remove(TipWidget.INSTANCE.lastTip);
             TipWidget.INSTANCE.lastTip = null;
             // 切换下一个
             if (!TIP_QUEUE.isEmpty()) {
-                TipWidget.INSTANCE.setTip(TIP_QUEUE.get(0));
+                TipWidget.INSTANCE.tip = TIP_QUEUE.get(0);
             }
         }
     }

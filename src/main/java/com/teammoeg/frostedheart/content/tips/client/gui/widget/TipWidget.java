@@ -8,43 +8,33 @@ import com.teammoeg.frostedheart.util.client.FHColorHelper;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import lombok.Getter;
-import lombok.Setter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
+import net.minecraftforge.common.util.Size2i;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.List;
 
 public class TipWidget extends AbstractWidget {
-    private static final String ANIMATION_PROGRESS_NAME = TipWidget.class.getSimpleName() + "_progress";
-    private static final String ANIMATION_FADE_NAME = TipWidget.class.getSimpleName() + "_fade";
-    private static final int FADE_ANIMATION_TIME_LENGTH = 400;
-    private static final int BACKGROUND_BORDER = 4;
-    private static final int FADE_OFFSET = 16;
-    private static final int LINE_SPACE = 12;
-    private static final int MIN_WIDTH = 160;
-    private static final int MAX_WIDTH = 360;
     public final IconButton closeButton;
     public final IconButton pinButton;
     public Tip lastTip;
-    @Setter
-    @Getter
     @Nullable
-    private Tip tip;
+    public Tip tip;
     @Getter
-    @Setter
     private State state;
-    private boolean alwaysVisibleOverride;
     @Getter
     private float progress;
+    private final RenderContext context;
+    private boolean alwaysVisibleOverride;
 
     /**
      * TipWidget实例
@@ -54,13 +44,14 @@ public class TipWidget extends AbstractWidget {
     private TipWidget() {
         super(0, 0, 0, 0, Component.literal("tip"));
         this.closeButton = new IconButton(0, 0, IconButton.Icon.CROSS, FHColorHelper.CYAN, Lang.gui("close").component(),
-                b -> state = State.FADING_OUT
+                b -> close()
         );
         this.pinButton = new IconButton(0, 0, IconButton.Icon.LOCK, FHColorHelper.CYAN, Lang.gui("pin").component(),
                 b -> this.alwaysVisibleOverride = true
         );
         this.closeButton.visible = false;
         this.pinButton.visible = false;
+        this.context = new RenderContext();
     }
 
     @Override
@@ -72,21 +63,21 @@ public class TipWidget extends AbstractWidget {
         switch (state) {
             case IDLE -> state = State.FADING_IN;
             case FADING_IN -> {
-                float f = AnimationUtil.fadeIn(FADE_ANIMATION_TIME_LENGTH, ANIMATION_FADE_NAME, false);
+                float f = AnimationUtil.fadeIn(RenderContext.FADE_ANIM_LENGTH, RenderContext.FADE_ANIM_NAME, false);
                 render(graphics, mouseX, mouseY, partialTick, f);
                 if (f == 1F) {
                     state = isAlwaysVisible() ? State.DONE : State.PROGRESSING;
-                    AnimationUtil.remove(ANIMATION_FADE_NAME);
+                    AnimationUtil.remove(RenderContext.FADE_ANIM_NAME);
                 }
             }
             case PROGRESSING -> {
                 if (isAlwaysVisible()) state = State.DONE;
-                progress = AnimationUtil.progress(tip.getDisplayTime(), ANIMATION_PROGRESS_NAME, false);
+                progress = AnimationUtil.progress(tip.getDisplayTime(), RenderContext.PROGRESS_ANIM_NAME, false);
                 render(graphics, mouseX, mouseY, partialTick, 1);
                 if (progress == 1F) state = State.FADING_OUT;
             }
             case FADING_OUT -> {
-                float f = 1F - AnimationUtil.fadeIn(FADE_ANIMATION_TIME_LENGTH, ANIMATION_FADE_NAME, false);
+                float f = 1F - AnimationUtil.fadeIn(RenderContext.FADE_ANIM_LENGTH, RenderContext.FADE_ANIM_NAME, false);
                 render(graphics, mouseX, mouseY, partialTick, f);
                 if (f == 0F) resetState();
             }
@@ -100,78 +91,76 @@ public class TipWidget extends AbstractWidget {
 
     private void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick, float progress) {
         if (tip == null || tip.getContents().isEmpty()) return;
-        var contents = tip.getContents();
-        int fontColor = FHColorHelper.setAlpha(tip.getFontColor(), Math.max(progress, 0.1F));
-        int backgroundColor = FHColorHelper.setAlpha(tip.getBackgroundColor(), (isGuiOpened() ? 0.8F : 0.5F) * progress);
-        int screenW = ClientUtils.screenWidth();
-        int screenH = ClientUtils.screenHeight();
-        setWidth(Mth.clamp((int)(screenW * 0.3F), MIN_WIDTH, MAX_WIDTH));
+        
+        context.update(tip);
+        setWidth(context.size.width);
+        setHeight(context.size.height);
+        setX(context.screenSize.width - super.getWidth() - 4 - RenderContext.BG_BORDER + (int) context.pYaw);
+        setY((int)(context.screenSize.height * 0.3F) + (int) context.pPitch);
+        setAlpha(progress);
+        graphics.setColor(1, 1, 1, alpha);
 
-        // 文本
-        var titleLines = ClientUtils.font().split(contents.get(0), super.getWidth()-24);
-        var contentLines = new ArrayList<FormattedCharSequence>();
-        if (contents.size() > 1)
-            for (int i = 1; i < contents.size(); i++)
-                contentLines.addAll(ClientUtils.font().split(contents.get(i), super.getWidth()-24));
-        setHeight((titleLines.size() + contentLines.size()) * LINE_SPACE);
-
-        // 跟随视角晃动
-        float yaw = 0;
-        float pitch = 0;
-        Minecraft MC = ClientUtils.mc();
-        if (MC.player != null) {
-            if (MC.isPaused()) {
-                yaw   = (MC.player.getViewYRot(MC.getFrameTime()) - MC.player.yBob) * -0.1F;
-                pitch = (MC.player.getViewXRot(MC.getFrameTime()) - MC.player.xBob) * -0.1F;
-            } else {
-                yaw   = (MC.player.getViewYRot(MC.getFrameTime())
-                        - Mth.lerp(MC.getFrameTime(), MC.player.yBobO, MC.player.yBob)) * -0.1F;
-                pitch = (MC.player.getViewXRot(MC.getFrameTime())
-                        - Mth.lerp(MC.getFrameTime(), MC.player.xBobO, MC.player.xBob)) * -0.1F;
-            }
-        }
-
-        // 渲染
-        setPosition((screenW - width - 8 + (int)yaw), ((int)(screenH * 0.3F) + (int)pitch));
+        int border = RenderContext.BG_BORDER;
         PoseStack pose = graphics.pose();
         pose.pushPose();
-        pose.translate((yaw - (int)yaw), (pitch - (int)pitch), 800);
+        pose.translate((context.pYaw - (int) context.pYaw), (context.pPitch - (int) context.pPitch), 800);
 
         // 背景
-        graphics.fill(getX()-BACKGROUND_BORDER, getY()-BACKGROUND_BORDER, getX()+width+BACKGROUND_BORDER, getY()+getHeight() + (contentLines.isEmpty() ? 1 : 6), backgroundColor);
+        graphics.fill(
+                getX() - border,
+                getY() - border,
+                getX() + super.getWidth() + border,
+                getY() + getHeight() + (!context.contentLines.isEmpty() || context.hasImage ? 2 + border : 1),
+                context.BGColor);
 
         // 进度条
         if (state != State.FADING_OUT) {
-            int y = getY() + (titleLines.size() * LINE_SPACE);
+            int y = getY() + (context.titleLines.size() * RenderContext.LINE_SPACE);
             pose.pushPose();
-            pose.translate(getX()-BACKGROUND_BORDER, y, 0);
+            pose.translate(getX()- border, y, 0);
             if (state == State.PROGRESSING) {
                 // 更平滑的进度条效果
-                pose.scale(1 - AnimationUtil.getProgress(ANIMATION_PROGRESS_NAME), 1, 1);
+                pose.scale(1 - AnimationUtil.getProgress(RenderContext.PROGRESS_ANIM_NAME), 1, 1);
             }
-            graphics.fill(0, 0, super.getWidth()+(BACKGROUND_BORDER*2), 1, fontColor);
+            graphics.fill(0, 0, super.getWidth()+(border *2), 1, context.fontColor);
             pose.popPose();
         }
 
-        // 标题和内容
-        FHGuiHelper.drawStrings(graphics, ClientUtils.font(), titleLines, getX(), getY(), fontColor, LINE_SPACE, false);
-        FHGuiHelper.drawStrings(graphics, ClientUtils.font(), contentLines, getX(), getY()+6 + (titleLines.size() * LINE_SPACE), fontColor, LINE_SPACE, false);
+        // 图片
+        if (context.hasImage) {
+            FHGuiHelper.bindTexture(tip.getImage());
+            FHGuiHelper.blitColored(
+                    pose,
+                    getX() + (super.getWidth() / 2) - (context.imageSize.width / 2),
+                    getY() + border + (context.totalLineSize * RenderContext.LINE_SPACE),
+                    context.imageSize.width, context.imageSize.height,
+                    0, 0,
+                    context.imageSize.width, context.imageSize.height,
+                    context.imageSize.width, context.imageSize.height,
+                    0xFFFFFFFF, alpha);
+        }
 
         // 按钮
         pose.translate(0, 0, 100);
-        closeButton.color = fontColor;
+        closeButton.color = context.fontColor;
         closeButton.visible = true;
         closeButton.setPosition(getX() + super.getWidth() - 10, getY());
         closeButton.render(graphics, mouseX, mouseY, partialTick);
         if (isGuiOpened() && !isAlwaysVisible() && state != State.FADING_OUT) {
-            pinButton.color = fontColor;
+            pinButton.color = context.fontColor;
             pinButton.visible = true;
             pinButton.setPosition(getX() + super.getWidth() - 22, getY());
             pinButton.render(graphics, mouseX, mouseY, partialTick);
         } else {
             pinButton.visible = false;
         }
+
+        // 标题和内容
+        FHGuiHelper.drawStrings(graphics, ClientUtils.font(), context.titleLines, getX(), getY(), context.fontColor, RenderContext.LINE_SPACE, false);
+        FHGuiHelper.drawStrings(graphics, ClientUtils.font(), context.contentLines, getX(), getY()+6 + (context.titleLines.size() * RenderContext.LINE_SPACE), context.fontColor, RenderContext.LINE_SPACE, false);
+
         pose.popPose();
+        graphics.setColor(1, 1, 1, 1);
     }
 
     /**
@@ -181,6 +170,10 @@ public class TipWidget extends AbstractWidget {
         return ClientUtils.mc().screen != null;
     }
 
+    public void close() {
+        state = State.FADING_OUT;
+    }
+
     /**
      * 重置状态
      */
@@ -188,16 +181,19 @@ public class TipWidget extends AbstractWidget {
         lastTip = tip;
         tip = null;
         progress = 0;
+        context.clear();
         state = State.IDLE;
         alwaysVisibleOverride = false;
         pinButton.visible = false;
         closeButton.visible = false;
         pinButton.setFocused(false);
         closeButton.setFocused(false);
+        pinButton.setAlpha(1F);
+        closeButton.setAlpha(1F);
+        AnimationUtil.remove(RenderContext.FADE_ANIM_NAME);
+        AnimationUtil.remove(RenderContext.PROGRESS_ANIM_NAME);
         // 将位置设置到屏幕外避免影响屏幕内的元素
         setPosition(ClientUtils.screenWidth(), ClientUtils.screenHeight());
-        AnimationUtil.remove(ANIMATION_FADE_NAME);
-        AnimationUtil.remove(ANIMATION_PROGRESS_NAME);
     }
 
     /**
@@ -214,9 +210,9 @@ public class TipWidget extends AbstractWidget {
     @Override
     public int getX() {
         if (state == State.FADING_IN)
-            return super.getX() - FADE_OFFSET + (int)(FADE_OFFSET * AnimationUtil.getFadeIn(ANIMATION_FADE_NAME));
+            return super.getX() - RenderContext.FADE_OFFSET + (int)(RenderContext.FADE_OFFSET * AnimationUtil.getFadeIn(RenderContext.FADE_ANIM_NAME));
         if (state == State.FADING_OUT)
-            return super.getX() - (int)(FADE_OFFSET * AnimationUtil.getFadeOut(ANIMATION_FADE_NAME));
+            return super.getX() - (int)(RenderContext.FADE_OFFSET * AnimationUtil.getFadeOut(RenderContext.FADE_ANIM_NAME));
 
         return super.getX();
     }
@@ -224,9 +220,9 @@ public class TipWidget extends AbstractWidget {
     @Override
     public int getWidth() {
         if (state == State.FADING_IN)
-            return super.getWidth() + FADE_OFFSET - (int)(FADE_OFFSET * AnimationUtil.getFadeIn(ANIMATION_FADE_NAME));
+            return super.getWidth() + RenderContext.FADE_OFFSET - (int)(RenderContext.FADE_OFFSET * AnimationUtil.getFadeIn(RenderContext.FADE_ANIM_NAME));
         if (state == State.FADING_OUT)
-            return super.getWidth() + (int)(FADE_OFFSET * AnimationUtil.getFadeOut(ANIMATION_FADE_NAME));
+            return super.getWidth() + (int)(RenderContext.FADE_OFFSET * AnimationUtil.getFadeOut(RenderContext.FADE_ANIM_NAME));
 
         return super.getWidth();
     }
@@ -240,8 +236,109 @@ public class TipWidget extends AbstractWidget {
     protected void updateWidgetNarration(@NotNull NarrationElementOutput pNarrationElementOutput) {
     }
 
-    @Override
-    public void playDownSound(@NotNull SoundManager pHandler) {
+    private class RenderContext {
+        static final String FADE_ANIM_NAME = TipWidget.class.getSimpleName() + "_fade";
+        static final String PROGRESS_ANIM_NAME = TipWidget.class.getSimpleName() + "_progress";
+        static final int FADE_ANIM_LENGTH = 400;
+        static final int BG_BORDER = 4;
+        static final int FADE_OFFSET = 16;
+        static final int LINE_SPACE = 12;
+        static final int MIN_WIDTH = 160;
+        static final int MAX_WIDTH = 360;
+
+        List<FormattedCharSequence> titleLines;
+        List<FormattedCharSequence> contentLines;
+        Size2i imageSize;
+        Size2i screenSize;
+        Size2i size;
+        boolean hasImage;
+        int totalLineSize;
+        int BGColor;
+        int fontColor;
+        float pYaw;
+        float pPitch;
+
+        void update(Tip tip) {
+            BGColor = FHColorHelper.setAlpha(tip.getBackgroundColor(), (isGuiOpened() ? 0.8F : 0.5F));
+            fontColor = tip.getFontColor();
+
+            // 跟随视角晃动
+            Minecraft MC = ClientUtils.mc();
+            if (MC.player != null) {
+                if (MC.isPaused()) {
+                    pYaw   = (MC.player.getViewYRot(MC.getFrameTime()) - MC.player.yBob) * -0.1F;
+                    pPitch = (MC.player.getViewXRot(MC.getFrameTime()) - MC.player.xBob) * -0.1F;
+                } else {
+                    pYaw   = (MC.player.getViewYRot(MC.getFrameTime())
+                            - Mth.lerp(MC.getFrameTime(), MC.player.yBobO, MC.player.yBob)) * -0.1F;
+                    pPitch = (MC.player.getViewXRot(MC.getFrameTime())
+                            - Mth.lerp(MC.getFrameTime(), MC.player.xBobO, MC.player.xBob)) * -0.1F;
+                }
+            } else {
+                pYaw = 0;
+                pPitch = 0;
+            }
+
+            // 检查屏幕尺寸是否更新
+            Size2i newSize = new Size2i(ClientUtils.screenWidth(), ClientUtils.screenHeight());
+            if (this.screenSize != null && this.screenSize.equals(newSize)) return;
+            this.screenSize = newSize;
+            int width = (int)Mth.clamp(screenSize.width * 0.3F, MIN_WIDTH, MAX_WIDTH);
+
+            // 文本换行
+            var contents = tip.getContents();
+            titleLines = ClientUtils.font().split(contents.get(0), width-24);
+            contentLines = new ArrayList<>();
+            if (contents.size() > 1)
+                for (int i = 1; i < contents.size(); i++)
+                    contentLines.addAll(ClientUtils.font().split(contents.get(i), width-24));
+            totalLineSize = titleLines.size() + contentLines.size();
+            int height = (totalLineSize * RenderContext.LINE_SPACE);
+
+            // 图片
+            hasImage = tip.getImage() != null && tip.getImageSize() != null;
+            int imgW = 0;
+            int imgH = 0;
+            if (hasImage) {
+                imgW = tip.getImageSize().width;
+                imgH = tip.getImageSize().height;
+                // 缩放图片以适应屏幕
+                if (Math.abs(imgW - imgH) < 8 && imgW <= 32) {
+                    imgW = imgW * (32 / imgW);
+                    imgH = imgH * (32 / imgH);
+                }
+                if (imgW > width) {
+                    float scale = (float)width / imgW;
+                    imgH = (int) (imgH * scale);
+                    imgW = (int) (imgW * scale);
+                }
+                if (context.screenSize.height * 0.3F + height + imgH > screenSize.height) {
+                    float availableHeight = screenSize.height - context.screenSize.height * 0.3F - height - 8;
+                    if (availableHeight > 0) {
+                        float scale = availableHeight / imgH;
+                        imgH = (int) (imgH * scale);
+                        imgW = (int) (imgW * scale);
+                    }
+                }
+            }
+
+            imageSize = new Size2i(imgW, imgH);
+            size = new Size2i(width, height + imageSize.height);
+        }
+
+        void clear() {
+            titleLines = null;
+            contentLines = null;
+            imageSize = null;
+            screenSize = null;
+            size = null;
+            hasImage = false;
+            totalLineSize = 0;
+            BGColor = 0;
+            fontColor = 0;
+            pYaw = 0;
+            pPitch = 0;
+        }
     }
 
     public enum State {

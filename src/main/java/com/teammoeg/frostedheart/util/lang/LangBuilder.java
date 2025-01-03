@@ -6,11 +6,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.List;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.lang.FHTextIcon.TextIconType;
 
 /**
@@ -29,7 +31,9 @@ public class LangBuilder {
     public LangBuilder(String namespace) {
         this.namespace = namespace;
     }
-
+    public LangBuilder() {
+        this.namespace = FHMain.MODID;
+    }
     public LangBuilder space() {
         return text(" ");
     }
@@ -123,6 +127,10 @@ public class LangBuilder {
         return add(Components.literal(literalText).withStyle(s -> s.withColor(color)));
     }
 
+    public LangBuilder number(double d) {
+        return add(Components.literal(LangNumberFormat.format(d)));
+    }
+
     /**
      * Appends the contents of another builder
      *
@@ -174,6 +182,17 @@ public class LangBuilder {
         return this;
     }
 
+    /**
+     * Applies the format to all added components
+     *
+     * @param style
+     * @return
+     */
+    public LangBuilder style(Style style) {
+        assertComponent();
+        component = component.withStyle(style);
+        return this;
+    }
     /**
      * Applies the color to all added components
      *

@@ -36,10 +36,8 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -356,14 +354,26 @@ public class FHGuiHelper {
 
 	}
 
-	public static int drawStrings(GuiGraphics graphics, Font font, FormattedText text, int x, int y, int color,
-								  int maxWidth, int lineSpace, boolean shadow)
+	/**
+	 * 换行文本并渲染
+	 * @param maxWidth 单行最大宽度
+	 * @param lineSpace 行间距
+	 * @param shadow 文本阴影
+	 * @return 换行后的行数
+	 */
+	public static int drawWordWarp(GuiGraphics graphics, Font font, FormattedText text, int x, int y, int color,
+								   int maxWidth, int lineSpace, boolean shadow)
 	{
 		List<FormattedCharSequence> texts = font.split(text, maxWidth);
 		drawStrings(graphics, font, texts, x, y, color, lineSpace, shadow);
 		return texts.size();
 	}
 
+	/**
+	 * 渲染列表中的所有文本
+	 * @param lineSpace 行间距
+	 * @param shadow 文本阴影
+	 */
 	public static void drawStrings(GuiGraphics graphics, Font font, List<FormattedCharSequence> texts, int x, int y,
 								   int color, int lineSpace, boolean shadow)
 	{

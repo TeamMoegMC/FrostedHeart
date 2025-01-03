@@ -20,16 +20,15 @@
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
 
-import java.util.List;
-
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
-
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.List;
 
 public class SaunaEffect extends MobEffect {
 

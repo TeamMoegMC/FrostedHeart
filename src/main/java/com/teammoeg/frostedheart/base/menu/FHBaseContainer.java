@@ -173,7 +173,7 @@ public abstract class FHBaseContainer extends AbstractContainerMenu {
 	public boolean moveItemStackTo(ItemStack pStack, int pStartIndex, int pEndIndex, boolean pReverseDirection) {
 		return super.moveItemStackTo(pStack, pStartIndex, pEndIndex, pReverseDirection);
 	}
-	public void reciveMessage(short btnId,int state) {
+	public void receiveMessage(short btnId,int state) {
 		
 	}
 	public void sendMessage(int btnId,int state) {
@@ -198,7 +198,7 @@ public abstract class FHBaseContainer extends AbstractContainerMenu {
 	public void addDataSlot(SyncableDataSlot<?> slot) {
 		specialDataSlots.add(slot);
 	}
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void processPacket(FHContainerDataSync packet) {
 		packet.forEach((i,o)->{
 			((SyncableDataSlot)specialDataSlots.get(i)).setValue(o);

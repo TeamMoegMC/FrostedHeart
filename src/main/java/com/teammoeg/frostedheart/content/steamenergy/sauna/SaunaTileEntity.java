@@ -19,65 +19,67 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
+import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
+import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
-
-import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
-import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
-import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.ContainerHelper;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.core.Direction;
-import net.minecraft.core.NonNullList;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.util.Mth;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.network.NetworkHooks;
 
-public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity, FHBlockInterfaces.IActiveState, IIEInventory,MenuProvider {
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
+public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity, FHBlockInterfaces.IActiveState, IIEInventory, MenuProvider {
 
     private static final int RANGE = 5;
     private static final int WALL_HEIGHT = 3;
     private static final Direction[] HORIZONTALS =
             new Direction[]{Direction.EAST, Direction.WEST, Direction.SOUTH, Direction.NORTH};
-
+    protected NonNullList<ItemStack> inventory;
+    Set<BlockPos> floor = new HashSet<>();
+    Set<BlockPos> edges = new HashSet<>();
+    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 10, 1);
+    LazyOptional<HeatConsumerEndpoint> heatcap = LazyOptional.of(() -> network);
     private int remainTime = 0;
     private int maxTime = 0;
     private MobEffect effect = null;
@@ -85,20 +87,14 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBloc
     private int effectAmplifier = 0;
     private boolean formed = false;
     private int workPeriod;
-    Set<BlockPos> floor = new HashSet<>();
-    Set<BlockPos> edges = new HashSet<>();
-    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 10,1);
-
-    protected NonNullList<ItemStack> inventory;
     private LazyOptional<IItemHandler> insertionCap;
 
-    public SaunaTileEntity(BlockPos pos,BlockState state) {
-        super(FHBlockEntityTypes.SAUNA.get(),pos,state);
+
+    public SaunaTileEntity(BlockPos pos, BlockState state) {
+        super(FHBlockEntityTypes.SAUNA.get(), pos, state);
         this.inventory = NonNullList.withSize(1, ItemStack.EMPTY);
         this.insertionCap = LazyOptional.of(() -> new IEInventoryHandler(1, this));
     }
-
-
 
     private boolean dist(BlockPos crn, BlockPos orig) {
         return Mth.abs(crn.getX() - orig.getX()) <= RANGE && Mth.abs(crn.getZ() - orig.getZ()) <= RANGE;
@@ -126,15 +122,15 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBloc
             }
         }
     }
-    LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
+
     @Nonnull
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
-    	if(capability == ForgeCapabilities.ITEM_HANDLER)
-    		return this.insertionCap.cast();
-		if(capability==FHCapabilities.HEAT_EP.capability()&&facing==Direction.DOWN) {
-			return heatcap.cast();
-		}
-		return super.getCapability(capability, facing);
+        if (capability == ForgeCapabilities.ITEM_HANDLER)
+            return this.insertionCap.cast();
+        if (capability == FHCapabilities.HEAT_EP.capability() && facing == Direction.DOWN) {
+            return heatcap.cast();
+        }
+        return super.getCapability(capability, facing);
     }
 
     public MobEffectInstance getEffectInstance() {
@@ -156,7 +152,7 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBloc
     }
 
     public float getPowerFraction() {
-        return network.getPower() / network.getMaxPower();
+        return network.getHeat() / network.getCapacity();
     }
 
     @Override
@@ -185,7 +181,7 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBloc
             // whole day reward
             p.addEffect(new MobEffectInstance(FHMobEffects.SAUNA.get(), 23000, 0, true, false));
         }
-        
+
         // add medical effect
         if (hasMedicine() && remainTime == 1) {
             p.addEffect(getEffectInstance());
@@ -279,35 +275,36 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBloc
                 return recipe;
         return null;
     }
+
     @Override
     public void tick() {
         // server side logic
         if (!level.isClientSide) {
-        	//Check formed
-        	workPeriod--;
-            if(workPeriod<0) {
-            	workPeriod=200;
-            	formed=this.structureIsValid();
+            //Check formed
+            workPeriod--;
+            if (workPeriod < 0) {
+                workPeriod = 200;
+                formed = this.structureIsValid();
             }
-        	
+
             // power logic
-            if (formed&&network.tryDrainHeat(1)) {
-            	this.setActive(true);
+            if (formed && network.tryDrainHeat(1)) {
+                this.setActive(true);
                 setChanged();
             } else this.setActive(false);
 
             // grant player effect if structure is valid
             if (getIsActive()) {
                 // consume medcine time
-            	if(remainTime>0) {
-            		remainTime -= 1;
-            	}else{
-            		ItemStack medicine = this.inventory.get(0);
+                if (remainTime > 0) {
+                    remainTime -= 1;
+                } else {
+                    ItemStack medicine = this.inventory.get(0);
                     effect = null;
                     effectDuration = 0;
                     effectAmplifier = 0;
                     if (!medicine.isEmpty()) {
-                        SaunaRecipe recipe =findRecipe(medicine);
+                        SaunaRecipe recipe = findRecipe(medicine);
                         if (recipe != null) {
                             maxTime = recipe.time;
                             remainTime += recipe.time;
@@ -359,18 +356,16 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBloc
     }
 
 
-
-	@Override
-	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
-		return new SaunaContainer(pContainerId,pPlayerInventory,this);
-	}
-
+    @Override
+    public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
+        return new SaunaContainer(pContainerId, pPlayerInventory, this);
+    }
 
 
-	@Override
-	public Component getDisplayName() {
-		return this.getBlockState().getBlock().getName();
-	}
+    @Override
+    public Component getDisplayName() {
+        return this.getBlockState().getBlock().getName();
+    }
 
 
 }

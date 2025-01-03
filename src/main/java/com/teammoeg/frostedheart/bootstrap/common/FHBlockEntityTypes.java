@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import static com.teammoeg.frostedheart.FHMain.*;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Supplier;
@@ -26,7 +28,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.kinetics.base.HalfShaftInstance;
-import com.teammoeg.frostedheart.content.steamenergy.steamcore.HalfShaftRenderer;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
@@ -35,9 +36,10 @@ import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
-import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterTileEntity;
+import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
+import com.teammoeg.frostedheart.content.steamenergy.steamcore.HalfShaftRenderer;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEntity;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseBlockEntity;
@@ -53,11 +55,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.BlockEntityType.BlockEntitySupplier;
-import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
+import net.minecraftforge.registries.RegistryObject;
 
 public class FHBlockEntityTypes {
     public static final DeferredRegister<BlockEntityType<?>> REGISTER = DeferredRegister.create(

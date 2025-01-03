@@ -1,11 +1,8 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import java.util.Optional;
-
-import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
@@ -30,7 +27,7 @@ public class GeneratorState extends HeatingState {
     @Override
     public void readSaveNBT(CompoundTag nbt) {
         super.readSaveNBT(nbt);
-        Optional<GeneratorData> data = this.getDataNoCheck();
+        //Optional<GeneratorData> data = this.getDataNoCheck();
         explodeTicks = nbt.getInt("explodeTicks");
     }
 
@@ -48,7 +45,17 @@ public class GeneratorState extends HeatingState {
     public final Optional<GeneratorData> getData(BlockPos origin) {
         return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA)).filter(t -> origin.equals(t.actualPos));
     }
-
+    public final void tickData(Level level,BlockPos origin) {
+        Optional<TeamDataHolder> data= getTeamData();
+        if(data.isPresent()) {
+        	TeamDataHolder teamData=data.get();
+        	GeneratorData dat=teamData.getData(SpecialDataTypes.GENERATOR_DATA);
+        	if(origin.equals(dat.actualPos)) {
+        		dat.tick(level, teamData);
+        	}
+        	
+        }
+    }
     /**
      * @param origin the origin to check
      * @return if the GeneratorData from the owned team with the given origin is present.

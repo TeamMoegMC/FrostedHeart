@@ -51,6 +51,7 @@ import com.teammoeg.frostedheart.content.climate.tooltips.BlockTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.EquipmentTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
+import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
 import com.teammoeg.frostedheart.util.FHRemote;
@@ -66,7 +67,6 @@ import net.minecraft.world.level.GameRules.IntegerValue;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -118,6 +118,7 @@ public class FHMain {
         REGISTRATE.setTooltipModifierFactory(item -> {
             return new ItemDescription.Modifier(item, TooltipHelper.Palette.STANDARD_CREATE)
                     .andThen(new FoodTempStats(item))
+                    .andThen(TooltipModifier.mapNull(FoodNutritionStats.create(item)))
                     .andThen(TooltipModifier.mapNull(PlantTempStats.create(item)))
                     .andThen(TooltipModifier.mapNull(BlockTempStats.create(item)))
                     .andThen(TooltipModifier.mapNull(EquipmentTempStats.create(item)))

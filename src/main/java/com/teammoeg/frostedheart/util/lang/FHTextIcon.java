@@ -4,6 +4,7 @@ import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 
 /**
@@ -54,5 +55,8 @@ public class FHTextIcon {
 	
 	/** thermometer icon . */
 	public static final TextIconType thermometer=new TextIconType("\uF500");
-
+	public static final TextIconType SOIL_THERMOMETER = new TextIconType("\uF520");
+	public static Style applyFont(Style style) {
+		return style.withFont(iconFont);
+	}
 }

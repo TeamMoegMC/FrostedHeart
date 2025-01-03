@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2Gener
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorState;
 import com.teammoeg.frostedheart.content.climate.heatdevice.radiator.RadiatorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.radiator.RadiatorMultiblock;
+import com.teammoeg.frostedheart.content.climate.heatdevice.radiator.RadiatorState;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.MultiblockRegistration;
@@ -37,7 +38,6 @@ import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMulti
 import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.IEMultiblockBuilder;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.logic.NonMirrorableWithActiveBlock;
 import blusunrize.immersiveengineering.common.register.IEBlocks;
-import com.teammoeg.frostedheart.content.climate.heatdevice.radiator.RadiatorState;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
@@ -61,7 +61,7 @@ public class FHMultiblocks {
 			.component(FHMenuTypes.GENERATOR_T1.createComponent())
 			.build();
 		public static final MultiblockRegistration<T2GeneratorState> GENERATOR_T2 = metal(new T2GeneratorLogic(), "generator_t2")
-			.structure(() -> FHMultiblocks.Multiblock.GENERATOR_T1)
+			.structure(() -> FHMultiblocks.Multiblock.GENERATOR_T2)
 			.notMirrored()
 			.component(FHMenuTypes.GENERATOR_T2.createComponent())
 			.build();

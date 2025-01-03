@@ -48,7 +48,7 @@ public class RadiatorLogic extends HeatingLogic<RadiatorLogic, RadiatorState> {
         RadiatorState state = ctx.getState();
         boolean hasFuel;
         if (state.network.tryDrainHeat(4)) {
-            state.setTempLevel(state.network.getTemperatureLevel());
+            state.setTempLevel(state.network.getTempLevel());
             state.setRangeLevel(0.5f);
             state.setActive(true);
             hasFuel = true;
@@ -73,7 +73,7 @@ public class RadiatorLogic extends HeatingLogic<RadiatorLogic, RadiatorState> {
 
     @Override
     public <T> LazyOptional<T> getCapability(IMultiblockContext<RadiatorState> ctx, CapabilityPosition position, Capability<T> cap) {
-        if (cap == FHCapabilities.HEAT_EP.capability() && position.posInMultiblock().getY() == 0) {
+        if (FHCapabilities.HEAT_EP.isCapability(cap) && position.posInMultiblock().getY() == 0) {
             return ctx.getState().heatcap.cast();
         }
         return super.getCapability(ctx, position, cap);

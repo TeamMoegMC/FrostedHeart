@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.town.house;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
@@ -265,7 +265,7 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity {
         assert level != null;
         if (!level.isClientSide) {
             if (endpoint.tryDrainHeat(1)) {
-                temperatureModifier = Math.max(endpoint.getTemperatureLevel() * 10, COMFORTABLE_TEMP_HOUSE);
+                temperatureModifier = Math.max(endpoint.getTempLevel() * 10, COMFORTABLE_TEMP_HOUSE);
                 if (setActive(true)) {
                     setChanged();
                 }

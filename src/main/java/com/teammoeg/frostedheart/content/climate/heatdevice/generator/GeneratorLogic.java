@@ -106,7 +106,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
         BlockPos negMasterOffset = FHMultiblockHelper.getMasterPos(ctx.getLevel()).subtract(getNextLevelMultiblock().getMasterFromOriginOffset());
         Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, ctx.getLevel().getOrientation().front());
         ((MultiBlockAccess) getNextLevelMultiblock()).setPlayer(entityplayer);
-        ((MultiBlockAccess) getNextLevelMultiblock()).callForm(ctx.getLevel().getRawLevel(), ctx.getLevel().toAbsolute(negMasterOffset), rot, Mirror.NONE, ctx.getLevel().getOrientation().front());
+        ((MultiBlockAccess) getNextLevelMultiblock()).callForm(ctx.getLevel().getRawLevel(), ctx.getLevel().toAbsolute(negMasterOffset), rot, Mirror.NONE, ctx.getLevel().getOrientation().front().getOpposite());
 
     }
 
@@ -180,7 +180,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
         IETemplateMultiblock ietm = getNextLevelMultiblock();
         if (ietm != null) {
             if (upgrade == null) {
-                List<StructureBlockInfo> structure = ctx.getMultiblock().getStructure().apply(level);
+                List<StructureBlockInfo> structure = ietm.getStructure(level);
                 NonNullList<ItemStack> materials = NonNullList.create();
                 for (StructureBlockInfo info : structure) {
                     // Skip dummy blocks in total
@@ -252,7 +252,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
         boolean lastIsBroken = data.map(t -> t.isBroken).orElse(false);
 
         // Tick the GeneratorData
-        data.ifPresent(t -> t.tick(ctx.getLevel().getRawLevel()));
+        ctx.getState().tickData(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
         boolean isActive = data.map(t -> t.isActive).orElse(false);
 
         // If newly broken, start exploding for 100 ticks

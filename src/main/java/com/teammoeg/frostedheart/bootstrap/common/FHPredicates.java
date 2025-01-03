@@ -1,10 +1,11 @@
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import static com.teammoeg.frostedheart.FHMain.*;
+
 import com.teammoeg.frostedheart.util.utility.BlackListPredicate;
+
 import net.minecraft.advancements.critereon.ItemPredicate;
 import net.minecraft.resources.ResourceLocation;
-
-import static com.teammoeg.frostedheart.FHMain.MODID;
 
 public class FHPredicates {
     public static void init() {

@@ -25,6 +25,7 @@ import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +54,11 @@ public class PlantTempStats implements TooltipModifier {
     @Override
     public void modify(ItemTooltipEvent context) {
         List<Component> stats = getStats(block, context.getItemStack(), context.getEntity());
-        KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>());
+        KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>(),
+                GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_LEFT_CONTROL,
+                "S", "Ctrl",
+                "holdForTemperature", "holdForControls"
+        );
         if (!stats.isEmpty()) {
             List<Component> tooltip = context.getToolTip();
             tooltip.add(Components.immutableEmpty());
@@ -73,7 +78,7 @@ public class PlantTempStats implements TooltipModifier {
         String s2 = s.substring(3);
 
         LangBuilder builder = Lang.builder()
-                .add(FHTextIcon.thermometer)
+                .add(FHTextIcon.SOIL_THERMOMETER)
                 .add(Lang.text(" " + TemperatureDisplayHelper.toTemperatureFloatString(min))
                         .style(min <= 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD))
                 .add(Lang.text(" - ").style(ChatFormatting.GRAY))
@@ -86,7 +91,7 @@ public class PlantTempStats implements TooltipModifier {
         return builder;
     }
 
-    public static List<Component> getStats(Block block, ItemStack stack, Player player) {
+    public static List<Component> getStats(Block block, @Nullable ItemStack stack, @Nullable Player player) {
         List<Component> list = new ArrayList<>();
         PlantTempData data = WorldTemperature.getPlantDataWithDefault(block);
         boolean bonemealable = block instanceof BonemealableBlock;

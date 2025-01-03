@@ -21,7 +21,17 @@ package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.loot.*;
+import com.teammoeg.frostedheart.content.loot.AddLootModifier;
+import com.teammoeg.frostedheart.content.loot.ApplyDamageLootModifier;
+import com.teammoeg.frostedheart.content.loot.BlizzardDamageCondition;
+import com.teammoeg.frostedheart.content.loot.DechantLootModifier;
+import com.teammoeg.frostedheart.content.loot.ModLootCondition;
+import com.teammoeg.frostedheart.content.loot.RemoveLootModifier;
+import com.teammoeg.frostedheart.content.loot.ReplaceLootModifier;
+import com.teammoeg.frostedheart.content.loot.TagLootCondition;
+import com.teammoeg.frostedheart.content.loot.TemperatureLootCondition;
+import com.teammoeg.frostedheart.content.loot.TreasureLootCondition;
+
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
 import net.minecraftforge.common.loot.IGlobalLootModifier;

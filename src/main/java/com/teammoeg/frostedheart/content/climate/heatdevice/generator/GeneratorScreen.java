@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -56,7 +57,6 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
     private static final AtlasUV generatorSymbol = new AtlasUV(TEXTURE, 176, 0, 24, 48, 3, 12, TEXW, TEXH);
     private static final Point generatorPos = new Point(76, 44);
     MasterGeneratorGuiButtonUpgrade upgrade;
-    GeneratorLogic<T, R> tile;
     int level;
     boolean validStructure;
     boolean hasResearch;
@@ -76,7 +76,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
     protected List<InfoArea> makeInfoAreas() {
         if (menu.getTank() == null)
             return super.makeInfoAreas();
-        return ImmutableList.of(new FluidInfoArea(menu.getTank(), new Rect2i(135, 27, 16, 60), 0, 0, 0, 0, TEXTURE));
+        return ImmutableList.of(new FluidInfoArea(menu.getTank(), new Rect2i(leftPos+135,topPos+ 57, 16, 60), 0, 0, 0, 0, TEXTURE));
     }
     @Override
 	protected void drawBackgroundTexture(GuiGraphics graphics)
@@ -104,18 +104,18 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         int inarryl = 76 - ininvarrx;
         int outarryl = out.getX() - 2 - outinvarrx;
         // arrows
-        matrixStack.blit(TEXTURE,leftPos+ ininvarrx,topPos+ ininvarry, inarryl, 4, 511 - inarryl, 132,TEXW,TEXH);
-        matrixStack.blit(TEXTURE,leftPos+ outinvarrx,topPos+  outinvarry, outarryl, 4, 511 - outarryl, 132,TEXW,TEXH);
+        matrixStack.blit(TEXTURE,leftPos+ ininvarrx,topPos+ ininvarry, 511 - inarryl, 132, inarryl, 4,TEXW,TEXH);
+        matrixStack.blit(TEXTURE,leftPos+ outinvarrx,topPos+  outinvarry, 511 - outarryl, 132, outarryl, 4,TEXW,TEXH);
         // slot background
-        matrixStack.blit(TEXTURE,leftPos+ in.getX() - 2,topPos+  in.getY() - 2, 20, 20, 404, 128,TEXW,TEXH);
-        matrixStack.blit(TEXTURE,leftPos+ out.getX() - 2,topPos+  out.getY() - 2, 20, 20, 424, 128,TEXW,TEXH);
+        matrixStack.blit(TEXTURE,leftPos+ in.getX() - 2,topPos+  in.getY() - 2, 404, 128, 20, 20,TEXW,TEXH);
+        matrixStack.blit(TEXTURE,leftPos+ out.getX() - 2,topPos+  out.getY() - 2, 424, 128, 20, 20,TEXW,TEXH);
         if (menu.getTank() != null) {
-            matrixStack.blit(TEXTURE,leftPos+ 133,topPos+  55, 20, 64, 384, 128,TEXW,TEXH);
-            matrixStack.blit(TEXTURE,leftPos+ 98,topPos+  84, 34, 4, 444, 128,TEXW,TEXH);
+            matrixStack.blit(TEXTURE,leftPos+ 133,topPos+  55,384, 128, 20, 64,TEXW,TEXH);
+            matrixStack.blit(TEXTURE,leftPos+ 98,topPos+  84, 444, 128, 34, 4,TEXW,TEXH);
         }
 
         // upgrade arrow
-        matrixStack.blit(TEXTURE,leftPos+ 85,topPos+  93, 6, 22, 412, 148,TEXW,TEXH);
+        matrixStack.blit(TEXTURE,leftPos+ 85,topPos+  93, 412, 148, 6, 22,TEXW,TEXH);
 
         // generator symbol
         generatorSymbol.blitAtlas(matrixStack, leftPos, topPos, generatorPos, (menu.isWorking.getValue() && menu.process.getValue() > 0) ? 2 : 1, (menu.getTier() - 1));
@@ -134,18 +134,19 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         // this.font.drawText(matrixStack, this.playerInventory.getDisplayName(),
         // this.playerInventoryTitleX, this.playerInventoryTitleY+5, 0xff404040);
         // temp level
-        matrixStack.drawCenteredString(this.font, TemperatureDisplayHelper.toTemperatureDeltaInt(menu.tempDegree.getValue()) + "", 88, 40, 0xffffffff);
+        matrixStack.drawCenteredString(this.font, TemperatureDisplayHelper.toTemperatureDeltaInt(menu.tempDegree.getValue()) + "", 88, 37, 0xffffffff);
         // range level
-        matrixStack.drawCenteredString(this.font, menu.rangeBlock.getValue() + "", 35, 45, 0xffffffff);
+        matrixStack.drawCenteredString(this.font, menu.rangeBlock.getValue() + "", 35, 40, 0xffffffff);
         // overdrive level
-        matrixStack.drawCenteredString(this.font, menu.overdrive.getValue() * 100 + "", 141, 45, 0xffffffff);
+        matrixStack.drawCenteredString(this.font, (int)(menu.overdrive.getValue() * 100) + "", 141, 40, 0xffffffff);
     }
 
     @Override
     public void init() {
         super.init();
-        IMultiblockBEHelper<R> helper = (IMultiblockBEHelper<R>) FHMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.pos.getValue()).get();
-        tile = (GeneratorLogic<T, R>) helper.getMultiblock().logic();
+        Optional<IMultiblockBEHelper<?>> ohelper = FHMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.pos.getValue());
+        
+       
         this.addRenderableWidget(new MasterGeneratorGuiButtonBoolean(leftPos + 5, topPos + 24, 11, 22, menu.isWorking.asSupplier(), 472, 148,
                 btn -> {
                     menu.sendMessage(1, btn.getNextState());
@@ -157,53 +158,58 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
         level = 1;
         Player player = ClientUtils.mc().player;
         costStr.clear();
-        if (menu.isBroken.getValue()) {
-            costStr.add(Lang.translateGui("generator.repair_material"));
-            BitSet cost = IngredientUtils.checkItemList(ClientUtils.mc().player, tile.getRepairCost());
-            int i = 0;
-            for (IngredientWithSize iws : tile.getRepairCost()) {
-                ItemStack[] iss = iws.getMatchingStacks();
-                MutableComponent iftc = Lang.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
-                if (cost.get(i))
-                    iftc = iftc.withStyle(ChatFormatting.GREEN);
-                else
-                    iftc = iftc.withStyle(ChatFormatting.RED);
-                i++;
-                costStr.add(iftc);
-            }
-            if (cost.cardinality() == cost.length())
-                level = 2;
-            else
-                level = 3;
-        } else if (tile.getNextLevelMultiblock() != null) {
-            validStructure = tile.nextLevelHasValidStructure(Minecraft.getInstance().level, helper);
-            List<IngredientWithSize> upgcost = tile.getUpgradeCost(Minecraft.getInstance().level, helper);
-            BitSet cost = IngredientUtils.checkItemList(ClientUtils.mc().player, upgcost);
-            hasResearch = ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock());
-            Vec3i v3i = tile.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);
-            if (!validStructure) {
-                costStr.add(Lang.translateGui("generator.no_enough_space", v3i.getX(), v3i.getY(), v3i.getZ()));
-            } else if (!hasResearch) {
-                costStr.add(Lang.translateGui("generator.incomplete_research"));
-            } else {
-                costStr.add(Lang.translateGui("generator.upgrade_material"));
-                int i = 0;
-                for (IngredientWithSize iws : upgcost) {
-                    ItemStack[] iss = iws.getMatchingStacks();
-                    MutableComponent iftc = Lang.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
-                    if (cost.get(i))
-                        iftc = iftc.withStyle(ChatFormatting.GREEN);
-                    else
-                        iftc = iftc.withStyle(ChatFormatting.RED);
-                    i++;
-                    costStr.add(iftc);
-                }
-                if (cost.cardinality() == cost.length()) {
-                    level = 0;
-                }
-            }
-
-        }
+        ohelper.ifPresent(t->{
+        	GeneratorLogic<T,R> tile = (GeneratorLogic<T, R>) t.getMultiblock().logic();
+        	IMultiblockBEHelper<R> helper=(IMultiblockBEHelper<R>) t;
+	        if (menu.isBroken.getValue()) {
+	            costStr.add(Lang.translateGui("generator.repair_material"));
+	            BitSet cost = IngredientUtils.checkItemList(ClientUtils.mc().player, tile.getRepairCost());
+	            int i = 0;
+	            for (IngredientWithSize iws : tile.getRepairCost()) {
+	                ItemStack[] iss = iws.getMatchingStacks();
+	                MutableComponent iftc = Lang.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
+	                if (cost.get(i))
+	                    iftc = iftc.withStyle(ChatFormatting.GREEN);
+	                else
+	                    iftc = iftc.withStyle(ChatFormatting.RED);
+	                i++;
+	                costStr.add(iftc);
+	            }
+	            if (cost.cardinality() == cost.length())
+	                level = 2;
+	            else
+	                level = 3;
+	        } else if (tile.getNextLevelMultiblock() != null) {
+	            validStructure = tile.nextLevelHasValidStructure(Minecraft.getInstance().level, helper);
+	            List<IngredientWithSize> upgcost = tile.getUpgradeCost(Minecraft.getInstance().level, helper);
+	            BitSet cost = IngredientUtils.checkItemList(ClientUtils.mc().player, upgcost);
+	            hasResearch = ResearchListeners.hasMultiblock(null, tile.getNextLevelMultiblock());
+	            Vec3i v3i = tile.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);
+	            if (!validStructure) {
+	                costStr.add(Lang.translateGui("generator.no_enough_space", v3i.getX(), v3i.getY(), v3i.getZ()));
+	            } else if (!hasResearch) {
+	                costStr.add(Lang.translateGui("generator.incomplete_research"));
+	            } else {
+	                costStr.add(Lang.translateGui("generator.upgrade_material"));
+	                int i = 0;
+	                for (IngredientWithSize iws : upgcost) {
+	                    ItemStack[] iss = iws.getMatchingStacks();
+	                    MutableComponent iftc = Lang.str(iws.getCount() + "x ").append(iss[(int) ((new Date().getTime() / 1000) % iss.length)].getHoverName());
+	                    if (cost.get(i))
+	                        iftc = iftc.withStyle(ChatFormatting.GREEN);
+	                    else
+	                        iftc = iftc.withStyle(ChatFormatting.RED);
+	                    i++;
+	                    costStr.add(iftc);
+	                }
+	                if (cost.cardinality() == cost.length()) {
+	                    level = 0;
+	                }
+	            }
+	        	
+	
+	        }
+        });
         this.addRenderableWidget(upgrade = new MasterGeneratorGuiButtonUpgrade(leftPos + 75, topPos + 116, 26, 18, () -> level, 424, 148,
                 btn -> {
                     FHNetwork.sendToServer(new GeneratorModifyPacket());

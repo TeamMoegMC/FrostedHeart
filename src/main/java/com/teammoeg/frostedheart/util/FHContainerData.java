@@ -49,8 +49,10 @@ public class FHContainerData {
 	}
 	public interface FHDataSlot<T>{
 		T getValue();
+		
 		void setValue(T t);
 		void bind(Supplier<T> sup);
+		void bind(Consumer<T> setter);
 		void bind(Supplier<T> sup,Consumer<T> con);
 		default Supplier<T> asSupplier(){
 			return ()->getValue();
@@ -101,7 +103,10 @@ public class FHContainerData {
 			this.getter=getter;
 			this.setter=setter;
 		}
-
+		@Override
+		public void bind(Consumer<T> setter) {
+			this.setter=setter;
+		}
 	}
 	public static interface SyncableDataSlot<T>{
 		boolean checkForUpdate();
@@ -142,6 +147,10 @@ public class FHContainerData {
 		@Override
 		public void bind(Supplier<T> getter, Consumer<T> setter) {
 			this.getter=getter;
+			this.setter=setter;
+		}
+		@Override
+		public void bind(Consumer<T> setter) {
 			this.setter=setter;
 		}
 		public boolean checkForUpdate() {
@@ -215,7 +224,10 @@ public class FHContainerData {
 			this.getter=getter;
 			this.setter=setter;
 		}
-
+		@Override
+		public void bind(Consumer<T> setter) {
+			this.setter=setter;
+		}
 
 	}
 	public static final DataSlotConverter<Integer> SLOT_INT=new DataSlotConverter<>(){
@@ -367,6 +379,9 @@ public class FHContainerData {
 		}
 
 	};
+	static {
+		encoders.register(SLOT_TANK);
+	}
 	public static <T> FHDataSlot<T> create(FHBaseContainer container,DataSlotConverter<T> type) {
 		SingleDataSlot<T> slot=new SingleDataSlot<>(type);
 		container.addDataSlot(slot);

@@ -25,8 +25,6 @@ import java.util.function.Function;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DynamicOps;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
-import com.teammoeg.frostedheart.util.io.codec.DataOps;
 
 /**
  * Type of special data

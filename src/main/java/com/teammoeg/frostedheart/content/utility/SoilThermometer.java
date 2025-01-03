@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.utility;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.ChatFormatting;
@@ -28,6 +29,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -38,11 +40,20 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult.Type;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper.toTemperatureFloatString;
 
 public class SoilThermometer extends FHBaseItem {
+    private static final List<Predicate<Player>> IS_WEARING_PREDICATES = new ArrayList<>();
+
+    static {
+        addIsWearingPredicate(player -> FHItems.soil_thermometer.isIn(player.getItemBySlot(EquipmentSlot.OFFHAND)) ||
+                FHItems.soil_thermometer.isIn(player.getItemBySlot(EquipmentSlot.MAINHAND)));
+    }
+
     public SoilThermometer(Properties properties) {
         super(properties);
     }
@@ -90,5 +101,18 @@ public class SoilThermometer extends FHBaseItem {
             entityplayer.sendSystemMessage(Lang.translateMessage("info.soil_thermometerbody", toTemperatureFloatString(WorldTemperature.block(entityplayer.level(), brtr.getBlockPos()))));
         }
         return stack;
+    }
+
+    public static boolean isWearingSoilThermometer(Player player) {
+        for (Predicate<Player> predicate : IS_WEARING_PREDICATES) {
+            if (predicate.test(player)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void addIsWearingPredicate(Predicate<Player> predicate) {
+        IS_WEARING_PREDICATES.add(predicate);
     }
 }

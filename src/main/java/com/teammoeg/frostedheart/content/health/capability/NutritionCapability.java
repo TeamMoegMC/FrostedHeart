@@ -9,6 +9,12 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -17,6 +23,7 @@ import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 public class NutritionCapability implements NBTSerializable {
 
@@ -35,6 +42,9 @@ public class NutritionCapability implements NBTSerializable {
         }
         public float getNutritionValue(){
             return fat + carbohydrate + protein + vegetable;
+        }
+        public boolean isZero(){
+            return fat == 0 && carbohydrate == 0 && protein == 0 && vegetable == 0;
         }
     }
 
@@ -116,52 +126,82 @@ public class NutritionCapability implements NBTSerializable {
     }
 
     public void eat(Player player, ItemStack food) {
+        if(!food.isEdible()) return;
         Level level = player.level();
         NutritionRecipe wRecipe = NutritionRecipe.getRecipeFromItem(level, food);
         int nutrition = food.getFoodProperties(player).getNutrition();
-        modifyNutrition(player, wRecipe.getNutrition().scale(nutrition));
+        //因为只看食物自己的属性会比较低，加的点数不够一分钟的消耗，所以需要再乘一个系数
+        Nutrition n = wRecipe.getNutrition().scale(nutrition).scale(40.0f);
+        modifyNutrition(player, n);
     }
 
     public void consume(Player player) {
         // 这个比例可以放到Config里
-        float radio = 0.1f * FHConfig.SERVER.nutritionConsumptionRate.get();
+        float radio = - 0.1f * FHConfig.SERVER.nutritionConsumptionRate.get();
 
         Nutrition nutrition = get();
         modifyNutrition(player, nutrition.scale(radio / nutrition.getNutritionValue()));
     }
 
 
-    public void award(Player player) {
-        //TODO
-    }
+//    public void award(Player player) {
+//
+//    }
 
     public void punishment(Player player) {
         //TODO 营养值过高或过低的惩罚
+        int count = 0;
+
         if(nutrition.fat<3000){
+            count++;
 
         }
         if(nutrition.fat>8000){
+            count++;
 
         }
         if(nutrition.carbohydrate<3000){
+            count++;
 
         }
         if(nutrition.carbohydrate>8000){
+            count++;
 
         }
         if(nutrition.protein<3000){
+            count++;
 
         }
         if(nutrition.protein>8000){
+            count++;
 
         }
         if(nutrition.vegetable<3000){
+            count++;
 
         }
         if(nutrition.vegetable>8000){
+            count++;
 
         }
+        int a = count/2;
+        if(count>0) {
+            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 300, count - 1));
+        }
+        if(a>0) {
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 300, a));
+        }
+
+        // 对生命值上限的修改
+        int v = (int) (20 - nutrition.getNutritionValue() / 1000);
+        AttributeInstance instance = player.getAttributes().getInstance(Attributes.MAX_HEALTH);
+        AttributeModifier modifier = new AttributeModifier(NutritionUUID, "nutrition", -v, AttributeModifier.Operation.ADDITION);
+        if(instance.hasModifier(modifier))
+            instance.removeModifier(modifier);
+        instance.addPermanentModifier(modifier);
     }
+
+    public static final UUID NutritionUUID = UUID.fromString("f3f5f6f7-8f9f-afbf-cfcf-dfdfefeff0f1");
 
     public static LazyOptional<NutritionCapability> getCapability(@Nullable Player player) {
         return FHCapabilities.PLAYER_NUTRITION.getCapability(player);
