@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.util.lang;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 

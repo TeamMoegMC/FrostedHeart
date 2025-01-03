@@ -19,12 +19,22 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import static com.teammoeg.frostedheart.FHMain.*;
+import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.*;
+
+import java.util.function.Function;
+
 import com.simibubi.create.AllTags;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.item.ItemDescription;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.item.*;
+import com.teammoeg.frostedheart.base.item.DyedItemList;
+import com.teammoeg.frostedheart.base.item.FHArmorMaterial;
+import com.teammoeg.frostedheart.base.item.FHBaseArmorItem;
+import com.teammoeg.frostedheart.base.item.FHBaseClothesItem;
+import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.base.item.FHToolMaterials;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHFoodProperties;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
@@ -36,7 +46,15 @@ import com.teammoeg.frostedheart.content.research.blocks.FHBasePen;
 import com.teammoeg.frostedheart.content.research.blocks.FHReusablePen;
 import com.teammoeg.frostedheart.content.research.blocks.RubbingTool;
 import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
-import com.teammoeg.frostedheart.content.utility.*;
+import com.teammoeg.frostedheart.content.utility.CeramicBucket;
+import com.teammoeg.frostedheart.content.utility.DebugItem;
+import com.teammoeg.frostedheart.content.utility.KnifeItem;
+import com.teammoeg.frostedheart.content.utility.MushroomBed;
+import com.teammoeg.frostedheart.content.utility.SoilThermometer;
+import com.teammoeg.frostedheart.content.utility.SpearItem;
+import com.teammoeg.frostedheart.content.utility.SteamBottleItem;
+import com.teammoeg.frostedheart.content.utility.ThermometerItem;
+import com.teammoeg.frostedheart.content.utility.ThermosItem;
 import com.teammoeg.frostedheart.content.utility.handstoves.CoalHandStove;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestItem;
 import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
@@ -48,6 +66,7 @@ import com.teammoeg.frostedheart.content.water.item.IronBottleItem;
 import com.teammoeg.frostedheart.content.water.item.LeatherWaterBagItem;
 import com.teammoeg.frostedheart.content.water.item.WoodenCupItem;
 import com.tterrag.registrate.util.entry.ItemEntry;
+
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
@@ -55,18 +74,19 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.food.Foods;
 import net.minecraft.world.item.ArmorItem.Type;
-import net.minecraft.world.item.*;
+import net.minecraft.world.item.ArmorMaterials;
+import net.minecraft.world.item.AxeItem;
+import net.minecraft.world.item.HoeItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.PickaxeItem;
+import net.minecraft.world.item.ShovelItem;
+import net.minecraft.world.item.SwordItem;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
-
-import java.util.function.Function;
-
-import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
-import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.forgeItemTag;
 
 /**
  * All items.

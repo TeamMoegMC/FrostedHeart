@@ -37,7 +37,20 @@ import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
 import com.teammoeg.frostedheart.content.health.network.PlayerNutritionSyncPacket;
-import com.teammoeg.frostedheart.content.research.network.*;
+import com.teammoeg.frostedheart.content.research.network.FHChangeActiveResearchPacket;
+import com.teammoeg.frostedheart.content.research.network.FHDrawingDeskOperationPacket;
+import com.teammoeg.frostedheart.content.research.network.FHEffectProgressSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHEffectTriggerPacket;
+import com.teammoeg.frostedheart.content.research.network.FHEnergyDataSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHInsightSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchAttributeSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchControlPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchDataUpdatePacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchRegistrtySyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchSyncEndPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHS2CClueProgressSyncPacket;
 import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacket;
 import com.teammoeg.frostedheart.content.scenario.network.ClientScenarioResponsePacket;
 import com.teammoeg.frostedheart.content.scenario.network.FHClientReadyPacket;
@@ -48,16 +61,16 @@ import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioScenePack
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
-import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
-import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
-import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.content.town.TeamTownDataS2CPacket;
 import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.content.trade.network.BargainResponse;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeUpdatePacket;
-
+import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
+import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
+import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -66,7 +79,6 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
-import net.minecraftforge.registries.MissingMappingsEvent;
 
 public class FHNetwork {
 

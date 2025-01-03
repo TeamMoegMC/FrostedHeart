@@ -19,11 +19,14 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import static com.teammoeg.frostedheart.FHMain.*;
+
 import com.simibubi.create.content.fluids.VirtualFluid;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.tterrag.registrate.util.entry.FluidEntry;
+
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidType;
@@ -31,8 +34,6 @@ import net.minecraftforge.fluids.ForgeFlowingFluid;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistries.Keys;
-
-import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
 
 public class FHFluids {
 

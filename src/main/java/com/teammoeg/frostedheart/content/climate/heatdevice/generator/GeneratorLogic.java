@@ -252,7 +252,7 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
         boolean lastIsBroken = data.map(t -> t.isBroken).orElse(false);
 
         // Tick the GeneratorData
-        data.ifPresent(t -> t.tick(ctx.getLevel().getRawLevel()));
+        ctx.getState().tickData(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
         boolean isActive = data.map(t -> t.isActive).orElse(false);
 
         // If newly broken, start exploding for 100 ticks

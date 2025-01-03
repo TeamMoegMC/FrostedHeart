@@ -19,15 +19,21 @@
 
 package com.teammoeg.frostedheart.bootstrap.client;
 
+import static com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler.*;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.bootstrap.reference.FHTags.Items;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.recipe.InspireRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -38,12 +44,6 @@ import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-
-import static com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class FHTooltips {

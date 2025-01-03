@@ -20,7 +20,7 @@ public record FHContainerDataSync(List<ContainerDataPair> data) implements FHMes
 		public ContainerDataPair(FriendlyByteBuf buf,int slotIndex,OtherDataSlotEncoder<?> conv) {
 			this(slotIndex,conv,conv.read(buf));
 		}
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public void write(FriendlyByteBuf buffer) {
 			buffer.writeVarInt(slotIndex);
 			FHContainerData.encoders.write(buffer, conv);

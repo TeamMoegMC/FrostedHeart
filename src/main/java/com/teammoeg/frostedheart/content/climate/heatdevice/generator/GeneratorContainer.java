@@ -57,10 +57,11 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
         super(type, id, inventoryPlayer.player, 2);
         R state = ctx.mbContext().getState();
         BlockPos master=FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel());
-        if (state.getOwner() == null) {
+        /*if (state.getOwner() == null) {
             state.setOwner(FHTeamDataManager.get(inventoryPlayer.player).getId());
             state.regist(inventoryPlayer.player.level(),master);
-        }
+        }*/
+        state.tryRegist(inventoryPlayer.player.level(),master);
         Optional<GeneratorData> optdata = state.getData(master);
         optdata.ifPresent(data -> {
             process.bind(() -> data.process);
@@ -74,12 +75,12 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
             isBroken.bind(() -> data.isBroken);
             isWorking.bind(() -> data.isWorking, t -> {data.isWorking = t;});
             isOverdrive.bind(() -> data.isOverdrive, t -> data.isOverdrive = t);
-            System.out.println(" binded ");
+            //System.out.println(" binded ");
         });
-        System.out.println(optdata);
+        //System.out.println(optdata);
         pos.bind(() -> ctx.clickedPos());
         this.validator = new Validator(ctx.clickedPos(), 8).and(ctx.mbContext().isValid());
-        IItemHandler handler = state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel())).map(t -> t.inventory).orElseGet(() -> new ItemStackHandler(2));
+        IItemHandler handler = state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel())).map(t -> t.inventory).orElseGet(() -> null);
         createSlots(handler, inventoryPlayer);
     }
 
@@ -89,17 +90,19 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
     }
 
     protected void createSlots(IItemHandler handler, Inventory inventoryPlayer) {
-        Point in = getSlotIn();
-
-        this.addSlot(new SlotItemHandler(handler, 0, in.getX(), in.getY()) {
-            @Override
-            public boolean mayPlace(ItemStack itemStack) {
-                return GeneratorData.isStackValid(inventoryPlayer.player.level(), 0, itemStack);
-            }
-        });
-        Point out = getSlotOut();
-        this.addSlot(new NewOutput(handler, 1, out.getX(), out.getY()));
-        super.addPlayerInventory(inventoryPlayer, 8, 140, 198);
+        
+        if(handler!=null) {
+        	Point in = getSlotIn();
+	        this.addSlot(new SlotItemHandler(handler, 0, in.getX(), in.getY()) {
+	            @Override
+	            public boolean mayPlace(ItemStack itemStack) {
+	                return GeneratorData.isStackValid(inventoryPlayer.player.level(), 0, itemStack);
+	            }
+	        });
+	        Point out = getSlotOut();
+	        this.addSlot(new NewOutput(handler, 1, out.getX(), out.getY()));
+	        super.addPlayerInventory(inventoryPlayer, 8, 140, 198);
+        }
     }
 
     public abstract Point getSlotIn();

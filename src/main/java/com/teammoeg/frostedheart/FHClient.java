@@ -19,23 +19,10 @@
 
 package com.teammoeg.frostedheart;
 
-import blusunrize.immersiveengineering.api.ManualHelper;
-import blusunrize.immersiveengineering.client.manual.ManualElementMultiblock;
-import blusunrize.lib.manual.ManualEntry;
-import blusunrize.lib.manual.ManualInstance;
-import blusunrize.lib.manual.Tree;
-import com.teammoeg.frostedheart.compat.ftbq.FHGuiProviders;
-import com.teammoeg.frostedheart.compat.ie.FHManual;
-import com.teammoeg.frostedheart.compat.tetra.TetraClient;
-import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 import static com.teammoeg.frostedheart.FHMain.*;

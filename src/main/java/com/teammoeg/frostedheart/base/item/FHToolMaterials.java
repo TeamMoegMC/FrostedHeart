@@ -19,12 +19,12 @@
 
 package com.teammoeg.frostedheart.base.item;
 
-import net.minecraft.util.LazyLoadedValue;
+import java.util.function.Supplier;
+
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.crafting.Ingredient;
-
-import java.util.function.Supplier;
+import net.minecraftforge.common.util.Lazy;
 
 public enum FHToolMaterials implements Tier {
     FLINT(1, 81, 3.0F, 1.0F, 8, () -> {
@@ -37,7 +37,7 @@ public enum FHToolMaterials implements Tier {
     private final float efficiency;
     private final float attackDamage;
     private final int enchantability;
-    private final LazyLoadedValue<Ingredient> repairMaterial;
+    private final Lazy<Ingredient> repairMaterial;
 
     private FHToolMaterials(int harvestLevelIn, int maxUsesIn, float efficiencyIn, float attackDamageIn, int enchantabilityIn, Supplier<Ingredient> repairMaterialIn)
     {
@@ -47,7 +47,7 @@ public enum FHToolMaterials implements Tier {
         this.efficiency = efficiencyIn;
         this.attackDamage = attackDamageIn;
         this.enchantability = enchantabilityIn;
-        this.repairMaterial = new LazyLoadedValue<>(repairMaterialIn);
+        this.repairMaterial = Lazy.of(repairMaterialIn);
     }
 
     public int getUses() {

@@ -21,19 +21,19 @@ package com.teammoeg.frostedheart.bootstrap.common;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.content.health.effect.AnemiaEffect;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.effect.BaseEffect;
 import com.teammoeg.frostedheart.content.climate.effect.HyperthermiaEffect;
 import com.teammoeg.frostedheart.content.climate.effect.HypothermiaEffect;
+import com.teammoeg.frostedheart.content.health.effect.AnemiaEffect;
 import com.teammoeg.frostedheart.content.health.effect.IonEffect;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaEffect;
 
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
-import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 public class FHMobEffects {
     public static final DeferredRegister<MobEffect> EFFECTS=DeferredRegister.create(ForgeRegistries.MOB_EFFECTS, FHMain.MODID);
