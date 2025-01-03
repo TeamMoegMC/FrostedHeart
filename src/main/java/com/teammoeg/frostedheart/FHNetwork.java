@@ -46,6 +46,8 @@ import com.teammoeg.frostedheart.content.scenario.network.ServerScenarioCommandP
 import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioActPacket;
 import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioScenePacket;
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkRequestC2SPacket;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkResponseS2CPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
 import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
@@ -171,6 +173,8 @@ public class FHNetwork {
 
         // Heat Messages
         registerMessage("heat_endpoint", EndPointDataPacket.class);
+        registerMessage("heat_network_request_c2s", HeatNetworkRequestC2SPacket.class);
+        registerMessage("heat_network_response_s2c", HeatNetworkResponseS2CPacket.class);
 
         // Town Messages
         registerMessage("team_town_data_s2c", TeamTownDataS2CPacket.class);

@@ -20,7 +20,7 @@ import net.minecraftforge.registries.ForgeRegistries;
  */
 @Getter
 @ToString()
-public class HeatEndpoint implements NBTSerializable {
+public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
 
     /**
      * The main network.
@@ -242,10 +242,6 @@ public class HeatEndpoint implements NBTSerializable {
         else
             avgOutput = avgOutput * .95f + Math.max(0, output) * .05f;
         canCostMore = Math.round(avgOutput * 10) / 10f < maxIntake;
-        intake = -1;
-        output = -1;
-        maxIntake = -1;
-        maxOutput = -1;
     }
 
     public void writeNetwork(FriendlyByteBuf pb) {
@@ -279,5 +275,10 @@ public class HeatEndpoint implements NBTSerializable {
         nbt.putFloat("net_power", heat);
         nbt.putLong("pos", pos.asLong());
         nbt.putString("block", RegistryUtils.getRegistryName(blk).toString());
+    }
+
+    @Override
+    public HeatNetwork getNetwork() {
+        return network;
     }
 }
