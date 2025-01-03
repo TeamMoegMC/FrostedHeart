@@ -28,12 +28,16 @@ import com.simibubi.create.foundation.utility.Lang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.simibubi.create.infrastructure.config.CClient;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.tooltips.BlockTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkRequestC2SPacket;
+import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.utility.SoilThermometer;
 import com.teammoeg.frostedheart.content.utility.TemperatureProbe;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
@@ -76,6 +80,7 @@ public class TemperatureGoogleRenderer {
 
     public static int hoverTicks = 0;
     public static BlockPos lastHovered = null;
+    public static BlockPos lastHeatNetworkPos = null;
 
     public static void renderOverlay(ForgeGui gui, GuiGraphics graphics, float partialTicks, int width,
                                      int height) {
@@ -128,6 +133,19 @@ public class TemperatureGoogleRenderer {
 
         boolean goggleAddedInformation = false;
         boolean hoverAddedInformation = false;
+
+        boolean hasHeatNetworkInformation = be instanceof HeatNetworkProvider;
+
+        // Request HeatNetwork data
+        if (wearingGoggles && hasGoggleInformation && hasHeatNetworkInformation) {
+            if (lastHeatNetworkPos == null)
+                lastHeatNetworkPos = pos;
+            if (!lastHeatNetworkPos.equals(pos)) {
+                lastHeatNetworkPos = pos;
+                FHMain.LOGGER.debug("Requesting HeatNetwork data for HeatNetworkProvider at " + pos);
+                FHNetwork.sendToServer(new HeatNetworkRequestC2SPacket(pos));
+            }
+        }
 
         // Icon to render
         ItemStack item = AllItems.GOGGLES.asStack();

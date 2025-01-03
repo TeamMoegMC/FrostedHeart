@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -85,8 +86,10 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
      * Network current pressure: The
      */
     @Getter
+    @Setter
     private float totalEndpointOutput;
     @Getter
+    @Setter
     private float totalEndpointIntake;
 
     public HeatNetwork() {
@@ -100,30 +103,22 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
 
     @Override
     public void save(CompoundTag nbt, boolean isPacket) {
-        FHMain.LOGGER.debug("HeatNetwork save");
         nbt.put("pipes",
                 SerializeUtil.toNBTList(propagated.entrySet(), (t, p) -> p.compound().putLong("pos", t.getKey().asLong()).putInt("len", t.getValue())));
-        FHMain.LOGGER.debug("HeatNetwork pipes saved");
         nbt.putFloat("totalEndpointOutput", totalEndpointOutput);
-        FHMain.LOGGER.debug("HeatNetwork totalEndpointOutput saved");
         nbt.putFloat("totalEndpointIntake", totalEndpointIntake);
-        FHMain.LOGGER.debug("HeatNetwork totalEndpointIntake saved");
     }
 
     @Override
     public void load(CompoundTag nbt, boolean isPacket) {
-        FHMain.LOGGER.debug("HeatNetwork load");
         propagated.clear();
         ListTag cn = nbt.getList("pipes", Tag.TAG_COMPOUND);
         for (Tag ccn : cn) {
             CompoundTag ccnbt = ((CompoundTag) ccn);
             propagated.put(BlockPos.of(ccnbt.getLong("pos")), ccnbt.getInt("len"));
         }
-        FHMain.LOGGER.debug("HeatNetwork pipes loaded");
         totalEndpointOutput = nbt.getFloat("totalEndpointOutput");
-        FHMain.LOGGER.debug("HeatNetwork totalEndpointOutput loaded");
         totalEndpointIntake = nbt.getFloat("totalEndpointIntake");
-        FHMain.LOGGER.debug("HeatNetwork totalEndpointIntake loaded");
     }
 
     @Override
@@ -246,10 +241,10 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
         for (HeatEndpoint endpoint : endpoints) {
             while (accumulated > 0 && endpoint.canReceiveHeat()) {
                 // logic
-                float received = endpoint.receiveHeat(accumulated, tlevel);
+                float received = endpoint.receiveHeat(endpoint.getMaxIntake(), tlevel);
                 totalEndpointIntake += received;
                 accumulated -= received;
-                endpoint.intake = accumulated;
+                endpoint.intake = received;
             }
         }
 

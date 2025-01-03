@@ -57,8 +57,8 @@ public class HeatStatScreen extends BaseScreen {
     @Override
     public void drawForeground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         super.drawForeground(matrixStack, theme, x, y, w, h);
-        theme.drawString(matrixStack, "Generating", x + 6, y + 6);
-        theme.drawString(matrixStack, "Consuming", x + 118, y + 6);
+        theme.drawString(matrixStack, "Consuming", x + 6, y + 6);
+        theme.drawString(matrixStack, "Generating", x + 118, y + 6);
     }
 
     @Override
