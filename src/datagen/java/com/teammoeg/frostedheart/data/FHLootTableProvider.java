@@ -87,19 +87,19 @@ public class FHLootTableProvider extends LootTableProvider {
                     // add FHItems.hide_boots
                     .withPool(LootPool.lootPool()
                                     .setRolls(ConstantValue.exactly(1.0F))
-                                    .add(LootItem.lootTableItem(FHItems.hide_boots.get())
+                                    .add(LootItem.lootTableItem(FHItems.FH_CLOTHES.get("hide_boots").get())
                                             .apply(SetItemCountFunction.setCount(UniformGenerator.between(0.0F, 1.0F)))
                                             .apply(LootingEnchantFunction.lootingMultiplier(UniformGenerator.between(0.0F, 1.0F))))
                     // add FHItems.hide_leggings
-                                    .add(LootItem.lootTableItem(FHItems.hide_hat.get())
+                                    .add(LootItem.lootTableItem(FHItems.FH_CLOTHES.get("hide_hat").get())
                                             .apply(SetItemCountFunction.setCount(UniformGenerator.between(0.0F, 1.0F)))
                                             .apply(LootingEnchantFunction.lootingMultiplier(UniformGenerator.between(0.0F, 1.0F))))
                     // add FHItems.hide_chestplate
-                                    .add(LootItem.lootTableItem(FHItems.hide_jacket.get())
+                                    .add(LootItem.lootTableItem(FHItems.FH_CLOTHES.get("hide_jacket").get())
                                             .apply(SetItemCountFunction.setCount(UniformGenerator.between(0.0F, 1.0F)))
                                             .apply(LootingEnchantFunction.lootingMultiplier(UniformGenerator.between(0.0F, 1.0F))))
                     // add FHItems.hide_pants
-                                    .add(LootItem.lootTableItem(FHItems.hide_pants.get())
+                                    .add(LootItem.lootTableItem(FHItems.FH_CLOTHES.get("hide_pants").get())
                                             .apply(SetItemCountFunction.setCount(UniformGenerator.between(0.0F, 1.0F)))
                                             .apply(LootingEnchantFunction.lootingMultiplier(UniformGenerator.between(0.0F, 1.0F)))))
                     // add foods
