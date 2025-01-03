@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
-import com.teammoeg.frostedheart.content.town.resource.TownResourceType;
+import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
@@ -43,11 +43,11 @@ public class TeamTown implements Town, TownWithResident {
     /** Linked to town data resources. */
     TownResourceManager resources;
     /** Service, only live in one tick cycle. */
-    Map<TownResourceType, Integer> service = new EnumMap<>(TownResourceType.class);
+    Map<ItemResourceType, Integer> service = new EnumMap<>(ItemResourceType.class);
     /** Costed service, only live in one tick cycle. */
-    Map<TownResourceType, Integer> costedService = new EnumMap<>(TownResourceType.class);
+    Map<ItemResourceType, Integer> costedService = new EnumMap<>(ItemResourceType.class);
     /** Max storage, only live in one tick cycle. */
-    Map<TownResourceType, Integer> maxStorage = new EnumMap<>(TownResourceType.class);
+    Map<ItemResourceType, Integer> maxStorage = new EnumMap<>(ItemResourceType.class);
     /** The town data, actual data stored on disk. */
     TeamTownData data;
 
@@ -242,15 +242,8 @@ public class TeamTown implements Town, TownWithResident {
     }
     */
 
-    public Map<TownResourceType, Long> getResources() {
-        Map<TownResourceType, Double> ret = new EnumMap<>(TownResourceType.class);
-        for (Entry<TownResourceType, Integer> ent : resources.entrySet()) {
-            int val = ent.getValue();
-            val += backupStorage.getOrDefault(ent.getKey(), 0);
-            val += service.getOrDefault(ent.getKey(), 0);
-            ret.put(ent.getKey(), val / 1000d);
-        }
-        return ret;
+    public TownResourceManager getResourceManager() {
+        return resources;
     }
 
 
@@ -348,10 +341,6 @@ public class TeamTown implements Town, TownWithResident {
      */
     public void setName(String name) {
         this.data.name = name;
-    }
-
-    private int getIntMaxStorage(TownResourceType name) {
-        return maxStorage.computeIfAbsent(name, t -> t.getIntMaxStorage(this));
     }
 
     @Override

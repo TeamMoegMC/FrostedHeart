@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart;
 
 import com.simibubi.create.foundation.utility.Lang;
+import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
@@ -38,7 +39,8 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
 
-import java.util.Collections;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class FHTags {
 
@@ -179,6 +181,33 @@ public class FHTags {
 
 		public final TagKey<Item> tag;
 		public final boolean alwaysDatagen;
+
+		public static final Map<ItemResourceType, TagKey<Item>> townTagsType = new EnumMap<>(ItemResourceType.class);
+		public static final Map<Integer, TagKey<Item>> townTagsLevel = new HashMap<>();
+		static{
+			NameSpace namespace = NameSpace.MOD;
+			//TownResourceType有一个maxLevel的属性，找到最大的maxLevel，以生成适当数量的tag来表示level
+			AtomicInteger max_maxLevel = new AtomicInteger(0);
+			Arrays.stream(ItemResourceType.values())
+					.peek(type -> max_maxLevel.set(Math.max(max_maxLevel.get(), type.maxLevel)))
+					//.map(ItemResourceType::getKey)
+					//.map(key_string -> new ResourceLocation(namespace.id, "town_resource_type_" + key_string))
+					.forEach(type -> {
+						ResourceLocation resourceLocation = new ResourceLocation(namespace.id, "town_resource_type_" + type.getKey());
+						if (namespace.optionalDefault) {
+							townTagsType.put(type, optionalTag(ForgeRegistries.ITEMS, resourceLocation));
+						} else {
+							townTagsType.put(type, ItemTags.create(resourceLocation));
+						}
+					});
+			for(int i = 0; i <= max_maxLevel.get(); i++){
+				if(namespace.optionalDefault){
+					townTagsLevel.put(i, optionalTag(ForgeRegistries.ITEMS, new ResourceLocation(namespace.id, "town_resource_level_" + i)));
+				} else {
+					townTagsLevel.put(i, ItemTags.create(new ResourceLocation(namespace.id, "town_resource_level_" + i)));
+				}
+			}
+		}
 
 		Items() {
 			this(NameSpace.MOD);

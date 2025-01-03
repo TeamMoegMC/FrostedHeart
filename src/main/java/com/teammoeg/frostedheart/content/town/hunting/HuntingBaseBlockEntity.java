@@ -6,12 +6,16 @@ import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEn
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockScanner;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
-import com.teammoeg.frostedheart.content.town.resource.TownResourceType;
+import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
+import com.teammoeg.frostedheart.content.town.resource.ResourceActionResult;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
+import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
@@ -24,53 +28,36 @@ import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 
 public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity {
+    @Getter
     private double rating = 0;
+    //get volume
+    @Getter
     private int volume;
+    //get area
+    @Getter
     private int area;
+    //get chest num
+    @Getter
     private int chestNum;
+    //get bed num
+    @Getter
     private int bedNum;
+    //get tanning rack num
+    @Getter
     private int tanningRackNum;
+    //get temperature
+    @Getter
     private double temperature;
     private Map<String, Integer> decorations;
     HeatConsumerEndpoint endpoint = new HeatConsumerEndpoint(99,10,1);
     LazyOptional<HeatConsumerEndpoint> endpointCap = LazyOptional.of(()-> endpoint);
     private double temperatureModifier = 0;
+    //get max resident
+    @Getter
     private int maxResident;
 
     public HuntingBaseBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.HUNTING_BASE.get(),pos,state);
-    }
-
-    public double getRating(){
-        return rating;
-    }
-    //get volume
-    public int getVolume() {
-        return volume;
-    }
-    //get area
-    public int getArea() {
-        return area;
-    }
-    //get chest num
-    public int getChestNum() {
-        return chestNum;
-    }
-    //get bed num
-    public int getBedNum() {
-        return bedNum;
-    }
-    //get tanning rack num
-    public int getTanningRackNum() {
-        return tanningRackNum;
-    }
-    //get temperature
-    public double getTemperature() {
-        return temperature;
-    }
-    //get max resident
-    public int getMaxResident() {
-        return maxResident;
     }
 
 
@@ -205,17 +192,16 @@ public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity {
     public static class HuntingBaseWorker implements TownWorker {
         @Override
         public boolean work(Town town, CompoundTag workData) {
-            if(town instanceof TeamTown){//the town must be team town because it needs to get all camps in the town.
+            if(town instanceof TeamTown teamTown){//the town must be team town because it needs to get all camps in the town.
                 TreeSet<SimpleEntry<TownWorkerData,Double>> camps = new TreeSet<>(Comparator.comparingDouble(AbstractMap.SimpleEntry::getValue));//Double: rating
                 ArrayList<TownWorkerData> campsUnchecked = new ArrayList<>();
-                TeamTown teamTown = (TeamTown) town;
                 teamTown.getTownBlocks().values().forEach(
                         (TownWorkerData data)->{
                             if(data.getType()==TownWorkerType.HUNTING_CAMP){
                                 campsUnchecked.add(data);
                             }
                         });
-                if(campsUnchecked.size() > 0){
+                if(!campsUnchecked.isEmpty()){
                     double baseRating = workData.getDouble("rating");
                     for(TownWorkerData data : campsUnchecked){
                         SimpleEntry<TownWorkerData,Double> dataPair = new SimpleEntry<>(data, data.getWorkData().getDouble("rating") * baseRating * 2);//double: 考虑到与之距离过近的camp之后新计算的rating    *2:下面遍历的时候会遍历到它自己
@@ -226,15 +212,16 @@ public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity {
                     }
                 }
                 int residentsLeft = workData.getInt("maxResident");
-                if(camps.size() > 0 && residentsLeft > 0){
+                if(!camps.isEmpty() && residentsLeft > 0){
                     Iterator<SimpleEntry<TownWorkerData, Double>> iterator = camps.iterator();
                     while(iterator.hasNext() && residentsLeft > 0){
                         double add = iterator.next().getValue();
-                        double realAdd = town.add(TownResourceType.RAW_FOOD, add, true);
-                        if(add - realAdd > 0.001) return false;
+                        ResourceActionResult result = town.getResourceManager().addToMax(new ItemStack(Items.BEEF), add);
+                        if(result.amount() != add) return false;
                         residentsLeft--;
                     }
                 }
+                return true;
             }
             return false;
         }

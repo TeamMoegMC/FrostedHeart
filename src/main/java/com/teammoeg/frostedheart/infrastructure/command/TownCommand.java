@@ -28,12 +28,15 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TeamTown;
-import com.teammoeg.frostedheart.content.town.TownResourceType;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resource.ResourceActionResult;
+import com.teammoeg.frostedheart.content.town.resource.VirtualResourceKey;
+import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.world.item.ItemStack;
 
 public class TownCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -46,20 +49,28 @@ public class TownCommand {
                             return Command.SINGLE_SUCCESS;
                         });
 
-        LiteralArgumentBuilder<CommandSourceStack> listResources =
-                Commands.literal("list")
+        LiteralArgumentBuilder<CommandSourceStack> listItemStackResources =
+                Commands.literal("list_items")
                         .executes(ct -> {
                             TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                            ct.getSource().sendSuccess(()->TranslateUtils.str(town.getResources()), true);
+                            ct.getSource().sendSuccess(()->TranslateUtils.str(town.getResourceManager().resourceHolder.getAllItems() ), true);
                             return Command.SINGLE_SUCCESS;
                         });
 
-        LiteralArgumentBuilder<CommandSourceStack> addResources =
-                Commands.literal("add")
+        LiteralArgumentBuilder<CommandSourceStack> listVirtualResources =
+                Commands.literal("list_virtual")
+                        .executes(ct -> {
+                            TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
+                            ct.getSource().sendSuccess(()->TranslateUtils.str(town.getResourceManager().resourceHolder.getAllVirtualResources() ), true);
+                            return Command.SINGLE_SUCCESS;
+                        });
+
+        LiteralArgumentBuilder<CommandSourceStack> addVirtualResources =
+                Commands.literal("addVirtual")
                         .then(Commands.argument("type", StringArgumentType.string())
                                 .suggests((ct, s) -> {
                                     // Get all TownResourceType enum values
-                                    Arrays.stream(TownResourceType.values()).forEach(t -> s.suggest(t.getKey()));
+                                    Arrays.stream(VirtualResourceType.values()).forEach(t -> s.suggest(t.getKey()));
                                     return s.buildFuture();
                                 })
                                 .then(Commands.argument("amount", DoubleArgumentType.doubleArg())
@@ -67,11 +78,30 @@ public class TownCommand {
                                             double amount = DoubleArgumentType.getDouble(ct, "amount");
                                             String type = StringArgumentType.getString(ct, "type");
                                             TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                                            town.add(TownResourceType.from(type), amount, false);
-                                            ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added"), true);
+                                            ResourceActionResult result = town.getResourceManager().addIfHaveCapacity(VirtualResourceType.from(type), amount);
+                                            if(result.isSuccess()){
+                                                ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added"), true);
+                                            } else ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added failed: No enough capacity."), true);
                                             return Command.SINGLE_SUCCESS;
                                         })
                                 )
+                        );
+
+        LiteralArgumentBuilder<CommandSourceStack> addItemOnHand =
+                Commands.literal("addItemOnHand")
+                        .then(Commands.argument("amount", DoubleArgumentType.doubleArg())
+                                .executes(ct -> {
+                                    double amount = DoubleArgumentType.getDouble(ct, "amount");
+                                    TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
+                                    ItemStack itemStack = ct.getSource().getPlayerOrException().getMainHandItem();
+                                    ResourceActionResult result = town.getResourceManager().addIfHaveCapacity(itemStack, amount);
+                                    if(result.isSuccess()){
+                                        ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added"), true);
+                                        return Command.SINGLE_SUCCESS;
+                                    } else ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added failed: No enough capacity."), true);
+                                    return Command.SINGLE_SUCCESS;
+                                })
+
                         );
 
         LiteralArgumentBuilder<CommandSourceStack> listResidents =
@@ -110,8 +140,10 @@ public class TownCommand {
                 .then(Commands.literal("town")
                         .then(name)
                         .then(Commands.literal("resources")
-                                .then(listResources)
-                                .then(addResources)
+                                .then(listItemStackResources)
+                                .then(listVirtualResources)
+                                .then(addVirtualResources)
+                                .then(addItemOnHand)
                         )
                         .then(Commands.literal("residents")
                                 .then(listResidents)

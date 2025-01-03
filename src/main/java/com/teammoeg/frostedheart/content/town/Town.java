@@ -19,9 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import com.teammoeg.frostedheart.content.town.resource.TownResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
-import com.teammoeg.frostedheart.content.town.resource.TownResourceType;
 
 import java.util.Optional;
 

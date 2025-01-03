@@ -242,6 +242,12 @@ public class FHRegistrateTags {
                 prov.getOrCreateRawBuilder(tag.tag);
             }
         }
+
+        //register for town tags
+        if(FHTags.NameSpace.MOD.alwaysDatagenDefault){
+            FHTags.Items.townTagsType.values().forEach(prov::getOrCreateRawBuilder);
+            FHTags.Items.townTagsLevel.values().forEach(prov::getOrCreateRawBuilder);
+        }
     }
 
     private static void genFluidTags(RegistrateTagsProvider<Fluid> provIn) {

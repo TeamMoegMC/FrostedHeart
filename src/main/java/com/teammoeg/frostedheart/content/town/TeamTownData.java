@@ -29,9 +29,6 @@ import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.town.mine.MineBlockEntity;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.TownResourceHolder;
-import com.teammoeg.frostedheart.content.town.resource.TownResourceKey;
-import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
-import com.teammoeg.frostedheart.content.town.resource.TownResourceType;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import net.minecraft.nbt.ListTag;
@@ -145,7 +142,7 @@ public class TeamTownData implements SpecialData{
         //    t.setData(world);
         //}
         //在目前的运行逻辑中，work方法不会改变任何应存储在TileEntity中的信息，因此暂时将此内容放在所有work之前。
-        teamTown.finishWork();
+        //teamTown.finishWork();此方法已随旧的TownResource一并弃用
     }
 
     public void tickMorning(ServerLevel world){
