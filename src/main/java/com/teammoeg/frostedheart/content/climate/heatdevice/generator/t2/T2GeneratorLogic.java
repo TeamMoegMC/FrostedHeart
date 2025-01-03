@@ -100,7 +100,7 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
                 BlockPos networkPos = ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock());
                 Direction dir = NETWORK_CAP.side().forFront(ctx.getLevel().getOrientation());
                // System.out.println(networkPos.relative(dir)+"-"+dir);
-                c.connect(ctx.getLevel().getRawLevel(),networkPos.relative(dir), dir);
+                c.connect(ctx.getLevel().getRawLevel(),networkPos.relative(dir), dir.getOpposite());
             });
         }
        

@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
- * An abstract Endpoint for A Heat Network.
+ * An abstract Endpoint for a Heat Network.
  */
 @Getter
 @ToString()
@@ -29,6 +29,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     HeatNetwork network;
     /**
      * The distance of this endpoint to network center.
+     * This value is only for measuring detach priority, not penalty would be apply for long distance
      */
     int distance = -1;
     /**
@@ -101,7 +102,8 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     @Getter
     float maxOutput = -1;
     /**
-     * Whether this endpoint receives more heat than it provides.
+     * Whether this endpoint receives more heat than the network currently provides.
+     * Used for display
      */
     boolean canCostMore = false;
 
@@ -148,12 +150,13 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     }
 
     /**
-     * Connect to a network to distance.
+     * The network call this method to provide information about the connection
+     * This should only called by network.
      *
      * @param network  the network
      * @param distance the distance
      */
-    public void connect(HeatNetwork network, int distance, BlockPos pos, Level level) {
+    public void setConnectionInfo(HeatNetwork network, int distance, BlockPos pos, Level level) {
         this.network = network;
         this.distance = distance;
         this.pos = pos;
@@ -231,7 +234,11 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     public boolean hasValidNetwork() {
         return network != null;
     }
-
+    /**
+     * This method is called by the network each tick to calculate average stats
+     * <p>
+     * This should be only called by the network, You should not call this method.
+     * */
     public void pushData() {
         if (avgIntake < 0)
             avgIntake = intake;

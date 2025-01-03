@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.steamenergy;
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
@@ -59,6 +60,9 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
      * All Endpoints of the network.
      */
     transient PriorityQueue<HeatEndpoint> endpoints = new PriorityQueue<>(Comparator.comparingInt(HeatEndpoint::getPriority).reversed().thenComparing(HeatEndpoint::getDistance));
+    /**
+     * A blockpos-distance map for existing pipelines
+     * */
     Map<BlockPos, Integer> propagated = new HashMap<>();
     /**
      * Interval ticks to re-scan network.
@@ -70,16 +74,11 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
     private transient Consumer<HeatConnector> onConnect;
     private final HeatConnector connect = (level, pos, d) -> {
         BlockEntity te = Utils.getExistingTileEntity(level, pos);
-        if (te instanceof NetworkConnector)
-            ((NetworkConnector) te).tryConnectTo(this, d, 1);
+        
+        if (te instanceof NetworkConnector nc)
+        	startPropagation(level,pos,nc,d);
         else if (te != null)
-            FHCapabilities.HEAT_EP.getCapability(te, d).ifPresent(t -> t.reciveConnection(level, pos, this, d, 1));
-        if (cur instanceof NetworkConnector) {
-            ((NetworkConnector) cur).tryConnectTo(this, d.getOpposite(), 0);
-        } else if (cur != null) {
-            FHCapabilities.HEAT_EP.getCapability(cur, d.getOpposite()).ifPresent(t -> t.reciveConnection(level, cur.getBlockPos(), this, d.getOpposite(), 0));
-        }
-
+            FHCapabilities.HEAT_EP.getCapability(te, d).ifPresent(t -> t.reciveConnection(level, pos, this, d, 0));
     };
 
     /**
@@ -103,7 +102,8 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
 
     @Override
     public void save(CompoundTag nbt, boolean isPacket) {
-        nbt.put("pipes",
+    	if(!isPacket)
+    		nbt.put("pipes",
                 SerializeUtil.toNBTList(propagated.entrySet(), (t, p) -> p.compound().putLong("pos", t.getKey().asLong()).putInt("len", t.getValue())));
         nbt.putFloat("totalEndpointOutput", totalEndpointOutput);
         nbt.putFloat("totalEndpointIntake", totalEndpointIntake);
@@ -111,12 +111,14 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
 
     @Override
     public void load(CompoundTag nbt, boolean isPacket) {
-        propagated.clear();
-        ListTag cn = nbt.getList("pipes", Tag.TAG_COMPOUND);
-        for (Tag ccn : cn) {
-            CompoundTag ccnbt = ((CompoundTag) ccn);
-            propagated.put(BlockPos.of(ccnbt.getLong("pos")), ccnbt.getInt("len"));
-        }
+    	if(!isPacket) {
+	        propagated.clear();
+	        ListTag cn = nbt.getList("pipes", Tag.TAG_COMPOUND);
+	        for (Tag ccn : cn) {
+	            CompoundTag ccnbt = ((CompoundTag) ccn);
+	            propagated.put(BlockPos.of(ccnbt.getLong("pos")), ccnbt.getInt("len"));
+	        }
+    	}
         totalEndpointOutput = nbt.getFloat("totalEndpointOutput");
         totalEndpointIntake = nbt.getFloat("totalEndpointIntake");
     }
@@ -135,10 +137,43 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
         return false;
     }
 
-    public void startPropagation(HeatPipeTileEntity hpte, Direction dir) {
-        hpte.connectTo(dir, this, propagated.getOrDefault(hpte.getBlockPos(), -1));
+    public <T extends BlockEntity&NetworkConnector> void startPropagation(T hpte, Direction dir) {
+    	propagate(hpte.getLevel(),hpte.getBlockPos(),hpte,dir, propagated.getOrDefault(hpte.getBlockPos(), -1));
+    }
+    public void startPropagation(Level l,BlockPos pos,NetworkConnector hpte, Direction dir) {
+    	connect(l,pos,hpte,dir, propagated.getOrDefault(pos, 0));
+    }
+    public  boolean connect(Level l,BlockPos pos,NetworkConnector connector, Direction to, int ndist) {
+    	 System.out.println("Connection requested"+pos+":"+to);
+        if (connector.getNetwork() == null || connector.getNetwork().getNetworkSize() <= getNetworkSize()) {
+        	connector.setNetwork(this);
+        }
+        if (shouldPropagate(pos, ndist)) {
+        	System.out.println("propagating");
+            this.propagate(l,pos,connector,to, ndist);
+        }
+        return true;
     }
 
+    protected void propagate(Level l,BlockPos fromPos,NetworkConnector connector,Direction from, int lengthx) {
+    	//Direction fromFace=from.getOpposite();
+        for (Direction d : Direction.values()) {
+            if (from == d) continue;
+            if(!connector.canConnectTo(d))continue;
+            
+            BlockPos n = fromPos.relative(d);
+            d = d.getOpposite();
+            
+            BlockEntity be=FHUtils.getExistingTileEntity(l, n);
+            System.out.println("fetching pipeette from"+n+":"+d+"-"+be);
+            if(be instanceof NetworkConnector nc) {
+            	System.out.println("trying to connect");
+            	if(nc.canConnectTo(d))
+            		connect(l,n,nc,d,lengthx+1);
+            }else
+            	HeatCapabilities.connect(this,l, n, d, lengthx + 1);
+        }	
+    }
     public int getNetworkSize() {
         return endpoints.size() + propagated.size();
     }
@@ -150,11 +185,11 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
     public boolean addEndpoint(HeatEndpoint heatEndpoint, int dist, Level level, BlockPos pos) {
         if (endpoints.contains(heatEndpoint)) {
             if (dist < heatEndpoint.getDistance()) {
-                heatEndpoint.connect(this, dist, pos, level);
+                heatEndpoint.setConnectionInfo(this, dist, pos, level);
                 return true;
             }
         } else {
-            heatEndpoint.connect(this, dist, pos, level);
+            heatEndpoint.setConnectionInfo(this, dist, pos, level);
             endpoints.add(heatEndpoint);
             return true;
         }
@@ -187,7 +222,23 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
     public boolean isUpdateRequested() {
         return interval >= 0;
     }
-
+    public void clearConnection(Level level) {
+        // Reset pipes Connection
+        for (BlockPos bp : propagated.keySet()) {
+        	NetworkConnector hpte = FHUtils.getExistingTileEntity(level, bp, NetworkConnector.class);
+            if (hpte != null) {
+                hpte.setNetwork(null);
+            }
+        }
+        // Clear pipes
+        propagated.clear();
+        // Reset endpoints
+        for (HeatEndpoint bp : endpoints) {
+            bp.clearConnection();
+        }
+        // Clear endpoints
+        endpoints.clear();
+    }
     /**
      * Tick.
      */
@@ -196,20 +247,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
         if (interval > 0) {
             interval--;
         } else if (interval == 0) {
-            // Check pipes
-            for (BlockPos bp : propagated.keySet()) {
-                HeatPipeTileEntity hpte = FHUtils.getExistingTileEntity(level, bp, HeatPipeTileEntity.class);
-                if (hpte != null) {
-                    hpte.ntwk = null;
-                }
-            }
-            // Clear pipes
-            propagated.clear();
-            // Clear endpoints
-            for (HeatEndpoint bp : endpoints) {
-                bp.clearConnection();
-            }
-            endpoints.clear();
+        	clearConnection(level);
             // Connect all pipes and endpoints again
             if (onConnect != null)
                 onConnect.accept(connect);
@@ -219,7 +257,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
         // Heat accumulated this tick!
         int tlevel = 1;
 
-        // Provide heat from the endpoints
+        // Retrieve heat from the endpoints
         float accumulated = 0;
         totalEndpointOutput = 0;
         for (HeatEndpoint endpoint : endpoints) {
@@ -254,17 +292,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
     }
 
     public void invalidate(Level l) {
-        for (BlockPos bp : propagated.keySet()) {
-            HeatPipeTileEntity hpte = FHUtils.getExistingTileEntity(l, bp, HeatPipeTileEntity.class);
-            if (hpte != null) {
-                hpte.ntwk = null;
-            }
-        }
-        propagated.clear();
-        for (HeatEndpoint bp : endpoints) {
-            bp.clearConnection();
-        }
-        endpoints.clear();
+    	clearConnection(l);
         interval = -1;
     }
 

@@ -37,8 +37,8 @@ import java.util.List;
 
 import static net.minecraft.ChatFormatting.GRAY;
 
-public class HeatPipeTileEntity extends PipeTileEntity implements FHTickableBlockEntity, HeatNetworkProvider, NetworkConnector, IHaveGoggleInformation {
-    HeatNetwork ntwk;
+public class HeatPipeTileEntity extends PipeTileEntity implements NetworkConnector, IHaveGoggleInformation {
+    HeatNetwork network;
     int cnt = 1;
 
     public HeatPipeTileEntity(BlockPos l, BlockState state) {
@@ -47,41 +47,17 @@ public class HeatPipeTileEntity extends PipeTileEntity implements FHTickableBloc
 
     @Override
     public boolean canConnectTo(Direction to) {
-        return true;
+        return this.getState().getValue(FluidPipeBlock.PROPERTY_BY_DIRECTION.get(to));
     }
-
-    public boolean connect(HeatNetwork network, Direction to, int ndist) {
-        if (ntwk == null || ntwk.getNetworkSize() < network.getNetworkSize()) {
-            ntwk = network;
-        }
-        if (ntwk.shouldPropagate(getBlockPos(), ndist)) {
-            this.propagate(to, ntwk, ndist);
-        }
-        return true;
-    }
-
-    public void connectTo(Direction d, HeatNetwork network, int lengthx) {
-        BlockPos n = this.getBlockPos().relative(d);
-
-        d = d.getOpposite();
-        HeatCapabilities.connect(network, getLevel(), n, d, lengthx + 1);
-
-    }
-
-    protected void propagate(Direction from, HeatNetwork network, int lengthx) {
-        for (Direction d : Direction.values()) {
-            if (from == d) continue;
-            connectTo(d, network, lengthx);
-        }
-    }
-
+	@Override
+	public void setNetwork(HeatNetwork network) {
+		this.network = network;
+	}
     @Override
     public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
-        if (descPacket) {
-        }
     }
 
-    @Override
+    /*@Override
     public void tick() {
         if (cnt > 0) {
             cnt--;
@@ -94,26 +70,24 @@ public class HeatPipeTileEntity extends PipeTileEntity implements FHTickableBloc
                 }
             }
         }
-    }
+    }*/
 
     @Override
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
-        if (descPacket) {
-        }
     }
 
     @Override
     public void onFaceChange(Direction dir, boolean isConnect) {
-        if (ntwk == null) return;
+        if (network == null) return;
         if (isConnect)
-            ntwk.startPropagation(this, dir);
+            network.startPropagation(this, dir);
         else
-            ntwk.requestUpdate();
+            network.requestUpdate();
     }
 
     @Override
     public HeatNetwork getNetwork() {
-        return ntwk;
+        return network;
     }
 
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
@@ -126,9 +100,9 @@ public class HeatPipeTileEntity extends PipeTileEntity implements FHTickableBloc
                 .style(GRAY)
                 .forGoggles(tooltip);
 
-        if (ntwk != null) {
-            output = ntwk.getTotalEndpointOutput();
-            intake = ntwk.getTotalEndpointIntake();
+        if (network != null) {
+            output = network.getTotalEndpointOutput();
+            intake = network.getTotalEndpointIntake();
         }
 
         Lang.number(intake)
@@ -150,4 +124,6 @@ public class HeatPipeTileEntity extends PipeTileEntity implements FHTickableBloc
         return true;
 
     }
+
+
 }

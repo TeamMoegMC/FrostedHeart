@@ -35,14 +35,21 @@ public class HeatCapabilities {
     public static boolean connect(HeatNetwork network, Level w, BlockPos pos, Direction d, int distance) {
         BlockEntity te = FHUtils.getExistingTileEntity(w, pos);
         if (te != null) {
+            
+            if (te instanceof NetworkConnector) {
+            	if(((NetworkConnector) te).canConnectTo(d)) {
+            		((NetworkConnector) te).setNetwork(network);
+            		return true;
+            	}
+            	return false;
+            }
+            
             LazyOptional<HeatEndpoint> ep = te.getCapability(FHCapabilities.HEAT_EP.capability(), d);
             if (ep.isPresent())
                 return ep.orElse(null).reciveConnection(w, pos, network, d, distance);
-            if (te instanceof NetworkConnector)
-                return ((NetworkConnector) te).tryConnectTo(network, d, distance);
+
         }
         return false;
     }
-
 
 }

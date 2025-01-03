@@ -22,41 +22,25 @@ package com.teammoeg.frostedheart.content.steamenergy;
 import net.minecraft.core.Direction;
 
 /**
- * Any HeatPipe-like BlockEntity that actively connects to a network.
+ * Any HeatPipe-like BlockEntity that network should treat it as transmitter.
+ * The network would no longer check capability api for endpoints
  */
-public interface NetworkConnector {
+public interface NetworkConnector extends HeatNetworkProvider{
 
     /**
      * Check if this can connect to a certain direction.
      *
-     * @param to the direction to connect to.
+     * @param to the direction to connect to, outbounds the current block
      * @return true, if this can connect to the direction.
      */
     boolean canConnectTo(Direction to);
 
 
     /**
-     * Received Connection from any heat provider.<br>
-     * Usually you should call receiveConnection.
+     * Heat network should call this to update cache for the pipe
      *
-     * @param d the direction connection from
-     * @param distance the distance
+     * @param network
      * @return true, if connected successfully
      */
-    boolean connect(HeatNetwork network, Direction d, int distance);
-
-
-    /**
-     * Try to connect to a certain direction.<br>
-     * Provider should use this to connect to devices.
-     *
-     * @param dir the direction
-     * @param distance the distance
-     * @return true, if connected successfully
-     */
-    default boolean tryConnectTo(HeatNetwork network, Direction dir, int distance) {
-        if (canConnectTo(dir))
-            return connect(network, dir, distance);
-        return false;
-    }
+    void setNetwork(HeatNetwork network);
 }
