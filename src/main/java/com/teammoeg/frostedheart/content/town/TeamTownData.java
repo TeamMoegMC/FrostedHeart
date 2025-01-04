@@ -208,11 +208,6 @@ public class TeamTownData implements SpecialData{
         });
     }
 
-	@Override
-	public void setHolder(SpecialDataHolder holder) {
-
-	}
-
     private void checkOccupiedAreaOverlap(){
         //removeNonTownBlocks(world);
         Collection<TownWorkerData> workerDataCollection =  new ArrayList<>(blocks.values());

@@ -19,35 +19,32 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import java.util.function.Supplier;
-
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.core.Direction;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.LevelAccessor;
 
-public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements FHEntityBlock<HeatPipeTileEntity>{
+import java.util.function.Supplier;
+
+public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements FHEntityBlock<HeatPipeTileEntity> {
 
     public HeatPipeBlock(Properties blockProps) {
-        super(HeatPipeBlock.class,  blockProps);
+        super(HeatPipeBlock.class, blockProps);
         this.lightOpacity = 0;
     }
 
 
     @Override
-	public boolean canConnectTo(LevelAccessor world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
-		return HeatCapabilities.canConnectAt(world, neighbourPos, direction.getOpposite());
-	}
-
-
+    public boolean canConnectTo(LevelAccessor world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
+        return HeatCapabilities.canConnectAt(world, neighbourPos, direction.getOpposite());
+    }
 
 
     @Override
@@ -56,10 +53,10 @@ public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements FHEn
     }
 
 
-	@Override
-	public Supplier<BlockEntityType<HeatPipeTileEntity>> getBlock() {
-		return FHBlockEntityTypes.HEATPIPE;
-	}
+    @Override
+    public Supplier<BlockEntityType<HeatPipeTileEntity>> getBlock() {
+        return FHBlockEntityTypes.HEATPIPE;
+    }
 
 
 }

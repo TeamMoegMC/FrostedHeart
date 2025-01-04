@@ -19,6 +19,16 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import static com.teammoeg.frostedheart.FHMain.*;
+import static com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen.*;
+import static com.teammoeg.frostedheart.infrastructure.gen.FHTagGen.*;
+import static net.minecraft.world.level.block.Blocks.*;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import com.google.common.collect.ImmutableMap;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.AssetLookup;
@@ -31,8 +41,15 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
 import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
-import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.decoration.*;
+import com.teammoeg.frostedheart.content.decoration.BoneBlock;
+import com.teammoeg.frostedheart.content.decoration.OddMark;
+import com.teammoeg.frostedheart.content.decoration.PackageBlock;
+import com.teammoeg.frostedheart.content.decoration.PebbleBlock;
+import com.teammoeg.frostedheart.content.decoration.RelicChestBlock;
+import com.teammoeg.frostedheart.content.decoration.SmallGarage;
+import com.teammoeg.frostedheart.content.decoration.SmokeBlockT1;
+import com.teammoeg.frostedheart.content.decoration.WoodenBox;
+import com.teammoeg.frostedheart.content.decoration.bloodBlock;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
 import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskBlock;
@@ -53,16 +70,25 @@ import com.teammoeg.frostedheart.content.town.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.warehouse.WarehouseBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentBlock;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerBlock;
-import com.teammoeg.frostedheart.infrastructure.gen.FHLootGen;
 import com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen;
+import com.teammoeg.frostedheart.infrastructure.gen.FHLootGen;
 import com.tterrag.registrate.providers.loot.RegistrateBlockLootTables;
 import com.tterrag.registrate.util.entry.BlockEntry;
+
 import net.minecraft.data.loot.packs.VanillaBlockLoot;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DropExperienceBlock;
+import net.minecraft.world.level.block.HugeMushroomBlock;
+import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
+import net.minecraft.world.level.block.SnowyDirtBlock;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount;
@@ -71,16 +97,6 @@ import net.minecraftforge.common.Tags;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
-import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
-import static com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen.*;
-import static com.teammoeg.frostedheart.infrastructure.gen.FHTagGen.*;
-import static net.minecraft.world.level.block.Blocks.*;
 
 public class FHBlocks {
 

@@ -8,9 +8,9 @@ import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.RangedAttribute;
-import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 public class FHAttributes {
 	public static final DeferredRegister<Attribute> REGISTER=DeferredRegister.create(ForgeRegistries.ATTRIBUTES, FHMain.MODID);

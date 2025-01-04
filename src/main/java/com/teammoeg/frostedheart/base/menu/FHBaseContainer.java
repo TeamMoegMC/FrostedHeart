@@ -198,7 +198,7 @@ public abstract class FHBaseContainer extends AbstractContainerMenu {
 	public void addDataSlot(SyncableDataSlot<?> slot) {
 		specialDataSlots.add(slot);
 	}
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void processPacket(FHContainerDataSync packet) {
 		packet.forEach((i,o)->{
 			((SyncableDataSlot)specialDataSlots.get(i)).setValue(o);

@@ -19,42 +19,43 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
+import lombok.Getter;
 import lombok.ToString;
 
 /**
- * Class SteamNetworkConsumer.
- * <p>
- * Integrated power cache manager for power devices
- * A device should properly "request" power from the network
+ * A heat endpoint for heat consuming devices.
+ * A device should properly receive power from the network.
  */
 @ToString(callSuper = true)
-public class HeatConsumerEndpoint extends HeatCapacityEndpoint {
-    /**
-     * The max intake value.<br>
-     */
-    public final float maxIntake;
-    
+public class HeatConsumerEndpoint extends HeatEndpoint {
     /**
      * Instantiates a new SteamNetworkConsumer.<br>
      *
-     * @param priority consumer priority, if power is low, endpoint with lower priority would detach first
-     * @param maxPower  the max power to store<br>
+     * @param priority  consumer priority, if power is low, endpoint with lower priority would detach first
+     * @param capacity  the max heat capacity<br>
      * @param maxIntake the max heat requested from network<br>
      */
-    public HeatConsumerEndpoint(int priority, float maxPower, float maxIntake) {
-        super(priority, Math.max(maxPower, maxIntake));
+    public HeatConsumerEndpoint(int priority, float capacity, float maxIntake) {
+        super(priority, Math.max(capacity, maxIntake));
         this.maxIntake = maxIntake;
     }
+
     /**
      * Instantiates a new SteamNetworkConsumer with recommended cache value.<br>
      * maxPower defaults to four times maxIntake. <br>
+     *
      * @param maxIntake the max heat requested from network<br>
      */
     public HeatConsumerEndpoint(float maxIntake) {
-        super(0, maxIntake*4);
+        super(0, maxIntake * 4);
         this.maxIntake = maxIntake;
     }
-    
+
+    public HeatConsumerEndpoint(float capacity, float maxIntake) {
+        super(0, Math.max(capacity, maxIntake));
+        this.maxIntake = maxIntake;
+    }
+
     /**
      * Drain heat from this endpoint.
      *
@@ -68,27 +69,25 @@ public class HeatConsumerEndpoint extends HeatCapacityEndpoint {
     }
 
     public float receiveHeat(float filled, int level) {
-    	float required=Math.min(maxIntake, capacity - heat);
-    	tempLevel=level;
-    	if(required>0) {
-	    	if(filled>=required) {
-	    		filled-=required;
-	    		heat +=required;
-	    		return filled;
-	    	}
-	    	heat +=filled;
-	    	return 0;
-    	}
-    	return filled;
+        float required = Math.min(maxIntake, capacity - heat);
+        tempLevel = level;
+        if (required > 0) {
+            if (filled >= required) {
+                filled -= required;
+                heat += required;
+                return filled;
+            }
+            heat += filled;
+            return 0;
+        }
+        return filled;
     }
 
-
-
     /**
-     * Try drain heat from this endpoint.
+     * Try drain heat from this endpoint if there is enough heat.
      *
-     * @param val the heat value to drain
-     * @return true, if the heat value can all drained
+     * @param val the amount of heat to drain
+     * @return if the heat is drained successfully
      */
     public boolean tryDrainHeat(float val) {
         if (heat >= val) {
@@ -97,15 +96,25 @@ public class HeatConsumerEndpoint extends HeatCapacityEndpoint {
         }
         return false;
     }
-	public boolean canProvideHeat() {
-		return false;
-	}
 
-	@Override
-	public float provideHeat() {
-		return 0;
-	}
-	public float getMaxIntake() {
-		return maxIntake;
-	}
+    // Consumer cannot provide heat
+    public boolean canProvideHeat() {
+        return false;
+    }
+
+    // Consumer cannot provide heat
+    @Override
+    public float provideHeat() {
+        return 0;
+    }
+
+    @Override
+    public float getMaxIntake() {
+        return maxIntake;
+    }
+
+    @Override
+    public float getMaxOutput() {
+        return 0;
+    }
 }

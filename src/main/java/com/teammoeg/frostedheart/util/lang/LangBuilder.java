@@ -127,6 +127,10 @@ public class LangBuilder {
         return add(Components.literal(literalText).withStyle(s -> s.withColor(color)));
     }
 
+    public LangBuilder number(double d) {
+        return add(Components.literal(LangNumberFormat.format(d)));
+    }
+
     /**
      * Appends the contents of another builder
      *

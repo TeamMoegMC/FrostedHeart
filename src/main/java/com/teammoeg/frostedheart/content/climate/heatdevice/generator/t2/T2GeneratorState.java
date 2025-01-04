@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorState;
-import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.capability.IFluidHandler;
@@ -13,7 +13,7 @@ public class T2GeneratorState extends GeneratorState {
     public FluidTank tank = new FluidTank(TANK_CAPACITY,
             f -> GeneratorSteamRecipe.findRecipe(f) != null);
     public LazyOptional<IFluidHandler> tankCap = LazyOptional.of(() -> tank);
-    HeatEnergyNetwork manager=new HeatEnergyNetwork();
+    HeatNetwork manager=new HeatNetwork();
 
     int liquidtick = 0;
     int noliquidtick = 0;

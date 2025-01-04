@@ -19,44 +19,40 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-
-import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
-
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
-
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.tags.FluidTags;
-import net.minecraft.core.Direction;
-import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
-public class FountainTileEntity extends IEBaseBlockEntity implements
-        INetworkConsumer, FHTickableBlockEntity, FHBlockInterfaces.IActiveState {
+public class FountainTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity, FHBlockInterfaces.IActiveState {
 
+    public static final int RANGE_PER_NOZZLE = 1;
+    public static final int MAX_HEIGHT = 5;
     private static final UUID WARMTH_EFFECT_UUID = UUID.fromString("95c1f024-8f3a-4828-aaa7-a86733cffbf2");
     private static final float POWER_CAP = 400;
     private static final float REFILL_THRESHOLD = 200;
-    public static final int RANGE_PER_NOZZLE = 1;
-    public static final int MAX_HEIGHT = 5;
-
+    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 10, 1);
+    LazyOptional<HeatConsumerEndpoint> heatcap = LazyOptional.of(() -> network);
     private float power = 0;
     private boolean refilling = false;
     private int height = 0;
@@ -64,29 +60,16 @@ public class FountainTileEntity extends IEBaseBlockEntity implements
     private boolean heatAdjusted = false;
     private float lastTemp;
 
-    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 10, 1);
-
-    public FountainTileEntity(BlockPos pos,BlockState state) {
-        super(FHBlockEntityTypes.FOUNTAIN.get(),pos,state);
+    public FountainTileEntity(BlockPos pos, BlockState state) {
+        super(FHBlockEntityTypes.FOUNTAIN.get(), pos, state);
     }
 
-    LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
     @Nonnull
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
-        if(capability== FHCapabilities.HEAT_EP.capability()&&facing==Direction.DOWN) {
+        if (capability == FHCapabilities.HEAT_EP.capability() && facing == Direction.DOWN) {
             return heatcap.cast();
         }
         return super.getCapability(capability, facing);
-    }
-
-    @Override
-    public boolean canConnectAt(Direction to) {
-        return to == Direction.DOWN;
-    }
-
-    @Override
-    public boolean connect(HeatEnergyNetwork network, Direction d, int distance) {
-        return false;
     }
 
     public boolean isWorking() {
@@ -249,7 +232,7 @@ public class FountainTileEntity extends IEBaseBlockEntity implements
         lastTemp = networkTemp;
 
         removeHeat();
-        ChunkHeatData.addPillarTempAdjust(level, worldPosition, (heatRange = range), height + 1,1, (int) lastTemp * 15);
+        ChunkHeatData.addPillarTempAdjust(level, worldPosition, (heatRange = range), height + 1, 1, (int) lastTemp * 15);
         heatAdjusted = true;
     }
 
@@ -258,7 +241,7 @@ public class FountainTileEntity extends IEBaseBlockEntity implements
     }
 
 
-	@Override
+    @Override
     public void setRemovedIE() {
         super.setRemovedIE();
         removeHeat();

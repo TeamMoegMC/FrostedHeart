@@ -26,6 +26,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.SpecialData;
 import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.steamenergy.HeatProviderEndPoint;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -92,11 +93,10 @@ public class GeneratorData implements SpecialData {
     public HeatProviderEndPoint ep = new HeatProviderEndPoint(200);
     public LazyOptional<HeatProviderEndPoint> epcap = LazyOptional.of(() -> ep);
     public ResourceKey<Level> dimension;
-    private SpecialDataHolder<? extends SpecialDataHolder> teamData;
 
-    public GeneratorData(SpecialDataHolder teamResearchData) {
-        teamData = teamResearchData;
+    public GeneratorData(SpecialDataHolder teamData) {
     }
+
 
     public GeneratorData(int process, int processMax, int steamProcess, int overdriveLevel, boolean[] flags, float steamLevel, float power, int heated, int ranged, Optional<Fluid> fluid, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, BlockPos actualPos, Optional<ResourceLocation> dimension) {
         super();
@@ -133,7 +133,7 @@ public class GeneratorData implements SpecialData {
         return false;
     }
 
-    public boolean consumesFuel(Level w) {
+    public boolean consumesFuel(Level w,SpecialDataHolder<?> teamData) {
         if (!currentItem.isEmpty()) {
             if (!inventory.getStackInSlot(OUTPUT_SLOT).isEmpty() && ItemHandlerHelper.canItemStacksStack(inventory.getStackInSlot(OUTPUT_SLOT), currentItem))
                 inventory.getStackInSlot(OUTPUT_SLOT).grow(currentItem.getCount());
@@ -147,7 +147,7 @@ public class GeneratorData implements SpecialData {
             inventory.extractItem(INPUT_SLOT, count, false);
             currentItem = recipe.output.copy();
             currentItem.setCount(currentItem.getCount());
-            double effi = getEfficiency();
+            double effi = getEfficiency(teamData);
             this.process = (int) (recipe.time * effi);
             this.processMax = process;
             return true;
@@ -159,7 +159,7 @@ public class GeneratorData implements SpecialData {
         return false;
     }
 
-    protected double getEfficiency() {
+    protected double getEfficiency(SpecialDataHolder<?> teamData) {
         return teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
     }
 
@@ -191,11 +191,11 @@ public class GeneratorData implements SpecialData {
      * But does not update the heat adjust. That is done in HeatingLogic#serverTick
      * @param w
      */
-    public void tick(Level w) {
-        isActive = tickFuelProcess(w);
+    public void tick(Level w,SpecialDataHolder<?> teamData) {
+        isActive = tickFuelProcess(w,teamData);
         tickHeatedProcess(w);
         if (isActive && power > 0)
-            ep.setHeat((float) (power * getHeatEfficiency()));
+            ep.setHeat((float) (power * getHeatEfficiency(teamData)));
     }
 
     public void tickHeatedProcess(Level world) {
@@ -232,7 +232,7 @@ public class GeneratorData implements SpecialData {
 
     }
 
-    public boolean tickFuelProcess(Level w) {
+    public boolean tickFuelProcess(Level w,SpecialDataHolder<?> teamData) {
         if (!isWorking || isBroken)
             return false;
         boolean hasFuel = true;
@@ -241,7 +241,7 @@ public class GeneratorData implements SpecialData {
         	
         if (isOverdrive) {
             while (process <= 1 && hasFuel) {
-                hasFuel = consumesFuel(w);
+                hasFuel = consumesFuel(w,teamData);
             }
             overdriveLevel += 20;
             if(overdriveLevel<0)
@@ -259,7 +259,7 @@ public class GeneratorData implements SpecialData {
             if(overdriveLevel<0)
             	overdriveLevel=0;
             while (process <= 0 && hasFuel) {
-                hasFuel = consumesFuel(w);
+                hasFuel = consumesFuel(w,teamData);
             }
             if (process > 0) {
                 process--;
@@ -280,7 +280,7 @@ public class GeneratorData implements SpecialData {
         steamProcess = 0;
     }
 
-    protected double getHeatEfficiency() {
+    protected double getHeatEfficiency(SpecialDataHolder<?> teamData) {
 
         return 1 + teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_HEAT);
     }
@@ -333,10 +333,5 @@ public class GeneratorData implements SpecialData {
      */
     public int getTempMod() {
         return (int) (TLevel * 10);
-    }
-
-    @Override
-    public void setHolder(SpecialDataHolder holder) {
-        this.teamData = holder;
     }
 }

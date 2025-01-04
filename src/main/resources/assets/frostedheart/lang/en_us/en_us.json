@@ -420,11 +420,17 @@
   "tooltip.frostedheart.keyCtrl": "Ctrl",
   "tooltip.frostedheart.keyS": "S",
   "tooltip.frostedheart.nutrition": "Nutrition",
+  "tooltip.frostedheart.pressure": "Superheated Steam",
+  "tooltip.frostedheart.pressure.intake": "Consuming At Current Temperature",
+  "tooltip.frostedheart.pressure.output": "Generating At Current Temperature",
+  "tooltip.frostedheart.at_current_heat": "At Current Temperature",
+  "tooltip.frostedheart.heat_stats": "Pressure Stats",
   "frostedheart.tooltip.food_temp_change": "Temperature Change: ",
   "waypoint.frostedheart.columbiat": "Columbiat",
   "waypoint.frostedheart.distance": "Distance: %d blocks",
   "waypoint.frostedheart.entity_health": "❤ %s / %s",
   "waypoint.frostedheart.lost_target": "⚠ Target lost",
   "waypoint.frostedheart.position": "[X: %s, Y: %s, Z: %s]",
-  "waypoint.frostedheart.sun_station": "Sun Station"
+  "waypoint.frostedheart.sun_station": "Sun Station",
+  "generic.frostedheart.unit.pressure": "kPa"
 }

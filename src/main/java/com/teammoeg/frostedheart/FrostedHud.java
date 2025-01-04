@@ -23,13 +23,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.mixin.client.BossHealthOverlayAccess;
 import com.teammoeg.frostedheart.util.client.*;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.world.level.border.WorldBorder;
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;

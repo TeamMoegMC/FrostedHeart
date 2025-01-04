@@ -19,12 +19,10 @@
 
 package com.teammoeg.frostedheart.bootstrap.reference;
 
-import com.teammoeg.frostedheart.FHMain;
-
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.MapColor;
 
 public class FHProps {
     public static final BlockBehaviour.Properties stoneDecoProps = BlockBehaviour.Properties

@@ -19,6 +19,28 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-public interface EnergyNetworkProvider {
-	HeatEnergyNetwork getNetwork();
+import net.minecraft.core.Direction;
+
+/**
+ * Any HeatPipe-like BlockEntity that network should treat it as transmitter.
+ * The network would no longer check capability api for endpoints
+ */
+public interface NetworkConnector extends HeatNetworkProvider{
+
+    /**
+     * Check if this can connect to a certain direction.
+     *
+     * @param to the direction to connect to, outbounds the current block
+     * @return true, if this can connect to the direction.
+     */
+    boolean canConnectTo(Direction to);
+
+
+    /**
+     * Heat network should call this to update cache for the pipe
+     *
+     * @param network
+     * @return true, if connected successfully
+     */
+    void setNetwork(HeatNetwork network);
 }

@@ -30,14 +30,13 @@ import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMulti
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
-import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -101,15 +100,18 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
                 BlockPos networkPos = ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock());
                 Direction dir = NETWORK_CAP.side().forFront(ctx.getLevel().getOrientation());
                // System.out.println(networkPos.relative(dir)+"-"+dir);
-                c.connect(ctx.getLevel().getRawLevel(),networkPos.relative(dir), dir);
+                c.connect(ctx.getLevel().getRawLevel(),networkPos.relative(dir), dir.getOpposite());
             });
         }
        
         getData(ctx).ifPresent(t->{
-        	if(!t.ep.hasValidNetwork())
-        		ctx.getState().manager.addEndpoint(ctx.getLevel().getRawLevel(),  ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock()), t.ep, 0);
+        	if(!t.ep.hasValidNetwork()) {
+                BlockPos pos = ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock());
+                Level level = ctx.getLevel().getRawLevel();
+                ctx.getState().manager.addEndpoint(t.ep, 0, level, pos);
+            }
         });
-        if (ctx.getState().manager.data.size() <= 1 && !ctx.getState().manager.isUpdateRequested()) {
+        if (ctx.getState().manager.getNumEndpoints() <= 1 && !ctx.getState().manager.isUpdateRequested()) {
             ctx.getState().manager.requestSlowUpdate();
             
         }

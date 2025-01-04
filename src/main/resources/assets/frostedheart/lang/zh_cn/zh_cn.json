@@ -919,5 +919,15 @@
   "tooltip.frostedheart.holdForTemperature": "按住 [%1$s] 可查看温度信息",
   "tooltip.frostedheart.keyShift": "Shift",
   "tooltip.frostedheart.keyCtrl": "Ctrl",
-  "tooltip.frostedheart.keyS": "S"
+  "tooltip.frostedheart.keyS": "S",
+  "item.frostedheart.flux": "助焊剂",
+  "message.frostedheart.info.air_temperature": "Air temperature this block: %s",
+  "tooltip.frostedheart.holdForNutrition": "Hold [%1$s] for Nutrition Info",
+  "tooltip.frostedheart.nutrition": "营养",
+  "tooltip.frostedheart.pressure": "过热蒸汽",
+  "tooltip.frostedheart.pressure.intake": "当前温度消耗气压值",
+  "tooltip.frostedheart.pressure.output": "当前温度产生气压值",
+  "tooltip.frostedheart.at_current_heat": "当前温度",
+  "tooltip.frostedheart.heat_stats": "系统气压状态",
+  "generic.frostedheart.unit.pressure": "千帕"
 }

@@ -22,22 +22,18 @@ package com.teammoeg.frostedheart.content.steamenergy;
 import lombok.ToString;
 
 /**
- * Integrated power cache manager for power generating devices
- * A device should properly "gives" power from the network
+ * A heat endpoint for heat generating devices.
+ * A device should properly provide power to the network.
  */
 @ToString(callSuper = true)
-public class HeatProviderEndPoint extends HeatCapacityEndpoint {
+public class HeatProviderEndPoint extends HeatEndpoint {
 
-    /**
-     * The maximum heat output of this provider.<br>
-     */
-    public final float maxOutput;
 
     /**
      * Instantiates HeatProviderEndPoint.<br>
      *
-     * @param priority if power is low, endpoint with lower priority would detach first
-     * @param capacity the max power to store<br>
+     * @param priority  if power is low, endpoint with lower priority would detach first
+     * @param capacity  the max power to store<br>
      * @param maxOutput the max heat put to network<br>
      */
     public HeatProviderEndPoint(int priority, float capacity, float maxOutput) {
@@ -53,10 +49,10 @@ public class HeatProviderEndPoint extends HeatCapacityEndpoint {
         this.maxOutput = maxOutput;
     }
 
-	public HeatProviderEndPoint(float capacity, float maxOutput) {
-		super(0, capacity);
-		this.maxOutput = maxOutput;
-	}
+    public HeatProviderEndPoint(float capacity, float maxOutput) {
+        super(0, Math.max(capacity, maxOutput));
+        this.maxOutput = maxOutput;
+    }
 
     public boolean canReceiveHeat() {
         return false;
@@ -75,11 +71,11 @@ public class HeatProviderEndPoint extends HeatCapacityEndpoint {
         heat = Math.min(capacity, heat + added);
     }
 
-	/**
-	 * Provide heat bounded by the maximum output.
-	 *
-	 * @return the amount of heat actually provided
-	 */
+    /**
+     * Provide heat bounded by the maximum output.
+     *
+     * @return the amount of heat actually provided
+     */
     @Override
     public float provideHeat() {
         float provided = Math.min(heat, maxOutput);
@@ -91,5 +87,10 @@ public class HeatProviderEndPoint extends HeatCapacityEndpoint {
     @Override
     public float getMaxIntake() {
         return 0;
+    }
+
+    @Override
+    public float getMaxOutput() {
+        return maxOutput;
     }
 }
