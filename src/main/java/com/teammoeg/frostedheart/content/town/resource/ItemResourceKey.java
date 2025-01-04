@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.content.town.resource;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHTags;
+import lombok.Getter;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
@@ -15,9 +16,10 @@ import java.util.concurrent.atomic.AtomicReference;
  * Holds the resource type and the level.
  * The amount of a resource with specific type and level can be read using this key.
  */
+@Getter
 public class ItemResourceKey implements ITownResourceKey {
     public final ItemResourceType type;
-    private int level;
+    private final int level;
 
     public static final Codec<ItemResourceKey> CODEC = RecordCodecBuilder.create(t -> t.group(
             ItemResourceType.CODEC.fieldOf("type").forGetter(o->o.type),
@@ -72,14 +74,6 @@ public class ItemResourceKey implements ITownResourceKey {
                     }
                 });
         return new ItemResourceKey(type.get(), level.get());
-    }
-
-    public ItemResourceType getType(){
-        return type;
-    }
-
-    public int getLevel() {
-        return level;
     }
 
     @Override

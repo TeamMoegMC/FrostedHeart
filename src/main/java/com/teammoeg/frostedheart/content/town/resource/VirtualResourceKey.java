@@ -2,10 +2,12 @@ package com.teammoeg.frostedheart.content.town.resource;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import lombok.Getter;
 
+@Getter
 public class VirtualResourceKey implements ITownResourceKey{
     public final VirtualResourceType type;
-    private int level;
+    private final int level;
 
     public static final Codec<VirtualResourceKey> CODEC = RecordCodecBuilder.create(t -> t.group(
                     VirtualResourceType.CODEC.fieldOf("type").forGetter(o->o.type),
@@ -40,14 +42,6 @@ public class VirtualResourceKey implements ITownResourceKey{
         return new VirtualResourceKey(type);
     }
 
-    public VirtualResourceType getType(){
-        return type;
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -60,6 +54,10 @@ public class VirtualResourceKey implements ITownResourceKey{
     @Override
     public int hashCode() {
         return type.hashCode()*31+level;
+    }
+
+    public String toString(){
+        return type.getKey()+"_level:"+level;
     }
 
 }

@@ -1,8 +1,5 @@
 package com.teammoeg.frostedheart.content.town.resource;
 
-import com.mojang.serialization.Codec;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
-
 public interface ITownResourceType {
     int getMaxLevel();
 

@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.infrastructure.command;
 
 import java.util.Arrays;
+import java.util.HashMap;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
@@ -61,6 +62,7 @@ public class TownCommand {
                 Commands.literal("list_virtual")
                         .executes(ct -> {
                             TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
+                            System.out.println(town.getResourceManager().resourceHolder.getAllVirtualResources());
                             ct.getSource().sendSuccess(()->TranslateUtils.str(town.getResourceManager().resourceHolder.getAllVirtualResources() ), true);
                             return Command.SINGLE_SUCCESS;
                         });
@@ -94,6 +96,7 @@ public class TownCommand {
                                     double amount = DoubleArgumentType.getDouble(ct, "amount");
                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                                     ItemStack itemStack = ct.getSource().getPlayerOrException().getMainHandItem();
+                                    ct.getSource().sendSuccess(()->TranslateUtils.str("Adding ItemStack: " + itemStack), true);
                                     ResourceActionResult result = town.getResourceManager().addIfHaveCapacity(itemStack, amount);
                                     if(result.isSuccess()){
                                         ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added"), true);

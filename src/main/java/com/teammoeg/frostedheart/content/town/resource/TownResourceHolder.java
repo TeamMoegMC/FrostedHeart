@@ -54,8 +54,8 @@ public class TownResourceHolder {
     }
 
     public double get(ItemStack itemStack){
-        itemStack.setCount(1);
-        return itemResources.getOrDefault(ItemResourceKey.fromItemStack(itemStack), Collections.emptyMap()).getOrDefault(itemStack, 0.0);
+        ItemStack itemStackCopy = itemStack.copyWithCount(1);
+        return itemResources.getOrDefault(ItemResourceKey.fromItemStack(itemStackCopy), Collections.emptyMap()).getOrDefault(itemStackCopy, 0.0);
     }
 
     public double get(ITownResourceKey key){
@@ -73,8 +73,7 @@ public class TownResourceHolder {
      * If you have already gotten the key of item, you can use this method to reduce the times of reading tags from ItemStack
      */
     public double get(ItemResourceKey key, ItemStack itemStack){
-        itemStack.setCount(1);
-        return itemResources.getOrDefault(key, Collections.emptyMap()).getOrDefault(itemStack, 0.0);
+        return itemResources.getOrDefault(key, Collections.emptyMap()).getOrDefault(itemStack.copyWithCount(1), 0.0);
     }
 
     /**
@@ -83,7 +82,7 @@ public class TownResourceHolder {
      */
     public Map<ItemStack, Double> getAllItems(){
         Map<ItemStack, Double> resources = new HashMap<>();
-        itemResources.forEach((key, map) -> map.forEach((item, amount) -> resources.merge(item, amount, Double::sum)));
+        itemResources.forEach((key, map) -> resources.putAll(map));
         return resources;
     }
 
@@ -129,8 +128,7 @@ public class TownResourceHolder {
     void addUnsafe(ItemResourceKey key, ItemStack itemStack, double amount){
         if(itemStack.isEmpty()) return;
         this.occupiedCapacity += amount;
-        itemStack.setCount(1);
-        itemResources.get(key).merge(itemStack, amount, Double::sum);
+        itemResources.computeIfAbsent(key, k->new HashMap<>()).merge(itemStack.copyWithCount(1), amount, Double::sum);
     }
 
     /**

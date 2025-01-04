@@ -13,11 +13,6 @@ import java.util.Map;
 public class TownResourceManager {
     public final TownResourceHolder resourceHolder;
 
-    public static final Codec<TownResourceManager> CODEC = RecordCodecBuilder.create(t -> t.group(
-                    TownResourceHolder.CODEC.fieldOf("holder").forGetter(o->o.resourceHolder)
-            ).apply(t, TownResourceManager::new)
-    );
-
     public TownResourceManager(TownResourceHolder holder){
         this.resourceHolder = holder;
     }
