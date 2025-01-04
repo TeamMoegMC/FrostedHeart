@@ -6,10 +6,7 @@ import com.teammoeg.frostedheart.util.io.CodecUtil;
 import lombok.Getter;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.DoubleAdder;
 
 /**
@@ -34,19 +31,13 @@ public class TownResourceHolder {
             ).apply(t, TownResourceHolder::new)
     );
 
-
-    //used to debug
-    public TownResourceHolder(Map<ItemResourceKey, Map<ItemStack, Double>> itemResources/*, Map<VirtualResourceKey, Double> virtualResources*/, double occupiedCapacity) {
-        this.itemResources = itemResources;
-        //this.virtualResources = virtualResources;
-        this.occupiedCapacity = occupiedCapacity;
-    }
-
     public TownResourceHolder() {}
     public TownResourceHolder(Map<ItemResourceKey, Map<ItemStack, Double>> itemResources, Map<VirtualResourceKey, Double> virtualResources, double occupiedCapacity) {
         this.itemResources = itemResources;
         this.virtualResources = virtualResources;
         this.occupiedCapacity = occupiedCapacity;
+        reorganizeItems();
+        removeZeros();
     }
 
     public TownResourceHolder(Map<ItemResourceKey, Map<ItemStack, Double>> itemResources, Map<VirtualResourceKey, Double> virtualResources) {
@@ -58,6 +49,8 @@ public class TownResourceHolder {
         this.itemResources = itemResources;
         this.virtualResources = virtualResources;
         this.occupiedCapacity = adder.doubleValue();
+        reorganizeItems();
+        removeZeros();
     }
 
     public double get(ItemStack itemStack){
@@ -106,15 +99,6 @@ public class TownResourceHolder {
         return Map.copyOf(virtualResources);
     }
 
-    /**
-     * Remove all items and virtual resources with zero amount from map.
-     */
-    public void removeZeros(){
-        for(Map<ItemStack, Double> map : itemResources.values()){
-            map.entrySet().removeIf(entry -> entry.getValue() == 0);
-        }
-        virtualResources.entrySet().removeIf(entry -> entry.getValue() == 0);
-    }
 
     /**
      * Add resource to the town without checking capacity.
@@ -238,5 +222,36 @@ public class TownResourceHolder {
             this.addUnsafe(key, different);
         }
         else virtualResources.put(key, amount);
+    }
+
+    /**
+     * 将物品从不正确的key下移动到正确的key下，这样当物品对应的key在不同的版本中发生变化，TownResourceHolder仍能正常工作
+     */
+    void reorganizeItems(){
+        for(Map.Entry<ItemResourceKey, Map<ItemStack, Double>> entry0 : itemResources.entrySet()){
+            ItemResourceKey key = entry0.getKey();
+            Map<ItemStack, Double> itemAmountMap = entry0.getValue();
+            ArrayList<ItemStack> toRemove = new ArrayList<>();
+            for(Map.Entry<ItemStack, Double> entry1 : itemAmountMap.entrySet()){
+                ItemResourceKey keyItem = ItemResourceKey.fromItemStack(entry1.getKey());
+                if(!key.equals(keyItem)){
+                    itemResources.computeIfAbsent(keyItem, k->new HashMap<>()).merge(entry1.getKey(), entry1.getValue(), Double::sum);
+                    toRemove.add(entry1.getKey());
+                }
+            }
+            toRemove.forEach(itemAmountMap::remove);
+        }
+    }
+
+
+    /**
+     * Remove all items and virtual resources with zero amount from map.
+     */
+    public void removeZeros(){
+        for(Map<ItemStack, Double> map : itemResources.values()){
+            map.entrySet().removeIf(entry -> entry.getValue() == 0);
+        }
+        itemResources.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+        virtualResources.entrySet().removeIf(entry -> entry.getValue() == 0);
     }
 }
