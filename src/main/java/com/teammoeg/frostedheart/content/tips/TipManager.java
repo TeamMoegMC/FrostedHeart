@@ -181,7 +181,7 @@ public class TipManager {
                 manager.state.setLockState(tip, true);
             }
 
-            if (tip.isPin()) {
+            if (tip.isPin() && !TipRenderer.TIP_QUEUE.isEmpty()) {
                 Tip last = TipRenderer.TIP_QUEUE.get(0);
                 TipWidget.INSTANCE.close();
                 TipRenderer.TIP_QUEUE.add(0, last);
