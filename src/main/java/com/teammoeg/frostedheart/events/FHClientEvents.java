@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
+import com.teammoeg.frostedheart.content.health.screen.NutritionScreen;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.gui.ResearchToast;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
@@ -394,6 +395,11 @@ public class FHClientEvents {
                 //event.setCanceled(true);
             } else if (ModList.get().isLoaded("ldlib") && FHKeyMappings.key_InfraredView.get().consumeClick()) {
                 InfraredViewRenderer.toggleInfraredView();
+            }
+        }
+        if (event.getAction() == GLFW.GLFW_PRESS) {
+            if (FHKeyMappings.key_health.get().consumeClick()) {
+                Minecraft.getInstance().setScreen(new NutritionScreen());
             }
         }
     }

@@ -25,7 +25,10 @@ import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.bootstrap.client.FHShaderInstances;
+import com.teammoeg.frostedheart.bootstrap.client.FHShaders;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
@@ -438,5 +441,80 @@ public class FHGuiHelper {
 		tessellator.end();
 
 		RenderSystem.disableBlend();
+	}
+
+
+	/**
+	 * 圆角矩形
+	 * @param guiGraphics The GuiGraphics object.
+	 * @param x1 The x coordinate of the top left corner of the rectangle.
+	 * @param y1 The y coordinate of the top left corner of the rectangle.
+	 * @param width The width of the rectangle.
+	 * @param height The height of the rectangle.
+	 * @param radius 圆角大小，范围0-1
+	 * @param color The color of the rectangle.
+	 */
+	public static void fillRoundRect(GuiGraphics guiGraphics, int x1, int y1, int width, int height, float radius, int color) {
+		int x2 = x1 + width;
+		int y2 = y1 + height;
+
+		final float ratio = (float) height / (float) width;
+
+		RenderSystem.setShader(FHShaderInstances::getRoundRectShader);
+		ShaderInstance shader = FHShaderInstances.getRoundRectShader();
+		shader.safeGetUniform("Ratio").set(ratio);
+		shader.safeGetUniform("Radius").set(radius * ratio);
+
+		Matrix4f matrix4f = guiGraphics.pose().last().pose();
+		BufferBuilder builder = Tesselator.getInstance().getBuilder();
+		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+		builder.vertex(matrix4f, x1, y1, 0).uv(0, 0).color(color).endVertex();
+		builder.vertex(matrix4f, x1, y2, 0).uv(0, 1).color(color).endVertex();
+		builder.vertex(matrix4f, x2, y2, 0).uv(1, 1).color(color).endVertex();
+		builder.vertex(matrix4f, x2, y1, 0).uv(1, 0).color(color).endVertex();
+		BufferUploader.drawWithShader(builder.end());
+	}
+
+	/**
+	 * 绘制圆环
+	 * @param guiGraphics The GuiGraphics object.
+	 * @param x 圆环中心x坐标
+	 * @param y 圆环中心y坐标
+	 * @param innerRadius 内半径
+	 * @param outerRadius 外半径
+	 * @param startAngle 起始角度
+	 * @param endAngle 结束角度
+	 * @param color 颜色
+	 */
+	public static void drawRing(GuiGraphics guiGraphics, int x, int y, float innerRadius, float outerRadius,float startAngle,float endAngle, int color) {
+		float x2 = (int) (x + outerRadius);
+		float y2 = (int) (y + outerRadius);
+		float x1 = (int) (x - outerRadius);
+		float y1 = (int) (y - outerRadius);
+
+		RenderSystem.setShader(FHShaderInstances::getRingShader);
+		ShaderInstance shader = FHShaderInstances.getRingShader();
+		shader.safeGetUniform("innerRadius").set(innerRadius/outerRadius/2);
+		shader.safeGetUniform("outerRadius").set(0.5f);
+
+		startAngle+=90;
+		endAngle+=90;
+		if(endAngle>360){
+			startAngle-=endAngle-360;
+			endAngle=360;
+		}
+
+		shader.safeGetUniform("startAngle").set(startAngle);
+		shader.safeGetUniform("endAngle").set(endAngle);
+
+		RenderSystem.enableBlend();
+		Matrix4f matrix4f = guiGraphics.pose().last().pose();
+		BufferBuilder builder = Tesselator.getInstance().getBuilder();
+		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+		builder.vertex(matrix4f, x1, y1, 0).uv(0, 0).color(color).endVertex();
+		builder.vertex(matrix4f, x1, y2, 0).uv(0, 1).color(color).endVertex();
+		builder.vertex(matrix4f, x2, y2, 0).uv(1, 1).color(color).endVertex();
+		builder.vertex(matrix4f, x2, y1, 0).uv(1, 0).color(color).endVertex();
+		BufferUploader.drawWithShader(builder.end());
 	}
 }

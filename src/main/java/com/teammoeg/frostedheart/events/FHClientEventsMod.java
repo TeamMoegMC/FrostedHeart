@@ -118,8 +118,10 @@ public class FHClientEventsMod {
 	public static void registerKeys(RegisterKeyMappingsEvent ev) {
         FHKeyMappings.key_skipDialog.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
         FHKeyMappings.key_InfraredView.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
+        FHKeyMappings.key_health.get().setKeyConflictContext(KeyConflictContext.IN_GAME);
 		ev.register(FHKeyMappings.key_skipDialog.get());
         ev.register(FHKeyMappings.key_InfraredView.get());
+        ev.register(FHKeyMappings.key_health.get());
 	}
 
 	@SubscribeEvent
