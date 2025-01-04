@@ -30,9 +30,13 @@ public class NutritionScreen extends Screen {
     private static Component carbohydrate_icon;
     private static Component vegetable_icon;
 
+    private static Font font = Minecraft.getInstance().font;
+
+    private static float progress;
+
     @Override
     public void init() {
-
+        progress=0.0f;
         ComponentOptimizer fat=new ComponentOptimizer();
         fat.appendChar("\uF504", def_style);
         ComponentOptimizer protein=new ComponentOptimizer();
@@ -51,6 +55,7 @@ public class NutritionScreen extends Screen {
     @Override
     public void render(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
         super.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
+        progress = Math.min(progress + pPartialTick/10, 1.0f);
         LocalPlayer localPlayer = null;
         if (this.minecraft != null) {
             localPlayer = this.minecraft.player;
@@ -66,25 +71,21 @@ public class NutritionScreen extends Screen {
 
     private static void renderNutritionBar(GuiGraphics guiGraphics, int x, int y, NutritionCapability.Nutrition n) {
 
-        Font font1 = Minecraft.getInstance().font;
+        renderBar(guiGraphics,x-40,y-30,fat_icon,Component.literal("fat"),n.fat()/10000,FAT_COLOR);
+        renderBar(guiGraphics,x+40,y-30,protein_icon,Component.literal("protein"),n.protein()/10000,PROTEIN_COLOR);
+        renderBar(guiGraphics,x-40,y+30,carbohydrate_icon,Component.literal("carbohydrate"),n.carbohydrate()/10000,CARBOHYDRATE_COLOR);
+        renderBar(guiGraphics,x+40,y+30,vegetable_icon,Component.literal("vegetable"),n.vegetable()/10000,VEGETABLE_COLOR);
+
+    }
+
+    private static void renderBar(GuiGraphics guiGraphics,int x,int y,Component icon,Component desc ,float value,int color){
         PoseStack pose = guiGraphics.pose();
         pose.pushPose();
         pose.scale(2.0f,2.0f,1.0f);
-        guiGraphics.drawCenteredString(font1, fat_icon, x-10, y-10-font1.lineHeight/2, 0xFFFFFF);
-        guiGraphics.drawCenteredString(font1, protein_icon, x+10, y-10-font1.lineHeight/2, 0xFFFFFF);
-        guiGraphics.drawCenteredString(font1, carbohydrate_icon, x-10, y+10-font1.lineHeight/2, 0xFFFFFF);
-        guiGraphics.drawCenteredString(font1, vegetable_icon, x+10, y+10-font1.lineHeight/2, 0xFFFFFF);
+        guiGraphics.drawCenteredString(font, icon, x/2, y/2-font.lineHeight/2, 0xFFFFFF);
         pose.popPose();
-
-        FHGuiHelper.drawRing(guiGraphics, x-20,  y-20, 9, 16, 0,360, 0x80FFFFFF);
-        FHGuiHelper.drawRing(guiGraphics, x+20,  y-20, 9, 16, 0,360, 0x80FFFFFF);
-        FHGuiHelper.drawRing(guiGraphics, x-20,  y+20, 9, 16, 0,360, 0x80FFFFFF);
-        FHGuiHelper.drawRing(guiGraphics, x+20,  y+20, 9, 16, 0,360, 0x80FFFFFF);
-
-        FHGuiHelper.drawRing(guiGraphics, x-20,  y-20, 10, 15, 0,n.fat()/10000 *360, FAT_COLOR);
-        FHGuiHelper.drawRing(guiGraphics, x+20,  y-20, 10, 15, 0,n.protein()/10000 *360, PROTEIN_COLOR);
-        FHGuiHelper.drawRing(guiGraphics, x-20,  y+20, 10, 15, 0,n.carbohydrate()/10000 *360, CARBOHYDRATE_COLOR);
-        FHGuiHelper.drawRing(guiGraphics, x+20,  y+20, 10, 15, 0,n.vegetable()/10000 *360, VEGETABLE_COLOR);
-
+        FHGuiHelper.drawRing(guiGraphics, x,  y, 9, 16, 0,360 * progress, 0x80FFFFFF);
+        FHGuiHelper.drawRing(guiGraphics, x,  y, 10, 15, 0,value *360 * progress, color);
+        guiGraphics.drawCenteredString(font, desc, x, y+16+font.lineHeight/2, 0xFFFFFF);
     }
 }

@@ -24,12 +24,19 @@ public class FHShaderInstances {
     @Nullable
     private static ShaderInstance ring;
 
+    @Nullable
+    private static ShaderInstance round;
+
     public static ShaderInstance getRoundRectShader() {
         return Objects.requireNonNull(roundRect, "Attempted to call getRoundRectShader before shaders have finished loading.");
     }
 
     public static ShaderInstance getRingShader() {
         return Objects.requireNonNull(ring, "Attempted to call getRingShader before shaders have finished loading.");
+    }
+
+    public static ShaderInstance getRoundShader() {
+        return Objects.requireNonNull(round, "Attempted to call getRoundShader before shaders have finished loading.");
     }
 
     @SubscribeEvent
@@ -50,6 +57,14 @@ public class FHShaderInstances {
                         DefaultVertexFormat.POSITION_TEX_COLOR
                 ),
                 (shader) -> roundRect = shader
+        );
+        event.registerShader(
+                new ShaderInstance(
+                        provider,
+                        FHMain.rl("round"),
+                        DefaultVertexFormat.POSITION_TEX
+                ),
+                (shader) -> round = shader
         );
     }
 }

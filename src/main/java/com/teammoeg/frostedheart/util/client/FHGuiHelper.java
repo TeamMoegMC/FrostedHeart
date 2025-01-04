@@ -497,12 +497,6 @@ public class FHGuiHelper {
 		shader.safeGetUniform("innerRadius").set(innerRadius/outerRadius/2);
 		shader.safeGetUniform("outerRadius").set(0.5f);
 
-		startAngle+=90;
-		endAngle+=90;
-		if(endAngle>360){
-			startAngle-=endAngle-360;
-			endAngle=360;
-		}
 
 		shader.safeGetUniform("startAngle").set(startAngle);
 		shader.safeGetUniform("endAngle").set(endAngle);
@@ -515,6 +509,22 @@ public class FHGuiHelper {
 		builder.vertex(matrix4f, x1, y2, 0).uv(0, 1).color(color).endVertex();
 		builder.vertex(matrix4f, x2, y2, 0).uv(1, 1).color(color).endVertex();
 		builder.vertex(matrix4f, x2, y1, 0).uv(1, 0).color(color).endVertex();
+		BufferUploader.drawWithShader(builder.end());
+	}
+
+	public static void blitRound(GuiGraphics guiGraphics, ResourceLocation atlasLocation, int x, int y, int width, int height) {
+		int x2 = x + width;
+		int y2 = y + height;
+
+		RenderSystem.setShaderTexture(0, atlasLocation);
+		RenderSystem.setShader(FHShaderInstances::getRoundShader);
+		Matrix4f matrix4f = guiGraphics.pose().last().pose();
+		BufferBuilder builder = Tesselator.getInstance().getBuilder();
+		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+		builder.vertex(matrix4f, (float)x, (float)y, 0).uv(0, 0);
+		builder.vertex(matrix4f, (float)x, (float)y2, 0).uv(0, 1);
+		builder.vertex(matrix4f, (float)x2, (float)y2, 0).uv(1, 1);
+		builder.vertex(matrix4f, (float)x2, (float)y, 0).uv(1, 0);
 		BufferUploader.drawWithShader(builder.end());
 	}
 }

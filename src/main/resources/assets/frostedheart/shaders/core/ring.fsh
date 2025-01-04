@@ -20,7 +20,10 @@ float atan2(float y, float x) {
 void main() {
     vec2 center = vec2(0.5f,0.5f);
     float distance = distance(center, texCoord0);
-    float angle = atan2(texCoord0.y - center.y,texCoord0.x - center.x);
+    vec2 translatedUV = texCoord0 - center;
+    vec2 rotatedUV = mat2(0.0, -1.0, 1.0, 0.0) * translatedUV;
+    vec2 finalUV = rotatedUV + center;
+    float angle = atan2(finalUV.y - center.y,finalUV.x - center.x);
     angle = degrees(angle);
 
     if (distance >= innerRadius && distance <= outerRadius && angle >= startAngle && angle <= endAngle) {
