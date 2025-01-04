@@ -28,12 +28,19 @@ public class TownResourceHolder {
     private double occupiedCapacity = 0.0;
 
     public static final Codec<TownResourceHolder> CODEC = RecordCodecBuilder.create(t -> t.group(
-            CodecUtil.mapCodec(ItemResourceKey.CODEC, CodecUtil.mapCodec(ItemStack.CODEC, Codec.DOUBLE)).fieldOf("itemResources").forGetter(o->o.itemResources),
-            CodecUtil.mapCodec(VirtualResourceKey.CODEC, Codec.DOUBLE).fieldOf("virtualResources").forGetter(o->o.virtualResources),
-            Codec.DOUBLE.fieldOf("occupiedCapacity").forGetter(o->o.occupiedCapacity)
+            CodecUtil.defaultValue(CodecUtil.mapCodec("itemKey", ItemResourceKey.CODEC, "itemAndAmount", CodecUtil.mapCodec("itemStack", ItemStack.CODEC, "amount", Codec.DOUBLE)), new HashMap<>()) .fieldOf("itemResources").forGetter(o->o.itemResources),
+            CodecUtil.defaultValue(CodecUtil.mapCodec("virtualKey", VirtualResourceKey.CODEC, "amount", Codec.DOUBLE), new HashMap<>()).fieldOf("virtualResources").forGetter(o->o.virtualResources),
+            CodecUtil.defaultValue(Codec.DOUBLE, 0.0).fieldOf("occupiedCapacity").forGetter(o->o.occupiedCapacity)
             ).apply(t, TownResourceHolder::new)
     );
 
+
+    //used to debug
+    public TownResourceHolder(Map<ItemResourceKey, Map<ItemStack, Double>> itemResources/*, Map<VirtualResourceKey, Double> virtualResources*/, double occupiedCapacity) {
+        this.itemResources = itemResources;
+        //this.virtualResources = virtualResources;
+        this.occupiedCapacity = occupiedCapacity;
+    }
 
     public TownResourceHolder() {}
     public TownResourceHolder(Map<ItemResourceKey, Map<ItemStack, Double>> itemResources, Map<VirtualResourceKey, Double> virtualResources, double occupiedCapacity) {

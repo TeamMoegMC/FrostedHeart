@@ -16,7 +16,7 @@ public enum VirtualResourceType implements ITownResourceType{
     public final boolean needCapacity;
     @Getter
     public final int maxLevel;
-	public static final Codec<VirtualResourceType> CODEC= CodecUtil.enumCodec(VirtualResourceType.class);
+	public static final Codec<VirtualResourceType> CODEC = CodecUtil.enumCodec(VirtualResourceType.class);
     VirtualResourceType(boolean needCapacity, boolean isService, int maxLevel){
         this.needCapacity=needCapacity;
         this.isService=isService;

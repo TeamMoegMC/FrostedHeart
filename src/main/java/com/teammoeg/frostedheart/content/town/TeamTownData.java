@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
 public class TeamTownData implements SpecialData{
 	public static final Codec<TeamTownData> CODEC=RecordCodecBuilder.create(t->t.group(
             CodecUtil.defaultValue(Codec.STRING, "Default Town").fieldOf("name").forGetter(o->o.name),
-			CodecUtil.defaultValue(TownResourceHolder.CODEC, new TownResourceHolder()).fieldOf("resource").forGetter(o->o.resources),
+			CodecUtil.defaultValue(TownResourceHolder.CODEC, new TownResourceHolder()).fieldOf("resources").forGetter(o->o.resources),
 			CodecUtil.defaultValue(CodecUtil.mapCodec("pos", CodecUtil.BLOCKPOS, "data", TownWorkerData.CODEC), ImmutableMap.of()).fieldOf("blocks").forGetter(o->o.blocks),
 			CodecUtil.defaultValue(CodecUtil.mapCodec("uuid",UUIDUtil.CODEC,"data",Resident.CODEC), ImmutableMap.of()).fieldOf("residents").forGetter(o->o.residents)
     ).apply(t, TeamTownData::new));
