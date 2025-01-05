@@ -6,6 +6,7 @@ import com.teammoeg.frostedheart.FHTags;
 import lombok.Getter;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,21 +60,11 @@ public class ItemResourceKey implements ITownResourceKey {
      * 若没有等级信息，默认为0
      */
     public static ItemResourceKey fromItemStack(ItemStack itemStack){
-        AtomicReference<ItemResourceType> type = new AtomicReference<>(ItemResourceType.OTHER);
-        AtomicInteger level = new AtomicInteger(0);
-        itemStack.getTags()
-                .map(TagKey::location)
-                .filter(location -> location.getNamespace().equals(FHTags.NameSpace.MOD.id))
-                .map(ResourceLocation::getPath)
-                .filter(path -> path.startsWith("town_resource_"))
-                .forEach(path -> {
-                    if(path.startsWith("town_resource_type_")){
-                        type.set(ItemResourceType.from(path.replace("town_resource_type_", "")));
-                    } else if(path.startsWith("town_resource_level_")){
-                        level.set(Integer.parseInt(path.replace("town_resource_level_", "")));
-                    }
-                });
-        return new ItemResourceKey(type.get(), level.get());
+        return itemStack.getTags()
+                .filter(FHTags.Items.TOWN_RESOURCE_TAGS::containsKey)
+                .map(FHTags.Items.TOWN_RESOURCE_TAGS::get)
+                .findFirst()
+                .orElse(ItemResourceKey.of(ItemResourceType.OTHER, 0));
     }
 
     @Override

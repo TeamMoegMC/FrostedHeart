@@ -245,8 +245,7 @@ public class FHRegistrateTags {
 
         //register for town tags
         if(FHTags.NameSpace.MOD.alwaysDatagenDefault){
-            FHTags.Items.townTagsType.values().forEach(prov::getOrCreateRawBuilder);
-            FHTags.Items.townTagsLevel.values().forEach(prov::getOrCreateRawBuilder);
+            FHTags.Items.TOWN_RESOURCE_TAGS.keySet().forEach(prov::getOrCreateRawBuilder);
         }
     }
 
