@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
-import com.teammoeg.frostedheart.content.utility.SpearEntity;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntity;
 
 import net.minecraft.resources.ResourceLocation;
@@ -33,16 +32,6 @@ import net.minecraftforge.registries.RegistryObject;
 
 public class FHEntityTypes {
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, FHMain.MODID);
-
-    public static final RegistryObject<EntityType<SpearEntity>> FLINT_SPEAR = ENTITY_TYPES.register("flint_spear",
-            () -> EntityType.Builder.<SpearEntity>of(SpearEntity::new, MobCategory.MISC)
-                    .sized(0.5F, 0.5F)
-                    .build(new ResourceLocation(FHMain.MODID, "flint_spear").toString()));
-
-    public static final RegistryObject<EntityType<SpearEntity>> ALLOY_SPEAR = ENTITY_TYPES.register("alloy_spear",
-            () -> EntityType.Builder.<SpearEntity>of(SpearEntity::new, MobCategory.MISC)
-                    .sized(0.5F, 0.5F)
-                    .build(new ResourceLocation(FHMain.MODID, "alloy_spear").toString()));
 
     public static final RegistryObject<EntityType<WanderingRefugee>> WANDERING_REFUGEE = ENTITY_TYPES.register("wandering_refugee",
             () -> EntityType.Builder.<WanderingRefugee>of(WanderingRefugee::new, MobCategory.CREATURE)

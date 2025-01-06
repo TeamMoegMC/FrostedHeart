@@ -19,9 +19,6 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
-import static com.teammoeg.frostedheart.FHMain.*;
-import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.*;
-
 import java.util.function.Function;
 
 import com.simibubi.create.AllTags;
@@ -51,7 +48,6 @@ import com.teammoeg.frostedheart.content.utility.DebugItem;
 import com.teammoeg.frostedheart.content.utility.KnifeItem;
 import com.teammoeg.frostedheart.content.utility.MushroomBed;
 import com.teammoeg.frostedheart.content.utility.SoilThermometer;
-import com.teammoeg.frostedheart.content.utility.SpearItem;
 import com.teammoeg.frostedheart.content.utility.SteamBottleItem;
 import com.teammoeg.frostedheart.content.utility.ThermometerItem;
 import com.teammoeg.frostedheart.content.utility.ThermosItem;
@@ -68,7 +64,6 @@ import com.teammoeg.frostedheart.content.water.item.WoodenCupItem;
 import com.tterrag.registrate.util.entry.ItemEntry;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.food.FoodProperties;
@@ -90,7 +85,6 @@ import net.minecraftforge.registries.RegistryObject;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
 import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.forgeItemTag;
@@ -1450,10 +1444,6 @@ public class FHItems {
             REGISTRATE.item("makeshift_hoe", p -> new HoeItem(FHToolMaterials.FLINT, 0, -3.0F, new Item.Properties()))
                     .tag(ItemTags.HOES)
                     .register();
-    public static final ItemEntry<SpearItem> MAKESHIFT_SPEAR =
-            REGISTRATE.item("makeshift_spear", p -> new SpearItem(FHToolMaterials.FLINT, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/makeshift_spear.png"),new Item.Properties()))
-                    .tag(forgeItemTag("spears"), forgeItemTag("spears/flint"))
-                    .register();
     public static final ItemEntry<KnifeItem> BRONZE_KNIFE =
             REGISTRATE.item("bronze_knife", p -> new KnifeItem(FHToolMaterials.ALLOY, 1, -1.5F, new Item.Properties()))
                     .tag(ItemTags.SWORDS, forgeItemTag("knifes"), forgeItemTag("knifes/bronze"))
@@ -1473,10 +1463,6 @@ public class FHItems {
     public static final ItemEntry<HoeItem> BRONZE_HOE =
             REGISTRATE.item("bronze_hoe", p -> new HoeItem(FHToolMaterials.ALLOY, 0, -3.0F, new Item.Properties()))
                     .tag(ItemTags.HOES, forgeItemTag("hoes"), forgeItemTag("hoes/bronze"))
-                    .register();
-    public static final ItemEntry<SpearItem> BRONZE_SPEAR =
-            REGISTRATE.item("bronze_spear", p -> new SpearItem(FHToolMaterials.ALLOY, 2, -2.9F, new ResourceLocation("frostedheart:textures/item/entity/bronze_spear.png"), new Item.Properties()))
-                    .tag(forgeItemTag("spears"), forgeItemTag("spears/bronze"))
                     .register();
     public static final ItemEntry<SwordItem> BRONZE_SWORD =
             REGISTRATE.item("bronze_sword", p -> new SwordItem(FHToolMaterials.ALLOY, 3, -2.4F, new Item.Properties()))
