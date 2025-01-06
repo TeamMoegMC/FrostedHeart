@@ -253,6 +253,7 @@ public class PlayerTemperatureData implements NBTSerializable  {
 			case HANDS -> player.getMainHandItem(); // Main hand
 			default -> ItemStack.EMPTY; // Default to empty
 		};
+		// TODO remove out
 		System.out.printf("Part %s Cond %f\n", bodyPart, clothesOfParts.get(bodyPart).getThermalConductivity(equipment));
 		return clothesOfParts.get(bodyPart).getThermalConductivity(equipment);
 	}
