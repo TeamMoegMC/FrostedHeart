@@ -114,9 +114,9 @@ public class HeatStatScreen extends BaseScreen {
             theme.drawContainerSlot(matrixStack, x, y, w, h);
             ic.draw(matrixStack, x + 4, y + 2, 24, 24);
             if (isIntake)
-                theme.drawString(matrixStack, val, x + 32 - theme.getStringWidth(val), y + 30);
+            	theme.drawString(matrixStack, val, x + 32 - theme.getStringWidth(val), y + 30, epd.canCostMore ? Color4I.RED : Color4I.GREEN, 0);
             else
-                theme.drawString(matrixStack, val, x + 32 - theme.getStringWidth(val), y + 30, epd.canCostMore ? Color4I.RED : Color4I.GREEN, 0);
+            	theme.drawString(matrixStack, val, x + 32 - theme.getStringWidth(val), y + 30);
         }
 
         @Override

@@ -51,9 +51,8 @@ public class HeatConsumerEndpoint extends HeatEndpoint {
         this.maxIntake = maxIntake;
     }
 
-    public HeatConsumerEndpoint(float capacity, float maxIntake) {
-        super(0, Math.max(capacity, maxIntake));
-        this.maxIntake = maxIntake;
+    public HeatConsumerEndpoint(int priority, float maxIntake) {
+        super(priority, maxIntake * 4);
     }
 
     /**
@@ -75,12 +74,12 @@ public class HeatConsumerEndpoint extends HeatEndpoint {
             if (filled >= required) {
                 filled -= required;
                 heat += required;
-                return filled;
+                return required;
             }
             heat += filled;
-            return 0;
+            return filled;
         }
-        return filled;
+        return 0;
     }
 
     /**

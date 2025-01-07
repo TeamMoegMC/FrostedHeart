@@ -24,8 +24,11 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.steamenergy.ConnectorNetworkRevalidator;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.HeatProviderEndPoint;
+import com.teammoeg.frostedheart.content.steamenergy.NetworkConnector;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -33,17 +36,19 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity {
+public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity,NetworkConnector {
 
     HeatNetwork manager;
     HeatProviderEndPoint endpoint;
     LazyOptional<HeatProviderEndPoint> heatcap;
+    
+    ConnectorNetworkRevalidator<DebugHeaterTileEntity> networkHandler=new ConnectorNetworkRevalidator<>(this);
 
     public DebugHeaterTileEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.DEBUGHEATER.get(), pos, state);
-        manager = new HeatNetwork(this, c -> {
+        manager = new HeatNetwork( () -> {
             for (Direction d : Direction.values()) {
-                c.connect(level, worldPosition.relative(d), d.getOpposite());
+            	manager.connectTo(level, worldPosition.relative(d), d.getOpposite());
             }
         });
         endpoint = new HeatProviderEndPoint(-1, Integer.MAX_VALUE, Integer.MAX_VALUE);
@@ -56,11 +61,11 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickab
 
     @Override
     public void tick() {
-        if ((!endpoint.hasValidNetwork() || manager.getNumEndpoints() <= 1) && !manager.isUpdateRequested()) {
-            manager.requestSlowUpdate();
-        }
         endpoint.addHeat(Integer.MAX_VALUE);
+        if(!endpoint.hasValidNetwork())
+        	manager.addEndpoint(endpoint, 0, getLevel(), getBlockPos());
         manager.tick(level);
+        networkHandler.tick();
     }
 
     @Override
@@ -73,5 +78,21 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickab
     @Override
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
     }
+
+	@Override
+	public HeatNetwork getNetwork() {
+		return networkHandler.hasNetwork()?networkHandler.getNetwork():manager;
+	}
+
+	@Override
+	public boolean canConnectTo(Direction to) {
+		return true;
+	}
+
+	@Override
+	public void setNetwork(HeatNetwork network) {
+		networkHandler.setNetwork(network);
+		network.addEndpoint(endpoint, 0, getLevel(), getBlockPos());
+	}
 
 }

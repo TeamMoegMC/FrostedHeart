@@ -106,7 +106,11 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * Used for display
      */
     boolean canCostMore = false;
-
+    /** Is constant supply even unload. */
+    @Setter
+    private boolean persist;
+    
+    
     public HeatEndpoint(Block block, BlockPos pos, int priority, float capacity) {
         this.blk = block;
         this.pos = pos;
@@ -146,6 +150,13 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * @return true, if successful
      */
     public boolean reciveConnection(Level level, BlockPos pos, HeatNetwork manager, Direction dir, int dist) {
+    	if(this.network!=null) {
+    		if(network.getNetworkSize()<=manager.getNetworkSize()) {
+    			this.network=null;
+    			this.distance=-1;
+    			manager.removeEndpoint(this,level, pos, dir);
+    		}
+    	}
         return manager.addEndpoint(this, dist, level, pos);
     }
 

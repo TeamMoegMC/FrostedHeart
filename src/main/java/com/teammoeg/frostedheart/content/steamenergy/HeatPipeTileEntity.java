@@ -37,8 +37,8 @@ import java.util.List;
 
 import static net.minecraft.ChatFormatting.GRAY;
 
-public class HeatPipeTileEntity extends PipeTileEntity implements NetworkConnector, IHaveGoggleInformation {
-    HeatNetwork network;
+public class HeatPipeTileEntity extends PipeTileEntity implements NetworkConnector, IHaveGoggleInformation,FHTickableBlockEntity {
+	ConnectorNetworkRevalidator<HeatPipeTileEntity> networkHandler=new ConnectorNetworkRevalidator<>(this);
     int cnt = 1;
 
     public HeatPipeTileEntity(BlockPos l, BlockState state) {
@@ -51,26 +51,16 @@ public class HeatPipeTileEntity extends PipeTileEntity implements NetworkConnect
     }
 	@Override
 	public void setNetwork(HeatNetwork network) {
-		this.network = network;
+		this.networkHandler.setNetwork(network);
 	}
     @Override
     public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
     }
 
-    /*@Override
+    @Override
     public void tick() {
-        if (cnt > 0) {
-            cnt--;
-        } else {
-            cnt = 10;
-            BlockState bs = this.getBlockState();
-            for (Direction dir : Direction.values()) {
-                if (bs.getValue(FluidPipeBlock.PROPERTY_BY_DIRECTION.get(dir))) {
-                    onFaceChange(dir, true);
-                }
-            }
-        }
-    }*/
+    	networkHandler.tick();
+    }
 
     @Override
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
@@ -78,16 +68,12 @@ public class HeatPipeTileEntity extends PipeTileEntity implements NetworkConnect
 
     @Override
     public void onFaceChange(Direction dir, boolean isConnect) {
-        if (network == null) return;
-        if (isConnect)
-            network.startPropagation(this, dir);
-        else
-            network.requestUpdate();
+    	networkHandler.onConnectionChange(dir, isConnect);
     }
 
     @Override
     public HeatNetwork getNetwork() {
-        return network;
+        return networkHandler.getNetwork();
     }
 
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
@@ -100,9 +86,9 @@ public class HeatPipeTileEntity extends PipeTileEntity implements NetworkConnect
                 .style(GRAY)
                 .forGoggles(tooltip);
 
-        if (network != null) {
-            output = network.getTotalEndpointOutput();
-            intake = network.getTotalEndpointIntake();
+        if (networkHandler.hasNetwork()) {
+            output = networkHandler.getNetwork().getTotalEndpointOutput();
+            intake = networkHandler.getNetwork().getTotalEndpointIntake();
         }
 
         Lang.number(intake)

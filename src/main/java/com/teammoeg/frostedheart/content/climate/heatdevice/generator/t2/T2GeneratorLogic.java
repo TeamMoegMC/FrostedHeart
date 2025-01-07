@@ -96,11 +96,11 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
     @Override
     protected boolean tickFuel(IMultiblockContext<T2GeneratorState> ctx) {
         if (!ctx.getState().manager.hasBounded()) {
-            ctx.getState().manager.bind(ctx.getLevel().forciblyGetBlockEntity(BlockPos.ZERO), c -> {
+            ctx.getState().manager.setReconnector(() -> {
                 BlockPos networkPos = ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock());
                 Direction dir = NETWORK_CAP.side().forFront(ctx.getLevel().getOrientation());
                // System.out.println(networkPos.relative(dir)+"-"+dir);
-                c.connect(ctx.getLevel().getRawLevel(),networkPos.relative(dir), dir.getOpposite());
+                ctx.getState().manager.connectTo(ctx.getLevel().getRawLevel(),networkPos.relative(dir), dir.getOpposite());
             });
         }
        
@@ -111,9 +111,8 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
                 ctx.getState().manager.addEndpoint(t.ep, 0, level, pos);
             }
         });
-        if (ctx.getState().manager.getNumEndpoints() <= 1 && !ctx.getState().manager.isUpdateRequested()) {
+        if (ctx.getState().manager.getNetworkSize()<=2) {
             ctx.getState().manager.requestSlowUpdate();
-            
         }
         ctx.getState().manager.tick(ctx.getLevel().getRawLevel());
         boolean active = super.tickFuel(ctx);

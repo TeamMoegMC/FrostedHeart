@@ -22,8 +22,11 @@ package com.teammoeg.frostedheart.content.steamenergy.debug;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -70,4 +73,23 @@ public class DebugHeaterBlock extends FHBaseBlock implements FHEntityBlock<Debug
     public Supplier<BlockEntityType<DebugHeaterTileEntity>> getBlock() {
         return FHBlockEntityTypes.DEBUGHEATER;
     }
+	@Override
+	public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
+		boolean isMoving) {
+		super.neighborChanged(state, worldIn, pos, blockIn, fromPos, isMoving);
+		//Direction d = FHUtils.dirBetween(fromPos, pos);
+		//System.out.println("changed")2
+		if(!worldIn.isClientSide)
+		worldIn.scheduleTick(pos, this, 10);
+
+	}
+
+	@Override 
+	public void tick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource pRandom) {
+		//System.out.println("ticked "+pos);
+		super.tick(state, worldIn, pos, pRandom);
+		DebugHeaterTileEntity te=FHUtils.getExistingTileEntity(worldIn, pos, DebugHeaterTileEntity.class);
+		if(te!=null)
+			te.getNetwork().startConnectionFromBlock(te);
+	}
 }
