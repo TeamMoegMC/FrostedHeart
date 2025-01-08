@@ -103,4 +103,9 @@ public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
         super.read(compound, clientPacket);
         network.load(compound, clientPacket);
     }
+	@Override
+	public void invalidateCaps() {
+		heatcap.invalidate();
+		super.invalidateCaps();
+	}
 }

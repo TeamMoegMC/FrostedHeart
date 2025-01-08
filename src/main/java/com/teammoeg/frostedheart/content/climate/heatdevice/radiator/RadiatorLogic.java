@@ -74,7 +74,8 @@ public class RadiatorLogic extends HeatingLogic<RadiatorLogic, RadiatorState> {
     @Override
     public <T> LazyOptional<T> getCapability(IMultiblockContext<RadiatorState> ctx, CapabilityPosition position, Capability<T> cap) {
         if (FHCapabilities.HEAT_EP.isCapability(cap) && position.posInMultiblock().getY() == 0) {
-            return ctx.getState().heatcap.cast();
+        	
+            return ctx.getState().heatCap.cast(ctx);
         }
         return super.getCapability(ctx, position, cap);
     }
@@ -90,6 +91,7 @@ public class RadiatorLogic extends HeatingLogic<RadiatorLogic, RadiatorState> {
 
     @Override
     public RadiatorState createInitialState(IInitialMultiblockContext<RadiatorState> capabilitySource) {
+    	
         return new RadiatorState();
     }
 

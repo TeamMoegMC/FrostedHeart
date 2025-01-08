@@ -299,4 +299,9 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity {
         }
         return super.getCapability(capability, facing);
     }
+	@Override
+	public void invalidateCaps() {
+		endpointCap.invalidate();
+		super.invalidateCaps();
+	}
 }

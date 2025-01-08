@@ -3,6 +3,8 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 import java.util.Optional;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.content.steamenergy.HeatProviderEndPoint;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
@@ -13,7 +15,7 @@ public class GeneratorState extends HeatingState {
      * Remaining ticks to explode
      */
     int explodeTicks;
-
+    public HeatProviderEndPoint ep = new HeatProviderEndPoint(200);
     public GeneratorState() {
         super();
     }
@@ -52,6 +54,8 @@ public class GeneratorState extends HeatingState {
         	GeneratorData dat=teamData.getData(SpecialDataTypes.GENERATOR_DATA);
         	if(origin.equals(dat.actualPos)) {
         		dat.tick(level, teamData);
+        		ep.setHeat(dat.lastPower);
+        		dat.lastPower=0;
         	}
         	
         }
@@ -72,8 +76,10 @@ public class GeneratorState extends HeatingState {
      */
     public void regist(Level level, BlockPos origin) {
         getDataNoCheck().ifPresent(t -> {
-            if (!origin.equals(t.actualPos))
+            if (!origin.equals(t.actualPos)) {
                 t.onPosChange();
+                onDataChange();
+            }
             t.actualPos = origin;
             t.dimension = level.dimension();
         });
@@ -88,9 +94,11 @@ public class GeneratorState extends HeatingState {
      */
     public void tryRegist(Level level, BlockPos origin) {
         getDataNoCheck().ifPresent(t -> {
-            if (BlockPos.ZERO.equals(t.actualPos)) {
-                if (!origin.equals(t.actualPos))
+            if (t.actualPos==null) {
+                if (!origin.equals(t.actualPos)) {
                     t.onPosChange();
+                    onDataChange();
+                }
                 t.actualPos = origin;
                 t.dimension = level.dimension();
             }
@@ -105,6 +113,9 @@ public class GeneratorState extends HeatingState {
     @Override
     public int getUpwardRange() {
         return Mth.ceil(getRangeLevel() * 4 + 1);
+    }
+    public void onDataChange() {
+    	
     }
 
 }

@@ -85,7 +85,7 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
     	//System.out.println(position);
     	//System.out.println(capability);
         if (FHCapabilities.HEAT_EP.isCapability(capability) && NETWORK_CAP.equalsOrNullFace(position)) {
-           return getData(ctx).map(t -> t.epcap).orElseGet(LazyOptional::empty).cast();
+           return ctx.getState().heatCap.cast(ctx);
         } else if (capability == ForgeCapabilities.FLUID_HANDLER && FLUID_INPUT_CAP.equals(position)) {
             LazyOptional<IFluidHandler> tankCap = ctx.getState().tankCap;
             return tankCap.cast();
@@ -100,17 +100,17 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
                 BlockPos networkPos = ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock());
                 Direction dir = NETWORK_CAP.side().forFront(ctx.getLevel().getOrientation());
                // System.out.println(networkPos.relative(dir)+"-"+dir);
-                ctx.getState().manager.connectTo(ctx.getLevel().getRawLevel(),networkPos.relative(dir), dir.getOpposite());
+                ctx.getState().manager.connectTo(ctx.getLevel().getRawLevel(),networkPos.relative(dir),networkPos, dir.getOpposite());
             });
         }
        
-        getData(ctx).ifPresent(t->{
-        	if(!t.ep.hasValidNetwork()) {
-                BlockPos pos = ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock());
-                Level level = ctx.getLevel().getRawLevel();
-                ctx.getState().manager.addEndpoint(t.ep, 0, level, pos);
-            }
-        });
+ 
+    	if(!ctx.getState().ep.hasValidNetwork()) {
+            BlockPos pos = ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock());
+            Level level = ctx.getLevel().getRawLevel();
+            ctx.getState().manager.addEndpoint(ctx.getState().heatCap.cast(ctx), 0, level, pos);
+        }
+        
         if (ctx.getState().manager.getNetworkSize()<=2) {
             ctx.getState().manager.requestSlowUpdate();
         }

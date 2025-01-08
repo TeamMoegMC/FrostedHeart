@@ -68,6 +68,7 @@ public class HeatPipeTileEntity extends PipeTileEntity implements NetworkConnect
 
     @Override
     public void onFaceChange(Direction dir, boolean isConnect) {
+    	//System.out.println(dir+":"+isConnect);
     	networkHandler.onConnectionChange(dir, isConnect);
     }
 

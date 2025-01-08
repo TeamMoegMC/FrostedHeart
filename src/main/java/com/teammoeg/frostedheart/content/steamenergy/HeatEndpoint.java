@@ -109,8 +109,9 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     /** Is constant supply even unload. */
     @Setter
     private boolean persist;
-    
-    
+    /** Is chunk unloaded*/
+    @Getter
+    private boolean unloaded;
     public HeatEndpoint(Block block, BlockPos pos, int priority, float capacity) {
         this.blk = block;
         this.pos = pos;
@@ -147,7 +148,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * @param pos     current pos
      * @param manager the network
      * @param dist    the distance to central
-     * @return true, if successful
+     * @return true, if the endpoint should receive connection
      */
     public boolean reciveConnection(Level level, BlockPos pos, HeatNetwork manager, Direction dir, int dist) {
     	if(this.network!=null) {
@@ -157,7 +158,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     			manager.removeEndpoint(this,level, pos, dir);
     		}
     	}
-        return manager.addEndpoint(this, dist, level, pos);
+        return true;//manager.addEndpoint(this, dist, level, pos);
     }
 
     /**
@@ -187,13 +188,13 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * <p>
      * The network would call this to check if this is a consumer.
      * If this returns true, this endpoint would be added to the consumer list with or without actually consume.
-     * The network may also put heat into this network.
+     * The network may also put heat into this endpoint.
      * <p>
      * This should be only called by the network, You should not call this method.
      *
      * @return true, if successful
      */
-    public boolean canReceiveHeat() {
+    protected boolean canReceiveHeatFromNetwork() {
         return heat < capacity;
     }
 
@@ -208,7 +209,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * @param level  the actual temperature level, which my differ from HeatEndpoint#tempLevel
      * @return the amount of heat actually filled
      */
-    protected float receiveHeat(float filled, int level) {
+    protected float receiveHeatFromNetwork(float filled, int level) {
         return 0;
     }
 
@@ -222,7 +223,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      *
      * @return true, if successful
      */
-    public boolean canProvideHeat() {
+    protected boolean canProvideHeatToNetwork() {
         return heat > 0;
     }
 
@@ -233,7 +234,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      *
      * @return the amount of heat actually provided
      */
-    protected float provideHeat() {
+    protected float provideHeatToNetwork() {
         return 0;
     }
 
@@ -250,7 +251,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * <p>
      * This should be only called by the network, You should not call this method.
      * */
-    public void pushData() {
+    protected void pushData() {
         if (avgIntake < 0)
             avgIntake = intake;
         else
@@ -259,7 +260,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
             avgOutput = output;
         else
             avgOutput = avgOutput * .95f + Math.max(0, output) * .05f;
-        canCostMore = Math.round(avgOutput * 10) / 10f < maxIntake;
+        canCostMore = Math.round(avgIntake * 10) / 10f < maxIntake;
     }
 
     public void writeNetwork(FriendlyByteBuf pb) {
@@ -298,5 +299,8 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     @Override
     public HeatNetwork getNetwork() {
         return network;
+    }
+    public void unload() {
+    	this.unloaded=true;
     }
 }

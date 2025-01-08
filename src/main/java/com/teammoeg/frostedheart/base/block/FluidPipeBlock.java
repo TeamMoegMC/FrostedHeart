@@ -194,8 +194,10 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends PipeBlock imple
 		if(te!=null) {
 			for (Direction d : Direction.values()) {
 				BooleanProperty prop=PROPERTY_BY_DIRECTION.get(d);
-				if(old.getValue(prop)!=neo.getValue(prop))
+				if(old.getValue(prop)!=neo.getValue(prop)) {
+					//System.out.println(pos+"face "+d+" "+neo.getValue(prop));
 					te.onFaceChange(d, neo.getValue(prop));
+				}
 			}
 		}
 	}
@@ -239,7 +241,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends PipeBlock imple
 		//Direction d = FHUtils.dirBetween(fromPos, pos);
 		//System.out.println("changed")2
 		if(!worldIn.isClientSide)
-		worldIn.scheduleTick(pos, this, 10);
+			worldIn.scheduleTick(pos, this, 10);
 
 	}
 
@@ -248,13 +250,15 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends PipeBlock imple
 		//System.out.println("ticked "+pos);
 		super.tick(state, worldIn, pos, pRandom);
 		BlockState updated=updateBlockState(state, null, null, worldIn, pos);
+		worldIn.setBlock(pos, updated, 2);
+		worldIn.sendBlockUpdated(pos, state, updated, 2);
+		System.out.println("update pipe "+pos);
 		checkNewConnection(worldIn,pos,state,updated);
 		//System.out.println(pos+" requested update "+updated.getValue(PROPERTY_BY_DIRECTION.get(Direction.UP)));
 		//if(state!=updated) {
 			//System.out.println("requested update "+updated.getValue(PROPERTY_BY_DIRECTION.get(Direction.UP)));
 		//worldIn.blockUpdated(pos, null);
-			worldIn.setBlock(pos, updated, 2);
-			worldIn.sendBlockUpdated(pos, state, updated, 2);
+
 		//}
 	}
 

@@ -28,6 +28,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockBehaviour.StateArgumentPredicate;
 
 public class T2GeneratorMultiblock extends FHBaseMultiblock {
 
@@ -50,8 +51,10 @@ public class T2GeneratorMultiblock extends FHBaseMultiblock {
         FHMultiblockHelper.getBEHelper(world, origin.offset(master)).ifPresent(te -> {
             T2GeneratorState state = (T2GeneratorState) te.getState();
             if (state != null) {
-            	if(state.manager!=null)
+            	if(state.manager!=null) {
             		state.manager.invalidate(world);
+     
+            	}
             }else
                 FHMain.LOGGER.error("T2GeneratorState is null when disassembling T2GeneratorMultiblock.");
         });

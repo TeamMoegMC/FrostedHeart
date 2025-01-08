@@ -41,15 +41,21 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.common.util.LazyOptional;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
@@ -64,7 +70,9 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
     /**
      * All connected endpoints of the network.
      */
-    transient PriorityQueue<HeatEndpoint> endpoints = new PriorityQueue<>(Comparator.comparingInt(HeatEndpoint::getPriority).reversed().thenComparing(HeatEndpoint::getDistance));
+    transient PriorityQueue<LazyOptional<HeatEndpoint>> endpoints = 
+    	new PriorityQueue<>(Comparator.<LazyOptional<HeatEndpoint>>comparingInt(t->t.map(HeatEndpoint::getPriority).orElse(-100))
+    		.reversed().thenComparing(t->t.map(HeatEndpoint::getDistance).orElse(-100)));
     /** A blockpos-distance map for existing pipelines. */
     Map<BlockPos, Integer> propagated = new HashMap<>();
     /**
@@ -171,7 +179,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
      */
     public void startConnectionFromBlock(BlockEntity hpte, Direction dir) {
     	//System.out.println("started to"+dir);
-    	connectTo(hpte.getLevel(),hpte.getBlockPos().relative(dir),dir.getOpposite());
+    	connectTo(hpte.getLevel(),hpte.getBlockPos().relative(dir),hpte.getBlockPos(),dir.getOpposite());
     }
     /**
      * Start connection from a block for all faces.
@@ -183,10 +191,10 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
     	if(hpte instanceof NetworkConnector nc) {
 	    	for(Direction dir:Direction.values())
 	    		if(nc.canConnectTo(dir))
-	    			connectTo(hpte.getLevel(),hpte.getBlockPos().relative(dir),dir.getOpposite());
+	    			connectTo(hpte.getLevel(),hpte.getBlockPos().relative(dir),hpte.getBlockPos(),dir.getOpposite());
     	}else {
     		for(Direction dir:Direction.values())
-	    		connectTo(hpte.getLevel(),hpte.getBlockPos().relative(dir),dir.getOpposite());
+	    		connectTo(hpte.getLevel(),hpte.getBlockPos().relative(dir),hpte.getBlockPos(),dir.getOpposite());
     	}
     }
     /**
@@ -196,7 +204,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
      * @param pos the position
      * @param face the face of provided block
      */
-    public void connectTo(Level level,BlockPos pos,Direction face) {
+    public void connectTo(Level level,BlockPos pos,BlockPos srcPos,Direction face) {
     	BlockEntity te = Utils.getExistingTileEntity(level, pos);
         
         if (te instanceof NetworkConnector nc)
@@ -285,28 +293,30 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
     public int getNumEndpoints() {
         return endpoints.size();
     }
-
+    public void refreshConnectedEndpoints(BlockPos pos) {
+    }
     /**
      * Add endpoint to network, This method do not validate endpoint, endpoint should do the validation before adding
      *
-     * @param heatEndpoint the heat endpoint to add
+     * @param capEndpoint the heat endpoint to add
      * @param dist the distance from of endpoint
      * @param level the level
      * @param pos the position of endpoint
      * @return true, if successful
      */
-    public boolean addEndpoint(HeatEndpoint heatEndpoint, int dist, Level level, BlockPos pos) {
-    	
-        if (endpoints.contains(heatEndpoint)) {
-            if (dist < heatEndpoint.getDistance()||heatEndpoint.getDistance()==-1) {
-                heatEndpoint.setConnectionInfo(this, dist, pos, level);
-                return true;
-            }
-        } else {
-            heatEndpoint.setConnectionInfo(this, dist, pos, level);
-            endpoints.add(heatEndpoint);
-            return true;
-        }
+    public boolean addEndpoint(LazyOptional<HeatEndpoint> capEndpoint, int dist, Level level, BlockPos pos) {
+    	HeatEndpoint heatEndpoint=capEndpoint.orElse(null);
+    	if(heatEndpoint!=null)
+	        if (endpoints.contains(capEndpoint)) {
+	            if (dist < heatEndpoint.getDistance()||heatEndpoint.getDistance()==-1) {
+	                heatEndpoint.setConnectionInfo(this, dist, pos, level);
+	                return true;
+	            }
+	        } else {
+	            heatEndpoint.setConnectionInfo(this, dist, pos, level);
+	            endpoints.add(capEndpoint);
+	            return true;
+	        }
         return false;
     }
     /**
@@ -318,6 +328,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
      * @return true, if successful
      */
     public boolean removeEndpoint(HeatEndpoint heatEndpoint, Level level, BlockPos pos,Direction indir) {
+    	heatEndpoint.clearConnection();
     	return endpoints.remove(heatEndpoint);
     }
 
@@ -356,7 +367,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
      * Request update.
      */
     public void requestUpdate() {
-    	if(interval>10)
+    	if(interval>10||interval<0)
     		interval = 10;
     }
 
@@ -393,8 +404,9 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
         // Clear pipes
         propagated.clear();
         // Reset endpoints
-        for (HeatEndpoint bp : endpoints) {
-            bp.clearConnection();
+        for (LazyOptional<HeatEndpoint> bp : endpoints) {
+        	HeatEndpoint ep=bp.orElse(null);
+        	ep.clearConnection();
         }
         // Clear endpoints
         endpoints.clear();
@@ -412,7 +424,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
         } else if (interval == 0) {
         	clearConnection(level);
             // Connect all pipes and endpoints again
-        	
+        	System.out.println("full rebuild triggered");
             if (onConnect != null)
                 onConnect.run();
             interval = -1;
@@ -423,34 +435,41 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
         // Retrieve heat from the endpoints
         float accumulated = 0;
         totalEndpointOutput = 0;
-        for (HeatEndpoint endpoint : endpoints) {
-            if (endpoint.canProvideHeat()) {
-                // logic
-                float provided = endpoint.provideHeat();
-                accumulated += provided;
-                // fetch the highest tLevel
-                tlevel = Math.max(endpoint.getTempLevel(), tlevel);
-                // update display data
-                endpoint.output = provided;
-            }
+        endpoints.removeIf(t->!t.isPresent());
+        for (LazyOptional<HeatEndpoint> lep : endpoints) {
+        	HeatEndpoint endpoint=lep.orElse(null);
+        	if(endpoint!=null)
+	            if (endpoint.canProvideHeatToNetwork()) {
+	                // logic
+	                float provided = endpoint.provideHeatToNetwork();
+	                accumulated += provided;
+	                // fetch the highest tLevel
+	                tlevel = Math.max(endpoint.getTempLevel(), tlevel);
+	                // update display data
+	                endpoint.output = provided;
+	            }
         }
 
         totalEndpointOutput = accumulated;
 
         // Distribute heat to the endpoints
         totalEndpointIntake = 0;
-        for (HeatEndpoint endpoint : endpoints) {
-            //while (accumulated > 0 && endpoint.canReceiveHeat()) {
-                // logic
-                float received = endpoint.receiveHeat(endpoint.getMaxIntake(), tlevel);
-                totalEndpointIntake += received;
-                accumulated -= received;
-                endpoint.intake = received;
-            //}
+        for (LazyOptional<HeatEndpoint> lep : endpoints) {
+        	HeatEndpoint endpoint=lep.orElse(null);
+        	if(endpoint!=null)
+	            if (endpoint.canReceiveHeatFromNetwork()) {
+	                // logic
+	                float received = endpoint.receiveHeatFromNetwork(accumulated, tlevel);
+	                totalEndpointIntake += received;
+	                accumulated -= received;
+	                endpoint.intake = received;
+	            }
+            //if(accumulated <= 0)
+            //	break;
         }
 
         // Process data
-        endpoints.forEach(HeatEndpoint::pushData);
+        endpoints.forEach(t->t.ifPresent(HeatEndpoint::pushData));
 
     }
 
@@ -475,6 +494,13 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
         return Lang.translateGui("heat_stat");
     }
 
-
+    public List<HeatEndpoint> getEndpoints(){
+    	List<HeatEndpoint> eplist=new ArrayList<>(endpoints.size());
+    	for(LazyOptional<HeatEndpoint> i:endpoints)
+    		if(i.isPresent()) {
+    			eplist.add(i.orElse(null));
+    		}
+    	return eplist;
+    }
 
 }

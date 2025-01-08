@@ -38,8 +38,9 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity{
 
     public HeatIncubatorTileEntity(BlockPos bp,BlockState bs) {
         super(FHBlockEntityTypes.INCUBATOR2.get(),bp,bs);
+        
     }
-
+    
 
     LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
     @Nonnull
@@ -91,6 +92,10 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity{
         super.writeCustomNBT(compound, client);
         network.save(compound,client);
     }
-
+	@Override
+	public void invalidateCaps() {
+		heatcap.invalidate();
+		super.invalidateCaps();
+	}
 
 }

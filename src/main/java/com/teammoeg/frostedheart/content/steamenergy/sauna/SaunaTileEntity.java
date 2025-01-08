@@ -367,5 +367,9 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBloc
         return this.getBlockState().getBlock().getName();
     }
 
-
+	@Override
+	public void invalidateCaps() {
+		heatcap.invalidate();
+		super.invalidateCaps();
+	}
 }

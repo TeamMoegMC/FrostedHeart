@@ -73,7 +73,7 @@ public class GeneratorData implements SpecialData {
             Codec.FLOAT.fieldOf("rangeLevel").forGetter(o -> o.RLevel),
             CompoundTag.CODEC.fieldOf("items").forGetter(o -> o.inventory.serializeNBT()),
             CodecUtil.defaultValue(CodecUtil.ITEMSTACK_CODEC, ItemStack.EMPTY).fieldOf("res").forGetter(o -> o.currentItem),
-            CodecUtil.BLOCKPOS.fieldOf("actualPos").forGetter(o -> o.actualPos),
+            CodecUtil.BLOCKPOS.optionalFieldOf("actualPos",null).forGetter(o -> o.actualPos),
             ResourceLocation.CODEC.optionalFieldOf("dim").forGetter(o -> o.dimension == null ? Optional.empty() : Optional.of(o.dimension.location()))
     ).apply(t, GeneratorData::new));
     public final ItemStackHandler inventory = new ItemStackHandler(2);
@@ -84,14 +84,14 @@ public class GeneratorData implements SpecialData {
     public float steamLevel;
     public int steamProcess;
     public int heated, ranged;
+    public float lastPower;
     public float power;
     public Fluid fluid;
     public boolean isWorking, isOverdrive, isActive, isBroken;
     public float TLevel, RLevel;
     public ItemStack currentItem;
-    public BlockPos actualPos = BlockPos.ZERO;
-    public HeatProviderEndPoint ep = new HeatProviderEndPoint(200);
-    public LazyOptional<HeatProviderEndPoint> epcap = LazyOptional.of(() -> ep);
+    public BlockPos actualPos = null;
+    
     public ResourceKey<Level> dimension;
 
     public GeneratorData(SpecialDataHolder teamData) {
@@ -184,7 +184,7 @@ public class GeneratorData implements SpecialData {
     public int getSlotLimit(int slot) {
         return 64;
     }
-
+    
     /**
      * Core tick function for generator called in HeatingLogic#tickFuel
      * It does the internal logic for fuel and heating.
@@ -194,8 +194,9 @@ public class GeneratorData implements SpecialData {
     public void tick(Level w,SpecialDataHolder<?> teamData) {
         isActive = tickFuelProcess(w,teamData);
         tickHeatedProcess(w);
+        lastPower=0;
         if (isActive && power > 0)
-            ep.setHeat((float) (power * getHeatEfficiency(teamData)));
+            lastPower=((float) (power * getHeatEfficiency(teamData)));
     }
 
     public void tickHeatedProcess(Level world) {

@@ -54,12 +54,12 @@ public class HeatProviderEndPoint extends HeatEndpoint {
         this.maxOutput = maxOutput;
     }
 
-    public boolean canReceiveHeat() {
+    public boolean canReceiveHeatFromNetwork() {
         return false;
     }
 
     @Override
-    public float receiveHeat(float filled, int level) {
+    public float receiveHeatFromNetwork(float filled, int level) {
         return filled;
     }
 
@@ -77,7 +77,7 @@ public class HeatProviderEndPoint extends HeatEndpoint {
      * @return the amount of heat actually provided
      */
     @Override
-    public float provideHeat() {
+    public float provideHeatToNetwork() {
         float provided = Math.min(heat, maxOutput);
         heat -= provided;
         return provided;

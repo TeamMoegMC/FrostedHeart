@@ -264,4 +264,9 @@ public class FountainTileEntity extends IEBaseBlockEntity implements FHTickableB
         ChunkHeatData.removeTempAdjust(level, worldPosition);
         heatAdjusted = false;
     }
+	@Override
+	public void invalidateCaps() {
+		heatcap.invalidate();
+		super.invalidateCaps();
+	}
 }

@@ -46,7 +46,10 @@ public class HeatCapabilities {
             
             LazyOptional<HeatEndpoint> ep = te.getCapability(FHCapabilities.HEAT_EP.capability(), d);
             if (ep.isPresent())
-                return ep.orElse(null).reciveConnection(w, pos, network, d, distance);
+                if(ep.orElse(null).reciveConnection(w, pos, network, d, distance)) {
+                	network.addEndpoint(ep, distance, w, pos);
+                	return true;
+                }
 
         }
         return false;

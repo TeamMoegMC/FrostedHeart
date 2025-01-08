@@ -48,7 +48,7 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickab
         super(FHBlockEntityTypes.DEBUGHEATER.get(), pos, state);
         manager = new HeatNetwork( () -> {
             for (Direction d : Direction.values()) {
-            	manager.connectTo(level, worldPosition.relative(d), d.getOpposite());
+            	manager.connectTo(level, worldPosition.relative(d),getBlockPos(), d.getOpposite());
             }
         });
         endpoint = new HeatProviderEndPoint(-1, Integer.MAX_VALUE, Integer.MAX_VALUE);
@@ -63,7 +63,7 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickab
     public void tick() {
         endpoint.addHeat(Integer.MAX_VALUE);
         if(!endpoint.hasValidNetwork())
-        	manager.addEndpoint(endpoint, 0, getLevel(), getBlockPos());
+        	manager.addEndpoint(heatcap.cast(), 0, getLevel(), getBlockPos());
         manager.tick(level);
         networkHandler.tick();
     }
@@ -92,7 +92,20 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickab
 	@Override
 	public void setNetwork(HeatNetwork network) {
 		networkHandler.setNetwork(network);
-		network.addEndpoint(endpoint, 0, getLevel(), getBlockPos());
+		network.addEndpoint(heatcap.cast(), 0, getLevel(), getBlockPos());
+	}
+	
+
+	@Override
+	public void invalidateCaps() {
+		heatcap.invalidate();
+		super.invalidateCaps();
+	}
+
+	@Override
+	public void onChunkUnloaded() {
+		super.onChunkUnloaded();
+		endpoint.unload();
 	}
 
 }

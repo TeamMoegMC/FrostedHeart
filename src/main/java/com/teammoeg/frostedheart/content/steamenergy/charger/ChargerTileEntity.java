@@ -199,4 +199,9 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements FHTickableBl
         nbt.putFloat("power", power);
         network.save(nbt, descPacket);
     }
+	@Override
+	public void invalidateCaps() {
+		heatcap.invalidate();
+		super.invalidateCaps();
+	}
 }

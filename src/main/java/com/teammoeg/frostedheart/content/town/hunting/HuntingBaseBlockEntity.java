@@ -237,5 +237,9 @@ public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity {
             }
             return false;
         }
-    }
+    }@Override
+	public void invalidateCaps() {
+		endpointCap.invalidate();
+		super.invalidateCaps();
+	}
 }

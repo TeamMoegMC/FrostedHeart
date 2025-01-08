@@ -67,7 +67,7 @@ public class HeatConsumerEndpoint extends HeatEndpoint {
         return drained;
     }
 
-    public float receiveHeat(float filled, int level) {
+    public float receiveHeatFromNetwork(float filled, int level) {
         float required = Math.min(maxIntake, capacity - heat);
         tempLevel = level;
         if (required > 0) {
@@ -97,13 +97,13 @@ public class HeatConsumerEndpoint extends HeatEndpoint {
     }
 
     // Consumer cannot provide heat
-    public boolean canProvideHeat() {
+    public boolean canProvideHeatToNetwork() {
         return false;
     }
 
     // Consumer cannot provide heat
     @Override
-    public float provideHeat() {
+    public float provideHeatToNetwork() {
         return 0;
     }
 

@@ -21,14 +21,16 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.radiator;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.HeatingState;
 import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
+
+import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.util.StoredCapability;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class RadiatorState extends HeatingState {
 
     HeatConsumerEndpoint network = new HeatConsumerEndpoint(100, 100, 4);
-    LazyOptional<HeatConsumerEndpoint> heatcap = LazyOptional.of(() -> network);
-
+    StoredCapability<HeatConsumerEndpoint> heatCap=new StoredCapability<>(network);
     @Override
     public void readSaveNBT(CompoundTag nbt) {
         super.readSaveNBT(nbt);
