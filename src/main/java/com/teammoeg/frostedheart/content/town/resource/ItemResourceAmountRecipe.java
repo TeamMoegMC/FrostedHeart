@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.content.town.resource;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IERecipeTypes;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHBlocks;
 import net.minecraft.core.RegistryAccess;
@@ -17,24 +16,25 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.common.crafting.conditions.ICondition;
 import net.minecraftforge.common.util.Lazy;
-import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+
+import static net.minecraft.world.item.crafting.ShapedRecipe.itemStackFromJson;
 
 public class ItemResourceAmountRecipe extends IESerializableRecipe {
     public static RegistryObject<RecipeType<ItemResourceAmountRecipe>> TYPE;
     public static RegistryObject<IERecipeSerializer<ItemResourceAmountRecipe>> SERIALIZER;
     public static Lazy<IERecipeTypes.TypeWithClass<ItemResourceAmountRecipe>> IEType = Lazy.of(() -> new IERecipeTypes.TypeWithClass<>(TYPE, ItemResourceAmountRecipe.class));
     public final ItemStack item;
-    public final TagKey<Item> itemOfResourceKey;
+    public final TagKey<Item> resourceTagKey;
     public final float amount;
 
-    public ItemResourceAmountRecipe(ResourceLocation id, ItemStack item, TagKey<Item> itemOfResourceKey, float amount) {
+    public ItemResourceAmountRecipe(ResourceLocation id, ItemStack item, TagKey<Item> resourceTagKey, float amount) {
         super(Lazy.of(() -> ItemStack.EMPTY), IEType.get(), id);
         this.item = item;
-        this.itemOfResourceKey = itemOfResourceKey;
+        this.resourceTagKey = resourceTagKey;
         this.amount = amount;
     }
 
@@ -66,16 +66,17 @@ public class ItemResourceAmountRecipe extends IESerializableRecipe {
         @Override
         public void toNetwork(FriendlyByteBuf buffer, ItemResourceAmountRecipe recipe) {
             buffer.writeItem(recipe.item);
-            buffer.writeResourceLocation(recipe.itemOfResourceKey.location());
+            buffer.writeResourceLocation(recipe.resourceTagKey.location());
             buffer.writeFloat(recipe.amount);
         }
 
         @Override
         public ItemResourceAmountRecipe readFromJson(ResourceLocation recipeId, JsonObject json, ICondition.IContext ctx) {
-            ItemStack item = readOutput(json.get("item")).get();
-            TagKey<Item> itemOfResourceKey = ItemTags.create(new ResourceLocation(GsonHelper.getAsString(json, "itemOfResourceKey")));
+            ItemStack item = itemStackFromJson(json);//readOutput(json.get("item")).get();
+            //itemStackFromJson(outputObject.getAsJsonObject())
+            TagKey<Item> resourceTagKey = ItemTags.create(new ResourceLocation(GsonHelper.getAsString(json, "resourceTagKey")));
             float amount = GsonHelper.getAsFloat(json, "amount");
-            return new ItemResourceAmountRecipe(recipeId, item, itemOfResourceKey, amount);
+            return new ItemResourceAmountRecipe(recipeId, item, resourceTagKey, amount);
         }
 
 
