@@ -286,16 +286,26 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
 
     public void load(CompoundTag nbt, boolean isPacket) {
         heat = nbt.getFloat("net_power");
-        pos = BlockPos.of(nbt.getLong("pos"));
-        blk = RegistryUtils.getBlock(new ResourceLocation(nbt.getString("block")));
+        //pos = BlockPos.of(nbt.getLong("pos"));
+        //blk = RegistryUtils.getBlock(new ResourceLocation(nbt.getString("block")));
     }
 
     public void save(CompoundTag nbt, boolean isPacket) {
         nbt.putFloat("net_power", heat);
+        //nbt.putLong("pos", pos.asLong());
+       //nbt.putString("block", RegistryUtils.getRegistryName(blk).toString());
+    }
+    public void loadNetwork(CompoundTag nbt, boolean isPacket) {
+        heat = nbt.getFloat("net_power");
+        pos = BlockPos.of(nbt.getLong("pos"));
+        blk = RegistryUtils.getBlock(new ResourceLocation(nbt.getString("block")));
+    }
+
+    public void saveNetwork(CompoundTag nbt, boolean isPacket) {
+        nbt.putFloat("net_power", heat);
         nbt.putLong("pos", pos.asLong());
         nbt.putString("block", RegistryUtils.getRegistryName(blk).toString());
     }
-
     @Override
     public HeatNetwork getNetwork() {
         return network;

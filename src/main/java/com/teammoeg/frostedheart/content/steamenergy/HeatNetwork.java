@@ -458,11 +458,20 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
         	HeatEndpoint endpoint=lep.orElse(null);
         	if(endpoint!=null)
 	            if (endpoint.canReceiveHeatFromNetwork()) {
-	                // logic
-	                float received = endpoint.receiveHeatFromNetwork(accumulated, tlevel);
-	                totalEndpointIntake += received;
-	                accumulated -= received;
+	            	//first distribute
+	                float received =0;
+	                if(accumulated!=0) {
+		                received=endpoint.receiveHeatFromNetwork(accumulated, tlevel);
+		                totalEndpointIntake += received;
+		                accumulated -= received;
+	                }
 	                endpoint.intake = received;
+	                if(received!=0&&accumulated!=0) {//maximum 2 times input
+	                	received = endpoint.receiveHeatFromNetwork(accumulated, tlevel);
+		                totalEndpointIntake += received;
+		                accumulated -= received;
+		                endpoint.intake += received;
+	                }
 	            }
             //if(accumulated <= 0)
             //	break;

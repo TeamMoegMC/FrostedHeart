@@ -183,7 +183,7 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements FHTickableBl
         if (!level.isClientSide) {
             float actual = network.drainHeat(Math.min(200, (getMaxPower() - power) / 0.8F));
             if (actual > 0) {
-                power += (float) (actual * 0.8);
+                power += (float) (actual * 8);
                 this.setActive(true);
                 setChanged();
                 this.markContainingBlockForUpdate(null);
