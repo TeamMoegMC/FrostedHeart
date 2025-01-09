@@ -4,13 +4,9 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHTags;
 import lombok.Getter;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Used in the storage of town resource.
@@ -61,10 +57,14 @@ public class ItemResourceKey implements ITownResourceKey {
      */
     public static ItemResourceKey fromItemStack(ItemStack itemStack){
         return itemStack.getTags()
-                .filter(FHTags.Items.TOWN_RESOURCE_TAGS::containsKey)
-                .map(FHTags.Items.TOWN_RESOURCE_TAGS::get)
+                .filter(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::containsKey)
+                .map(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::get)
                 .findFirst()
                 .orElse(ItemResourceKey.of(ItemResourceType.OTHER, 0));
+    }
+
+    public TagKey<Item> getTagKey(){
+        return FHTags.Items.MAP_TOWN_RESOURCE_KEY_TO_TAG.get(this);
     }
 
     @Override

@@ -183,22 +183,24 @@ public class FHTags {
 		public final TagKey<Item> tag;
 		public final boolean alwaysDatagen;
 
-		public static final Map<TagKey<Item>, ItemResourceKey> TOWN_RESOURCE_TAGS = new HashMap<>();
+		//something about town resource
+		public static final Map<TagKey<Item>, ItemResourceKey> MAP_TAG_TO_TOWN_RESOURCE_KEY = new HashMap<>();
+		public static final Map<ItemResourceKey, TagKey<Item>> MAP_TOWN_RESOURCE_KEY_TO_TAG = new HashMap<>();
 		static{
 			NameSpace namespace = NameSpace.MOD;
 			//TownResourceType有一个maxLevel的属性，找到最大的maxLevel，以生成适当数量的tag来表示level
-			AtomicInteger max_maxLevel = new AtomicInteger(0);
-			for(ItemResourceType type:ItemResourceType.values()){
+            for(ItemResourceType type:ItemResourceType.values()){
 				for(int i = 0; i <= type.maxLevel; i++){
 					ResourceLocation resourceLocation = new ResourceLocation(namespace.id, "town_resource_" + type.getKey() + "_" + i);
 					ItemResourceKey resourceKey = ItemResourceKey.of(type, i);
 					if (namespace.optionalDefault) {
-						TOWN_RESOURCE_TAGS.put(optionalTag(ForgeRegistries.ITEMS, resourceLocation), resourceKey);
+						MAP_TAG_TO_TOWN_RESOURCE_KEY.put(optionalTag(ForgeRegistries.ITEMS, resourceLocation), resourceKey);
 					} else {
-						TOWN_RESOURCE_TAGS.put(ItemTags.create(resourceLocation), resourceKey);
+						MAP_TAG_TO_TOWN_RESOURCE_KEY.put(ItemTags.create(resourceLocation), resourceKey);
 					}
 				}
 			}
+			MAP_TAG_TO_TOWN_RESOURCE_KEY.forEach((tag, resourceKey) -> MAP_TOWN_RESOURCE_KEY_TO_TAG.put(resourceKey, tag));
 		}
 
 		Items() {
