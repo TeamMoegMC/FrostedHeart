@@ -2,8 +2,14 @@ package com.teammoeg.frostedheart.content.steamenergy.creative;
 
 import com.simibubi.create.foundation.block.IBE;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterTileEntity;
+import com.teammoeg.frostedheart.util.FHUtils;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
@@ -51,5 +57,25 @@ public class CreativeHeaterBlock extends HeatBlock implements IBE<CreativeHeater
     @SuppressWarnings("deprecation")
     public BlockState mirror(BlockState state, Mirror mirrorIn) {
         return state.rotate(mirrorIn.getRotation(state.getValue(FACING)));
+    }
+
+    @Override
+    public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
+                                boolean isMoving) {
+        super.neighborChanged(state, worldIn, pos, blockIn, fromPos, isMoving);
+        //Direction d = FHUtils.dirBetween(fromPos, pos);
+        //System.out.println("changed")2
+        if(!worldIn.isClientSide)
+            worldIn.scheduleTick(pos, this, 10);
+
+    }
+
+    @Override
+    public void tick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource pRandom) {
+        //System.out.println("ticked "+pos);
+        super.tick(state, worldIn, pos, pRandom);
+        CreativeHeaterBlockEntity te= FHUtils.getExistingTileEntity(worldIn, pos, CreativeHeaterBlockEntity.class);
+        if(te!=null)
+            te.getNetwork().startConnectionFromBlock(te);
     }
 }

@@ -49,27 +49,43 @@ public class HeatBlockEntity extends SmartBlockEntity implements HeatNetworkProv
             Lang.translate("tooltip", "pressure")
                     .style(GRAY)
                     .forGoggles(tooltip);
+            Lang.number(intake)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.intake")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            Lang.number(output)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.output")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            Lang.number(endpoint.getMaxIntake())
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.max_intake")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            Lang.number(endpoint.getMaxOutput())
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.max_output")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
         } else {
             Lang.translate("tooltip", "pressure.no_network")
                     .style(ChatFormatting.RED)
                     .forGoggles(tooltip);
         }
-
-        Lang.number(intake)
-                .translate("generic", "unit.pressure")
-                .style(ChatFormatting.AQUA)
-                .space()
-                .add(Lang.translate("tooltip", "pressure.intake")
-                        .style(ChatFormatting.DARK_GRAY))
-                .forGoggles(tooltip, 1);
-
-        Lang.number(output)
-                .translate("generic", "unit.pressure")
-                .style(ChatFormatting.AQUA)
-                .space()
-                .add(Lang.translate("tooltip", "pressure.output")
-                        .style(ChatFormatting.DARK_GRAY))
-                .forGoggles(tooltip, 1);
 
         return true;
 

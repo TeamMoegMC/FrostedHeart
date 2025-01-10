@@ -200,8 +200,15 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
         
         if (te instanceof NetworkConnector nc)
         	startPropagation(level,pos,nc,face);
-        else if (te != null)
-            FHCapabilities.HEAT_EP.getCapability(te, face).ifPresent(t -> t.reciveConnection(level, pos, this, face, 0));
+        else if (te != null) {
+            LazyOptional<HeatEndpoint> heatcap = FHCapabilities.HEAT_EP.getCapability(te, face);
+            if (heatcap.isPresent()) {
+                boolean result = heatcap.orElse(null).reciveConnection(level, pos, this, face, 0);
+                if (result) {
+                    addEndpoint(heatcap, 0, level, pos);
+                }
+            }
+        }
     }
     
     /**

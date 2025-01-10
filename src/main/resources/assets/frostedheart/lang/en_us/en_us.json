@@ -424,6 +424,8 @@
   "tooltip.frostedheart.pressure.no_network": "Network Not Formed",
   "tooltip.frostedheart.pressure.intake": "Consuming At Current Temperature",
   "tooltip.frostedheart.pressure.output": "Generating At Current Temperature",
+  "tooltip.frostedheart.pressure.max_intake": "Endpoint Consuming Limit",
+  "tooltip.frostedheart.pressure.max_output": "Endpoint Generating Limit",
   "tooltip.frostedheart.at_current_heat": "At Current Temperature",
   "tooltip.frostedheart.heat_stats": "Pressure Stats",
   "frostedheart.tooltip.food_temp_change": "Temperature Change: ",
