@@ -44,12 +44,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     final float capacity;
     /**
      * Detach priority.
-     * Consumer priority, if power is low, endpoint with lower priority would detach first
-     * -- GETTER --
-     *  Gets the detach priority.
-     *
-     * @return the priority to detatch
-
+     * If power is low, endpoint with lower priority would detach first
      */
     @Getter
     final int priority;
@@ -82,34 +77,28 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      */
     float avgOutput = -1;
     /**
-     * The maximum intake when receiving heat.<br>
-     * -- GETTER --
-     *  The maximum heat to receive from the network.
-     *
-     * @return the max intake
-
+     * The maximum intake when receiving heat from the network.<br>
      */
     @Getter
     float maxIntake = -1;
     /**
-     * The maximum heat output of this provider.<br>
-     * -- GETTER --
-     *  The maximum heat to provide to the network.
-     *
-     * @return the max output
-
+     * The maximum heat output of this provider when providing heat to the network.<br>
      */
     @Getter
     float maxOutput = -1;
     /**
-     * Whether this endpoint receives more heat than the network currently provides.
-     * Used for display
+     * Whether the recent average intake is less than the max intake.
+     * Can receive more.
      */
     boolean canCostMore = false;
-    /** Is constant supply even unload. */
+    /**
+     * Is working even when Chunk is unloaded.
+     */
     @Setter
     private boolean persist;
-    /** Is chunk unloaded*/
+    /**
+     * Is chunk unloaded.
+     */
     @Getter
     private boolean unloaded;
     public HeatEndpoint(Block block, BlockPos pos, int priority, float capacity) {
@@ -142,7 +131,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     }
 
     /**
-     * Recive connection from network.
+     * Receive connection from network.
      *
      * @param level       current world
      * @param pos     current pos
@@ -162,8 +151,8 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     }
 
     /**
-     * The network call this method to provide information about the connection
-     * This should only called by network.
+     * The network calls this method to provide information about the connection
+     * This should only be called by network.
      *
      * @param network  the network
      * @param distance the distance

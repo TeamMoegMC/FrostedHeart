@@ -36,13 +36,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity,NetworkConnector {
+public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity {
 
     HeatNetwork manager;
     HeatProviderEndPoint endpoint;
     LazyOptional<HeatProviderEndPoint> heatcap;
-    
-    ConnectorNetworkRevalidator<DebugHeaterTileEntity> networkHandler=new ConnectorNetworkRevalidator<>(this);
 
     public DebugHeaterTileEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.DEBUGHEATER.get(), pos, state);
@@ -65,7 +63,6 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickab
         if(!endpoint.hasValidNetwork())
         	manager.addEndpoint(heatcap.cast(), 0, getLevel(), getBlockPos());
         manager.tick(level);
-        networkHandler.tick();
     }
 
     @Override
@@ -78,23 +75,6 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickab
     @Override
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
     }
-
-	@Override
-	public HeatNetwork getNetwork() {
-		return networkHandler.hasNetwork()?networkHandler.getNetwork():manager;
-	}
-
-	@Override
-	public boolean canConnectTo(Direction to) {
-		return true;
-	}
-
-	@Override
-	public void setNetwork(HeatNetwork network) {
-		networkHandler.setNetwork(network);
-		network.addEndpoint(heatcap.cast(), 0, getLevel(), getBlockPos());
-	}
-	
 
 	@Override
 	public void invalidateCaps() {
