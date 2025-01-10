@@ -30,7 +30,7 @@ public class CreativeHeaterBlockEntity extends HeatManagerBlockEntity {
     protected ScrollValueBehaviour generatedHeat;
     public CreativeHeaterBlockEntity(BlockEntityType<? extends BlockEntity> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
-        endpoint = new HeatEndpoint(-1, MAX_HEAT * 4, MAX_HEAT, 0);
+        endpoint = new HeatEndpoint(-1, MAX_HEAT * 4, DEFAULT_HEAT, 0);
     }
 
     @Override

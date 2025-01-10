@@ -322,21 +322,27 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     public void writeNetwork(FriendlyByteBuf pb) {
         pb.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS, blk);
         pb.writeBlockPos(pos);
+        pb.writeInt(priority);
         pb.writeFloat(capacity);
         pb.writeFloat(avgIntake);
         pb.writeFloat(avgOutput);
         pb.writeBoolean(canCostMore);
+        pb.writeFloat(maxIntake);
+        pb.writeFloat(maxOutput);
     }
 
     public static HeatEndpoint readNetwork(FriendlyByteBuf pb) {
         HeatEndpoint dat = new HeatEndpoint(
                 pb.readRegistryIdUnsafe(ForgeRegistries.BLOCKS),
                 pb.readBlockPos(),
+                pb.readInt(),
                 pb.readFloat()
         );
         dat.avgIntake = pb.readFloat();
         dat.avgOutput = pb.readFloat();
         dat.canCostMore = pb.readBoolean();
+        dat.maxIntake = pb.readFloat();
+        dat.maxOutput = pb.readFloat();
         return dat;
     }
 
@@ -350,17 +356,6 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
         nbt.putFloat("net_power", heat);
         //nbt.putLong("pos", pos.asLong());
        //nbt.putString("block", RegistryUtils.getRegistryName(blk).toString());
-    }
-    public void loadNetwork(CompoundTag nbt, boolean isPacket) {
-        heat = nbt.getFloat("net_power");
-        pos = BlockPos.of(nbt.getLong("pos"));
-        blk = RegistryUtils.getBlock(new ResourceLocation(nbt.getString("block")));
-    }
-
-    public void saveNetwork(CompoundTag nbt, boolean isPacket) {
-        nbt.putFloat("net_power", heat);
-        nbt.putLong("pos", pos.asLong());
-        nbt.putString("block", RegistryUtils.getRegistryName(blk).toString());
     }
     @Override
     public HeatNetwork getNetwork() {
