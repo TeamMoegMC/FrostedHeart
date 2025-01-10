@@ -24,6 +24,7 @@ import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
 import com.teammoeg.frostedheart.base.block.PipeTileEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.ChatFormatting;
@@ -83,33 +84,41 @@ public class HeatPipeTileEntity extends PipeTileEntity implements NetworkConnect
 
         Lang.tooltip("heat_stats").forGoggles(tooltip);
 
-        if (networkHandler.hasNetwork()) {
-            output = networkHandler.getNetwork().getTotalEndpointOutput();
-            intake = networkHandler.getNetwork().getTotalEndpointIntake();
+        if (!TemperatureGoogleRenderer.lastHeatNetworkData.invalid()) {
+            ClientHeatNetworkData data = TemperatureGoogleRenderer.lastHeatNetworkData;
+
             Lang.translate("tooltip", "pressure")
                     .style(GRAY)
                     .forGoggles(tooltip);
+            Lang.number(data.totalEndpointIntake)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.intake")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            Lang.number(data.totalEndpointOutput)
+                    .translate("generic", "unit.pressure")
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.output")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
+            // show number of endpoints
+            Lang.number(data.endpoints.size())
+                    .style(ChatFormatting.AQUA)
+                    .space()
+                    .add(Lang.translate("tooltip", "pressure.endpoints")
+                            .style(ChatFormatting.DARK_GRAY))
+                    .forGoggles(tooltip, 1);
+
         } else {
             Lang.translate("tooltip", "pressure.no_network")
                     .style(ChatFormatting.RED)
                     .forGoggles(tooltip);
         }
-
-        Lang.number(intake)
-                .translate("generic", "unit.pressure")
-                .style(ChatFormatting.AQUA)
-                .space()
-                .add(Lang.translate("tooltip", "pressure.intake")
-                        .style(ChatFormatting.DARK_GRAY))
-                .forGoggles(tooltip, 1);
-
-        Lang.number(output)
-                .translate("generic", "unit.pressure")
-                .style(ChatFormatting.AQUA)
-                .space()
-                .add(Lang.translate("tooltip", "pressure.output")
-                        .style(ChatFormatting.DARK_GRAY))
-                .forGoggles(tooltip, 1);
 
         return true;
 

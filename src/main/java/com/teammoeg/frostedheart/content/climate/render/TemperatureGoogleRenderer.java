@@ -35,9 +35,7 @@ import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.tooltips.BlockTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
-import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
-import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkRequestC2SPacket;
-import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
+import com.teammoeg.frostedheart.content.steamenergy.*;
 import com.teammoeg.frostedheart.content.utility.SoilThermometer;
 import com.teammoeg.frostedheart.content.utility.TemperatureProbe;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
@@ -63,6 +61,7 @@ import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -81,6 +80,7 @@ public class TemperatureGoogleRenderer {
     public static int hoverTicks = 0;
     public static BlockPos lastHovered = null;
     public static BlockPos lastHeatNetworkPos = null;
+    public static ClientHeatNetworkData lastHeatNetworkData = null;
 
     public static void renderOverlay(ForgeGui gui, GuiGraphics graphics, float partialTicks, int width,
                                      int height) {
@@ -137,14 +137,15 @@ public class TemperatureGoogleRenderer {
         boolean hasHeatNetworkInformation = be instanceof HeatNetworkProvider;
 
         // Request HeatNetwork data
+        // Note: We cannot really do cache by pos as heat network data can change every tick...
+        // TODO: Separate network request and endpoint request
         if (wearingGoggles && hasGoggleInformation && hasHeatNetworkInformation) {
-            if (lastHeatNetworkPos == null)
-                lastHeatNetworkPos = pos;
-            if (!lastHeatNetworkPos.equals(pos)) {
-                lastHeatNetworkPos = pos;
-                FHMain.LOGGER.debug("Requesting HeatNetwork data for HeatNetworkProvider at " + pos);
-                FHNetwork.sendToServer(new HeatNetworkRequestC2SPacket(pos));
-            }
+            // Set invalid data by default
+            if (lastHeatNetworkData == null)
+                lastHeatNetworkData = new ClientHeatNetworkData(pos);
+            // Try to request the data
+//            FHMain.LOGGER.debug("Requesting ClientHeatNetworkData from HeatNetworkProvider at " + pos);
+            FHNetwork.sendToServer(new HeatNetworkRequestC2SPacket(pos));
         }
 
         // Icon to render

@@ -36,7 +36,7 @@ public class CreativeHeaterBlockEntity extends HeatManagerBlockEntity {
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         generatedHeat = new HeatScrollValueBehavior(Lang.gui("creative_heater.heat").component(), this, new HeaterValueBox());
-        generatedHeat.between(-MAX_HEAT, MAX_HEAT);
+        generatedHeat.between(0, MAX_HEAT);
         generatedHeat.value = DEFAULT_HEAT;
         generatedHeat.withCallback(i -> updateHeat());
         behaviours.add(generatedHeat);

@@ -274,6 +274,10 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
         heat = capacity;
     }
 
+    public void clear() {
+        heat = 0;
+    }
+
     /**
      * Drain heat from this endpoint.
      *
@@ -344,6 +348,15 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
         dat.maxIntake = pb.readFloat();
         dat.maxOutput = pb.readFloat();
         return dat;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        // check blk, pos, priority, capacity, avgIntake, avgOutput, canCostMore, maxIntake, maxOutput
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        HeatEndpoint that = (HeatEndpoint) obj;
+        return blk.equals(that.blk) && pos.equals(that.pos) && priority == that.priority && Float.compare(that.capacity, capacity) == 0 && Float.compare(that.avgIntake, avgIntake) == 0 && Float.compare(that.avgOutput, avgOutput) == 0 && canCostMore == that.canCostMore && Float.compare(that.maxIntake, maxIntake) == 0 && Float.compare(that.maxOutput, maxOutput) == 0;
     }
 
     public void load(CompoundTag nbt, boolean isPacket) {

@@ -4,6 +4,8 @@ import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
+import com.teammoeg.frostedheart.content.steamenergy.ClientHeatNetworkData;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
@@ -38,18 +40,17 @@ public class HeatBlockEntity extends SmartBlockEntity implements HeatNetworkProv
     }
 
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        float output = 0;
-        float intake = 0;
 
         Lang.tooltip("heat_stats").forGoggles(tooltip);
 
-        if (getNetwork() != null) {
-            output = getNetwork().getTotalEndpointOutput();
-            intake = getNetwork().getTotalEndpointIntake();
-            Lang.translate("tooltip", "pressure")
+        if (!TemperatureGoogleRenderer.lastHeatNetworkData.invalid()) {
+            ClientHeatNetworkData data = TemperatureGoogleRenderer.lastHeatNetworkData;
+
+            Lang.translate("tooltip", "pressure.network")
                     .style(GRAY)
                     .forGoggles(tooltip);
-            Lang.number(intake)
+
+            Lang.number(data.totalEndpointIntake)
                     .translate("generic", "unit.pressure")
                     .style(ChatFormatting.AQUA)
                     .space()
@@ -57,7 +58,7 @@ public class HeatBlockEntity extends SmartBlockEntity implements HeatNetworkProv
                             .style(ChatFormatting.DARK_GRAY))
                     .forGoggles(tooltip, 1);
 
-            Lang.number(output)
+            Lang.number(data.totalEndpointOutput)
                     .translate("generic", "unit.pressure")
                     .style(ChatFormatting.AQUA)
                     .space()
@@ -65,21 +66,63 @@ public class HeatBlockEntity extends SmartBlockEntity implements HeatNetworkProv
                             .style(ChatFormatting.DARK_GRAY))
                     .forGoggles(tooltip, 1);
 
-            Lang.number(endpoint.getMaxIntake())
-                    .translate("generic", "unit.pressure")
+            // show number of endpoints
+            Lang.number(data.endpoints.size())
                     .style(ChatFormatting.AQUA)
                     .space()
-                    .add(Lang.translate("tooltip", "pressure.max_intake")
+                    .add(Lang.translate("tooltip", "pressure.endpoints")
                             .style(ChatFormatting.DARK_GRAY))
                     .forGoggles(tooltip, 1);
 
-            Lang.number(endpoint.getMaxOutput())
-                    .translate("generic", "unit.pressure")
-                    .style(ChatFormatting.AQUA)
-                    .space()
-                    .add(Lang.translate("tooltip", "pressure.max_output")
-                            .style(ChatFormatting.DARK_GRAY))
-                    .forGoggles(tooltip, 1);
+            Lang.translate("tooltip", "pressure.endpoint")
+                    .style(GRAY)
+                    .forGoggles(tooltip);
+
+            // stream through endpoints, filter by pos
+            data.endpoints.stream()
+                    .filter(e -> e.getPos().equals(worldPosition))
+                    .forEach(e -> {
+                        float maxIntake = e.getMaxIntake();
+                        float maxOutput = e.getMaxOutput();
+                        float avgIntake = e.getAvgIntake();
+                        float avgOutput = e.getAvgOutput();
+
+                        if (maxIntake > 0)
+                            Lang.number(e.getMaxIntake())
+                                    .translate("generic", "unit.pressure")
+                                    .style(ChatFormatting.AQUA)
+                                    .space()
+                                    .add(Lang.translate("tooltip", "pressure.max_intake")
+                                            .style(ChatFormatting.DARK_GRAY))
+                                    .forGoggles(tooltip, 1);
+
+                        if (maxOutput > 0)
+                            Lang.number(e.getMaxOutput())
+                                    .translate("generic", "unit.pressure")
+                                    .style(ChatFormatting.AQUA)
+                                    .space()
+                                    .add(Lang.translate("tooltip", "pressure.max_output")
+                                            .style(ChatFormatting.DARK_GRAY))
+                                    .forGoggles(tooltip, 1);
+
+                        if (avgIntake > 0)
+                            Lang.number(e.getAvgIntake())
+                                    .translate("generic", "unit.pressure")
+                                    .style(ChatFormatting.AQUA)
+                                    .space()
+                                    .add(Lang.translate("tooltip", "pressure.average_intake")
+                                            .style(ChatFormatting.DARK_GRAY))
+                                    .forGoggles(tooltip, 1);
+
+                        if (avgOutput > 0)
+                            Lang.number(e.getAvgOutput())
+                                .translate("generic", "unit.pressure")
+                                .style(ChatFormatting.AQUA)
+                                .space()
+                                .add(Lang.translate("tooltip", "pressure.average_output")
+                                        .style(ChatFormatting.DARK_GRAY))
+                                .forGoggles(tooltip, 1);
+                    });
 
         } else {
             Lang.translate("tooltip", "pressure.no_network")
