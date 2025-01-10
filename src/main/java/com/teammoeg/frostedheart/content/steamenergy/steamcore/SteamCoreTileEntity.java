@@ -5,7 +5,7 @@ import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -22,8 +22,8 @@ import java.util.Objects;
 public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
         FHTickableBlockEntity, IHaveGoggleInformation,
         FHBlockInterfaces.IActiveState {
-    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, FHConfig.COMMON.steamCoreMaxPower.get().floatValue(), FHConfig.COMMON.steamCorePowerIntake.get().floatValue());
-    LazyOptional<HeatConsumerEndpoint> heatcap = LazyOptional.of(() -> network);
+    HeatEndpoint network = new HeatEndpoint(10, FHConfig.COMMON.steamCoreMaxPower.get().floatValue(), 0, FHConfig.COMMON.steamCorePowerIntake.get().floatValue());
+    LazyOptional<HeatEndpoint> heatcap = LazyOptional.of(() -> network);
 
     public SteamCoreTileEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);

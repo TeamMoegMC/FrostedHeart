@@ -36,6 +36,7 @@ import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
+import com.teammoeg.frostedheart.content.steamenergy.creative.CreativeHeaterBlockEntity;
 import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
@@ -60,6 +61,11 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 public class FHBlockEntityTypes {
+    public static final BlockEntityEntry<CreativeHeaterBlockEntity> CREATIVE_HEATER = REGISTRATE
+            .blockEntity("creative_heater", CreativeHeaterBlockEntity::new)
+            .validBlocks(FHBlocks.CREATIVE_HEATER)
+            .register();
+
     public static final DeferredRegister<BlockEntityType<?>> REGISTER = DeferredRegister.create(
             ForgeRegistries.BLOCK_ENTITY_TYPES, FHMain.MODID);
     public static final RegistryObject<BlockEntityType<HeatPipeTileEntity>> HEATPIPE = REGISTER.register(
@@ -142,5 +148,7 @@ public class FHBlockEntityTypes {
     private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeTypeMultipleBlocks(BlockEntitySupplier<T> create, Supplier<Collection<Block>> valid) {
         return () -> new BlockEntityType<>(create, ImmutableSet.copyOf(valid.get()), null);
     }
+
+    public static void init() {}
 
 }

@@ -56,6 +56,7 @@ import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskBlock;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcBlock;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
+import com.teammoeg.frostedheart.content.steamenergy.creative.CreativeHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainBlock;
 import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainNozzleBlock;
@@ -1724,6 +1725,19 @@ public class FHBlocks {
             .model(AssetLookup.existingItemModel())
             .build()
             .register();
+    public static final BlockEntry<CreativeHeaterBlock> CREATIVE_HEATER = REGISTRATE.block("creative_heater", CreativeHeaterBlock::new)
+            .properties(t -> t.mapColor(MapColor.STONE)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops()
+                    .strength(2, 10)
+                    .noOcclusion())
+            .blockstate((c, p) -> p.getExistingVariantBuilder(c.get()))
+            .tag(FHTags.Blocks.METAL_MACHINES.tag)
+            .item()
+            .model(AssetLookup.existingItemModel())
+            .build()
+            .register();
+
     // CHARGER
     public static final BlockEntry<ChargerBlock> CHARGER = REGISTRATE.block("charger", ChargerBlock::new)
             .properties(t -> t.mapColor(MapColor.STONE)

@@ -421,6 +421,7 @@
   "tooltip.frostedheart.keyS": "S",
   "tooltip.frostedheart.nutrition": "Nutrition",
   "tooltip.frostedheart.pressure": "Superheated Steam",
+  "tooltip.frostedheart.pressure.no_network": "Network Not Formed",
   "tooltip.frostedheart.pressure.intake": "Consuming At Current Temperature",
   "tooltip.frostedheart.pressure.output": "Generating At Current Temperature",
   "tooltip.frostedheart.at_current_heat": "At Current Temperature",

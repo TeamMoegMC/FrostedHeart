@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.town.house;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
@@ -73,7 +73,7 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity {
     private double temperatureModifier = 0;
 
     /** Tile data, stored in tile entity. */
-    HeatConsumerEndpoint endpoint = new HeatConsumerEndpoint(99,10,1);
+    HeatEndpoint endpoint = new HeatEndpoint(99, 10, 0, 1);
 
     public HouseBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.HOUSE.get(),pos,state);
@@ -291,7 +291,7 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity {
         endpoint.save(compoundNBT, isPacket);
     }
 
-    LazyOptional<HeatConsumerEndpoint> endpointCap = LazyOptional.of(()-> endpoint);
+    LazyOptional<HeatEndpoint> endpointCap = LazyOptional.of(()-> endpoint);
     @Nonnull
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
         if(capability== FHCapabilities.HEAT_EP.capability() && facing == Direction.NORTH) {

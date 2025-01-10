@@ -83,13 +83,16 @@ public class HeatPipeTileEntity extends PipeTileEntity implements NetworkConnect
 
         Lang.tooltip("heat_stats").forGoggles(tooltip);
 
-        Lang.translate("tooltip", "pressure")
-                .style(GRAY)
-                .forGoggles(tooltip);
-
         if (networkHandler.hasNetwork()) {
             output = networkHandler.getNetwork().getTotalEndpointOutput();
             intake = networkHandler.getNetwork().getTotalEndpointIntake();
+            Lang.translate("tooltip", "pressure")
+                    .style(GRAY)
+                    .forGoggles(tooltip);
+        } else {
+            Lang.translate("tooltip", "pressure.no_network")
+                    .style(ChatFormatting.RED)
+                    .forGoggles(tooltip);
         }
 
         Lang.number(intake)

@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.town.hunting;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockScanner;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
@@ -31,8 +31,8 @@ public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity {
     private int tanningRackNum;
     private double temperature;
     private Map<String, Integer> decorations;
-    HeatConsumerEndpoint endpoint = new HeatConsumerEndpoint(99,10,1);
-    LazyOptional<HeatConsumerEndpoint> endpointCap = LazyOptional.of(()-> endpoint);
+    HeatEndpoint endpoint = new HeatEndpoint(99,10, 0, 1);
+    LazyOptional<HeatEndpoint> endpointCap = LazyOptional.of(()-> endpoint);
     private double temperatureModifier = 0;
     private int maxResident;
 

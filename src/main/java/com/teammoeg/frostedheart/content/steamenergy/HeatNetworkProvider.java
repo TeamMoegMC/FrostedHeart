@@ -19,9 +19,12 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
+import org.jetbrains.annotations.Nullable;
+
 /**
  * For any BlockEntity that provides a HeatNetwork.
  */
 public interface HeatNetworkProvider {
+    @Nullable
     HeatNetwork getNetwork();
 }

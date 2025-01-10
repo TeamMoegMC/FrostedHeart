@@ -2,8 +2,8 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorState;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
-import com.teammoeg.frostedheart.content.steamenergy.HeatProviderEndPoint;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.StoredCapability;
 import net.minecraft.nbt.CompoundTag;
@@ -17,7 +17,7 @@ public class T2GeneratorState extends GeneratorState {
             f -> GeneratorSteamRecipe.findRecipe(f) != null);
     public LazyOptional<IFluidHandler> tankCap = LazyOptional.of(() -> tank);
     
-    public StoredCapability<HeatProviderEndPoint> heatCap=new StoredCapability<>(ep);
+    public StoredCapability<HeatEndpoint> heatCap=new StoredCapability<>(ep);
     HeatNetwork manager=new HeatNetwork();
 
     int liquidtick = 0;

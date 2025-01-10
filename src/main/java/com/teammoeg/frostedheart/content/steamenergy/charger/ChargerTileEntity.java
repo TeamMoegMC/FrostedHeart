@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.core.BlockPos;
@@ -52,9 +52,9 @@ public class ChargerTileEntity extends IEBaseBlockEntity implements FHTickableBl
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
-    HeatConsumerEndpoint network = new HeatConsumerEndpoint(-10, 200, 5);
+    HeatEndpoint network = new HeatEndpoint(-10, 200, 0, 5);
     float power;
-    LazyOptional<HeatConsumerEndpoint> heatcap = LazyOptional.of(() -> network);
+    LazyOptional<HeatEndpoint> heatcap = LazyOptional.of(() -> network);
 
 
     public ChargerTileEntity(BlockPos pos, BlockState state) {

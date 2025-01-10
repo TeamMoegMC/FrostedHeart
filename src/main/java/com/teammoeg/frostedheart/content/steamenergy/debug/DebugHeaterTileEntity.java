@@ -24,10 +24,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.ConnectorNetworkRevalidator;
-import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
-import com.teammoeg.frostedheart.content.steamenergy.HeatProviderEndPoint;
-import com.teammoeg.frostedheart.content.steamenergy.NetworkConnector;
+import com.teammoeg.frostedheart.content.steamenergy.*;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -35,12 +32,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import org.jetbrains.annotations.Nullable;
 
-public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity {
+public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity, HeatNetworkProvider {
 
     HeatNetwork manager;
-    HeatProviderEndPoint endpoint;
-    LazyOptional<HeatProviderEndPoint> heatcap;
+    HeatEndpoint endpoint;
+    LazyOptional<HeatEndpoint> heatcap;
 
     public DebugHeaterTileEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.DEBUGHEATER.get(), pos, state);
@@ -49,7 +47,7 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickab
             	manager.connectTo(level, worldPosition.relative(d),getBlockPos(), d.getOpposite());
             }
         });
-        endpoint = new HeatProviderEndPoint(-1, Integer.MAX_VALUE, Integer.MAX_VALUE);
+        endpoint = new HeatEndpoint(-1, Integer.MAX_VALUE, Integer.MAX_VALUE, 0);
         heatcap = LazyOptional.of(() -> endpoint);
     }
 
@@ -88,4 +86,8 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickab
 		endpoint.unload();
 	}
 
+    @Override
+    public @Nullable HeatNetwork getNetwork() {
+        return manager;
+    }
 }

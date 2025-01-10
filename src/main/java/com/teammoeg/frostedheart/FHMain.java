@@ -161,6 +161,7 @@ public class FHMain {
         FHItems.init();
         FHProps.init();
         FHBlocks.init();
+        FHBlockEntityTypes.init();
         FHBiomes.init();
         FHMultiblocks.Multiblock.init();
         FHPredicates.init();

@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 import java.util.Optional;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.base.team.TeamDataHolder;
-import com.teammoeg.frostedheart.content.steamenergy.HeatProviderEndPoint;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -15,7 +15,7 @@ public class GeneratorState extends HeatingState {
      * Remaining ticks to explode
      */
     int explodeTicks;
-    public HeatProviderEndPoint ep = new HeatProviderEndPoint(200);
+    public HeatEndpoint ep = new HeatEndpoint(200, 0);
     public GeneratorState() {
         super();
     }
