@@ -1,7 +1,5 @@
 package com.teammoeg.frostedheart.content.town.resource;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Arrays;
@@ -34,13 +32,6 @@ public class TownResourceManager {
         return resourceHolder.get(itemStack);
     }
 
-    /**
-     * @param key Used to reduce the time of reading tags of ItemStack. MUST same with item's ItemResourceKey
-     */
-    public double get(ItemResourceKey key, ItemStack itemStack){
-        return resourceHolder.get(key,itemStack);
-    }
-
     public double getCapacityLeft(){
         return get(VirtualResourceType.MAX_CAPACITY.generateKey(0)) - resourceHolder.getOccupiedCapacity();
     }
@@ -70,7 +61,6 @@ public class TownResourceManager {
      * @return if the resource is added
      */
     public ResourceActionResult addIfHaveCapacity(VirtualResourceKey key, double amount){
-        if(amount <=0) return ResourceActionResult.NOT_SUCCESS;
         if(!key.type.needCapacity){
             resourceHolder.addUnsafe(key,amount);
             return new ResourceActionResult(true, amount, key);
@@ -88,12 +78,10 @@ public class TownResourceManager {
     }
 
     public ResourceActionResult addIfHaveCapacity(ItemStack itemStack, double amount){
-        if(amount <=0) return ResourceActionResult.NOT_SUCCESS;
         double spaceLeft = getCapacityLeft();
         if(spaceLeft>=amount){
-            ItemResourceKey key = ItemResourceKey.fromItemStack(itemStack);
-            resourceHolder.addUnsafe(key, itemStack, amount);
-            return new ResourceActionResult(true, amount, key);
+            resourceHolder.addUnsafe(itemStack, amount);
+            return new ResourceActionResult(true, amount, 0, 0);
         }
         return ResourceActionResult.NOT_SUCCESS;
     }
@@ -106,7 +94,6 @@ public class TownResourceManager {
      * @return the amount actually added
      */
     public ResourceActionResult addToMax(VirtualResourceKey key, double amount){
-        if(amount <=0) return ResourceActionResult.NOT_SUCCESS;
         if(!key.type.needCapacity){
             resourceHolder.addUnsafe(key,amount);
             return new ResourceActionResult(true, amount, key);
@@ -118,22 +105,19 @@ public class TownResourceManager {
             return new ResourceActionResult(true, amount, key);
         } else {
             resourceHolder.addUnsafe(key,capacityLeft);
-            return new ResourceActionResult(true, capacityLeft, key);
+            return new ResourceActionResult(false, capacityLeft, key);
         }
     }
 
     public ResourceActionResult addToMax(ItemStack itemStack, double amount){
-        if(amount <=0) return ResourceActionResult.NOT_SUCCESS;
         double capacityLeft = getCapacityLeft();
         if(capacityLeft <= 0) return ResourceActionResult.NOT_SUCCESS;
         if(capacityLeft>=amount){
-            ItemResourceKey key = ItemResourceKey.fromItemStack(itemStack);
-            resourceHolder.addUnsafe(key, itemStack,amount);
-            return new ResourceActionResult(true, amount, key);
+            resourceHolder.addUnsafe( itemStack,amount);
+            return new ResourceActionResult(true, amount, 0, 0);
         } else {
-            ItemResourceKey key = ItemResourceKey.fromItemStack(itemStack);
-            resourceHolder.addUnsafe(key, itemStack,capacityLeft);
-            return new ResourceActionResult(true, capacityLeft, key);
+            resourceHolder.addUnsafe(itemStack,capacityLeft);
+            return new ResourceActionResult(false, capacityLeft, 0, 0);
         }
     }
 
@@ -154,34 +138,25 @@ public class TownResourceManager {
 
     public ResourceActionResult costIfHaveEnough(ItemStack itemStack, double amount){
         if(amount <=0) return ResourceActionResult.NOT_SUCCESS;
-        ItemResourceKey key = ItemResourceKey.fromItemStack(itemStack);
         if(get(itemStack) >= amount){
-            resourceHolder.costUnsafe(key, itemStack,amount);
-            return new ResourceActionResult(true, amount, key);
+            resourceHolder.costUnsafe(itemStack,amount);
+            return new ResourceActionResult(true, amount, 0, 0);
         } else {
             return ResourceActionResult.NOT_SUCCESS;
         }
     }
 
-    public ResourceActionResult costIfHaveEnough(ItemResourceKey key, ItemStack itemStack, double amount){
-        if(amount <=0) return ResourceActionResult.NOT_SUCCESS;
-        double resourceLeft = get(key, itemStack);
-        if(resourceLeft< amount) return ResourceActionResult.NOT_SUCCESS;
-        resourceHolder.costUnsafe(itemStack,amount);
-        return new ResourceActionResult(true, amount, itemStack);
-    }
-
     public ResourceActionResult costIfHaveEnough(ItemResourceKey key, double amount){
-        if(amount <=0) return ResourceActionResult.NOT_SUCCESS;
         double resourceLeft = get(key);
         if(resourceLeft<=amount) return ResourceActionResult.NOT_SUCCESS;
         double toCost;
         Map<ItemStack, Double> items = resourceHolder.getAllItems(key);
-        toCost = Math.min(resourceLeft, amount);
+        toCost = amount;
         for(ItemStack itemStack : items.keySet()){
-            ResourceActionResult result = costToEmpty(itemStack, toCost);
-            toCost -= result.amount();
-            if(toCost<=0) break;
+            double itemResourceAmount = TownResourceHolder.getResourceAmount(itemStack, key);
+            ResourceActionResult result = costToEmpty(itemStack, toCost / itemResourceAmount);
+            toCost -= result.actualAmount() * itemResourceAmount;
+            if(toCost<=TownResourceHolder.DELTA) break;
         }
         return new ResourceActionResult(true, amount, key);
     }
@@ -198,49 +173,30 @@ public class TownResourceManager {
      * @return the amount actually cost
      */
     public ResourceActionResult costToEmpty(ItemStack itemStack, double amount){
-        if(amount <=0) return ResourceActionResult.NOT_SUCCESS;
         double resourceLeft = get(itemStack);
         if(resourceLeft<=0) return ResourceActionResult.NOT_SUCCESS;
         if(resourceLeft>=amount){
             resourceHolder.costUnsafe(itemStack,amount);
-            return new ResourceActionResult(true, amount, itemStack);
+            return new ResourceActionResult(true, amount);
         } else {
             resourceHolder.costUnsafe(itemStack,resourceLeft);
-            return new ResourceActionResult(true, resourceLeft, itemStack);
+            return new ResourceActionResult(false, resourceLeft);
         }
     }
 
-    /**
-     * Almost same with this method:
-     * public ResourceActionResult costToEmpty(ItemStack itemStack, double amount)
-     * @param key Used to reduce the times of reading tags of itemStack. MUST be same with the ItemResourceKey of the itemStack.
-     */
-    public ResourceActionResult costToEmpty(ItemResourceKey key, ItemStack itemStack, double amount){
-        if(amount <=0) return ResourceActionResult.NOT_SUCCESS;
-        double resourceLeft = get(key, itemStack);
-        if(resourceLeft<=0) return ResourceActionResult.NOT_SUCCESS;
-        if(resourceLeft>=amount){
-            resourceHolder.costUnsafe(key, itemStack,amount);
-            return new ResourceActionResult(true, amount, itemStack);
-        } else {
-            resourceHolder.costUnsafe(key, itemStack, resourceLeft);
-            return new ResourceActionResult(true, resourceLeft, itemStack);
-        }
-    }
 
     public ResourceActionResult costToEmpty(ItemResourceKey key, double amount){
-        if(amount <=0) return ResourceActionResult.NOT_SUCCESS;
         double resourceLeft = get(key);
-        if(resourceLeft<=0) return ResourceActionResult.NOT_SUCCESS;
         double toCost;
         Map<ItemStack, Double> items = resourceHolder.getAllItems(key);
         toCost = Math.min(resourceLeft, amount);
         for(ItemStack itemStack : items.keySet()){
-            ResourceActionResult result = costToEmpty(itemStack, toCost);
-            toCost -= result.amount();
-            if(toCost<=0) break;
+            double itemResourceAmount = TownResourceHolder.getResourceAmount(itemStack, key);
+            ResourceActionResult result = costToEmpty(itemStack, toCost / itemResourceAmount);
+            toCost -= result.actualAmount() * itemResourceAmount;
+            if(toCost<=TownResourceHolder.DELTA) break;
         }
-        return new ResourceActionResult(true, Math.min(resourceLeft, amount), key);
+        return new ResourceActionResult(amount <= resourceLeft, Math.min(resourceLeft, amount), key);
     }
 
     public ResourceActionResult costToEmpty(VirtualResourceKey key, double amount){
@@ -276,11 +232,11 @@ public class TownResourceManager {
         for(int level = minLevel; level <= maxLevel; level++){
             if(resourcesToCost<=0) break;
             ResourceActionResult result = costToEmpty(type.generateKey(level), resourcesToCost);
-            resourcesToCost -= result.amount();
-            if(result.isSuccess()){
+            resourcesToCost -= result.actualAmount();
+            if(result.allSuccess()){
                 minLevelCount = Math.min(minLevelCount, level);
             }
-            averageLevelCount += result.amount() * level;
+            averageLevelCount += result.actualAmount() * level;
         }
         averageLevelCount /= amount;
         return new ResourceActionResult(true, amount, minLevelCount, averageLevelCount);
@@ -308,11 +264,11 @@ public class TownResourceManager {
         for(int level = maxLevel; level >= 0; level--){
             if(resourcesToCost<=0) break;
             ResourceActionResult result = costToEmpty(type.generateKey(level), resourcesToCost);
-            resourcesToCost -= result.amount();
-            if(result.isSuccess()){
+            resourcesToCost -= result.actualAmount();
+            if(result.allSuccess()){
                 minLevelCount = Math.min(minLevelCount, level);
             }
-            averageLevelCount += result.amount() * level;
+            averageLevelCount += result.actualAmount() * level;
         }
         averageLevelCount /= amount;
         return new ResourceActionResult(true, amount, minLevelCount, averageLevelCount);
@@ -329,11 +285,11 @@ public class TownResourceManager {
         for(int level = minLevel; level <= maxLevel; level++){
             if(resourcesToCost<=0) break;
             ResourceActionResult result = costToEmpty(type.generateKey(level), resourcesToCost);
-            resourcesToCost -= result.amount();
-            if(result.isSuccess()){
+            resourcesToCost -= result.actualAmount();
+            if(result.allSuccess()){
                 minLevelCount = Math.min(minLevelCount, level);
             }
-            averageLevelCount += result.amount() * level;
+            averageLevelCount += result.actualAmount() * level;
         }
         averageLevelCount /= amount;
         return new ResourceActionResult(true, Math.min(amount, resourceLeft), minLevelCount, averageLevelCount);
@@ -358,11 +314,11 @@ public class TownResourceManager {
         for(int level = maxLevel; level >= 0; level--){
             if(resourcesToCost<=0) break;
             ResourceActionResult result = costToEmpty(type.generateKey(level), resourcesToCost);
-            resourcesToCost -= result.amount();
-            if(result.isSuccess()){
+            resourcesToCost -= result.actualAmount();
+            if(result.allSuccess()){
                 minLevelCount = Math.min(minLevelCount, level);
             }
-            averageLevelCount += result.amount() * level;
+            averageLevelCount += result.actualAmount() * level;
         }
         averageLevelCount /= amount;
         return new ResourceActionResult(true, Math.min(amount, resourceLeft), minLevelCount, averageLevelCount);

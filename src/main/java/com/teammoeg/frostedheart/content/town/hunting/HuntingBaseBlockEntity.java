@@ -217,7 +217,7 @@ public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity {
                     while(iterator.hasNext() && residentsLeft > 0){
                         double add = iterator.next().getValue();
                         ResourceActionResult result = town.getResourceManager().addToMax(new ItemStack(Items.BEEF), add);
-                        if(result.amount() != add) return false;
+                        if(result.actualAmount() != add) return false;
                         residentsLeft--;
                     }
                 }

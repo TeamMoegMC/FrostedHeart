@@ -71,16 +71,16 @@ public enum TownWorkerType {
         //duck_egg: 未来或许会按照食物的质量(result.averageLevel)和均衡程度，影响房屋内居民的健康。但目前仅做一个基础的cost内容，以消除编译错误。
         for(ItemResourceType foodType : foodTypes){
             ResourceActionResult result = town.getResourceManager().costHighestLevelToEmpty(foodType, residentNum);
-            foodAmounts.put(foodType, result.amount());
-            toCost -= result.amount();
+            foodAmounts.put(foodType, result.actualAmount());
+            toCost -= result.actualAmount();
         }
         if(toCost <= 0){
             return true;
         }
         for(ItemResourceType foodType : foodTypes){
             ResourceActionResult result = town.getResourceManager().costHighestLevelToEmpty(foodType, toCost);
-            foodAmounts.merge(foodType, result.amount(), Double::sum);
-            toCost -= result.amount();
+            foodAmounts.merge(foodType, result.actualAmount(), Double::sum);
+            toCost -= result.actualAmount();
         }
         return true;
 

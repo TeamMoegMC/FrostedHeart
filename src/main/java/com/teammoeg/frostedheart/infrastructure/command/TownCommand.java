@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.infrastructure.command;
 
 import java.util.Arrays;
-import java.util.HashMap;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
@@ -31,7 +30,6 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.ResourceActionResult;
-import com.teammoeg.frostedheart.content.town.resource.VirtualResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
@@ -81,7 +79,7 @@ public class TownCommand {
                                             String type = StringArgumentType.getString(ct, "type");
                                             TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                                             ResourceActionResult result = town.getResourceManager().addIfHaveCapacity(VirtualResourceType.from(type), amount);
-                                            if(result.isSuccess()){
+                                            if(result.allSuccess()){
                                                 ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added"), true);
                                             } else ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added failed: No enough capacity."), true);
                                             return Command.SINGLE_SUCCESS;
@@ -98,7 +96,7 @@ public class TownCommand {
                                     ItemStack itemStack = ct.getSource().getPlayerOrException().getMainHandItem();
                                     ct.getSource().sendSuccess(()->TranslateUtils.str("Adding ItemStack: " + itemStack), true);
                                     ResourceActionResult result = town.getResourceManager().addIfHaveCapacity(itemStack, amount);
-                                    if(result.isSuccess()){
+                                    if(result.allSuccess()){
                                         ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added"), true);
                                         return Command.SINGLE_SUCCESS;
                                     } else ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added failed: No enough capacity."), true);

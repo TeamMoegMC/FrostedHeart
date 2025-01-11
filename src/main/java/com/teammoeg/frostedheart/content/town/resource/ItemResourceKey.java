@@ -8,6 +8,12 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * Used in the storage of town resource.
  * Holds the resource type and the level.
@@ -55,16 +61,19 @@ public class ItemResourceKey implements ITownResourceKey {
      * 若没有对应的资源类型，默认为OTHER
      * 若没有等级信息，默认为0
      */
-    public static ItemResourceKey fromItemStack(ItemStack itemStack){
+    public static List<ItemResourceKey> fromItemStack(ItemStack itemStack){
         return itemStack.getTags()
                 .filter(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::containsKey)
                 .map(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::get)
-                .findFirst()
-                .orElse(ItemResourceKey.of(ItemResourceType.OTHER, 0));
+                .toList();
     }
 
-    public TagKey<Item> getTagKey(){
+    public TagKey<Item> toTagKey(){
         return FHTags.Items.MAP_TOWN_RESOURCE_KEY_TO_TAG.get(this);
+    }
+
+    public static ItemResourceKey fromTagKey(TagKey<Item> tagKey){
+        return FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY.get(tagKey);
     }
 
     @Override
