@@ -25,24 +25,24 @@ public class TownResourceHolder {
      * The collection that saves all the resources of town.
      * 为了方便城镇访问特定TownResourceKey的资源，将不同种类的资源分开，以减少遍历次数和读取物品tag的次数。
      */
-    private Map<ItemStack, Double> itemResources = new HashMap<>();
+    private Map<ItemStackWrapper, Double> itemResources = new HashMap<>();
     private Map<VirtualResourceKey, Double> virtualResources = new HashMap<>();
     @Getter
     private double occupiedCapacity = 0.0;
 
-    private static final Map<ItemResourceKey, HashSet<ItemStack>> ITEM_RESOURCE_KEY_CACHE = new HashMap<>();
-    private static final Map<ItemStack, Map<ItemResourceKey, Double>> ITEM_RESOURCE_AMOUNTS = new HashMap<>();
+    private static final Map<ItemResourceKey, HashSet<ItemStackWrapper>> ITEM_RESOURCE_KEY_CACHE = new HashMap<>();
+    private static final Map<ItemStackWrapper, Map<ItemResourceKey, Double>> ITEM_RESOURCE_AMOUNTS = new HashMap<>();
     public static final double DELTA = 1.0/8192;//一个非常小的值，当资源数量小于这个值时，认为资源为0，抵消误差。
 
     public static final Codec<TownResourceHolder> CODEC = RecordCodecBuilder.create(t -> t.group(
-            CodecUtil.defaultValue(CodecUtil.mapCodec("itemStack", ItemStack.CODEC, "amount", Codec.DOUBLE), new HashMap<>()) .fieldOf("itemResources").forGetter(o->o.itemResources),
+            CodecUtil.defaultValue(CodecUtil.mapCodec("itemStack", ItemStackWrapper.CODEC, "amount", Codec.DOUBLE), new HashMap<>()) .fieldOf("itemResources").forGetter(o->o.itemResources),
             CodecUtil.defaultValue(CodecUtil.mapCodec("virtualKey", VirtualResourceKey.CODEC, "amount", Codec.DOUBLE), new HashMap<>()).fieldOf("virtualResources").forGetter(o->o.virtualResources),
             CodecUtil.defaultValue(Codec.DOUBLE, 0.0).fieldOf("occupiedCapacity").forGetter(o->o.occupiedCapacity)
             ).apply(t, TownResourceHolder::new)
     );
 
     public TownResourceHolder() {}
-    public TownResourceHolder(Map<ItemStack, Double> itemResources, Map<VirtualResourceKey, Double> virtualResources, double occupiedCapacity) {
+    public TownResourceHolder(Map<ItemStackWrapper, Double> itemResources, Map<VirtualResourceKey, Double> virtualResources, double occupiedCapacity) {
         this.itemResources = itemResources;
         this.virtualResources = virtualResources;
         this.occupiedCapacity = occupiedCapacity;
@@ -50,7 +50,7 @@ public class TownResourceHolder {
         updateCache();
     }
 
-    public TownResourceHolder(Map<ItemStack, Double> itemResources, Map<VirtualResourceKey, Double> virtualResources) {
+    public TownResourceHolder(Map<ItemStackWrapper, Double> itemResources, Map<VirtualResourceKey, Double> virtualResources) {
         DoubleAdder adder = new DoubleAdder();
         itemResources.values().forEach(adder::add);
         virtualResources.entrySet().stream()
@@ -70,38 +70,56 @@ public class TownResourceHolder {
                 .filter(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::containsKey)
                 .findFirst()
                 .map(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::get)
-                .ifPresent(key -> isCached.set(ITEM_RESOURCE_KEY_CACHE.get(key).contains(itemStack)));
+                .ifPresent(key -> isCached.set(ITEM_RESOURCE_KEY_CACHE.get(key).contains(new ItemStackWrapper(itemStack))));
         return isCached.get();
     }
 
-    public static double getResourceAmount(ItemStack pItemStack, ItemResourceKey key){
+    public static double getResourceAmount(ItemStackWrapper itemStackWrapper, ItemResourceKey key){
         if(ITEM_RESOURCE_AMOUNTS.isEmpty()) loadItemResourceAmounts();
-        ItemStack itemStack = pItemStack.copyWithCount(1);
         AtomicReference<Double> amount = new AtomicReference<>(0.0);
-        if(ITEM_RESOURCE_KEY_CACHE.get(key).contains(itemStack)){
-            amount.set(ITEM_RESOURCE_AMOUNTS.get(itemStack).getOrDefault(key, 1.0));
+        if(ITEM_RESOURCE_KEY_CACHE.get(key).contains(itemStackWrapper)){
+            amount.set(ITEM_RESOURCE_AMOUNTS.get(itemStackWrapper).getOrDefault(key, 1.0));
         } else{
-            itemStack.getTags()
+            itemStackWrapper.getItemStack().getTags()
                     .map(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::get)
                     .filter(key::equals)
                     .findFirst()
-                    .ifPresent(key1 -> {
-                        amount.set(ITEM_RESOURCE_AMOUNTS.get(itemStack).getOrDefault(key1, 1.0));
-                    });
+                    .ifPresent(key1 -> amount.set(ITEM_RESOURCE_AMOUNTS.get(itemStackWrapper).getOrDefault(key1, 1.0)));
         }
         return amount.get();
     }
 
+    public static double getResourceAmount(ItemStack pItemStack, ItemResourceKey key){
+        return getResourceAmount(new ItemStackWrapper(pItemStack), key);
+    }
+
+    public static void addItemToCache(ItemStackWrapper itemStackWrapper){
+        itemStackWrapper.getItemStack().getTags()
+                //仅获取有对应ItemResourceKey的tag
+                .filter(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::containsKey)
+                //如果已经缓存过，则跳过该物品的tag
+                .takeWhile(tag -> !ITEM_RESOURCE_KEY_CACHE.get(ItemResourceKey.fromTagKey(tag)).contains(itemStackWrapper))
+                .map(ItemResourceKey::fromTagKey)
+                .forEach(key -> ITEM_RESOURCE_KEY_CACHE.computeIfAbsent(key, k -> new HashSet<>()).add(itemStackWrapper));
+    }
+
+    public static void addItemToCache(ItemStack pItemStack){
+        addItemToCache(new ItemStackWrapper(pItemStack));
+    }
+
+    public double get(ItemStackWrapper itemStackWrapper){
+        return itemResources.getOrDefault(itemStackWrapper, 0.0);
+    }
+
     public double get(ItemStack pItemStack){
-        ItemStack itemStack = pItemStack.copyWithCount(1);
-        return itemResources.getOrDefault(itemStack, 0.0);
+        return get(new ItemStackWrapper(pItemStack));
     }
 
     public double get(ITownResourceKey key){
         if(key instanceof ItemResourceKey){
             DoubleAdder adder = new DoubleAdder();
-            for(ItemStack itemStack : ITEM_RESOURCE_KEY_CACHE.get((ItemResourceKey)key)){
-                adder.add(get(itemStack) * getResourceAmount(itemStack, (ItemResourceKey)key));
+            for(ItemStackWrapper itemStackWrapper : ITEM_RESOURCE_KEY_CACHE.get((ItemResourceKey)key)){
+                adder.add(get(itemStackWrapper) * getResourceAmount(itemStackWrapper, (ItemResourceKey)key));
             }
             return adder.doubleValue();
         } else if(key instanceof VirtualResourceKey){
@@ -123,7 +141,13 @@ public class TownResourceHolder {
      * @return A map that contains all items stored in town.
      */
     public Map<ItemStack, Double> getAllItems(){
-        return Map.copyOf(itemResources);
+        Map<ItemStack, Double> items = new HashMap<>();
+        for(ItemStackWrapper itemStackWrapper : itemResources.keySet()){
+            if(get(itemStackWrapper) > DELTA){
+                items.put(itemStackWrapper.getItemStack(), get(itemStackWrapper));
+            }
+        }
+        return items;
     }
 
     /**
@@ -133,9 +157,9 @@ public class TownResourceHolder {
      */
     public Map<ItemStack, Double> getAllItems(ItemResourceKey key){
         Map<ItemStack, Double> items = new HashMap<>();
-        for(ItemStack itemStack : ITEM_RESOURCE_KEY_CACHE.get(key)){
-            if(get(itemStack) > DELTA){
-                items.put(itemStack, get(itemStack) * getResourceAmount(itemStack, key));
+        for(ItemStackWrapper itemStackWrapper : ITEM_RESOURCE_KEY_CACHE.get(key)){
+            if(get(itemStackWrapper) > DELTA){
+                items.put(itemStackWrapper.getItemStack(), get(itemStackWrapper) * getResourceAmount(itemStackWrapper, key));
             }
         }
         return items;
@@ -151,13 +175,13 @@ public class TownResourceHolder {
      */
     private void addSigned(ItemStack pItemStack, double amount){
         if(pItemStack.isEmpty()) return;
-        ItemStack itemStack = pItemStack.copyWithCount(1);
-        Double amountExist = itemResources.get(itemStack);
+        ItemStackWrapper itemStackWrapper = new ItemStackWrapper(pItemStack);
+        Double amountExist = itemResources.get(itemStackWrapper);
         if(amountExist == null){
-            addItemToCache(itemStack);
+            addItemToCache(itemStackWrapper);
         }
-        if(Math.abs(itemResources.merge(itemStack, amount, Double::sum)) <= DELTA){
-            itemResources.remove(itemStack);
+        if(Math.abs(itemResources.merge(itemStackWrapper, amount, Double::sum)) <= DELTA){
+            itemResources.remove(itemStackWrapper);
         }
         this.occupiedCapacity += amount;
     }
@@ -252,29 +276,17 @@ public class TownResourceHolder {
      * 遍历存储的所有物品，获取物品对应的ItemResourceKey及其数量，加入到缓存中。
      */
     public void updateCache(){
-        for(ItemStack itemStack : itemResources.keySet()){
-            if(itemStack.isEmpty()) continue;
-            addItemToCache(itemStack);
+        for(ItemStackWrapper itemStackWrapper : itemResources.keySet()){
+            if(itemStackWrapper.getItemStack().isEmpty()) continue;
+            addItemToCache(itemStackWrapper);
         }
-    }
-
-    public static void addItemToCache(ItemStack itemStack){
-        itemStack.getTags()
-                //仅获取有对应ItemResourceKey的tag
-                .filter(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::containsKey)
-                //如果已经缓存过，则跳过该物品的tag
-                .takeWhile(tag -> !ITEM_RESOURCE_KEY_CACHE.get(ItemResourceKey.fromTagKey(tag)).contains(itemStack))
-                .map(ItemResourceKey::fromTagKey)
-                .forEach(key -> {
-                    ITEM_RESOURCE_KEY_CACHE.computeIfAbsent(key, k -> new HashSet<>()).add(itemStack);
-                });
     }
 
     public static void loadItemResourceAmounts(){
         for(ItemResourceAmountRecipe recipe : FHUtils.filterRecipes(FHTeamDataManager.getRecipeManager(), ItemResourceAmountRecipe.TYPE)){
-            ItemStack item = recipe.item.copyWithCount(1);
-            if(!ITEM_RESOURCE_AMOUNTS.containsKey(item)) ITEM_RESOURCE_AMOUNTS.put(item, new HashMap<>());
-            ITEM_RESOURCE_AMOUNTS.get(item).put(ItemResourceKey.fromTagKey(recipe.resourceTagKey), (double) recipe.amount);
+            ItemStackWrapper itemStackWrapper = new ItemStackWrapper(recipe.item);
+            if(!ITEM_RESOURCE_AMOUNTS.containsKey(itemStackWrapper)) ITEM_RESOURCE_AMOUNTS.put(itemStackWrapper, new HashMap<>());
+            ITEM_RESOURCE_AMOUNTS.get(itemStackWrapper).put(ItemResourceKey.fromTagKey(recipe.resourceTagKey), (double) recipe.amount);
         }
     }
 
@@ -282,7 +294,41 @@ public class TownResourceHolder {
      * Remove all items and virtual resources with zero amount from map.
      */
     public void removeZeros(){
-        itemResources.entrySet().removeIf(entry -> Math.abs(entry.getValue()) <= DELTA || entry.getKey().isEmpty());
+        itemResources.entrySet().removeIf(entry -> Math.abs(entry.getValue()) <= DELTA || entry.getKey().getItemStack().isEmpty());
         virtualResources.entrySet().removeIf(entry ->Math.abs(entry.getValue()) <= DELTA);
     }
+
+    /**
+     * Wrapper for ItemStack, used to store ItemStack in map.
+     * The count of ItemStack will be changed to 1 when creating this wrapper.
+     */
+    @Getter
+    public static class ItemStackWrapper {
+        public ItemStack itemStack;
+
+        public static final Codec<ItemStackWrapper> CODEC = RecordCodecBuilder.create(t -> t.group(
+                        ItemStack.CODEC.fieldOf("itemStack").forGetter(o->o.itemStack)
+                ).apply(t, ItemStackWrapper::new)
+        );
+
+        public ItemStackWrapper(ItemStack itemStack){
+            this.itemStack =itemStack.copyWithCount(1);
+        }
+
+        public boolean equals(Object o){
+            ItemStack itemStack2;
+            if(o instanceof ItemStackWrapper){
+                itemStack2 = ((ItemStackWrapper) o).getItemStack();
+            } else return false;
+            return ItemStack.isSameItemSameTags(itemStack,itemStack2);
+        }
+
+        public int hashCode(){
+            int itemHash = itemStack.getItem().hashCode();
+            int tagHash = itemStack.getTag() == null ? 0 : itemStack.getTag().hashCode();
+            return Objects.hash(itemHash,tagHash);
+        }
+
+    }
+
 }
