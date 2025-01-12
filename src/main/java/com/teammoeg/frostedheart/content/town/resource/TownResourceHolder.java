@@ -69,21 +69,39 @@ public class TownResourceHolder {
                 .filter(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::containsKey)
                 .findFirst()
                 .map(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::get)
-                .ifPresent(key -> isCached.set(ITEM_RESOURCE_KEY_CACHE.get(key).contains(new ItemStackWrapper(itemStack))));
+                .ifPresent(key -> {
+                    HashSet<ItemStackWrapper> itemOfKey = ITEM_RESOURCE_KEY_CACHE.get(key);
+                    if(itemOfKey == null || itemOfKey.isEmpty()){
+                        isCached.set(false);
+                        return;
+                    }
+                    isCached.set(ITEM_RESOURCE_KEY_CACHE.get(key).contains(new ItemStackWrapper(itemStack)));
+                });
         return isCached.get();
     }
 
     public static double getResourceAmount(ItemStackWrapper itemStackWrapper, ItemResourceKey key){
         if(ITEM_RESOURCE_AMOUNTS.isEmpty()) loadItemResourceAmounts();
         AtomicReference<Double> amount = new AtomicReference<>(0.0);
-        if(ITEM_RESOURCE_KEY_CACHE.get(key).contains(itemStackWrapper)){
-            amount.set(ITEM_RESOURCE_AMOUNTS.get(itemStackWrapper).getOrDefault(key, 1.0));
+        HashSet<ItemStackWrapper> itemsOfKey = ITEM_RESOURCE_KEY_CACHE.get(key);
+        if(itemsOfKey == null || itemsOfKey.isEmpty()) return 0.0;
+        if(itemsOfKey.contains(itemStackWrapper)){
+            Map<ItemResourceKey, Double> itemAmounts = ITEM_RESOURCE_AMOUNTS.get(itemStackWrapper);
+            if(itemAmounts == null) return 1.0;
+            amount.set(itemAmounts.getOrDefault(key, 1.0));
         } else{
             itemStackWrapper.getItemStack().getTags()
                     .map(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::get)
                     .filter(key::equals)
                     .findFirst()
-                    .ifPresent(key1 -> amount.set(ITEM_RESOURCE_AMOUNTS.get(itemStackWrapper).getOrDefault(key1, 1.0)));
+                    .ifPresent(key1 -> {
+                        Map<ItemResourceKey, Double> itemAmounts = ITEM_RESOURCE_AMOUNTS.get(itemStackWrapper);
+                        if(itemAmounts == null || itemAmounts.isEmpty()) {
+                            amount.set(1.0);
+                            return;
+                        }
+                        amount.set(itemAmounts.getOrDefault(key1, 1.0));
+                    });
         }
         return amount.get();
     }
@@ -97,7 +115,7 @@ public class TownResourceHolder {
                 //仅获取有对应ItemResourceKey的tag
                 .filter(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::containsKey)
                 //如果已经缓存过，则跳过该物品的tag
-                .takeWhile(tag -> !ITEM_RESOURCE_KEY_CACHE.get(ItemResourceKey.fromTagKey(tag)).contains(itemStackWrapper))
+                .takeWhile(tag -> !ITEM_RESOURCE_KEY_CACHE.computeIfAbsent(ItemResourceKey.fromTagKey(tag), k -> new HashSet<>()).contains(itemStackWrapper))
                 .map(ItemResourceKey::fromTagKey)
                 .forEach(key -> ITEM_RESOURCE_KEY_CACHE.computeIfAbsent(key, k -> new HashSet<>()).add(itemStackWrapper));
     }
@@ -281,7 +299,7 @@ public class TownResourceHolder {
         for(ItemResourceAmountRecipe recipe : FHUtils.filterRecipes(FHTeamDataManager.getRecipeManager(), ItemResourceAmountRecipe.TYPE)){
             ItemStackWrapper itemStackWrapper = new ItemStackWrapper(recipe.item);
             if(!ITEM_RESOURCE_AMOUNTS.containsKey(itemStackWrapper)) ITEM_RESOURCE_AMOUNTS.put(itemStackWrapper, new HashMap<>());
-            ITEM_RESOURCE_AMOUNTS.get(itemStackWrapper).put(ItemResourceKey.fromTagKey(recipe.resourceTagKey), (double) recipe.amount);
+            ITEM_RESOURCE_AMOUNTS.computeIfAbsent(itemStackWrapper, k -> new HashMap<>()).put(ItemResourceKey.fromTagKey(recipe.resourceTagKey), (double) recipe.amount);
         }
     }
 

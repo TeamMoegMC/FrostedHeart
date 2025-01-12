@@ -29,11 +29,11 @@ import lombok.Getter;
 @Getter
 public enum ItemResourceType implements ITownResourceType {
 
-    OTHER(0),
-    WOOD(0),
-    STONE(0),
+    OTHER,
+    WOOD,
+    STONE,
     ORE,
-    METAL,
+    METAL(1),
     FUEL,
     TOOL,
     FOOD_PROTEIN,
@@ -59,7 +59,7 @@ public enum ItemResourceType implements ITownResourceType {
      * Create a new type
      */
     ItemResourceType() {
-        this.maxLevel=1;
+        this.maxLevel=0;
     }
 
     ItemResourceType(int maxLevel){
