@@ -26,18 +26,17 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.util.MultiblockFac
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.RelativeBlockFace;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.ShapeType;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
-import com.teammoeg.frostedheart.FHCapabilities;
+
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
-import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
-import com.teammoeg.frostedheart.util.FHMultiblockHelper;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -52,12 +51,10 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2GeneratorState> {
-    private static final MultiblockFace REDSTONE_OFFSET = new MultiblockFace(1, 1, 2, RelativeBlockFace.BACK);
+    private static final MultiblockFace REDSTONE_OFFSET = new MultiblockFace(1, 1, 0, RelativeBlockFace.FRONT);
     // TODO: Check if FRONT is correct
-    private static final MultiblockFace NETWORK_OFFSET = new MultiblockFace(1, 0, 0, RelativeBlockFace.FRONT);
-    private static final CapabilityPosition NETWORK_CAP = CapabilityPosition.opposing(NETWORK_OFFSET);
-    private static final MultiblockFace FLUID_INPUT_OFFSET = new MultiblockFace(1, 0, 2, RelativeBlockFace.BACK);
-    private static final CapabilityPosition FLUID_INPUT_CAP = CapabilityPosition.opposing(FLUID_INPUT_OFFSET);
+    private static final CapabilityPosition NETWORK_CAP = new CapabilityPosition(1, 0, 2, RelativeBlockFace.BACK);
+    private static final CapabilityPosition FLUID_INPUT_CAP = new CapabilityPosition(1, 0, 0, RelativeBlockFace.FRONT);
     
     public T2GeneratorLogic() {
         super();
@@ -85,8 +82,10 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
 
     @Override
     public <C> LazyOptional<C> getCapability(IMultiblockContext<T2GeneratorState> ctx, CapabilityPosition position, Capability<C> capability) {
-        if (capability == FHCapabilities.HEAT_EP.capability() && NETWORK_CAP.equals(position)) {
-           return getData(ctx).map(t -> t.epcap).orElseGet(LazyOptional::empty).cast();
+    	//System.out.println(position);
+    	//System.out.println(capability);
+        if (FHCapabilities.HEAT_EP.isCapability(capability) && NETWORK_CAP.equalsOrNullFace(position)) {
+           return ctx.getState().heatCap.cast(ctx);
         } else if (capability == ForgeCapabilities.FLUID_HANDLER && FLUID_INPUT_CAP.equals(position)) {
             LazyOptional<IFluidHandler> tankCap = ctx.getState().tankCap;
             return tankCap.cast();
@@ -96,19 +95,26 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
 
     @Override
     protected boolean tickFuel(IMultiblockContext<T2GeneratorState> ctx) {
-        if (ctx.getState().manager == null) {
-            ctx.getState().manager = new HeatEnergyNetwork(ctx.getLevel().getBlockEntity(BlockPos.ZERO), c -> {
-                BlockPos pos = FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel());
-                BlockPos networkPos = pos.offset(NETWORK_OFFSET.posInMultiblock());
-                Direction dir = ctx.getLevel().getOrientation().front();
-                c.accept(networkPos.relative(dir.getOpposite()), dir.getOpposite());
-
+        if (!ctx.getState().manager.hasBounded()) {
+            ctx.getState().manager.setReconnector(() -> {
+                BlockPos networkPos = ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock());
+                Direction dir = NETWORK_CAP.side().forFront(ctx.getLevel().getOrientation());
+               // System.out.println(networkPos.relative(dir)+"-"+dir);
+                ctx.getState().manager.connectTo(ctx.getLevel().getRawLevel(),networkPos.relative(dir),networkPos, dir.getOpposite());
             });
         }
-        if ((!getData(ctx).map(t -> t.ep.hasValidNetwork()).orElse(true) || ctx.getState().manager.data.size() <= 1) && !ctx.getState().manager.isUpdateRequested()) {
+       
+ 
+    	if(!ctx.getState().ep.hasValidNetwork()) {
+            BlockPos pos = ctx.getLevel().toAbsolute(NETWORK_CAP.posInMultiblock());
+            Level level = ctx.getLevel().getRawLevel();
+            ctx.getState().manager.addEndpoint(ctx.getState().heatCap.cast(ctx), 0, level, pos);
+        }
+        
+        if (ctx.getState().manager.getNetworkSize()<=2) {
             ctx.getState().manager.requestSlowUpdate();
         }
-        ctx.getState().manager.tick();
+        ctx.getState().manager.tick(ctx.getLevel().getRawLevel());
         boolean active = super.tickFuel(ctx);
         if (active)
             this.tickLiquid(ctx);
@@ -119,9 +125,7 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
     private void tickLiquid(IMultiblockContext<T2GeneratorState> ctx) {
         Optional<GeneratorData> data = getData(ctx);
         ctx.getState().liquidtick = data.map(t -> t.steamProcess).orElse(0);
-        if (!ctx.getState().isActive())
-            return;
-        float rt = ctx.getState().getTempLevel();
+        float rt = data.map(t->t.TLevel).orElse(0f);
         /*if (rt == 0) {
             this.spowerMod = 0;
             this.slevelMod = 0;

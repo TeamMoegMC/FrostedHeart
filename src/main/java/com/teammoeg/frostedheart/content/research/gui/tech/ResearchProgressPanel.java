@@ -20,12 +20,12 @@
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import com.ibm.icu.text.NumberFormat;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -42,11 +42,11 @@ public class ResearchProgressPanel extends Panel {
     public void addWidgets() {
         RTextField tf = new RTextField(this);
         tf.setMaxWidth(71).setMaxLine(2).setColor(TechIcons.text).setPos(40, 15);
-        Research inprog = ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
+        Research inprog = ClientResearchDataAPI.getData().get().getCurrentResearch().orElse(null);
         if (inprog != null)
             tf.setText(inprog.getName());
         else
-            tf.setText(TranslateUtils.translateGui("no_active_research"));
+            tf.setText(Lang.translateGui("no_active_research"));
         add(tf);
     }
 
@@ -60,22 +60,22 @@ public class ResearchProgressPanel extends Panel {
         super.draw(matrixStack, theme, x, y, w, h);
         // title
 
-        theme.drawString(matrixStack, TranslateUtils.translateGui("research_progress"), x + 3, y, TechIcons.text, 0);
+        theme.drawString(matrixStack, Lang.translateGui("research_progress"), x + 3, y, TechIcons.text, 0);
         // progress bar
         // TODO: this cause crash when root clue is added
         // float progress = researchScreen.getInProgressResearch().getProgressFraction();
         // float reqTime = researchScreen.getInProgressResearch().getCurrentPoints();
         // float finTIme = researchScreen.getInProgressResearch().getRequiredPoints();
-        Research inprog = ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
+        Research inprog = ClientResearchDataAPI.getData().get().getCurrentResearch().orElse(null);
         if (inprog != null) {
             float prog = inprog.getProgressFraction();
             TechIcons.SLIDER_FRAME.draw(matrixStack, x + 40, y + 32, 70, 8);
             if (prog > 0)
                 TechIcons.drawTexturedRect(matrixStack, x + 41, y + 33, (int) (68f * prog), 6, true);
-            if (inprog.getData().canComplete())
+            if (inprog.getData().canComplete(inprog))
                 theme.drawString(matrixStack, NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, TechIcons.text, 0);
             else
-                theme.drawString(matrixStack, TranslateUtils.translateGui("research.required_clue"), x + 40, y + 40, TechIcons.text_red, 0);
+                theme.drawString(matrixStack, Lang.translateGui("research.required_clue"), x + 40, y + 40, TechIcons.text_red, 0);
             // research icon
 
             TechIcons.SHADOW.draw(matrixStack, x + 1, y + 38, 36, 9);

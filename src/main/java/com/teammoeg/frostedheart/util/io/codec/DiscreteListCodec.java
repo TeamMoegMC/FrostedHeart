@@ -38,7 +38,7 @@ public final class DiscreteListCodec<A> implements Codec<List<A>> {
         int i=0;
         for (final A a : input) {
         	final int cri=i;
-        	if(empty.test(a))
+        	if(!empty.test(a))
             	builder.add(elementCodec.encodeStart(ops, a).flatMap(o->ops.mergeToMap(o, ops.createString(index), ops.createInt(cri))));
             i++;
         }
@@ -58,7 +58,7 @@ public final class DiscreteListCodec<A> implements Codec<List<A>> {
                 final DataResult<Integer> key=ops.get(t, index).flatMap(o->ops.getNumberValue(o)).map(o->o.intValue());
                 element.error().ifPresent(e -> failed.add(t));
                 result.setValue(result.getValue().apply3((r,k, v) -> {
-                	addEmptyIndexBefore(list,k);
+                	addEmptyIndexBefore(list,k+1);
                 	list.set(k,v.getFirst());
                     return r;
                 }, key, element));

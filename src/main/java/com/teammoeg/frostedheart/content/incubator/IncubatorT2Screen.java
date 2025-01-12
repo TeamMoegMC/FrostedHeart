@@ -19,20 +19,16 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.client.FHGuiHelper;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.info.FluidInfoArea;
 import blusunrize.immersiveengineering.client.gui.info.InfoArea;
-import blusunrize.immersiveengineering.client.utils.GuiHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.gui.GuiGraphics;
@@ -40,7 +36,7 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 
 public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
-    private static final ResourceLocation TEXTURE = TranslateUtils.makeTextureLocation("incubatorii");
+    private static final ResourceLocation TEXTURE = Lang.makeTextureLocation("incubatorii");
     private HeatIncubatorTileEntity tile;
 
     public IncubatorT2Screen(IncubatorT2Container container, Inventory inv, Component title) {
@@ -64,8 +60,8 @@ public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
             int w = (int) (14 * (tile.process / (float) tile.processMax));
             transform.blit(TEXTURE, leftPos + 107, topPos + 28, 176, 0, 14 - w, 29);
         }
-        if (tile.network.getPower() > 0) {
-            float v = tile.network.getPower() / tile.network.getMaxPower();
+        if (tile.network.getHeat() > 0) {
+            float v = tile.network.getHeat() / tile.network.getCapacity();
             boolean a = false, b = false;
             if (v > 0.75) {
                 a = b = true;

@@ -27,13 +27,13 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.TeamDataClosure;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
@@ -44,54 +44,60 @@ import net.minecraft.commands.arguments.UuidArgument;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.ChatFormatting;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ResearchCommand {
-    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+    @SubscribeEvent
+    public static void register(RegisterCommandsEvent event) {
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("research")
                 // add insight
                 .then(Commands.literal("insight").then(Commands.literal("add").then(Commands.argument("amount", IntegerArgumentType.integer(0)).executes(ct -> {
-                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException()).get();
                     trd.addInsight(ct.getArgument("amount", Integer.class));
-                    ct.getSource().sendSuccess(()->TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(()-> Lang.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
                         // get insight
                 .then(Commands.literal("get").executes(ct -> {
-                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
-                    ct.getSource().sendSuccess(()->TranslateUtils.str("Insight: " + trd.getInsight()).withStyle(ChatFormatting.GREEN), false);
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException()).get();
+                    ct.getSource().sendSuccess(()-> Lang.str("Insight: " + trd.getInsight()).withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 }))
                         // Get insight level
                 .then(Commands.literal("getLevel").executes(ct -> {
-                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
-                    ct.getSource().sendSuccess(()->TranslateUtils.str("Insight Level: " + trd.getInsightLevel()).withStyle(ChatFormatting.GREEN), false);
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException()).get();
+                    ct.getSource().sendSuccess(()-> Lang.str("Insight Level: " + trd.getInsightLevel()).withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 }))
                         // Get used insight level
                 .then(Commands.literal("getUsedLevel").executes(ct -> {
-                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
-                    ct.getSource().sendSuccess(()->TranslateUtils.str("Used Insight Level: " + trd.getUsedInsightLevel()).withStyle(ChatFormatting.GREEN), false);
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException()).get();
+                    ct.getSource().sendSuccess(()-> Lang.str("Used Insight Level: " + trd.getUsedInsightLevel()).withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 }))
                         // set insight
                 .then(Commands.literal("set").then(Commands.argument("amount", IntegerArgumentType.integer(0)).executes(ct -> {
-                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException()).get();
                     trd.setInsight(ct.getArgument("amount", Integer.class));
-                    ct.getSource().sendSuccess(()->TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(()-> Lang.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
                         // set insight level
                 .then(Commands.literal("setLevel").then(Commands.argument("level", IntegerArgumentType.integer(0)).executes(ct -> {
-                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException()).get();
                     trd.setInsightLevel(ct.getArgument("level", Integer.class));
-                    ct.getSource().sendSuccess(()->TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(()-> Lang.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
                         // set used insight level
                 .then(Commands.literal("setUsedLevel").then(Commands.argument("level", IntegerArgumentType.integer(0)).executes(ct -> {
-                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException()).get();
                     trd.setUsedInsightLevel(ct.getArgument("level", Integer.class));
-                    ct.getSource().sendSuccess(()->TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(()-> Lang.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
 
@@ -106,38 +112,37 @@ public class ResearchCommand {
                 }).executes(ct -> {
                     String rsn = ct.getArgument("name", String.class);
 
-                    Research rs = FHResearch.getResearch(rsn).get();
+                    Research rs = FHResearch.getResearch(rsn);
                     if (rs == null) {
-                        ct.getSource().sendFailure(TranslateUtils.str("Research not found").withStyle(ChatFormatting.RED));
+                        ct.getSource().sendFailure(Lang.str("Research not found").withStyle(ChatFormatting.RED));
                         return Command.SINGLE_SUCCESS;
                     }
-                    ResearchData rd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException()).getData(rs);
-                    rd.setFinished(true);
-                    rd.announceCompletion();
-
-                    ct.getSource().sendSuccess(()->TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    TeamDataClosure<TeamResearchData> rd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    rd.get().setResearchFinished(rd.team(), rs, true);
+                    ct.getSource().sendSuccess(()-> Lang.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("all").executes(ct -> {
-                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    try {
                     for (Research r : FHResearch.getAllResearch()) {
                         if (r.isInCompletable()) continue;
-                        ResearchData rd = trd.getData(r);
-                        rd.setFinished(true);
-                        rd.announceCompletion();
+                        trd.get().setResearchFinished(trd.team(), r, true);
                     }
-                    ct.getSource().sendSuccess(()->TranslateUtils.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    }catch(Throwable t) {t.printStackTrace();}
+                    ct.getSource().sendSuccess(()-> Lang.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+
                     return Command.SINGLE_SUCCESS;
                 })))
                 .then(Commands.literal("transfer").then(Commands.argument("from", UuidArgument.uuid())
                         .then(Commands.argument("to", UuidArgument.uuid())).executes(ct -> {
                             Team team = FTBTeamsAPI.api().getManager().getTeamByID(UuidArgument.getUuid(ct, "to")).orElse(null);
                             FHTeamDataManager.INSTANCE.transfer(UuidArgument.getUuid(ct, "from"), team);
-                            ct.getSource().sendSuccess(()->TranslateUtils.str("Transfered to " + team.getName()).withStyle(ChatFormatting.GREEN), false);
+                            ct.getSource().sendSuccess(()-> Lang.str("Transfered to " + team.getName()).withStyle(ChatFormatting.GREEN), false);
                             return Command.SINGLE_SUCCESS;
                         })))
                 .then(Commands.literal("edit").then(Commands.argument("enable", BoolArgumentType.bool()).executes(ct -> {
                     FHResearch.editor = ct.getArgument("enable", Boolean.class);
-                    ct.getSource().sendSuccess(()->TranslateUtils.str("Editing mode set " + FHResearch.editor).withStyle(ChatFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(()-> Lang.str("Editing mode set " + FHResearch.editor).withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
                 .then(Commands.literal("default").executes(ct -> Command.SINGLE_SUCCESS))
@@ -158,12 +163,12 @@ public class ResearchCommand {
                         }).executes(ct -> {
                             CompoundTag cnbt = ResearchDataAPI.getVariants(ct.getSource().getPlayerOrException());
                             String rsn = ct.getArgument("name", String.class);
-                            ct.getSource().sendSuccess(()->TranslateUtils.str(String.valueOf(cnbt.get(rsn))), false);
+                            ct.getSource().sendSuccess(()-> Lang.str(String.valueOf(cnbt.get(rsn))), false);
                             return Command.SINGLE_SUCCESS;
                         })).then(Commands.literal("all").executes(ct -> {
 
                             CompoundTag cnbt = ResearchDataAPI.getVariants(ct.getSource().getPlayerOrException());
-                            ct.getSource().sendSuccess(()->TranslateUtils.str(cnbt.toString()), false);
+                            ct.getSource().sendSuccess(()-> Lang.str(cnbt.toString()), false);
                             return Command.SINGLE_SUCCESS;
 
                         }))
@@ -191,15 +196,21 @@ public class ResearchCommand {
                     return s.buildFuture();
                 }).executes(ct -> {
                     String rsn = ct.getArgument("name", String.class);
-                    ResearchDataAPI.getData(ct.getSource().getPlayerOrException()).resetData(FHResearch.getResearch(rsn).get(), true);
+                    TeamDataClosure<TeamResearchData> trd=ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+                    
+                    trd.get().resetData(trd.team(),FHResearch.getResearch(rsn));
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("all").executes(ct -> {
-                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
-                    for (Research r : FHResearch.getAllResearch()) {
-                        trd.resetData(r, true);
-                    }
+                	try {
+	                    TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(ct.getSource().getPlayerOrException());
+	                    for (Research r : FHResearch.getAllResearch()) {
+	                        trd.get().resetData(trd.team(),r);
+	                    }
+	                }catch(Throwable t) {t.printStackTrace();}
                     return Command.SINGLE_SUCCESS;
                 })));
-        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermission(2)).then(add));
+        for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
+            dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(add));
+        }
     }
 }

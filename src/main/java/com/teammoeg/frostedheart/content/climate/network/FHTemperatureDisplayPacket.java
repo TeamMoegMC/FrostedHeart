@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.climate.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -98,7 +98,7 @@ public class FHTemperatureDisplayPacket implements FHMessage {
                 ss[i] = TemperatureDisplayHelper.toTemperatureIntString(temp[i] / 10f);
             }
             
-            MutableComponent tosend = TranslateUtils.translateMessage(langKey, ss);
+            MutableComponent tosend = Lang.translateMessage(langKey, ss);
             if (isStatus)
                 player.displayClientMessage(tosend, false);
             else

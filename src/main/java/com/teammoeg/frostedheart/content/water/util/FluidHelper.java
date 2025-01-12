@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.water.util;
 
 
-import com.teammoeg.frostedheart.FHFluids;
+import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import com.teammoeg.frostedheart.content.water.item.FluidBottleItem;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;

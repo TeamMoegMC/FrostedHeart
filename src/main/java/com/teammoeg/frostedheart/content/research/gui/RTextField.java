@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.research.gui;
 
 import java.util.List;
 
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.client.gui.GuiGraphics;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -38,7 +38,7 @@ import net.minecraft.network.chat.FormattedText;
 
 public class RTextField extends Widget {
 
-    private Component component = TranslateUtils.str("");
+    private Component component = Lang.str("");
     private FormattedText[] formattedText = new FormattedText[0];
     public int textFlags = 0;
     public int minWidth = 0;
@@ -146,11 +146,11 @@ public class RTextField extends Widget {
         Theme theme = getGui().getTheme();
 
         if (maxLine > 0) {
-            List<FormattedText> ls = theme.listFormattedStringToWidth(TranslateUtils.str("").append(txt),
+            List<FormattedText> ls = theme.listFormattedStringToWidth(Lang.str("").append(txt),
                     (int) (maxWidth / scale));
             formattedText = ls.subList(0, Math.min(ls.size(), (int) (maxLine / scale))).toArray(new FormattedText[0]);
         } else {
-            formattedText = theme.listFormattedStringToWidth(TranslateUtils.str("").append(txt), (int) (maxWidth / scale))
+            formattedText = theme.listFormattedStringToWidth(Lang.str("").append(txt), (int) (maxWidth / scale))
                     .toArray(new FormattedText[0]);
         }
 
@@ -158,6 +158,6 @@ public class RTextField extends Widget {
     }
 
     public RTextField setText(String txt) {
-        return setText(TranslateUtils.str(txt));
+        return setText(Lang.str(txt));
     }
 }

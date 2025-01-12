@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.research.blocks;
 import java.util.Optional;
 import java.util.Random;
 
-import com.teammoeg.frostedheart.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.foundation.recipes.ResearchPaperRecipe;
+import com.teammoeg.frostedheart.content.research.recipe.ResearchPaperRecipe;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardPos;
@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.GenerateInfo
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.ResearchGame;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
@@ -189,7 +189,7 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
 
 	@Override
 	public Component getDisplayName() {
-		return TranslateUtils.translate("gui.frostedheart.draw_desk");
+		return Lang.translateKey("gui.frostedheart.draw_desk");
 	}
 
 }

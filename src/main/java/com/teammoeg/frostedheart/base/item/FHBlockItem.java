@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.base.item;
 
-import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.base.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.frostedheart.base.creativeTab.TabType;
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;

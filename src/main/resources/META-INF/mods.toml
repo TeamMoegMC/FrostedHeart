@@ -468,7 +468,7 @@ Evan
 
 [[dependencies.frostedheart]]
     modId="caupona"
-    mandatory=true
+    mandatory=false
     versionRange="[1.20.1-0.4.9,)"
     ordering="BEFORE"
     side="BOTH"
@@ -501,3 +501,9 @@ Evan
     ordering="BEFORE"
     side="BOTH"
 
+[[dependencies.frostedheart]]
+    modId="tetra"
+    mandatory=false
+    versionRange="[6.6.0,)"
+    ordering="BEFORE"
+    side="BOTH"

@@ -12,13 +12,16 @@
     "frostedheart:deepslate_halite_ore",
     "frostedheart:deepslate_sylvite_ore",
     "frostedheart:deepslate_magnesite_ore",
+    "frostedheart:whale_block",
+    "frostedheart:whale_belly_block",
     "frostedheart:magnesite_block",
     "frostedheart:magnesia_block",
     "frostedheart:quicklime_block",
+    "frostedheart:generator_brick",
+    "frostedheart:generator_core_t1",
+    "frostedheart:generator_amplifier_r1",
     "frostedheart:refractory_bricks",
     "frostedheart:high_refractory_bricks",
-    "frostedheart:whale_block",
-    "frostedheart:whale_belly_block",
     "#frostedheart:permafrost"
   ]
 }

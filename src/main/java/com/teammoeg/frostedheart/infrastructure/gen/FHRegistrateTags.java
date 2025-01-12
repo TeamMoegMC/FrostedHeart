@@ -19,7 +19,13 @@
 
 package com.teammoeg.frostedheart.infrastructure.gen;
 
+import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.*;
+
+import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.*;
+import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.tterrag.registrate.providers.ProviderType;
 import com.tterrag.registrate.providers.RegistrateTagsProvider;
 import net.minecraft.core.registries.Registries;
@@ -55,40 +61,6 @@ public class FHRegistrateTags {
 
     private static void genBlockTags(RegistrateTagsProvider<Block> provIn) {
         FHTagGen.FHTagsProvider<Block> prov = new FHTagGen.FHTagsProvider<>(provIn, Block::builtInRegistryHolder);
-
-        // Metal machines
-        prov.tag(FHTags.Blocks.METAL_MACHINES.tag)
-                .add(FHBlocks.RELIC_CHEST.get())
-                .add(FHBlocks.HEAT_INCUBATOR.get())
-                .add(FHBlocks.DEBUG_HEATER.get())
-                .add(FHBlocks.CHARGER.get())
-                .add(FHBlocks.OIL_BURNER.get())
-                .add(FHBlocks.GAS_VENT.get())
-                .add(FHBlocks.SMOKE_BLOCK_T1.get())
-                .add(FHBlocks.MECHANICAL_CALCULATOR.get())
-                .add(FHBlocks.SAUNA_VENT.get())
-                .add(FHBlocks.FOUNTAIN_BASE.get())
-                .add(FHBlocks.FOUNTAIN_NOZZLE.get());
-
-        // Wood machines
-        prov.tag(FHTags.Blocks.WOODEN_MACHINES.tag)
-                .add(FHBlocks.HEAT_PIPE.get())
-                .add(FHBlocks.DRAWING_DESK.get())
-                .add(FHBlocks.INCUBATOR.get());
-
-        // crops
-        prov.tag(BlockTags.CROPS)
-                .add(FHBlocks.RYE_BLOCK.get())
-                .add(FHBlocks.WHITE_TURNIP_BLOCK.get())
-                .add(FHBlocks.WOLFBERRY_BUSH_BLOCK.get());
-
-        prov.tag(BlockTags.MINEABLE_WITH_PICKAXE)
-                // building
-                .add(FHBlocks.GENERATOR_CORE_T1.get())
-                .add(FHBlocks.GENERATOR_BRICK.get())
-                .add(FHBlocks.GENERATOR_AMPLIFIER_T1.get())
-                .add(FHBlocks.MAKESHIFT_GENERATOR_BROKEN.get())
-                .add(FHBlocks.BROKEN_PLATE.get());
 
         prov.tag(FHTags.Blocks.TOWN_DECORATIONS.tag).add(Blocks.FLOWER_POT, Blocks.LANTERN, Blocks.SOUL_LANTERN,
                 Blocks.CAMPFIRE, Blocks.SOUL_CAMPFIRE, Blocks.ENCHANTING_TABLE, Blocks.ANVIL, Blocks.CHIPPED_ANVIL,
@@ -195,18 +167,6 @@ public class FHRegistrateTags {
                 .add(Items.IRON_NUGGET);
 
         prov.tag(FHTags.Items.REFUGEE_NEEDS.tag)
-                .add(FHItems.military_rations.get())
-                .add(FHItems.compressed_biscuits_pack.get())
-                .add(FHItems.compressed_biscuits.get())
-                .add(FHItems.packed_nuts.get())
-                .add(FHItems.dried_vegetables.get())
-                .add(FHItems.chocolate.get())
-                .add(FHItems.black_bread.get())
-                .add(FHItems.rye_bread.get())
-                .add(FHItems.rye_porridge.get())
-                .add(FHItems.rye_sawdust_porridge.get())
-                .add(FHItems.vegetable_sawdust_soup.get())
-                .add(FHItems.vegetable_soup.get())
                 .add(Items.COOKED_PORKCHOP)
                 .add(Items.COOKED_BEEF)
                 .add(Items.COOKED_CHICKEN)
@@ -223,19 +183,21 @@ public class FHRegistrateTags {
                 .add(Items.PUMPKIN_PIE);
 
         prov.tag(FHTags.Items.DRY_FOOD.tag)
-                .add(FHItems.compressed_biscuits_pack.get())
-                .add(FHItems.compressed_biscuits.get())
-                .add(FHItems.packed_nuts.get())
-                .add(FHItems.dried_vegetables.get())
-                .add(FHItems.chocolate.get());
+                .add(Items.COOKIE)
+                .add(Items.DRIED_KELP);
 
-        prov.tag(FHTags.Items.INSULATED_FOOD.tag)
-                .add(FHItems.military_rations.get())
-                .add(FHItems.thermos.get())
-                .add(FHItems.advanced_thermos.get());
+        prov.tag(forgeItemTag("crushed_raw_materials/copper"))
+                .add(AllItems.CRUSHED_COPPER.asItem());
+        prov.tag(forgeItemTag("crushed_raw_materials/iron"))
+                .add(AllItems.CRUSHED_IRON.asItem());
+        prov.tag(forgeItemTag("crushed_raw_materials/gold"))
+                .add(AllItems.CRUSHED_GOLD.asItem());
+        prov.tag(forgeItemTag("crushed_raw_materials/zinc"))
+                .add(AllItems.CRUSHED_ZINC.asItem());
 
-        FHItems.alladvthermos.stream().forEach(t->prov.tag(FHTags.Items.INSULATED_FOOD.tag).add(t.get()));
-        FHItems.allthermos.stream().forEach(t->prov.tag(FHTags.Items.INSULATED_FOOD.tag).add(t.get()));
+        // rewrite using prov method
+        prov.tag(FHTags.Items.CHICKEN_FEED.tag)
+                .addTag(Tags.Items.SEEDS);
 
         for (FHTags.Items tag : FHTags.Items.values()) {
             if (tag.alwaysDatagen) {

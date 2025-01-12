@@ -1,72 +1,47 @@
 package com.teammoeg.frostedheart.util.io;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.mojang.datafixers.util.Either;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.*;
+import com.mojang.serialization.DataResult.PartialResult;
+import com.mojang.serialization.codecs.EitherMapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.ConstructorCodec;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.io.codec.*;
+import com.teammoeg.frostedheart.util.io.codec.BooleansCodec.BooleanCodecBuilder;
+import io.netty.handler.codec.DecoderException;
+import io.netty.handler.codec.EncoderException;
+import net.minecraft.ResourceLocationException;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.MappedRegistry;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
+
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.mojang.datafixers.util.Either;
-import com.mojang.datafixers.util.Pair;
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
-import com.mojang.serialization.DynamicOps;
-import com.mojang.serialization.JsonOps;
-import com.mojang.serialization.ListBuilder;
-import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.EitherMapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorData;
-import com.teammoeg.frostedheart.util.ConstructorCodec;
-import com.teammoeg.frostedheart.util.io.codec.AlternativeCodecBuilder;
-import com.teammoeg.frostedheart.util.io.codec.BooleansCodec.BooleanCodecBuilder;
-import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
-import com.teammoeg.frostedheart.util.io.codec.CustomListCodec;
-import com.teammoeg.frostedheart.util.io.codec.DataOps;
-import com.teammoeg.frostedheart.util.io.codec.RegistryCodec;
-import com.teammoeg.frostedheart.util.io.codec.KeysCodec;
-import com.teammoeg.frostedheart.util.io.codec.MapPathCodec;
-import com.teammoeg.frostedheart.util.io.codec.DefaultValueCodec;
-import com.teammoeg.frostedheart.util.io.codec.DiscreteListCodec;
-import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
-import com.teammoeg.frostedheart.util.io.codec.PacketOrSchemaCodec;
-import com.teammoeg.frostedheart.util.io.codec.StreamCodec;
-
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import io.netty.handler.codec.DecoderException;
-import io.netty.handler.codec.EncoderException;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.MappedRegistry;
 
 public class CodecUtil {
 	static final Function<DynamicOps<?>, Codec<?>> schCodec=SerializeUtil.cached(CodecUtil::scCodec);
@@ -158,6 +133,14 @@ public class CodecUtil {
 			tag.ifPresent(n->out.setTag(n));
 			return out;
 		}));
+	public static final Codec<ItemStack>  ITEMSTACK_STRING_CODEC = new AlternativeCodecBuilder<>(ItemStack.class)
+			.add(ITEMSTACK_CODEC)
+			.add(ResourceLocation.CODEC.comapFlatMap(t->{
+				Item it=RegistryUtils.getItem(t);
+				if(it==Items.AIR||it==null)return DataResult.error(()->"Not a item");
+				return DataResult.success(new ItemStack(it,1));
+				
+			}, t->RegistryUtils.getRegistryName(t.getItem()))).build();
 	public static final Codec<CompoundTag> COMPOUND_TAG_CODEC=CodecUtil.convertSchema(NbtOps.INSTANCE).comapFlatMap(t->{
 		if(t instanceof CompoundTag)
 			return DataResult.success((CompoundTag)t);
@@ -166,8 +149,21 @@ public class CodecUtil {
 	public static final Codec<Integer> POSITIVE_INT = Codec.intRange(0, Integer.MAX_VALUE);
 	public static final Codec<BlockPos> BLOCKPOS = alternative(BlockPos.class).add(BlockPos.CODEC).add(Codec.LONG.xmap(BlockPos::of, BlockPos::asLong)).build();
 	
-	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(JsonOps.INSTANCE,Ingredient::toJson,Ingredient::fromJson,Ingredient::toNetwork,Ingredient::fromNetwork);
-	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=new PacketOrSchemaCodec<>(JsonOps.INSTANCE,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
+	public static final Codec<Ingredient> INGREDIENT_CODEC = new PacketOrSchemaCodec<>(JsonOps.INSTANCE,o2->DataResult.success(o2.toJson()),o->{
+		if(o.isJsonArray()||o.isJsonObject())
+			return DataResult.success(Ingredient.fromJson(o));
+		if(o.isJsonPrimitive()) {
+			try {
+			Item i=RegistryUtils.getItem(new ResourceLocation(o.getAsString()));
+			if(i!=null&&i!=Items.AIR)
+				return DataResult.success(Ingredient.of(i));
+			}catch(ResourceLocationException rle) {
+				
+			}
+		}
+		return DataResult.error(()->"Not a ingredient");
+	},Ingredient::toNetwork,Ingredient::fromNetwork);
+	public static final Codec<IngredientWithSize> INGREDIENT_SIZE_CODEC=PacketOrSchemaCodec.create(JsonOps.INSTANCE,IngredientWithSize::serialize,IngredientWithSize::deserialize,IngredientWithSize::write,IngredientWithSize::read);
 	public static final Codec<MobEffectInstance> MOB_EFFECT_CODEC = COMPOUND_TAG_CODEC.xmap(o->MobEffectInstance.load(o),t->t.save(new CompoundTag()));
 	public static final Codec<boolean[]> BOOLEANS = Codec.BYTE.xmap(SerializeUtil::readBooleans, SerializeUtil::writeBooleans);
 
@@ -255,6 +251,64 @@ public class CodecUtil {
 			return Either.right(fb.apply(o));
 		});
 	}
+	public static <S,A> RecordCodecBuilder<S, A> poly(
+			MapCodec<A> readWrite,MapCodec<A> readOnly,
+			Function<S,A> getter){
+		return new EitherMapCodec<>(readWrite,readOnly).xmap(t->t.left().or(()->t.right()).get(), t->Either.left(t)).forGetter(getter);
+	}
+	public static <A> Codec<A> debugCodec(Codec<A> codec){
+		return new Codec<>() {
+
+			@Override
+			public <T> DataResult<T> encode(A input, DynamicOps<T> ops, T prefix) {
+				DataResult<T> res=codec.encode(input, ops, prefix);
+				System.out.println(codec);
+				System.out.println(res);
+				return res;
+			}
+
+			@Override
+			public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
+				DataResult<Pair<A, T>> res=codec.decode(ops,input);
+				System.out.println(codec);
+				System.out.println(res);
+				return res;
+			}
+			@Override
+			public String toString() {
+				return codec.toString();
+			}
+		};
+	}
+	public static <A> MapCodec<A> debugCodec(MapCodec<A> codec){
+		return new MapCodec<>() {
+
+			@Override
+			public <T> DataResult<A> decode(DynamicOps<T> ops, MapLike<T> input) {
+				DataResult<A> res=codec.decode(ops, input);
+				System.out.println(codec);
+				System.out.println(res);
+				return res;
+			}
+
+			@Override
+			public <T> RecordBuilder<T> encode(A input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
+				RecordBuilder<T> res=codec.encode(input, ops, prefix);
+				System.out.println(codec);
+				//System.out.println(res.build(ops.empty()));
+				return res;
+			}
+
+			@Override
+			public <T> Stream<T> keys(DynamicOps<T> ops) {
+				return codec.keys(ops);
+			}
+			@Override
+			public String toString() {
+				return codec.toString();
+			}
+		};
+	}
 	public static <O,A,B,C> RecordCodecBuilder<O, Either<A, Either<B, C>>> either(
 			MapCodec<A> a,MapCodec<B> b,MapCodec<C> c,
 			Function<O,A> fa,Function<O,B> fb,Function<O,C> fc){
@@ -324,16 +378,16 @@ public class CodecUtil {
 	public static <T> void writeCodec(FriendlyByteBuf pb, Codec<T> codec, T obj) {
 		DataResult<Object> ob = codec.encodeStart(DataOps.COMPRESSED, obj);
 		Optional<Object> ret = ob.resultOrPartial(t->{throw new EncoderException(t);});
-		System.out.println(ret.get());
+//		System.out.println(ret.get());
 		ObjectWriter.writeObject(pb, ret.get());
 	}
 	public static <T> T readCodec(FriendlyByteBuf pb, Codec<T> codec) {
 		
 		Object readed = ObjectWriter.readObject(pb);
-		System.out.println(readed);
+//		System.out.println(readed);
 		DataResult<T> ob = codec.parse(DataOps.COMPRESSED, readed);
-		
-		Optional<T> ret = ob.resultOrPartial(t->{throw new DecoderException(t);});
+//		System.out.println(ob);
+		Optional<T> ret = ob.resultOrPartial(FHMain.LOGGER::info);
 		return ret.get();
 	}
 	public static <T> void writeCodecNBT(FriendlyByteBuf pb, Codec<T> codec, T obj) {
@@ -414,6 +468,6 @@ public class CodecUtil {
 		
 	}
 	public static void main(String[] args) throws Exception {
-		System.out.println(GeneratorData.CODEC.encodeStart(NbtOps.INSTANCE, new GeneratorData((SpecialDataHolder)null)));
+//		System.out.println(GeneratorData.CODEC.encodeStart(NbtOps.INSTANCE, new GeneratorData((SpecialDataHolder)null)));
 	}
 }

@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.compat.jei.extension;
 
 import java.util.Arrays;
-import com.teammoeg.frostedheart.foundation.recipes.ModifyDamageRecipe;
+import com.teammoeg.frostedheart.content.utility.recipe.ModifyDamageRecipe;
 
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.ingredient.ICraftingGridHelper;

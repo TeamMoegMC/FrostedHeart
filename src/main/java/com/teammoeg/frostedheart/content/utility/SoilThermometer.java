@@ -19,37 +19,48 @@
 
 package com.teammoeg.frostedheart.content.utility;
 
-import java.util.List;
-
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-
-import net.minecraft.world.item.TooltipFlag;
+import com.teammoeg.frostedheart.util.lang.Lang;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.ClipContext.Fluid;
-import net.minecraft.world.phys.HitResult.Type;
-import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult.Type;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+
+import static com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper.toTemperatureFloatString;
 
 public class SoilThermometer extends FHBaseItem {
+    private static final List<Predicate<Player>> IS_WEARING_PREDICATES = new ArrayList<>();
+
+    static {
+        addIsWearingPredicate(player -> FHItems.soil_thermometer.isIn(player.getItemBySlot(EquipmentSlot.OFFHAND)) ||
+                FHItems.soil_thermometer.isIn(player.getItemBySlot(EquipmentSlot.MAINHAND)));
+    }
+
     public SoilThermometer(Properties properties) {
         super(properties);
     }
 
     @Override
     public void appendHoverText(ItemStack stack, Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
-        tooltip.add(TranslateUtils.translateTooltip("thermometer.usage").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Lang.translateTooltip("thermometer.usage").withStyle(ChatFormatting.GRAY));
     }
 
     /**
@@ -67,13 +78,13 @@ public class SoilThermometer extends FHBaseItem {
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
-        playerIn.displayClientMessage(TranslateUtils.translateMessage("thermometer.testing"), true);
+        playerIn.displayClientMessage(Lang.translateMessage("thermometer.testing"), true);
         playerIn.startUsingItem(handIn);
         if (playerIn instanceof ServerPlayer && playerIn.getAbilities().instabuild) {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, playerIn, Fluid.ANY);
             if (brtr.getType() != Type.MISS) {
 
-            	playerIn.sendSystemMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(WorldTemperature.block(playerIn.level(), brtr.getBlockPos()))));
+                playerIn.sendSystemMessage(Lang.translateMessage("info.soil_thermometerbody", toTemperatureFloatString(WorldTemperature.block(playerIn.level(), brtr.getBlockPos()))));
             }
 
         }
@@ -87,8 +98,21 @@ public class SoilThermometer extends FHBaseItem {
         if (entityplayer instanceof ServerPlayer) {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, Fluid.ANY);
             if (brtr.getType() == Type.MISS) return stack;
-            entityplayer.sendSystemMessage(TranslateUtils.translateMessage("info.soil_thermometerbody",ChunkHeatData.toDisplaySoil(WorldTemperature.block(entityplayer.level(), brtr.getBlockPos()))));
+            entityplayer.sendSystemMessage(Lang.translateMessage("info.soil_thermometerbody", toTemperatureFloatString(WorldTemperature.block(entityplayer.level(), brtr.getBlockPos()))));
         }
         return stack;
+    }
+
+    public static boolean isWearingSoilThermometer(Player player) {
+        for (Predicate<Player> predicate : IS_WEARING_PREDICATES) {
+            if (predicate.test(player)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void addIsWearingPredicate(Predicate<Player> predicate) {
+        IS_WEARING_PREDICATES.add(predicate);
     }
 }

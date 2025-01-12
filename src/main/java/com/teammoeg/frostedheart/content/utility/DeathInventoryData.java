@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.utility;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
 import net.minecraft.world.entity.player.Player;

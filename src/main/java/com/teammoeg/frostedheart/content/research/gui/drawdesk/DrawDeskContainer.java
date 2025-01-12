@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
 import com.teammoeg.frostedheart.base.menu.FHBlockEntityContainer;
-import com.teammoeg.frostedheart.FHMenuTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
 
 import blusunrize.immersiveengineering.common.gui.IESlot;

@@ -4,7 +4,7 @@ import java.util.AbstractMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;

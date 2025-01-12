@@ -70,20 +70,21 @@ import net.minecraftforge.network.PacketDistributor.PacketTarget;
  */
 public class FHResearch {
 	public static FHRegistry<Research> researches = new FHRegistry<>();
-	public static FHRegistry<Clue> clues = new FHRegistry<>();
-	public static FHRegistry<Effect> effects = new FHRegistry<>();
+	/*public static FHRegistry<Clue> clues = new FHRegistry<>();
+	public static FHRegistry<Effect> effects = new FHRegistry<>();*/
 	private static OptionalLazy<List<Research>> allResearches = OptionalLazy.of(() -> researches.all());
 	public static boolean editor = false;
 
 	public static void clearAll() {
-		clues.clear();
+		//clues.clear();
 		researches.clear();
-		effects.clear();
+		//effects.clear();
 	}
 
 	// clear cache when modification applied
 	public static void clearCache() {
-		allResearches = OptionalLazy.of(() -> researches.all());
+		if(allResearches.isResolved())
+			allResearches = OptionalLazy.of(() -> researches.all());
 	}
 
 	public static void delete(Research r) {
@@ -99,21 +100,21 @@ public class FHResearch {
 	// called after reload
 	public static void finishReload() {
 		reindex();
-		effects.all().forEach(Effect::init);
-		clues.all().forEach(Clue::init);
+		/*effects.all().forEach(Effect::init);
+		clues.all().forEach(Clue::init);*/
 	}
 
 	public static List<Research> getAllResearch() {
 		return allResearches.resolve().get();
 	}
 
-	public static Supplier<Clue> getClue(int id) {
+	/*public static Clue getClue(int id) {
 		return clues.get(id);
 	}
 
-	public static Supplier<Clue> getClue(String id) {
+	public static Clue getClue(String id) {
 		return clues.get(id);
-	}
+	}*/
 
 	public static Research getFirstResearchInCategory(ResearchCategory cate) {
 		List<Research> all = getAllResearch();
@@ -131,11 +132,11 @@ public class FHResearch {
 		return unl;
 	}
 
-	public static Supplier<Research> getResearch(int id) {
+	public static Research getResearch(int id) {
 		return researches.get(id);
 	}
 
-	public static Supplier<Research> getResearch(String id) {
+	public static Research getResearch(String id) {
 		return researches.get(id);
 	}
 
@@ -202,6 +203,7 @@ public class FHResearch {
 		// no need
 		FHResearch.clearAll();
 		prepareReload();
+		//clearCache();
 		MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
 		FHResearch.load(data);
 	}
@@ -236,9 +238,9 @@ public class FHResearch {
 	}
 
 	public static void load(CompoundTag cnbt) {
-		clues.deserialize(cnbt.getList("clues", Tag.TAG_STRING));
+		//clues.deserialize(cnbt.getList("clues", Tag.TAG_STRING));
 		researches.deserialize(cnbt.getList("researches", Tag.TAG_STRING));
-		effects.deserialize(cnbt.getList("effects", Tag.TAG_STRING));
+		//effects.deserialize(cnbt.getList("effects", Tag.TAG_STRING));
 	}
 
 	public static Research load(Research r) {
@@ -253,13 +255,17 @@ public class FHResearch {
 		
 				Research.CODEC.parse(JsonOps.INSTANCE, je).resultOrPartial(FHMain.LOGGER::error).map(o -> {
 					o.setId(r.getId());
+					//System.out.println(o);
 					return o;
 				}).ifPresent(researches::replace);
 				;
+				
 			}
+			
 		} catch (IOException e) {
 			FHMain.LOGGER.error("Cannot load research " + f.getName() + ": " + e.getMessage());
 		}
+		clearCache();
 		return researches.getById(iid);
 	}
 
@@ -290,7 +296,7 @@ public class FHResearch {
 	}
 
 	public static void main(String[] args) {
-		System.out.println(Research.CODEC);
+//		System.out.println(Research.CODEC);
 		File rf = new File("run/config/fhresearches");
 		rf.mkdirs();
 		JsonParser jp = new JsonParser();
@@ -313,40 +319,43 @@ public class FHResearch {
 			}
 
 		}
-		System.out.println(CodecUtil.INGREDIENT_CODEC.encodeStart(DataOps.COMPRESSED, Ingredient.of(Items.ACACIA_BOAT)));
+//		System.out.println(CodecUtil.INGREDIENT_CODEC.encodeStart(DataOps.COMPRESSED, Ingredient.of(Items.ACACIA_BOAT)));
 		FriendlyByteBuf pb=new FriendlyByteBuf(Unpooled.buffer());
 		Object prein=Research.CODEC.encodeStart(DataOps.COMPRESSED, new Research()).resultOrPartial(System.out::println).get();
-		System.out.println(prein);
+//		System.out.println(prein);
 		ObjectWriter.writeObject(pb,prein);
-		System.out.println();
-		System.out.println(pb.writerIndex());
-		for(int i=0;i<pb.writerIndex();i++) {
-			System.out.print(String.format("%2x ", pb.getByte(i)));
-		}
+//		System.out.println();
+//		System.out.println(pb.writerIndex());
+//		for(int i=0;i<pb.writerIndex();i++) {
+//			System.out.print(String.format("%2x ", pb.getByte(i)));
+//		}
 		pb.resetReaderIndex();
 		Object in=ObjectWriter.readObject(pb);
-		System.out.println();
-		System.out.println(in);
-		System.out.println(Research.CODEC.parse(DataOps.COMPRESSED,in));
+//		System.out.println();
+//		System.out.println(in);
+//		System.out.println(Research.CODEC.parse(DataOps.COMPRESSED,in));
 	}
 
 	// called before reload
 	public static void prepareReload() {
 		researches.prepareReload();
-		clues.prepareReload();
-		effects.prepareReload();
+		//clues.prepareReload();
+		//effects.prepareReload();
 		clearCache();
 	}
 
-	public static void readOne(Research r) {
+	public static void readOne(String key, Research r) {
+		r.setId(key);
 		r.packetInit();
 		researches.register(r);
+		clearCache();
 	}
 
 	public static void readAll(List<Research> rss) {
 
 		for (Research r : rss) {
-			readOne(r);
+			r.packetInit();
+			researches.register(r);
 		}
 	}
 
@@ -358,14 +367,18 @@ public class FHResearch {
 
 	// called after reload
 	public static void reindex() {
+		try {
 		allResearches.orElse(Collections.emptyList()).forEach(Research::doReindex);
 		allResearches.orElse(Collections.emptyList()).forEach(Research::doIndex);
+		}catch(Throwable t) {
+			t.printStackTrace();
+		}
 	}
 
 	public static CompoundTag save(CompoundTag cnbt) {
-		cnbt.put("clues", clues.serialize());
+		//cnbt.put("clues", clues.serialize());
 		cnbt.put("researches", researches.serialize());
-		cnbt.put("effects", effects.serialize());
+		//cnbt.put("effects", effects.serialize());
 		return cnbt;
 	}
 

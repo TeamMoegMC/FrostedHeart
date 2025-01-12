@@ -1,11 +1,10 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import java.util.Optional;
-
-import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 
-import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
@@ -16,7 +15,7 @@ public class GeneratorState extends HeatingState {
      * Remaining ticks to explode
      */
     int explodeTicks;
-
+    public HeatEndpoint ep = new HeatEndpoint(200, 0);
     public GeneratorState() {
         super();
     }
@@ -30,7 +29,7 @@ public class GeneratorState extends HeatingState {
     @Override
     public void readSaveNBT(CompoundTag nbt) {
         super.readSaveNBT(nbt);
-        Optional<GeneratorData> data = this.getDataNoCheck();
+        //Optional<GeneratorData> data = this.getDataNoCheck();
         explodeTicks = nbt.getInt("explodeTicks");
     }
 
@@ -48,7 +47,19 @@ public class GeneratorState extends HeatingState {
     public final Optional<GeneratorData> getData(BlockPos origin) {
         return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA)).filter(t -> origin.equals(t.actualPos));
     }
-
+    public final void tickData(Level level,BlockPos origin) {
+        Optional<TeamDataHolder> data= getTeamData();
+        if(data.isPresent()) {
+        	TeamDataHolder teamData=data.get();
+        	GeneratorData dat=teamData.getData(SpecialDataTypes.GENERATOR_DATA);
+        	if(origin.equals(dat.actualPos)) {
+        		dat.tick(level, teamData);
+        		ep.setHeat(dat.lastPower);
+        		dat.lastPower=0;
+        	}
+        	
+        }
+    }
     /**
      * @param origin the origin to check
      * @return if the GeneratorData from the owned team with the given origin is present.
@@ -65,8 +76,10 @@ public class GeneratorState extends HeatingState {
      */
     public void regist(Level level, BlockPos origin) {
         getDataNoCheck().ifPresent(t -> {
-            if (!origin.equals(t.actualPos))
+            if (!origin.equals(t.actualPos)) {
                 t.onPosChange();
+                onDataChange();
+            }
             t.actualPos = origin;
             t.dimension = level.dimension();
         });
@@ -81,9 +94,11 @@ public class GeneratorState extends HeatingState {
      */
     public void tryRegist(Level level, BlockPos origin) {
         getDataNoCheck().ifPresent(t -> {
-            if (BlockPos.ZERO.equals(t.actualPos)) {
-                if (!origin.equals(t.actualPos))
+            if (t.actualPos==null) {
+                if (!origin.equals(t.actualPos)) {
                     t.onPosChange();
+                    onDataChange();
+                }
                 t.actualPos = origin;
                 t.dimension = level.dimension();
             }
@@ -98,6 +113,9 @@ public class GeneratorState extends HeatingState {
     @Override
     public int getUpwardRange() {
         return Mth.ceil(getRangeLevel() * 4 + 1);
+    }
+    public void onDataChange() {
+    	
     }
 
 }

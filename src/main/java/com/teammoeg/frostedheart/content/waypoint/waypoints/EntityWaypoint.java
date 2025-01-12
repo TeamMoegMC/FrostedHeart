@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.waypoint.waypoints;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.nbt.CompoundTag;
@@ -98,7 +98,7 @@ public class EntityWaypoint extends Waypoint {
         super.updateInfos();
 
         if (entityTarget != null && entityTarget instanceof LivingEntity) {
-            addInfoLine(TranslateUtils.translateWaypoint("entity_health",
+            addInfoLine(Lang.translateWaypoint("entity_health",
                     String.format("%.2f", ((LivingEntity)entityTarget).getHealth()),
                     String.format("%.2f", ((LivingEntity)entityTarget).getMaxHealth())),
             1);
@@ -106,7 +106,7 @@ public class EntityWaypoint extends Waypoint {
 
         if (entityTarget != null && !entityTarget.isAlive()) {
             addInfoLine(null, -1);
-            addInfoLine(TranslateUtils.translateWaypoint("lost_target"), -1);
+            addInfoLine(Lang.translateWaypoint("lost_target"), -1);
         }
     }
 

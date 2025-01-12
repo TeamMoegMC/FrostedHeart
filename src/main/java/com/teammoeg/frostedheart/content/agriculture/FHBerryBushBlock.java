@@ -19,48 +19,18 @@
 
 package com.teammoeg.frostedheart.content.agriculture;
 
-import com.teammoeg.frostedheart.content.climate.WorldClimate;
-import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.WorldTemperature.TemperatureCheckResult;
-import com.teammoeg.frostedheart.util.FHUtils;
-
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.SweetBerryBushBlock;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.Level;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.block.SweetBerryBushBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 public class FHBerryBushBlock extends SweetBerryBushBlock {
-
-    private int growTemperature;
-    protected int growSpeed = 10;//0<growSpeed<50,growSpeed=50时具有原版浆果丛的生长速度
-
-    public FHBerryBushBlock(int growTemperature, Properties properties) {
-        super(properties);
-
-        this.growTemperature = growTemperature;
-    }//if you don't want to set growSpeed
-
-    public FHBerryBushBlock(int growTemperature, Properties properties, int growSpeed) {
-        super(properties);
-
-        this.growTemperature = growTemperature;
-        this.growSpeed = growSpeed;
-    }
-
-    @Override
-    public boolean isBonemealSuccess(Level worldIn, RandomSource rand, BlockPos pos, BlockState state) {
-        return WorldTemperature.isSuitableForCrop(worldIn,pos,getGrowTemperature()+ WorldTemperature.BONEMEAL_TEMPERATURE).isSuitable();
-    }
-
-
-    public int getGrowTemperature() {
-        return growTemperature;
+    public FHBerryBushBlock(Properties pProperties) {
+        super(pProperties);
     }
 
     @Override
@@ -77,24 +47,6 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
             }
 
         }
-    }
-
-    @Override
-    public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
-        int i = state.getValue(AGE);
-        TemperatureCheckResult res = WorldTemperature.isSuitableForCrop(worldIn,pos,getGrowTemperature(),getGrowTemperature()-5);
-        if(!res.isValid())return;
-        if(res.isRipedOff()) {
-        	FHUtils.setToAirPreserveFluid(worldIn, pos);
-        }else if (res.isDeadly()) {
-            if (worldIn.getRandom().nextInt(3) == 0) {
-                worldIn.setBlock(pos, this.defaultBlockState(), 2);
-            }
-        } else if(res.isSuitable())
-        	if (i < 3 && worldIn.getRawBrightness(pos.above(), 0) >= 9 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt(50) < this.growSpeed)) {
-	            worldIn.setBlock(pos, state.setValue(AGE, i + 1), 2);
-	            net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state);
-        	}
     }
 
 }

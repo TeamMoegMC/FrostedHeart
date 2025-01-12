@@ -20,7 +20,9 @@
 package com.teammoeg.frostedheart.content.research.research.effects;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -35,6 +37,7 @@ import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.AutoIDItem;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
+import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
@@ -42,8 +45,11 @@ import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.content.research.network.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
+import com.teammoeg.frostedheart.util.io.codec.CompressDifferMapCodec;
 import com.teammoeg.frostedheart.util.io.registry.TypedCodecRegistry;
 
+import dev.ftb.mods.ftblibrary.icon.Icon;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
@@ -61,30 +67,22 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * @date 2022/09/02
  */
 public abstract class Effect extends AutoIDItem{
-	public static class BaseData{
-	    String name = "";
-	    List<String> tooltip;
-	    FHIcon icon;
-	    String nonce;
-	    boolean hidden;
-		public BaseData(String name, List<String> tooltip, FHIcon icon, String nonce, boolean hidden) {
-			super();
-			this.name = name;
-			this.tooltip = tooltip;
-			this.icon = icon;
-			this.nonce = nonce;
-			this.hidden = hidden;
+	public static record BaseData(String name,List<String> tooltip,FHIcon icon,String nonce,boolean hidden){
+
+		public BaseData(String name, List<String> tooltip, Optional<FHIcon> icon, String nonce, boolean hidden) {
+			this(name,tooltip,icon.orElse(null),nonce,hidden);
 		}
 	    
 	}
-	public static final MapCodec<BaseData> BASE_CODEC=RecordCodecBuilder.mapCodec(t->
-	t.group(CodecUtil.defaultValue(Codec.STRING,"").fieldOf("name").forGetter(o->o.name),
-		CodecUtil.defaultSupply(Codec.list(Codec.STRING),ArrayList::new).fieldOf("tooltip").forGetter(o->o.tooltip),
-		FHIcons.CODEC.fieldOf("icon").forGetter(o->o.icon),
+	public static final MapCodec<BaseData> BASE_CODEC=CodecUtil.debugCodec(RecordCodecBuilder.mapCodec(t->
+	t.group(
+		Codec.STRING.optionalFieldOf("name","").forGetter(o->o.name),
+		Codec.list(Codec.STRING).optionalFieldOf("tooltip",Arrays.asList()).forGetter(o->o.tooltip),
+		FHIcons.CODEC.optionalFieldOf("icon").forGetter(o->Optional.ofNullable(o.icon)),
 		Codec.STRING.fieldOf("id").forGetter(o->o.nonce),
-		Codec.BOOL.fieldOf("hidden").forGetter(o->o.hidden)).apply(t, BaseData::new));
+		Codec.BOOL.optionalFieldOf("hidden",false).forGetter(o->o.hidden)).apply(t, BaseData::new)));
     private static TypedCodecRegistry<Effect> registry = new TypedCodecRegistry<>();
-    public static final Codec<Effect> CODEC=registry.codec();
+    public static final Codec<Effect> CODEC=CodecUtil.debugCodec(registry.codec());
     static {
     	registerEffectType(EffectBuilding.class, "multiblock", EffectBuilding.CODEC);
         registerEffectType(EffectCrafting.class, "recipe", EffectCrafting.CODEC);
@@ -95,8 +93,8 @@ public abstract class Effect extends AutoIDItem{
         registerEffectType(EffectCommand.class, "command", EffectCommand.CODEC);
         registerEffectType(EffectExperience.class, "experience", EffectExperience.CODEC);
     }
-    public static <T extends Effect> void registerEffectType(Class<T> cls, String type, Codec<T> json) {
-        registry.register(cls, type, json);
+    public static <T extends Effect> void registerEffectType(Class<T> cls, String type, MapCodec<T> json) {
+        registry.register(cls, type, CodecUtil.debugCodec(json));
     }
 
     String name = "";
@@ -108,8 +106,6 @@ public abstract class Effect extends AutoIDItem{
     String nonce;
 
     boolean hidden;
-
-    public transient Supplier<Research> parent;
 
     /**
      * Instantiates a new Effect.<br>
@@ -125,13 +121,15 @@ public abstract class Effect extends AutoIDItem{
      */
     public Effect(BaseData data) {
     	name=data.name;
-    	tooltip=data.tooltip;
+    	tooltip=new ArrayList<>(data.tooltip);
     	icon=data.icon;
     	nonce=data.nonce;
     	hidden=data.hidden;
     }
     public BaseData getBaseData() {
-    	return new BaseData(name, tooltip, icon, nonce, hidden);
+    	BaseData bd= new BaseData(name, tooltip, icon, nonce, hidden);
+//    	System.out.println(bd);
+    	return bd;
     }
     /**
      * Instantiates a new Effect.<br>
@@ -182,45 +180,10 @@ public abstract class Effect extends AutoIDItem{
     public Effect(String name, List<String> tooltip, ItemStack icon) {
         this(name, tooltip, FHIcons.getIcon(icon));
     }
-
-    /**
-     * Delete from the registry and research
-     */
-    public void delete() {
-        deleteSelf();
-        if (parent != null) {
-            Research r = parent.get();
-            if (r != null) {
-                r.getEffects().remove(this);
-            }
-        }
-    }
-
-    private void deleteInTree() {
-        FHTeamDataManager.INSTANCE.getAllData().forEach(t -> {
-        	int iid=FHResearch.effects.getIntId(this);
-            if (iid != 0) {
-            	TeamResearchData trd=t.getData(SpecialDataTypes.RESEARCH_DATA);
-                revoke(trd);
-
-                trd.setGrant(this, false);
-            }
-        });
-    }
-
-    /**
-     * Delete from the registry.
-     */
-    public void deleteSelf() {
-        deleteInTree();
-        FHResearch.effects.remove(this);
-    }
-
     /**
      * Called when effect is edited.
      */
     public void edit() {
-        deleteInTree();
     }
 
     /**
@@ -263,6 +226,11 @@ public abstract class Effect extends AutoIDItem{
         if (icon == null)
             return getDefaultIcon();
         return icon;
+    }
+    public final Icon getFtbIcon() {
+        if (icon == null)
+            return getDefaultIcon().asFtbIcon();
+        return icon.asFtbIcon();
     }
 
     /**
@@ -316,7 +284,7 @@ public abstract class Effect extends AutoIDItem{
      * @param isload        true if this is run when loaded from disk<br>
      * @return true, if
      */
-    public abstract boolean grant(TeamResearchData team, @Nullable Player triggerPlayer, boolean isload);
+    public abstract boolean grant(TeamDataHolder team,TeamResearchData trd, @Nullable Player triggerPlayer, boolean isload);
 
     /**
      * Inits this effect globally.
@@ -324,15 +292,6 @@ public abstract class Effect extends AutoIDItem{
      */
     public abstract void init();
 
-    /**
-     * Checks if is granted for client.<br>
-     *
-     * @return if is granted,true.
-     */
-    @OnlyIn(Dist.CLIENT)
-    public boolean isGranted() {
-        return ClientResearchDataAPI.getData().isEffectGranted(this);
-    }
 
     /**
      * Checks if is hidden.<br>
@@ -344,7 +303,7 @@ public abstract class Effect extends AutoIDItem{
     }
 
     @OnlyIn(Dist.CLIENT)
-    public void onClick() {
+    public void onClick(ResearchData data) {
     }
 
     public void reload() {
@@ -359,46 +318,8 @@ public abstract class Effect extends AutoIDItem{
      */
     public abstract void revoke(TeamResearchData team);
 
-    /**
-     * Send effect progress packet for current effect to players in team.
-     * Useful for data sync. This would called automatically, Their's no need to call this in effect.
-     *
-     * @param team the team<br>
-     */
-    public void sendProgressPacket(TeamDataHolder team) {
-        FHEffectProgressSyncPacket packet = new FHEffectProgressSyncPacket(team, this);
-        team.sendToOnline(packet);
-    }
-
-
-    /**
-     * set granted.
-     *
-     * @param b value to set granted to.
-     */
-    @OnlyIn(Dist.CLIENT)
-    public void setGranted(boolean b) {
-        ClientResearchDataAPI.getData().setGrant(this, b);
-    }
-
-    /**
-     * set new id, would change registry data.
-     *
-     * @param id value to set new id to.
-     */
-    void setNewId(String id) {
-        if (!id.equals(this.nonce)) {
-            delete();
-            this.nonce = id;
-            FHResearch.effects.register(this);
-            if (parent != null) {
-                Research r = parent.get();
-                if (r != null) {
-                    r.attachEffect(this);
-                    r.doIndex();
-                }
-            }
-        }
-    }
+	public void setNonce(String text) {
+		this.nonce=text;
+	}
 
 }

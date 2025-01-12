@@ -23,11 +23,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
@@ -38,7 +40,7 @@ import net.minecraft.network.chat.Component;
  * Reward the research team executes command
  */
 public class EffectExperience extends Effect {
-	public static final Codec<EffectExperience> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	public static final MapCodec<EffectExperience> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
 	Codec.INT.fieldOf("experience").forGetter(o->o.exp))
 	.apply(t,EffectExperience::new));
     int exp;
@@ -68,18 +70,18 @@ public class EffectExperience extends Effect {
 
     @Override
     public MutableComponent getDefaultName() {
-        return TranslateUtils.translateGui("effect.exp");
+        return Lang.translateGui("effect.exp");
     }
 
     @Override
     public List<Component> getDefaultTooltip() {
         List<Component> tooltip = new ArrayList<>();
-        tooltip.add(TranslateUtils.str("+" + exp));
+        tooltip.add(Lang.str("+" + exp));
         return tooltip;
     }
 
     @Override
-    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
+    public boolean grant(TeamDataHolder team,TeamResearchData trd,  Player triggerPlayer, boolean isload) {
         if (triggerPlayer == null || isload)
             return false;
 

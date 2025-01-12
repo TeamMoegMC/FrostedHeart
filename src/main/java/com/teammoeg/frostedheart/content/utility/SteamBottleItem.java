@@ -22,15 +22,15 @@ package com.teammoeg.frostedheart.content.utility;
 import java.util.List;
 
 import com.mojang.datafixers.util.Either;
-import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.constants.EquipmentSlotType;
+import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.world.item.TooltipFlag;
@@ -61,8 +61,8 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
     @Override
     public void appendHoverText(ItemStack stack, Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
         String stored = FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->t.getEnergyStored()).orElse(0f) + "/" + 240;
-        tooltip.add(TranslateUtils.translateTooltip("meme.steam_bottle").withStyle(ChatFormatting.GRAY));
-        tooltip.add(TranslateUtils.translateTooltip("steam_stored", stored).withStyle(ChatFormatting.GOLD));
+        tooltip.add(Lang.translateTooltip("meme.steam_bottle").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Lang.translateTooltip("steam_stored", stored).withStyle(ChatFormatting.GOLD));
     }
 
     @Override

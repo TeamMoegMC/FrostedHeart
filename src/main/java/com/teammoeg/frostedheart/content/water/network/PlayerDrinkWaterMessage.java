@@ -1,10 +1,9 @@
 package com.teammoeg.frostedheart.content.water.network;
 
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.base.network.NBTMessage;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
-import com.teammoeg.frostedheart.content.water.event.WaterEventHandler;
+import com.teammoeg.frostedheart.content.water.event.WaterCommonEvents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -31,7 +30,7 @@ public class PlayerDrinkWaterMessage extends NBTMessage {
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         Player player = context.get().getSender();
-        WaterEventHandler.drinkWaterBlock(player);
+        WaterCommonEvents.drinkWaterBlock(player);
         WaterLevelCapability.getCapability(player).ifPresent(data -> {
             FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new PlayerWaterLevelSyncPacket(data.getWaterLevel(), data.getWaterSaturationLevel(), data.getWaterExhaustionLevel()));
         });

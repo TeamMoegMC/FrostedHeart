@@ -24,12 +24,12 @@ import java.util.Arrays;
 import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
-import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
-import com.teammoeg.frostedheart.foundation.recipes.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -82,7 +82,7 @@ public class ChargerDefrostCategory implements IRecipeCategory<CampfireDefrostRe
 
 
     public Component getTitle() {
-        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".charger_defrost"));
+        return (Lang.translateKey("gui.jei.category." + FHMain.MODID + ".charger_defrost"));
     }
 
 

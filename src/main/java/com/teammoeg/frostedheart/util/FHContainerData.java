@@ -15,7 +15,11 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraftforge.fluids.FluidStack;
-
+/**
+ * FHContainerData
+ * a utility class for menu data sync and type convertion
+ * 
+ * */
 public class FHContainerData {
 	public static final IdRegistry<OtherDataSlotEncoder<?>> encoders=new IdRegistry<>();
 	public static interface DataSlotConverter<A> extends IntFunction<A>{
@@ -45,8 +49,10 @@ public class FHContainerData {
 	}
 	public interface FHDataSlot<T>{
 		T getValue();
+		
 		void setValue(T t);
 		void bind(Supplier<T> sup);
+		void bind(Consumer<T> setter);
 		void bind(Supplier<T> sup,Consumer<T> con);
 		default Supplier<T> asSupplier(){
 			return ()->getValue();
@@ -63,6 +69,7 @@ public class FHContainerData {
 		public SingleDataSlot(DataSlotConverter<T> conv) {
 			super();
 			this.conv = conv;
+			this.value=conv.getDefault();
 		}
 		@Override
 		public int get() {
@@ -96,7 +103,10 @@ public class FHContainerData {
 			this.getter=getter;
 			this.setter=setter;
 		}
-
+		@Override
+		public void bind(Consumer<T> setter) {
+			this.setter=setter;
+		}
 	}
 	public static interface SyncableDataSlot<T>{
 		boolean checkForUpdate();
@@ -139,6 +149,10 @@ public class FHContainerData {
 			this.getter=getter;
 			this.setter=setter;
 		}
+		@Override
+		public void bind(Consumer<T> setter) {
+			this.setter=setter;
+		}
 		public boolean checkForUpdate() {
 			T curval=getValue();
 			if(!Objects.equal(oldValue, curval)) {
@@ -164,6 +178,7 @@ public class FHContainerData {
 		public MultiDataSlot(MultipleDataSlotConverter<T> conv) {
 			super();
 			this.conv = conv;
+			this.value=conv.getDefault();
 			values=new int[conv.getCount()];
 		}
 		private void updateIfNeeded() {
@@ -209,7 +224,10 @@ public class FHContainerData {
 			this.getter=getter;
 			this.setter=setter;
 		}
-
+		@Override
+		public void bind(Consumer<T> setter) {
+			this.setter=setter;
+		}
 
 	}
 	public static final DataSlotConverter<Integer> SLOT_INT=new DataSlotConverter<>(){
@@ -253,7 +271,7 @@ public class FHContainerData {
 		}
 		@Override
 		public int apply(Float t) {
-			return (int)(t*100);
+			return (int)((t==null?0:t)*100);
 		}
 		@Override
 		public Float getDefault() {
@@ -361,6 +379,9 @@ public class FHContainerData {
 		}
 
 	};
+	static {
+		encoders.register(SLOT_TANK);
+	}
 	public static <T> FHDataSlot<T> create(FHBaseContainer container,DataSlotConverter<T> type) {
 		SingleDataSlot<T> slot=new SingleDataSlot<>(type);
 		container.addDataSlot(slot);

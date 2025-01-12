@@ -22,8 +22,6 @@ package com.teammoeg.frostedheart.content.decoration;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHBlockEntityTypes;
-
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.world.level.block.state.BlockState;
@@ -37,7 +35,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
@@ -71,7 +71,7 @@ public class RelicChestTileEntity extends RandomizableContainerBlockEntity imple
 
     @Override
     protected Component getDefaultName() {
-        return TranslateUtils.translate("container.relic_chest");
+        return Lang.translateKey("container.relic_chest");
     }
 
     @Nullable

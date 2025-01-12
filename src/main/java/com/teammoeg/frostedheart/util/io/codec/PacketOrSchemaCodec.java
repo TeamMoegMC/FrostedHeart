@@ -13,13 +13,19 @@ import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
 
 public class PacketOrSchemaCodec<A,S> implements Codec<A> {
-	Function<A,S> schemaSerialize;
-	Function<S,A> schemaDeserialize;
+	Function<A,DataResult<S>> schemaSerialize;
+	Function<S,DataResult<A>> schemaDeserialize;
 	BiConsumer<A,FriendlyByteBuf> bufferSerialize;
 	Function<byte[],A> bufferDeserialize;
 	DynamicOps<S> schemaCodec;
-
-	public PacketOrSchemaCodec(DynamicOps<S> schema, Function<A, S> schemaSerialize, Function<S, A> schemaDeserialize, BiConsumer<A, FriendlyByteBuf> bufferSerialize, Function<FriendlyByteBuf, A> bufferDeserialize) {
+	public static <A,S> PacketOrSchemaCodec<A,S> create(DynamicOps<S> schema, Function<A, S> schemaSerialize, Function<S, A> schemaDeserialize, BiConsumer<A, FriendlyByteBuf> bufferSerialize, Function<FriendlyByteBuf, A> bufferDeserialize) {
+		return new PacketOrSchemaCodec<>(schema,
+		schemaSerialize.andThen(DataResult::success),
+		schemaDeserialize.andThen(DataResult::success),
+		bufferSerialize,
+		bs->bufferDeserialize.apply(new FriendlyByteBuf(Unpooled.wrappedBuffer(bs))));
+	}
+	public PacketOrSchemaCodec(DynamicOps<S> schema, Function<A, DataResult<S>> schemaSerialize, Function<S, DataResult<A>> schemaDeserialize, BiConsumer<A, FriendlyByteBuf> bufferSerialize, Function<FriendlyByteBuf, A> bufferDeserialize) {
 		super();
 		this.schemaSerialize = schemaSerialize;
 		this.schemaDeserialize = schemaDeserialize;
@@ -37,7 +43,7 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 			buffer.getBytes(0, ba);
 			return CodecUtil.BYTE_ARRAY_CODEC.encode(ba, ops, prefix);
 		}
-		return CodecUtil.convertSchema(schemaCodec).encode(schemaSerialize.apply(input), ops, prefix);
+		return schemaSerialize.apply(input).flatMap(t->CodecUtil.convertSchema(schemaCodec).encode(t, ops, prefix) );
 	}
 
 	@Override
@@ -46,7 +52,7 @@ public class PacketOrSchemaCodec<A,S> implements Codec<A> {
 			return CodecUtil.BYTE_ARRAY_CODEC.decode(ops, input).map(t->t.mapFirst(bufferDeserialize));
 		}
 		DataResult<Pair<S, T>> obj=CodecUtil.convertSchema(schemaCodec).decode(ops, input);
-		return obj.map(o->o.mapFirst(schemaDeserialize));
+		return obj.flatMap(t->schemaDeserialize.apply(t.getFirst()).map(o->Pair.of(o, input)));
 	}
 
 	@Override

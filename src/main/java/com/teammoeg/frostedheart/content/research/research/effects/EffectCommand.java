@@ -26,12 +26,14 @@ import java.util.List;
 import java.util.Map;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.commands.CommandSourceStack;
@@ -45,7 +47,7 @@ import net.minecraft.network.chat.Component;
  * Reward the research team executes command
  */
 public class EffectCommand extends Effect {
-	public static final Codec<EffectCommand> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	public static final MapCodec<EffectCommand> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
 	Codec.list(Codec.STRING).fieldOf("rewards").forGetter(o->o.rewards))
 	.apply(t,EffectCommand::new));
 
@@ -78,7 +80,7 @@ public class EffectCommand extends Effect {
 
     @Override
     public MutableComponent getDefaultName() {
-        return TranslateUtils.translateGui("effect.command");
+        return Lang.translateGui("effect.command");
     }
 
     @Override
@@ -87,7 +89,7 @@ public class EffectCommand extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
+    public boolean grant(TeamDataHolder team,TeamResearchData trd, Player triggerPlayer, boolean isload) {
         if (triggerPlayer == null || isload)
             return false;
 
@@ -98,8 +100,7 @@ public class EffectCommand extends Effect {
         overrides.put("x", pos.getX());
         overrides.put("y", pos.getY());
         overrides.put("z", pos.getZ());
-
-        overrides.put("t", team.getHolder().getTeam().get().getId().toString());
+        team.getTeam().map(t->t.getId()).ifPresent(t->overrides.put("t", t));
         Commands cmds = FHTeamDataManager.getServer().getCommands();
         CommandSourceStack source = FHTeamDataManager.getServer().createCommandSourceStack();
         for (String s : rewards) {

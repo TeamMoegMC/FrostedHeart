@@ -34,14 +34,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
-import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
-import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
-import com.teammoeg.frostedheart.content.climate.data.CupData;
-import com.teammoeg.frostedheart.content.climate.data.CupTempAdjustProxy;
-import com.teammoeg.frostedheart.content.climate.data.DrinkTempData;
-import com.teammoeg.frostedheart.content.climate.data.FoodTempData;
-import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
+import com.teammoeg.frostedheart.content.climate.data.*;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
@@ -50,6 +43,7 @@ import com.teammoeg.frostedheart.util.mixin.StructureUtils;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.FriendlyByteBuf;
@@ -125,6 +119,7 @@ public class FHDataManager implements ResourceManagerReloadListener {
 
 	public static final DataType<ArmorTempData> Armor = (new DataType<>(ArmorTempData.class, "temperature", "armor", ArmorTempData.CODEC));
 	public static final DataType<BiomeTempData> Biome = (new DataType<>(BiomeTempData.class, "temperature", "biome", BiomeTempData.CODEC));
+	public static final DataType<PlantTempData> Plant = (new DataType<>(PlantTempData.class, "temperature", "plant", PlantTempData.CODEC));
 	public static final DataType<FoodTempData> Food = (new DataType<>(FoodTempData.class, "temperature", "food", FoodTempData.CODEC));
 	public static final DataType<BlockTempData> Block = (new DataType<>(BlockTempData.class, "temperature", "block", BlockTempData.CODEC));
 	public static final DataType<DrinkTempData> Drink = (new DataType<>(DrinkTempData.class, "temperature", "drink", DrinkTempData.CODEC));
@@ -188,6 +183,11 @@ public class FHDataManager implements ResourceManagerReloadListener {
 		return 0F;
 	}
 
+	@Nullable
+	public static PlantTempData getPlantData(Block b) {
+		return FHDataManager.get(Plant).get(RegistryUtils.getRegistryName(b));
+	}
+
 	public static BlockTempData getBlockData(Block b) {
 		return FHDataManager.get(Block).get(RegistryUtils.getRegistryName(b));
 	}
@@ -212,13 +212,24 @@ public class FHDataManager implements ResourceManagerReloadListener {
 	 * @param stack the item stack
 	 * @return the temperature adjuster
 	 */
-	public static @Nullable ITempAdjustFood getFood(ItemStack stack) {
-		CupData data = FHDataManager.get(Cup).get(RegistryUtils.getRegistryName(stack.getItem()));
+	public static @Nullable ITempAdjustFood getTempAdjustFood(ItemStack stack) {
+		return getTempAdjustFood(stack.getItem());
+	}
+
+	public static @Nullable ITempAdjustFood getTempAdjustFood(Item item) {
+		if (item instanceof ITempAdjustFood) {
+			return (ITempAdjustFood) item;
+		}
+		CupData data = FHDataManager.get(Cup).get(RegistryUtils.getRegistryName(item));
 		ResourceMap<FoodTempData> foodData = FHDataManager.get(Food);
 		if (data != null) {
-			return new CupTempAdjustProxy(data.getEfficiency(), foodData.get(RegistryUtils.getRegistryName(stack.getItem())));
+			return new CupTempAdjustProxy(data.getEfficiency(), foodData.get(RegistryUtils.getRegistryName(item)));
 		}
-        return foodData.get(RegistryUtils.getRegistryName(stack.getItem()));
+		return foodData.get(RegistryUtils.getRegistryName(item));
+	}
+
+	public static @Nullable FoodTempData getFoodTemp(Item item) {
+		return FHDataManager.get(Food).get(RegistryUtils.getRegistryName(item));
 	}
 
 	@Nonnull

@@ -1,0 +1,25 @@
+{
+  "type": "create:mixing",
+  "heatRequirement": "heated",
+  "ingredients": [
+    {
+      "tag": "minecraft:leaves"
+    },
+    {
+      "amount": 250,
+      "fluid": "frostedheart:red_water",
+      "nbt": {}
+    },
+    {
+      "amount": 250,
+      "fluid": "frostedheart:blue_water",
+      "nbt": {}
+    }
+  ],
+  "results": [
+    {
+      "amount": 500,
+      "fluid": "frostedheart:purple_water"
+    }
+  ]
+}

@@ -1,10 +1,12 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "particle": "frostedheart:block/multiblocks/crudegeneratorstone"
+    "texture0": "frostedheart:block/heat_radiator",
+    "particle": "frostedheart:block/heat_radiator"
   },
   "loader": "forge:obj",
   "model": "frostedheart:models/block/heat_radiator.obj",
-  "detectCullableFaces": false,
-  "flip-v": true
+  "automatic_culling": false,
+  "flip_v": true,
+  "render_type": "cutout"
 }

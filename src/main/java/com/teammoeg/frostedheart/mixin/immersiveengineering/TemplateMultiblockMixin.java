@@ -31,9 +31,9 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.multiblock.components.IOwnerState;
-import com.teammoeg.frostedheart.util.FHMultiblockHelper;
+import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
-import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
+import com.teammoeg.frostedheart.compat.ie.MultiBlockAccess;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;

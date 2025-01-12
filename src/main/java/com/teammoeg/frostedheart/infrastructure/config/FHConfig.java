@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.infrastructure.config;
 
-import com.teammoeg.frostedheart.util.constants.FHTemperatureDifficulty;
+import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -176,6 +176,7 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Double> flintIgnitionChance;
         public final ForgeConfigSpec.ConfigValue<Double> stickIgnitionChance;
         public final ForgeConfigSpec.ConfigValue<Double> consumeChanceWhenIgnited;
+        public final ForgeConfigSpec.ConfigValue<Boolean> enableScenario;
 
 
         Common(ForgeConfigSpec.Builder builder) {
@@ -215,6 +216,9 @@ public class FHConfig {
             enableDailyKitchen = builder
                     .comment("Enables sending wanted food message. ")
                     .define("enableDailyKitchen", true);
+            enableScenario = builder
+                    .comment("Enables the scenario system. ")
+                    .define("enableScenario", true);
             builder.pop();
 
         }
@@ -258,10 +262,13 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Integer> minBodyTempChange;
         public final ForgeConfigSpec.ConfigValue<Integer> maxBodyTempChange;
 
+        public final ForgeConfigSpec.ConfigValue<Float> nutritionConsumptionRate;
+
+
         Server(ForgeConfigSpec.Builder builder) {
             builder.push("Temperature");
-            tdiffculty = builder.comment("Temperature System difficulty", "Easy=Strong body", "Normal=Average", "Hard=Reality", "Hardcore=Sick body")
-                    .defineEnum("temperatureDifficulty", FHTemperatureDifficulty.Normal);
+            tdiffculty = builder.comment("Temperature System difficulty", "easy=Strong body", "normal=Average", "hard=Reality", "hardcore=Sick body")
+                    .defineEnum("temperatureDifficulty", FHTemperatureDifficulty.normal);
             tempSpeed = builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
                     .defineInRange("temperatureChangeRate", 0.5, 0, 20);
             temperatureUpdateIntervalTicks = builder.comment("The interval of temperature update in ticks.")
@@ -298,13 +305,15 @@ public class FHConfig {
                     .defineInRange("maxBodyTempChange", 10, -100, 100);
             builder.pop();
 
-            builder.push("Water");
+            builder.push("Water & Nutrition");
             waterReducingRate = builder.comment("finalReducingValue = basicValue * waterReducingRate.(DoubleValue)")
                     .defineInRange("waterReducingRate", 1.0D, 0d, 1000D);
             weaknessEffectAmplifier = builder.comment("It is the weakness effect amplifier of the effect punishment when player's water level is too low. -1 means canceling this effect. Default:0")
                     .defineInRange("weaknessEffectAmplifier", 0, -1, 999999);
             resetWaterLevelInDeath = builder.comment("It decides if players' water level would reset in death.")
                     .define("resetWaterLevelInDeath", true);
+            nutritionConsumptionRate = builder.comment("The rate of nutrition consumption.")
+                    .define("nutritionConsumptionRate", 1.0f);
             builder.pop();
 
             builder.push("Worldgen");

@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.infrastructure.gen;
 
 import com.simibubi.create.foundation.data.recipe.Mods;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHTags;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.builders.ItemBuilder;
 import com.tterrag.registrate.providers.RegistrateTagsProvider;

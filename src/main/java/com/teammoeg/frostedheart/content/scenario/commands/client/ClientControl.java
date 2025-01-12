@@ -35,14 +35,13 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.Grap
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsLineContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsRectContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsTextContent;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.Point;
 import com.teammoeg.frostedheart.util.client.Rect;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
-import dev.ftb.mods.ftbquests.FTBQuests;
 import dev.ftb.mods.ftbquests.api.FTBQuestsAPI;
 import dev.ftb.mods.ftbquests.quest.BaseQuestFile;
 import dev.ftb.mods.ftbquests.quest.Quest;
@@ -56,9 +55,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
@@ -81,12 +78,12 @@ public class ClientControl implements IClientControlCommand {
 		if(tsk instanceof ItemTask itmtask) {
 
 			MutableComponent cmp=tsk.getTitle().copy().withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM,new HoverEvent.ItemStackInfo(itmtask.getItemStack()))));
-			itt=TranslateUtils.translateMessage("item_task",cmp);
+			itt= Lang.translateMessage("item_task",cmp);
 			
 		}else if(tsk instanceof KillTask) {
-			itt=TranslateUtils.translateMessage("kill_task",tsk.getTitle().copy().withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)));
+			itt= Lang.translateMessage("kill_task",tsk.getTitle().copy().withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)));
 		}else {
-			itt=TranslateUtils.translateMessage("other_task",tsk.getTitle().copy().withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)));
+			itt= Lang.translateMessage("other_task",tsk.getTitle().copy().withStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)));
 		}
 		runner.cls();
 		runner.processClient(itt, true, false);
@@ -133,7 +130,7 @@ public class ClientControl implements IClientControlCommand {
 		if(show!=null) {
 			if(show>0) {
 				if(!(ClientScene.INSTANCE.dialog instanceof ImageScreenDialog)) {
-					id=new ImageScreenDialog(TranslateUtils.str(""));
+					id=new ImageScreenDialog(Lang.str(""));
 					if(ClientScene.INSTANCE.dialog!=null)
 						ClientScene.INSTANCE.dialog.closeDialog();
 					ClientScene.INSTANCE.dialog=id;

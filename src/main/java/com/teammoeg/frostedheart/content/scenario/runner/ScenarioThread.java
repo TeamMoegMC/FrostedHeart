@@ -133,4 +133,6 @@ public interface ScenarioThread {
 	 * Pop call stack.
 	 */
 	void popCallStack(ScenarioContext ctx);
+
+	void appendLiteral(String text);
 }

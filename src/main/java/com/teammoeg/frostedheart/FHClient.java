@@ -19,26 +19,38 @@
 
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.foundation.model.DynamicModelSetup;
-import com.teammoeg.frostedheart.content.climate.client.FogModification;
-import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
+import static com.teammoeg.frostedheart.FHMain.*;
+
+import com.teammoeg.frostedheart.bootstrap.client.FHDynamicModels;
+
+@Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class FHClient {
     public FHClient() {
 
     }
 
-    public static void setupClient() {
-        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
-        IEventBus forgeBus = MinecraftForge.EVENT_BUS;
+    public static void init() {
+        IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
+        IEventBus forge = MinecraftForge.EVENT_BUS;
 
-        DynamicModelSetup.setup();
-        KGlyphProvider.addListener();
-        forgeBus.addListener(FogModification::renderFogColors);
-        forgeBus.addListener(FogModification::renderFogDensity);
-        forgeBus.addListener(FHTooltips::onItemTooltip);
+        LOGGER.info(CLIENT_INIT, "Initializing client");
+        FHDynamicModels.setup();
+        // Moved to FHClientEventsMod
+//        KGlyphProvider.addListener();
+
+        LOGGER.info(CLIENT_INIT, "Registering client forge event listeners");
+
+        LOGGER.info(CLIENT_INIT, "Registering client mod event listeners");
+
+        LOGGER.info(CLIENT_INIT, "Finished initializing client");
     }
+
+
+
 }

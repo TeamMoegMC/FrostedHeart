@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.teammoeg.frostedheart.base.network.FHContainerDataSync;
 import com.teammoeg.frostedheart.base.network.FHContainerOperation;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.FHBodyDataSyncPacket;
@@ -35,8 +36,21 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorM
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.content.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
-import com.teammoeg.frostedheart.content.nutrition.network.PlayerNutritionSyncPacket;
-import com.teammoeg.frostedheart.content.research.network.*;
+import com.teammoeg.frostedheart.content.health.network.PlayerNutritionSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHChangeActiveResearchPacket;
+import com.teammoeg.frostedheart.content.research.network.FHDrawingDeskOperationPacket;
+import com.teammoeg.frostedheart.content.research.network.FHEffectProgressSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHEffectTriggerPacket;
+import com.teammoeg.frostedheart.content.research.network.FHEnergyDataSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHInsightSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchAttributeSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchControlPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchDataUpdatePacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchRegistrtySyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchSyncEndPacket;
+import com.teammoeg.frostedheart.content.research.network.FHResearchSyncPacket;
+import com.teammoeg.frostedheart.content.research.network.FHS2CClueProgressSyncPacket;
 import com.teammoeg.frostedheart.content.scenario.network.ClientLinkClickedPacket;
 import com.teammoeg.frostedheart.content.scenario.network.ClientScenarioResponsePacket;
 import com.teammoeg.frostedheart.content.scenario.network.FHClientReadyPacket;
@@ -45,18 +59,20 @@ import com.teammoeg.frostedheart.content.scenario.network.ServerScenarioCommandP
 import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioActPacket;
 import com.teammoeg.frostedheart.content.scenario.network.ServerSenarioScenePacket;
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkRequestC2SPacket;
+import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkResponseS2CPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipPacket;
 import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
-import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
-import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
-import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.content.town.TeamTownDataS2CPacket;
 import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.content.trade.network.BargainResponse;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeUpdatePacket;
-
+import com.teammoeg.frostedheart.content.water.network.PlayerWaterLevelSyncPacket;
+import com.teammoeg.frostedheart.content.waypoint.network.WaypointRemovePacket;
+import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncPacket;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -78,7 +94,7 @@ public class FHNetwork {
     private static int iid = 0;
 
     /**
-     * Register Message Type, would automatically use method in FHMessage as serializer and <init>(PacketBuffer) as deserializer
+     * Register Message Type, would automatically use method in FHMessage as serializer and &lt;init&gt;(PacketBuffer) as deserializer
      */
     public static synchronized <T extends FHMessage> void registerMessage(String name, Class<T> msg) {
         classesId.put(msg, FHMain.rl(name));
@@ -89,7 +105,8 @@ public class FHNetwork {
                     return ctor.newInstance(pb);
                 } catch (IllegalAccessException | IllegalArgumentException | InstantiationException |
                          InvocationTargetException e) {
-                    throw new RuntimeException("Can not create message " + msg.getSimpleName(), e);
+                	e.printStackTrace();
+                    throw new RuntimeException("Can not create message " + msg.getSimpleName()+e.getMessage(), e);
                 }
             }, FHMessage::handle);
         } catch (NoSuchMethodException | SecurityException e1) {
@@ -126,6 +143,7 @@ public class FHNetwork {
         // TemperatureChangePacket::handle);
         //Fundamental Message
         registerMessage("container_operation", FHContainerOperation.class);
+        registerMessage("container_sync",FHContainerDataSync.class);
 
         //Climate Messages
         registerMessage("body_data", FHBodyDataSyncPacket.class);
@@ -140,7 +158,7 @@ public class FHNetwork {
         registerMessage("research_sync_end", FHResearchSyncEndPacket.class);
         registerMessage("research_data", FHResearchDataSyncPacket.class);
         registerMessage("research_data_update", FHResearchDataUpdatePacket.class);
-        registerMessage("research_clue", FHClueProgressSyncPacket.class);
+        registerMessage("research_clue", FHS2CClueProgressSyncPacket.class);
         registerMessage("research_attribute", FHResearchAttributeSyncPacket.class);
         registerMessage("effect_trigger", FHEffectTriggerPacket.class);
         registerMessage("research_control", FHResearchControlPacket.class);
@@ -167,6 +185,8 @@ public class FHNetwork {
 
         // Heat Messages
         registerMessage("heat_endpoint", EndPointDataPacket.class);
+        registerMessage("heat_network_request_c2s", HeatNetworkRequestC2SPacket.class);
+        registerMessage("heat_network_response_s2c", HeatNetworkResponseS2CPacket.class);
 
         // Town Messages
         registerMessage("team_town_data_s2c", TeamTownDataS2CPacket.class);

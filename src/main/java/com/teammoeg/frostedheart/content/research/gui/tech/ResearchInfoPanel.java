@@ -22,12 +22,11 @@ package com.teammoeg.frostedheart.content.research.gui.tech;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.FHResearch;
-import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
-import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FramedPanel;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
@@ -38,7 +37,6 @@ import com.teammoeg.frostedheart.content.research.network.FHResearchControlPacke
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.frostedheart.content.research.research.effects.EffectBuilding;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -90,7 +88,7 @@ public class ResearchInfoPanel extends Panel {
 
             fp.setHeight(ioffset);
         });
-        prl.setTitle(TranslateUtils.translateGui("research.requirements"));
+        prl.setTitle(Lang.translateGui("research.requirements"));
         prl.setPos(0, 0);
         if ((!detailPanel.research.getRequiredItems().isEmpty())
                 && (FHResearch.editor || !researchData.canResearch())) {
@@ -98,9 +96,9 @@ public class ResearchInfoPanel extends Panel {
             add(prl);
         }
         if (!researchData.canResearch()) {
-            if (researchData.isUnlocked()) {
+            if (detailPanel.research.isUnlocked()) {
                 // commit items button
-                Button commitItems = new TechTextButton(this, TranslateUtils.translateGui("research.commit_material_and_start"),
+                Button commitItems = new TechTextButton(this, Lang.translateGui("research.commit_material_and_start"),
                         Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
@@ -111,9 +109,9 @@ public class ResearchInfoPanel extends Panel {
 
                 add(commitItems);
             }
-        } else if (researchData.isInProgress()) {
+        } else if (detailPanel.research.isInProgress()) {
             // commit items button
-            Button commitItems = new TechTextButton(this, TranslateUtils.translateGui("research.stop"), Icon.empty()) {
+            Button commitItems = new TechTextButton(this, Lang.translateGui("research.stop"), Icon.empty()) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
                     FHNetwork.sendToServer(new FHResearchControlPacket(Operator.PAUSE, detailPanel.research));
@@ -123,7 +121,7 @@ public class ResearchInfoPanel extends Panel {
             add(commitItems);
         } else if (!researchData.isCompleted() && !detailPanel.research.isInCompletable()) {
             // commit items button
-            Button commitItems = new TechTextButton(this, TranslateUtils.translateGui("research.start"), Icon.empty()) {
+            Button commitItems = new TechTextButton(this, Lang.translateGui("research.start"), Icon.empty()) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
                     FHNetwork.sendToServer(new FHResearchControlPacket(Operator.START, detailPanel.research));
@@ -144,7 +142,7 @@ public class ResearchInfoPanel extends Panel {
                         if (!(effect instanceof EffectBuilding))
                             continue;
                         if (effect.isHidden()) continue;
-                        LargeEffectWidget button = new LargeEffectWidget(fp, effect);
+                        LargeEffectWidget button = new LargeEffectWidget(fp, effect,detailPanel.research);
                         button.setPos(xoffset, offset);
                         fp.add(button);
                         xoffset += 32;
@@ -160,14 +158,14 @@ public class ResearchInfoPanel extends Panel {
                     xoffset = 4;
                     boolean hasUnclaimed = false;
                     for (Effect effect : detailPanel.research.getEffects()) {
-                        if (!effect.isGranted())
+                        if (!detailPanel.research.getData().isEffectGranted(effect))
                             hasUnclaimed = true;
                         // building
                         if (effect instanceof EffectBuilding) {
                             continue;
                         }
                         if (effect.isHidden()) continue;
-                        EffectWidget button = new EffectWidget(fp, effect);
+                        EffectWidget button = new EffectWidget(fp, effect,detailPanel.research);
                         button.setPos(xoffset, offset);
                         fp.add(button);
                         xoffset += 17;
@@ -180,9 +178,8 @@ public class ResearchInfoPanel extends Panel {
 
                     if (hasB)
                         offset += 24;
-                    TeamResearchData data = ClientResearchDataAPI.getData();
-                    if (data.getData(detailPanel.research).isCompleted() && hasUnclaimed) {
-                        Button claimRewards = new TechTextButton(fp, TranslateUtils.translateGui("research.claim_rewards"),
+                    if (detailPanel.research.isCompleted() && hasUnclaimed) {
+                        Button claimRewards = new TechTextButton(fp, Lang.translateGui("research.claim_rewards"),
                                 Icon.empty()) {
                             @Override
                             public void onClicked(MouseButton mouseButton) {
@@ -194,7 +191,7 @@ public class ResearchInfoPanel extends Panel {
                         offset += claimRewards.height + 1;
                     }
                 } else {
-                    RTextField rt = new RTextField(fp).setColor(TechIcons.text).setMaxWidth(width - 5).setText(TranslateUtils.translateGui("effect_unknown"));
+                    RTextField rt = new RTextField(fp).setColor(TechIcons.text).setMaxWidth(width - 5).setText(Lang.translateGui("effect_unknown"));
                     rt.setPos(xoffset, offset);
                     offset += rt.height;
                     fp.add(rt);
@@ -202,7 +199,7 @@ public class ResearchInfoPanel extends Panel {
                 fp.setWidth(width);
                 fp.setHeight(offset);
             });
-            ppl.setTitle(TranslateUtils.translateGui("research.effects"));
+            ppl.setTitle(Lang.translateGui("research.effects"));
             ppl.setPos(0, 0);
             add(ppl);
             panels.add(ppl);
@@ -213,7 +210,7 @@ public class ResearchInfoPanel extends Panel {
                 List<Clue> clues = new ArrayList<>();
                 int i = 0;
                 for (Clue cl : detailPanel.research.getClues()) {
-                    if (cl.isRequired() && !cl.isCompleted())
+                    if (cl.isRequired() && !detailPanel.research.getData().isClueTriggered(cl))
                         clues.add(i++, cl);
                     else clues.add(cl);
                 }
@@ -230,7 +227,7 @@ public class ResearchInfoPanel extends Panel {
                 fp.setHeight(offset);
             });
 
-            pcl.setTitle(TranslateUtils.translateGui("research.clues"));
+            pcl.setTitle(Lang.translateGui("research.clues"));
             pcl.setPos(0, 0);
             add(pcl);
             panels.add(pcl);

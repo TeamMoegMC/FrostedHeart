@@ -23,13 +23,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.entity.player.Player;
@@ -43,7 +46,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * Allows the research team to use certain machines
  */
 public class EffectShowCategory extends Effect {
-	public static final Codec<EffectShowCategory> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	public static final MapCodec<EffectShowCategory> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
 	ResourceLocation.CODEC.fieldOf("category").forGetter(o->o.cate))
 	.apply(t,EffectShowCategory::new));
     ResourceLocation cate;
@@ -79,7 +82,7 @@ public class EffectShowCategory extends Effect {
 
     @Override
     public MutableComponent getDefaultName() {
-        return TranslateUtils.translateGui("effect.category");
+        return Lang.translateGui("effect.category");
     }
 
 
@@ -89,8 +92,8 @@ public class EffectShowCategory extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
-        team.categories.add(cate);
+    public boolean grant(TeamDataHolder team,TeamResearchData trd,  Player triggerPlayer, boolean isload) {
+        trd.categories.add(cate);
         return true;
     }
 
@@ -102,7 +105,7 @@ public class EffectShowCategory extends Effect {
 
     @OnlyIn(Dist.CLIENT)
     @Override
-    public void onClick() {
+    public void onClick(ResearchData data) {
         if (cate != null)
             JEICompat.showJEICategory(cate);
     }

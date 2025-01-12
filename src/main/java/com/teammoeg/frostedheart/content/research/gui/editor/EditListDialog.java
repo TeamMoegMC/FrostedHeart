@@ -25,9 +25,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -45,7 +44,6 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 /**
  * @author LatvianModder, khjxiaogu
@@ -55,7 +53,7 @@ public class EditListDialog<T> extends EditDialog {
         public ButtonAddValue(Panel panel) {
             super(panel);
             setHeight(12);
-            setTitle(TranslateUtils.str("+ ").append(TranslateUtils.translate("gui.add")));
+            setTitle(Lang.str("+ ").append(Lang.translateKey("gui.add")));
         }
 
         @Override
@@ -70,7 +68,7 @@ public class EditListDialog<T> extends EditDialog {
                 Color4I.WHITE.withAlpha(33).draw(matrixStack, x, y, w, h);
             }
 
-            theme.drawString(matrixStack, getTitle(), x + 4, y + 2, Color4I.BLACK, 0);
+            theme.drawString(matrixStack, getTitle(), x + 4, y + 2, Color4I.WHITE, 0);
             RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
         }
 
@@ -102,7 +100,7 @@ public class EditListDialog<T> extends EditDialog {
             if (getMouseX() >= getX() + width - 19) {
                 l.translate("selectServer.delete");
             } else {
-                l.add(TranslateUtils.str(read.apply(list.get(index))));
+                l.add(Lang.str(read.apply(list.get(index))));
             }
         }
 
@@ -123,10 +121,10 @@ public class EditListDialog<T> extends EditDialog {
                 }
             }
 
-            theme.drawString(matrixStack, read.apply(list.get(index)), x + 4 + ioffset, y + 2, Color4I.BLACK, 0);
+            theme.drawString(matrixStack, read.apply(list.get(index)), x + 4 + ioffset, y + 2, Color4I.WHITE, 0);
 
             if (mouseOver) {
-                theme.drawString(matrixStack, "[-]", x + w - 16, y + 2, Color4I.BLACK, 0);
+                theme.drawString(matrixStack, "[-]", x + w - 16, y + 2, Color4I.WHITE, 0);
             }
 
             RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
@@ -181,7 +179,7 @@ public class EditListDialog<T> extends EditDialog {
             list = new ArrayList<>(vx);
         else
             list = new ArrayList<>();
-        title = TranslateUtils.str(label).withStyle(ChatFormatting.BOLD);
+        title = Lang.str(label).withStyle(ChatFormatting.BOLD);
         this.editor = editor;
         this.def = def;
         this.read = toread;
@@ -209,12 +207,12 @@ public class EditListDialog<T> extends EditDialog {
         };
 
         scroll = new PanelScrollBar(this, configPanel);
-        buttonAccept = new SimpleButton(this, TranslateUtils.translate("gui.accept"), Icons.ACCEPT, (widget, button) -> {
+        buttonAccept = new SimpleButton(this, Lang.translateKey("gui.accept"), Icons.ACCEPT, (widget, button) -> {
             callback.accept(list);
             modified = false;
             close();
         });
-        buttonCancel = new SimpleButton(this, TranslateUtils.translate("gui.cancel"), Icons.CANCEL, (widget, button) -> close());
+        buttonCancel = new SimpleButton(this, Lang.translateKey("gui.cancel"), Icons.CANCEL, (widget, button) -> close());
     }
 
     @Override

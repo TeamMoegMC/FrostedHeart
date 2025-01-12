@@ -20,11 +20,13 @@
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import com.ibm.icu.text.NumberFormat;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.client.gui.GuiGraphics;
+
+import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.TextField;
@@ -76,7 +78,7 @@ public class CluePanel extends Panel {
     @Override
     public void drawBackground(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         // super.drawBackground(matrixStack, theme, x, y, w, h);
-        if (c.isCompleted())
+        if (ClientResearchDataAPI.getData().get().isClueCompleted(r, c))
             TechIcons.CHECKBOX_CHECKED.draw(matrixStack, x, y, 9, 9);
         else if (r.isCompleted())
             TechIcons.CHECKBOX_CROSS.draw(matrixStack, x, y, 9, 9);
@@ -87,10 +89,10 @@ public class CluePanel extends Panel {
     public void initWidgets() {
         int offset = 1;
         clueName = new TextField(this);
-        clueName.setMaxWidth(width - 6).setText(c.getName()).setColor(TechIcons.text).setPos(10, offset);
+        clueName.setMaxWidth(width - 6).setText(c.getName(r)).setColor(TechIcons.text).setPos(10, offset);
 
         offset += clueName.height + 2;
-        Component itx = c.getDescription();
+        Component itx = c.getDescription(r);
         if (itx != null) {
             desc = new TextField(this);
             desc.setMaxWidth(width).setText(itx).setColor(TechIcons.text).setPos(0, offset);
@@ -99,19 +101,19 @@ public class CluePanel extends Panel {
         if (c.isRequired()) {
             rq = new TextField(this)
                     .setMaxWidth(width)
-                    .setText(TranslateUtils.translateGui("research.required"))
+                    .setText(Lang.translateGui("research.required"))
                     .setColor(TechIcons.text_red);
             rq.setPos(0, offset);
             offset += rq.height + 2;
         }
         contribute = new TextField(this)
                 .setMaxWidth(width)
-                .setText(TranslateUtils.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
+                .setText(Lang.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
                 .setColor(TechIcons.text);
         contribute.setPos(0, offset);
         offset += contribute.height + 2;
         offset += 1;
-        hover = c.getHint();
+        hover = c.getHint(r);
         this.setHeight(offset);
     }
 

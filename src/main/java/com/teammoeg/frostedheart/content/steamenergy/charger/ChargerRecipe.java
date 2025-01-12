@@ -19,25 +19,49 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.charger;
 
-import javax.annotation.Nullable;
-
-import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHBlocks;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeType;
+import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.util.GsonHelper;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
 import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.registries.RegistryObject;
 
+import javax.annotation.Nullable;
+
 public class ChargerRecipe extends IESerializableRecipe {
+    public static RegistryObject<RecipeType<ChargerRecipe>> TYPE;
+    public static Lazy<TypeWithClass<ChargerRecipe>> IEType = Lazy.of(() -> new TypeWithClass<>(TYPE, ChargerRecipe.class));
+    public static RegistryObject<IERecipeSerializer<ChargerRecipe>> SERIALIZER;
+    public final IngredientWithSize input;
+    public final ItemStack output;
+    public final float cost;
+
+    public ChargerRecipe(ResourceLocation id, ItemStack output, IngredientWithSize input, float cost2) {
+        super(Lazy.of(() -> output), IEType.get(), id);
+        this.output = output;
+        this.input = input;
+        this.cost = cost2;
+    }
+
+    @Override
+    protected IERecipeSerializer<ChargerRecipe> getIESerializer() {
+        return SERIALIZER.get();
+    }
+
+    @Override
+    public ItemStack getResultItem(RegistryAccess access) {
+        return this.output;
+    }
+
     public static class Serializer extends IERecipeSerializer<ChargerRecipe> {
         @Override
         public ItemStack getIcon() {
@@ -67,32 +91,6 @@ public class ChargerRecipe extends IESerializableRecipe {
             recipe.input.write(buffer);
             buffer.writeFloat(recipe.cost);
         }
-    }
-    public static RegistryObject<RecipeType<ChargerRecipe>> TYPE;
-    public static Lazy<TypeWithClass<ChargerRecipe>> IEType=Lazy.of(()->new TypeWithClass<>(TYPE, ChargerRecipe.class));
-    public static RegistryObject<IERecipeSerializer<ChargerRecipe>> SERIALIZER;
-    public final IngredientWithSize input;
-
-    public final ItemStack output;
-
-    public final float cost;
-
-
-    public ChargerRecipe(ResourceLocation id, ItemStack output, IngredientWithSize input, float cost2) {
-        super(Lazy.of(()->output), IEType.get(), id);
-        this.output = output;
-        this.input = input;
-        this.cost = cost2;
-    }
-
-    @Override
-    protected IERecipeSerializer<ChargerRecipe> getIESerializer() {
-        return SERIALIZER.get();
-    }
-
-    @Override
-    public ItemStack getResultItem(RegistryAccess access) {
-        return this.output;
     }
 
 }

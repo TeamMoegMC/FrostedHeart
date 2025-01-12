@@ -403,18 +403,20 @@ public class DataOps implements DynamicOps<Object> {
 
 	@Override
 	public DataResult<Object> mergeToList(Object list, List<Object> values) {
+		//System.out.println("merges "+values+" into "+list);
 		if (list instanceof List) {
 			List<Object> li = (List<Object>) list;
 			li.addAll(values);
+			return DataResult.success(li);
 		} else if (list == NULLTAG || list == null) {
-			return DataResult.success(values);
+			return DataResult.success(new ArrayList<>(values));
 		}
-		return DataResult.error(()->"Not a Map or Empty");
+		return DataResult.error(()->"Not a List or Empty");
 	}
 
 	@Override
 	public DataResult<Object> mergeToList(Object list, Object value) {
-		// System.out.println(list);
+		//System.out.println("merge "+value+" into "+list);
 		if (list == NULLTAG || list == null) {
 			return DataResult.success(Stream.of(value).collect(Collectors.toList()));
 		}

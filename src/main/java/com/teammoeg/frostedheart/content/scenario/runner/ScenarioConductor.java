@@ -20,20 +20,14 @@
 package com.teammoeg.frostedheart.content.scenario.runner;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteStackElement;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ScenarioTarget;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.registry.IdRegistry;
@@ -44,6 +38,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.ListTag;
 import net.minecraftforge.common.util.LazyOptional;
+import org.apache.logging.log4j.MarkerManager;
 
 /**
  * ScenarioConductor
@@ -86,8 +81,8 @@ public class ScenarioConductor implements NBTSerializable{
  
     	}
     }
-    public void initContext(ServerPlayer player) {
-    	context.setPlayer(player);
+    public void initContext(ServerPlayer player,String lang) {
+    	context.setPlayerAndLang(player,lang);
     }
     public ScenarioConductor() {
 		super();
@@ -96,13 +91,8 @@ public class ScenarioConductor implements NBTSerializable{
 		actids.register(init);
 	}
 
-    public void init(ServerPlayer player) {
-    	initContext(player);
-	}
-
-    public ScenarioConductor(ServerPlayer player) {
-		this();
-		this.initContext(player);
+    public void init(ServerPlayer player,String lang) {
+    	initContext(player,lang);
 	}
 	
 	public void notifyClientResponse(boolean isSkip,int status) {
@@ -133,7 +123,7 @@ public class ScenarioConductor implements NBTSerializable{
 		acts.get(init).jump(getContext(), scenario, null);
 	}
 	public void tick(ServerPlayer player) {
-		init(player);
+		init(player,null);
     	//detect triggers
 		//System.out.println("start tick==============");
 		
@@ -281,7 +271,7 @@ public class ScenarioConductor implements NBTSerializable{
 	public void load(CompoundTag data, boolean isPacket) {
 		getContext().varData.load(data.getCompound("vars"));
     	getContext().takeSnapshot();
-    	System.out.println(data.getCompound("vars"));
+    	FHMain.LOGGER.info(MarkerManager.getMarker("Scenario Conductor"), data.getCompound("vars"));
     	ListTag lacts=data.getList("acts", Tag.TAG_COMPOUND);
     	//Act initact=acts.get(init);
     	for(Tag v:lacts) {

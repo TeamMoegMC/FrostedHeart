@@ -1,42 +1,27 @@
 package com.teammoeg.frostedheart.content.tips.network;
 
 import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
+import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.TipManager;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class DisplayCustomTipPacket implements FHMessage {
-    private final String title;
-    private final String content;
-    private final int visibleTime;
-    private final boolean history;
+public record DisplayCustomTipPacket(Tip tip) implements FHMessage {
 
     public DisplayCustomTipPacket(FriendlyByteBuf buffer) {
-        title = buffer.readUtf();
-        content = buffer.readUtf();
-        visibleTime = buffer.readInt();
-        history = buffer.readBoolean();
+        this(Tip.builder("").fromNBT(buffer.readNbt()).build());
     }
 
-    public DisplayCustomTipPacket(String title, String content, int visibleTime, boolean history) {
-        this.title = title;
-        this.content = content;
-        this.visibleTime = visibleTime;
-        this.history = history;
-    }
-
+    @Override
     public void encode(FriendlyByteBuf buffer) {
-        buffer.writeUtf(this.title);
-        buffer.writeUtf(this.content);
-        buffer.writeInt(this.visibleTime);
-        buffer.writeBoolean(this.history);
+        tip.write(buffer);
     }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> TipDisplayManager.displayCustomTip(title, content, visibleTime, history));
+        ctx.get().enqueueWork(() -> TipManager.INSTANCE.display().general(tip));
         ctx.get().setPacketHandled(true);
     }
 }

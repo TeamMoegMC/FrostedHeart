@@ -34,6 +34,8 @@ public class DirectScenarioVariables implements  IScenarioVaribles  {
     }
     @Override
 	public CompoundTag save() {
+    	if(extraData==null)
+    		extraData=new CompoundTag();
     	return extraData;
     }
     @Override

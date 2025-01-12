@@ -24,7 +24,7 @@ import java.util.Map;
 
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
 
 import net.minecraft.resources.ResourceLocation;
@@ -56,8 +56,8 @@ public enum ResearchCategory {
 
     ResearchCategory(String id) {
         this.id = FHMain.rl(id);
-        this.name = TranslateUtils.translateResearchCategoryName(id);
-        this.desc = TranslateUtils.translateResearchCategoryDesc(id);
+        this.name = Lang.translateResearchCategoryName(id);
+        this.desc = Lang.translateResearchCategoryDesc(id);
         this.icon = FHMain.rl("textures/gui/research/category/" + id + ".png");
         //FHMain.rl("textures/gui/research/category/background/" + id + ".png");
 

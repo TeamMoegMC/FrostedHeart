@@ -68,7 +68,7 @@ public abstract class ResearchPanel extends Panel {
                 if (super.mousePressed(arg0))
                     return true;
                 if (isMouseOver()) {
-                    Research inprog = ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
+                    Research inprog = ClientResearchDataAPI.getData().get().getCurrentResearch().orElse(null);
                     if (inprog != null) {
                         selectResearch(inprog);
                         return true;
@@ -84,7 +84,7 @@ public abstract class ResearchPanel extends Panel {
         if (ClientResearchData.last != null && FHResearch.researches.getIntId(ClientResearchData.last) > 0)
             cr = ClientResearchData.last;
         else
-            cr = ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
+            cr = ClientResearchDataAPI.getData().get().getCurrentResearch().orElse(null);
         selectedCategory = cr == null ? ResearchCategory.RESCUE : cr.getCategory();
         selectedResearch = cr == null ? FHResearch.getFirstResearchInCategory(selectedCategory) : cr;
     }
@@ -142,7 +142,8 @@ public abstract class ResearchPanel extends Panel {
 
     @Override
     public void drawWidget(GuiGraphics arg0, Theme arg1, Widget arg2, int arg3, int arg4, int arg5, int arg6) {
-        GuiHelper.setupDrawing();
+        //GuiHelper.setupDrawing();
+        
         super.drawWidget(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
     }
 

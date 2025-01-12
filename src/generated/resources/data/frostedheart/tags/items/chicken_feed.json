@@ -1,6 +1,5 @@
 {
   "values": [
-    "#forge:seeds",
-    "#forge:breedables/chicken"
+    "#forge:seeds"
   ]
 }

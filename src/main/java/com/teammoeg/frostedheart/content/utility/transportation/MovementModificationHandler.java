@@ -19,9 +19,11 @@
 
 package com.teammoeg.frostedheart.content.utility.transportation;
 
-import com.teammoeg.frostedheart.FHAttributes;
-import com.teammoeg.frostedheart.FHItems;
-import com.teammoeg.frostedheart.FHTags;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -33,11 +35,15 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class MovementModificationHandler {
     /*
      * Movement modifiers for snowshoes and ice skates
      */
+    @SubscribeEvent
     public static void movementModifier(TickEvent.PlayerTickEvent event) {
         Level world = event.player.level();
         Player player = event.player;

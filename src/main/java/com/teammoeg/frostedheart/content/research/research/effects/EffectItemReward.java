@@ -24,12 +24,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 
 import net.minecraft.world.entity.player.Player;
@@ -41,8 +43,8 @@ import net.minecraft.network.chat.Component;
  * Reward the research team item rewards
  */
 public class EffectItemReward extends Effect {
-	public static final Codec<EffectItemReward> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
-	Codec.list(CodecUtil.ITEMSTACK_CODEC).fieldOf("rewards").forGetter(o->o.rewards))
+	public static final MapCodec<EffectItemReward> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	Codec.list(CodecUtil.ITEMSTACK_STRING_CODEC).fieldOf("rewards").forGetter(o->o.rewards))
 	.apply(t,EffectItemReward::new));
     List<ItemStack> rewards;
 
@@ -77,7 +79,7 @@ public class EffectItemReward extends Effect {
 
     @Override
     public MutableComponent getDefaultName() {
-        return TranslateUtils.translateGui("effect.item_reward");
+        return Lang.translateGui("effect.item_reward");
     }
 
     @Override
@@ -87,7 +89,7 @@ public class EffectItemReward extends Effect {
             if (stack.getCount() == 1)
                 tooltip.add(stack.getHoverName());
             else
-                tooltip.add(((MutableComponent) stack.getHoverName()).append(TranslateUtils.str(" x " + stack.getCount())));
+                tooltip.add(((MutableComponent) stack.getHoverName()).append(Lang.str(" x " + stack.getCount())));
         }
         return tooltip;
     }
@@ -98,7 +100,7 @@ public class EffectItemReward extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
+    public boolean grant(TeamDataHolder team,TeamResearchData trd,  Player triggerPlayer, boolean isload) {
         if (triggerPlayer == null || isload) return false;
         for (ItemStack s : rewards) {
             FHUtils.giveItem(triggerPlayer, s.copy());

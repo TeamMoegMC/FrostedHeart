@@ -33,14 +33,15 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
-import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.compat.jei.category.CampfireDefrostCategory;
 import com.teammoeg.frostedheart.compat.jei.category.ChargerCategory;
 import com.teammoeg.frostedheart.compat.jei.category.ChargerCookingCategory;
@@ -61,27 +62,30 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorS
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
-import com.teammoeg.frostedheart.foundation.recipes.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.foundation.recipes.InstallInnerRecipe;
-import com.teammoeg.frostedheart.foundation.recipes.ModifyDamageRecipe;
-import com.teammoeg.frostedheart.foundation.recipes.SmokingDefrostRecipe;
+import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
+import com.teammoeg.frostedheart.content.climate.recipe.InstallInnerRecipe;
+import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
+import com.teammoeg.frostedheart.content.utility.recipe.ModifyDamageRecipe;
+import com.teammoeg.frostedheart.content.climate.recipe.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
+import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 import com.teammoeg.frostedheart.content.research.research.effects.EffectCrafting;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
 import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.client.Point;
 
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.gui.handlers.IGlobalGuiHandler;
 import mezz.jei.api.gui.handlers.IGuiClickableArea;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import mezz.jei.api.helpers.IGuiHelper;
@@ -97,6 +101,7 @@ import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import mezz.jei.library.ingredients.IngredientInfoRecipe;
 import mezz.jei.library.util.RecipeUtil;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -107,6 +112,7 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 @JeiPlugin
 public class JEICompat implements IModPlugin {
@@ -138,7 +144,7 @@ public class JEICompat implements IModPlugin {
             }
         }
         infos.clear();
-        Component it = TranslateUtils.translate("gui.jei.info.require_research");
+        Component it = Lang.translateKey("gui.jei.info.require_research");
 		/*List<IngredientInfoRecipe<ItemStack>> rinfos=(List<IngredientInfoRecipe<ItemStack>>) man.getRecipes(man.getRecipeCategory(VanillaRecipeCategoryUid.INFORMATION));
 		for(IngredientInfoRecipe<ItemStack> info:rinfos) {
 			List<ItemStack> iss=info.getIngredients();
@@ -184,6 +190,8 @@ public class JEICompat implements IModPlugin {
     }
 
     public static void syncJEI() {
+        if (Minecraft.getInstance().level == null)
+            return;
         if (man == null)
             return;
         if (cachedInfoAdd)
@@ -195,7 +203,7 @@ public class JEICompat implements IModPlugin {
             ItemStack irs = RecipeUtil.getResultItem(i);
            
             //Recipe<?> ovrd = overrides.get(i.getId());
-            if (!ClientResearchDataAPI.getData().crafting.has(i)) {
+            if (!ClientResearchDataAPI.getData().get().crafting.has(i)) {
             	Set<RecipeType<?>> type=types.get(i);
             	if(type!=null)
 	                for (RecipeType<?> rl : type) {
@@ -231,26 +239,26 @@ public class JEICompat implements IModPlugin {
         for (ResourceLocation rl : ResearchListeners.categories) {
         	RecipeType<?> type=man.getRecipeType(rl).orElse(null);
         	if(type!=null) {
-	            if (!ClientResearchDataAPI.getData().categories.has(rl)) {
+	            if (!ClientResearchDataAPI.getData().get().categories.has(rl)) {
 	                man.hideRecipeCategory(type);
 	            } else
 	                man.unhideRecipeCategory(type);
         	}
         }
         research.clear();
-        for(Effect effect:FHResearch.effects) {
-        	if(effect.isGranted()&&effect instanceof EffectCrafting) {
-        		Set<Item> item=new HashSet<>();
-        		EffectCrafting crafting=(EffectCrafting) effect;
-        		if(crafting.getItem()!=null)
-        			item.add(crafting.getItem());
-        		else if(crafting.getItemStack()!=null)
-        			item.add(crafting.getItemStack().getItem());
-        		else if(crafting.getUnlocks()!=null)
-        			crafting.getUnlocks().stream().map(RecipeUtil::getResultItem).filter(t->t!=null&&!t.isEmpty()).map(ItemStack::getItem).forEach(item::add);
-        		for(Item ix:item) {
-        			research.computeIfAbsent(ix, i->new LinkedHashMap<>()).put(effect.parent.get().getId(), TranslateUtils.translateTooltip("research_unlockable", effect.parent.get().getName()));
-        		}
+        for(Research research:FHResearch.getAllResearch()) {
+        	for(Effect effect:research.getEffects()) {
+	        	if(ClientResearchDataAPI.getData().get().isEffectGranted(research, effect)&&effect instanceof EffectCrafting) {
+	        		Set<Item> item=new HashSet<>();
+	        		EffectCrafting crafting=(EffectCrafting) effect;
+	        		if(crafting.getIngredient()!=null)
+	        			Stream.of(crafting.getIngredient().getItems()).map(t->t.getItem()).forEach(item::add);
+	        		else if(crafting.getUnlocks()!=null)
+	        			crafting.getUnlocks().stream().map(RecipeUtil::getResultItem).filter(t->t!=null&&!t.isEmpty()).map(ItemStack::getItem).forEach(item::add);
+	        		for(Item ix:item) {
+	        			JEICompat.research.computeIfAbsent(ix, i->new LinkedHashMap<>()).put(research.getId(), Lang.translateTooltip("research_unlockable", research.getName()));
+	        		}
+	        	}
         	}
         }
     }
@@ -306,8 +314,16 @@ public class JEICompat implements IModPlugin {
 				return col;
 			}
 		});
+        
         registry.addRecipeClickArea(IncubatorT1Screen.class, 80, 28, 32, 29, IncubatorCategory.UID);
         registry.addRecipeClickArea(IncubatorT2Screen.class, 107, 28, 14, 29, IncubatorCategory.UID);
+
+        registry.addGlobalGuiHandler(new IGlobalGuiHandler() {
+            @Override
+            public @NotNull Collection<Rect2i> getGuiExtraAreas() {
+                return Collections.singletonList(TipWidget.INSTANCE.getRect());
+            }
+        });
     }
 
     @Override

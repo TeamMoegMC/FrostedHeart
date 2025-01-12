@@ -19,24 +19,13 @@
 
 package com.teammoeg.frostedheart.content.utility.ignition;
 
-import com.teammoeg.frostedheart.FHTags;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.Tags;
-import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.List;
-
 public class IgnitionHandler {
 //    public static void addIgnitionTooltips(ItemStack stack, List<MutableComponent> text) {
 //        if (stack.is(Tags.Items.RODS_WOODEN)) {
-//            text.add(TranslateUtils.translateTooltip("double_stick_ignition").withStyle(ChatFormatting.RED));
+//            text.add(Lang.translateTooltip("double_stick_ignition").withStyle(ChatFormatting.RED));
 //        } else if (stack.is(FHTags.Items.IGNITION_MATERIAL)) {
-//            text.add(TranslateUtils.translateTooltip("ignition_material").withStyle(ChatFormatting.GRAY));
-//            text.add(TranslateUtils.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
+//            text.add(Lang.translateTooltip("ignition_material").withStyle(ChatFormatting.GRAY));
+//            text.add(Lang.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
 //            List<Item> metals = ForgeRegistries.ITEMS.getValues().stream()
 //                    .filter(item -> item.builtInRegistryHolder().is(FHTags.Items.IGNITION_METAL))
 //                    .toList();
@@ -44,8 +33,8 @@ public class IgnitionHandler {
 //                text.add(item.getDescription().copy().withStyle(ChatFormatting.GRAY));
 //            }
 //        } else if (stack.is(FHTags.Items.IGNITION_METAL)) {
-//            text.add(TranslateUtils.translateTooltip("ignition_metal").withStyle(ChatFormatting.RED));
-//            text.add(TranslateUtils.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
+//            text.add(Lang.translateTooltip("ignition_metal").withStyle(ChatFormatting.RED));
+//            text.add(Lang.translateTooltip("ignition_tutorial").withStyle(ChatFormatting.GRAY));
 //            // append the localized names of ignition materials from the tag
 //            // get all items in the tag
 //            List<Item> materials = ForgeRegistries.ITEMS.getValues().stream()

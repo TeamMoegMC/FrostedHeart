@@ -21,14 +21,14 @@ package com.teammoeg.frostedheart.content.climate.food;
 
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.FHDamageTypes;
-import com.teammoeg.frostedheart.FHTags;
+import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.water.item.DrinkContainerItem;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.core.NonNullList;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
@@ -51,7 +51,7 @@ public class FoodTemperatureHandler {
     public static final float DEFAULT_COLD_FOOD_HEAT = -0.5F;
     public static final float DEFAULT_HOT_FOOD_HEAT = 0.5F;
 
-    // Called in PlayerEvents
+    // Called in FHCommonEvents
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer) {
             ServerPlayer player = (ServerPlayer) event.player;
@@ -106,7 +106,7 @@ public class FoodTemperatureHandler {
                 event.setDuration((int) (event.getDuration() * COLD_FOOD_EAT_DURATION_MODIFIER));
             } else if (temperature == FoodTemperatureHandler.FROZEN) {
                 // cannot eat frozen food
-                player.displayClientMessage(TranslateUtils.translateMessage("food.frozen"), true);
+                player.displayClientMessage(Lang.translateMessage("food.frozen"), true);
                 event.setCanceled(true);
             } else if (temperature == FoodTemperatureHandler.HOT) {
                 event.setDuration((int) (event.getDuration() * HOT_FOOD_EAT_DURATION_MODIFIER));
@@ -128,7 +128,7 @@ public class FoodTemperatureHandler {
         if (it instanceof ITempAdjustFood) {
             adj = (ITempAdjustFood) it;
         } else {
-            adj = FHDataManager.getFood(stack);
+            adj = FHDataManager.getTempAdjustFood(stack);
         }
 
         // Depending on food temperature status, display message, and set default heat, which could be overridden if
@@ -139,10 +139,10 @@ public class FoodTemperatureHandler {
         if (isFoodOrDrink(stack)) {
             byte temperature = FoodTemperatureHandler.getTemperature(stack);
             if (temperature == FoodTemperatureHandler.COLD) {
-                player.displayClientMessage(TranslateUtils.translateMessage("food.cold"), true);
+                player.displayClientMessage(Lang.translateMessage("food.cold"), true);
                 heat = DEFAULT_COLD_FOOD_HEAT;
             } else if (temperature == FoodTemperatureHandler.HOT) {
-                player.displayClientMessage(TranslateUtils.translateMessage("food.hot"), true);
+                player.displayClientMessage(Lang.translateMessage("food.hot"), true);
                 heat = DEFAULT_HOT_FOOD_HEAT;
             }
 

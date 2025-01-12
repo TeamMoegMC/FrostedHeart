@@ -22,9 +22,9 @@ package com.teammoeg.frostedheart.compat.jei.category;
 import java.util.Arrays;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import mezz.jei.api.constants.VanillaTypes;
@@ -79,7 +79,7 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
     }
 
     public Component getTitle() {
-        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".generator_fuel"));
+        return (Lang.translateKey("gui.jei.category." + FHMain.MODID + ".generator_fuel"));
     }
 
 

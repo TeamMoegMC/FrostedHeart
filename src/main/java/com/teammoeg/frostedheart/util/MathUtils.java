@@ -21,7 +21,13 @@ package com.teammoeg.frostedheart.util;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collection;
+import java.util.List;
 import java.util.Random;
+
+import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
+
+import dev.ftb.mods.ftblibrary.icon.Drawable;
 
 public class MathUtils {
 
@@ -34,4 +40,10 @@ public class MathUtils {
         bd = bd.setScale(places, RoundingMode.HALF_UP);
         return bd.doubleValue();
     }
+    public static <T> T selectElementByTime(T[] list) {
+    	return list[(int) ((System.currentTimeMillis() / 1000) %list.length)];
+    }
+	public static <T> T selectElementByTime(List<T> list) {
+		return list.get((int) ((System.currentTimeMillis() / 1000) %list.size()));
+	}
 }

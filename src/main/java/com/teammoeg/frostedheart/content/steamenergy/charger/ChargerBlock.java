@@ -19,33 +19,32 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.charger;
 
-import java.util.function.Supplier;
-
-import com.teammoeg.frostedheart.FHBlockEntityTypes;
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-
-import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.StateDefinition.Builder;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition.Builder;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.phys.BlockHitResult;
 
-public class ChargerBlock extends FHBaseBlock implements FHEntityBlock<ChargerTileEntity>{
+import java.util.function.Supplier;
+
+public class ChargerBlock extends FHBaseBlock implements FHEntityBlock<ChargerTileEntity> {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public ChargerBlock(Properties blockProps) {
@@ -61,7 +60,6 @@ public class ChargerBlock extends FHBaseBlock implements FHEntityBlock<ChargerTi
             ClientUtils.spawnSteamParticles(worldIn, pos);
         }
     }
-
 
 
     @Override
@@ -81,7 +79,6 @@ public class ChargerBlock extends FHBaseBlock implements FHEntityBlock<ChargerTi
     }
 
 
-
     @Override
     public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         InteractionResult superResult = super.use(state, world, pos, player, hand, hit);
@@ -97,10 +94,10 @@ public class ChargerBlock extends FHBaseBlock implements FHEntityBlock<ChargerTi
     }
 
 
-	@Override
-	public Supplier<BlockEntityType<ChargerTileEntity>> getBlock() {
-		return FHBlockEntityTypes.CHARGER;
-	}
+    @Override
+    public Supplier<BlockEntityType<ChargerTileEntity>> getBlock() {
+        return FHBlockEntityTypes.CHARGER;
+    }
 
 
 }

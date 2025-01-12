@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.content.town.hunting;
 
-import com.teammoeg.frostedheart.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockScanner;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockEntity;
@@ -49,8 +49,8 @@ public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity {
     @Getter
     private double temperature;
     private Map<String, Integer> decorations;
-    HeatConsumerEndpoint endpoint = new HeatConsumerEndpoint(99,10,1);
-    LazyOptional<HeatConsumerEndpoint> endpointCap = LazyOptional.of(()-> endpoint);
+    HeatEndpoint endpoint = new HeatEndpoint(99,10, 0, 1);
+    LazyOptional<HeatEndpoint> endpointCap = LazyOptional.of(()-> endpoint);
     private double temperatureModifier = 0;
     //get max resident
     @Getter
@@ -127,7 +127,7 @@ public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity {
         assert level != null;
         if (!level.isClientSide) {
             if (endpoint.tryDrainHeat(1)) {
-                temperatureModifier = Math.max(endpoint.getTemperatureLevel() * 10, HouseBlockEntity.COMFORTABLE_TEMP_HOUSE);
+                temperatureModifier = Math.max(endpoint.getTempLevel() * 10, HouseBlockEntity.COMFORTABLE_TEMP_HOUSE);
                 if (setActive(true)) {
                     setChanged();
                 }
@@ -225,5 +225,9 @@ public class HuntingBaseBlockEntity extends AbstractTownWorkerBlockEntity {
             }
             return false;
         }
-    }
+    }@Override
+	public void invalidateCaps() {
+		endpointCap.invalidate();
+		super.invalidateCaps();
+	}
 }

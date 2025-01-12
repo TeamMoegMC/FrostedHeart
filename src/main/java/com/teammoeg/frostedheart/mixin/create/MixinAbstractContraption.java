@@ -27,8 +27,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.Contraption;
-import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
-import com.teammoeg.frostedheart.util.mixin.IStressContraption;
+import com.teammoeg.frostedheart.compat.create.ContraptionCostUtils;
+import com.teammoeg.frostedheart.compat.create.IStressContraption;
 
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;

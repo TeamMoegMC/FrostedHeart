@@ -1,6 +1,5 @@
 {
   "values": [
-    "frostedheart:steam_core",
     "frostedheart:relic_chest",
     "frostedheart:heat_incubator",
     "frostedheart:debug_heater",
@@ -11,6 +10,7 @@
     "frostedheart:mechanical_calculator",
     "frostedheart:sauna_vent",
     "frostedheart:fountain_base",
-    "frostedheart:fountain_nozzle"
+    "frostedheart:fountain_nozzle",
+    "frostedheart:steam_core"
   ]
 }

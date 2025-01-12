@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.decoration;
 
 import com.teammoeg.frostedheart.base.menu.FHBlockEntityContainer;
-import com.teammoeg.frostedheart.FHMenuTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
@@ -34,7 +34,7 @@ public class RelicChestContainer extends FHBlockEntityContainer<RelicChestTileEn
                 this.addSlot(new Slot(tile, k + j * 5, 44 + k * 18, 19 + j * 18));
             }
         }
-        super.addPlayerInventory(inventoryPlayer, 9, id, id);
+//        super.addPlayerInventory(inventoryPlayer, 9, id, id);
         
         for (int i = 0; i < 3; i++)
             for (int j = 0; j < 9; j++)

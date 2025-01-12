@@ -26,8 +26,10 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.gson.JsonElement;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.research.gui.editor.BaseEditDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.EditListDialog;
@@ -41,7 +43,7 @@ import com.teammoeg.frostedheart.content.research.gui.editor.NumberBox;
 import com.teammoeg.frostedheart.content.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectItemStackDialog;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.MathUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
@@ -65,18 +67,27 @@ import net.minecraft.resources.ResourceLocation;
 public class FHIcons {
     private static final TypedCodecRegistry<FHIcon> serializers = new TypedCodecRegistry<>();
 	public static final Codec<FHIcon> CODEC=new AlternativeCodecBuilder<FHIcon>(FHIcon.class)
-		.add(FHNopIcon.class ,FHNopIcon.CODEC)
+		.addSaveOnly(FHNopIcon.class ,FHNopIcon.CODEC.codec())
 		.add(FHItemIcon.class, FHItemIcon.ICON_CODEC)
-		.add(FHItemIcon.class,FHItemIcon.CODEC)
+		.add(FHItemIcon.class,FHItemIcon.CODEC.codec())
 		.add(FHAnimatedIcon.class,FHAnimatedIcon.ICON_CODEC)
 		.add(serializers.codec())
-		.add(FHNopIcon.CODEC)
+		.addSaveOnly(FHIcon.class,FHNopIcon.CODEC.codec())
 		.build();
+	public static final Codec<FHIcon> DEFAULT_CODEC=new AlternativeCodecBuilder<FHIcon>(FHIcon.class)
+			.fallback(()->FHNopIcon.INSTANCE)
+			.addSaveOnly(FHNopIcon.class ,FHNopIcon.CODEC.codec())
+			.add(FHItemIcon.class, FHItemIcon.ICON_CODEC)
+			.add(FHItemIcon.class,FHItemIcon.CODEC.codec())
+			.add(FHAnimatedIcon.class,FHAnimatedIcon.ICON_CODEC)
+			.add(serializers.codec())
+			.add(FHNopIcon.CODEC.codec())
+			.build();
     private static class FHAnimatedIcon extends FHIcon {
-        private static final Codec<FHAnimatedIcon> CODEC=RecordCodecBuilder.create(t->t.group(
-        	Codec.list(FHIcons.CODEC).fieldOf("icons").forGetter(o->o.icons)
+        private static final MapCodec<FHAnimatedIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+        	Codec.list(FHIcons.DEFAULT_CODEC).fieldOf("icons").forGetter(o->o.icons)
         	).apply(t, FHAnimatedIcon::new));
-        private static final Codec<FHAnimatedIcon> ICON_CODEC=Codec.list(FHIcons.CODEC).xmap(FHAnimatedIcon::new, o->o.icons);
+        private static final Codec<FHAnimatedIcon> ICON_CODEC=Codec.list(FHIcons.DEFAULT_CODEC).xmap(FHAnimatedIcon::new, o->o.icons);
         List<FHIcon> icons;
         public FHAnimatedIcon() {
             icons = new ArrayList<>();
@@ -96,16 +107,16 @@ public class FHIcons {
         public void draw(GuiGraphics ms, int x, int y, int w, int h) {
             if (!icons.isEmpty()) {
                 GuiHelper.setupDrawing();
-                icons.get((int) ((System.currentTimeMillis() / 1000) % icons.size())).draw(ms, x, y, w, h);
+                MathUtils.selectElementByTime(icons).draw(ms, x, y, w, h);
             }
         }
 
     }
 
     private static class FHCombinedIcon extends FHIcon {
-        private static final Codec<FHCombinedIcon> CODEC=RecordCodecBuilder.create(t->t.group(
-        	FHIcons.CODEC.fieldOf("base").forGetter(o->o.large),
-        	FHIcons.CODEC.fieldOf("small").forGetter(o->o.small)
+        private static final MapCodec<FHCombinedIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
+        	FHIcons.CODEC.optionalFieldOf("base",FHNopIcon.INSTANCE).forGetter(o->o.large),
+        	FHIcons.CODEC.optionalFieldOf("small",FHNopIcon.INSTANCE).forGetter(o->o.small)
         	).apply(t, FHCombinedIcon::new));
         FHIcon large;
         FHIcon small;
@@ -130,7 +141,7 @@ public class FHIcons {
     }
 
     private static class FHDelegateIcon extends FHIcon {
-        private static final Codec<FHDelegateIcon> CODEC=RecordCodecBuilder.create(t->t.group(
+        private static final MapCodec<FHDelegateIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
         	Codec.STRING.fieldOf("name").forGetter(o->o.name)
         	).apply(t, FHDelegateIcon::new));
         String name;
@@ -148,8 +159,21 @@ public class FHIcons {
 
 
     }
+    private static class FHIconWrapper extends Icon{
+    	FHIcon icon;
 
-    public static abstract class FHIcon extends Icon implements Cloneable {
+		public FHIconWrapper(FHIcon icon) {
+			super();
+			this.icon = icon;
+		}
+
+		@Override
+		public void draw(GuiGraphics arg0, int arg1, int arg2, int arg3, int arg4) {
+			icon.draw(arg0, arg1, arg2, arg3, arg4);
+		}
+    	
+    }
+    public static abstract class FHIcon implements Cloneable {
         public FHIcon() {
             super();
         }
@@ -162,10 +186,18 @@ public class FHIcons {
                 throw new AssertionError();
             }
         }
+        public abstract void draw(GuiGraphics ms, int x, int y, int w, int h);
+        Icon ftbIconCache;
+        public Icon asFtbIcon() {
+        	if(ftbIconCache==null)
+	        	ftbIconCache= new FHIconWrapper(this) ;
+        	return ftbIconCache;
+        }
+        
     }
 
     private static class FHIngredientIcon extends FHAnimatedIcon {
-        private static final Codec<FHIngredientIcon> CODEC=RecordCodecBuilder.create(t->t.group(
+        private static final MapCodec<FHIngredientIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
         	CodecUtil.INGREDIENT_CODEC.fieldOf("ingredient").forGetter(o->o.igd)
         	).apply(t, FHIngredientIcon::new));
         Ingredient igd;
@@ -182,7 +214,7 @@ public class FHIcons {
     }
 
     private static class FHItemIcon extends FHIcon {
-        private static final Codec<FHItemIcon> CODEC=RecordCodecBuilder.create(t->t.group(
+        private static final MapCodec<FHItemIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
         	CodecUtil.ITEMSTACK_CODEC.fieldOf("item").forGetter(o->o.stack)
         	).apply(t, FHItemIcon::new));
         private static final Codec<FHItemIcon> ICON_CODEC=
@@ -225,7 +257,7 @@ public class FHIcons {
     private static class FHNopIcon extends FHIcon {
        
         public static final FHNopIcon INSTANCE = new FHNopIcon();
-        private static final Codec<FHNopIcon> CODEC=new NopCodec<>(INSTANCE);
+        private static final MapCodec<FHNopIcon> CODEC=MapCodec.unit(INSTANCE);
 
 
         private FHNopIcon() {
@@ -239,7 +271,7 @@ public class FHIcons {
     }
 
     private static class FHTextIcon extends FHIcon {
-        private static final Codec<FHTextIcon> CODEC=RecordCodecBuilder.create(t->t.group(
+        private static final MapCodec<FHTextIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
         	Codec.STRING.fieldOf("text").forGetter(o->o.text)
         	).apply(t, FHTextIcon::new));
         String text;
@@ -268,7 +300,7 @@ public class FHIcons {
     }
 
     private static class FHTextureIcon extends FHIcon {
-        private static final Codec<FHTextureIcon> CODEC=RecordCodecBuilder.create(t->t.group(
+        private static final MapCodec<FHTextureIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
         	ResourceLocation.CODEC.fieldOf("location").forGetter(o->o.rl)
         	).apply(t, FHTextureIcon::new));
         Icon nested;
@@ -288,7 +320,7 @@ public class FHIcons {
     }
 
     private static class FHTextureUVIcon extends FHIcon {
-        private static final Codec<FHTextureUVIcon> CODEC=RecordCodecBuilder.create(t->t.group(
+        private static final MapCodec<FHTextureUVIcon> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
         	ResourceLocation.CODEC.fieldOf("location").forGetter(o->o.rl),
         	Codec.INT.fieldOf("x") .forGetter(o->o.x),
         	Codec.INT.fieldOf("y") .forGetter(o->o.y),
@@ -391,7 +423,7 @@ public class FHIcons {
                 add(h);
                 add(tw);
                 add(th);
-                add(new SimpleTextButton(this, TranslateUtils.str("Commit"), Icon.empty()) {
+                add(new SimpleTextButton(this, Lang.str("Commit"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton arg0) {
                         v.rl = new ResourceLocation(rl.getText());
@@ -472,10 +504,10 @@ public class FHIcons {
         };
         public static final Editor<FHIcon> NOP_CHANGE_EDITOR = (p, l, v, c) -> EDITOR.open(p, l, null, c);
         public static final Editor<FHAnimatedIcon> ANIMATED_EDITOR = (p, l, v, c) -> new EditListDialog<>(p, l, v == null ? null : v.icons, null, EDITOR, e -> e.getClass().getSimpleName(),
-                e -> e, e -> c.accept(new FHAnimatedIcon(e.toArray(new FHIcon[0])))).open();
+                e -> e.asFtbIcon(), e -> c.accept(new FHAnimatedIcon(e.toArray(new FHIcon[0])))).open();
         public static final Editor<FHCombinedIcon> COMBINED_EDITOR = (p, l, v, c) -> new Combined(p, l, v, c).open();
 
-        public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> new SelectDialog<>(p, l, v == null ? null : v.name, o -> c.accept(new FHDelegateIcon(o)), TechIcons.internals::keySet, TranslateUtils::str, e -> new String[]{e}, TechIcons.internals::get).open();
+        public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> new SelectDialog<>(p, l, v == null ? null : v.name, o -> c.accept(new FHDelegateIcon(o)), TechIcons.internals::keySet, Lang::str, e -> new String[]{e}, TechIcons.internals::get).open();
 
         public static final Editor<FHTextureUVIcon> UV_EDITOR = (p, l, v, c) -> new UV(p, l, v, c).open();
 

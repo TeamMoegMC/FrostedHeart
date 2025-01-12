@@ -35,12 +35,12 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.DayTemperatureData.HourData;
+import com.teammoeg.frostedheart.content.climate.event.ClimateCommonEvents;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
-import com.teammoeg.frostedheart.content.climate.event.CommonEvents;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 
@@ -80,11 +80,11 @@ import net.minecraftforge.network.PacketDistributor;
  * <p>
  * To ensure time synchronization, we also implemented {@link WorldClockSource} as a universal timestamp generator.
  * Hence, the clock source is updated each second on server side:
- * {@link CommonEvents#onServerTick(TickEvent.LevelTickEvent)}
+ * {@link ClimateCommonEvents#onServerTick(TickEvent.LevelTickEvent)}
  * <p>
  * To improve performance, we introduced a cache system for temperature data for {@link #DAY_CACHE_LENGTH} days.
  * Hence, the cache is updated each second on server side:
- * {@link CommonEvents#onServerTick(TickEvent.LevelTickEvent)}
+ * {@link ClimateCommonEvents#onServerTick(TickEvent.LevelTickEvent)}
  * <p>
  *
  * @author yuesha-yc
@@ -343,7 +343,7 @@ public class WorldClimate implements NBTSerializable {
         return getCapability(world).map(t->t.getHourData().getType() == ClimateType.BLIZZARD).orElse(false);
     }
 
-    public static boolean isCloudy(Level world) {
+    public static boolean isCloudy(LevelAccessor world) {
         return getCapability(world).map(t->t.getHourData().getType() == ClimateType.CLOUDY).orElse(false);
     }
 
@@ -378,7 +378,7 @@ public class WorldClimate implements NBTSerializable {
         return getFutureBlizzard(get(world), deltaDays, deltaHours);
     }
 
-    public static boolean isSnowing(Level world) {
+    public static boolean isSnowing(LevelAccessor world) {
         return getCapability(world).map(t->t.getHourData().getType() == ClimateType.SNOW).orElse(false);
     }
 

@@ -24,12 +24,15 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableSet;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
+import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.api.ManualHelper;
@@ -51,7 +54,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * Allows forming multiblock
  */
 public class EffectBuilding extends Effect {
-	public static final Codec<EffectBuilding> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	public static final MapCodec<EffectBuilding> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
 	ResourceLocation.CODEC.xmap(MultiblockHandler::getByUniqueName, IMultiblock::getUniqueName).fieldOf("multiblock").forGetter(o->o.multiblock))
 	.apply(t,EffectBuilding::new));
     IMultiblock multiblock;
@@ -85,7 +88,7 @@ public class EffectBuilding extends Effect {
 
     @Override
     public MutableComponent getDefaultName() {
-        return TranslateUtils.translateGui("effect.building");
+        return Lang.translateGui("effect.building");
     }
 
     @Override
@@ -95,7 +98,7 @@ public class EffectBuilding extends Effect {
         String namespace = raw.substring(0, raw.indexOf(':'));
         String multiblock = raw.substring(raw.indexOf('/') + 1);
         String key = "block." + namespace + "." + multiblock;
-        ar.add(TranslateUtils.translate(key));
+        ar.add(Lang.translateKey(key));
         return ar;
     }
 
@@ -104,8 +107,8 @@ public class EffectBuilding extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
-        team.building.add(multiblock);
+    public boolean grant(TeamDataHolder team,TeamResearchData trd, Player triggerPlayer, boolean isload) {
+        trd.building.add(multiblock);
         return true;
 
     }
@@ -118,8 +121,8 @@ public class EffectBuilding extends Effect {
 
     @OnlyIn(Dist.CLIENT)
     @Override
-    public void onClick() {
-        if (this.isGranted() && ClientUtils.getPlayer().getInventory().hasAnyOf(ImmutableSet.of(IEItems.Tools.MANUAL.asItem()))) {
+    public void onClick(ResearchData data) {
+        if (data.isEffectGranted(this) && ClientUtils.getPlayer().getInventory().hasAnyOf(ImmutableSet.of(IEItems.Tools.MANUAL.asItem()))) {
             ResourceLocation loc = multiblock.getUniqueName();
             ResourceLocation manual = new ResourceLocation(loc.getNamespace(), loc.getPath().substring(loc.getPath().lastIndexOf("/") + 1));
             ManualScreen screen = ManualHelper.getManual().getGui();

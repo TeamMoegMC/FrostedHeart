@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.compat.jei.category;
 
 import java.util.Arrays;
 
-import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import mezz.jei.api.forge.ForgeTypes;
@@ -94,7 +94,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     }
 
     public Component getTitle() {
-        return (TranslateUtils.translate("gui.jei.category." + FHMain.MODID + ".incubator"));
+        return (Lang.translateKey("gui.jei.category." + FHMain.MODID + ".incubator"));
     }
 
 
@@ -113,18 +113,18 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 	@Override
 	public void setRecipe(IRecipeLayoutBuilder builder, IncubateRecipe recipe, IFocusGroup focuses) {
 		builder.addSlot(RecipeIngredientRole.INPUT, 57, 16).addFluidStack(Fluids.WATER, recipe.water)
-		.setFluidRenderer(recipe.water*5, false, 16, 46).addTooltipCallback((v,t)->t.add(TranslateUtils.translateGui("mb_per_sec", recipe.water)));
+		.setFluidRenderer(recipe.water*5, false, 16, 46).addTooltipCallback((v,t)->t.add(Lang.translateGui("mb_per_sec", recipe.water)));
 		
 		IRecipeSlotBuilder fluidout=builder.addSlot(RecipeIngredientRole.OUTPUT, 113, 16).setFluidRenderer(1000, false, 16,46);
 		if (!recipe.output_fluid.isEmpty())
 			fluidout.setFluidRenderer(recipe.output_fluid.getAmount()*5, false, 16,46).addIngredient(ForgeTypes.FLUID_STACK, recipe.output_fluid)
-			.addTooltipCallback((v,t)->{if(recipe.isFood)t.add(TranslateUtils.translateGui("per_food_value", recipe.output_fluid.getAmount()));});
+			.addTooltipCallback((v,t)->{if(recipe.isFood)t.add(Lang.translateGui("per_food_value", recipe.output_fluid.getAmount()));});
 		builder.addSlot(RecipeIngredientRole.INPUT, 29, 47);
 		builder.addSlot(recipe.consume_catalyst?RecipeIngredientRole.INPUT:RecipeIngredientRole.CATALYST, 11, 12)
 		.addItemStacks(Arrays.asList(recipe.catalyst.getMatchingStacks()))
-		.addTooltipCallback((v,t)->{if(recipe.consume_catalyst)t.add(TranslateUtils.translateGui("not_consume"));});
+		.addTooltipCallback((v,t)->{if(recipe.consume_catalyst)t.add(Lang.translateGui("not_consume"));});
 		builder.addSlot(RecipeIngredientRole.INPUT, 29, 12).addItemStacks(Arrays.asList(recipe.input.getMatchingStacks()))
-		.addTooltipCallback((v,t)->{if(recipe.isFood)t.add(TranslateUtils.translateGui("any_food"));});
+		.addTooltipCallback((v,t)->{if(recipe.isFood)t.add(Lang.translateGui("any_food"));});
 		
 		IRecipeSlotBuilder itemout=builder.addSlot(RecipeIngredientRole.OUTPUT, 138, 31);
         if (!recipe.output.isEmpty())

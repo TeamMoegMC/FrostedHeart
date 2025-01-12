@@ -19,67 +19,56 @@
 
 package com.teammoeg.frostedheart.util;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
-import java.util.*;
-import java.util.function.ToIntFunction;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.FHTags;
-import net.minecraftforge.common.Tags;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.capability.nbt.FHNBTCapability;
-import com.teammoeg.frostedheart.content.climate.WorldClimate;
-import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
-
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import blusunrize.immersiveengineering.common.util.Utils;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.Container;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeManager;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.tags.ItemTags;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.levelgen.Heightmap.Types;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.registries.RegistryObject;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.function.ToIntFunction;
 
 public class FHUtils {
 
@@ -96,52 +85,33 @@ public class FHUtils {
         }
     }
 
-    public static boolean canBigTreeGenerate(Level w, BlockPos p, RandomSource r) {
-
-        return canTreeGenerate(w, p, r, 7);
-
-    }
-
-    public static void canBigTreeGenerate(Level w, BlockPos p, RandomSource r, CallbackInfoReturnable<Boolean> cr) {
-        if (!canBigTreeGenerate(w, p, r))
-            cr.setReturnValue(false);
-    }
-
-    public static boolean canGrassSurvive(LevelReader world, BlockPos pos) {
-        float t = WorldTemperature.block(world, pos);
-        return t >= WorldTemperature.HEMP_GROW_TEMPERATURE && t <= WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX;
-    }
-
-    public static boolean canNetherTreeGrow(BlockGetter w, BlockPos p) {
-        if (!(w instanceof LevelAccessor)) {
-            return false;
-        }
-        float temp = WorldTemperature.block((LevelAccessor) w, p);
-        if (temp <= 300)
-            return false;
-        return !(temp > 300 + WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX);
-    }
-
-    public static boolean canTreeGenerate(Level w, BlockPos p, RandomSource r, int chance) {
-        return r.nextInt(chance) == 0;
-
-    }
     public static Direction dirBetween(BlockPos from,BlockPos to) {
     	BlockPos delt=from.subtract(to);
     	return Direction.fromDelta(Mth.clamp(delt.getX(), -1, 1), Mth.clamp(delt.getY(), -1, 1), Mth.clamp(delt.getZ(), -1, 1));
     }
+
+    public static BlockEntity getExistingTileEntity(Level world, BlockPos pos)
+    {
+        if(world==null)
+            return null;
+        if(world.hasChunkAt(pos))
+            return world.getBlockEntity(pos);
+        return null;
+    }
+
     public static BlockEntity getExistingTileEntity(LevelAccessor w,BlockPos pos) {
 		if(w==null)
 			return null;
     	BlockEntity te=null;
     	if(w instanceof Level) {
-    		te=Utils.getExistingTileEntity((Level) w, pos);
+    		te= getExistingTileEntity((Level) w, pos);
     	}else {
 			if(w.hasChunkAt(pos))
 				te=w.getBlockEntity(pos);
     	}
     	return te;
     }
+
     public static <T> T getExistingTileEntity(LevelAccessor w,BlockPos pos,Class<T> type) {
     	BlockEntity te=getExistingTileEntity(w,pos);
     	if(type.isInstance(te))
@@ -155,89 +125,7 @@ public class FHUtils {
     		return te.getCapability(cap,d).orElse(null);
     	return null;
     }
-    public static boolean canTreeGrow(LevelAccessor worldIn, BlockPos p, RandomSource rand) {
-        float temp = WorldTemperature.block(worldIn, p);
-        if (temp <= -6 || WorldClimate.isBlizzard(worldIn))
-            return false;
-        if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
-            return false;
-        if (temp > 0)
-            return true;
-        return rand.nextInt(Math.max(1, Mth.ceil(-temp / 2))) == 0;
-    }
-    public static boolean hasItems(Player player,List<IngredientWithSize> costList) {
-    	int i=0;
-        for (IngredientWithSize iws : costList) {
-            int count = iws.getCount();
-            for (ItemStack it : player.getInventory().items) {
-                if (iws.testIgnoringSize(it)) {
-                    count -= it.getCount();
-                    if (count <= 0)
-                        break;
-                }
-            }
-            if (count > 0) {
-            	return false;
-            }
-        }
-        return true;
-    }
-    public static BitSet checkItemList(Player player,List<IngredientWithSize> costList) {
-    	BitSet bs=new BitSet(costList.size());
-    	int i=0;
-        for (IngredientWithSize iws : costList) {
-            int count = iws.getCount();
-            for (ItemStack it : player.getInventory().items) {
-                if (iws.testIgnoringSize(it)) {
-                    count -= it.getCount();
-                    if (count <= 0)
-                        break;
-                }
-            }
-            if (count > 0) {
-            	bs.set(i++,false);
-            } else {
-            	bs.set(i++, true);
-            }
-        }
-        return bs;
-    }
-    public static boolean costItems(Player player,List<IngredientWithSize> costList) {
-        // first do simple verify
-        for (IngredientWithSize iws : costList) {
-            int count = iws.getCount();
-            for (ItemStack it : player.getInventory().items) {
-                if (iws.testIgnoringSize(it)) {
-                    count -= it.getCount();
-                    if (count <= 0)
-                        break;
-                }
-            }
-            if (count > 0)
-                return false;
-        }
-        //System.out.println("test");
-        // then really consume item
-        List<ItemStack> ret = new ArrayList<>();
-        for (IngredientWithSize iws : costList) {
-            int count = iws.getCount();
-            for (ItemStack it : player.getInventory().items) {
-                if (iws.testIgnoringSize(it)) {
-                    int redcount = Math.min(count, it.getCount());
-                    ret.add(it.split(redcount));
-                    count -= redcount;
-                    if (count <= 0)
-                        break;
-                }
-            }
-            if (count > 0) {// wrong, revert.
-                for (ItemStack it : ret)
-                    FHUtils.giveItem(player, it);
-                return false;
-            }
-        }
-        return true;
-    }
+
     public static Ingredient createIngredient(ItemStack is) {
 
         return Ingredient.of(is);
@@ -245,14 +133,6 @@ public class FHUtils {
 
     public static Ingredient createIngredient(ResourceLocation tag) {
         return Ingredient.of(ItemTags.create(tag));
-    }
-
-    public static IngredientWithSize createIngredientWithSize(ItemStack is) {
-        return new IngredientWithSize(createIngredient(is), is.getCount());
-    }
-
-    public static IngredientWithSize createIngredientWithSize(ResourceLocation tag, int count) {
-        return new IngredientWithSize(createIngredient(tag), count);
     }
 
     public static ResourceLocation getEmptyLoot() {
@@ -281,21 +161,6 @@ public class FHUtils {
     public static void giveItem(Player pe, ItemStack is) {
         if (!pe.addItem(is))
             pe.level().addFreshEntity(new ItemEntity(pe.level(), pe.blockPosition().getX(), pe.blockPosition().getY(), pe.blockPosition().getZ(), is));
-    }
-
-    public static boolean isBlizzardHarming(LevelAccessor iWorld, BlockPos p) {
-        return WorldClimate.isBlizzard(iWorld) && isBlizzardVulnerable(iWorld,p);
-    }
-    public static boolean isBlizzardVulnerable(LevelAccessor iWorld, BlockPos p) {
-        return iWorld.getHeight(Types.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) <= p.getY();
-    }
-    public static boolean isRainingAt(BlockPos pos, Level world) {
-
-        if (!world.isRaining()) {
-            return false;
-        } else if (!world.canSeeSky(pos)) {
-            return false;
-        } else return world.getHeightmapPos(Types.MOTION_BLOCKING, pos).getY() <= pos.getY();
     }
 
     public static MobEffectInstance noHeal(MobEffectInstance ei) {
@@ -441,7 +306,7 @@ public class FHUtils {
         }
         return false;
     }
-    public static void setToAirPreserveFluid(Level l,BlockPos pos) {
+    public static void setToAirPreserveFluid(LevelAccessor l,BlockPos pos) {
     	FluidState curstate=l.getFluidState(pos);
     	if(curstate.isEmpty())
     		l.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);

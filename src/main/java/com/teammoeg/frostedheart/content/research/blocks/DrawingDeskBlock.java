@@ -25,11 +25,11 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
@@ -154,9 +154,9 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
     public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
         if (!worldIn.isClientSide && handIn == InteractionHand.MAIN_HAND && !player.isShiftKeyDown()) {
             if (!player.isCreative() && worldIn.getMaxLocalRawBrightness(pos) < 8) {
-                player.displayClientMessage(TranslateUtils.translateMessage("research.too_dark"), true);
+                player.displayClientMessage(Lang.translateMessage("research.too_dark"), true);
             } else if (!player.isCreative() && PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getBodyTemp).orElse(0f) < -0.2) {
-                player.displayClientMessage(TranslateUtils.translateMessage("research.too_cold"), true);
+                player.displayClientMessage(Lang.translateMessage("research.too_cold"), true);
             } else {
                 if (state.getValue(IS_NOT_MAIN)) {
                     pos = pos.relative(getNeighbourDirection(state.getValue(IS_NOT_MAIN), state.getValue(FACING)));
@@ -167,7 +167,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
                 if (crid != null && crid.equals(IOwnerTile.getOwner(ii)))
                 	NetworkHooks.openScreen((ServerPlayer) player, (MenuProvider)ii,ii.getBlockPos());
                 else
-                    player.displayClientMessage(TranslateUtils.translateMessage("research.not_owned"), true);
+                    player.displayClientMessage(Lang.translateMessage("research.not_owned"), true);
             }
         }
         return InteractionResult.SUCCESS;

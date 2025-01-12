@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.frostedheart.foundation.hud.FrostedHud;
+import com.teammoeg.frostedheart.FrostedHud;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;

@@ -46,9 +46,8 @@ public class RenderHelper {
         // 下面的代码来自 (https://github.com/LouisQuepierts/ThatSkyInteractions/blob/teacon-jiachen/src/main/java/net/quepierts/thatskyinteractions/client/gui/layer/World2ScreenWidgetLayer.java)
         Matrix4f viewMatrix = new Matrix4f()
                 .rotation(cameraRotation)
-                .translate(getCameraPos().reverse().toVector3f());
-        result = new Vector4f(worldPos.toVector3f(), 1F)
-                .mul(new Matrix4f(projectionMatrix).mul(viewMatrix));
+                .translate(getCameraPos().subtract(worldPos).reverse().toVector3f());
+        result = new Vector4f().mul(new Matrix4f(projectionMatrix).mul(viewMatrix));
 
         float screenX = (result.x / result.z * 0.5F + 0.5F) * screenWidth;
         float screenY = (1.0F - (result.y / result.z * 0.5F + 0.5F)) * screenHeight;

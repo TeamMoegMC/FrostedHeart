@@ -40,11 +40,11 @@ import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 import com.teammoeg.frostedheart.util.io.FileUtil;
 
-import com.teammoeg.frostedheart.foundation.world.FHFeatures;
+import com.teammoeg.frostedheart.content.world.FHFeatures;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -54,10 +54,16 @@ import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLPaths;
 
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class DebugCommand {
-    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+    @SubscribeEvent
+    public static void register(RegisterCommandsEvent event) {
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("debug")
                 .then(Commands.literal("generate_airship").executes(ct -> {
                     FHFeatures.SPACECRAFT.get().place(NoneFeatureConfiguration.INSTANCE, ((ServerLevel) ct.getSource().getPlayerOrException().level()), ((ServerLevel) ct.getSource().getPlayerOrException().level()).getChunkSource().getGenerator(), ct.getSource().getPlayerOrException().level().random,
@@ -105,7 +111,7 @@ public class DebugCommand {
                         FHMain.LOGGER.error("Error while exporting food values");
                         e.printStackTrace();
                     }
-                    ct.getSource().sendSuccess(()->TranslateUtils.str("Exported " + items.size() + " Foods"), true);
+                    ct.getSource().sendSuccess(()-> Lang.str("Exported " + items.size() + " Foods"), true);
                     return Command.SINGLE_SUCCESS;
                 }))
 /*
@@ -202,9 +208,9 @@ public class DebugCommand {
 
                         for (Clue t : e.getClues()) {
                             JsonObject joc = new JsonObject();
-                            joc.addProperty("name", t.getName().getString());
-                            Component desc = t.getDescription();
-                            Component hint = t.getHint();
+                            joc.addProperty("name", t.getName(e).getString());
+                            Component desc = t.getDescription(e);
+                            Component hint = t.getHint(e);
                             if (desc != null)
                                 joc.addProperty("desc", desc.getString());
                             if (hint != null)
@@ -266,11 +272,13 @@ public class DebugCommand {
                                 packet.sendToAll(ct.getSource().getServer());
                             }
                         }
-                    ct.getSource().sendSuccess(()->TranslateUtils.str("Fixed " + tchunks.val + " Chunks"), true);
+                    ct.getSource().sendSuccess(()->Lang.str("Fixed " + tchunks.val + " Chunks"), true);
                     return Command.SINGLE_SUCCESS;
                 }))*/;
 
-        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermission(2)).then(add));
+        for (String string : new String[]{FHMain.MODID, FHMain.ALIAS, FHMain.TWRID}) {
+            dispatcher.register(Commands.literal(string).requires(s -> s.hasPermission(2)).then(add));
+        }
     }
 
 }

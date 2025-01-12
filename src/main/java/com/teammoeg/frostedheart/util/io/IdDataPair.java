@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.util.io;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.util.io.codec.CompressDifferMapCodec;
 
 import net.minecraft.resources.ResourceLocation;
 

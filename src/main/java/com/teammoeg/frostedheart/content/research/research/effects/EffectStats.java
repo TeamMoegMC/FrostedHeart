@@ -24,11 +24,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.base.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.network.chat.MutableComponent;
@@ -39,7 +41,7 @@ import net.minecraft.network.chat.Component;
  */
 public class EffectStats extends Effect {
     private static FHIcon addIcon = FHIcons.getDelegateIcon("plus");
-	public static final Codec<EffectStats> CODEC=RecordCodecBuilder.create(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
+	public static final MapCodec<EffectStats> CODEC=RecordCodecBuilder.mapCodec(t->t.group(Effect.BASE_CODEC.forGetter(Effect::getBaseData),
 	Codec.STRING.fieldOf("vars").forGetter(o->o.vars),
 	Codec.DOUBLE.fieldOf("val").forGetter(o->o.val),
 	Codec.BOOL.fieldOf("percent").forGetter(o->o.isPercentage)
@@ -81,35 +83,35 @@ public class EffectStats extends Effect {
 
     @Override
     public MutableComponent getDefaultName() {
-        return TranslateUtils.translateGui("effect.stats");
+        return Lang.translateGui("effect.stats");
     }
 
 
     @Override
     public List<Component> getDefaultTooltip() {
         List<Component> tooltip = new ArrayList<>();
-        tooltip.add(TranslateUtils.translateGui("effect.stats." + vars));
+        tooltip.add(Lang.translateGui("effect.stats." + vars));
         String vtext;
         if (isPercentage) {
             vtext = NumberFormat.getPercentInstance().format(val / 100);
         } else
             vtext = NumberFormat.getInstance().format(val);
         if (val > 0) {
-            tooltip.add(TranslateUtils.str("+" + vtext));
+            tooltip.add(Lang.str("+" + vtext));
         } else
-            tooltip.add(TranslateUtils.str(vtext));
+            tooltip.add(Lang.str(vtext));
         return tooltip;
     }
 
     @Override
-    public boolean grant(TeamResearchData team, Player triggerPlayer, boolean isload) {
+    public boolean grant(TeamDataHolder team,TeamResearchData trd,  Player triggerPlayer, boolean isload) {
         if (isload) return false;
-        double var = team.getVariants().getDouble(vars);
+        double var = trd.getVariants().getDouble(vars);
         if (isPercentage)
             var += val / 100;
         else
             var += val;
-        team.getVariants().putDouble(vars, var);
+        trd.getVariants().putDouble(vars, var);
         return true;
     }
 

@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.base.item;
 
-import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.base.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -39,7 +39,7 @@ public class FHBaseItem extends Item implements ICreativeModeTabItem{
         return repair.getItem() == this.repair;
     }
 
-    public Item setRepairItem(Item it) {
+    public FHBaseItem setRepairItem(Item it) {
         repair = it;
         return this;
     }

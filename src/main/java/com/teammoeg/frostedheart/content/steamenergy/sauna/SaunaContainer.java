@@ -20,8 +20,7 @@
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
 import com.teammoeg.frostedheart.base.menu.FHBlockEntityContainer;
-import com.teammoeg.frostedheart.FHMenuTypes;
-
+import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -29,8 +28,8 @@ import net.minecraft.world.item.ItemStack;
 public class SaunaContainer extends FHBlockEntityContainer<SaunaTileEntity> {
 
     public SaunaContainer(int id, Inventory inventoryPlayer, SaunaTileEntity tile) {
-        super(FHMenuTypes.SAUNA.get(), tile, id,inventoryPlayer.player, 1);
-  
+        super(FHMenuTypes.SAUNA.get(), tile, id, inventoryPlayer.player, 1);
+
         // medicine slot
         addSlot(new Slot(this.inv, 0, 98, 26) {
             @Override
@@ -53,8 +52,8 @@ public class SaunaContainer extends FHBlockEntityContainer<SaunaTileEntity> {
             addSlot(new Slot(inventoryPlayer, i, 8 + i * 18, 142));
     }
 
-	@Override
-	public boolean quickMoveIn(ItemStack slotStack) {
-		return this.moveItemStackTo(slotStack, 0,1, false);
-	}
+    @Override
+    public boolean quickMoveIn(ItemStack slotStack) {
+        return this.moveItemStackTo(slotStack, 0, 1, false);
+    }
 }

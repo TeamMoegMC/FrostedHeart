@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
-import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -39,21 +39,21 @@ class HelpPanel extends Panel {
 
     @Override
     public void addWidgets() {
-        float scale = Float.parseFloat(TranslateUtils.translateGui("minigame.scale").getString());
+        float scale = Float.parseFloat(Lang.translateGui("minigame.scale").getString());
         RTextField t1 = new RTextField(this).setColor(TechIcons.text).addFlags(0).setScale(scale)
-                .setMaxWidth(112).setMaxLine(2).setText(TranslateUtils.translateGui("minigame.t1"));
+                .setMaxWidth(112).setMaxLine(2).setText(Lang.translateGui("minigame.t1"));
         t1.setPos(8, 70);
         RTextField t2 = new RTextField(this).setColor(TechIcons.text).addFlags(0).setScale(scale)
-                .setMaxWidth(114).setMaxLine(2).setText(TranslateUtils.translateGui("minigame.t2"));
+                .setMaxWidth(114).setMaxLine(2).setText(Lang.translateGui("minigame.t2"));
         t2.setPos(124, 70);
         RTextField t3 = new RTextField(this).setColor(TechIcons.text).addFlags(0).setScale(scale)
-                .setMaxWidth(90).setMaxLine(3).setText(TranslateUtils.translateGui("minigame.t3"));
+                .setMaxWidth(90).setMaxLine(3).setText(Lang.translateGui("minigame.t3"));
         t3.setPos(5, 137);
         RTextField t4 = new RTextField(this).setColor(TechIcons.text).addFlags(0).setScale(scale)
-                .setMaxWidth(68).setMaxLine(3).setText(TranslateUtils.translateGui("minigame.t4"));
+                .setMaxWidth(68).setMaxLine(3).setText(Lang.translateGui("minigame.t4"));
         t4.setPos(95, 137);
         RTextField t5 = new RTextField(this).setColor(TechIcons.text).addFlags(0).setScale(scale)
-                .setMaxWidth(74).setMaxLine(3).setText(TranslateUtils.translateGui("minigame.t5"));
+                .setMaxWidth(74).setMaxLine(3).setText(Lang.translateGui("minigame.t5"));
         t5.setPos(165, 137);
         add(t1);
         add(t2);
@@ -83,8 +83,8 @@ class HelpPanel extends Panel {
         if (ot.showHelp) {
 
             super.draw(arg0, arg1, arg2, arg3, arg4, arg5);
-            arg1.drawString(arg0, TranslateUtils.translateGui("minigame.match"), arg2 + 8, arg3 + 90, TechIcons.text, 0);
-            arg1.drawString(arg0, TranslateUtils.translateGui("minigame.display"), arg2 + 8, arg3 + 2, TechIcons.text, 0);
+            arg1.drawString(arg0, Lang.translateGui("minigame.match"), arg2 + 8, arg3 + 90, TechIcons.text, 0);
+            arg1.drawString(arg0, Lang.translateGui("minigame.display"), arg2 + 8, arg3 + 2, TechIcons.text, 0);
         }
     }
 

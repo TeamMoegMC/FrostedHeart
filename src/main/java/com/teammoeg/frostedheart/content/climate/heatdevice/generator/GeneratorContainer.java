@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.base.menu.FHBaseContainer;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.util.FHContainerData;
 import com.teammoeg.frostedheart.util.FHContainerData.FHDataSlot;
-import com.teammoeg.frostedheart.util.FHMultiblockHelper;
+import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.client.Point;
 
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
@@ -57,10 +57,11 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
         super(type, id, inventoryPlayer.player, 2);
         R state = ctx.mbContext().getState();
         BlockPos master=FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel());
-        if (state.getOwner() == null) {
+        /*if (state.getOwner() == null) {
             state.setOwner(FHTeamDataManager.get(inventoryPlayer.player).getId());
             state.regist(inventoryPlayer.player.level(),master);
-        }
+        }*/
+        state.tryRegist(inventoryPlayer.player.level(),master);
         Optional<GeneratorData> optdata = state.getData(master);
         optdata.ifPresent(data -> {
             process.bind(() -> data.process);
@@ -69,16 +70,17 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
             power.bind(() -> data.power);
             tempLevel.bind(() -> data.TLevel);
             rangeLevel.bind(() -> data.RLevel);
-            tempDegree.bind(() -> state.getTempMod());
-            rangeBlock.bind(() -> state.getRadius());
+            tempDegree.bind(() -> data.getTempMod());
+            rangeBlock.bind(() -> data.getRadius());
             isBroken.bind(() -> data.isBroken);
-            isWorking.bind(() -> data.isWorking, t -> data.isWorking = t);
+            isWorking.bind(() -> data.isWorking, t -> {data.isWorking = t;});
             isOverdrive.bind(() -> data.isOverdrive, t -> data.isOverdrive = t);
-
+            //System.out.println(" binded ");
         });
+        //System.out.println(optdata);
         pos.bind(() -> ctx.clickedPos());
         this.validator = new Validator(ctx.clickedPos(), 8).and(ctx.mbContext().isValid());
-        IItemHandler handler = state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel())).map(t -> t.inventory).orElseGet(() -> new ItemStackHandler(2));
+        IItemHandler handler = state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel())).map(t -> t.inventory).orElseGet(() -> null);
         createSlots(handler, inventoryPlayer);
     }
 
@@ -88,17 +90,19 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
     }
 
     protected void createSlots(IItemHandler handler, Inventory inventoryPlayer) {
-        Point in = getSlotIn();
-
-        this.addSlot(new SlotItemHandler(handler, 0, in.getX(), in.getY()) {
-            @Override
-            public boolean mayPlace(ItemStack itemStack) {
-                return GeneratorData.isStackValid(inventoryPlayer.player.level(), 0, itemStack);
-            }
-        });
-        Point out = getSlotOut();
-        this.addSlot(new NewOutput(handler, 1, out.getX(), out.getY()));
-        super.addPlayerInventory(inventoryPlayer, 8, 140, 198);
+        
+        if(handler!=null) {
+        	Point in = getSlotIn();
+	        this.addSlot(new SlotItemHandler(handler, 0, in.getX(), in.getY()) {
+	            @Override
+	            public boolean mayPlace(ItemStack itemStack) {
+	                return GeneratorData.isStackValid(inventoryPlayer.player.level(), 0, itemStack);
+	            }
+	        });
+	        Point out = getSlotOut();
+	        this.addSlot(new NewOutput(handler, 1, out.getX(), out.getY()));
+	        super.addPlayerInventory(inventoryPlayer, 8, 140, 198);
+        }
     }
 
     public abstract Point getSlotIn();
@@ -108,8 +112,9 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
     public abstract int getTier();
 
     public abstract FluidTank getTank();
-
+    @Override
     public void receiveMessage(short btn, int state) {
+    	//System.out.println("id "+btn+" state "+state);
         switch (btn) {
             case 1:
                 isWorking.setValue(state > 0);
@@ -118,6 +123,7 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
                 isOverdrive.setValue(state > 0);
                 break;
         }
+        
        /* if (message.contains("temperatureLevel", Tag.TAG_INT))
             setTemperatureLevel(message.getInt("temperatureLevel"));
         if (message.contains("rangeLevel", Tag.TAG_INT))

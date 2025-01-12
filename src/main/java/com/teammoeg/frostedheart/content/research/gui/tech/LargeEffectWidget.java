@@ -20,7 +20,10 @@
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import net.minecraft.client.gui.GuiGraphics;
+
+import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
+import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
 
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
@@ -29,8 +32,8 @@ import dev.ftb.mods.ftblibrary.ui.Theme;
 
 public class LargeEffectWidget extends EffectWidget {
 
-    public LargeEffectWidget(Panel panel, Effect e) {
-        super(panel, e);
+    public LargeEffectWidget(Panel panel, Effect e,Research r) {
+        super(panel, e, r);
         super.setSize(36, 36);
     }
 
@@ -51,7 +54,7 @@ public class LargeEffectWidget extends EffectWidget {
         GuiHelper.setupDrawing();
         TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
         icon.draw(matrixStack, x + 2, y + 2, w - 4, h - 4);
-        if (e.isGranted()) {
+        if (ClientResearchDataAPI.getData().get().isEffectGranted(r, e)) {
             matrixStack.pose().pushPose();
             matrixStack.pose().translate(0, 0, 300);
             GuiHelper.setupDrawing();

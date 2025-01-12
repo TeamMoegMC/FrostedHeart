@@ -47,7 +47,6 @@ public class BaseDataHolder<T extends BaseDataHolder<T>> implements SpecialDataH
         	if(data.contains(/*"loading type: " + */tc.getId())) {
         		//System.out.println(tc.getId());
         		SpecialData raw=tc.loadData(NbtOps.INSTANCE, data.get(tc.getId()));
-        		raw.setHolder(this);
 				this.data.put(tc, raw);
         	}
         }
@@ -57,17 +56,14 @@ public class BaseDataHolder<T extends BaseDataHolder<T>> implements SpecialDataH
 	@SuppressWarnings("unchecked")
 	public <U extends SpecialData> U getData(SpecialDataType<U> cap){
 		U ret= (U) data.computeIfAbsent(cap,s->cap.create((T) this));
-		ret.setHolder(this);
 		return ret;
 	}
 	public <U extends SpecialData> U setData(SpecialDataType<U> cap, U data){
 		this.data.put(cap, data);
-		data.setHolder(this);
 		return data;
 	}
 	public SpecialData getDataRaw(SpecialDataType<?> cap){
 		SpecialData ret= data.computeIfAbsent(cap,s->cap.createRaw(this));
-		ret.setHolder(this);
 		return ret;
 	}
 

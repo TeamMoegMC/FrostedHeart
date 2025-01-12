@@ -23,9 +23,10 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultib
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.CapabilityPosition;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.ShapeType;
-import com.teammoeg.frostedheart.FHCapabilities;
+
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.HeatingLogic;
-import com.teammoeg.frostedheart.util.FHMultiblockHelper;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -47,7 +48,7 @@ public class RadiatorLogic extends HeatingLogic<RadiatorLogic, RadiatorState> {
         RadiatorState state = ctx.getState();
         boolean hasFuel;
         if (state.network.tryDrainHeat(4)) {
-            state.setTempLevel(state.network.getTemperatureLevel());
+            state.setTempLevel(state.network.getTempLevel());
             state.setRangeLevel(0.5f);
             state.setActive(true);
             hasFuel = true;
@@ -72,8 +73,9 @@ public class RadiatorLogic extends HeatingLogic<RadiatorLogic, RadiatorState> {
 
     @Override
     public <T> LazyOptional<T> getCapability(IMultiblockContext<RadiatorState> ctx, CapabilityPosition position, Capability<T> cap) {
-        if (cap == FHCapabilities.HEAT_EP.capability() && position.posInMultiblock().getY() == 0) {
-            return ctx.getState().heatcap.cast();
+        if (FHCapabilities.HEAT_EP.isCapability(cap) && position.posInMultiblock().getY() == 0) {
+        	
+            return ctx.getState().heatCap.cast(ctx);
         }
         return super.getCapability(ctx, position, cap);
     }
@@ -89,6 +91,7 @@ public class RadiatorLogic extends HeatingLogic<RadiatorLogic, RadiatorState> {
 
     @Override
     public RadiatorState createInitialState(IInitialMultiblockContext<RadiatorState> capabilitySource) {
+    	
         return new RadiatorState();
     }
 

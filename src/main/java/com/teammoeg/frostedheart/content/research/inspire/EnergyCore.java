@@ -22,15 +22,16 @@ package com.teammoeg.frostedheart.content.research.inspire;
 import javax.annotation.Nullable;
 
 import com.mojang.serialization.Codec;
-import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHMobEffects;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.base.team.TeamDataClosure;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.network.FHEnergyDataSyncPacket;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.utility.LeveledValue;
@@ -114,8 +115,8 @@ public class EnergyCore implements NBTSerializable {
     public float getModifier(ServerPlayer player) {
     	boolean isBodyNotWell = player.getEffect(FHMobEffects.HYPERTHERMIA.get()) != null || player.getEffect(FHMobEffects.HYPOTHERMIA.get()) != null;
     	if(isBodyNotWell)return 0;
-    	TeamResearchData trd = ResearchDataAPI.getData(player);
-    	double initValue=(1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
+    	TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(player);
+    	double initValue=(1 + trd.get().getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
         if ( utbody != 0) {
             double t = Mth.clamp(((int)lastsleep), 1, Integer.MAX_VALUE) / 1200d;
             initValue *= ( utbody / (t * t * t * t * t * t +  utbody * 2) + 0.5);
@@ -137,7 +138,7 @@ public class EnergyCore implements NBTSerializable {
                 dietValue /= tdv;
         }*/
         initValue+=(dietValue - 0.4);
-        initValue/=1+(trd.getHolder().getOnlineMembers().size()-1)*0.8f;
+        initValue/=1+(trd.team().getOnlineMembers().size()-1)*0.8f;
         return (float) initValue;
     }
     public static void dT(ServerPlayer player) {
@@ -155,7 +156,7 @@ public class EnergyCore implements NBTSerializable {
     }
 
     public static void reportEnergy(Player player) {
-    	getCapability(player).ifPresent(data->player.sendSystemMessage(TranslateUtils.str("Energy:" + data.level + ",Persist Energy: " + data.persistLevel)));
+    	getCapability(player).ifPresent(data->player.sendSystemMessage(Lang.str("Energy:" + data.level + ",Persist Energy: " + data.persistLevel)));
     }
  
 

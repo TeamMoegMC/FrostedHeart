@@ -4,7 +4,7 @@ import java.util.function.Consumer;
 
 import com.google.gson.JsonObject;
 
-import com.teammoeg.frostedheart.content.nutrition.recipe.NutritionRecipe;
+import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.CriterionTriggerInstance;
 import net.minecraft.advancements.RequirementsStrategy;

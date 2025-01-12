@@ -10,15 +10,10 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class WaypointSyncPacket implements FHMessage {
-    private final AbstractWaypoint waypoint;
-
-    public WaypointSyncPacket(AbstractWaypoint waypoint) {
-        this.waypoint = waypoint;
-    }
+public record WaypointSyncPacket(AbstractWaypoint waypoint) implements FHMessage {
 
     public WaypointSyncPacket(FriendlyByteBuf buffer) {
-        this.waypoint = WaypointManager.registry.read(buffer);
+        this(WaypointManager.registry.read(buffer));
     }
 
     @Override

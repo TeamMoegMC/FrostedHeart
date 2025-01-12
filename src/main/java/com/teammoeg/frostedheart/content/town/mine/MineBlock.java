@@ -4,11 +4,11 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 import com.teammoeg.frostedheart.content.town.TeamTown;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.core.BlockPos;
@@ -39,10 +39,10 @@ public class MineBlock extends AbstractTownWorkerBlock implements FHEntityBlock<
                 return InteractionResult.FAIL;
             }
             te.refresh();
-            player.displayClientMessage(TranslateUtils.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.displayClientMessage(TranslateUtils.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.displayClientMessage(TranslateUtils.str("Valid stone: " + (te.getValidStoneOrOre())), false);
-            player.displayClientMessage(TranslateUtils.str("Average light level: " + (te.getAvgLightLevel())), false);
+            player.displayClientMessage(Lang.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            player.displayClientMessage(Lang.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(Lang.str("Valid stone: " + (te.getValidStoneOrOre())), false);
+            player.displayClientMessage(Lang.str("Average light level: " + (te.getAvgLightLevel())), false);
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

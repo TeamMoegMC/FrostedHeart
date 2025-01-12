@@ -25,16 +25,16 @@ import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 import com.mojang.datafixers.util.Either;
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHTabs;
 import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
-import com.teammoeg.frostedheart.content.steamenergy.IChargable;
+import com.teammoeg.frostedheart.content.steamenergy.charger.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.constants.EquipmentSlotType;
+import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.Entity;
@@ -65,8 +65,8 @@ public class HeaterVestItem extends FHBaseItem implements IHeatingEquipment, ICh
         String stored = FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->{
 			return t.getEnergyStored();
 		}).orElse(0F) + "/" + this.getMaxEnergyStored(stack);
-        list.add(TranslateUtils.translateTooltip("charger.heat_vest").withStyle(ChatFormatting.GRAY));
-        list.add(TranslateUtils.translateTooltip("steam_stored", stored).withStyle(ChatFormatting.GOLD));
+        list.add(Lang.translateTooltip("charger.heat_vest").withStyle(ChatFormatting.GRAY));
+        list.add(Lang.translateTooltip("steam_stored", stored).withStyle(ChatFormatting.GOLD));
     }
 
     @Override

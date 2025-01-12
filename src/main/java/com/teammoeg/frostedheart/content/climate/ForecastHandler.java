@@ -20,10 +20,9 @@
 package com.teammoeg.frostedheart.content.climate;
 
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.content.foods.dailykitchen.DailyKitchen;
+import com.teammoeg.frostedheart.content.health.dailykitchen.DailyKitchen;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.TickEvent;
@@ -41,14 +40,14 @@ public class ForecastHandler {
                 boolean nextHourB = WorldClimate.isFutureBlizzard(serverPlayer.level(), 1);
                 if (!thisHourB) { // not in blizzard yet
                     if (nextHourB) {
-                        serverPlayer.displayClientMessage(TranslateUtils.translateMessage("forecast.blizzard_warning")
+                        serverPlayer.displayClientMessage(Lang.translateMessage("forecast.blizzard_warning")
                                 .withStyle(ChatFormatting.DARK_RED).withStyle(ChatFormatting.BOLD), true);
                         // serverPlayer.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE,
                         // GuiUtils.translateMessage("forecast.blizzard_warning")));
                     }
                 } else { // in blizzard now
                     if (!nextHourB) {
-                        serverPlayer.displayClientMessage(TranslateUtils.translateMessage("forecast.blizzard_retreating")
+                        serverPlayer.displayClientMessage(Lang.translateMessage("forecast.blizzard_retreating")
                                 .withStyle(ChatFormatting.GREEN).withStyle(ChatFormatting.BOLD), true);
                         // serverPlayer.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE,
                         // GuiUtils.translateMessage("forecast.blizzard_retreating")));
@@ -74,11 +73,11 @@ public class ForecastHandler {
                             || WorldClimate.isFutureBlizzard(serverPlayer.level(), 0, 18)
                             || WorldClimate.isFutureBlizzard(serverPlayer.level(), 1, 0);
                     if (blizzard)
-                        serverPlayer.displayClientMessage(TranslateUtils.translateMessage("forecast.blizzard_today"), false);
+                        serverPlayer.displayClientMessage(Lang.translateMessage("forecast.blizzard_today"), false);
                     else if (snow)
-                        serverPlayer.displayClientMessage(TranslateUtils.translateMessage("forecast.snow_today"), false);
+                        serverPlayer.displayClientMessage(Lang.translateMessage("forecast.snow_today"), false);
                     else
-                        serverPlayer.displayClientMessage(TranslateUtils.translateMessage("forecast.clear_today"), false);
+                        serverPlayer.displayClientMessage(Lang.translateMessage("forecast.clear_today"), false);
 
                 }
 
@@ -105,11 +104,11 @@ public class ForecastHandler {
                             || WorldClimate.isFutureBlizzard(serverPlayer.level(), 0, 18)
                             || WorldClimate.isFutureBlizzard(serverPlayer.level(), 1, 0);
                     if (blizzard)
-                        serverPlayer.displayClientMessage(TranslateUtils.translateMessage("forecast.blizzard_tomorrow"), false);
+                        serverPlayer.displayClientMessage(Lang.translateMessage("forecast.blizzard_tomorrow"), false);
                     else if (snow)
-                        serverPlayer.displayClientMessage(TranslateUtils.translateMessage("forecast.snow_tomorrow"), false);
+                        serverPlayer.displayClientMessage(Lang.translateMessage("forecast.snow_tomorrow"), false);
                     else
-                        serverPlayer.displayClientMessage(TranslateUtils.translateMessage("forecast.clear_tomorrow"), false);
+                        serverPlayer.displayClientMessage(Lang.translateMessage("forecast.clear_tomorrow"), false);
                 }
             }
 

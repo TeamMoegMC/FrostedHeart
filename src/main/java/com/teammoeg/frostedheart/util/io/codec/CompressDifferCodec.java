@@ -27,7 +27,8 @@ public class CompressDifferCodec<A> implements Codec<A> {
 		if(ops.compressMaps()) {
 			return compressed.decode(ops, input);
 		}
-		return uncompressed.decode(ops, input);
+		DataResult<Pair<A, T>> res= uncompressed.decode(ops, input);
+		return res;
 	}
 
 	@Override

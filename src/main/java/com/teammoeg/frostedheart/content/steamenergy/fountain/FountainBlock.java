@@ -19,29 +19,28 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
-import java.util.function.Supplier;
-
-import com.teammoeg.frostedheart.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
-
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.phys.BlockHitResult;
 
-public class FountainBlock extends FHBaseBlock implements FHEntityBlock<FountainTileEntity>{
+import java.util.function.Supplier;
+
+public class FountainBlock extends FHBaseBlock implements FHEntityBlock<FountainTileEntity> {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public FountainBlock(Properties blockProps) {
@@ -78,8 +77,8 @@ public class FountainBlock extends FHBaseBlock implements FHEntityBlock<Fountain
         return InteractionResult.SUCCESS;
     }
 
-	@Override
-	public Supplier<BlockEntityType<FountainTileEntity>> getBlock() {
-		return FHBlockEntityTypes.FOUNTAIN;
-	}
+    @Override
+    public Supplier<BlockEntityType<FountainTileEntity>> getBlock() {
+        return FHBlockEntityTypes.FOUNTAIN;
+    }
 }

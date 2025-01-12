@@ -20,14 +20,16 @@
 package com.teammoeg.frostedheart.content.research.research.clues;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.content.research.research.Research;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.network.chat.Component;
 
 public class MinigameClue extends CustomClue {
-	public static final Codec<MinigameClue> CODEC=RecordCodecBuilder.create(t->t.group(
+	public static final MapCodec<MinigameClue> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
 		Clue.BASE_CODEC.forGetter(o->o.getData()),
 		Codec.INT.fieldOf("level").forGetter(o->o.level)
 		).apply(t,MinigameClue::new));
@@ -47,13 +49,8 @@ public class MinigameClue extends CustomClue {
     }
 
     @Override
-    public String getBrief() {
+    public String getBrief(Research parent) {
         return "Complete game level " + this.level;
-    }
-
-    @Override
-    public String getId() {
-        return "game";
     }
 
 
@@ -62,10 +59,10 @@ public class MinigameClue extends CustomClue {
     }
 
     @Override
-    public Component getName() {
+    public Component getName(Research parent) {
         if (name != null && !name.isEmpty())
-            return super.getName();
-        return TranslateUtils.translate("clue." + FHMain.MODID + ".minigame.t" + level);
+            return super.getName(parent);
+        return Lang.translateKey("clue." + FHMain.MODID + ".minigame.t" + level);
     }
 
     public void setLevel(int level) {

@@ -25,13 +25,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
@@ -47,7 +46,6 @@ import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.advancements.Advancement;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.world.entity.EntityType;
@@ -132,7 +130,7 @@ public class SelectDialog<T> extends EditDialog {
     }
     public static final Editor<Research> EDITOR_RESEARCH = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, FHResearch::getAllResearch,
             Research::getName, e -> new String[]{e.getId(), e.getName().getString()},
-            Research::getIcon
+            Research::getFTBIcon
     ).open();
     public static final Editor<IMultiblock> EDITOR_MULTIBLOCK = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, MultiblockHandler::getMultiblocks,
             wrap(IMultiblock::getUniqueName)
@@ -143,7 +141,7 @@ public class SelectDialog<T> extends EditDialog {
 
         new SelectDialog<>(p, l, adv, e -> c.accept(e.getId()), () -> cam.getAdvancements().getAllAdvancements(),
                 Advancement::getChatComponent, advx -> new String[]{advx.getChatComponent().getString(), advx.getId().toString()},
-                advx -> FHIcons.getIcon(advx.getDisplay().getIcon())
+                advx -> FHIcons.getIcon(advx.getDisplay().getIcon()).asFtbIcon()
         ).open();
         
     };
@@ -166,10 +164,10 @@ public class SelectDialog<T> extends EditDialog {
     public TextBox searchBox;
 
     public static <R> Function<R, Component> wrap(Function<R, Object> str) {
-        return e -> TranslateUtils.str(String.valueOf(str.apply(e)));
+        return e -> Lang.str(String.valueOf(str.apply(e)));
     }
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
-        this(panel, lbl, val, cb, fetcher, e -> TranslateUtils.str(e.toString()), e -> new String[]{e.toString()}, e -> Icon.empty());
+        this(panel, lbl, val, cb, fetcher, e -> Lang.str(e.toString()), e -> new String[]{e.toString()}, e -> Icon.empty());
     }
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
                         Function<T, Component> tostr) {

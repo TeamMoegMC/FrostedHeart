@@ -28,8 +28,8 @@ import com.mojang.datafixers.util.Either;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-import com.teammoeg.frostedheart.util.constants.EquipmentSlotType;
+import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.LivingEntity;
@@ -45,11 +45,9 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.ForgeRegistries;
 import top.theillusivec4.curios.api.type.ISlotType;
-import net.minecraft.world.item.Item.Properties;
 
 public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
     public final static int max_fuel = 800;
@@ -83,10 +81,10 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> list, TooltipFlag flag) {
-        list.add(TranslateUtils.translateTooltip("handstove.add_fuel").withStyle(ChatFormatting.GRAY));
+//        list.add(Lang.translateTooltip("handstove.add_fuel").withStyle(ChatFormatting.GRAY));
         if (getAshAmount(stack) >= 800)
-            list.add(TranslateUtils.translateTooltip("handstove.trash_ash").withStyle(ChatFormatting.RED));
-        list.add(TranslateUtils.translateTooltip("handstove.fuel", getFuelAmount(stack) / 2).withStyle(ChatFormatting.GRAY));
+            list.add(Lang.translateTooltip("handstove.trash_ash").withStyle(ChatFormatting.RED));
+        list.add(Lang.translateTooltip("handstove.fuel", getFuelAmount(stack) / 2).withStyle(ChatFormatting.GRAY));
     }
 
 

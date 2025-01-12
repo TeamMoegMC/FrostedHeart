@@ -33,8 +33,8 @@ import javax.annotation.Nullable;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import net.minecraft.core.BlockPos;
@@ -250,14 +250,6 @@ public class ChunkHeatData {
      */
     public static LazyOptional<ChunkHeatData> getCapability(@Nullable ChunkAccess chunk) {
         return FHCapabilities.CHUNK_HEAT.getCapability(chunk);
-    }
-
-    public static String toDisplaySoil(float temp) {
-        temp = Math.max(temp, -20);
-        temp = Math.min(temp, 30);
-        temp += 20;
-        temp *= 2;
-        return (int) temp + "%";
     }
 
     /**

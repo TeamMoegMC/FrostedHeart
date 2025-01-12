@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.utility;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.content.tips.TipDisplayManager;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
@@ -16,7 +16,7 @@ public class DebugItem extends FHBaseItem {
     @Override
     public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
         if (worldIn.isClientSide) {
-            TipDisplayManager.openDebugScreen();
+            ClientUtils.openDebugScreen();
         }
         return super.use(worldIn, playerIn, handIn);
     }

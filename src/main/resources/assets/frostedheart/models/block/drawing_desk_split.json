@@ -5,7 +5,17 @@
 	},
 	"loader": "immersiveengineering:basic_split",
 	"dynamic": false,
-	"base_model": "frostedheart:block/drawing_desk",
+	"inner_model": {
+		"parent": "minecraft:block/block",
+		"textures": {
+			"particle": "frostedheart:block/escritoire_main"
+		},
+		"loader": "forge:obj",
+		"model": "frostedheart:models/block/escritoire.obj",
+		"automatic_culling": false,
+		"flip_v": true,
+		"render_type": "cutout"
+	},
 	"split_parts": [
 		[
 			0,

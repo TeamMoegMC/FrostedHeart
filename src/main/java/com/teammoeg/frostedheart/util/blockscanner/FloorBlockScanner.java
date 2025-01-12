@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.util.blockscanner;
 import java.util.AbstractMap;
 import java.util.HashSet;
 
-import com.teammoeg.frostedheart.FHTags;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.tags.BlockTags;

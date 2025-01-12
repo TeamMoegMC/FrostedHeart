@@ -33,6 +33,6 @@ public interface Editor<T> {
         };
     }
 
-    void open(Widget w, String lab, T val, Consumer<T> onCommit);
+    void open(Widget parent, String label, T previousValue, Consumer<T> onCommit);
 
 }

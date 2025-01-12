@@ -2,5 +2,6 @@
   "parent": "minecraft:block/crop",
   "textures": {
     "crop": "frostedheart:block/crop/rye_block6"
-  }
+  },
+  "render_type": "cutout"
 }

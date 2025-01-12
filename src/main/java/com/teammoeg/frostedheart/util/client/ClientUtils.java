@@ -20,14 +20,11 @@
 package com.teammoeg.frostedheart.util.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.teammoeg.frostedheart.FHParticleTypes;
-import com.teammoeg.frostedheart.content.research.gui.ResearchGui;
+import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
 
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
-import dev.ftb.mods.ftblibrary.ui.IScreenWrapper;
+import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
@@ -54,21 +51,14 @@ public class ClientUtils {
     public static float partialTicks() {
     	return mc().getFrameTime();
     }
+    public static long gameTick() {
+        return getWorld().getLevelData().getGameTime();
+    }
     public static Minecraft mc() {
         return Minecraft.getInstance();
     }
     public static Font font() {
         return mc().font;
-    }
-    public static void refreshResearchGui() {
-        Screen cur = mc().screen;
-        if (cur instanceof IScreenWrapper) {
-            BaseScreen bs = ((IScreenWrapper) cur).getGui();
-            if (bs instanceof ResearchGui) {
-                bs.refreshWidgets();
-            }
-        }
-        mc().getLanguageManager();
     }
 
     public static void spawnFireParticles(Level worldIn, BlockPos pos) {
@@ -152,5 +142,18 @@ public class ClientUtils {
 
     public static ResourceLocation getDimLocation() {
         return getWorld().dimension().location();
+    }
+
+    private static long previousTick = 0;
+    public static boolean isGameTimeUpdated() {
+        boolean flag = previousTick != gameTick();
+        previousTick = gameTick();
+        return flag;
+    }
+
+    public static void openDebugScreen() {
+        if (Minecraft.getInstance().player != null) {
+            Minecraft.getInstance().setScreen(new DebugScreen());
+        }
     }
 }

@@ -26,9 +26,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.mojang.serialization.Codec;
-import com.teammoeg.frostedheart.FHBlocks;
-
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.town.hunting.HuntingBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.mine.MineWorker;
 import com.teammoeg.frostedheart.content.town.resident.Resident;

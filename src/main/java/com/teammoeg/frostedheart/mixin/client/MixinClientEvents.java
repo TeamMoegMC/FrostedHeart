@@ -52,7 +52,7 @@ public class MixinClientEvents {
 //        }
 //
 //        if (event.getType() == RenderGuiOverlayEvent.ElementType.SUBTITLES) {
-//            ClientEvents.onRenderHotbar(ms, buffers, light, overlay, pt);
+//            FHClientEvents.onRenderHotbar(ms, buffers, light, overlay, pt);
 //        }
 //    }
 }

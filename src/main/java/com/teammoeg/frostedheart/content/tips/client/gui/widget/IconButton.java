@@ -10,6 +10,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 
 public class IconButton extends Button {
     public static final ResourceLocation ICON_LOCATION = new ResourceLocation(FHMain.MODID, "textures/gui/hud_icon.png");
@@ -17,28 +18,22 @@ public class IconButton extends Button {
     public static final int TEXTURE_WIDTH = 80;
     public static final int ICON_SIZE = 10;
 
-    public final Icon currentIcon;
-    public final int color;
+    public Icon currentIcon;
+    public int color;
 
     /**
-     * @param icon 按钮的图标，例如 {@link Icon#LOCK}
+     * @param icon 按钮的图标 {@link Icon}
      */
     public IconButton(int x, int y, Icon icon, int color, Component title, OnPress pressedAction) {
         super(x, y, 10, 10, title, pressedAction, Button.DEFAULT_NARRATION);
-        builder(title,pressedAction).build();
         this.color = color;
         this.currentIcon = icon;
     }
 
-    public void setXY(int x, int y) {
-        this.setX(x);
-        this.setY(y);
-    }
-
     @Override
-    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         if (isHoveredOrFocused()) {
-        	graphics.fill(getX(), getY(), getX()+width, getY()+height, FHColorHelper.setAlpha(color, 50));
+            graphics.fill(getX(), getY(), getX()+width, getY()+height, FHColorHelper.setAlpha(color, 50));
             if (!getMessage().getString().isEmpty() && isHovered()) {
                 int textWidth = ClientUtils.font().width(getMessage());
                 int renderX = getX()-textWidth+8;

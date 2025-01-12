@@ -4,10 +4,11 @@ import com.google.gson.JsonElement;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.RenderHelper;
 import com.teammoeg.frostedheart.util.io.Writeable;
+import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -32,7 +33,8 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     /**
      * 路径点的 ID
      */
-    public String id;
+    @Getter
+    protected String id;
     /**
      * 路径点的显示名称
      */
@@ -40,7 +42,7 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     /**
      * 路径点的目标坐标
      */
-    public Vec3 target;
+    protected Vec3 target = Vec3.ZERO;
     /**
      * 路径点记录的是否为方块坐标
      */
@@ -56,7 +58,8 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     /**
      * 路径点是否有效，如果为 false 会在下一次渲染前删除
      */
-    public boolean valid;
+    @Getter
+    protected boolean valid;
     /**
      * 路径点的渲染颜色
      */
@@ -65,21 +68,21 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
      * 路径点所处的维度
      */
     public ResourceLocation dimension;
-
     /**
      * 路径点在屏幕中的坐标
      */
-    public Vec2 screenPos = Vec2.ZERO;
+    @Getter
+    protected Vec2 screenPos = Vec2.ZERO;
     /**
      * 路径点的悬停信息
      */
-    protected List<Object> infoLines = new ArrayList<>();
+    protected final List<Object> infoLines = new ArrayList<>();
 
     AbstractWaypoint(Vec3 target, String ID, int color) {
         this.id = ID;
         this.color = color;
         this.target = target;
-        this.displayName = TranslateUtils.str(ID);
+        this.displayName = Lang.str(ID);
         this.focus = false;
         this.enable = true;
         this.valid = true;
@@ -105,26 +108,28 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     }
 
     public void render(GuiGraphics graphics) {
-        screenPos = getScreenPos();
+        updateScreenPos();
         PoseStack pose = graphics.pose();
 
         pose.pushPose();
-        pose.translate(screenPos.x, screenPos.y, -1);
+        pose.translate(getScreenPos().x, getScreenPos().y, -1);
         renderMain(graphics);
-        if (ClientWaypointManager.hoveredWaypoint == this) {
-            if (ClientWaypointManager.shouldUpdate()) {
+        ClientWaypointManager.getHovered().ifPresent((hovered) -> {
+            if (hovered == this) {
+                if (ClientWaypointManager.shouldUpdate()) {
+                    infoLines.clear();
+                    updateInfos();
+                }
+                if (!infoLines.isEmpty()) {
+                    //确保悬停信息始终显示在其他路径点上面 TODO 修复半透明背景剔除其他HUD元素
+                    pose.translate(0, 0, 1);
+                    renderHoverInfo(graphics);
+                    pose.translate(0, 0, -1);
+                }
+            } else {
                 infoLines.clear();
-                updateInfos();
             }
-            if (!infoLines.isEmpty()) {
-                //确保悬停信息始终显示在其他路径点上面 TODO 修复半透明背景剔除其他HUD元素
-                pose.translate(0, 0, 1);
-                renderHoverInfo(graphics);
-                pose.translate(0, 0, -1);
-            }
-        } else {
-            infoLines.clear();
-        }
+        });
         pose.popPose();
     }
 
@@ -139,7 +144,7 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     public abstract void renderHoverInfo(GuiGraphics graphics);
 
     /**
-     * 更新悬停信息，每 2 tick 更新一次
+     * 更新悬停信息，每 tick 更新一次
      */
     protected abstract void updateInfos();
 
@@ -181,27 +186,18 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
      */
     public abstract void onServerRemove();
 
-    /**
-     * 获取路径点的屏幕坐标
-     */
-    public Vec2 getScreenPos() {
-        if (getTarget() == null) {
-            return Vec2.ZERO;
-        }
+    private void updateScreenPos() {
         Vec2 pos = RenderHelper.worldPosToScreenPos(getTarget());
         //限制区域避免覆盖其他HUD元素
         float x = Mth.clamp(pos.x, 10, ClientUtils.screenWidth() -10);
         float y = Mth.clamp(pos.y, 25, ClientUtils.screenHeight()-25);
-        return new Vec2(x, y);
+        screenPos = new Vec2(x, y);
     }
 
     /**
      * 获取玩家距离路径点的距离
      */
     public double getDistance() {
-        if (getTarget() == null) {
-            return -1;
-        }
         return getTarget().distanceTo(ClientUtils.getPlayer().getEyePosition(ClientUtils.partialTicks()));
     }
 
@@ -209,20 +205,20 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
         return blockPos ? target.add(0.5F, 0.5F, 0.5F) : target;
     }
 
-    public String getID() {
-        return id;
+    public Vec3 getRealTarget() {
+        return target;
     }
 
-    public void setInvalid() {
+    public void invalidate() {
         valid = false;
     }
 
     protected MutableComponent distanceTranslation() {
-        return TranslateUtils.translateWaypoint("distance", (int)getDistance());
+        return Lang.translateWaypoint("distance", (int)getDistance());
     }
 
     protected MutableComponent posTranslation() {
-        return TranslateUtils.translateWaypoint("position", String.format("%.2f", getTarget().x), String.format("%.2f", getTarget().y), String.format("%.2f", getTarget().z));
+        return Lang.translateWaypoint("position", String.format("%.2f", getTarget().x), String.format("%.2f", getTarget().y), String.format("%.2f", getTarget().z));
     }
 
     @Override
@@ -239,6 +235,6 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
 
     @Override
     public String toString() {
-        return "ID: '" + id + "' [" + getTarget().x + ", " + getTarget().y + ", " + getTarget().z + "]";
+        return "ID: '" + id + "' [" + target.x + ", " + target.y + ", " + target.z + "]";
     }
 }

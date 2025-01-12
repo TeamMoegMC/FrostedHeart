@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.TranslateUtils;
+import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.Villager;
@@ -123,7 +123,7 @@ public class FHVillagerData implements MenuProvider {
 
     @Override
     public Component getDisplayName() {
-        return TranslateUtils.translateGui("trade.title");
+        return Lang.translateGui("trade.title");
     }
 
     public PolicySnapshot getPolicy() {
