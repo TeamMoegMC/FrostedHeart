@@ -20,17 +20,18 @@
 package com.teammoeg.frostedheart.infrastructure.command;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.content.town.resource.ResourceActionResult;
-import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
+import com.teammoeg.frostedheart.content.town.resource.*;
 import com.teammoeg.frostedheart.util.TranslateUtils;
 
 import net.minecraft.commands.CommandSourceStack;
@@ -73,17 +74,72 @@ public class TownCommand {
                                     Arrays.stream(VirtualResourceType.values()).forEach(t -> s.suggest(t.getKey()));
                                     return s.buildFuture();
                                 })
-                                .then(Commands.argument("amount", DoubleArgumentType.doubleArg())
-                                        .executes(ct -> {
-                                            double amount = DoubleArgumentType.getDouble(ct, "amount");
-                                            String type = StringArgumentType.getString(ct, "type");
-                                            TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                                            ResourceActionResult result = town.getResourceManager().addIfHaveCapacity(VirtualResourceType.from(type), amount);
-                                            if(result.allSuccess()){
-                                                ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added"), true);
-                                            } else ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added failed: No enough capacity."), true);
-                                            return Command.SINGLE_SUCCESS;
+                                .then(Commands.argument("level", IntegerArgumentType.integer())
+                                        .suggests((ct, s) -> {
+                                            IntStream.rangeClosed(0, VirtualResourceType.from(StringArgumentType.getString(ct, "type")).maxLevel)
+                                                    .forEach(s::suggest);
+                                            return s.buildFuture();
                                         })
+                                        .then(Commands.argument("amount", DoubleArgumentType.doubleArg())
+                                                .executes(ct -> {
+                                                    double amount = DoubleArgumentType.getDouble(ct, "amount");
+                                                    String type = StringArgumentType.getString(ct, "type");
+                                                    int level = IntegerArgumentType.getInteger(ct, "level");
+                                                    if(amount < 0){
+                                                        ct.getSource().sendFailure(TranslateUtils.str("Invalid amount: Amount must be positive."));
+                                                        return Command.SINGLE_SUCCESS;
+                                                    }
+                                                    TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
+                                                    ResourceActionResult result = town.getResourceManager().addIfHaveCapacity(VirtualResourceType.from(type).generateKey(level), amount);
+                                                    if(result.allSuccess()){
+                                                        ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added"), true);
+                                                    } else ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added failed: No enough capacity."), true);
+                                                    return Command.SINGLE_SUCCESS;
+                                                })
+                                        )
+                                )
+                        );
+
+        LiteralArgumentBuilder<CommandSourceStack> costResource =
+                Commands.literal("cost")
+                        .then(Commands.argument("type", StringArgumentType.string())
+                                .suggests((ct, s) -> {
+                                    // Get all TownResourceType enum values
+                                    Arrays.stream(VirtualResourceType.values()).forEach(t -> s.suggest(t.getKey()));
+                                    Arrays.stream(ItemResourceType.values()).forEach(t -> s.suggest(t.getKey()));
+                                    return s.buildFuture();
+                                })
+                                .then(Commands.argument("level", IntegerArgumentType.integer())
+                                        .suggests((ct, s) -> {
+                                            ITownResourceType type = ITownResourceType.from(StringArgumentType.getString(ct, "type"));
+                                            if(type == null) return s.buildFuture();
+                                            IntStream.rangeClosed(0, type.getMaxLevel())
+                                                    .forEach(s::suggest);
+                                            return s.buildFuture();
+                                        })
+                                        .then(Commands.argument("amount", DoubleArgumentType.doubleArg())
+                                                .executes(ct -> {
+                                                    double amount = DoubleArgumentType.getDouble(ct, "amount");
+                                                    String typeString = StringArgumentType.getString(ct, "type");
+                                                    int level = IntegerArgumentType.getInteger(ct, "level");
+                                                    ITownResourceType type = ITownResourceType.from(typeString);
+                                                    if(type == null){
+                                                        ct.getSource().sendFailure(TranslateUtils.str("Invalid type"));
+                                                        return Command.SINGLE_SUCCESS;
+                                                    }
+                                                    if(amount < 0){
+                                                        ct.getSource().sendFailure(TranslateUtils.str("Invalid amount: Amount must be positive."));
+                                                        return Command.SINGLE_SUCCESS;
+                                                    }
+                                                    TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
+                                                    ResourceActionResult result = null;
+                                                    result = town.getResourceManager().costIfHaveEnough(type.generateKey(level), amount);
+                                                    if(result.allSuccess()){
+                                                        ct.getSource().sendSuccess(()->TranslateUtils.str("Resource costed."), true);
+                                                    } else ct.getSource().sendSuccess(()->TranslateUtils.str("Resource cost failed: No enough resource."), true);
+                                                    return Command.SINGLE_SUCCESS;
+                                                })
+                                        )
                                 )
                         );
 
@@ -145,6 +201,7 @@ public class TownCommand {
                                 .then(listVirtualResources)
                                 .then(addVirtualResources)
                                 .then(addItemOnHand)
+                                .then(costResource)
                         )
                         .then(Commands.literal("residents")
                                 .then(listResidents)

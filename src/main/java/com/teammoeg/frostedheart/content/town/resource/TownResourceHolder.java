@@ -118,7 +118,7 @@ public class TownResourceHolder {
     public double get(ITownResourceKey key){
         if(key instanceof ItemResourceKey){
             DoubleAdder adder = new DoubleAdder();
-            for(ItemStackWrapper itemStackWrapper : ITEM_RESOURCE_KEY_CACHE.get((ItemResourceKey)key)){
+            for(ItemStackWrapper itemStackWrapper : ITEM_RESOURCE_KEY_CACHE.getOrDefault((ItemResourceKey)key, new HashSet<>())){
                 adder.add(get(itemStackWrapper) * getResourceAmount(itemStackWrapper, (ItemResourceKey)key));
             }
             return adder.doubleValue();

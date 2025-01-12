@@ -89,21 +89,6 @@ public enum ItemResourceType implements ITownResourceType {
     }
 
     /**
-     * 从物品的Tag中获取资源类型，并获取对应的ItemResourceKey
-     * 若没有对应的资源类型，默认为OTHER
-     */
-    public static ItemResourceType fromItem(ItemStack item) {
-        return item.getTags()
-                .map(TagKey::location)
-                .filter(location -> location.getNamespace().equals(FHTags.NameSpace.MOD.id))
-                .map(ResourceLocation::getPath)
-                .filter(path -> path.startsWith("town_resource_type_"))
-                .findFirst()
-                .map(path -> ItemResourceType.from(path.replace("town_resource_type_", "")))
-                .orElse(ItemResourceType.OTHER);
-    }
-
-    /**
      * 用于校正TownResourceKey的等级，确保其符合当前类型
      * @param level level might be invalid for this type
      * @return the corrected level
