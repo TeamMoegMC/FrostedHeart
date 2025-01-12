@@ -33,8 +33,6 @@ import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.content.town.resource.*;
-import com.teammoeg.frostedheart.util.TranslateUtils;
-
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -69,7 +67,7 @@ public class TownCommand {
                         .executes(ct -> {
                             TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                             System.out.println(town.getResourceManager().resourceHolder.getAllVirtualResources());
-                            ct.getSource().sendSuccess(()->TranslateUtils.str(town.getResourceManager().resourceHolder.getAllVirtualResources() ), true);
+                            ct.getSource().sendSuccess(()->Lang.str(town.getResourceManager().resourceHolder.getAllVirtualResources() ), true);
                             return Command.SINGLE_SUCCESS;
                         });
 
@@ -93,14 +91,14 @@ public class TownCommand {
                                                     String type = StringArgumentType.getString(ct, "type");
                                                     int level = IntegerArgumentType.getInteger(ct, "level");
                                                     if(amount < 0){
-                                                        ct.getSource().sendFailure(TranslateUtils.str("Invalid amount: Amount must be positive."));
+                                                        ct.getSource().sendFailure(Lang.str("Invalid amount: Amount must be positive."));
                                                         return Command.SINGLE_SUCCESS;
                                                     }
                                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                                                     ResourceActionResult result = town.getResourceManager().addIfHaveCapacity(VirtualResourceType.from(type).generateKey(level), amount);
                                                     if(result.allSuccess()){
                                                         ct.getSource().sendSuccess(()-> Lang.str("Resource added"), true);
-                                                    } else ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added failed: No enough capacity."), true);
+                                                    } else ct.getSource().sendSuccess(()->Lang.str("Resource added failed: No enough capacity."), true);
                                                     return Command.SINGLE_SUCCESS;
                                                 })
                                         )
@@ -131,19 +129,19 @@ public class TownCommand {
                                                     int level = IntegerArgumentType.getInteger(ct, "level");
                                                     ITownResourceType type = ITownResourceType.from(typeString);
                                                     if(type == null){
-                                                        ct.getSource().sendFailure(TranslateUtils.str("Invalid type"));
+                                                        ct.getSource().sendFailure(Lang.str("Invalid type"));
                                                         return Command.SINGLE_SUCCESS;
                                                     }
                                                     if(amount < 0){
-                                                        ct.getSource().sendFailure(TranslateUtils.str("Invalid amount: Amount must be positive."));
+                                                        ct.getSource().sendFailure(Lang.str("Invalid amount: Amount must be positive."));
                                                         return Command.SINGLE_SUCCESS;
                                                     }
                                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                                                     ResourceActionResult result = null;
                                                     result = town.getResourceManager().costIfHaveEnough(type.generateKey(level), amount);
                                                     if(result.allSuccess()){
-                                                        ct.getSource().sendSuccess(()->TranslateUtils.str("Resource costed."), true);
-                                                    } else ct.getSource().sendSuccess(()->TranslateUtils.str("Resource cost failed: No enough resource."), true);
+                                                        ct.getSource().sendSuccess(()->Lang.str("Resource costed."), true);
+                                                    } else ct.getSource().sendSuccess(()->Lang.str("Resource cost failed: No enough resource."), true);
                                                     return Command.SINGLE_SUCCESS;
                                                 })
                                         )
@@ -157,12 +155,12 @@ public class TownCommand {
                                     double amount = DoubleArgumentType.getDouble(ct, "amount");
                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                                     ItemStack itemStack = ct.getSource().getPlayerOrException().getMainHandItem();
-                                    ct.getSource().sendSuccess(()->TranslateUtils.str("Adding ItemStack: " + itemStack), true);
+                                    ct.getSource().sendSuccess(()->Lang.str("Adding ItemStack: " + itemStack), true);
                                     ResourceActionResult result = town.getResourceManager().addIfHaveCapacity(itemStack, amount);
                                     if(result.allSuccess()){
-                                        ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added"), true);
+                                        ct.getSource().sendSuccess(()->Lang.str("Resource added"), true);
                                         return Command.SINGLE_SUCCESS;
-                                    } else ct.getSource().sendSuccess(()->TranslateUtils.str("Resource added failed: No enough capacity."), true);
+                                    } else ct.getSource().sendSuccess(()->Lang.str("Resource added failed: No enough capacity."), true);
                                     return Command.SINGLE_SUCCESS;
                                 })
 
@@ -227,8 +225,11 @@ public class TownCommand {
                 .requires(s -> s.hasPermission(2))
                 .then(name)
                 .then(Commands.literal("resources")
-                        .then(listResources)
-                        .then(addResources)
+                        .then(listVirtualResources)
+                        .then(listItemStackResources)
+                        .then(addVirtualResources)
+                        .then(addItemOnHand)
+                        .then(costResource)
                 )
                 .then(Commands.literal("residents")
                         .then(listResidents)

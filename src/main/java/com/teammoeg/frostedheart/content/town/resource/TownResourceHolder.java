@@ -2,9 +2,8 @@ package com.teammoeg.frostedheart.content.town.resource;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHTags;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import lombok.Getter;

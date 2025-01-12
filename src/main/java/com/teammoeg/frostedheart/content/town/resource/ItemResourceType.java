@@ -20,15 +20,8 @@
 package com.teammoeg.frostedheart.content.town.resource;
 
 import com.mojang.serialization.Codec;
-import com.teammoeg.frostedheart.FHTags;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
 import lombok.Getter;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
-import net.minecraft.world.item.ItemStack;
-
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * 具有对应物品的城镇资源类型，如木头、金属、食物等

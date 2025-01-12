@@ -4,7 +4,7 @@ import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IERecipeTypes;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;

@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.town.resource;
 import com.google.common.collect.Interner;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.FHTags;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import lombok.Getter;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
