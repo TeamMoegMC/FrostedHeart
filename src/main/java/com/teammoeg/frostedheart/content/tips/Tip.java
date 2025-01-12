@@ -17,8 +17,6 @@ import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.util.Size2i;
 import org.slf4j.Logger;
@@ -152,7 +150,7 @@ public class Tip {
         nbt.putInt("fontColor", fontColor);
         nbt.putInt("backgroundColor", backgroundColor);
         var toAddContents = new ListTag();
-        this.contents.stream().map(content -> StringTag.valueOf(getKeyOrElseStr(content))).forEach(toAddContents::add);
+        this.contents.stream().map(content -> StringTag.valueOf(Lang.getKeyOrElseStr(content))).forEach(toAddContents::add);
         nbt.put("contents", toAddContents);
         return nbt;
     }
@@ -171,17 +169,9 @@ public class Tip {
         json.addProperty("fontColor", Integer.toHexString(fontColor).toUpperCase());
         json.addProperty("backgroundColor", Integer.toHexString(backgroundColor).toUpperCase());
         var toAddContents = new JsonArray();
-        this.contents.stream().map(Tip::getKeyOrElseStr).forEach(toAddContents::add);
+        this.contents.stream().map(Lang::getKeyOrElseStr).forEach(toAddContents::add);
         json.add("contents", toAddContents);
         return json;
-    }
-
-    private static String getKeyOrElseStr(Component component) {
-        if (component instanceof MutableComponent c && (c.getContents() instanceof TranslatableContents t)) {
-            return t.getKey();
-        } else {
-            return component.getString();
-        }
     }
 
     public static Tip.Builder builder(String id) {
@@ -387,7 +377,7 @@ public class Tip {
         }
 
         public Builder fromJson(JsonObject json) {
-            if (!editable) return this;
+            if (!editable || json == null) return this;
 
             if (json.has("id")) {
                 String s = json.get("id").getAsString();
@@ -431,12 +421,12 @@ public class Tip {
             }
 
             if (json.has("category"       )) category     (json.get("category").getAsString());
-            if (json.has("next"           )) nextTip      (json.get("next").getAsString());
+            if (json.has("nextTip"        )) nextTip      (json.get("nextTip").getAsString());
             if (json.has("alwaysVisible"  )) alwaysVisible(json.get("alwaysVisible").getAsBoolean());
             if (json.has("onceOnly"       )) onceOnly     (json.get("onceOnly").getAsBoolean());
             if (json.has("hide"           )) hide         (json.get("hide").getAsBoolean());
             if (json.has("pin"            )) pin          (json.get("pin").getAsBoolean());
-            if (json.has("visibleTime"    )) displayTime  (Math.max(json.get("visibleTime").getAsInt(), 0));
+            if (json.has("displayTime"    )) displayTime  (Math.max(json.get("displayTime").getAsInt(), 0));
             if (json.has("fontColor"      )) fontColor    (getColorOrElse(json, "fontColor", FHColorHelper.CYAN));
             if (json.has("backgroundColor")) BGColor      (getColorOrElse(json, "backgroundColor", FHColorHelper.BLACK));
 

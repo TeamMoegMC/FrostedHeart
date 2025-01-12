@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.tips.client.gui.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.teammoeg.frostedheart.base.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.util.client.AnimationUtil;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -44,11 +45,16 @@ public class TipWidget extends AbstractWidget {
     private TipWidget() {
         super(0, 0, 0, 0, Component.literal("tip"));
         this.closeButton = new IconButton(0, 0, IconButton.Icon.CROSS, FHColorHelper.CYAN, Lang.gui("close").component(),
-                b -> close()
-        );
+                b -> {
+                    close();
+                    b.setFocused(false);
+                });
         this.pinButton = new IconButton(0, 0, IconButton.Icon.LOCK, FHColorHelper.CYAN, Lang.gui("pin").component(),
-                b -> this.alwaysVisibleOverride = true
-        );
+                b -> {
+                    this.alwaysVisibleOverride = true;
+                    b.setFocused(false);
+                });
+        this.visible = false;
         this.closeButton.visible = false;
         this.pinButton.visible = false;
         this.context = new RenderContext();
@@ -156,8 +162,8 @@ public class TipWidget extends AbstractWidget {
         }
 
         // 标题和内容
-        FHGuiHelper.drawStrings(graphics, ClientUtils.font(), context.titleLines, getX(), getY(), context.fontColor, RenderContext.LINE_SPACE, false);
-        FHGuiHelper.drawStrings(graphics, ClientUtils.font(), context.contentLines, getX(), getY()+6 + (context.titleLines.size() * RenderContext.LINE_SPACE), context.fontColor, RenderContext.LINE_SPACE, false);
+        FHGuiHelper.drawStrings(graphics, ClientUtils.font(), context.titleLines, getX(), getY(), context.fontColor, RenderContext.LINE_SPACE, false, false);
+        FHGuiHelper.drawStrings(graphics, ClientUtils.font(), context.contentLines, getX(), getY()+6 + (context.titleLines.size() * RenderContext.LINE_SPACE), context.fontColor, RenderContext.LINE_SPACE, false, false);
 
         pose.popPose();
         graphics.setColor(1, 1, 1, 1);
@@ -184,8 +190,10 @@ public class TipWidget extends AbstractWidget {
         context.clear();
         state = State.IDLE;
         alwaysVisibleOverride = false;
+        visible = false;
         pinButton.visible = false;
         closeButton.visible = false;
+        setFocused(false);
         pinButton.setFocused(false);
         closeButton.setFocused(false);
         pinButton.setAlpha(1F);

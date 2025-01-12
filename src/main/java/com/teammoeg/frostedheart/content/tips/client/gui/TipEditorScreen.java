@@ -1,43 +1,56 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.teammoeg.frostedheart.content.tips.TipRenderer;
-import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
+import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.base.client.gui.widget.IconButton;
+import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipEditsList;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.FHColorHelper;
+import com.teammoeg.frostedheart.util.lang.Lang;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.jetbrains.annotations.NotNull;
 
 public class TipEditorScreen extends Screen {
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private List<Component> contents = new ArrayList<>();
-    private String id;
-    private String category;
-    private String next;
-    private ResourceLocation image;
-    private boolean alwaysVisible;
-    private boolean onceOnly;
-    private boolean hidden;
-    private boolean pinned;
-    private boolean temporary;
-    private int displayTime = 30000;
-    private int fontColor = FHColorHelper.CYAN;
-    private int BGColor = FHColorHelper.BLACK;
+    private final TipEditsList list;
+    private final IconButton saveButton;
 
-    protected TipEditorScreen() {
-        super(Component.translatable("gui.frostedheart.tip_editor.title"));
+    public TipEditorScreen() {
+        super(Lang.str("Tip Editor"));
+        this.list = new TipEditsList(ClientUtils.mc(), ClientUtils.screenWidth(), ClientUtils.screenHeight(), 10, ClientUtils.screenHeight() - 30, 28);
+        list.setRenderBackground(false);
+        this.saveButton = new IconButton(ClientUtils.screenWidth()/2 - 10, ClientUtils.screenHeight()-25, IconButton.Icon.FOLDER, FHColorHelper.CYAN, 2, Component.literal("Save"), (b) -> {
+            var json = list.getJson();
+            if (json != null) {
+                Tip.builder("").fromJson(json).build().saveAsFile();
+            }
+        });
+    }
+
+    @Override
+    public void render(@NotNull GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
+        renderBackground(pGuiGraphics);
+        list.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
+        super.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
+    }
+
+    @Override
+    public void resize(@NotNull Minecraft pMinecraft, int pWidth, int pHeight) {
+        super.resize(pMinecraft, pWidth, pHeight);
+        list.updateSize(ClientUtils.screenWidth(), ClientUtils.screenHeight(), 10, ClientUtils.screenHeight() - 30);
+        saveButton.setPosition(ClientUtils.screenWidth()/2 - 10, ClientUtils.screenHeight()-25);
     }
 
     @Override
     protected void init() {
-        addRenderableWidget(new IconButton(50, 50, IconButton.Icon.CHECK, FHColorHelper.CYAN, Component.translatable("gui.yes"), (b) -> {
-            if (!TipRenderer.TIP_QUEUE.isEmpty()) {
-                TipRenderer.TIP_QUEUE.get(0).saveAsFile();
-            }
-        }));
+        super.init();
+        addWidget(list);
+        addRenderableWidget(saveButton);
+    }
+
+    @Override
+    public boolean isPauseScreen() {
+        return false;
     }
 }

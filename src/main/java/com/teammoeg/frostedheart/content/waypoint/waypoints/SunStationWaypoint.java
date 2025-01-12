@@ -10,7 +10,7 @@ import net.minecraft.world.phys.Vec3;
 public class SunStationWaypoint extends Waypoint {
     public SunStationWaypoint() {
         super(new Vec3(0, 0, 0), "Sun Station", 0xFFFFDA64);
-        this.displayName = Lang.translateWaypoint("sun_station");
+        this.displayName = Lang.waypoint("sun_station").component();
         this.focus = true;
     }
 
