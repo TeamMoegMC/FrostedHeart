@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.town.resource;
 
+import com.google.common.collect.Interner;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHTags;
@@ -8,11 +9,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Used in the storage of town resource.
@@ -24,6 +21,8 @@ public class ItemResourceKey implements ITownResourceKey {
     public final ItemResourceType type;
     private final int level;
 
+    private static final Interner<ItemResourceKey> INTERNER = com.google.common.collect.Interners.newWeakInterner();
+
     public static final Codec<ItemResourceKey> CODEC = RecordCodecBuilder.create(t -> t.group(
             ItemResourceType.CODEC.fieldOf("type").forGetter(o->o.type),
             Codec.INT.fieldOf("level").forGetter(o->o.level)
@@ -31,7 +30,7 @@ public class ItemResourceKey implements ITownResourceKey {
     );
 
 
-    ItemResourceKey(ItemResourceType type, int level){
+    private ItemResourceKey(ItemResourceType type, int level){
         this.type=type;
         if(type.isLevelValid(level)){
             this.level=level;
@@ -40,7 +39,7 @@ public class ItemResourceKey implements ITownResourceKey {
         }
     }
 
-        ItemResourceKey(ItemResourceType type){
+    ItemResourceKey(ItemResourceType type){
         this.type=type;
         this.level = 0;
     }
@@ -49,7 +48,7 @@ public class ItemResourceKey implements ITownResourceKey {
 
     //快速生成Key
     public static ItemResourceKey of(ItemResourceType type, int level) {
-        return new ItemResourceKey(type, level);
+        return INTERNER.intern(new ItemResourceKey(type, level));
     }
 
     public static ItemResourceKey of(ItemResourceType type) {

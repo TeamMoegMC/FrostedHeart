@@ -30,7 +30,7 @@ public enum VirtualResourceType implements ITownResourceType{
 
     @Override
     public VirtualResourceKey generateKey(int level) {
-        return new VirtualResourceKey(this, level);
+        return VirtualResourceKey.of(this, level);
     }
 
     public Codec<VirtualResourceType> getCodec() {

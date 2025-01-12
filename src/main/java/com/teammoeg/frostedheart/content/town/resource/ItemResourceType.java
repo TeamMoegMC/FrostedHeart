@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * 具有对应物品的城镇资源类型，如木头、金属、食物等
  */
+@Getter
 public enum ItemResourceType implements ITownResourceType {
 
     OTHER(0),
@@ -55,7 +56,6 @@ public enum ItemResourceType implements ITownResourceType {
      * if maxLevel is n, the level range is [0,n]
      * default is 1.
      */
-    @Getter
     public final int maxLevel;
 
     public static ItemResourceType from(String t) {
@@ -85,7 +85,7 @@ public enum ItemResourceType implements ITownResourceType {
 
     @Override
     public ItemResourceKey generateKey(int level) {
-        return new ItemResourceKey(this, level);
+        return ItemResourceKey.of(this, level);
     }
 
     /**

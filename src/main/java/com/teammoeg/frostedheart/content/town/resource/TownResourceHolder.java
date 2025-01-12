@@ -199,8 +199,7 @@ public class TownResourceHolder {
      */
     void addUnsafe(VirtualResourceKey key, double amount){
         if(amount < 0){
-            FHMain.LOGGER.error("TownResourceHolder.addUnsafe(VirtualResourceKey, double): Invalid amount input, amount must be positive.");
-            return;
+            throw new IllegalArgumentException("Amount putted in addUnsafe() must be positive.");
         }
         addSigned(key, amount);
     }
@@ -213,8 +212,7 @@ public class TownResourceHolder {
      */
     void addUnsafe(ItemStack ItemStack, double amount){
         if(amount < 0) {
-            FHMain.LOGGER.error("TownResourceHolder.addUnsafe(ItemStack, double): Invalid amount input, amount must be positive.");
-            return;
+            throw new IllegalArgumentException("Amount putted in addUnsafe() must be positive.");
         }
         addSigned(ItemStack, amount);
     }
@@ -235,8 +233,7 @@ public class TownResourceHolder {
      */
     void costUnsafe(VirtualResourceKey key, double amount){
         if(amount < 0){
-            FHMain.LOGGER.error("TownResourceHolder.costUnsafe(VirtualResourceKey, double): Invalid amount input, amount must be positive.");
-            return;
+            throw new IllegalArgumentException("Amount putted in costUnsafe() must be positive.");
         }
         addSigned(key, -amount);
     }
@@ -249,8 +246,7 @@ public class TownResourceHolder {
      */
     void costUnsafe(ItemStack itemStack, double amount){
         if(amount < 0){
-            FHMain.LOGGER.error("TownResourceHolder.costUnsafe(ItemStack, double): Invalid amount input, amount must be positive.");
-            return;
+            throw new IllegalArgumentException("Amount putted in costUnsafe() must be positive.");
         }
         addSigned(itemStack, -amount);
     }

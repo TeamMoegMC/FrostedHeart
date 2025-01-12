@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.town.resource;
 
+import com.google.common.collect.Interner;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import lombok.Getter;
@@ -8,6 +9,7 @@ import lombok.Getter;
 public class VirtualResourceKey implements ITownResourceKey{
     public final VirtualResourceType type;
     private final int level;
+    public static final Interner<VirtualResourceKey> INTERNER = com.google.common.collect.Interners.newWeakInterner();
 
     public static final Codec<VirtualResourceKey> CODEC = RecordCodecBuilder.create(t -> t.group(
                     VirtualResourceType.CODEC.fieldOf("type").forGetter(o->o.type),
@@ -34,12 +36,12 @@ public class VirtualResourceKey implements ITownResourceKey{
 
     //快速生成Key
     public static VirtualResourceKey of(VirtualResourceType type, int level) {
-        return new VirtualResourceKey(type, level);
+        return INTERNER.intern(new VirtualResourceKey(type, level));
     }
 
 
     public static VirtualResourceKey of(VirtualResourceType type) {
-        return new VirtualResourceKey(type);
+        return INTERNER.intern(new VirtualResourceKey(type));
     }
 
     @Override
