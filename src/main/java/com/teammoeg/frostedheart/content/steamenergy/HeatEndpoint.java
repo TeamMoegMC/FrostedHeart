@@ -44,12 +44,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     final float capacity;
     /**
      * Detach priority.
-     * Consumer priority, if power is low, endpoint with lower priority would detach first
-     * -- GETTER --
-     *  Gets the detach priority.
-     *
-     * @return the priority to detatch
-
+     * If power is low, endpoint with lower priority would detach first
      */
     @Getter
     final int priority;
@@ -68,48 +63,42 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     /**
      * The heat intake from the network at this tick.
      */
-    float intake = -1;
+    float intake = 0;
     /**
      * The heat output to the network at this tick.
      */
-    float output = -1;
+    float output = 0;
     /**
      * The recent average intake from the network maintained by the network.
      */
-    float avgIntake = -1;
+    float avgIntake = 0;
     /**
      * The recent average output to the network maintained by the network.
      */
-    float avgOutput = -1;
+    float avgOutput = 0;
     /**
-     * The maximum intake when receiving heat.<br>
-     * -- GETTER --
-     *  The maximum heat to receive from the network.
-     *
-     * @return the max intake
-
+     * The maximum intake when receiving heat from the network.<br>
      */
-    @Getter
-    float maxIntake = -1;
+    @Getter @Setter
+    float maxIntake = 0;
     /**
-     * The maximum heat output of this provider.<br>
-     * -- GETTER --
-     *  The maximum heat to provide to the network.
-     *
-     * @return the max output
-
+     * The maximum heat output of this provider when providing heat to the network.<br>
      */
-    @Getter
-    float maxOutput = -1;
+    @Getter @Setter
+    float maxOutput = 0;
     /**
-     * Whether this endpoint receives more heat than the network currently provides.
-     * Used for display
+     * Whether the recent average intake is less than the max intake.
+     * Can receive more.
      */
     boolean canCostMore = false;
-    /** Is constant supply even unload. */
+    /**
+     * Is working even when Chunk is unloaded.
+     */
     @Setter
     private boolean persist;
-    /** Is chunk unloaded*/
+    /**
+     * Is chunk unloaded.
+     */
     @Getter
     private boolean unloaded;
     public HeatEndpoint(Block block, BlockPos pos, int priority, float capacity) {
@@ -126,23 +115,42 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
         this.capacity = capacity;
     }
 
-    public HeatEndpoint(int priority, float capacity) {
-        this.priority = priority;
-        this.capacity = capacity;
-    }
-
-    public HeatEndpoint(float capacity) {
-        this.priority = 0;
-        this.capacity = capacity;
-    }
-
     public HeatEndpoint() {
         this.priority = 0;
         this.capacity = 0;
     }
 
     /**
-     * Recive connection from network.
+     * Instantiates HeatProviderEndPoint.<br>
+     *
+     * @param priority  if power is low, endpoint with lower priority would detach first
+     * @param capacity  the max power to store<br>
+     * @param maxOutput the max heat put to network<br>
+     * @param maxIntake the max heat requested from network<br>
+     */
+    public HeatEndpoint(int priority, float capacity, float maxOutput, float maxIntake) {
+        this.priority = priority;
+        this.capacity = Math.max(Math.max(maxIntake, maxOutput), capacity);
+        this.maxOutput = maxOutput;
+        this.maxIntake = maxIntake;
+    }
+
+    public HeatEndpoint(float capacity, float maxOutput, float maxIntake) {
+        this.priority = 0;
+        this.capacity = Math.max(Math.max(maxIntake, maxOutput), capacity);
+        this.maxOutput = maxOutput;
+        this.maxIntake = maxIntake;
+    }
+
+    public HeatEndpoint(float maxOutput, float maxIntake) {
+        this.priority = 0;
+        this.capacity = 4 * Math.max(maxIntake, maxOutput);
+        this.maxOutput = maxOutput;
+        this.maxIntake = maxIntake;
+    }
+
+    /**
+     * Receive connection from network.
      *
      * @param level       current world
      * @param pos     current pos
@@ -162,8 +170,8 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     }
 
     /**
-     * The network call this method to provide information about the connection
-     * This should only called by network.
+     * The network calls this method to provide information about the connection
+     * This should only be called by network.
      *
      * @param network  the network
      * @param distance the distance
@@ -195,7 +203,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * @return true, if successful
      */
     protected boolean canReceiveHeatFromNetwork() {
-        return heat < capacity;
+        return maxIntake > 0 && heat < capacity;
     }
 
     /**
@@ -210,6 +218,17 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * @return the amount of heat actually filled
      */
     protected float receiveHeatFromNetwork(float filled, int level) {
+        float required = Math.min(maxIntake, capacity - heat);
+        tempLevel = level;
+        if (required > 0) {
+            if (filled >= required) {
+                filled -= required;
+                heat += required;
+                return required;
+            }
+            heat += filled;
+            return filled;
+        }
         return 0;
     }
 
@@ -224,7 +243,7 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * @return true, if successful
      */
     protected boolean canProvideHeatToNetwork() {
-        return heat > 0;
+        return maxOutput > 0 && heat > 0;
     }
 
     /**
@@ -235,7 +254,54 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * @return the amount of heat actually provided
      */
     protected float provideHeatToNetwork() {
-        return 0;
+        float provided = Math.min(heat, maxOutput);
+        heat -= provided;
+        return provided;
+    }
+
+    /**
+     * Adds heat to the endpoint, if capacity exceed, tbe remaining would be disposed.
+     * The heat actually added to the endpoint still depends on the generation.
+     */
+    public void addHeat(float added) {
+        heat = Math.min(capacity, heat + added);
+    }
+
+    /**
+     * Fill the endpoint with heat.
+     */
+    public void fill() {
+        heat = capacity;
+    }
+
+    public void clear() {
+        heat = 0;
+    }
+
+    /**
+     * Drain heat from this endpoint.
+     *
+     * @param val the heat value to drain
+     * @return the heat actually drain
+     */
+    public float drainHeat(float val) {
+        float drained = Math.min(heat, val);
+        heat -= drained;
+        return drained;
+    }
+
+    /**
+     * Try drain heat from this endpoint if there is enough heat.
+     *
+     * @param val the amount of heat to drain
+     * @return if the heat is drained successfully
+     */
+    public boolean tryDrainHeat(float val) {
+        if (heat >= val) {
+            heat -= val;
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -252,36 +318,45 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
      * This should be only called by the network, You should not call this method.
      * */
     protected void pushData() {
-        if (avgIntake < 0)
-            avgIntake = intake;
-        else
-            avgIntake = avgIntake * .95f + Math.max(0, intake) * .05f;
-        if (avgOutput < 0)
-            avgOutput = output;
-        else
-            avgOutput = avgOutput * .95f + Math.max(0, output) * .05f;
+        avgIntake = avgIntake * .95f + Math.max(0, intake) * .05f;
+        avgOutput = avgOutput * .95f + Math.max(0, output) * .05f;
         canCostMore = Math.round(avgIntake * 10) / 10f < maxIntake;
     }
 
     public void writeNetwork(FriendlyByteBuf pb) {
         pb.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS, blk);
         pb.writeBlockPos(pos);
+        pb.writeInt(priority);
         pb.writeFloat(capacity);
         pb.writeFloat(avgIntake);
         pb.writeFloat(avgOutput);
         pb.writeBoolean(canCostMore);
+        pb.writeFloat(maxIntake);
+        pb.writeFloat(maxOutput);
     }
 
     public static HeatEndpoint readNetwork(FriendlyByteBuf pb) {
         HeatEndpoint dat = new HeatEndpoint(
                 pb.readRegistryIdUnsafe(ForgeRegistries.BLOCKS),
                 pb.readBlockPos(),
+                pb.readInt(),
                 pb.readFloat()
         );
         dat.avgIntake = pb.readFloat();
         dat.avgOutput = pb.readFloat();
         dat.canCostMore = pb.readBoolean();
+        dat.maxIntake = pb.readFloat();
+        dat.maxOutput = pb.readFloat();
         return dat;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        // check blk, pos, priority, capacity, avgIntake, avgOutput, canCostMore, maxIntake, maxOutput
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        HeatEndpoint that = (HeatEndpoint) obj;
+        return blk.equals(that.blk) && pos.equals(that.pos) && priority == that.priority && Float.compare(that.capacity, capacity) == 0 && Float.compare(that.avgIntake, avgIntake) == 0 && Float.compare(that.avgOutput, avgOutput) == 0 && canCostMore == that.canCostMore && Float.compare(that.maxIntake, maxIntake) == 0 && Float.compare(that.maxOutput, maxOutput) == 0;
     }
 
     public void load(CompoundTag nbt, boolean isPacket) {
@@ -294,17 +369,6 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
         nbt.putFloat("net_power", heat);
         //nbt.putLong("pos", pos.asLong());
        //nbt.putString("block", RegistryUtils.getRegistryName(blk).toString());
-    }
-    public void loadNetwork(CompoundTag nbt, boolean isPacket) {
-        heat = nbt.getFloat("net_power");
-        pos = BlockPos.of(nbt.getLong("pos"));
-        blk = RegistryUtils.getBlock(new ResourceLocation(nbt.getString("block")));
-    }
-
-    public void saveNetwork(CompoundTag nbt, boolean isPacket) {
-        nbt.putFloat("net_power", heat);
-        nbt.putLong("pos", pos.asLong());
-        nbt.putString("block", RegistryUtils.getRegistryName(blk).toString());
     }
     @Override
     public HeatNetwork getNetwork() {

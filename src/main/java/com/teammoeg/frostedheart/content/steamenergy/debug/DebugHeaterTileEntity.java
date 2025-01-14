@@ -20,28 +20,33 @@
 package com.teammoeg.frostedheart.content.steamenergy.debug;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
+import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.ConnectorNetworkRevalidator;
-import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
-import com.teammoeg.frostedheart.content.steamenergy.HeatProviderEndPoint;
-import com.teammoeg.frostedheart.content.steamenergy.NetworkConnector;
+import com.teammoeg.frostedheart.content.steamenergy.*;
 
+import com.teammoeg.frostedheart.util.lang.Lang;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import org.jetbrains.annotations.Nullable;
 
-public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity,NetworkConnector {
+import java.util.List;
+
+import static net.minecraft.ChatFormatting.GRAY;
+
+public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity, HeatNetworkProvider, NetworkConnector, IHaveGoggleInformation {
 
     HeatNetwork manager;
-    HeatProviderEndPoint endpoint;
-    LazyOptional<HeatProviderEndPoint> heatcap;
-    
+    HeatEndpoint endpoint;
+    LazyOptional<HeatEndpoint> heatcap;
     ConnectorNetworkRevalidator<DebugHeaterTileEntity> networkHandler=new ConnectorNetworkRevalidator<>(this);
 
     public DebugHeaterTileEntity(BlockPos pos, BlockState state) {
@@ -51,7 +56,7 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickab
             	manager.connectTo(level, worldPosition.relative(d),getBlockPos(), d.getOpposite());
             }
         });
-        endpoint = new HeatProviderEndPoint(-1, Integer.MAX_VALUE, Integer.MAX_VALUE);
+        endpoint = new HeatEndpoint(-1, Integer.MAX_VALUE, Integer.MAX_VALUE, 0);
         heatcap = LazyOptional.of(() -> endpoint);
     }
 
@@ -80,23 +85,6 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickab
     }
 
 	@Override
-	public HeatNetwork getNetwork() {
-		return networkHandler.hasNetwork()?networkHandler.getNetwork():manager;
-	}
-
-	@Override
-	public boolean canConnectTo(Direction to) {
-		return true;
-	}
-
-	@Override
-	public void setNetwork(HeatNetwork network) {
-		networkHandler.setNetwork(network);
-		network.addEndpoint(heatcap.cast(), 0, getLevel(), getBlockPos());
-	}
-	
-
-	@Override
 	public void invalidateCaps() {
 		heatcap.invalidate();
 		super.invalidateCaps();
@@ -108,4 +96,56 @@ public class DebugHeaterTileEntity extends IEBaseBlockEntity implements FHTickab
 		endpoint.unload();
 	}
 
+    @Override
+    public HeatNetwork getNetwork() {
+        return networkHandler.hasNetwork()?networkHandler.getNetwork():manager;
+    }
+
+    @Override
+    public boolean canConnectTo(Direction to) {
+        return true;
+    }
+
+    @Override
+    public void setNetwork(HeatNetwork network) {
+        networkHandler.setNetwork(network);
+    }
+
+    public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
+        float output = 0;
+        float intake = 0;
+
+        Lang.tooltip("heat_stats").forGoggles(tooltip);
+
+        if (networkHandler.hasNetwork()) {
+            output = networkHandler.getNetwork().getTotalEndpointOutput();
+            intake = networkHandler.getNetwork().getTotalEndpointIntake();
+            Lang.translate("tooltip", "pressure")
+                    .style(GRAY)
+                    .forGoggles(tooltip);
+        } else {
+            Lang.translate("tooltip", "pressure.no_network")
+                    .style(ChatFormatting.RED)
+                    .forGoggles(tooltip);
+        }
+
+        Lang.number(intake)
+                .translate("generic", "unit.pressure")
+                .style(ChatFormatting.AQUA)
+                .space()
+                .add(Lang.translate("tooltip", "pressure.intake")
+                        .style(ChatFormatting.DARK_GRAY))
+                .forGoggles(tooltip, 1);
+
+        Lang.number(output)
+                .translate("generic", "unit.pressure")
+                .style(ChatFormatting.AQUA)
+                .space()
+                .add(Lang.translate("tooltip", "pressure.output")
+                        .style(ChatFormatting.DARK_GRAY))
+                .forGoggles(tooltip, 1);
+
+        return true;
+
+    }
 }

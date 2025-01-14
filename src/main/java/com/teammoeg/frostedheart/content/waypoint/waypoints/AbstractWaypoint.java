@@ -88,7 +88,7 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
         this.valid = true;
 
         if (ClientUtils.getWorld() != null) {
-            this.dimension = ClientUtils.getWorld().dimension().location();
+            this.dimension = ClientUtils.getDimLocation();
         } else {
             this.dimension = Level.OVERWORLD.location();
         }
@@ -214,11 +214,11 @@ public abstract class AbstractWaypoint implements Writeable, INBTSerializable<Co
     }
 
     protected MutableComponent distanceTranslation() {
-        return Lang.translateWaypoint("distance", (int)getDistance());
+        return Lang.waypoint("distance", (int)getDistance()).component();
     }
 
     protected MutableComponent posTranslation() {
-        return Lang.translateWaypoint("position", String.format("%.2f", getTarget().x), String.format("%.2f", getTarget().y), String.format("%.2f", getTarget().z));
+        return Lang.waypoint("position", String.format("%.2f", getTarget().x), String.format("%.2f", getTarget().y), String.format("%.2f", getTarget().z)).component();
     }
 
     @Override

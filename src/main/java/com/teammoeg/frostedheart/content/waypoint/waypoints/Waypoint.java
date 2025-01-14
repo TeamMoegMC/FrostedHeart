@@ -4,7 +4,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
-import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
+import com.teammoeg.frostedheart.base.client.gui.widget.IconButton;
+import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.util.client.AnimationUtil;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -64,7 +65,7 @@ public class Waypoint extends AbstractWaypoint {
         pose.mulPose(new Quaternionf().rotateZ(Mth.PI/4));
         if (focus) {
             pose.scale(1.5F, 1.5F, 1.5F);
-            IconButton.renderIcon(pose, focusIcon, -5, -5, color);
+            FHGuiHelper.renderIcon(pose, focusIcon, -5, -5, color);
             //focus的动画效果
             float progress = AnimationUtil.fadeIn(750, "waypoints" + id, false);
             if (progress == 1 && AnimationUtil.progress(750, "waypoint2" + id, false) == 1) {
@@ -75,7 +76,7 @@ public class Waypoint extends AbstractWaypoint {
             pose.scale(progress+0.25F, progress+0.25F, progress+0.25F);
             graphics.fill(-5, -5, 5, 5, fadeColor);
         } else {
-            IconButton.renderIcon(pose, icon, -5, -5, color);
+            FHGuiHelper.renderIcon(pose, icon, -5, -5, color);
         }
         pose.popPose();
     }

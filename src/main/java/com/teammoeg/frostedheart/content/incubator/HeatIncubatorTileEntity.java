@@ -23,8 +23,8 @@ import javax.annotation.Nonnull;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.HeatConsumerEndpoint;
 
+import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.nbt.CompoundTag;
@@ -34,7 +34,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class HeatIncubatorTileEntity extends IncubatorTileEntity{
-    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10, 80, 5);
+    HeatEndpoint network = new HeatEndpoint(10, 80, 0, 5);
 
     public HeatIncubatorTileEntity(BlockPos bp,BlockState bs) {
         super(FHBlockEntityTypes.INCUBATOR2.get(),bp,bs);
@@ -42,7 +42,7 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity{
     }
     
 
-    LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
+    LazyOptional<HeatEndpoint> heatcap=LazyOptional.of(()->network);
     @Nonnull
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
 		if(FHCapabilities.HEAT_EP.isCapability(capability)&&facing == this.getBlockState().getValue(IncubatorBlock.HORIZONTAL_FACING)) {

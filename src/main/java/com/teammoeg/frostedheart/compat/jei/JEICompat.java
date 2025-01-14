@@ -366,6 +366,7 @@ public class JEICompat implements IModPlugin {
         List<IncubateRecipe> rcps = new ArrayList<>(FHUtils.filterRecipes(recipeManager,IncubateRecipe.TYPE));
         rcps.add(new IncubateRecipe());
         registration.addRecipes(IncubatorCategory.UID,rcps);
+        //todo: add JEI for ItemResourceAmountRecipe
     }
 
 

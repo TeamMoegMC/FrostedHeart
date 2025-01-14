@@ -147,7 +147,7 @@ public class HeatStatScreen extends BaseScreen {
             int offset = 0;
             int i = 0;
             for (HeatEndpoint r : screen.cx.data) {
-                if ((isIntake && r.avgIntake == -1) || (!isIntake && r.avgOutput == -1)) continue;
+                if ((isIntake && r.avgIntake == 0) || (!isIntake && r.avgOutput == 0)) continue;
                 EndPointSlot button = new EndPointSlot(this, r, isIntake);
                 add(button);
                 button.setPos(i * 33, offset);

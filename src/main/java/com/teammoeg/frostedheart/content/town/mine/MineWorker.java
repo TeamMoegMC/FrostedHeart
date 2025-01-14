@@ -2,13 +2,13 @@ package com.teammoeg.frostedheart.content.town.mine;
 
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.util.MathUtils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class MineWorker implements TownWorker {
     @Override
@@ -18,12 +18,12 @@ public class MineWorker implements TownWorker {
             CompoundTag dataTE = workData.getCompound("tileEntity");
             double rating = dataTE.getDouble("rating");
             ListTag list = dataTE.getList("resources", Tag.TAG_COMPOUND);
-            EnumMap<TownResourceType, Double> resources = new EnumMap<>(TownResourceType.class);
+            EnumMap<ItemResourceType, Double> resources = new EnumMap<>(ItemResourceType.class);
             list.forEach(nbt -> {
                 CompoundTag nbt_1 = (CompoundTag) nbt;
                 String key = nbt_1.getString("type");
                 double amount = nbt_1.getDouble("amount");
-                resources.put(TownResourceType.from(key), amount);
+                resources.put(ItemResourceType.from(key), amount);
             });
             List<Resident> residents = workData.getCompound("town").getList("residents", Tag.TAG_STRING)
                     .stream()
@@ -36,11 +36,13 @@ public class MineWorker implements TownWorker {
                 double add = rating * resident.getWorkScore(TownWorkerType.MINE);
                 double randomDouble = MathUtils.RANDOM.nextDouble();
                 double counter = 0;
-                for(Map.Entry<TownResourceType, Double> entry : resources.entrySet()){
+                for(Map.Entry<ItemResourceType, Double> entry : resources.entrySet()){
                     counter += entry.getValue();
                     if(counter >= randomDouble){
-                        double actualAdd = town.add(entry.getKey(), add, false);
-                        if(add != actualAdd) return false;
+                        //double actualAdd = town.add(entry.getKey(), add, false);
+                        //if(add != actualAdd) return false;
+                        return false;
+                        //todo: 重制ChunkResource之后再来搞这个
                     }
                 }
             }

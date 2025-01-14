@@ -1,20 +1,4 @@
 {
-  "tips.frostedheart.empty.title": "Oops, there's nothing here",
-  "tips.frostedheart.error.desc": "Please check if the Modpack is installed properly or report this issue",
-  "tips.frostedheart.error.other": "[Error] An unknown error occurred",
-  "tips.frostedheart.error.save": "[Error] Unable to save file",
-  "tips.frostedheart.error.load": "[Error] Unable to load file",
-  "tips.frostedheart.error.load.no_id": "Tip id is empty/blank",
-  "tips.frostedheart.error.load.duplicate_id": "Tip id is empty/blank",
-  "tips.frostedheart.error.load.empty": "No content to display",
-  "tips.frostedheart.error.load.invalid": "Invalid JSON file format",
-  "tips.frostedheart.error.load.invalid_image": "No content to display",
-  "tips.frostedheart.error.load.not_exists": "File does not exists",
-
-  "gui.frostedheart.tip_editor.title": "Tip Editor",
-  "gui.frostedheart.close": "Close",
-  "gui.frostedheart.pin": "Pin",
-
   "tips.frostedheart.default.title": "Welcome to The Winter Rescue!",
   "tips.frostedheart.default.desc1": "Tips will appear here as you play, be sure to read them carefully!",
   "tips.frostedheart.default.desc2": "To close, click the button in the top right corner. You can also use §6[TAB]§r and the mouse to select.",

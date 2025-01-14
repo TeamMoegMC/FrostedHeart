@@ -1,0 +1,6 @@
+{
+  "type": "frostedheart:item_resource_amount",
+  "item": "minecraft:bedrock",
+  "resourceTagKey": "frostedheart:town_resource_stone_0",
+  "amount": 1024
+}

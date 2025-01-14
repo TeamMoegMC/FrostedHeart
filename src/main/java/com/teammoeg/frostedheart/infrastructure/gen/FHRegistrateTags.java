@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.tterrag.registrate.providers.ProviderType;
 import com.tterrag.registrate.providers.RegistrateTagsProvider;
 import net.minecraft.core.registries.Registries;
@@ -199,10 +200,26 @@ public class FHRegistrateTags {
         prov.tag(FHTags.Items.CHICKEN_FEED.tag)
                 .addTag(Tags.Items.SEEDS);
 
+        //used for town test
+        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_KEY_TO_TAG.get(ItemResourceType.STONE.generateKey(0)))
+                .add(Items.COBBLESTONE)
+                .add(Items.STONE)
+                .add(Items.BEDROCK);
+        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_KEY_TO_TAG.get(ItemResourceType.METAL.generateKey(0)))
+                .add(Items.COPPER_INGOT);
+        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_KEY_TO_TAG.get(ItemResourceType.METAL.generateKey(1)))
+                .add(Items.IRON_INGOT);
+
+
         for (FHTags.Items tag : FHTags.Items.values()) {
             if (tag.alwaysDatagen) {
                 prov.getOrCreateRawBuilder(tag.tag);
             }
+        }
+
+        //register for town tags
+        if(FHTags.NameSpace.MOD.alwaysDatagenDefault){
+            FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY.keySet().forEach(prov::getOrCreateRawBuilder);
         }
     }
 

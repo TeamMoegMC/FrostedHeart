@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.bootstrap.reference;
 import com.teammoeg.frostedheart.FHMain;
 
 import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.content.town.resource.ItemResourceKey;
+import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
@@ -40,7 +42,8 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
 
-import java.util.Collections;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class FHTags {
 
@@ -186,6 +189,26 @@ public class FHTags {
 
 		public final TagKey<Item> tag;
 		public final boolean alwaysDatagen;
+
+		//something about town resource
+		public static final Map<TagKey<Item>, ItemResourceKey> MAP_TAG_TO_TOWN_RESOURCE_KEY = new HashMap<>();
+		public static final Map<ItemResourceKey, TagKey<Item>> MAP_TOWN_RESOURCE_KEY_TO_TAG = new HashMap<>();
+		static{
+			NameSpace namespace = NameSpace.MOD;
+			//TownResourceType有一个maxLevel的属性，找到最大的maxLevel，以生成适当数量的tag来表示level
+            for(ItemResourceType type:ItemResourceType.values()){
+				for(int i = 0; i <= type.maxLevel; i++){
+					ResourceLocation resourceLocation = new ResourceLocation(namespace.id, "town_resource_" + type.getKey() + "_" + i);
+					ItemResourceKey resourceKey = ItemResourceKey.of(type, i);
+					if (namespace.optionalDefault) {
+						MAP_TAG_TO_TOWN_RESOURCE_KEY.put(optionalTag(ForgeRegistries.ITEMS, resourceLocation), resourceKey);
+					} else {
+						MAP_TAG_TO_TOWN_RESOURCE_KEY.put(ItemTags.create(resourceLocation), resourceKey);
+					}
+				}
+			}
+			MAP_TAG_TO_TOWN_RESOURCE_KEY.forEach((tag, resourceKey) -> MAP_TOWN_RESOURCE_KEY_TO_TAG.put(resourceKey, tag));
+		}
 
 		Items() {
 			this(NameSpace.MOD);
