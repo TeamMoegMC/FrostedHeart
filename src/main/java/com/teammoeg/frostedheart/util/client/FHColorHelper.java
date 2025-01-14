@@ -30,7 +30,7 @@ public class FHColorHelper {
     }
 
     public static int makeDark(int color, float darkness) {
-        darkness = Mth.clamp(darkness, 0, 1);
+        darkness = 1-Mth.clamp(darkness, 0, 1);
 
         int a = FastColor.ARGB32.alpha(color);
         int r = (int)(FastColor.ARGB32.red  (color) * darkness);

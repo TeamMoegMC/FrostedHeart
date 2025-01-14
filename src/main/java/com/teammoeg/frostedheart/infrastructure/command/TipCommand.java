@@ -25,7 +25,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipPacket;
+import com.teammoeg.frostedheart.content.tips.ServerTipSender;
 import com.teammoeg.frostedheart.content.tips.network.DisplayTipPacket;
 import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.client.resources.language.I18n;
@@ -75,7 +75,7 @@ public class TipCommand {
 
                         int i = 0;
                         for(ServerPlayer sp : EntityArgument.getPlayers(c, "targets")) {
-                            FHNetwork.send(PacketDistributor.PLAYER.with(() -> sp), new DisplayCustomTipPacket(toTip(title, content, displayTime)));
+                            ServerTipSender.sendCustom(toTip(title, content, displayTime), sp);
                             i++;
                         }
 

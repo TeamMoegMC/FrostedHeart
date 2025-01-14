@@ -5,13 +5,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.teammoeg.frostedheart.base.client.gui.widget.ActionStateIconButton;
 import com.teammoeg.frostedheart.base.client.gui.widget.ColorEditbox;
 import com.teammoeg.frostedheart.base.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.base.client.gui.widget.IconCheckbox;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipRenderer;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.FHColorHelper;
-import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -28,6 +29,7 @@ import java.util.List;
 
 public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.EditEntry> {
     private final Font font;
+    private String cachedId;
 
     public TipEditsList(Minecraft pMinecraft, int pWidth, int pHeight, int pY0, int pY1, int pItemHeight) {
         super(pMinecraft, pWidth, pHeight, pY0, pY1, pItemHeight);
@@ -50,7 +52,9 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
     public void updatePreview() {
         TipRenderer.TIP_QUEUE.clear();
         TipRenderer.forceClose();
-        Tip.builder("").fromJson(getJson()).alwaysVisible(true).forceDisplay();
+        Tip tip = Tip.builder("").fromJson(getJson()).alwaysVisible(true).build();
+        tip.forceDisplay();
+        this.cachedId = tip.getId();
     }
 
     public JsonObject getJson() {
@@ -109,21 +113,46 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
     public class MultiComponentEntry extends StringEntry {
         protected final IconButton addButton;
         protected final IconButton deleteButton;
-        protected final List<Component> contents = new ArrayList<>();
+        protected final IconButton translationButton;
+        protected final List<String> contents = new ArrayList<>();
 
         public MultiComponentEntry(String property, Component message) {
             super(property, message);
-            this.addButton = new IconButton(0, 0, IconButton.Icon.CHECK, FHColorHelper.CYAN, Component.translatable("gui.add"), b -> {
+            this.addButton = new IconButton(0, 0, IconButton.Icon.CHECK, FHColorHelper.CYAN, Component.translatable("gui.frostedheart.tip_editor.add_line"), b -> {
                 if (input.getValue().isBlank()) return;
 
-                contents.add(Lang.str(this.input.getValue()));
+                contents.add(this.input.getValue());
                 input.setValue("");
                 updatePreview();
             });
 
-            this.deleteButton = new IconButton(0, 0, IconButton.Icon.TRASH_CAN, FHColorHelper.CYAN, Component.translatable("key.keyboard.delete"), b -> {
-                if (!contents.isEmpty()) contents.remove(contents.size()-1);
-                updatePreview();
+            this.deleteButton = new IconButton(0, 0, IconButton.Icon.TRASH_CAN, FHColorHelper.CYAN, Component.translatable("gui.frostedheart.tip_editor.delete_last_line"), b -> {
+                if (!contents.isEmpty()) {
+                    contents.remove(contents.size() - 1);
+                    updatePreview();
+                }
+            });
+
+            this.translationButton = new ActionStateIconButton(0, 0, IconButton.Icon.LIST, FHColorHelper.CYAN, Component.translatable("gui.frostedheart.tip_editor.convert_and_copy"), Component.translatable("gui.frostedheart.copied"), b -> {
+                if (!contents.isEmpty()) {
+                    String prefix = "tips.frostedheart." + cachedId;
+                    StringBuilder copy = new StringBuilder();
+                    List<String> converted = new ArrayList<>();
+
+                    converted.add(prefix + ".title");
+                    copy.append(prefix).append(".title: \"").append(contents.get(0)).append("\",\n");
+                    for (int i = 1; i < contents.size(); i++) {
+                        //tips.frostedheart.example.desc1
+                        String s = prefix + ".desc" + i;
+                        converted.add(s);
+                        copy.append(s).append(": \"").append(contents.get(i)).append("\",\n");
+                    }
+
+                    contents.clear();
+                    contents.addAll(converted);
+                    ClientUtils.mc().keyboardHandler.setClipboard(copy.substring(0, copy.length()-2)); // 删除最后一行的逗号和换行
+                    updatePreview();
+                }
             });
         }
 
@@ -134,23 +163,25 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
             addButton.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
             deleteButton.setPosition(pLeft + 132, pTop + (pHeight/2) - 10);
             deleteButton.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
+            translationButton.setPosition(pLeft + 118, pTop + (pHeight/2) - 10);
+            translationButton.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
         }
 
         @Override
         public JsonElement getValue() {
             JsonArray contents = new JsonArray();
-            this.contents.stream().map(Lang::getKeyOrElseStr).forEach(contents::add);
+            this.contents.forEach(contents::add);
             return contents;
         }
 
         @Override
         public @NotNull List<? extends NarratableEntry> narratables() {
-            return ImmutableList.of(addButton, deleteButton, input);
+            return ImmutableList.of(addButton, deleteButton, translationButton, input);
         }
 
         @Override
         public @NotNull List<? extends GuiEventListener> children() {
-            return ImmutableList.of(addButton, deleteButton, input);
+            return ImmutableList.of(addButton, deleteButton, translationButton, input);
         }
     }
 

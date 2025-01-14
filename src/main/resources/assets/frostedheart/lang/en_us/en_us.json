@@ -457,6 +457,10 @@
   "tips.frostedheart.error.load.invalid_image": "Invalid texture ResourceLocation '%s'",
   "tips.frostedheart.error.load.invalid_digit": "Invalid hexadecimal number '%s'",
   "gui.frostedheart.close": "Close",
+  "gui.frostedheart.copied": "Copied!",
+  "gui.frostedheart.save_as_file": "Save as file",
+  "gui.frostedheart.saved": "Saved!",
+  "gui.frostedheart.sent": "Sent!",
   "gui.frostedheart.tip_editor.title": "Tip Editor",
   "gui.frostedheart.tip_editor.id": "ID",
   "gui.frostedheart.tip_editor.category": "Category",
@@ -468,5 +472,10 @@
   "gui.frostedheart.tip_editor.display_time": "Display Time",
   "gui.frostedheart.tip_editor.once_only": "Once Only",
   "gui.frostedheart.tip_editor.hide": "Hide",
-  "gui.frostedheart.tip_editor.pin": "Pin"
+  "gui.frostedheart.tip_editor.pin": "Pin",
+  "gui.frostedheart.tip_editor.add_line": "Add a new line",
+  "gui.frostedheart.tip_editor.delete_last_line": "Delete the last line",
+  "gui.frostedheart.tip_editor.convert_and_copy": "Convert content to localization key values and copy to clipboard",
+  "gui.frostedheart.tip_editor.send": "Send this tip to all players",
+  "gui.frostedheart.tip_editor.no_permission": "You don't have permission to use this button"
 }

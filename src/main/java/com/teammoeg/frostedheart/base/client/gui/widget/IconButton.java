@@ -40,8 +40,11 @@ public class IconButton extends Button {
 
     @Override
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        int color = isActive() ? this.color : 0xFF666666;
+        int backgroundColor = FHColorHelper.makeDark(color, 0.3F);
+        float alpha = 0.5F;
         if (isHoveredOrFocused()) {
-            graphics.fill(getX(), getY(), getX()+getWidth(), getY()+getHeight(), FHColorHelper.setAlpha(color, 50));
+            graphics.fill(getX(), getY(), getX()+getWidth(), getY()+getHeight(), FHColorHelper.setAlpha(backgroundColor, alpha));
             if (!getMessage().getString().isBlank() && isHovered()) {
                 int textWidth = ClientUtils.font().width(getMessage());
                 int renderX = getX()-textWidth+8;
@@ -50,21 +53,21 @@ public class IconButton extends Button {
                             getY()-12,
                             getX()+2 + textWidth,
                             getY(),
-                            FHColorHelper.setAlpha(color, 50));
+                            FHColorHelper.setAlpha(backgroundColor, alpha));
                     graphics.drawString(ClientUtils.font(), getMessage(), getX()+2, getY()-10, color);
                 } else {
                     graphics.fill(getX()-textWidth+getWidth()-1,
                             getY()-12,
                             getX()+getWidth(),
                             getY(),
-                            FHColorHelper.setAlpha(color, 50));
+                            FHColorHelper.setAlpha(backgroundColor, alpha));
                     graphics.drawString(ClientUtils.font(), getMessage(), getX()-textWidth+getWidth(), getY()-10, color);
                 }
             }
         }
 
         FHGuiHelper.bindTexture(ICON_LOCATION);
-        FHGuiHelper.blitColored(graphics.pose(), getX(), getY(), getWidth(), getHeight(), icon.x*scale, icon.y*scale, getWidth(), getHeight(), TEXTURE_WIDTH*scale, TEXTURE_HEIGHT*scale, color, alpha);
+        FHGuiHelper.blitColored(graphics.pose(), getX(), getY(), getWidth(), getHeight(), icon.x*scale, icon.y*scale, getWidth(), getHeight(), TEXTURE_WIDTH*scale, TEXTURE_HEIGHT*scale, color, this.alpha);
     }
 
     public void setScale(int scale) {

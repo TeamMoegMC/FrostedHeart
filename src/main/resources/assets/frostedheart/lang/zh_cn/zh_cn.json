@@ -934,6 +934,10 @@
   "tips.frostedheart.error.load.invalid_image": "无效的纹理资源路径 '%s'",
   "tips.frostedheart.error.load.invalid_digit": "无效的16进制数字 '%s'",
   "gui.frostedheart.close": "关闭",
+  "gui.frostedheart.copied": "已复制!",
+  "gui.frostedheart.save_as_file": "保存为文件",
+  "gui.frostedheart.saved": "已保存!",
+  "gui.frostedheart.sent": "已发送!",
   "gui.frostedheart.tip_editor.title": "提示编辑器",
   "gui.frostedheart.tip_editor.id": "ID",
   "gui.frostedheart.tip_editor.category": "分类",
@@ -945,5 +949,11 @@
   "gui.frostedheart.tip_editor.display_time": "显示时长",
   "gui.frostedheart.tip_editor.once_only": "只显示一次",
   "gui.frostedheart.tip_editor.hide": "隐藏该提示",
-  "gui.frostedheart.tip_editor.pin": "显示时置顶"
+  "gui.frostedheart.tip_editor.pin": "显示时置顶",
+  "gui.frostedheart.tip_editor.add_line": "添加新行",
+  "gui.frostedheart.tip_editor.delete_last_line": "删除最后一行",
+  "gui.frostedheart.tip_editor.convert_and_copy": "将内容转换为本地化键值并复制到剪贴板",
+  "gui.frostedheart.tip_editor.send": "将此提示发送给所有玩家",
+  "gui.frostedheart.tip_editor.no_permission": "你没有权限使用这个按钮"
+
 }

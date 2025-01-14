@@ -114,6 +114,14 @@ public class Tip {
         this.backgroundColor = builder.BGColor;
     }
 
+    public void display() {
+        TipManager.INSTANCE.display().general(this);
+    }
+
+    public void forceDisplay() {
+        TipManager.INSTANCE.display().force(this);
+    }
+
     public boolean hasNext() {
         return TipManager.INSTANCE.hasTip(nextTip);
     }
@@ -126,7 +134,7 @@ public class Tip {
             return true;
         } catch (IOException e) {
             LOGGER.error("Unable to save file: '{}'", file, e);
-            Tip.builder("exception").error(ErrorType.SAVE, e, Lang.str(file.getName())).forceDisplay();
+            Tip.builder("exception").error(ErrorType.SAVE, e, Lang.str(file.getName())).build().forceDisplay();
             return false;
         }
     }
@@ -223,14 +231,6 @@ public class Tip {
         public Builder(String id) {
             this.id = id;
             setTemporary();
-        }
-
-        public void display() {
-            TipManager.INSTANCE.display().general(build());
-        }
-
-        public void forceDisplay() {
-            TipManager.INSTANCE.display().force(build());
         }
 
         public Tip build() {

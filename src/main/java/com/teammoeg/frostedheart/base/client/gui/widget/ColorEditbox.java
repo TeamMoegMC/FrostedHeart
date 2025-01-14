@@ -42,7 +42,7 @@ public class ColorEditbox extends EditBox {
         PoseStack pose = graphics.pose();
         pose.pushPose();
         pose.translate(1, 1, 0);
-        graphics.fill(getX()+getWidth()+2, getY(), getX()+getWidth()+getHeight()+2, getY()+getHeight(), FHColorHelper.makeDark(getColorValue(), 0.25F));
+        graphics.fill(getX()+getWidth()+2, getY(), getX()+getWidth()+getHeight()+2, getY()+getHeight(), FHColorHelper.makeDark(getColorValue(), 0.75F));
         pose.translate(-1, -1, 0);
         graphics.fill(getX()+getWidth()+2, getY(), getX()+getWidth()+getHeight()+2, getY()+getHeight(), getColorValue());
         pose.popPose();
