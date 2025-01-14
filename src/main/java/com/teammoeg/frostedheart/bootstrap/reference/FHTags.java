@@ -191,11 +191,18 @@ public class FHTags {
 		public final boolean alwaysDatagen;
 
 		//something about town resource
+		/**
+		 * 下方的两个Map是用于快速转换ItemResourceKey和TagKey
+		 * 所有对应城镇资源的TagKey都在这里自动生成，每一个ItemResourceKey对应一个TagKey
+		 * 这些自动注册的TagKey都具有"frostedheaft:town_resource_XXX_YYY"的形式
+		 * 其中XXX为ItemResourceKey中，ItemResourceType名字的小写，YYY为ItemResourceKey的level
+		 * com.teammoeg.frostedheart.infrastructure.gen.FHRegistrateTag中注册了这些TagKIey。
+		 * 同时，若需要在frostedheart环境中为物品添加城镇Tag，也应在FHRegistrateTag中进行。
+		 */
 		public static final Map<TagKey<Item>, ItemResourceKey> MAP_TAG_TO_TOWN_RESOURCE_KEY = new HashMap<>();
 		public static final Map<ItemResourceKey, TagKey<Item>> MAP_TOWN_RESOURCE_KEY_TO_TAG = new HashMap<>();
 		static{
 			NameSpace namespace = NameSpace.MOD;
-			//TownResourceType有一个maxLevel的属性，找到最大的maxLevel，以生成适当数量的tag来表示level
             for(ItemResourceType type:ItemResourceType.values()){
 				for(int i = 0; i <= type.maxLevel; i++){
 					ResourceLocation resourceLocation = new ResourceLocation(namespace.id, "town_resource_" + type.getKey() + "_" + i);

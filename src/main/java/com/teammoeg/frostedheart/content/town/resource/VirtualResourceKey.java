@@ -5,10 +5,19 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import lombok.Getter;
 
+/**
+ * Town resource key of Items.
+ * Holds the resource type and the level.
+ * The amount of a resource with specific type and level can be read using this key.
+*/
 @Getter
 public class VirtualResourceKey implements ITownResourceKey{
     public final VirtualResourceType type;
     private final int level;
+
+    /**
+     * 用于缓存，避免创建重复的key，占用额外内存。
+     */
     public static final Interner<VirtualResourceKey> INTERNER = com.google.common.collect.Interners.newWeakInterner();
 
     public static final Codec<VirtualResourceKey> CODEC = RecordCodecBuilder.create(t -> t.group(
@@ -34,12 +43,18 @@ public class VirtualResourceKey implements ITownResourceKey{
 
 
 
-    //快速生成Key
+    /**
+     * 创建一个VirtualResourceKey，并使用缓存，避免重复创建占用内存
+     */
     public static VirtualResourceKey of(VirtualResourceType type, int level) {
         return INTERNER.intern(new VirtualResourceKey(type, level));
     }
 
 
+    /**
+     * 创建一个VirtualResourceKey，并使用缓存，避免重复创建占用内存
+     * 默认等级为0
+     */
     public static VirtualResourceKey of(VirtualResourceType type) {
         return INTERNER.intern(new VirtualResourceKey(type));
     }

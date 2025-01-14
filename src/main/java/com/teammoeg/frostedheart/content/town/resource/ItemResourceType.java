@@ -47,12 +47,18 @@ public enum ItemResourceType implements ITownResourceType {
      * the largest level this type of resource can be.
      * 0: this type doesn't have level
      * if maxLevel is n, the level range is [0,n]
-     * default is 1.
+     * default is 0.
      */
     public final int maxLevel;
 
-    public static ItemResourceType from(String t) {
-        return ItemResourceType.valueOf(t.toUpperCase());
+    /**
+     * 根据字符串获取ItemResourceType。大小写均可。
+     * 如果字符串不对应任何一个枚举值的名字，可能会引发IllegalArgumentException。
+     * @param stringOfType 对应此枚举类中某个字段的字符串
+     * @return 对应的ItemResourceType
+     */
+    public static ItemResourceType from(String stringOfType) {
+        return ItemResourceType.valueOf(stringOfType.toUpperCase());
     }
 
     /**
@@ -66,28 +72,33 @@ public enum ItemResourceType implements ITownResourceType {
         this.maxLevel=maxLevel;
     }
 
+    /**
+     * 生成这个ItemResourceType的小写字符串。
+     * 并非ItemResourceKey.
+     * @return 该ItemResourceType名字的小写字符串。
+     */
     @Override
     public String getKey() {
         return this.name().toLowerCase();
     }
 
+    /**
+     * 判断给定的等级是否是合法的，即是否在[0,maxLevel]之间。
+     * @param level 给定的等级
+     * @return 等级是否合法
+     */
     @Override
     public boolean isLevelValid(int level){
         return level >= 0 && level <= this.maxLevel;
     }
 
+    /**
+     * 生成该type为ItemResourceType，level为传入值的ItemResourceKey。
+     * @param level The level of the resource. Shouldn't be negative or more than max level.
+     * @return The generated ItemResourceKey.
+     */
     @Override
     public ItemResourceKey generateKey(int level) {
         return ItemResourceKey.of(this, level);
     }
-
-    /**
-     * 用于校正TownResourceKey的等级，确保其符合当前类型
-     * @param level level might be invalid for this type
-     * @return the corrected level
-     */
-    public int correctLevel(int level){
-        return Math.max(Math.min(level, this.maxLevel), 0);
-    }
-
 }

@@ -17,20 +17,32 @@ import java.util.concurrent.atomic.DoubleAdder;
 /**
  * 此类用于封装resources，仅提供addUnsafe和costUnsafe两个方法来修改resources，确保在修改资源数量时，occupiedCapacity也会随之修改。
  * 为保证OccupiedCapacity本身不会被意外修改，它并非作为一个service resource储存在resources中，而是以private变量的形式存在这里。
- * 此类中提供的方法都有可能产生不合法的数据(如负数的资源或超过上限的资源)，请使用TownResourceManager来修改资源数量。
+ * 此类中提供的方法都有可能产生不应出现的数据(如负数的资源或超过上限的资源)，请使用TownResourceManager来修改资源数量。
  */
 public class TownResourceHolder {
     /**
      * The collection that saves all the resources of town.
-     * 为了方便城镇访问特定TownResourceKey的资源，将不同种类的资源分开，以减少遍历次数和读取物品tag的次数。
+     * ItemStack没有实现equals和hashCode方法，使用ItemStackWrapper进行封装来代替。
      */
     private Map<ItemStackWrapper, Double> itemResources = new HashMap<>();
     private Map<VirtualResourceKey, Double> virtualResources = new HashMap<>();
+    /**
+     * 表示已占用的资源容量。
+     * 使用此类的中的addUnsafe和costUnsafe方法修改需要占用容量的资源时，已占用资源会随之修改。
+     * 对于物品，每一个物品都占用1个容量。每一个需要占用容量的虚拟资源也占用1个容量。
+     */
     @Getter
     private double occupiedCapacity = 0.0;
 
+    /**
+     * 缓存ItemResourceKey对应的物品。
+     * 存储在城镇中的物品，在读取数据，即创建新TownResourceHolder实例时，都会顺带加入缓存中。
+     * 若城镇中没有储存过改物品，物品使用AddUnsafe方法加入城镇时，也会存入缓存中。
+     * 因此，这个缓存理论上涵盖了所有存储在城镇中的物品，按照某个TownResourceKey消耗资源时，不需要考虑没有存入缓存的物品而去遍历所有物品。
+     */
     private static final Map<ItemResourceKey, HashSet<ItemStackWrapper>> ITEM_RESOURCE_KEY_CACHE = new HashMap<>();
     private static final Map<ItemStackWrapper, Map<ItemResourceKey, Double>> ITEM_RESOURCE_AMOUNTS = new HashMap<>();
+
     public static final double DELTA = 1.0/8192;//一个非常小的值，当资源数量小于这个值时，认为资源为0，抵消误差。
 
     public static final Codec<TownResourceHolder> CODEC = RecordCodecBuilder.create(t -> t.group(
@@ -49,6 +61,7 @@ public class TownResourceHolder {
         updateCache();
     }
 
+    //不输入已占用容量，自行计算。
     public TownResourceHolder(Map<ItemStackWrapper, Double> itemResources, Map<VirtualResourceKey, Double> virtualResources) {
         DoubleAdder adder = new DoubleAdder();
         itemResources.values().forEach(adder::add);
@@ -62,6 +75,9 @@ public class TownResourceHolder {
         updateCache();
     }
 
+    /**
+     * 判断是否缓存了该物品。
+     */
     public static boolean isCached(ItemStack pItemStack){
         ItemStack itemStack = pItemStack.copyWithCount(1);
         AtomicBoolean isCached = new AtomicBoolean(false);
@@ -80,6 +96,12 @@ public class TownResourceHolder {
         return isCached.get();
     }
 
+    /**
+     * 获取单个物品对应的的某资源数量。
+     * @param itemStackWrapper 物品（包装类）
+     * @param key 物品要转化为的ItemResourceKey
+     * @return 单个该物品能转化为输入的ItemResourceKey的数量
+     */
     public static double getResourceAmount(ItemStackWrapper itemStackWrapper, ItemResourceKey key){
         if(ITEM_RESOURCE_AMOUNTS.isEmpty()) loadItemResourceAmounts();
         AtomicReference<Double> amount = new AtomicReference<>(0.0);
@@ -106,32 +128,62 @@ public class TownResourceHolder {
         return amount.get();
     }
 
+    /**
+     * 获取单个物品对应的的某资源数量。
+     * @param pItemStack 物品
+     * @param key 物品要转化为的ItemResourceKey
+     * @return 单个该物品能转化为输入的ItemResourceKey的数量
+     */
     public static double getResourceAmount(ItemStack pItemStack, ItemResourceKey key){
         return getResourceAmount(new ItemStackWrapper(pItemStack), key);
     }
 
+    /**
+     * 获取物品的所有ItemResourceKey，并加入到缓存中。
+     * 若加入过程中发现该物品已经缓存过，则直接跳过后续内容。
+     * @param itemStackWrapper ItemStack的包装类
+     */
     public static void addItemToCache(ItemStackWrapper itemStackWrapper){
         itemStackWrapper.getItemStack().getTags()
                 //仅获取有对应ItemResourceKey的tag
                 .filter(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_KEY::containsKey)
-                //如果已经缓存过，则跳过该物品的tag
-                .takeWhile(tag -> !ITEM_RESOURCE_KEY_CACHE.computeIfAbsent(ItemResourceKey.fromTagKey(tag), k -> new HashSet<>()).contains(itemStackWrapper))
+                //转化为ItemResourceKey
                 .map(ItemResourceKey::fromTagKey)
+                //如果已经缓存过，则跳过该物品的tag
+                .takeWhile(key -> !ITEM_RESOURCE_KEY_CACHE.computeIfAbsent(key, k -> new HashSet<>()).contains(itemStackWrapper))
                 .forEach(key -> ITEM_RESOURCE_KEY_CACHE.computeIfAbsent(key, k -> new HashSet<>()).add(itemStackWrapper));
     }
 
+    /**
+     * 获取物品的所有ItemResourceKey，并加入到缓存中。
+     * 若加入过程中发现该物品已经缓存过，则直接跳过后续内容。
+     * @param pItemStack 物品
+     */
     public static void addItemToCache(ItemStack pItemStack){
         addItemToCache(new ItemStackWrapper(pItemStack));
     }
 
+    /**
+     * 获取城镇中某个物品的储量。
+     */
     public double get(ItemStackWrapper itemStackWrapper){
         return itemResources.getOrDefault(itemStackWrapper, 0.0);
     }
 
+    /**
+     * 获取城镇中某个物品的储量。
+     */
     public double get(ItemStack pItemStack){
         return get(new ItemStackWrapper(pItemStack));
     }
 
+    /**
+     * 获取城镇中某个ITownResourceKey的储量。
+
+     * 若为ItemResourceKey，获取的是城镇中，所有该ItemResourceKey对应物品的(物品数量 * 单个物品能转化为ItemResourceKey数量)之和。
+     * 这也是TownResourceManager中，两种cost(ItemResourceKey)能消耗的最大数量。
+     * 举个例子，比如城镇中，有20个铁锭、10个铁块，1个铁锭可转化为1 metal_1，1个铁块可转化为9 metal_1，使用这个get方法获取metal_1的数量，会得到20*1+10*9=110.
+     */
     public double get(ITownResourceKey key){
         if(key instanceof ItemResourceKey){
             DoubleAdder adder = new DoubleAdder();
@@ -144,6 +196,7 @@ public class TownResourceHolder {
         }
         return 0.0;
     }
+
 
     public double get(ITownResourceType type){
         double sum = 0.0;
@@ -188,13 +241,15 @@ public class TownResourceHolder {
 
     /**
      * Add or subtract resource to the town. Add if amount >= 0, subtract if amount < 0.
-     * Only used in this class, use addUnsafe and costUnsafe in this package, use methods in TownResourceManager in other classes.
+     * Only used in this class.
+     * Use addUnsafe and costUnsafe in this package.
+     * Use methods in TownResourceManager in other classes.
      */
     private void addSigned(ItemStack pItemStack, double amount){
         if(pItemStack.isEmpty()) return;
         ItemStackWrapper itemStackWrapper = new ItemStackWrapper(pItemStack);
         Double amountExist = itemResources.get(itemStackWrapper);
-        if(amountExist == null){
+        if(amountExist == null || amountExist <= DELTA){
             addItemToCache(itemStackWrapper);
         }
         if(Math.abs(itemResources.merge(itemStackWrapper, amount, Double::sum)) <= DELTA){
@@ -295,6 +350,9 @@ public class TownResourceHolder {
         }
     }
 
+    /**
+     * 读取所欲城镇相关的物品对应资源数量的recipe，并缓存起来。
+     */
     public static void loadItemResourceAmounts(){
         for(ItemResourceAmountRecipe recipe : FHUtils.filterRecipes(FHTeamDataManager.getRecipeManager(), ItemResourceAmountRecipe.TYPE)){
             ItemStackWrapper itemStackWrapper = new ItemStackWrapper(recipe.item);
@@ -312,8 +370,8 @@ public class TownResourceHolder {
     }
 
     /**
-     * Wrapper for ItemStack, used to store ItemStack in map.
-     * The count of ItemStack will be changed to 1 when creating this wrapper.
+     * Wrapper for ItemStack, added special hashCode and equals method, for saving ItemStack in HashMap.
+     * The count of ItemStack will be changed to 1 when creating this wrapper. Because TownResourceHolder used other things to save the amount of items.
      */
     @Getter
     public static class ItemStackWrapper {

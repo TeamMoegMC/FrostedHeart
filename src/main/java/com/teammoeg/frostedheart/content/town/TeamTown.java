@@ -27,7 +27,6 @@ import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
-import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
@@ -40,14 +39,8 @@ import net.minecraft.core.BlockPos;
  * You may use this to access or modify town data.
  */
 public class TeamTown implements Town, TownWithResident {
-    /** Linked to town data resources. */
+    /** Used to manage town resource. */
     TownResourceManager resources;
-    /** Service, only live in one tick cycle. */
-    Map<ItemResourceType, Integer> service = new EnumMap<>(ItemResourceType.class);
-    /** Costed service, only live in one tick cycle. */
-    Map<ItemResourceType, Integer> costedService = new EnumMap<>(ItemResourceType.class);
-    /** Max storage, only live in one tick cycle. */
-    Map<ItemResourceType, Integer> maxStorage = new EnumMap<>(ItemResourceType.class);
     /** The town data, actual data stored on disk. */
     TeamTownData data;
 
@@ -242,6 +235,11 @@ public class TeamTown implements Town, TownWithResident {
     }
     */
 
+    /**
+     * Get the resource manager.
+     * Use methods in TownResourceManager to change resources in town.
+     * @return the town resource manager
+     */
     public TownResourceManager getResourceManager() {
         return resources;
     }

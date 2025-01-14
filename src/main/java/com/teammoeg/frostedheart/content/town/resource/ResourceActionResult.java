@@ -31,6 +31,7 @@ public record ResourceActionResult (boolean allSuccess, double actualAmount, dou
 
     /**
      * If you just costed a ItemStack, not a ITownResourceKey, use this constructor.
+     * ItemStack don't have a certain level so the lowestLevel and averageLevel are both 0.
      */
     public ResourceActionResult(boolean allSuccess, double actualAmount){
         this(allSuccess, actualAmount, 0, 0);
