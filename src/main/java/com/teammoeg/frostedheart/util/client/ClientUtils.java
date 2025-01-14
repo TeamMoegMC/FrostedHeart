@@ -33,6 +33,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.util.Size2i;
 
 /**
  * Rendering not related client functions, used for get/set client data, spawning particles
@@ -60,6 +61,7 @@ public class ClientUtils {
     public static Font font() {
         return mc().font;
     }
+    public static Size2i screenSize() {return new Size2i(mc().getWindow().getGuiScaledWidth(), mc().getWindow().getGuiScaledHeight());}
 
     public static void spawnFireParticles(Level worldIn, BlockPos pos) {
         RandomSource random = worldIn.getRandom();

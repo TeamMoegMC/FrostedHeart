@@ -26,6 +26,7 @@ import java.util.Map;
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -96,6 +97,14 @@ public class Lang {
         return I18n.exists(string) ? translateKey(string) : str(string);
     }
 
+    public static String getKeyOrElseStr(Component component) {
+        if (component instanceof MutableComponent c && (c.getContents() instanceof TranslatableContents t)) {
+            return t.getKey();
+        } else {
+            return component.getString();
+        }
+    }
+
     @Deprecated
     public static MutableComponent translateGui(String name, Object... args) {
         return gui(name, args).component();
@@ -134,11 +143,6 @@ public class Lang {
     @Deprecated
     public static MutableComponent translateTips(String name, Object... args) {
         return tips(name, args).component();
-    }
-
-    @Deprecated
-    public static MutableComponent translateWaypoint(String name, Object... args) {
-        return waypoint(name, args).component();
     }
 
     public static String rawQuestReward(String name, Object... args) {

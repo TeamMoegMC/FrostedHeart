@@ -1,9 +1,10 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
 import com.teammoeg.frostedheart.FrostedHud;
+import com.teammoeg.frostedheart.base.client.gui.widget.ColorEditbox;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipManager;
-import com.teammoeg.frostedheart.content.tips.client.gui.widget.IconButton;
+import com.teammoeg.frostedheart.base.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.ColumbiatWaypoint;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.SunStationWaypoint;
@@ -34,6 +35,7 @@ public class DebugScreen extends Screen {
 
     @Override
     public void init() {
+        super.init();
         buttons.clear();
 
         addButton(IconButton.Icon.CROSS, FHColorHelper.CYAN, "Clear Tip Render Queue", (b) ->
@@ -80,12 +82,14 @@ public class DebugScreen extends Screen {
             String message = debug();
             ClientUtils.getPlayer().sendSystemMessage(Lang.str(message));
         });
-        super.init();
+        var colorPicker = new ColorEditbox(font, 50, 50, 64, 20, Lang.str(""),false, FHColorHelper.CYAN);
+        addRenderableWidget(colorPicker);
 //        addRenderableWidget(new TextLabelWidget(10, 10, 50, 50, Component.literal("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), ClientUtils.font()));
     }
 
     // 方便热重载debug
     private String debug() {
+        buttons.get(0).setScale(2);
         Tip tip = Tip.builder("test").line(Lang.str("test")).line(Lang.str("aaaaaaaaaaaaa")).nextTip("default").build();
         TipManager.INSTANCE.display().general(tip);
         return tip.getNextTip();

@@ -127,7 +127,7 @@ public class FHClientEventsMod {
 	@SubscribeEvent
 	public static void onLayerRegister(final RegisterLayerDefinitions event) {
 		event.registerLayerDefinition(HeaterVestModel.HEATER_VEST_LAYER, () -> HeaterVestModel.createLayer());
-	}
+	} 
 
 	@SubscribeEvent
 	public static void onLayerAdd(final AddLayers event) {
@@ -137,8 +137,10 @@ public class FHClientEventsMod {
 	@SubscribeEvent
 	public static void registerModels(ModelEvent.RegisterAdditional ev)
 	{
+		FHMain.LOGGER.info("===========Dynamic Model Register========");
 		DynamicBlockModelReference.registeredModels.forEach(rl->{
-			ev.register(new ResourceLocation(rl.getNamespace(),rl.getPath().substring(0,rl.getPath().lastIndexOf(".")).substring(7)));
+			ev.register(new ModelResourceLocation(rl,"dynamic"));
+			FHMain.LOGGER.info(rl);
 		});
 	}
 	@SubscribeEvent

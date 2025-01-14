@@ -25,8 +25,9 @@ import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.base.client.gui.widget.IconButton;
+import com.teammoeg.frostedheart.util.lang.Lang;
 import com.teammoeg.frostedheart.bootstrap.client.FHShaderInstances;
-import com.teammoeg.frostedheart.bootstrap.client.FHShaders;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
@@ -365,10 +366,10 @@ public class FHGuiHelper {
 	 * @return 换行后的行数
 	 */
 	public static int drawWordWarp(GuiGraphics graphics, Font font, FormattedText text, int x, int y, int color,
-								   int maxWidth, int lineSpace, boolean shadow)
+								   int maxWidth, int lineSpace, boolean shadow, boolean background)
 	{
 		List<FormattedCharSequence> texts = font.split(text, maxWidth);
-		drawStrings(graphics, font, texts, x, y, color, lineSpace, shadow);
+		drawStrings(graphics, font, texts, x, y, color, lineSpace, shadow, background);
 		return texts.size();
 	}
 
@@ -377,72 +378,35 @@ public class FHGuiHelper {
 	 * @param lineSpace 行间距
 	 * @param shadow 文本阴影
 	 */
-	public static void drawStrings(GuiGraphics graphics, Font font, List<FormattedCharSequence> texts, int x, int y,
-								   int color, int lineSpace, boolean shadow)
+	public static void drawStrings(GuiGraphics graphics, Font font, List<?> texts, int x, int y,
+                                   int color, int lineSpace, boolean shadow, boolean background)
 	{
-		for (int i = 0; i < texts.size(); i++)
-			graphics.drawString(font, texts.get(i), x, y + i * lineSpace, color, shadow);
+		for (int i = 0; i < texts.size(); i++) {
+			Object obj = texts.get(i);
+			if (obj instanceof FormattedCharSequence formatted) {
+				if (background) graphics.fill(x, y-1 + i * lineSpace, x + font.width(formatted), y-1 + (i+1) * lineSpace, FHColorHelper.setAlpha(FHColorHelper.BLACK, 0.5F));
+				graphics.drawString(font, formatted, x, y + i * lineSpace, color, shadow);
+
+			} else if (obj instanceof Component component) {
+				if (background) graphics.fill(x, y-1 + i * lineSpace, x + font.width(component), y-1 + (i+1) * lineSpace, FHColorHelper.setAlpha(FHColorHelper.BLACK, 0.5F));
+				graphics.drawString(font, component, x, y + i * lineSpace, color, shadow);
+
+			} else {
+				if (background) graphics.fill(x, y-1 + i * lineSpace, x + font.width(obj.toString()), y-1 + (i+1) * lineSpace, FHColorHelper.setAlpha(FHColorHelper.BLACK, 0.5F));
+				graphics.drawString(font, Lang.str(obj.toString()), x, y + i * lineSpace, color, shadow);
+			}
+		}
 	}
 
 	/**
-	 * 绘制一个不完整的圆
-	 * 
-	 * @param radius  半径
-	 * @param partial 圆的完整度 {@code 0.0 ~ 1.0}
+	 * 渲染一个图标
+	 * @param icon {@link IconButton.Icon}
+	 * @param color 图标的颜色
 	 */
-	public static void drawPartialCircle(int x, int y, double radius, float partial, int color) {
-
-		RenderSystem.enableBlend();
-		RenderSystem.defaultBlendFunc();
-		RenderSystem.disableCull();
-
-		Tesselator tessellator = Tesselator.getInstance();
-		BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
-
-		bufferBuilder.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
-		bufferBuilder.vertex(x, y, 0).endVertex();
-		for (int i = -180; i <= 360 * partial - 180; i++) { // 为了让圆顺时针绘制
-			double angle = i * Math.PI / 180;
-			double x2 = x + Math.sin(-angle) * radius;
-			double y2 = y + Math.cos(angle) * radius;
-			bufferBuilder.vertex(x2, y2, 0).color(color).endVertex();
-		}
-
-		tessellator.end();
-
-		RenderSystem.enableCull();
-		RenderSystem.disableBlend();
+	public static void renderIcon(PoseStack pose, IconButton.Icon icon, int x, int y, int color) {
+		FHGuiHelper.bindTexture(IconButton.ICON_LOCATION);
+		FHGuiHelper.blitColored(pose, x, y, icon.size.width, icon.size.height, icon.x, icon.y, icon.size.width, icon.size.height, IconButton.TEXTURE_WIDTH, IconButton.TEXTURE_HEIGHT, color);
 	}
-
-	/**
-	 * 绘制一个多边形
-	 * 
-	 * @param radius 半径
-	 * @param sides  多边形的边数，大部分情况下 50 已经够圆了
-	 */
-	public static void drawPolygon(int x, int y, double radius, int sides, int color) {
-		sides = Mth.clamp(sides, 3, 360);
-
-		RenderSystem.enableBlend();
-		RenderSystem.defaultBlendFunc();
-
-		Tesselator tessellator = Tesselator.getInstance();
-		BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
-
-		bufferBuilder.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
-		bufferBuilder.vertex(x, y, 0).endVertex();
-		for (int i = 0; i <= sides; i++) {
-			double angle = i * (360F / sides) * Math.PI / 180;
-			double x2 = x + Math.sin(angle) * radius;
-			double y2 = y + Math.cos(angle) * radius;
-			bufferBuilder.vertex(x2, y2, 0).color(color).endVertex();
-		}
-
-		tessellator.end();
-
-		RenderSystem.disableBlend();
-	}
-
 
 	/**
 	 * 圆角矩形

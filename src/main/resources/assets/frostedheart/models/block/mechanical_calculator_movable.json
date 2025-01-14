@@ -1,0 +1,11 @@
+{
+  "parent": "minecraft:block/block",
+  "automatic_culling": false,
+  "flip_v": true,
+  "loader": "immersiveengineering:ie_obj",
+  "callbacks":"immersiveengineering:submodel",
+  "model": "frostedheart:models/block/mechanical_calculator_movable.obj",
+  "textures": {
+    "particle": "frostedheart:block/obj/mechanical_calculator"
+  }
+}

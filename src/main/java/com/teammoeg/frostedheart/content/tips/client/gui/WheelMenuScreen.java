@@ -12,10 +12,10 @@ import org.lwjgl.glfw.GLFW;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WheelSelectorScreen extends Screen {
+public class WheelMenuScreen extends Screen {
     private final Map<Button, Button.OnPress> actions = new HashMap<>();
 
-    public WheelSelectorScreen() {
+    public WheelMenuScreen() {
         super(Component.literal("WheelSelector"));
         this.addRenderableWidget(Button.builder(Component.literal("test"), (p) -> {
             minecraft.player.sendSystemMessage(Component.literal("HELLO"));

@@ -3,7 +3,7 @@
   "automatic_culling": false,
   "flip_v": true,
   "loader": "forge:obj",
-  "model": "frostedheart:models/block/multiblocks/generator_t2.obj",
+  "model": "frostedheart:models/block/multiblocks/generator_t2_fuel.obj",
   "textures": {
     "particle": "frostedheart:block/multiblocks/generatoriibottom"
   }

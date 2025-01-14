@@ -11,12 +11,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.network.PacketDistributor;
 
-import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
 
 public class WaypointManager {
-    public static NBTSerializerRegistry<AbstractWaypoint> registry = new NBTSerializerRegistry<>();
+    public static final NBTSerializerRegistry<AbstractWaypoint> registry = new NBTSerializerRegistry<>();
     static {
         registry.register(Waypoint.class, "default", Waypoint::new, AbstractWaypoint::serializeNBT, Waypoint::new);
         registry.register(EntityWaypoint.class, "entity", EntityWaypoint::new, AbstractWaypoint::serializeNBT, EntityWaypoint::new);
@@ -77,7 +76,6 @@ public class WaypointManager {
         }));
     }
 
-    @Nullable
     public Map<String, AbstractWaypoint> getAll() {
         return waypoints;
     }
