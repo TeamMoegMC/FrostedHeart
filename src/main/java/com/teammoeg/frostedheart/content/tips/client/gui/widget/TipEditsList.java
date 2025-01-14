@@ -10,6 +10,7 @@ import com.teammoeg.frostedheart.base.client.gui.widget.ColorEditbox;
 import com.teammoeg.frostedheart.base.client.gui.widget.IconButton;
 import com.teammoeg.frostedheart.base.client.gui.widget.IconCheckbox;
 import com.teammoeg.frostedheart.content.tips.Tip;
+import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.frostedheart.content.tips.TipRenderer;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.FHColorHelper;
@@ -36,7 +37,17 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         this.font = pMinecraft.font;
         setRenderHeader(true, 10);
 
-        addEntry(new StringEntry("id", Component.translatable("gui.frostedheart.tip_editor.title")));
+        var idEntry = new StringEntry("id", Component.translatable("gui.frostedheart.tip_editor.title"));
+        idEntry.input.setResponder((s) -> {
+            if (TipManager.INSTANCE.hasTip(s)) {
+                idEntry.input.setTextColor(FHColorHelper.RED);
+                updatePreview();
+            } else {
+                idEntry.input.setTextColor(FHColorHelper.WHITE);
+                updatePreview();
+            }
+        });
+        addEntry(idEntry);
         addEntry(new StringEntry("category", Component.translatable("gui.frostedheart.tip_editor.category")));
         addEntry(new StringEntry("nextTip", Component.translatable("gui.frostedheart.tip_editor.next_tip")));
         addEntry(new StringEntry("image", Component.translatable("gui.frostedheart.tip_editor.image")));
@@ -49,12 +60,12 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         addEntry(new BooleanEntry("pin", Component.translatable("gui.frostedheart.tip_editor.pin")));
     }
 
-    public void updatePreview() {
+    public void updatePreview(Component... infos) {
         TipRenderer.TIP_QUEUE.clear();
         TipRenderer.forceClose();
-        Tip tip = Tip.builder("").fromJson(getJson()).alwaysVisible(true).build();
-        tip.forceDisplay();
+        Tip tip = Tip.builder("").fromJson(getJson()).lines(infos).alwaysVisible(true).build();
         this.cachedId = tip.getId();
+        tip.forceDisplay();
     }
 
     public JsonObject getJson() {
@@ -192,6 +203,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
             super(property, message);
             this.input = new EditBox(font, 0, 0, 64, 12, message);
             this.input.setResponder(b -> updatePreview());
+            this.input.setMaxLength(1024);
         }
 
         @Override

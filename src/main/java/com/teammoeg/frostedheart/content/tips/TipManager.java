@@ -75,7 +75,7 @@ public class TipManager {
         if (tip != null) {
             return tip;
         }
-        return Tip.builder(id).error(Tip.ErrorType.OTHER, Lang.str(id), Lang.tips("error.load.tip_not_exists").component()).build();
+        return Tip.builder(id).error(Tip.ErrorType.DISPLAY, Lang.tips("error.load.tip_not_exists", id).component(), Tip.ERROR_DESC).build();
     }
 
     /**

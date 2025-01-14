@@ -295,11 +295,11 @@ public class TipWidget extends AbstractWidget {
 
             // 文本换行
             var contents = tip.getContents();
-            titleLines = ClientUtils.font().split(contents.get(0), width-24);
+            titleLines = ClientUtils.font().split(contents.get(0), width);
             contentLines = new ArrayList<>();
             if (contents.size() > 1)
                 for (int i = 1; i < contents.size(); i++)
-                    contentLines.addAll(ClientUtils.font().split(contents.get(i), width-24));
+                    contentLines.addAll(ClientUtils.font().split(contents.get(i), width));
             totalLineSize = titleLines.size() + contentLines.size();
             int height = (totalLineSize * RenderContext.LINE_SPACE);
 

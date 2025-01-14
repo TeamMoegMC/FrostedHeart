@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -39,7 +38,8 @@ import java.util.List;
 public class Tip {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    public static final Tip EMPTY = Tip.builder("empty").error(ErrorType.OTHER, Lang.tips("error.not_exists").component()).build();
+    public static final Component ERROR_DESC = Component.translatable("tips.frostedheart.error.desc");
+    public static final Tip EMPTY = Tip.builder("empty").error(ErrorType.OTHER, Lang.tips("error.not_exists").component(), ERROR_DESC).build();
 
     /**
      * 显示内容
@@ -134,7 +134,7 @@ public class Tip {
             return true;
         } catch (IOException e) {
             LOGGER.error("Unable to save file: '{}'", file, e);
-            Tip.builder("exception").error(ErrorType.SAVE, e, Lang.str(file.getName())).build().forceDisplay();
+            Tip.builder("exception").error(ErrorType.SAVE, e).build().forceDisplay();
             return false;
         }
     }
@@ -191,7 +191,7 @@ public class Tip {
         Tip.Builder builder = builder("exception");
         if (!filePath.exists()) {
             LOGGER.error("File does not exists '{}'", filePath);
-            builder.error(ErrorType.LOAD, Lang.str(filePath.toString()), Lang.tips("error.file_not_exists").component());
+            builder.error(ErrorType.LOAD, Lang.str(filePath.toString()), Lang.tips("error.file_not_exists", ERROR_DESC).component());
         } else {
             try {
                 String content = new String(Files.readAllBytes(Paths.get(String.valueOf(filePath))));
@@ -200,11 +200,11 @@ public class Tip {
 
             } catch (JsonSyntaxException e) {
                 LOGGER.error("Invalid JSON format '{}'", filePath, e);
-                builder.error(ErrorType.LOAD, e, Lang.str(builder.id), Lang.tips("error.invalid_json").component());
+                builder.error(ErrorType.LOAD, e, Lang.str(builder.id), Lang.tips("error.invalid_json", ERROR_DESC).component());
 
             } catch (Exception e) {
                 LOGGER.error("Unable to load file '{}'", filePath, e);
-                builder.error(ErrorType.LOAD, e, Lang.str(builder.id), Lang.tips("error.other").component());
+                builder.error(ErrorType.LOAD, e, Lang.str(builder.id), Lang.tips("error.other").component(), ERROR_DESC);
             }
         }
         return builder.build();
@@ -259,6 +259,10 @@ public class Tip {
             if (!editable) return this;
             this.contents.addAll(texts);
             return this;
+        }
+
+        public Builder lines(Component... texts) {
+            return lines(List.of(texts));
         }
 
         public Builder clearContents() {
@@ -382,14 +386,15 @@ public class Tip {
             if (json.has("id")) {
                 String s = json.get("id").getAsString();
                 if (s.isBlank()) {
-                    error(ErrorType.LOAD, Lang.str("ID: " + id), Lang.tips("error.load.no_id").component());
-                    id = "exception";
+                    error(ErrorType.LOAD, Lang.tips("error.load.no_id").component());
+                    return this;
+                } else if (TipManager.INSTANCE.hasTip(s)) {
+                    error(ErrorType.LOAD, Lang.str("ID: " + s), Lang.tips("error.load.duplicate_id").component());
                     return this;
                 }
                 id = s;
             } else {
-                error(ErrorType.LOAD, Lang.str("ID: " + id), Lang.tips("error.load.no_id").component());
-                id = "exception";
+                error(ErrorType.LOAD, Lang.tips("error.load.no_id").component());
                 return this;
             }
 
@@ -434,11 +439,10 @@ public class Tip {
             return this;
         }
 
-        public Builder error(ErrorType type, Component... descriptions) {
+        public Builder error(ErrorType type, Collection<Component> descriptions) {
             clearContents()
                     .line(Lang.tips("error." + type.key).component())
-                    .lines(Arrays.asList(descriptions))
-                    .line(Lang.tips("error.desc").component())
+                    .lines(descriptions)
                     .color(FHColorHelper.RED, FHColorHelper.BLACK)
                     .alwaysVisible(true)
                     .setTemporary()
@@ -447,9 +451,14 @@ public class Tip {
             return this;
         }
 
+        public Builder error(ErrorType type, Component... descriptions) {
+            return error(type, List.of(descriptions));
+        }
+
         public Builder error(ErrorType type, Exception exception, Component... descriptions) {
-            return error(type, descriptions)
-                    .line(Lang.str(exception.getMessage()));
+            var desc = new ArrayList<>(List.of(descriptions));
+            desc.add(Lang.str(exception.getMessage()));
+            return error(type, desc);
         }
 
         private void imageSize(ResourceLocation location) {
@@ -464,18 +473,18 @@ public class Tip {
                     }
                 } catch (IOException e) {
                     LOGGER.error("Invalid texture resource location {}", location, e);
-                    error(ErrorType.LOAD, e, Lang.tips("error.load.invalid_image").component());
+                    error(ErrorType.LOAD, e, Lang.tips("error.load.invalid_image", location).component());
                 }
             }
             this.image = null;
-            error(ErrorType.LOAD, Lang.tips("error.load.invalid_image").component());
+            error(ErrorType.LOAD, Lang.tips("error.load.invalid_image", location).component());
         }
 
         private int getColorOrElse(JsonObject json, String name, int defColor) {
             try {
                 return Integer.parseUnsignedInt(json.get(name).getAsString(), 16);
             } catch (NumberFormatException e) {
-                line(Lang.tips("error.load.invalid_digit", name).component());
+                error(ErrorType.LOAD, Lang.tips("error.load.invalid_digit", name).component());
                 return defColor;
             }
         }
