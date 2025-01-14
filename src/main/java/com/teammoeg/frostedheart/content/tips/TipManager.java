@@ -75,7 +75,7 @@ public class TipManager {
         if (tip != null) {
             return tip;
         }
-        return Tip.builder(id).error(Tip.ErrorType.OTHER, Lang.str(id), Lang.tips("error.tip_not_exists").component()).build();
+        return Tip.builder(id).error(Tip.ErrorType.OTHER, Lang.str(id), Lang.tips("error.load.tip_not_exists").component()).build();
     }
 
     /**
@@ -116,7 +116,7 @@ public class TipManager {
     }
 
     private void displayException(Tip.ErrorType type, String id, Exception e) {
-        Tip exception = Tip.builder("exception").error(type, e, Lang.str(id)).build();
+        Tip exception = Tip.builder("exception").error(type, e, Lang.str("ID: " + id)).build();
         display.force(exception);
     }
 

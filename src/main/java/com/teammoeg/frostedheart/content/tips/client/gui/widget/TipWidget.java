@@ -268,7 +268,7 @@ public class TipWidget extends AbstractWidget {
 
         void update(Tip tip) {
             BGColor = FHColorHelper.setAlpha(tip.getBackgroundColor(), (isGuiOpened() ? 0.8F : 0.5F));
-            fontColor = tip.getFontColor();
+            fontColor = FHColorHelper.setAlpha(tip.getFontColor(), 1.0F);
 
             // 跟随视角晃动
             Minecraft MC = ClientUtils.mc();

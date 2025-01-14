@@ -382,13 +382,13 @@ public class Tip {
             if (json.has("id")) {
                 String s = json.get("id").getAsString();
                 if (s.isBlank()) {
-                    error(ErrorType.LOAD, Lang.str(id), Lang.tips("error.no_id").component());
+                    error(ErrorType.LOAD, Lang.str("ID: " + id), Lang.tips("error.load.no_id").component());
                     id = "exception";
                     return this;
                 }
                 id = s;
             } else {
-                error(ErrorType.LOAD, Lang.str(id), Lang.tips("error.no_id").component());
+                error(ErrorType.LOAD, Lang.str("ID: " + id), Lang.tips("error.load.no_id").component());
                 id = "exception";
                 return this;
             }
@@ -403,7 +403,7 @@ public class Tip {
                 }
             }
             if (this.contents.isEmpty()) {
-                error(ErrorType.LOAD, Lang.str(id), Lang.tips("error.empty").component());
+                error(ErrorType.LOAD, Lang.str("ID: " + id), Lang.tips("error.load.empty").component());
                 return this;
             }
 
@@ -414,7 +414,7 @@ public class Tip {
                     if (image != null) {
                         image(image);
                     } else {
-                        error(ErrorType.LOAD, Lang.str(id), Lang.tips("error.invalid_image", location).component());
+                        error(ErrorType.LOAD, Lang.str("ID: " + id), Lang.tips("error.load.invalid_image", location).component());
                         return this;
                     }
                 }
@@ -464,18 +464,18 @@ public class Tip {
                     }
                 } catch (IOException e) {
                     LOGGER.error("Invalid texture resource location {}", location, e);
-                    error(ErrorType.LOAD, e, Lang.tips("error.invalid_image").component());
+                    error(ErrorType.LOAD, e, Lang.tips("error.load.invalid_image").component());
                 }
             }
             this.image = null;
-            error(ErrorType.LOAD, Lang.tips("error.invalid_image").component());
+            error(ErrorType.LOAD, Lang.tips("error.load.invalid_image").component());
         }
 
         private int getColorOrElse(JsonObject json, String name, int defColor) {
             try {
                 return Integer.parseUnsignedInt(json.get(name).getAsString(), 16);
             } catch (NumberFormatException e) {
-                line(Lang.tips("error.invalid_digit", name).component());
+                line(Lang.tips("error.load.invalid_digit", name).component());
                 return defColor;
             }
         }
