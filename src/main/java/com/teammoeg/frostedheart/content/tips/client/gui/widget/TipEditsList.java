@@ -151,12 +151,12 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
                     List<String> converted = new ArrayList<>();
 
                     converted.add(prefix + ".title");
-                    copy.append(prefix).append(".title: \"").append(contents.get(0)).append("\",\n");
+                    copy.append('\"').append(prefix).append(".title\": \"").append(contents.get(0)).append("\",\n");
                     for (int i = 1; i < contents.size(); i++) {
                         //tips.frostedheart.example.desc1
                         String s = prefix + ".desc" + i;
                         converted.add(s);
-                        copy.append(s).append(": \"").append(contents.get(i)).append("\",\n");
+                        copy.append('\"').append(s).append("\": \"").append(contents.get(i)).append("\",\n");
                     }
 
                     contents.clear();
