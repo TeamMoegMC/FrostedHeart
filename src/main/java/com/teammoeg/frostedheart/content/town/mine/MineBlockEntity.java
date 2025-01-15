@@ -121,16 +121,4 @@ public class MineBlockEntity extends AbstractTownWorkerBlockEntity {
     public static void setLinkedBase(TownWorkerData mineData, BlockPos pos){
         mineData.setDataFromTown("linkedBasePos", LongTag.valueOf(pos.asLong()));
     }
-
-
-
-    @Override
-    public void readCustomNBT(CompoundTag compoundNBT, boolean b) {
-
-    }
-
-    @Override
-    public void writeCustomNBT(CompoundTag compoundNBT, boolean b) {
-
-    }
 }

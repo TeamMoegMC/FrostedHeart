@@ -72,16 +72,6 @@ public class MineBaseBlockEntity extends AbstractTownWorkerBlockEntity {
     }
 
     @Override
-    public void readCustomNBT(CompoundTag compoundNBT, boolean b) {
-
-    }
-
-    @Override
-    public void writeCustomNBT(CompoundTag compoundNBT, boolean b) {
-
-    }
-
-    @Override
     public int getPriority() {
         return 0;
     }

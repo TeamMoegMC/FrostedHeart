@@ -1,25 +1,33 @@
 package com.teammoeg.frostedheart.content.town.warehouse;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
+import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
+import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
-import com.teammoeg.frostedheart.content.town.TownWorkerState;
-import com.teammoeg.frostedheart.content.town.TownWorkerType;
+import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.data.TeamManagerImpl;
+import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity {
     private int volume;//有效体积
     private int area;//占地面积
     private double capacity;//最大容量
     private boolean addedToSchedulerQueue = false;
+    @Getter
+    private UUID teamID;//frostedheartID
 
     public WarehouseBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.WAREHOUSE.get(),pos,state);
@@ -102,6 +110,29 @@ public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity {
             SchedulerQueue.add(this);
             this.addedToSchedulerQueue = true;
         }
+    }
+
+    public TeamTown getTown(){
+        if(this.teamID == null){
+            FHMain.LOGGER.error("WareHouseBlockEntity.getTown(): TeamName is null!");
+            return null;
+        }
+        TeamTownData townData = Objects.requireNonNull(FHTeamDataManager.getDataByResearchID(this.teamID)).getData(SpecialDataTypes.TOWN_DATA);
+        return new TeamTown(townData);
+    }
+
+    void setTeamID(UUID teamID){
+        this.teamID = teamID;
+    }
+
+    @Override
+    public void readCustomNBT(CompoundTag compoundNBT, boolean isPacket){
+        this.teamID = compoundNBT.getUUID("teamID");
+    }
+
+    @Override
+    public void writeCustomNBT(CompoundTag compoundNBT, boolean isPacket){
+        compoundNBT.putUUID("teamID", this.teamID);
     }
 
 }

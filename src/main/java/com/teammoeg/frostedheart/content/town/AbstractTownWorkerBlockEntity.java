@@ -5,6 +5,8 @@ import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.scheduler.ScheduledTaskTileEntity;
 import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -13,6 +15,8 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public abstract class AbstractTownWorkerBlockEntity extends FHBaseTileEntity implements
         TownBlockEntity, ScheduledTaskTileEntity, FHBlockInterfaces.IActiveState {
+    @Getter
+    @Setter
     public TownWorkerState workerState = TownWorkerState.NOT_INITIALIZED;
     public OccupiedArea occupiedArea;
     protected boolean addedToSchedulerQueue = false;
@@ -105,13 +109,6 @@ public abstract class AbstractTownWorkerBlockEntity extends FHBaseTileEntity imp
                 }
             }
         }
-    }
-
-    public void setWorkerState(TownWorkerState workerState) {
-        this.workerState = workerState;
-    }
-    public TownWorkerState getWorkerState() {
-        return workerState;
     }
 
     public static TownWorkerState getWorkerState(CompoundTag nbt){

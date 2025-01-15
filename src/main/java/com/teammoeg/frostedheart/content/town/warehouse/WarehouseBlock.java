@@ -1,10 +1,19 @@
 package com.teammoeg.frostedheart.content.town.warehouse;
 
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.base.block.FHEntityBlock;
+import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
+import com.teammoeg.frostedheart.content.town.TeamTown;
+import com.teammoeg.frostedheart.content.town.TownBlockEntity;
 import com.teammoeg.frostedheart.util.lang.Lang;
 
+import dev.ftb.mods.ftbteams.api.Team;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -14,8 +23,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.Level;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 public class WarehouseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<WarehouseBlockEntity>{
@@ -44,7 +55,20 @@ public class WarehouseBlock extends AbstractTownWorkerBlock implements FHEntityB
 
 	@Override
 	public Supplier<BlockEntityType<WarehouseBlockEntity>> getBlock() {
-
 		return FHBlockEntityTypes.WAREHOUSE;
 	}
+
+    @Override
+    public void setPlacedBy(Level world, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
+        super.setPlacedBy(world, pos, state, entity, stack);
+        WarehouseBlockEntity warehouseBlockEntity = (WarehouseBlockEntity) Utils.getExistingTileEntity(world, pos);
+        if (warehouseBlockEntity != null) {
+            if (entity instanceof ServerPlayer) {
+                if (ChunkHeatData.hasAdjust(world, pos)) {
+                    UUID teamFHID = FHTeamDataManager.get((ServerPlayer)entity).getId();
+                    warehouseBlockEntity.setTeamID(teamFHID);
+                }
+            }
+        }
+    }
 }
