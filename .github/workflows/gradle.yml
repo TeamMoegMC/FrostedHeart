@@ -52,6 +52,8 @@ jobs:
         owner: TeamMoegMC
         repo: CosMavenProxy
         latest: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Start cos maven local
       shell: bash
       env:
