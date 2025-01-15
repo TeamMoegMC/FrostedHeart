@@ -23,6 +23,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,7 +38,8 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         this.font = pMinecraft.font;
         setRenderHeader(true, 10);
 
-        var idEntry = new StringEntry("id", Component.translatable("gui.frostedheart.tip_editor.title"));
+        var idEntry = new StringEntry("id", Component.translatable("gui.frostedheart.tip_editor.id"));
+        idEntry.input.setMaxLength(240);
         idEntry.input.setResponder((s) -> {
             if (TipManager.INSTANCE.hasTip(s)) {
                 idEntry.input.setTextColor(FHColorHelper.RED);
@@ -55,6 +57,7 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         addEntry(new ColorEntry("fontColor", Component.translatable("gui.frostedheart.tip_editor.font_color"), FHColorHelper.CYAN));
         addEntry(new ColorEntry("backgroundColor", Component.translatable("gui.frostedheart.tip_editor.background_color"),FHColorHelper.BLACK));
         addEntry(new IntegerEntry("displayTime", Component.translatable("gui.frostedheart.tip_editor.display_time")));
+        addEntry(new BooleanEntry("alwaysVisible", Component.translatable("gui.frostedheart.tip_editor.always_visible")));
         addEntry(new BooleanEntry("onceOnly", Component.translatable("gui.frostedheart.tip_editor.once_only")));
         addEntry(new BooleanEntry("hide", Component.translatable("gui.frostedheart.tip_editor.hide")));
         addEntry(new BooleanEntry("pin", Component.translatable("gui.frostedheart.tip_editor.pin")));
@@ -72,6 +75,11 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
         JsonObject json = new JsonObject();
         children().forEach(e -> json.add(e.property, e.getValue()));
         return json;
+    }
+
+    @Override
+    protected int getScrollbarPosition() {
+        return ClientUtils.screenWidth() - 6;
     }
 
     public class ColorEntry extends IntegerEntry {
@@ -129,6 +137,19 @@ public class TipEditsList extends ContainerObjectSelectionList<TipEditsList.Edit
 
         public MultiComponentEntry(String property, Component message) {
             super(property, message);
+            this.input = new EditBox(font, 0, 0, 64, 12, message) {
+                @Override
+                public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
+                    if (pKeyCode == GLFW.GLFW_KEY_ENTER || pKeyCode == GLFW.GLFW_KEY_KP_ENTER) {
+                        addButton.onPress();
+                        return true;
+                    }
+                    return super.keyPressed(pKeyCode, pScanCode, pModifiers);
+                }
+            };
+            this.input.setResponder(b -> updatePreview());
+            this.input.setMaxLength(1024);
+
             this.addButton = new IconButton(0, 0, IconButton.Icon.CHECK, FHColorHelper.CYAN, Component.translatable("gui.frostedheart.tip_editor.add_line"), b -> {
                 if (input.getValue().isBlank()) return;
 

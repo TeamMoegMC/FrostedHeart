@@ -4,6 +4,7 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.base.client.gui.widget.ActionStateIconButton;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.base.client.gui.widget.IconButton;
+import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipEditsList;
 import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipRequestPacket;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
@@ -20,8 +21,9 @@ public class TipEditorScreen extends Screen {
 
     public TipEditorScreen() {
         super(Lang.str("Tip Editor"));
-        this.list = new TipEditsList(ClientUtils.mc(), ClientUtils.screenWidth(), ClientUtils.screenHeight(), 10, ClientUtils.screenHeight() - 30, 28);
+        this.list = new TipEditsList(ClientUtils.mc(), ClientUtils.screenWidth() + 172, ClientUtils.screenHeight(), 10, ClientUtils.screenHeight() - 30, 28);
         list.setRenderBackground(false);
+        list.setLeftPos(-172);
     }
 
     @Override
@@ -34,7 +36,8 @@ public class TipEditorScreen extends Screen {
     @Override
     public void resize(@NotNull Minecraft pMinecraft, int pWidth, int pHeight) {
         super.resize(pMinecraft, pWidth, pHeight);
-        list.updateSize(ClientUtils.screenWidth(), ClientUtils.screenHeight(), 10, ClientUtils.screenHeight() - 30);
+        list.updateSize(ClientUtils.screenWidth() + 172, ClientUtils.screenHeight(), 10, ClientUtils.screenHeight() - 30);
+        list.setLeftPos(-172);
     }
 
     @Override
@@ -46,6 +49,7 @@ public class TipEditorScreen extends Screen {
             var json = list.getJson();
             if (json != null) {
                 Tip.builder("").fromJson(json).build().saveAsFile();
+                TipManager.INSTANCE.loadFromFile();
             }
         }));
         // 发送按钮
