@@ -47,13 +47,7 @@ jobs:
     - name: Run build jar
       run: ./gradlew jar -Pmod_version="${{steps.read_property.outputs.mod_version}}-snapshot${{github.run_number}}"
     - name: Download cosmaven from github
-      uses: joutvhu/get-release@v1.0.3
-      with:
-        owner: TeamMoegMC
-        repo: CosMavenProxy
-        latest: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: wget https://github.com/TeamMoegMC/CosMavenProxy/releases/latest/download/cosmavenproxy.jar
     - name: Start cos maven local
       shell: bash
       env:
@@ -61,8 +55,7 @@ jobs:
         COS_ID: ${{ secrets.COS_SECRETID }}
       run: |
         java -DCOS_SECRETID="$COS_ID" -DCOS_SECRETKEY="$COS_KEY" -Dport=9999 -jar cosmavenproxy.jar &
-    - name: Publish to cos maven local
-      run: ./gradlew publishMavenJavaPublicationToCOSRepository -Pmod_version="${{steps.read_property.outputs.mod_version}}-snapshot${{github.run_number}}"
+        ./gradlew publishMavenJavaPublicationToCOSRepository -Pmod_version="${{steps.read_property.outputs.mod_version}}-snapshot${{github.run_number}}"
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
