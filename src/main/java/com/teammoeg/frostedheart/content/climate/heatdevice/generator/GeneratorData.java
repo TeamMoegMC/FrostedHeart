@@ -71,7 +71,7 @@ public class GeneratorData implements SpecialData {
             Codec.FLOAT.fieldOf("rangeLevel").forGetter(o -> o.RLevel),
             CompoundTag.CODEC.fieldOf("items").forGetter(o -> o.inventory.serializeNBT()),
             CodecUtil.defaultValue(CodecUtil.ITEMSTACK_CODEC, ItemStack.EMPTY).fieldOf("res").forGetter(o -> o.currentItem),
-            CodecUtil.BLOCKPOS.optionalFieldOf("actualPos",null).forGetter(o -> o.actualPos),
+            CodecUtil.BLOCKPOS.optionalFieldOf("actualPos",BlockPos.ZERO).forGetter(o -> o.actualPos),
             ResourceLocation.CODEC.optionalFieldOf("dim").forGetter(o -> o.dimension == null ? Optional.empty() : Optional.of(o.dimension.location()))
     ).apply(t, GeneratorData::new));
     public final ItemStackHandler inventory = new ItemStackHandler(2);
@@ -87,7 +87,7 @@ public class GeneratorData implements SpecialData {
     public Fluid fluid;
     public boolean isWorking, isOverdrive, isActive, isBroken;
     public float TLevel, RLevel;
-    public ItemStack currentItem;
+    public ItemStack currentItem = ItemStack.EMPTY;
     public BlockPos actualPos = null;
     
     public ResourceKey<Level> dimension;
