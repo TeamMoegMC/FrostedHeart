@@ -52,17 +52,17 @@ public class MechCalcRenderer implements BlockEntityRenderer<MechCalcTileEntity>
     @Override
     public void render(MechCalcTileEntity te, float partialTicks, PoseStack matrixStack,
                        MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
+ 
         BlockPos blockPos = te.getBlockPos();
         BlockState state = te.getLevel().getBlockState(blockPos);
-        if (state.getBlock() != FHBlocks.MECHANICAL_CALCULATOR.get())
-            return;
+        //if (state.getBlock() != FHBlocks.MECHANICAL_CALCULATOR.get())
+        //    return;
         Direction rd = te.getDirection().getClockWise();
        
         matrixStack.pushPose();
         matrixStack.rotateAround(new Quaternionf().rotateY(te.getDirection().toYRot()/180F*Mth.PI), 0.5f, 0.5f, 0.5f);
         double forward = ((double) te.process / 1067) / 16d;
         matrixStack.translate(rd.getStepX() * forward, 0, rd.getStepZ() * forward);
-        
         List<BakedQuad> quads = MODEL.apply(ModelData.builder().with(DynamicSubmodelCallbacks.getProperty(), register).build());
         RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
         matrixStack.popPose();

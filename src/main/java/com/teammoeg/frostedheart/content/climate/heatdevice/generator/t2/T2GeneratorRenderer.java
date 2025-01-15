@@ -60,6 +60,7 @@ public class T2GeneratorRenderer implements BlockEntityRenderer<MultiblockBlockE
             Direction facing = orientation.front();
             matrixStack.rotateAround(FHGuiHelper.DIR_TO_FACING.apply(facing), 0.5f, 0.5f, 0.5f);
             List<BakedQuad> quads = FUEL.getAllQuads();
+            
             RenderUtils.renderModelTESRFast(quads, bufferIn.getBuffer(RenderType.solid()), matrixStack, combinedLightIn, combinedOverlayIn);
             matrixStack.popPose();
         }
