@@ -34,8 +34,8 @@ public class FoodNutritionStats implements TooltipModifier {
     public void modify(ItemTooltipEvent context) {
         List<Component> stats = getFoodStats(item, context.getItemStack(), context.getEntity());
         KeyControlledDesc desc = new KeyControlledDesc(stats, new ArrayList<>(),
-                GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_LEFT_CONTROL,
-                "A", "Ctrl",
+                GLFW.GLFW_KEY_N, GLFW.GLFW_KEY_LEFT_CONTROL,
+                "N", "Ctrl",
                 "holdForNutrition", "holdForControls"
                 );
         if (!stats.isEmpty()) {
