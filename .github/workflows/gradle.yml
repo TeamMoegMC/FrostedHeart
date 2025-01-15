@@ -47,7 +47,11 @@ jobs:
     - name: Run build jar
       run: ./gradlew jar -Pmod_version="${{steps.read_property.outputs.mod_version}}-snapshot${{github.run_number}}"
     - name: Download cosmaven from github
-      run: wget https://github.com/TeamMoegMC/CosMavenProxy/releases/latest/download/cosmavenproxy.jar
+      uses: joutvhu/get-release@v1.0.3
+      with:
+        owner: TeamMoegMC
+        repo: CosMavenProxy
+        latest: true
     - name: Start cos maven local
       shell: bash
       env:
