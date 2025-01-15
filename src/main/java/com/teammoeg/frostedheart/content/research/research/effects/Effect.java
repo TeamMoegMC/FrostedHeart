@@ -82,7 +82,7 @@ public abstract class Effect extends AutoIDItem{
 		Codec.STRING.fieldOf("id").forGetter(o->o.nonce),
 		Codec.BOOL.optionalFieldOf("hidden",false).forGetter(o->o.hidden)).apply(t, BaseData::new)));
     private static TypedCodecRegistry<Effect> registry = new TypedCodecRegistry<>();
-    public static final Codec<Effect> CODEC=CodecUtil.debugCodec(registry.codec());
+    public static final Codec<Effect> CODEC=registry.codec();
     static {
     	registerEffectType(EffectBuilding.class, "multiblock", EffectBuilding.CODEC);
         registerEffectType(EffectCrafting.class, "recipe", EffectCrafting.CODEC);

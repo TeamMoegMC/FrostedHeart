@@ -261,17 +261,17 @@ public class CodecUtil {
 
 			@Override
 			public <T> DataResult<T> encode(A input, DynamicOps<T> ops, T prefix) {
+				FHMain.LOGGER.debug("Encoding Codec: " + codec);
 				DataResult<T> res=codec.encode(input, ops, prefix);
-				System.out.println(codec);
-				System.out.println(res);
+				FHMain.LOGGER.debug("Encoded result: " + res);
 				return res;
 			}
 
 			@Override
 			public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
+				FHMain.LOGGER.debug("Decoding Codec: " + codec);
 				DataResult<Pair<A, T>> res=codec.decode(ops,input);
-				System.out.println(codec);
-				System.out.println(res);
+				FHMain.LOGGER.debug("Decoded result: " + res);
 				return res;
 			}
 			@Override

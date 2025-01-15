@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.util.utility.OptionalLazy;
@@ -78,7 +79,11 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 		super.load(nbt, isPacket);
 		//Compatible migration from old data folder
 		if(nbt.contains("researches")) {
-			this.setData(SpecialDataTypes.RESEARCH_DATA, SpecialDataTypes.RESEARCH_DATA.loadData(NbtOps.INSTANCE, nbt));
+			try {
+				this.setData(SpecialDataTypes.RESEARCH_DATA, SpecialDataTypes.RESEARCH_DATA.loadData(NbtOps.INSTANCE, nbt));
+			} catch (Exception e) {
+				FHMain.LOGGER.error("Error migrating research data", e);
+			}
 		}
         if (nbt.contains("owner"))
             ownerName = nbt.getString("owner");

@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.content.town.resource;
 import com.google.common.collect.Interner;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.util.io.CodecUtil;
 import lombok.Getter;
 
 /**
@@ -22,7 +23,7 @@ public class VirtualResourceKey implements ITownResourceKey{
 
     public static final Codec<VirtualResourceKey> CODEC = RecordCodecBuilder.create(t -> t.group(
                     VirtualResourceType.CODEC.fieldOf("type").forGetter(o->o.type),
-                    Codec.INT.fieldOf("level").forGetter(o->o.level)
+                    CodecUtil.defaultValue(Codec.INT, 0).fieldOf("level").forGetter(o->o.level)
             ).apply(t, VirtualResourceKey::new)
     );
 

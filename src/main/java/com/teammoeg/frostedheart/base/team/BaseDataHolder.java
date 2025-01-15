@@ -23,31 +23,45 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.io.NBTSerializable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.NbtOps;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 
 public class BaseDataHolder<T extends BaseDataHolder<T>> implements SpecialDataHolder<T>, NBTSerializable {
+
+	public static final Marker TEAM_MARKER = MarkerManager.getMarker("FH Team Data");
 
 	public BaseDataHolder() {
 	}
 
 	@Override
 	public void save(CompoundTag nbt, boolean isPacket) {
-		nbt.put("data", SerializeUtil.toNBTMap(data.entrySet(), (t,p)->p.put(t.getKey().getId(),(Tag)t.getKey().saveData(NbtOps.INSTANCE, t.getValue()))));
+		nbt.put("data", SerializeUtil.toNBTMap(data.entrySet(), (t,p)-> {
+			try {
+				p.put(t.getKey().getId(),(Tag)t.getKey().saveData(NbtOps.INSTANCE, t.getValue()));
+			} catch (Exception e) {
+				FHMain.LOGGER.error(TEAM_MARKER, "Failed to save " + t.getKey(), e);
+			}
+		}));
 	}
 
 	@Override
 	public void load(CompoundTag data, boolean isPacket) {
 		data = data.getCompound("data");
 		for(SpecialDataType<?> tc:SpecialDataTypes.TYPE_REGISTRY) {
-        	if(data.contains(/*"loading type: " + */tc.getId())) {
-        		//System.out.println(tc.getId());
-        		SpecialData raw=tc.loadData(NbtOps.INSTANCE, data.get(tc.getId()));
-				this.data.put(tc, raw);
+        	if(data.contains(tc.getId())) {
+				try {
+					SpecialData raw=tc.loadData(NbtOps.INSTANCE, data.get(tc.getId()));
+					this.data.put(tc, raw);
+				} catch (Exception e) {
+					FHMain.LOGGER.error(TEAM_MARKER, "Failed to load " + tc, e);
+				}
         	}
         }
 	}

@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.research.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
 import com.teammoeg.frostedheart.base.network.FHMessage;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
@@ -44,13 +45,21 @@ public class FHResearchDataSyncPacket implements FHMessage {
     }
 
     public FHResearchDataSyncPacket(TeamResearchData team) {
-    	this.dat = (SpecialDataTypes.RESEARCH_DATA.saveData(DataOps.COMPRESSED, team));
+        try {
+            this.dat = (SpecialDataTypes.RESEARCH_DATA.saveData(DataOps.COMPRESSED, team));
+        } catch (Exception e) {
+            FHMain.LOGGER.error("Failed to save research data when syncing research data", e);
+        }
     }
 
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	FHClientTeamDataManager.INSTANCE.getInstance().setData(SpecialDataTypes.RESEARCH_DATA, SpecialDataTypes.RESEARCH_DATA.loadData(DataOps.COMPRESSED, dat));
+            try {
+                FHClientTeamDataManager.INSTANCE.getInstance().setData(SpecialDataTypes.RESEARCH_DATA, SpecialDataTypes.RESEARCH_DATA.loadData(DataOps.COMPRESSED, dat));
+            } catch (Exception e) {
+                FHMain.LOGGER.error("Failed to load data when syncing research data", e);
+            }
             DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::syncJEI);
         });
         context.get().setPacketHandled(true);

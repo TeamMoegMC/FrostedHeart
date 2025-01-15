@@ -378,7 +378,7 @@ public class TownResourceHolder {
         public ItemStack itemStack;
 
         public static final Codec<ItemStackWrapper> CODEC = RecordCodecBuilder.create(t -> t.group(
-                        ItemStack.CODEC.fieldOf("itemStack").forGetter(o->o.itemStack)
+                CodecUtil.defaultValue(ItemStack.CODEC, ItemStack.EMPTY).fieldOf("itemStack").forGetter(o->o.itemStack)
                 ).apply(t, ItemStackWrapper::new)
         );
 

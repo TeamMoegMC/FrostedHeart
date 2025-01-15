@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.town;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.network.FHMessage;
@@ -44,11 +45,21 @@ public class TeamTownDataS2CPacket implements FHMessage {
 	}
 
 	public TeamTownDataS2CPacket(TeamTownData townData) {
-		data=SpecialDataTypes.TOWN_DATA.saveData(DataOps.COMPRESSED, townData);
+		try {
+			data=SpecialDataTypes.TOWN_DATA.saveData(DataOps.COMPRESSED, townData);
+		} catch (Exception e) {
+			FHMain.LOGGER.error("Failed to save town data when syncing town data", e);
+		}
     }
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> FHClientTeamDataManager.INSTANCE.getInstance().setData(SpecialDataTypes.TOWN_DATA,SpecialDataTypes.TOWN_DATA.loadData(DataOps.COMPRESSED, data)));
+        context.get().enqueueWork(() -> {
+			try {
+				FHClientTeamDataManager.INSTANCE.getInstance().setData(SpecialDataTypes.TOWN_DATA, SpecialDataTypes.TOWN_DATA.loadData(DataOps.COMPRESSED, data));
+			} catch (Exception e) {
+				FHMain.LOGGER.error("Failed to load data when syncing town data", e);
+			}
+		});
         context.get().setPacketHandled(true);
     }
 

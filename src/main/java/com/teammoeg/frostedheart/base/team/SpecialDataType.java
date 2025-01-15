@@ -24,7 +24,10 @@ import java.util.function.Function;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DynamicOps;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.io.CodecUtil;
+import lombok.Getter;
+import lombok.ToString;
 
 /**
  * Type of special data
@@ -32,10 +35,13 @@ import com.teammoeg.frostedheart.util.io.CodecUtil;
  * @param <T> the data component data type
  * <U>: the data holder actual type
  */
+@ToString
 public class SpecialDataType<T extends SpecialData>{
-	
+	@Getter
 	private String id;
+	@ToString.Exclude
 	private Function<SpecialDataHolder,T> factory;
+	@Getter
 	private Codec<T> codec;
 	
 	/**
@@ -71,15 +77,28 @@ public class SpecialDataType<T extends SpecialData>{
 	public <T extends SpecialDataHolder> SpecialData createRaw(T data) {
 		return factory.apply(data);
 	}
-	public <U> T loadData(DynamicOps<U> ops,U data) {
-		//System.out.println(this.getId());
-		//System.out.println("=============data element===============");
-		//System.out.println(data);
-		return CodecUtil.decodeOrThrow(codec.decode(ops, data));
-	}
-	public <U> U saveData(DynamicOps<U> ops,T data) {
-		//System.out.println(this.getId());
-		return CodecUtil.encodeOrThrow(codec.encodeStart(ops, data));
+	public <U> T loadData(DynamicOps<U> ops,U data) throws Exception {
+		try {
+			return CodecUtil.decodeOrThrow(codec.decode(ops, data));
+		} catch (Exception e) {
+			FHMain.LOGGER.error("Error loading data for SpecialDataType " + this);
+			FHMain.LOGGER.error("Data: " + data);
+			e.printStackTrace();
+			// throw
+			throw new Exception("Error loading data for SpecialDataType " + this, e);
+		}
+    }
+	public <U> U saveData(DynamicOps<U> ops,T data) throws Exception {
+		try {
+			return CodecUtil.encodeOrThrow(codec.encodeStart(ops, data));
+		} catch (Exception e) {
+			FHMain.LOGGER.error("Error saving data for SpecialDataType " + this);
+			FHMain.LOGGER.error("Data: " + data);
+			e.printStackTrace();
+			// throw
+			throw new Exception("Error saving data for SpecialDataType " + this, e);
+		}
+
 	}
 	
 	/**
@@ -91,11 +110,7 @@ public class SpecialDataType<T extends SpecialData>{
 	public <U extends SpecialDataHolder<U>> T getOrCreate(U data) {
 		return data.getData(this);
 	}
-	
-	public String getId() {
-		return id;
-	}
-	
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(id);
