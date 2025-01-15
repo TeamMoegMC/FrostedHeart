@@ -10,8 +10,6 @@ name: Java CI with Gradle 1.20
 on:
   push:
     branches: [ "1.20" ]
-  pull_request:
-    branches: [ "1.20" ]
   workflow_dispatch: 
 
 
