@@ -36,27 +36,27 @@ jobs:
       uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582
     - name: Modify permission settings
       run: chmod +x ./gradlew
-    - name: run datagen with Gradle Wrapper
-      run: ./gradlew runData
-    - name: Read value from Properties-file
+    - name: Read mod version from properties
       id: read_property
       uses: christian-draeger/read-properties@1.1.1
       with:
         path: './gradle.properties'
         properties: 'mod_version'
-    - name: Build with Gradle Wrapper
+    - name: Run data generation
+      run: ./gradlew runData -Pmod_version="${{steps.read_property.outputs.mod_version}}-snapshot${{github.run_number}}"
+    - name: Run build jar
       run: ./gradlew jar -Pmod_version="${{steps.read_property.outputs.mod_version}}-snapshot${{github.run_number}}"
-    - name: Download cosmaven
+    - name: Download cosmaven from github
       run: wget https://github.com/TeamMoegMC/CosMavenProxy/releases/latest/download/cosmavenproxy.jar
-    - name: Start local cos maven
+    - name: Start cos maven local
       shell: bash
       env:
         COS_KEY: ${{ secrets.COS_SECRETKEY }}
         COS_ID: ${{ secrets.COS_SECRETID }}
       run: |
         java -DCOS_SECRETID="$COS_KEY" -DCOS_SECRETKEY="$COS_SECRETID" -Dport=9999 -jar cosmavenproxy.jar &
-    - name: Publish to maven local
-      run: ./gradlew publishMavenPublications -Pmod_version="${{steps.read_property.outputs.mod_version}}-snapshot${{github.run_number}}"
+    - name: Publish to cos maven local
+      run: ./gradlew publishMavenJavaPublicationToCOSRepository -Pmod_version="${{steps.read_property.outputs.mod_version}}-snapshot${{github.run_number}}"
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
