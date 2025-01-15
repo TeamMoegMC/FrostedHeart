@@ -54,7 +54,7 @@ jobs:
         COS_KEY: ${{ secrets.COS_SECRETKEY }}
         COS_ID: ${{ secrets.COS_SECRETID }}
       run: |
-        java -DCOS_SECRETID="$COS_KEY" -DCOS_SECRETKEY="$COS_SECRETID" -Dport=9999 -jar cosmavenproxy.jar &
+        java -DCOS_SECRETID="$COS_ID" -DCOS_SECRETKEY="$COS_KEY" -Dport=9999 -jar cosmavenproxy.jar &
     - name: Publish to cos maven local
       run: ./gradlew publishMavenJavaPublicationToCOSRepository -Pmod_version="${{steps.read_property.outputs.mod_version}}-snapshot${{github.run_number}}"
     - name: Upload artifacts
