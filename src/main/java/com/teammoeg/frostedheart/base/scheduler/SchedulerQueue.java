@@ -25,7 +25,7 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.frostedheart.util.FHUtils;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.core.BlockPos;
@@ -88,7 +88,7 @@ public class SchedulerQueue {
         int curpos = lastpos;
         while (taskNum > 0) {
             ScheduledData data = tasks.get(curpos);
-            BlockEntity te = Utils.getExistingTileEntity(world, data.pos);
+            BlockEntity te = FHUtils.getExistingTileEntity(world, data.pos);
             if ((te instanceof ScheduledTaskTileEntity)) {
                 ((ScheduledTaskTileEntity) te).executeTask();
             } else {
