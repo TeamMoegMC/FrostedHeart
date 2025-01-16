@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.climate.event;
 
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.chorda.capability.CurioCapabilityProvider;
-import com.teammoeg.chorda.scheduler.SchedulerQueue;
 import com.teammoeg.chorda.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.team.TeamDataHolder;
@@ -267,9 +266,6 @@ public class ClimateCommonEvents {
             Level world = event.level;
             if (!world.isClientSide && world instanceof ServerLevel) {
                 ServerLevel serverWorld = (ServerLevel) world;
-
-                // Scheduled checks (e.g. town structures)
-                SchedulerQueue.tickAll(serverWorld);
 
                 // Town logic tick
                 int i = 0;
