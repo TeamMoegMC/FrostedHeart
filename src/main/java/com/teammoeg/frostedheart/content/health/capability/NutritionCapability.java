@@ -45,8 +45,7 @@ public class NutritionCapability implements NBTSerializable {
     }
 
     @Override
-    public void save(CompoundTag nbt, boolean isPacket) {
-        CompoundTag compound = new CompoundTag();
+    public void save(CompoundTag compound, boolean isPacket) {
         compound.putFloat("fat", nutrition.fat);
         compound.putFloat("carbohydrate", nutrition.carbohydrate);
         compound.putFloat("protein", nutrition.protein);

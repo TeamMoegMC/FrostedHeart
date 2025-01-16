@@ -26,10 +26,9 @@ public class WaterLevelCapability implements NBTSerializable {
 
     @Override
     public void save(CompoundTag nbt, boolean isPacket) {
-        CompoundTag compound = new CompoundTag();
-        compound.putInt("PlayerWaterLevel", this.getWaterLevel());
-        compound.putInt("PlayerWaterSaturationLevel", this.getWaterSaturationLevel());
-        compound.putFloat("PlayerWaterExhaustionLevel", this.getWaterExhaustionLevel());
+        nbt.putInt("PlayerWaterLevel", this.getWaterLevel());
+        nbt.putInt("PlayerWaterSaturationLevel", this.getWaterSaturationLevel());
+        nbt.putFloat("PlayerWaterExhaustionLevel", this.getWaterExhaustionLevel());
     }
 
     @Override
