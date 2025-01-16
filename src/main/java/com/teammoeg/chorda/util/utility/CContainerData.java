@@ -80,7 +80,7 @@ public class CContainerData {
 		 * */
 		@Override
 		public void set(int pValue) {
-			value=conv.apply(pValue);
+			setValue(conv.apply(pValue));
 		}
 		@Override
 		public T getValue() {
@@ -197,7 +197,8 @@ public class CContainerData {
 		@Override
 		public void set(int pIndex, int pValue) {
 			values[pIndex]=pValue;
-			value=lastValue=conv.decode(values);
+			setValue(conv.decode(values));
+			lastValue=value;
 		}
 		@Override
 		public int getCount() {
