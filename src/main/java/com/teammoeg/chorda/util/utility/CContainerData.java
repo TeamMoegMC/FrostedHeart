@@ -1,11 +1,11 @@
 package com.teammoeg.chorda.util.utility;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
-import com.google.common.base.Objects;
 import com.teammoeg.chorda.menu.CContainer;
 import com.teammoeg.chorda.util.io.registry.IdRegistry;
 
@@ -34,6 +34,9 @@ public class CContainerData {
 		void write(FriendlyByteBuf network,A data);
 		A copy(A data);
 		A getDefault();
+		default boolean isSame(A data,A data2) {
+			return Objects.equals(data, data2);
+		};
 		default CDataSlot<A> create(CContainer container) {
 			return CContainerData.create(container,this);
 		}
@@ -43,6 +46,9 @@ public class CContainerData {
 		A decode(int[] values);
 		int getCount();
 		A getDefault();
+		default boolean isSame(A data,A data2) {
+			return Objects.equals(data, data2);
+		};
 		default CDataSlot<A> create(CContainer container) {
 			return CContainerData.create(container,this);
 		}
@@ -155,7 +161,7 @@ public class CContainerData {
 		}
 		public boolean checkForUpdate() {
 			T curval=getValue();
-			if(!Objects.equal(oldValue, curval)) {
+			if(!conv.isSame(oldValue, curval)) {
 				oldValue=conv.copy(curval);
 				return true;
 			}
@@ -182,7 +188,7 @@ public class CContainerData {
 			values=new int[conv.getCount()];
 		}
 		private void updateIfNeeded() {
-			if(!Objects.equal(value, lastValue)) {
+			if(!conv.isSame(value, lastValue)) {
 				conv.encode(value, values);
 				lastValue=value;
 			}
@@ -377,6 +383,15 @@ public class CContainerData {
 		@Override
 		public FluidStack getDefault() {
 			return FluidStack.EMPTY;
+		}
+		@Override
+		public boolean isSame(FluidStack data, FluidStack data2) {
+			if(data==null) {
+				return data==data2;
+			}
+			if(data2==null)
+				return false;
+			return data.isFluidStackIdentical(data2);
 		}
 
 	};
