@@ -42,8 +42,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.chorda.util.RegistryUtils;
+import com.teammoeg.chorda.util.io.NBTSerializable;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.nbt.CompoundTag;

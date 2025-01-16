@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.content.research.api;
 
-import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.base.team.TeamDataClosure;
+import com.teammoeg.chorda.team.FHClientTeamDataManager;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 
 import net.minecraft.nbt.CompoundTag;
@@ -33,7 +33,7 @@ public class ClientResearchDataAPI {
 
     @OnlyIn(Dist.CLIENT)
     public static TeamDataClosure<TeamResearchData> getData() {
-        return FHClientTeamDataManager.INSTANCE.getInstance().getDataHolder(SpecialDataTypes.RESEARCH_DATA);
+        return FHClientTeamDataManager.INSTANCE.getInstance().getDataHolder(FHSpecialDataTypes.RESEARCH_DATA);
 
     }
 

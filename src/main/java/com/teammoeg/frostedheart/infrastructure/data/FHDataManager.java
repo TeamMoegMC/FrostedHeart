@@ -36,10 +36,10 @@ import com.mojang.serialization.MapCodec;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.*;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.io.IdDataPair;
-import com.teammoeg.frostedheart.util.mixin.StructureUtils;
+import com.teammoeg.chorda.util.RegistryUtils;
+import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.chorda.util.io.IdDataPair;
+import com.teammoeg.chorda.util.mixin.StructureUtils;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;

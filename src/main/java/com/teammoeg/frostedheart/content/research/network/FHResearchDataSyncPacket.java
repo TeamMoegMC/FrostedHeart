@@ -22,13 +22,13 @@ package com.teammoeg.frostedheart.content.research.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
-import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.chorda.team.FHClientTeamDataManager;
+import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.util.io.codec.DataOps;
-import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
+import com.teammoeg.chorda.util.io.codec.DataOps;
+import com.teammoeg.chorda.util.io.codec.ObjectWriter;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
@@ -46,7 +46,7 @@ public class FHResearchDataSyncPacket implements FHMessage {
 
     public FHResearchDataSyncPacket(TeamResearchData team) {
         try {
-            this.dat = (SpecialDataTypes.RESEARCH_DATA.saveData(DataOps.COMPRESSED, team));
+            this.dat = (FHSpecialDataTypes.RESEARCH_DATA.saveData(DataOps.COMPRESSED, team));
         } catch (Exception e) {
             FHMain.LOGGER.error("Failed to save research data when syncing research data", e);
         }
@@ -56,7 +56,7 @@ public class FHResearchDataSyncPacket implements FHMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             try {
-                FHClientTeamDataManager.INSTANCE.getInstance().setData(SpecialDataTypes.RESEARCH_DATA, SpecialDataTypes.RESEARCH_DATA.loadData(DataOps.COMPRESSED, dat));
+                FHClientTeamDataManager.INSTANCE.getInstance().setData(FHSpecialDataTypes.RESEARCH_DATA, FHSpecialDataTypes.RESEARCH_DATA.loadData(DataOps.COMPRESSED, dat));
             } catch (Exception e) {
                 FHMain.LOGGER.error("Failed to load data when syncing research data", e);
             }

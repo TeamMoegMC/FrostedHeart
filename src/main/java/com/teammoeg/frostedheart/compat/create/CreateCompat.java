@@ -23,7 +23,7 @@ import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.kinetics.BlockStressDefaults;
 import com.simibubi.create.content.kinetics.BlockStressValues;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.chorda.util.RegistryUtils;
 
 import net.minecraft.world.level.block.Blocks;
 

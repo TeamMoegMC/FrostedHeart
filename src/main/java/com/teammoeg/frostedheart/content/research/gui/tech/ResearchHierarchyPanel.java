@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
@@ -222,7 +223,7 @@ public class ResearchHierarchyPanel extends Panel {
         if (FHResearch.editor) {
             int offset = 5;
             if (researchPanel.selectedResearch != null) {
-                Button par = new TechTextButton(this, Lang.str("parents"), Icon.empty()) {
+                Button par = new TechTextButton(this, Components.str("parents"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add parent
@@ -242,7 +243,7 @@ public class ResearchHierarchyPanel extends Panel {
                 par.setPos(offset, 130);
                 add(par);
                 offset += par.width + 3;
-                Button chd = new TechTextButton(this, Lang.str("children"), Icon.empty()) {
+                Button chd = new TechTextButton(this, Components.str("children"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add children
@@ -263,7 +264,7 @@ public class ResearchHierarchyPanel extends Panel {
                 offset += chd.width + 3;
             }
             {
-                Button create = new TechTextButton(this, Lang.str("new"), Icon.empty()) {
+                Button create = new TechTextButton(this, Components.str("new"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         // TODO Add research
@@ -275,7 +276,7 @@ public class ResearchHierarchyPanel extends Panel {
                 offset += create.width + 3;
             }
             if (researchPanel.selectedResearch != null) {
-                Button create = new TechTextButton(this, Lang.str("edit"), Icon.empty()) {
+                Button create = new TechTextButton(this, Components.str("edit"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         EditUtils.editResearch(this, researchPanel.selectedResearch);
@@ -284,7 +285,7 @@ public class ResearchHierarchyPanel extends Panel {
                 create.setPos(offset, 130);
                 add(create);
                 offset += create.width + 3;
-                Button rem = new TechTextButton(this, Lang.str("delete"), Icon.empty()) {
+                Button rem = new TechTextButton(this, Components.str("delete"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton mouseButton) {
                         researchPanel.selectedResearch.delete();

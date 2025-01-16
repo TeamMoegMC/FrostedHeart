@@ -34,15 +34,15 @@ import com.google.gson.JsonObject;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.io.FileUtil;
+import com.teammoeg.chorda.util.RegistryUtils;
+import com.teammoeg.chorda.util.io.FileUtil;
 
 import com.teammoeg.frostedheart.content.world.FHFeatures;
 import net.minecraft.commands.CommandSourceStack;
@@ -111,7 +111,7 @@ public class DebugCommand {
                         FHMain.LOGGER.error("Error while exporting food values");
                         e.printStackTrace();
                     }
-                    ct.getSource().sendSuccess(()-> Lang.str("Exported " + items.size() + " Foods"), true);
+                    ct.getSource().sendSuccess(()-> Components.str("Exported " + items.size() + " Foods"), true);
                     return Command.SINGLE_SUCCESS;
                 }))
 /*

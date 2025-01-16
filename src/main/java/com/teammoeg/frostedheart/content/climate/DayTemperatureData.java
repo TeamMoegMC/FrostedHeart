@@ -23,7 +23,7 @@ import java.util.Arrays;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.chorda.util.io.CodecUtil;
 
 import net.minecraft.nbt.CompoundTag;
 

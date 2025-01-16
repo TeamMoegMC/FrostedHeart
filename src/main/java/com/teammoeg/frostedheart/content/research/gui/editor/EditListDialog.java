@@ -26,7 +26,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.frostedheart.util.client.Lang;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -53,7 +54,7 @@ public class EditListDialog<T> extends EditDialog {
         public ButtonAddValue(Panel panel) {
             super(panel);
             setHeight(12);
-            setTitle(Lang.str("+ ").append(Lang.translateKey("gui.add")));
+            setTitle(Components.str("+ ").append(Lang.translateKey("gui.add")));
         }
 
         @Override
@@ -100,7 +101,7 @@ public class EditListDialog<T> extends EditDialog {
             if (getMouseX() >= getX() + width - 19) {
                 l.translate("selectServer.delete");
             } else {
-                l.add(Lang.str(read.apply(list.get(index))));
+                l.add(Components.str(read.apply(list.get(index))));
             }
         }
 
@@ -179,7 +180,7 @@ public class EditListDialog<T> extends EditDialog {
             list = new ArrayList<>(vx);
         else
             list = new ArrayList<>();
-        title = Lang.str(label).withStyle(ChatFormatting.BOLD);
+        title = Components.str(label).withStyle(ChatFormatting.BOLD);
         this.editor = editor;
         this.def = def;
         this.read = toread;

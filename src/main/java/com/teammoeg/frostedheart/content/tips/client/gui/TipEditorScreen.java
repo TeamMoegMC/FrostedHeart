@@ -1,15 +1,15 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.base.client.gui.widget.ActionStateIconButton;
+import com.teammoeg.chorda.widget.ActionStateIconButton;
 import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.frostedheart.base.client.gui.widget.IconButton;
+import com.teammoeg.chorda.widget.IconButton;
 import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipEditsList;
 import com.teammoeg.frostedheart.content.tips.network.DisplayCustomTipRequestPacket;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.FHColorHelper;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.util.client.ColorHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -20,7 +20,7 @@ public class TipEditorScreen extends Screen {
     private final TipEditsList list;
 
     public TipEditorScreen() {
-        super(Lang.str("Tip Editor"));
+        super(Components.str("Tip Editor"));
         this.list = new TipEditsList(ClientUtils.mc(), ClientUtils.screenWidth() + 172, ClientUtils.screenHeight(), 10, ClientUtils.screenHeight() - 30, 28);
         list.setRenderBackground(false);
         list.setLeftPos(-172);
@@ -45,7 +45,7 @@ public class TipEditorScreen extends Screen {
         super.init();
         addWidget(list);
         // 保存按钮
-        addRenderableWidget(new ActionStateIconButton(ClientUtils.screenWidth()/2 - 30, ClientUtils.screenHeight()-25, IconButton.Icon.FOLDER, FHColorHelper.CYAN, 2, Component.translatable("gui.frostedheart.save_as_file"), Component.translatable("gui.frostedheart.saved"), (b) -> {
+        addRenderableWidget(new ActionStateIconButton(ClientUtils.screenWidth()/2 - 30, ClientUtils.screenHeight()-25, IconButton.Icon.FOLDER, ColorHelper.CYAN, 2, Component.translatable("gui.frostedheart.save_as_file"), Component.translatable("gui.frostedheart.saved"), (b) -> {
             var json = list.getJson();
             if (json != null) {
                 Tip.builder("").fromJson(json).build().saveAsFile();
@@ -53,7 +53,7 @@ public class TipEditorScreen extends Screen {
             }
         }));
         // 发送按钮
-        ActionStateIconButton sendButton = new ActionStateIconButton(ClientUtils.screenWidth()/2 + 5, ClientUtils.screenHeight()-25, IconButton.Icon.GIVE, FHColorHelper.CYAN, 2, Component.translatable("gui.frostedheart.tip_editor.send"), Component.translatable("gui.frostedheart.sent"), (b) -> {
+        ActionStateIconButton sendButton = new ActionStateIconButton(ClientUtils.screenWidth()/2 + 5, ClientUtils.screenHeight()-25, IconButton.Icon.GIVE, ColorHelper.CYAN, 2, Component.translatable("gui.frostedheart.tip_editor.send"), Component.translatable("gui.frostedheart.sent"), (b) -> {
             var json = list.getJson();
             if (json != null) {
                 Tip tip = Tip.builder("").fromJson(json).build();

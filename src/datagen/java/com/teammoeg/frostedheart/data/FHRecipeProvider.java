@@ -32,7 +32,7 @@ import com.teammoeg.caupona.CPFluids;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.trade.policy.TradeBuilder;
-import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.chorda.util.RegistryUtils;
 
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.recipes.FinishedRecipe;

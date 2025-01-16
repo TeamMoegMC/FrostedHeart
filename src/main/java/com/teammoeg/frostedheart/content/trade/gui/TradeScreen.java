@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.gui.FakeSlot;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
@@ -35,8 +36,8 @@ import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.SellData;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
@@ -108,11 +109,11 @@ public class TradeScreen extends BaseScreen {
                 return;
             }
             if (cx.discountAmount != 0)
-                c.add(Lang.translateGui("trade.discount").append(Lang
+                c.add(Lang.translateGui("trade.discount").append(Components
                         .str(" -" + (int) Math.ceil(cx.discountAmount / 10f)).withStyle(ChatFormatting.GREEN)));
             if (cx.relationMinus > 0)
                 c.add(Lang.translateGui("trade.bad_relation").append(
-                        Lang.str(" " + (int) Math.ceil(cx.relationMinus / 10f)).withStyle(ChatFormatting.RED)));
+                        Components.str(" " + (int) Math.ceil(cx.relationMinus / 10f)).withStyle(ChatFormatting.RED)));
 
         });
         rels.setPos(110, 108);
@@ -165,14 +166,14 @@ public class TradeScreen extends BaseScreen {
         super.add(tab);
         ToolTipWidget ttw = new ToolTipWidget(this, list -> {
             int tot = cx.relations.sum();
-            list.add(Lang.translateGui("trade.relation").append(Lang.str(tot > 0 ? " +" + tot : "" + tot)
+            list.add(Lang.translateGui("trade.relation").append(Components.str(tot > 0 ? " +" + tot : "" + tot)
                     .withStyle(tot > 0 ? ChatFormatting.GREEN : ChatFormatting.RED)));
 
             for (RelationModifier m : RelationModifier.values()) {
                 int rel = cx.relations.get(m);
                 if (rel == 0)
                     continue;
-                MutableComponent tx = Lang.str(rel > 0 ? " +" + rel : " " + rel)
+                MutableComponent tx = Components.str(rel > 0 ? " +" + rel : " " + rel)
                         .withStyle(rel > 0 ? ChatFormatting.GREEN : ChatFormatting.RED);
                 list.add(m.getDesc().append(tx));
 

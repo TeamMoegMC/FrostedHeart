@@ -1,12 +1,12 @@
 package com.teammoeg.frostedheart.content.health.tooltip;
 
 import com.simibubi.create.foundation.item.TooltipModifier;
-import com.teammoeg.frostedheart.base.tooltip.KeyControlledDesc;
+import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
-import com.teammoeg.frostedheart.util.lang.Components;
-import com.teammoeg.frostedheart.util.lang.FineProgressBarBuilder;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.frostedheart.util.client.FineProgressBarBuilder;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;

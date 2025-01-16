@@ -21,9 +21,9 @@ package com.teammoeg.frostedheart.content.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.research.Research;
@@ -41,7 +41,7 @@ public record FHS2CClueProgressSyncPacket(boolean data,int id,int index) impleme
     }
 
     public FHS2CClueProgressSyncPacket(TeamDataHolder team,Research rch,Clue clue) {
-    	this(team.getData(SpecialDataTypes.RESEARCH_DATA).getData(rch).isClueTriggered(clue),FHResearch.researches.getIntId(rch),rch.getClues().indexOf(clue));
+    	this(team.getData(FHSpecialDataTypes.RESEARCH_DATA).getData(rch).isClueTriggered(clue),FHResearch.researches.getIntId(rch),rch.getClues().indexOf(clue));
     }
 
     public void encode(FriendlyByteBuf buffer) {

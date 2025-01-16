@@ -26,7 +26,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.gson.JsonElement;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.CGuiHelper;
+import com.teammoeg.chorda.util.lang.Components;
 import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
@@ -43,18 +44,15 @@ import com.teammoeg.frostedheart.content.research.gui.editor.NumberBox;
 import com.teammoeg.frostedheart.content.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectItemStackDialog;
-import com.teammoeg.frostedheart.util.MathUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.FHGuiHelper;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.io.codec.AlternativeCodecBuilder;
-import com.teammoeg.frostedheart.util.io.codec.NopCodec;
-import com.teammoeg.frostedheart.util.io.registry.TypedCodecRegistry;
+import com.teammoeg.chorda.util.MathUtils;
+import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.chorda.util.io.codec.AlternativeCodecBuilder;
+import com.teammoeg.chorda.util.io.registry.TypedCodecRegistry;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
@@ -106,7 +104,7 @@ public class FHIcons {
         @Override
         public void draw(GuiGraphics ms, int x, int y, int w, int h) {
             if (!icons.isEmpty()) {
-                GuiHelper.setupDrawing();
+                dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
                 MathUtils.selectElementByTime(icons).draw(ms, x, y, w, h);
             }
         }
@@ -128,12 +126,12 @@ public class FHIcons {
 
         @Override
         public void draw(GuiGraphics ms, int x, int y, int w, int h) {
-            GuiHelper.setupDrawing();
+            dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
             if (large != null)
                 large.draw(ms, x, y, w, h);
             ms.pose().pushPose();
             ms.pose().translate(0, 0, 110);// let's get top most
-            GuiHelper.setupDrawing();
+            dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
             if (small != null)
                 small.draw(ms, x + w / 2, y + h / 2, w / 2, h / 2);
             ms.pose().popPose();
@@ -153,7 +151,7 @@ public class FHIcons {
 
         @Override
         public void draw(GuiGraphics ms, int x, int y, int w, int h) {
-            GuiHelper.setupDrawing();
+            dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
             TechIcons.internals.get(name).draw(ms, x, y, w, h);
         }
 
@@ -239,7 +237,7 @@ public class FHIcons {
             itemRenderer.renderItemAndEffectIntoGUI(stack, x, y);
             itemRenderer.renderItemOverlayIntoGUI(font, stack, x, y, null);
             itemRenderer.zLevel = 0.0F;*/
-        	FHGuiHelper.drawItem(matrixStack, stack, x, y,199, w/16f, h/16f, true, null);
+        	CGuiHelper.drawItem(matrixStack, stack, x, y,199, w/16f, h/16f, true, null);
             /*ClientUtils.mc().getItemRenderer().renderItem(stack, TransformType.GUI,LightTexture., y, matrixStack, null);
             if (stack != null && stack.getCount() > 1) {
                 matrixStack.push();
@@ -294,7 +292,7 @@ public class FHIcons {
             ms.drawString(ClientUtils.mc().font,text, 0, 0, 0xFFFFFFFF);
             ms.pose().popPose();
             ms.pose().popPose();
-            GuiHelper.setupDrawing();
+            dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
         }
 
     }
@@ -313,7 +311,7 @@ public class FHIcons {
 
         @Override
         public void draw(GuiGraphics ms, int x, int y, int w, int h) {
-            GuiHelper.setupDrawing();
+            dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
             nested.draw(ms, x, y, w, h);
         }
 
@@ -350,7 +348,7 @@ public class FHIcons {
 
         @Override
         public void draw(GuiGraphics ms, int x, int y, int w, int h) {
-            GuiHelper.setupDrawing();
+            dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
             if (nested != null)
                 nested.draw(ms, x, y, w, h);
         }
@@ -423,7 +421,7 @@ public class FHIcons {
                 add(h);
                 add(tw);
                 add(th);
-                add(new SimpleTextButton(this, Lang.str("Commit"), Icon.empty()) {
+                add(new SimpleTextButton(this, Components.str("Commit"), Icon.empty()) {
                     @Override
                     public void onClicked(MouseButton arg0) {
                         v.rl = new ResourceLocation(rl.getText());
@@ -507,7 +505,7 @@ public class FHIcons {
                 e -> e.asFtbIcon(), e -> c.accept(new FHAnimatedIcon(e.toArray(new FHIcon[0])))).open();
         public static final Editor<FHCombinedIcon> COMBINED_EDITOR = (p, l, v, c) -> new Combined(p, l, v, c).open();
 
-        public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> new SelectDialog<>(p, l, v == null ? null : v.name, o -> c.accept(new FHDelegateIcon(o)), TechIcons.internals::keySet, Lang::str, e -> new String[]{e}, TechIcons.internals::get).open();
+        public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> new SelectDialog<>(p, l, v == null ? null : v.name, o -> c.accept(new FHDelegateIcon(o)), TechIcons.internals::keySet, Components::str, e -> new String[]{e}, TechIcons.internals::get).open();
 
         public static final Editor<FHTextureUVIcon> UV_EDITOR = (p, l, v, c) -> new UV(p, l, v, c).open();
 

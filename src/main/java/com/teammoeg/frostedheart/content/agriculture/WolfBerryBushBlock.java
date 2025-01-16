@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.agriculture;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.chorda.util.RegistryUtils;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
@@ -37,8 +37,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public class WolfBerryBushBlock extends FHBerryBushBlock {
     public static final IntegerProperty AGE = BlockStateProperties.AGE_3;

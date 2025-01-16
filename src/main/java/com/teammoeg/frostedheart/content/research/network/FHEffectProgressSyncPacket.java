@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.content.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.base.team.TeamDataClosure;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.chorda.team.TeamDataClosure;
+import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
@@ -42,7 +42,7 @@ public record FHEffectProgressSyncPacket(boolean data,int id,int index) implemen
     }
 
     public FHEffectProgressSyncPacket(TeamDataHolder team,Research rs,Effect eff) {
-    	this(team.getData(SpecialDataTypes.RESEARCH_DATA).isEffectGranted(rs, eff),FHResearch.researches.getIntId(rs),rs.getEffects().indexOf(eff));
+    	this(team.getData(FHSpecialDataTypes.RESEARCH_DATA).isEffectGranted(rs, eff),FHResearch.researches.getIntId(rs),rs.getEffects().indexOf(eff));
     }
 
 

@@ -21,13 +21,11 @@ package com.teammoeg.frostedheart.content.research.gui;
 
 import java.util.function.Consumer;
 
+import com.teammoeg.chorda.util.CGuiHelper;
 import net.minecraft.client.gui.GuiGraphics;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.FHGuiHelper;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
@@ -81,9 +79,9 @@ public class FakeSlot extends Widget {
     public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
         if (i == null) return;
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
-        GuiHelper.setupDrawing();
+        dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
         
-        FHGuiHelper.drawItem(matrixStack, cur, x, y,100, w / 16F, h / 16F, true, cnt==0?null:String.valueOf(cnt));
+        CGuiHelper.drawItem(matrixStack, cur, x, y,100, w / 16F, h / 16F, true, cnt==0?null:String.valueOf(cnt));
         
         matrixStack.pose().pushPose();
         matrixStack.pose().translate(0, 0, 200);

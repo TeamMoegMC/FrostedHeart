@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.tips.client.gui;
 
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.client.gui.screens.Screen;
 
 import java.util.HashMap;
@@ -26,7 +26,7 @@ public class TipListScreen extends Screen {
     public static String select = "";
 
     public TipListScreen(boolean background) {
-        super(Lang.str(""));
+        super(Components.str(""));
         this.background = background;
     }
 //
@@ -70,9 +70,9 @@ public class TipListScreen extends Screen {
 //        }
 //
 //        graphics.fill(x, y-16, lx, y-2, BGColor);
-//        graphics.fill(lx, y-16, lx+1, y-2, FHColorHelper.CYAN);
+//        graphics.fill(lx, y-16, lx+1, y-2, ColorHelper.CYAN);
 //        graphics.fill(x, y, lx, ly, BGColor);
-//        graphics.fill(lx, ly, lx+1, y, FHColorHelper.CYAN);
+//        graphics.fill(lx, ly, lx+1, y, ColorHelper.CYAN);
 //        if (fadeIn == 1.0F && !select.isEmpty()) {
 //            renderTipContent(graphics, lx, y);
 //        }
@@ -228,7 +228,7 @@ public class TipListScreen extends Screen {
 //            graphics.enableScissor(0, textMinY, width, GuiHeight+textMinY -8);
 //            int line = 0;
 //            for (Component content : contents) {
-//                line += 1 + FHGuiHelper.drawSplitTexts(graphics, content, boxWidth + 4, y + 4 + line * 12,
+//                line += 1 + CGuiHelper.drawSplitTexts(graphics, content, boxWidth + 4, y + 4 + line * 12,
 //                        textColor, x - 8 - boxWidth, 12, false);
 //            }
 //            textHeight = line*12;
@@ -240,7 +240,7 @@ public class TipListScreen extends Screen {
 //            graphics.enableScissor(0, textMinY, width, GuiHeight+textMinY -8);
 //            int line = 0;
 //            for (int i = 1; i < contents.size(); i++) {
-//                line += 1 + FHGuiHelper.drawSplitTexts(graphics, contents.get(i), boxWidth + 4, y+4 + line*12,
+//                line += 1 + CGuiHelper.drawSplitTexts(graphics, contents.get(i), boxWidth + 4, y+4 + line*12,
 //                        textColor, x-8 - boxWidth, 12, false);
 //            }
 //            textHeight = line*12;
@@ -278,7 +278,7 @@ public class TipListScreen extends Screen {
 //        //平滑效果
 //        graphics.pose().pushPose();
 //        graphics.pose().translate(0, barY, 0);
-//        graphics.fill(x, y, x+w, y+barHeight, FHColorHelper.CYAN);
+//        graphics.fill(x, y, x+w, y+barHeight, ColorHelper.CYAN);
 //        graphics.pose().popPose();
 //    }
 //

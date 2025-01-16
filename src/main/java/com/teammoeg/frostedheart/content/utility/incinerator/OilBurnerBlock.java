@@ -21,11 +21,11 @@ package com.teammoeg.frostedheart.content.utility.incinerator;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.base.block.FHEntityBlock;
+import com.teammoeg.chorda.block.FHBaseBlock;
+import com.teammoeg.chorda.block.FHEntityBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -49,7 +49,7 @@ public class OilBurnerBlock extends FHBaseBlock implements FHEntityBlock<OilBurn
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public OilBurnerBlock(Properties blockProps) {
-        super(blockProps.lightLevel(FHUtils.getLightValueLit(15)));
+        super(blockProps.lightLevel(CUtils.getLightValueLit(15)));
         this.registerDefaultState(this.stateDefinition.any().setValue(LIT, Boolean.FALSE));
     }
 

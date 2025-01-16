@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.teammoeg.frostedheart.content.climate.recipe.InstallInnerRecipe;
-import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.chorda.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;

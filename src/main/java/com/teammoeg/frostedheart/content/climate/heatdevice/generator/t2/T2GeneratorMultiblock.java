@@ -20,15 +20,14 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
+import com.teammoeg.chorda.multiblock.FHBaseMultiblock;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks.Logic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
+import com.teammoeg.chorda.util.ie.FHMultiblockHelper;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockBehaviour.StateArgumentPredicate;
 
 public class T2GeneratorMultiblock extends FHBaseMultiblock {
 

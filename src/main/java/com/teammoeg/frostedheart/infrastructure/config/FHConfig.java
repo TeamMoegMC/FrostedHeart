@@ -231,7 +231,6 @@ public class FHConfig {
         public final ForgeConfigSpec.EnumValue<FHTemperatureDifficulty> tdiffculty;
         public final ForgeConfigSpec.ConfigValue<Double> tempSpeed;
         public final ForgeConfigSpec.BooleanValue keepEquipments;
-        public final ForgeConfigSpec.ConfigValue<Double> taskPerTick;
         public final ForgeConfigSpec.ConfigValue<Double> waterReducingRate;
         public final ForgeConfigSpec.IntValue weaknessEffectAmplifier;
         public final ForgeConfigSpec.BooleanValue resetWaterLevelInDeath;
@@ -366,8 +365,6 @@ public class FHConfig {
             fixEssJeiIssue = builder
                     .comment("Fixes JEI and Bukkit server compat issue, don't touch unless you know what you are doing.")
                     .define("fixEssJeiIssue", true);
-            taskPerTick = builder.comment("Range Detection tasks to execute per tick")
-                    .defineInRange("taskPerTick", 1, 0.005, Integer.MAX_VALUE);
             developers = builder
                     .comment("Special array of players")
                     .defineList("Player Whitelist", DEFAULT_WHITELIST, s -> true);

@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.frostedheart.base.block.FHEntityBlock;
-import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
+import com.teammoeg.chorda.block.FHEntityBlock;
+import com.teammoeg.chorda.block.FluidPipeBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 import net.minecraft.core.BlockPos;

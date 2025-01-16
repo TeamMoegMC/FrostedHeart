@@ -30,8 +30,8 @@ import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.Villager;
@@ -239,7 +239,7 @@ public class FHVillagerData implements MenuProvider {
     public void update(ServerLevel w, Player trigger) {
         initLegacy(parent);
         long day = WorldClimate.getWorldDay(w);
-        FHUtils.ofMap(relations, trigger.getUUID()).ifPresent(t -> t.update(day));
+        CUtils.ofMap(relations, trigger.getUUID()).ifPresent(t -> t.update(day));
         if (lastUpdated == -1) {
             lastUpdated = day - 1;
         }

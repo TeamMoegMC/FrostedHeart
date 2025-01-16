@@ -27,9 +27,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlock;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
+import com.teammoeg.chorda.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
-import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
+import com.teammoeg.chorda.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.level.block.Block;

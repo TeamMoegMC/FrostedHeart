@@ -20,10 +20,10 @@
 package com.teammoeg.frostedheart.content.utility.incinerator;
 
 import com.simibubi.create.foundation.fluid.FluidHelper;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
-import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
+import com.teammoeg.chorda.block.FHBlockInterfaces.IActiveState;
+import com.teammoeg.chorda.blockentity.FHBaseTileEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
+import com.teammoeg.chorda.block.FHTickableBlockEntity;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundTag;

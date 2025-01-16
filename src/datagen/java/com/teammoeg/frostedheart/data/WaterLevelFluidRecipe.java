@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.data;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.content.water.recipe.WaterLevelAndEffectRecipe;
-import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.chorda.util.RegistryUtils;
 
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.world.level.material.Fluid;

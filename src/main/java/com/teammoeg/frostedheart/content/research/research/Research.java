@@ -33,9 +33,9 @@ import java.util.stream.Collectors;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.team.FHTeamDataManager;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.FHRegisteredItem;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
@@ -46,8 +46,8 @@ import com.teammoeg.frostedheart.content.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.content.research.number.IResearchNumber;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.utility.OptionalLazy;
+import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.chorda.util.utility.OptionalLazy;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -266,7 +266,7 @@ public class Research implements FHRegisteredItem {
         deleteInTree();
         //this.effects.forEach(Effect::deleteSelf);
         //this.clues.forEach(Clue::deleteSelf);
-        FHTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(e,this));
+        FHTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(FHSpecialDataTypes.RESEARCH_DATA).resetData(e,this));
 
         FHResearch.delete(this);
     }
@@ -390,7 +390,7 @@ public class Research implements FHRegisteredItem {
      * @return data<br>
      */
     public ResearchData getData(TeamDataHolder team) {
-        return team.getData(SpecialDataTypes.RESEARCH_DATA).getData(this);
+        return team.getData(FHSpecialDataTypes.RESEARCH_DATA).getData(this);
     }
 
     /**
@@ -680,7 +680,7 @@ public class Research implements FHRegisteredItem {
      */
     public void setNewId(String nid) {
         if (!id.equals(nid)) {
-            FHTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(SpecialDataTypes.RESEARCH_DATA).resetData(e, this));
+            FHTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(FHSpecialDataTypes.RESEARCH_DATA).resetData(e, this));
             deleteInTree();//clear all reference, hope this could work
             FHResearch.delete(this);
             this.setId(nid);

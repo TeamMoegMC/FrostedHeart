@@ -22,19 +22,19 @@ package com.teammoeg.frostedheart.content.steamenergy.sauna;
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
+import com.teammoeg.chorda.block.FHBlockInterfaces;
+import com.teammoeg.chorda.block.FHTickableBlockEntity;
+import com.teammoeg.chorda.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.mixin.IOwnerTile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
@@ -270,7 +270,7 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBloc
     }
 
     public SaunaRecipe findRecipe(ItemStack input) {
-        for (SaunaRecipe recipe : FHUtils.filterRecipes(this.getLevel().getRecipeManager(), SaunaRecipe.TYPE))
+        for (SaunaRecipe recipe : CUtils.filterRecipes(this.getLevel().getRecipeManager(), SaunaRecipe.TYPE))
             if (recipe.input.test(input))
                 return recipe;
         return null;
@@ -327,7 +327,7 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBloc
         }
         // client side render
         else if (getIsActive()) {
-            ClientUtils.spawnSteamParticles(this.getLevel(), worldPosition);
+            FHClientUtils.spawnSteamParticles(this.getLevel(), worldPosition);
         }
     }
 

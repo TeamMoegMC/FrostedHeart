@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.health.network;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.FHMessage;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkDirection;

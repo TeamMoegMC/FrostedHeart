@@ -26,10 +26,10 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.base.team.TeamDataClosure;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.team.FHTeamDataManager;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.chorda.team.TeamDataClosure;
+import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.research.recipe.InspireRecipe;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
@@ -44,9 +44,9 @@ import com.teammoeg.frostedheart.content.research.research.clues.ItemClue;
 import com.teammoeg.frostedheart.content.research.research.clues.KillClue;
 import com.teammoeg.frostedheart.content.research.research.clues.MinigameClue;
 import com.teammoeg.frostedheart.content.research.research.clues.TickListenerClue;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.utility.OptionalLazy;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.RegistryUtils;
+import com.teammoeg.chorda.util.utility.OptionalLazy;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
@@ -244,7 +244,7 @@ public class ResearchListeners {
     @OnlyIn(Dist.CLIENT)
     public static boolean canExamine(ItemStack i) {
         if (i.isEmpty()) return false;
-        for (InspireRecipe ir : FHUtils.filterRecipes(null, InspireRecipe.TYPE)) {
+        for (InspireRecipe ir : CUtils.filterRecipes(null, InspireRecipe.TYPE)) {
             if (ir.item.test(i)) {
                 return true;
             }
@@ -329,7 +329,7 @@ public class ResearchListeners {
 
     public static int fetchGameLevel(ServerPlayer s) {
     	TeamDataHolder data=FHTeamDataManager.get(s);
-        TeamResearchData trd = data.getData(SpecialDataTypes.RESEARCH_DATA);
+        TeamResearchData trd = data.getData(FHSpecialDataTypes.RESEARCH_DATA);
         OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent()) {
             Research rs = cur.orElse(null);
@@ -400,7 +400,7 @@ public class ResearchListeners {
         FHTeamDataManager.INSTANCE.save();
         FHTeamDataManager.INSTANCE.load();
         FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
-        FHTeamDataManager.INSTANCE.forAllData(SpecialDataTypes.RESEARCH_DATA,TeamResearchData::sendUpdate);
+        FHTeamDataManager.INSTANCE.forAllData(FHSpecialDataTypes.RESEARCH_DATA,TeamResearchData::sendUpdate);
     }
 
     public static ItemStack submitItem(ServerPlayer s, ItemStack i) {
@@ -425,7 +425,7 @@ public class ResearchListeners {
                 }
                 cur.ifPresent(r -> RubbingTool.setResearch(i, r.getId()));
             }
-            for (InspireRecipe ir : FHUtils.filterRecipes(s.level().getRecipeManager(), InspireRecipe.TYPE)) {
+            for (InspireRecipe ir : CUtils.filterRecipes(s.level().getRecipeManager(), InspireRecipe.TYPE)) {
                 if (ir.item.test(i)) {
                     i.shrink(1);
                     EnergyCore.addPersistentEnergy(s, ir.inspire);

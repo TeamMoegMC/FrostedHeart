@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.content.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.team.FHTeamDataManager;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.Research;
@@ -56,7 +56,7 @@ public class FHEffectTriggerPacket implements FHMessage {
 
             ServerPlayer spe = context.get().getSender();
         	TeamDataHolder data=FHTeamDataManager.get(spe);
-            TeamResearchData trd = data.getData(SpecialDataTypes.RESEARCH_DATA);
+            TeamResearchData trd = data.getData(FHSpecialDataTypes.RESEARCH_DATA);
             if (trd.getData(r).isCompleted()) {
             	
             	trd.grantEffects(data, spe,r);

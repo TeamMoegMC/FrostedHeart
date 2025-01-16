@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.waypoint.network;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.FHMessage;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.WaypointManager;
 import net.minecraft.network.FriendlyByteBuf;

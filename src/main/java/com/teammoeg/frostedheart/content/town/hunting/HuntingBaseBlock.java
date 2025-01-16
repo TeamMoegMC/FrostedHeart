@@ -1,11 +1,11 @@
 package com.teammoeg.frostedheart.content.town.hunting;
 
-import com.teammoeg.frostedheart.base.block.FHEntityBlock;
+import com.teammoeg.chorda.block.FHEntityBlock;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.MathUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import com.teammoeg.chorda.util.MathUtils;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -28,7 +28,7 @@ public class HuntingBaseBlock extends AbstractTownWorkerBlock implements FHEntit
     public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, RandomSource rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
         if (stateIn.getValue(AbstractTownWorkerBlock.LIT)) {
-            ClientUtils.spawnSteamParticles(worldIn, pos);
+            FHClientUtils.spawnSteamParticles(worldIn, pos);
         }
     }
 
@@ -39,22 +39,22 @@ public class HuntingBaseBlock extends AbstractTownWorkerBlock implements FHEntit
             if (te == null) {
                 return InteractionResult.FAIL;
             }
-            player.displayClientMessage(Lang.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.displayClientMessage(Lang.str(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
-            player.displayClientMessage(Lang.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.displayClientMessage(Lang.str("Raw temperature: " +
+            player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            player.displayClientMessage(Components.str(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
+            player.displayClientMessage(Components.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(Components.str("Raw temperature: " +
                     MathUtils.round(te.getTemperature(), 2)), false);
-            player.displayClientMessage(Lang.str("Temperature modifier: " +
+            player.displayClientMessage(Components.str("Temperature modifier: " +
                     MathUtils.round(te.getTemperatureModifier(), 2)), false);
-            player.displayClientMessage(Lang.str("Effective temperature: " +
+            player.displayClientMessage(Components.str("Effective temperature: " +
                     MathUtils.round(te.getEffectiveTemperature(), 2)), false);
-            player.displayClientMessage(Lang.str("BedNum: " + te.getBedNum()), false);
-            player.displayClientMessage(Lang.str("MaxResident: " + te.getMaxResident()), false);
-            player.displayClientMessage(Lang.str("TanningRackNum: " + te.getTanningRackNum()), false);
-            player.displayClientMessage(Lang.str("chestNum: " + te.getChestNum()), false);
-            player.displayClientMessage(Lang.str("Volume: " + (te.getVolume())), false);
-            player.displayClientMessage(Lang.str("Area: " + (te.getArea())), false);
-            player.displayClientMessage(Lang.str("Rating: " +
+            player.displayClientMessage(Components.str("BedNum: " + te.getBedNum()), false);
+            player.displayClientMessage(Components.str("MaxResident: " + te.getMaxResident()), false);
+            player.displayClientMessage(Components.str("TanningRackNum: " + te.getTanningRackNum()), false);
+            player.displayClientMessage(Components.str("chestNum: " + te.getChestNum()), false);
+            player.displayClientMessage(Components.str("Volume: " + (te.getVolume())), false);
+            player.displayClientMessage(Components.str("Area: " + (te.getArea())), false);
+            player.displayClientMessage(Components.str("Rating: " +
                     MathUtils.round(te.getRating(), 2)), false);
             return InteractionResult.SUCCESS;
         }

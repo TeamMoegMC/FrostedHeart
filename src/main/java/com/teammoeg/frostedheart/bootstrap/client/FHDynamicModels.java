@@ -23,7 +23,7 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1Gener
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorRenderer;
 import com.teammoeg.frostedheart.content.research.blocks.MechCalcRenderer;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.model.DynamicBlockModelReference;
+import com.teammoeg.chorda.model.DynamicBlockModelReference;
 
 public class FHDynamicModels {
     public static void setup() {

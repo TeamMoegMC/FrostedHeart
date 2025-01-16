@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
+import com.teammoeg.chorda.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.content.scenario.Param;
@@ -13,8 +13,8 @@ import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.trigger.MovementTrigger;
 import com.teammoeg.frostedheart.content.scenario.runner.trigger.OrTrigger;
 import com.teammoeg.frostedheart.content.scenario.runner.trigger.VariantTrigger;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.RegistryUtils;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -33,7 +33,7 @@ public class MCCommands {
 		ItemStack is = new ItemStack(i, count);
 		if (nbt != null)
 			is.setTag(TagParser.parseTag(nbt));
-		FHUtils.giveItem(runner.context().player(), is);
+		CUtils.giveItem(runner.context().player(), is);
 	}
 
 	public void setResearchAttribute(ScenarioCommandContext runner, @Param("k") String key, @Param("v") double value) {

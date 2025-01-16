@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.robotics.logistics;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.block.FHGuiBlock;
+import com.teammoeg.chorda.block.FHGuiBlock;
 
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;

@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
-import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.chorda.util.CUtils;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -100,9 +100,9 @@ public class IngredientEditor extends BaseEditDialog {
     };
     public static final Editor<Ingredient> NBT_EDITOR = (p, l, v, c) -> {
         if (v == null || v.isEmpty()) {
-            SelectItemStackDialog.EDITOR.open(p, l, new ItemStack(Items.AIR), e -> c.accept(FHUtils.createIngredient(e)));
+            SelectItemStackDialog.EDITOR.open(p, l, new ItemStack(Items.AIR), e -> c.accept(CUtils.createIngredient(e)));
         } else {
-            SelectItemStackDialog.EDITOR.open(p, l, v.getItems()[0], e -> c.accept(FHUtils.createIngredient(e)));
+            SelectItemStackDialog.EDITOR.open(p, l, v.getItems()[0], e -> c.accept(CUtils.createIngredient(e)));
         }
     };
     public static final Editor<Ingredient> TAG_EDITOR = (p, l, v, c) -> {

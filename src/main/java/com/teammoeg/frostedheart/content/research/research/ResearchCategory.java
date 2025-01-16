@@ -24,8 +24,8 @@ import java.util.Map;
 
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
+import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.io.codec.CompressDifferCodec;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;

@@ -20,13 +20,12 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
-import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
-import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
-import com.teammoeg.frostedheart.base.block.PipeTileEntity;
+import com.teammoeg.chorda.block.FHTickableBlockEntity;
+import com.teammoeg.chorda.block.FluidPipeBlock;
+import com.teammoeg.chorda.blockentity.PipeTileEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

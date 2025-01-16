@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.research;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;

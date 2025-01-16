@@ -21,8 +21,6 @@ package com.teammoeg.frostedheart.content.scenario.runner;
 
 import java.util.Arrays;
 
-import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
-
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 

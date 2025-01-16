@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import com.teammoeg.frostedheart.base.menu.FHBlockEntityContainer;
+import com.teammoeg.chorda.menu.FHBlockEntityContainer;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 
 import blusunrize.immersiveengineering.common.gui.IESlot;

@@ -20,10 +20,10 @@
 package com.teammoeg.frostedheart.content.steamenergy.charger;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.base.block.FHEntityBlock;
+import com.teammoeg.chorda.block.FHBaseBlock;
+import com.teammoeg.chorda.block.FHEntityBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
@@ -57,7 +57,7 @@ public class ChargerBlock extends FHBaseBlock implements FHEntityBlock<ChargerTi
     public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, RandomSource rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
         if (stateIn.getValue(LIT)) {
-            ClientUtils.spawnSteamParticles(worldIn, pos);
+            FHClientUtils.spawnSteamParticles(worldIn, pos);
         }
     }
 

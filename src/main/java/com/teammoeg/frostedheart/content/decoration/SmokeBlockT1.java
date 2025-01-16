@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.chorda.block.FHBaseBlock;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.BlockPos;

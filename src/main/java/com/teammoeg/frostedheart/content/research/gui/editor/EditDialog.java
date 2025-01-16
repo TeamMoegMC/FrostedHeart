@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.content.research.gui.editor;
 
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.DrawDeskScreen;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Widget;
@@ -58,7 +58,7 @@ public abstract class EditDialog extends Panel {
                 sc.closeDialog(refresh);
         } catch (Throwable ex) {
             ex.printStackTrace();
-            ClientUtils.getPlayer().sendSystemMessage(Lang.str("Fatal error on switching dialog! see log for details").withStyle(ChatFormatting.RED));
+            ClientUtils.getPlayer().sendSystemMessage(Components.str("Fatal error on switching dialog! see log for details").withStyle(ChatFormatting.RED));
             sc.closeGui();
         }
         try {

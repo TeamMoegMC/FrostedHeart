@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
-import com.teammoeg.frostedheart.base.event.PerformBonemealEvent;
+import com.teammoeg.frostedheart.content.climate.event.PerformBonemealEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;

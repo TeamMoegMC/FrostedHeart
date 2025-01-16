@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
+import com.teammoeg.chorda.multiblock.FHBaseMultiblock;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 

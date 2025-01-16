@@ -28,8 +28,8 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.util.client.Lang;
 
 import mezz.jei.api.forge.ForgeTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
@@ -125,7 +125,7 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
 	@Override
 	public void setRecipe(IRecipeLayoutBuilder builder, GeneratorSteamRecipe recipe, IFocusGroup focuses) {
 		builder.addSlot(RecipeIngredientRole.INPUT, 26, 12).addIngredients(ForgeTypes.FLUID_STACK, recipe.input.getMatchingFluidStacks()).setFluidRenderer(recipe.input.getAmount()*5, false, 16, 47).setOverlay(TANK, 0, 0);
-		List<GeneratorRecipe> recipes=FHUtils.filterRecipes(null, GeneratorRecipe.TYPE);
+		List<GeneratorRecipe> recipes= CUtils.filterRecipes(null, GeneratorRecipe.TYPE);
 		builder.addSlot(RecipeIngredientRole.INPUT, 75, 7).addItemStacks(recipes.stream().flatMap(t->Arrays.stream(t.input.getMatchingStacks())).collect(Collectors.toList()));
 		builder.addSlot(RecipeIngredientRole.OUTPUT, 75, 46).addItemStacks(recipes.stream().map(t->t.output).collect(Collectors.toList()));
 	}

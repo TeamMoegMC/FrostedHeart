@@ -19,15 +19,15 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.util.mixin.IFeedStore;
-import com.teammoeg.frostedheart.util.mixin.IMilkable;
+import com.teammoeg.chorda.util.mixin.IFeedStore;
+import com.teammoeg.chorda.util.mixin.IMilkable;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.goal.BreedGoal;

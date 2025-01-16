@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.research.network;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.FHMessage;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardPos;
 

@@ -20,12 +20,11 @@
 package com.teammoeg.frostedheart.content.climate.event;
 
 import com.teammoeg.frostedheart.*;
-import com.teammoeg.frostedheart.base.capability.CurioCapabilityProvider;
-import com.teammoeg.frostedheart.base.event.PerformBonemealEvent;
-import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.capability.CurioCapabilityProvider;
+import com.teammoeg.chorda.scheduler.SchedulerQueue;
+import com.teammoeg.chorda.team.FHTeamDataManager;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
@@ -49,8 +48,7 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager.DataType;
 import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_PlaceExtraSnow;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.tterrag.registrate.util.entry.BlockEntry;
+import com.teammoeg.chorda.util.CUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -233,7 +231,7 @@ public class ClimateCommonEvents {
                         continue;
                     }
                     CompoundTag cnbt = cn.getCompound("inner_cover_tag");
-                    int i = FHUtils.getEnchantmentLevel(Enchantments.UNBREAKING, cnbt);
+                    int i = CUtils.getEnchantmentLevel(Enchantments.UNBREAKING, cnbt);
                     int j = 0;
                     if (i > 0)
                         for (int k = 0; k < amount; ++k) {
@@ -276,15 +274,15 @@ public class ClimateCommonEvents {
                 // Town logic tick
                 int i = 0;
                 for (TeamDataHolder trd : FHTeamDataManager.INSTANCE.getAllData()) {
-                    if (serverWorld.dimension().equals(trd.getData(SpecialDataTypes.GENERATOR_DATA).dimension)) {
+                    if (serverWorld.dimension().equals(trd.getData(FHSpecialDataTypes.GENERATOR_DATA).dimension)) {
                         if (serverWorld.getGameTime() % 20 == i % 20) {//Split town calculations to multiple seconds
                             if (trd.getTeam().map(t -> t.getOnlineMembers().size()).orElse(0) > 0) {
-                                trd.getData(SpecialDataTypes.TOWN_DATA).tick(serverWorld);
+                                trd.getData(FHSpecialDataTypes.TOWN_DATA).tick(serverWorld);
                             }
                         }
                         if(serverWorld.getGameTime() == i + 1000) {
                             if (trd.getTeam().map(t -> t.getOnlineMembers().size()).orElse(0) > 0) {
-                                trd.getData(SpecialDataTypes.TOWN_DATA).tickMorning(serverWorld);//execute only once a day
+                                trd.getData(FHSpecialDataTypes.TOWN_DATA).tickMorning(serverWorld);//execute only once a day
                             }
                         }
                     }

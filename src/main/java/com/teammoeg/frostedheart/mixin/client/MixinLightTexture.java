@@ -20,10 +20,6 @@
 package com.teammoeg.frostedheart.mixin.client;
 
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
-
-import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.client.renderer.LightTexture;
 

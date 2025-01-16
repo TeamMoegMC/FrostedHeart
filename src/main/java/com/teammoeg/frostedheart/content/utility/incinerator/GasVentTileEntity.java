@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.content.utility.incinerator;
 
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
-import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
+import com.teammoeg.chorda.block.FHBlockInterfaces.IActiveState;
+import com.teammoeg.chorda.blockentity.FHBaseTileEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
+import com.teammoeg.chorda.block.FHTickableBlockEntity;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;

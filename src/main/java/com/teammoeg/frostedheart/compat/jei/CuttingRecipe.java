@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.compat.jei;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.chorda.util.RegistryUtils;
 
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;

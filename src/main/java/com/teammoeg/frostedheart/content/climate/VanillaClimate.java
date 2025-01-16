@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate;
 
-import com.teammoeg.frostedheart.util.noise.INoise1D;
+import com.teammoeg.chorda.util.noise.INoise1D;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;

@@ -142,7 +142,7 @@ public abstract class ResearchPanel extends Panel {
 
     @Override
     public void drawWidget(GuiGraphics arg0, Theme arg1, Widget arg2, int arg3, int arg4, int arg5, int arg6) {
-        //GuiHelper.setupDrawing();
+        //CGuiHelper.setupDrawing();
         
         super.drawWidget(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
     }

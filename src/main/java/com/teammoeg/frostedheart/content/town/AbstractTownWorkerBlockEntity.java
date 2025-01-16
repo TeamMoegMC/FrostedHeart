@@ -1,9 +1,9 @@
 package com.teammoeg.frostedheart.content.town;
 
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
-import com.teammoeg.frostedheart.base.scheduler.ScheduledTaskTileEntity;
-import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
+import com.teammoeg.chorda.block.FHBlockInterfaces;
+import com.teammoeg.chorda.blockentity.FHBaseTileEntity;
+import com.teammoeg.chorda.scheduler.ScheduledTaskTileEntity;
+import com.teammoeg.chorda.scheduler.SchedulerQueue;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;

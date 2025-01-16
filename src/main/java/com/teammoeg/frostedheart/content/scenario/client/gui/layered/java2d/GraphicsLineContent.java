@@ -7,7 +7,7 @@ import java.awt.RenderingHints;
 
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
-import com.teammoeg.frostedheart.util.client.Point;
+import com.teammoeg.chorda.util.client.Point;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 

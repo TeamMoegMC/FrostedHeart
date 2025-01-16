@@ -30,9 +30,9 @@ import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardPos;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.GenerateInfo;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.ResearchGame;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
@@ -96,7 +96,7 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
         if (inventory.get(PAPER_SLOT).isEmpty()) return;
         int lvl = ResearchListeners.fetchGameLevel(player);
         if (lvl < 0) return;
-        Optional<ResearchPaperRecipe> pr = FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.get(PAPER_SLOT))).findAny();
+        Optional<ResearchPaperRecipe> pr = CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.get(PAPER_SLOT))).findAny();
         if (!pr.isPresent()) return;
         if (EnergyCore.getEnergy(player)<=0) return;
         if (!damageInk(player, 5, lvl)) return;
@@ -119,7 +119,7 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
         ItemStack is = inventory.get(PAPER_SLOT);
         if (is.isEmpty()) return false;
         int lvl = ResearchListeners.fetchGameLevel();
-        return FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.maxlevel >= lvl && r.paper.test(is));
+        return CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.maxlevel >= lvl && r.paper.test(is));
     }
 
     @Override
@@ -129,7 +129,7 @@ public class DrawingDeskTileEntity extends IEBaseBlockEntity implements MenuProv
         else if (slot == INK_SLOT)
             return item.getItem() instanceof IPen && ((IPen) item.getItem()).canUse(null, item, 1);
         else if (slot == PAPER_SLOT)
-            return FHUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.paper.test(item));
+            return CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.paper.test(item));
         else
             return false;
     }

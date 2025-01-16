@@ -23,13 +23,13 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.simibubi.create.foundation.utility.VoxelShaper;
-import com.teammoeg.frostedheart.base.block.FHEntityBlock;
-import com.teammoeg.frostedheart.base.block.FHKineticBlock;
-import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
-import com.teammoeg.frostedheart.base.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.chorda.block.FHEntityBlock;
+import com.teammoeg.chorda.block.FHKineticBlock;
+import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.util.lang.Lang;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.level.block.Block;
@@ -70,7 +70,7 @@ public class MechCalcBlock extends FHKineticBlock implements FHEntityBlock<MechC
                                TooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         if (stack.hasTag() && stack.getTag().getBoolean("prod")) {
-            tooltip.add(Lang.str("For Display Only"));
+            tooltip.add(Components.str("For Display Only"));
         }
     }
 

@@ -30,9 +30,9 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.recipe.InspireRecipe;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -146,7 +146,7 @@ public class FHTooltips {
 
 
             // Inspiration item
-            for (InspireRecipe ir : FHUtils.filterRecipes(null, InspireRecipe.TYPE)) {
+            for (InspireRecipe ir : CUtils.filterRecipes(null, InspireRecipe.TYPE)) {
                 if (ir.item.test(stack)) {
                     event.getToolTip().add(Lang.translateTooltip("inspire_item").withStyle(ChatFormatting.GRAY));
                     break;

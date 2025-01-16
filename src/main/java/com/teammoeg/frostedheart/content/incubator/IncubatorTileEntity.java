@@ -23,14 +23,14 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
-import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
+import com.teammoeg.chorda.block.FHBlockInterfaces;
+import com.teammoeg.chorda.block.FHTickableBlockEntity;
+import com.teammoeg.chorda.blockentity.FHBaseTileEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IProcessBE;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
@@ -222,15 +222,15 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements FHTickableB
         return 64;
     }
     public boolean canBeCatalyst(ItemStack catalyst) {
-        return FHUtils.filterRecipes(this.getLevel().getRecipeManager(),IncubateRecipe.TYPE).stream().filter(r -> r.catalyst != null).anyMatch(r -> r.catalyst.testIgnoringSize(catalyst));
+        return CUtils.filterRecipes(this.getLevel().getRecipeManager(),IncubateRecipe.TYPE).stream().filter(r -> r.catalyst != null).anyMatch(r -> r.catalyst.testIgnoringSize(catalyst));
     }
 
     public boolean canBeInput(ItemStack input) {
-        return FHUtils.filterRecipes(this.getLevel().getRecipeManager(),IncubateRecipe.TYPE).stream().anyMatch(r -> r.input.testIgnoringSize(input));
+        return CUtils.filterRecipes(this.getLevel().getRecipeManager(),IncubateRecipe.TYPE).stream().anyMatch(r -> r.input.testIgnoringSize(input));
     }
 
     public IncubateRecipe findRecipe(ItemStack in, ItemStack catalyst) {
-        return FHUtils.filterRecipes(this.getLevel().getRecipeManager(),IncubateRecipe.TYPE).stream().filter(t -> t.input.test(in)).filter(t -> t.catalyst == null || t.catalyst.test(catalyst)).findAny().orElse(null);
+        return CUtils.filterRecipes(this.getLevel().getRecipeManager(),IncubateRecipe.TYPE).stream().filter(t -> t.input.test(in)).filter(t -> t.catalyst == null || t.catalyst.test(catalyst)).findAny().orElse(null);
     }
     @Override
     public boolean isStackValid(int i, ItemStack itemStack) {

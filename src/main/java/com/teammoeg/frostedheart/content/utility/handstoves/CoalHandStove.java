@@ -25,10 +25,10 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.mojang.datafixers.util.Either;
-import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 
 import net.minecraft.world.item.TooltipFlag;
@@ -133,7 +133,7 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
                 stack.getTag().putInt("CustomModelData", 1);
             if (item.hasNext() && entityLiving instanceof Player ) {
                 ItemStack ret = new ItemStack(item.next());
-                FHUtils.giveItem((Player) entityLiving, ret);
+                CUtils.giveItem((Player) entityLiving, ret);
             }
         }
         return stack;

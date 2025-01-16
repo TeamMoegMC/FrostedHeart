@@ -7,9 +7,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.logging.LogUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.FHColorHelper;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.util.client.ColorHelper;
+import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.frostedheart.util.client.Lang;
 import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -158,7 +159,7 @@ public class Tip {
         nbt.putInt("fontColor", fontColor);
         nbt.putInt("backgroundColor", backgroundColor);
         var toAddContents = new ListTag();
-        this.contents.stream().map(content -> StringTag.valueOf(Lang.getKeyOrElseStr(content))).forEach(toAddContents::add);
+        this.contents.stream().map(content -> StringTag.valueOf(Components.getKeyOrElseStr(content))).forEach(toAddContents::add);
         nbt.put("contents", toAddContents);
         return nbt;
     }
@@ -177,7 +178,7 @@ public class Tip {
         json.addProperty("fontColor", Integer.toHexString(fontColor).toUpperCase());
         json.addProperty("backgroundColor", Integer.toHexString(backgroundColor).toUpperCase());
         var toAddContents = new JsonArray();
-        this.contents.stream().map(Lang::getKeyOrElseStr).forEach(toAddContents::add);
+        this.contents.stream().map(Components::getKeyOrElseStr).forEach(toAddContents::add);
         json.add("contents", toAddContents);
         return json;
     }
@@ -191,7 +192,7 @@ public class Tip {
         Tip.Builder builder = builder("exception");
         if (!filePath.exists()) {
             LOGGER.error("File does not exists '{}'", filePath);
-            builder.error(ErrorType.LOAD, Lang.str(filePath.toString()), Lang.tips("error.file_not_exists", ERROR_DESC).component());
+            builder.error(ErrorType.LOAD, Components.str(filePath.toString()), Lang.tips("error.file_not_exists", ERROR_DESC).component());
         } else {
             try {
                 String content = new String(Files.readAllBytes(Paths.get(String.valueOf(filePath))));
@@ -200,11 +201,11 @@ public class Tip {
 
             } catch (JsonSyntaxException e) {
                 LOGGER.error("Invalid JSON format '{}'", filePath, e);
-                builder.error(ErrorType.LOAD, e, Lang.str(builder.id), Lang.tips("error.invalid_json", ERROR_DESC).component());
+                builder.error(ErrorType.LOAD, e, Components.str(builder.id), Lang.tips("error.invalid_json", ERROR_DESC).component());
 
             } catch (Exception e) {
                 LOGGER.error("Unable to load file '{}'", filePath, e);
-                builder.error(ErrorType.LOAD, e, Lang.str(builder.id), Lang.tips("error.other").component(), ERROR_DESC);
+                builder.error(ErrorType.LOAD, e, Components.str(builder.id), Lang.tips("error.other").component(), ERROR_DESC);
             }
         }
         return builder.build();
@@ -223,8 +224,8 @@ public class Tip {
         private boolean pin;
         private boolean temporary;
         private int displayTime = 30000;
-        private int fontColor = FHColorHelper.CYAN;
-        private int BGColor = FHColorHelper.BLACK;
+        private int fontColor = ColorHelper.CYAN;
+        private int BGColor = ColorHelper.BLACK;
 
         private boolean editable = true;
 
@@ -371,11 +372,11 @@ public class Tip {
                 if (!location.isBlank()) image(ResourceLocation.tryParse(location));
 
                 var contents = nbt.getList("contents", Tag.TAG_STRING);
-                var list = contents.stream().map(tag -> Lang.translateOrElseStr(tag.getAsString())).toList();
+                var list = contents.stream().map(tag -> Components.translateOrElseStr(tag.getAsString())).toList();
                 this.contents.addAll(list);
             }
             if (id.isBlank()) {
-                error(ErrorType.OTHER, Lang.str("NBT does not contain tip"));
+                error(ErrorType.OTHER, Components.str("NBT does not contain tip"));
             }
             return this;
         }
@@ -389,7 +390,7 @@ public class Tip {
                     error(ErrorType.LOAD, Lang.tips("error.load.no_id").component());
                     return this;
                 } else if (TipManager.INSTANCE.hasTip(s)) {
-                    error(ErrorType.LOAD, Lang.str("ID: " + s), Lang.tips("error.load.duplicate_id").component());
+                    error(ErrorType.LOAD, Components.str("ID: " + s), Lang.tips("error.load.duplicate_id").component());
                     return this;
                 }
                 id = s;
@@ -403,12 +404,12 @@ public class Tip {
                 if (jsonContents != null) {
                     for (int i = 0; i < jsonContents.size(); i++) {
                         String s = jsonContents.get(i).getAsString();
-                        line(Lang.translateOrElseStr(s));
+                        line(Components.translateOrElseStr(s));
                     }
                 }
             }
             if (this.contents.isEmpty()) {
-                error(ErrorType.LOAD, Lang.str("ID: " + id), Lang.tips("error.load.empty").component());
+                error(ErrorType.LOAD, Components.str("ID: " + id), Lang.tips("error.load.empty").component());
                 return this;
             }
 
@@ -419,7 +420,7 @@ public class Tip {
                     if (image != null) {
                         image(image);
                     } else {
-                        error(ErrorType.LOAD, Lang.str("ID: " + id), Lang.tips("error.load.invalid_image", location).component());
+                        error(ErrorType.LOAD, Components.str("ID: " + id), Lang.tips("error.load.invalid_image", location).component());
                         return this;
                     }
                 }
@@ -432,8 +433,8 @@ public class Tip {
             if (json.has("hide"           )) hide         (json.get("hide").getAsBoolean());
             if (json.has("pin"            )) pin          (json.get("pin").getAsBoolean());
             if (json.has("displayTime"    )) displayTime  (Math.max(json.get("displayTime").getAsInt(), 0));
-            if (json.has("fontColor"      )) fontColor    (getColorOrElse(json, "fontColor", FHColorHelper.CYAN));
-            if (json.has("backgroundColor")) BGColor      (getColorOrElse(json, "backgroundColor", FHColorHelper.BLACK));
+            if (json.has("fontColor"      )) fontColor    (getColorOrElse(json, "fontColor", ColorHelper.CYAN));
+            if (json.has("backgroundColor")) BGColor      (getColorOrElse(json, "backgroundColor", ColorHelper.BLACK));
 
             temporary = false;
             return this;
@@ -443,7 +444,7 @@ public class Tip {
             clearContents()
                     .line(Lang.tips("error." + type.key).component())
                     .lines(descriptions)
-                    .color(FHColorHelper.RED, FHColorHelper.BLACK)
+                    .color(ColorHelper.RED, ColorHelper.BLACK)
                     .alwaysVisible(true)
                     .setTemporary()
                     .pin(true);
@@ -457,7 +458,7 @@ public class Tip {
 
         public Builder error(ErrorType type, Exception exception, Component... descriptions) {
             var desc = new ArrayList<>(List.of(descriptions));
-            desc.add(Lang.str(exception.getMessage()));
+            desc.add(Components.str(exception.getMessage()));
             return error(type, desc);
         }
 

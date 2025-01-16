@@ -2,8 +2,7 @@ package com.teammoeg.frostedheart.content.steamenergy.creative;
 
 import com.simibubi.create.foundation.block.IBE;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterTileEntity;
-import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.chorda.util.CUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -63,7 +62,7 @@ public class CreativeHeaterBlock extends HeatBlock implements IBE<CreativeHeater
     public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
                                 boolean isMoving) {
         super.neighborChanged(state, worldIn, pos, blockIn, fromPos, isMoving);
-        //Direction d = FHUtils.dirBetween(fromPos, pos);
+        //Direction d = CUtils.dirBetween(fromPos, pos);
         //System.out.println("changed")2
         if(!worldIn.isClientSide)
             worldIn.scheduleTick(pos, this, 10);
@@ -74,7 +73,7 @@ public class CreativeHeaterBlock extends HeatBlock implements IBE<CreativeHeater
     public void tick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource pRandom) {
         //System.out.println("ticked "+pos);
         super.tick(state, worldIn, pos, pRandom);
-        CreativeHeaterBlockEntity te= FHUtils.getExistingTileEntity(worldIn, pos, CreativeHeaterBlockEntity.class);
+        CreativeHeaterBlockEntity te= CUtils.getExistingTileEntity(worldIn, pos, CreativeHeaterBlockEntity.class);
         if(te!=null)
             te.getNetwork().startConnectionFromBlock(te);
     }

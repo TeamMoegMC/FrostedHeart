@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.RTextField;
@@ -63,7 +63,7 @@ public class ResearchListPanel extends Panel {
 
         @Override
         public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-            //GuiHelper.setupDrawing();
+            //CGuiHelper.setupDrawing();
             this.drawIcon(matrixStack, theme, x + 1, y + 1, 16, 16);
             long secs = System.currentTimeMillis() / 1000;
             if (lastupdate != secs) {

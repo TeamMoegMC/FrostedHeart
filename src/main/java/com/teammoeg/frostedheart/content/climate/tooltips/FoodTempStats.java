@@ -2,16 +2,16 @@ package com.teammoeg.frostedheart.content.climate.tooltips;
 
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
-import com.teammoeg.frostedheart.base.tooltip.KeyControlledDesc;
+import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHDataManager;
-import com.teammoeg.frostedheart.util.lang.FHTextIcon;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.FHTextIcon;
+import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
-import com.teammoeg.frostedheart.util.lang.Components;
-import com.teammoeg.frostedheart.util.lang.LangBuilder;
+import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.util.lang.LangBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -72,7 +72,7 @@ public class FoodTempStats implements TooltipModifier {
             int progress = Mth.ceil(Mth.clamp(Math.abs(heat) * 3, 0, 3));
 
             LangBuilder builder = Lang.builder()
-                    .add(FHTextIcon.thermometer)
+                    .add(FHTextIcon.thermometer.getIcon())
                     .add(Lang.text(" " + s + " " + TooltipHelper.makeProgressBar(3, progress))
                             .style(heat < 0 ? ChatFormatting.AQUA : ChatFormatting.GOLD));
             builder.addTo(list);

@@ -28,10 +28,11 @@ import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.town.resource.*;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -50,7 +51,7 @@ public class TownCommand {
                 Commands.literal("name")
                         .executes(ct -> {
                             TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                            ct.getSource().sendSuccess(()-> Lang.str(town.getName()), true);
+                            ct.getSource().sendSuccess(()-> Components.str(town.getName()), true);
                             return Command.SINGLE_SUCCESS;
                         });
 
@@ -58,7 +59,7 @@ public class TownCommand {
                 Commands.literal("list_items")
                         .executes(ct -> {
                             TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                            ct.getSource().sendSuccess(()-> Lang.str(town.getResourceManager().resourceHolder.getAllItems() ), true);
+                            ct.getSource().sendSuccess(()-> Components.str(town.getResourceManager().resourceHolder.getAllItems() ), true);
                             return Command.SINGLE_SUCCESS;
                         });
 
@@ -67,7 +68,7 @@ public class TownCommand {
                         .executes(ct -> {
                             TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                             System.out.println(town.getResourceManager().resourceHolder.getAllVirtualResources());
-                            ct.getSource().sendSuccess(()->Lang.str(town.getResourceManager().resourceHolder.getAllVirtualResources() ), true);
+                            ct.getSource().sendSuccess(()-> Components.str(town.getResourceManager().resourceHolder.getAllVirtualResources() ), true);
                             return Command.SINGLE_SUCCESS;
                         });
 
@@ -91,14 +92,14 @@ public class TownCommand {
                                                     String type = StringArgumentType.getString(ct, "type");
                                                     int level = IntegerArgumentType.getInteger(ct, "level");
                                                     if(amount < 0){
-                                                        ct.getSource().sendFailure(Lang.str("Invalid amount: Amount must be positive."));
+                                                        ct.getSource().sendFailure(Components.str("Invalid amount: Amount must be positive."));
                                                         return Command.SINGLE_SUCCESS;
                                                     }
                                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                                                     ResourceActionResult result = town.getResourceManager().addIfHaveCapacity(VirtualResourceType.from(type).generateKey(level), amount);
                                                     if(result.allSuccess()){
-                                                        ct.getSource().sendSuccess(()-> Lang.str("Resource added"), true);
-                                                    } else ct.getSource().sendSuccess(()->Lang.str("Resource added failed: No enough capacity."), true);
+                                                        ct.getSource().sendSuccess(()-> Components.str("Resource added"), true);
+                                                    } else ct.getSource().sendSuccess(()-> Components.str("Resource added failed: No enough capacity."), true);
                                                     return Command.SINGLE_SUCCESS;
                                                 })
                                         )
@@ -129,19 +130,19 @@ public class TownCommand {
                                                     int level = IntegerArgumentType.getInteger(ct, "level");
                                                     ITownResourceType type = ITownResourceType.from(typeString);
                                                     if(type == null){
-                                                        ct.getSource().sendFailure(Lang.str("Invalid type"));
+                                                        ct.getSource().sendFailure(Components.str("Invalid type"));
                                                         return Command.SINGLE_SUCCESS;
                                                     }
                                                     if(amount < 0){
-                                                        ct.getSource().sendFailure(Lang.str("Invalid amount: Amount must be positive."));
+                                                        ct.getSource().sendFailure(Components.str("Invalid amount: Amount must be positive."));
                                                         return Command.SINGLE_SUCCESS;
                                                     }
                                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                                                     ResourceActionResult result = null;
                                                     result = town.getResourceManager().costIfHaveEnough(type.generateKey(level), amount);
                                                     if(result.allSuccess()){
-                                                        ct.getSource().sendSuccess(()->Lang.str("Resource costed."), true);
-                                                    } else ct.getSource().sendSuccess(()->Lang.str("Resource cost failed: No enough resource."), true);
+                                                        ct.getSource().sendSuccess(()-> Components.str("Resource costed."), true);
+                                                    } else ct.getSource().sendSuccess(()-> Components.str("Resource cost failed: No enough resource."), true);
                                                     return Command.SINGLE_SUCCESS;
                                                 })
                                         )
@@ -155,12 +156,12 @@ public class TownCommand {
                                     double amount = DoubleArgumentType.getDouble(ct, "amount");
                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                                     ItemStack itemStack = ct.getSource().getPlayerOrException().getMainHandItem();
-                                    ct.getSource().sendSuccess(()->Lang.str("Adding ItemStack: " + itemStack), true);
+                                    ct.getSource().sendSuccess(()-> Components.str("Adding ItemStack: " + itemStack), true);
                                     ResourceActionResult result = town.getResourceManager().addIfHaveCapacity(itemStack, amount);
                                     if(result.allSuccess()){
-                                        ct.getSource().sendSuccess(()->Lang.str("Resource added"), true);
+                                        ct.getSource().sendSuccess(()-> Components.str("Resource added"), true);
                                         return Command.SINGLE_SUCCESS;
-                                    } else ct.getSource().sendSuccess(()->Lang.str("Resource added failed: No enough capacity."), true);
+                                    } else ct.getSource().sendSuccess(()-> Components.str("Resource added failed: No enough capacity."), true);
                                     return Command.SINGLE_SUCCESS;
                                 })
 
@@ -170,8 +171,8 @@ public class TownCommand {
                 Commands.literal("list").executes(ct -> {
                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                             int size = town.getResidents().values().size();
-                            ct.getSource().sendSuccess(()-> Lang.str("Total residents: " + size), true);
-                            ct.getSource().sendSuccess(()-> Lang.str(town.getResidents().values()), true);
+                            ct.getSource().sendSuccess(()-> Components.str("Total residents: " + size), true);
+                            ct.getSource().sendSuccess(()-> Components.str(town.getResidents().values()), true);
                             return Command.SINGLE_SUCCESS;
                         });
 
@@ -181,7 +182,7 @@ public class TownCommand {
                                 .then(Commands.argument("last_name", StringArgumentType.string()).executes(ct -> {
                                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
                                     town.addResident(new Resident(StringArgumentType.getString(ct, "first_name"), StringArgumentType.getString(ct, "last_name")));
-                                    ct.getSource().sendSuccess(()-> Lang.str("Resident added"), true);
+                                    ct.getSource().sendSuccess(()-> Components.str("Resident added"), true);
                                     return Command.SINGLE_SUCCESS;
                                 }))
                         );
@@ -189,10 +190,10 @@ public class TownCommand {
         LiteralArgumentBuilder<CommandSourceStack> listBlocks =
                 Commands.literal("list").executes(ct -> {
                     TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                    ct.getSource().sendSuccess(()-> Lang.str("Total blocks: " + town.getTownBlocks().size()), true);
+                    ct.getSource().sendSuccess(()-> Components.str("Total blocks: " + town.getTownBlocks().size()), true);
                     town.getTownBlocks().forEach((k, v) -> {
                         String blockName = v.getType().getBlock().getDescriptionId();
-                        ct.getSource().sendSuccess(()-> Lang.translateKey(blockName).append(Lang.str(" at " + k)), true);
+                        ct.getSource().sendSuccess(()-> Lang.translateKey(blockName).append(Components.str(" at " + k)), true);
                     });
                     return Command.SINGLE_SUCCESS;
                 });

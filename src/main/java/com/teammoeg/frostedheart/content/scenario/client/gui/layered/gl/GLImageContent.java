@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
-import com.teammoeg.frostedheart.util.client.FHGuiHelper;
+import com.teammoeg.chorda.util.CGuiHelper;
 import net.minecraft.resources.ResourceLocation;
 
 public class GLImageContent extends GLLayerContent {
@@ -33,14 +33,14 @@ public class GLImageContent extends GLLayerContent {
 		if(texture==null) {
 			if(showingImage!=null) {
 				
-				FHGuiHelper.bindTexture(showingImage);
-				FHGuiHelper.blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
+				CGuiHelper.bindTexture(showingImage);
+				CGuiHelper.blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
 			}
 		}else {
 			texture.draw(params.getGuiGraphics(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, params.getOpacity());
 
 			//texture.bind();
-			//FHGuiHelper.blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
+			//CGuiHelper.blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
 		}
 	}
 

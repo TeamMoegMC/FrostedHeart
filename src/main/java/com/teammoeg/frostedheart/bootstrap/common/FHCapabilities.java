@@ -7,10 +7,10 @@ import java.util.List;
 
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.capability.IFHCapability;
-import com.teammoeg.frostedheart.base.capability.codec.FHCodecCapability;
-import com.teammoeg.frostedheart.base.capability.nbt.FHNBTCapability;
-import com.teammoeg.frostedheart.base.capability.nonpresistent.FHTransientCapability;
+import com.teammoeg.chorda.capability.IFHCapability;
+import com.teammoeg.chorda.capability.codec.FHCodecCapability;
+import com.teammoeg.chorda.capability.nbt.FHNBTCapability;
+import com.teammoeg.chorda.capability.nonpresistent.FHTransientCapability;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.content.town.ChunkTownResourceCapability;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.content.waypoint.capability.WaypointCapability;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.chorda.util.io.NBTSerializable;
 
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.common.util.NonNullSupplier;

@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.bootstrap.reference;
 
 import com.teammoeg.frostedheart.FHMain;
 
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import net.minecraft.core.registries.Registries;
@@ -43,7 +43,6 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class FHTags {
 

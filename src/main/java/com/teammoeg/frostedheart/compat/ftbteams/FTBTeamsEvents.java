@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.compat.ftbteams;
 import java.util.UUID;
 
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
+import com.teammoeg.chorda.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
 

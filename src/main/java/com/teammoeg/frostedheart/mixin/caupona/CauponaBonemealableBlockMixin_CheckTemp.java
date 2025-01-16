@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.mixin.caupona;
 
 import com.teammoeg.caupona.blocks.plants.FruitsLeavesBlock;
 import com.teammoeg.caupona.blocks.plants.SilphiumBlock;
-import com.teammoeg.frostedheart.base.event.PerformBonemealEvent;
+import com.teammoeg.frostedheart.content.climate.event.PerformBonemealEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;

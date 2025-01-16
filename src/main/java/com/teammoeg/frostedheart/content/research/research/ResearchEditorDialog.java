@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.IconEditor;
 import com.teammoeg.frostedheart.content.research.gui.editor.BaseEditDialog;
@@ -39,7 +40,6 @@ import com.teammoeg.frostedheart.content.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectDialog;
 import com.teammoeg.frostedheart.content.research.research.clues.ClueEditor;
 import com.teammoeg.frostedheart.content.research.research.effects.EffectEditor;
-import com.teammoeg.frostedheart.util.lang.Lang;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -85,7 +85,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
     public void addWidgets() {
         add(EditUtils.getTitle(this, "Edit/New Research"));
         add(id);
-        add(new SimpleTextButton(this, Lang.str("Reset id"), Icon.empty()) {
+        add(new SimpleTextButton(this, Components.str("Reset id"), Icon.empty()) {
             @Override
             public void onClicked(MouseButton arg0) {
                 id.setText(r.getId());
@@ -122,7 +122,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
             s.forEach(t->r.getClues().add(t.clue()));
             r.doIndex();
         }));
-        add(new SimpleTextButton(this, Lang.str("Remove"), Icon.empty()) {
+        add(new SimpleTextButton(this, Components.str("Remove"), Icon.empty()) {
 
             @Override
             public void onClicked(MouseButton arg0) {

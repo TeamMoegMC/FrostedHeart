@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
-import com.teammoeg.frostedheart.base.menu.FHBlockEntityContainer;
+import com.teammoeg.chorda.menu.FHBlockEntityContainer;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;

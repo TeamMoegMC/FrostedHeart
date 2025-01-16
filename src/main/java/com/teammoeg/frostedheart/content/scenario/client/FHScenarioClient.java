@@ -25,7 +25,7 @@ import java.util.Optional;
 import com.teammoeg.frostedheart.content.scenario.ScenarioExecutor;
 import com.teammoeg.frostedheart.content.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.content.scenario.commands.client.ClientControl;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;

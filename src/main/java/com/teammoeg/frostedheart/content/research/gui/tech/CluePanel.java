@@ -20,7 +20,8 @@
 package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import com.ibm.icu.text.NumberFormat;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
@@ -108,7 +109,7 @@ public class CluePanel extends Panel {
         }
         contribute = new TextField(this)
                 .setMaxWidth(width)
-                .setText(Lang.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
+                .setText(Components.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
                 .setColor(TechIcons.text);
         contribute.setPos(0, offset);
         offset += contribute.height + 2;

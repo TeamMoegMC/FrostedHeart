@@ -22,10 +22,10 @@ package com.teammoeg.frostedheart.infrastructure.command;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.ClimateEvent;
 import com.teammoeg.frostedheart.content.climate.WorldClimate;
-import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -43,7 +43,7 @@ public class ClimateCommand {
         LiteralArgumentBuilder<CommandSourceStack> get = Commands.literal("get")
                 .executes((ct) -> {
                     try {
-                        ct.getSource().sendSuccess(()-> Lang.str(String.valueOf(WorldClimate.get(ct.getSource().getLevel()))), true);
+                        ct.getSource().sendSuccess(()-> Components.str(String.valueOf(WorldClimate.get(ct.getSource().getLevel()))), true);
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -52,43 +52,43 @@ public class ClimateCommand {
         LiteralArgumentBuilder<CommandSourceStack> rebuild = Commands.literal("rebuild").then(Commands.literal("cache").executes(ct -> {
 
                     WorldClimate.get(ct.getSource().getLevel()).rebuildCache(ct.getSource().getLevel());
-                    ct.getSource().sendSuccess(()-> Lang.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 }))
                 .executes((ct) -> {
 
                     WorldClimate.get(ct.getSource().getLevel()).resetTempEvent(ct.getSource().getLevel());
-                    ct.getSource().sendSuccess(()-> Lang.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 });
         LiteralArgumentBuilder<CommandSourceStack> init = Commands.literal("init")
                 .executes((ct) -> {
                     WorldClimate.get(ct.getSource().getLevel()).addInitTempEvent(ct.getSource().getLevel());
-                    ct.getSource().sendSuccess(()-> Lang.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 });
 
         LiteralArgumentBuilder<CommandSourceStack> app = Commands.literal("append").then(
                 Commands.literal("warm").executes(ct -> {
                     WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(ClimateEvent::getWarmClimateEvent);
-                    ct.getSource().sendSuccess(()-> Lang.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })
         ).then(
                 Commands.literal("cold").executes(ct -> {
                     WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(ClimateEvent::getColdClimateEvent);
-                    ct.getSource().sendSuccess(()-> Lang.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })
         ).then(
                 Commands.literal("blizzard").executes(ct -> {
                     WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(ClimateEvent::getBlizzardClimateEvent);
-                    ct.getSource().sendSuccess(()-> Lang.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+                    ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })
         ).executes(ct -> {
             WorldClimate.get(ct.getSource().getLevel()).appendTempEvent(ClimateEvent::getClimateEvent);
-            ct.getSource().sendSuccess(()-> Lang.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
+            ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
             return Command.SINGLE_SUCCESS;
         });
         LiteralArgumentBuilder<CommandSourceStack> reset = Commands.literal("resetVanilla")

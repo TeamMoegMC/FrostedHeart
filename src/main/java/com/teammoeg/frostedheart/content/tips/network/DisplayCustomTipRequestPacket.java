@@ -1,10 +1,10 @@
 package com.teammoeg.frostedheart.content.tips.network;
 
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.FHMessage;
 import com.teammoeg.frostedheart.content.tips.ServerTipSender;
 import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.frostedheart.util.lang.Lang;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -27,7 +27,7 @@ public record DisplayCustomTipRequestPacket(Tip tip) implements FHMessage {
         if (player != null) {
             if (!player.hasPermissions(2)) {
                 FHMain.LOGGER.warn("{} IS A HACKER!", player.getName().getString());
-                ServerTipSender.sendCustom(Tip.builder("warning").line(Lang.str("HACKER!")).pin(true).alwaysVisible(true).build(), player);
+                ServerTipSender.sendCustom(Tip.builder("warning").line(Components.str("HACKER!")).pin(true).alwaysVisible(true).build(), player);
             } else {
                 context.get().enqueueWork(() -> ServerTipSender.sendCustomToAll(tip));
             }

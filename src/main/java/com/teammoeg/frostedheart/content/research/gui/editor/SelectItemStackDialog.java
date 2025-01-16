@@ -33,10 +33,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterators;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.RegistryUtils;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.config.ui.ResourceSearchMode;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -121,7 +122,7 @@ public class SelectItemStackDialog extends EditDialog {
         @Override
         public void drawIcon(GuiGraphics guiGraphics, Theme theme, int x, int y, int w, int h) {
             guiGraphics.renderItem(current,x, y, w, h);
-            //GuiHelper.drawItem(matrixStack, current, x, y, w / 16F, h / 16F, true, null);
+            //CGuiHelper.drawItem(matrixStack, current, x, y, w / 16F, h / 16F, true, null);
         }
 
         @Override
@@ -184,7 +185,7 @@ public class SelectItemStackDialog extends EditDialog {
         @Override
         public void addMouseOverText(TooltipList list) {
             super.addMouseOverText(list);
-            list.add(activeMode.getDisplayName().withStyle(ChatFormatting.GRAY).append(Lang.str(" [" + panelStacks.getWidgets().size() + "]").withStyle(ChatFormatting.DARK_GRAY)));
+            list.add(activeMode.getDisplayName().withStyle(ChatFormatting.GRAY).append(Components.str(" [" + panelStacks.getWidgets().size() + "]").withStyle(ChatFormatting.DARK_GRAY)));
         }
 
         @Override
@@ -301,7 +302,7 @@ public class SelectItemStackDialog extends EditDialog {
 
             @Override
             public MutableComponent getDisplayName() {
-                return Lang.str("Inventory");
+                return Components.str("Inventory");
             }
 
             @Override
@@ -318,7 +319,7 @@ public class SelectItemStackDialog extends EditDialog {
 
             @Override
             public MutableComponent getDisplayName() {
-                return Lang.str("Blocks");
+                return Components.str("Blocks");
             }
 
             @Override

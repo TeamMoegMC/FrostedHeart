@@ -21,7 +21,7 @@
     "create.MixinSawTileEntity",
     "create.MixinToolboxInventory",
     "create.RecipeGridHandlerMixin",
-    "forge.CapabilityManagerAccess",
+    "com.teammoeg.chorda.mixin.CapabilityManagerAccess",
     "forge.FluidHandlerItemStackMixin",
     "forge.FluidHandlerItemStackSimpleMixin",
     "forge.ServerLifecycleHooksMixin",

@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.town;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.chorda.block.FHBaseBlock;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 
 import blusunrize.immersiveengineering.common.util.Utils;
