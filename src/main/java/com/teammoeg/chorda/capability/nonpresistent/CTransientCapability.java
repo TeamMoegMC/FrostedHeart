@@ -3,7 +3,7 @@ package com.teammoeg.chorda.capability.nonpresistent;
 import org.objectweb.asm.Type;
 
 import com.teammoeg.chorda.capability.CCapability;
-import com.teammoeg.chorda.mixin.CapabilityManagerAccess;
+import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;

@@ -3,7 +3,7 @@ package com.teammoeg.chorda.capability.nbt;
 import org.objectweb.asm.Type;
 
 import com.teammoeg.chorda.capability.CCapability;
-import com.teammoeg.chorda.mixin.CapabilityManagerAccess;
+import com.teammoeg.frostedheart.mixin.forge.CapabilityManagerAccess;
 import com.teammoeg.chorda.util.io.NBTSerializable;
 
 import net.minecraft.core.Direction;

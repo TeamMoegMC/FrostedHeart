@@ -1,4 +1,4 @@
-package com.teammoeg.chorda.mixin;
+package com.teammoeg.frostedheart.mixin.forge;
 
 import java.util.IdentityHashMap;
 
