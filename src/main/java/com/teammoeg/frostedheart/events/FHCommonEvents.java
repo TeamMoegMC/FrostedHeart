@@ -38,6 +38,7 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeReloadListener;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.util.FUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -136,13 +137,13 @@ public class FHCommonEvents {
             persistent.putBoolean(CConstants.FIRST_LOGIN_GIVE_MANUAL, false);
             event.getEntity().getInventory().add(
                     new ItemStack(CRegistries.getItem(new ResourceLocation("ftbquests", "book"))));
-            event.getEntity().getInventory().armor.set(3, CUtils.ArmorLiningNBT(new ItemStack(Items.IRON_HELMET)
+            event.getEntity().getInventory().armor.set(3, FUtils.ArmorLiningNBT(new ItemStack(Items.IRON_HELMET)
                     .setHoverName(Lang.translateKey("itemname.frostedheart.start_head"))));
-            event.getEntity().getInventory().armor.set(2, CUtils.ArmorLiningNBT(new ItemStack(Items.IRON_CHESTPLATE)
+            event.getEntity().getInventory().armor.set(2, FUtils.ArmorLiningNBT(new ItemStack(Items.IRON_CHESTPLATE)
                     .setHoverName(Lang.translateKey("itemname.frostedheart.start_chest"))));
-            event.getEntity().getInventory().armor.set(1, CUtils.ArmorLiningNBT(new ItemStack(Items.IRON_LEGGINGS)
+            event.getEntity().getInventory().armor.set(1, FUtils.ArmorLiningNBT(new ItemStack(Items.IRON_LEGGINGS)
                     .setHoverName(Lang.translateKey("itemname.frostedheart.start_leg"))));
-            event.getEntity().getInventory().armor.set(0, CUtils.ArmorLiningNBT(new ItemStack(Items.IRON_BOOTS)
+            event.getEntity().getInventory().armor.set(0, FUtils.ArmorLiningNBT(new ItemStack(Items.IRON_BOOTS)
                     .setHoverName(Lang.translateKey("itemname.frostedheart.start_foot"))));
             if (event.getEntity().getAbilities().instabuild) {
                 event.getEntity().sendSystemMessage(Lang.translateKey("message.frostedheart.creative_help")
