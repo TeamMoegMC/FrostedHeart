@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.events;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FrostedHud;
-import com.teammoeg.chorda.team.FHClientTeamDataManager;
+import com.teammoeg.chorda.team.CClientTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
@@ -111,7 +111,7 @@ public class FHClientEvents {
                     int l = 0;
                     for (FormattedCharSequence line : list) {
                         //TODO Uncomment after draw line fixed
-                    	//CGuiHelper.drawLine(matrixStack, Color4I.rgba(0, 0, 0, 255), 0, gui.height / 2 - 1 + l, 72,gui.height / 2 + 9 + l);
+                    	//CGuis.drawLine(matrixStack, Color4I.rgba(0, 0, 0, 255), 0, gui.height / 2 - 1 + l, 72,gui.height / 2 + 9 + l);
                         matrixStack.drawString(ClientUtils.mc().font, line, 1, gui.height / 2.0F + l, 0xFFFFFF, true);
                         l += 9;
                     }
@@ -171,7 +171,7 @@ public class FHClientEvents {
 
     @SubscribeEvent
     public static void fireLogin(ClientPlayerNetworkEvent.LoggingIn event) {
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClientTeamDataManager.INSTANCE::reset);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> CClientTeamDataManager.INSTANCE::reset);
         // TODO: temporary fix for client not sending ready packet
         ClientScene.INSTANCE = new ClientScene();
         ClientScene.INSTANCE.sendClientReady();

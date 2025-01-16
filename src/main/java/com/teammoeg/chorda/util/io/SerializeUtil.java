@@ -37,7 +37,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.util.RegistryUtils;
+import com.teammoeg.chorda.util.CRegistries;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
@@ -77,10 +77,10 @@ public class SerializeUtil {
 
 	public static ItemStack fromJson(JsonElement elm) {
 		if (elm.isJsonPrimitive())
-			return new ItemStack(RegistryUtils.getItem(new ResourceLocation(elm.getAsString())));
+			return new ItemStack(CRegistries.getItem(new ResourceLocation(elm.getAsString())));
 		else if (elm.isJsonObject()) {
 			JsonObject jo = elm.getAsJsonObject();
-			ItemStack ret = new ItemStack(RegistryUtils.getItem(new ResourceLocation(jo.get("id").getAsString())));
+			ItemStack ret = new ItemStack(CRegistries.getItem(new ResourceLocation(jo.get("id").getAsString())));
 			if (jo.has("count"))
 				ret.setCount(jo.get("count").getAsInt());
 			if (jo.has("nbt"))
@@ -205,9 +205,9 @@ public class SerializeUtil {
 	public static JsonElement toJson(ItemStack stack) {
 		boolean hasCount = stack.getCount() > 1, hasTag = stack.hasTag();
 		if (!hasCount && !hasTag)
-			return new JsonPrimitive(RegistryUtils.getRegistryName(stack.getItem()).toString());
+			return new JsonPrimitive(CRegistries.getRegistryName(stack.getItem()).toString());
 		JsonObject jo = new JsonObject();
-		jo.addProperty("id", RegistryUtils.getRegistryName(stack.getItem()).toString());
+		jo.addProperty("id", CRegistries.getRegistryName(stack.getItem()).toString());
 		if (hasCount)
 			jo.addProperty("count", stack.getCount());
 		if (hasTag)

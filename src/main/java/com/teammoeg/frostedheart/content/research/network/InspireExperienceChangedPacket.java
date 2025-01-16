@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
 import com.teammoeg.chorda.util.client.ClientUtils;
@@ -14,7 +14,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent.Context;
 
-public class InspireExperienceChangedPacket implements FHMessage {
+public class InspireExperienceChangedPacket implements CMessage {
 	int level;
 	int exp;
 	int plevel;

@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.research.network;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardPos;
 
@@ -34,7 +34,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when data update
-public class FHDrawingDeskOperationPacket implements FHMessage {
+public class FHDrawingDeskOperationPacket implements CMessage {
     private final BlockPos pos;
     private final byte op;
     private final CardPos pos1;

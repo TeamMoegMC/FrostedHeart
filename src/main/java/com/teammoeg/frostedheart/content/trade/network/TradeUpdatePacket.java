@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.trade.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.trade.RelationList;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
 import com.teammoeg.chorda.util.client.ClientUtils;
@@ -34,7 +34,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
-public class TradeUpdatePacket implements FHMessage {
+public class TradeUpdatePacket implements CMessage {
     CompoundTag data;
     CompoundTag player;
     RelationList relations;

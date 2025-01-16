@@ -25,12 +25,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.teammoeg.chorda.util.CRegistries;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.chorda.util.RegistryUtils;
 import com.teammoeg.chorda.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
@@ -74,7 +74,7 @@ public class SelectDialog<T> extends EditDialog {
 
         @Override
         public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-            //CGuiHelper.setupDrawing();
+            //CGuis.setupDrawing();
             if (val == this.obj)
                 theme.drawButton(matrixStack, x, y, w, h, WidgetType.DISABLED);
             else
@@ -145,7 +145,7 @@ public class SelectDialog<T> extends EditDialog {
         ).open();
         
     };
-    public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, RegistryUtils::getEntities, EntityType::getDescription, e -> new String[]{e.getDescription().getString(), RegistryUtils.getRegistryName(e).toString()}
+    public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, CRegistries::getEntities, EntityType::getDescription, e -> new String[]{e.getDescription().getString(), CRegistries.getRegistryName(e).toString()}
     ).open();
     public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, () -> ForgeRegistries.ITEMS.tags().getTagNames().map(t->t.location()).map(ResourceLocation::toString).collect(Collectors.toSet())).open();
     String lbl;

@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import com.teammoeg.chorda.block.FHBaseBlock;
-import com.teammoeg.chorda.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import net.minecraft.core.BlockPos;
@@ -42,7 +42,7 @@ import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.function.Supplier;
 
-public class SaunaBlock extends FHBaseBlock implements FHEntityBlock<SaunaTileEntity> {
+public class SaunaBlock extends CBlock implements CEntityBlock<SaunaTileEntity> {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public SaunaBlock(Properties blockProps) {

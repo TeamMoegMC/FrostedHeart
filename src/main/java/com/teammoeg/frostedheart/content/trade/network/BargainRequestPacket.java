@@ -23,7 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
 import com.teammoeg.chorda.util.io.SerializeUtil;
 
@@ -31,7 +31,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class BargainRequestPacket implements FHMessage {
+public class BargainRequestPacket implements CMessage {
     private Map<String, Integer> offer;
 
     public BargainRequestPacket(Map<String, Integer> offer) {

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.chorda.util.io.SerializeUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
@@ -27,7 +27,7 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.Collection;
 import java.util.function.Supplier;
 
-public class EndPointDataPacket implements FHMessage {
+public class EndPointDataPacket implements CMessage {
     private final Collection<HeatEndpoint> data;
 
     public EndPointDataPacket(HeatNetwork network) {

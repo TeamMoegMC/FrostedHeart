@@ -23,7 +23,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
-import com.teammoeg.chorda.util.MathUtils;
+import com.teammoeg.chorda.util.CMath;
 import com.teammoeg.chorda.util.io.CodecUtil;
 import com.teammoeg.chorda.util.io.SerializeUtil;
 import net.minecraft.nbt.CompoundTag;
@@ -89,7 +89,7 @@ public class Resident {
         this.lastName = lastName;
         this.uuid = UUID.randomUUID();
         workProficiency.forEach((k, v) -> {
-            if(k.needsResident()) workProficiency.put(k, MathUtils.RANDOM.nextInt(20)-2);
+            if(k.needsResident()) workProficiency.put(k, CMath.RANDOM.nextInt(20)-2);
         });//have 20% chance to be unworkable type
     }
 

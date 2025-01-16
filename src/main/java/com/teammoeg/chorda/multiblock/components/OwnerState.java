@@ -3,7 +3,7 @@ package com.teammoeg.chorda.multiblock.components;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.teammoeg.chorda.team.FHTeamDataManager;
+import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.chorda.team.TeamDataHolder;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
@@ -42,7 +42,7 @@ public class OwnerState implements IMultiblockState, IOwnerState<OwnerState> {
     protected Optional<TeamDataHolder> getTeamData() {
         UUID owner = getOwner();
         if (owner != null)
-            return Optional.ofNullable(FHTeamDataManager.getDataByResearchID(owner));
+            return Optional.ofNullable(CTeamDataManager.getDataByResearchID(owner));
         return Optional.empty();
     }
 

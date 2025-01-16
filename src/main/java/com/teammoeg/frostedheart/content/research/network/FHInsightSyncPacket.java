@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.network;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
@@ -29,7 +29,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class FHInsightSyncPacket implements FHMessage {
+public class FHInsightSyncPacket implements CMessage {
     int insight;
     int insightLevel;
     int usedInsightLevel;

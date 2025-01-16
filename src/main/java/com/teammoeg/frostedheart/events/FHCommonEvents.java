@@ -20,6 +20,8 @@
 package com.teammoeg.frostedheart.events;
 
 import com.google.common.collect.Sets;
+import com.teammoeg.chorda.util.CConstants;
+import com.teammoeg.chorda.util.CRegistries;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
@@ -36,8 +38,6 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeReloadListener;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.chorda.util.Constants;
-import com.teammoeg.chorda.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -132,10 +132,10 @@ public class FHCommonEvents {
         } else {
             nbt.put(Player.PERSISTED_NBT_TAG, (persistent = new CompoundTag()));
         }
-        if (!persistent.contains(Constants.FIRST_LOGIN_GIVE_MANUAL)) {
-            persistent.putBoolean(Constants.FIRST_LOGIN_GIVE_MANUAL, false);
+        if (!persistent.contains(CConstants.FIRST_LOGIN_GIVE_MANUAL)) {
+            persistent.putBoolean(CConstants.FIRST_LOGIN_GIVE_MANUAL, false);
             event.getEntity().getInventory().add(
-                    new ItemStack(RegistryUtils.getItem(new ResourceLocation("ftbquests", "book"))));
+                    new ItemStack(CRegistries.getItem(new ResourceLocation("ftbquests", "book"))));
             event.getEntity().getInventory().armor.set(3, CUtils.ArmorLiningNBT(new ItemStack(Items.IRON_HELMET)
                     .setHoverName(Lang.translateKey("itemname.frostedheart.start_head"))));
             event.getEntity().getInventory().armor.set(2, CUtils.ArmorLiningNBT(new ItemStack(Items.IRON_CHESTPLATE)

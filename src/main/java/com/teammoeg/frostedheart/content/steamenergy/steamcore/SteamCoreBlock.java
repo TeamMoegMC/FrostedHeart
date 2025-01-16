@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.steamenergy.steamcore;
 
 import com.simibubi.create.content.kinetics.base.DirectionalKineticBlock;
 import com.simibubi.create.foundation.utility.VoxelShaper;
-import com.teammoeg.chorda.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import net.minecraft.core.BlockPos;
@@ -28,7 +28,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.function.Supplier;
 
-public class SteamCoreBlock extends DirectionalKineticBlock implements FHEntityBlock {
+public class SteamCoreBlock extends DirectionalKineticBlock implements CEntityBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
     static final VoxelShaper shape = VoxelShaper.forDirectional(Shapes.or(Block.box(0, 0, 0, 16, 16, 16)), Direction.SOUTH);
 

@@ -228,7 +228,7 @@ public class TipListScreen extends Screen {
 //            graphics.enableScissor(0, textMinY, width, GuiHeight+textMinY -8);
 //            int line = 0;
 //            for (Component content : contents) {
-//                line += 1 + CGuiHelper.drawSplitTexts(graphics, content, boxWidth + 4, y + 4 + line * 12,
+//                line += 1 + CGuis.drawSplitTexts(graphics, content, boxWidth + 4, y + 4 + line * 12,
 //                        textColor, x - 8 - boxWidth, 12, false);
 //            }
 //            textHeight = line*12;
@@ -240,7 +240,7 @@ public class TipListScreen extends Screen {
 //            graphics.enableScissor(0, textMinY, width, GuiHeight+textMinY -8);
 //            int line = 0;
 //            for (int i = 1; i < contents.size(); i++) {
-//                line += 1 + CGuiHelper.drawSplitTexts(graphics, contents.get(i), boxWidth + 4, y+4 + line*12,
+//                line += 1 + CGuis.drawSplitTexts(graphics, contents.get(i), boxWidth + 4, y+4 + line*12,
 //                        textColor, x-8 - boxWidth, 12, false);
 //            }
 //            textHeight = line*12;

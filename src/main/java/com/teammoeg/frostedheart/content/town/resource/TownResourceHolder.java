@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.town.resource;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.team.FHTeamDataManager;
+import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.chorda.util.io.CodecUtil;
@@ -354,7 +354,7 @@ public class TownResourceHolder {
      * 读取所欲城镇相关的物品对应资源数量的recipe，并缓存起来。
      */
     public static void loadItemResourceAmounts(){
-        for(ItemResourceAmountRecipe recipe : CUtils.filterRecipes(FHTeamDataManager.getRecipeManager(), ItemResourceAmountRecipe.TYPE)){
+        for(ItemResourceAmountRecipe recipe : CUtils.filterRecipes(CTeamDataManager.getRecipeManager(), ItemResourceAmountRecipe.TYPE)){
             ItemStackWrapper itemStackWrapper = new ItemStackWrapper(recipe.item);
             if(!ITEM_RESOURCE_AMOUNTS.containsKey(itemStackWrapper)) ITEM_RESOURCE_AMOUNTS.put(itemStackWrapper, new HashMap<>());
             ITEM_RESOURCE_AMOUNTS.computeIfAbsent(itemStackWrapper, k -> new HashMap<>()).put(ItemResourceKey.fromTagKey(recipe.resourceTagKey), (double) recipe.amount);

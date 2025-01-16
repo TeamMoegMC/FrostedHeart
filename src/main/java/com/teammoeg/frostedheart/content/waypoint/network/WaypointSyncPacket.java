@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.waypoint.network;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.WaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.AbstractWaypoint;
@@ -10,7 +10,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public record WaypointSyncPacket(AbstractWaypoint waypoint) implements FHMessage {
+public record WaypointSyncPacket(AbstractWaypoint waypoint) implements CMessage {
 
     public WaypointSyncPacket(FriendlyByteBuf buffer) {
         this(WaypointManager.registry.read(buffer));

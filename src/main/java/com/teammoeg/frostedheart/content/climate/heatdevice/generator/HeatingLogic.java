@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
-import com.teammoeg.chorda.util.ie.FHMultiblockHelper;
+import com.teammoeg.chorda.util.ie.CMultiblockHelper;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IClientTickableComponent;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IServerTickableComponent;
@@ -63,10 +63,10 @@ public abstract class HeatingLogic<T extends HeatingLogic<T, ?>, R extends Heati
         // Update the heat area
         if (state.shouldUpdateAdjust()) {
             if (state.getRadius() > 0 && state.getTempMod() > 0) {
-                ChunkHeatData.addPillarTempAdjust(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()), state.getRadius(), state.getUpwardRange(),
+                ChunkHeatData.addPillarTempAdjust(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx.getLevel()), state.getRadius(), state.getUpwardRange(),
                         state.getDownwardRange(), state.getTempMod());
             } else {
-                ChunkHeatData.removeTempAdjust(ctx.getLevel().getRawLevel(), FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
+                ChunkHeatData.removeTempAdjust(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx.getLevel()));
             }
         }
         // If active, mark for update
@@ -88,7 +88,7 @@ public abstract class HeatingLogic<T extends HeatingLogic<T, ?>, R extends Heati
      */
     @Override
     public final void tickClient(IMultiblockContext<R> ctx) {
-        tickEffects(ctx, FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel()), ctx.getState().isActive());
+        tickEffects(ctx, CMultiblockHelper.getAbsoluteMaster(ctx.getLevel()), ctx.getState().isActive());
     }
 
 

@@ -33,10 +33,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterators;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.teammoeg.chorda.util.CRegistries;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.util.RegistryUtils;
 import com.teammoeg.chorda.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.config.ui.ResourceSearchMode;
@@ -122,7 +122,7 @@ public class SelectItemStackDialog extends EditDialog {
         @Override
         public void drawIcon(GuiGraphics guiGraphics, Theme theme, int x, int y, int w, int h) {
             guiGraphics.renderItem(current,x, y, w, h);
-            //CGuiHelper.drawItem(matrixStack, current, x, y, w / 16F, h / 16F, true, null);
+            //CGuis.drawItem(matrixStack, current, x, y, w / 16F, h / 16F, true, null);
         }
 
         @Override
@@ -252,7 +252,7 @@ public class SelectItemStackDialog extends EditDialog {
             }
 
             if (!mod.isEmpty()) {
-                return RegistryUtils.getRegistryName(stack.getItem()).getNamespace().contains(mod);
+                return CRegistries.getRegistryName(stack.getItem()).getNamespace().contains(mod);
             }
 
             return stack.getHoverName().getString().toLowerCase().contains(search);
@@ -280,7 +280,7 @@ public class SelectItemStackDialog extends EditDialog {
 
             @Override
             public Collection<ItemStack> getAllResources() {
-                return RegistryUtils.getItems().stream().filter(t->t!=null&&t!=Items.AIR).map(ItemStack::new).collect(Collectors.toList());
+                return CRegistries.getItems().stream().filter(t->t!=null&&t!=Items.AIR).map(ItemStack::new).collect(Collectors.toList());
             }
 
             @Override
@@ -314,7 +314,7 @@ public class SelectItemStackDialog extends EditDialog {
 
             @Override
             public Collection<ItemStack> getAllResources() {
-                return RegistryUtils.getBlocks().stream().map(Block::asItem).filter(Objects::nonNull).filter(t->t!=Items.AIR).map(ItemStack::new).collect(Collectors.toList());
+                return CRegistries.getBlocks().stream().map(Block::asItem).filter(Objects::nonNull).filter(t->t!=Items.AIR).map(ItemStack::new).collect(Collectors.toList());
             }
 
             @Override

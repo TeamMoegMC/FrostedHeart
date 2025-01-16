@@ -1,7 +1,6 @@
 package com.teammoeg.chorda;
 
 import com.teammoeg.chorda.scheduler.SchedulerQueue;
-import com.teammoeg.chorda.team.FHTeamDataManager;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.event.TickEvent;

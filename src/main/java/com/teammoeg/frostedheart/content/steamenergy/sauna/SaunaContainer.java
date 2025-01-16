@@ -19,13 +19,13 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
-import com.teammoeg.chorda.menu.FHBlockEntityContainer;
+import com.teammoeg.chorda.menu.CBlockEntityContainer;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-public class SaunaContainer extends FHBlockEntityContainer<SaunaTileEntity> {
+public class SaunaContainer extends CBlockEntityContainer<SaunaTileEntity> {
 
     public SaunaContainer(int id, Inventory inventoryPlayer, SaunaTileEntity tile) {
         super(FHMenuTypes.SAUNA.get(), tile, id, inventoryPlayer.player, 1);

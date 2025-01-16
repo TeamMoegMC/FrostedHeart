@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.debug;
 
-import com.teammoeg.chorda.block.FHBaseBlock;
-import com.teammoeg.chorda.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.chorda.util.CUtils;
@@ -42,7 +42,7 @@ import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.function.Supplier;
 
-public class DebugHeaterBlock extends FHBaseBlock implements FHEntityBlock<DebugHeaterTileEntity> {
+public class DebugHeaterBlock extends CBlock implements CEntityBlock<DebugHeaterTileEntity> {
     public DebugHeaterBlock(Properties blockProps) {
         super(blockProps);
     }

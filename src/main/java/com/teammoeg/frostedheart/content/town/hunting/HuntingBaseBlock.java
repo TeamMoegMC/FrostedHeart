@@ -1,11 +1,11 @@
 package com.teammoeg.frostedheart.content.town.hunting;
 
-import com.teammoeg.chorda.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
-import com.teammoeg.chorda.util.MathUtils;
+import com.teammoeg.chorda.util.CMath;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -18,7 +18,7 @@ import net.minecraft.world.level.Level;
 
 import java.util.function.Supplier;
 
-public class HuntingBaseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<HuntingBaseBlockEntity>{
+public class HuntingBaseBlock extends AbstractTownWorkerBlock implements CEntityBlock<HuntingBaseBlockEntity> {
     public HuntingBaseBlock(Properties blockProps) {
         super(blockProps);
     }
@@ -43,11 +43,11 @@ public class HuntingBaseBlock extends AbstractTownWorkerBlock implements FHEntit
             player.displayClientMessage(Components.str(te.isTemperatureValid() ? "Valid temperature" : "Invalid temperature"), false);
             player.displayClientMessage(Components.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
             player.displayClientMessage(Components.str("Raw temperature: " +
-                    MathUtils.round(te.getTemperature(), 2)), false);
+                    CMath.round(te.getTemperature(), 2)), false);
             player.displayClientMessage(Components.str("Temperature modifier: " +
-                    MathUtils.round(te.getTemperatureModifier(), 2)), false);
+                    CMath.round(te.getTemperatureModifier(), 2)), false);
             player.displayClientMessage(Components.str("Effective temperature: " +
-                    MathUtils.round(te.getEffectiveTemperature(), 2)), false);
+                    CMath.round(te.getEffectiveTemperature(), 2)), false);
             player.displayClientMessage(Components.str("BedNum: " + te.getBedNum()), false);
             player.displayClientMessage(Components.str("MaxResident: " + te.getMaxResident()), false);
             player.displayClientMessage(Components.str("TanningRackNum: " + te.getTanningRackNum()), false);
@@ -55,7 +55,7 @@ public class HuntingBaseBlock extends AbstractTownWorkerBlock implements FHEntit
             player.displayClientMessage(Components.str("Volume: " + (te.getVolume())), false);
             player.displayClientMessage(Components.str("Area: " + (te.getArea())), false);
             player.displayClientMessage(Components.str("Rating: " +
-                    MathUtils.round(te.getRating(), 2)), false);
+                    CMath.round(te.getRating(), 2)), false);
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.waypoint.network;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.WaypointManager;
@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class WaypointSyncAllPacket implements FHMessage {
+public class WaypointSyncAllPacket implements CMessage {
     private Map<String, AbstractWaypoint> waypoints = new HashMap<>();
 
     public WaypointSyncAllPacket(ServerPlayer player) {

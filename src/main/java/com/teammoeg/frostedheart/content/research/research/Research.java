@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.team.FHTeamDataManager;
+import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.FHRegisteredItem;
@@ -266,7 +266,7 @@ public class Research implements FHRegisteredItem {
         deleteInTree();
         //this.effects.forEach(Effect::deleteSelf);
         //this.clues.forEach(Clue::deleteSelf);
-        FHTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(FHSpecialDataTypes.RESEARCH_DATA).resetData(e,this));
+        CTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(FHSpecialDataTypes.RESEARCH_DATA).resetData(e,this));
 
         FHResearch.delete(this);
     }
@@ -680,7 +680,7 @@ public class Research implements FHRegisteredItem {
      */
     public void setNewId(String nid) {
         if (!id.equals(nid)) {
-            FHTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(FHSpecialDataTypes.RESEARCH_DATA).resetData(e, this));
+            CTeamDataManager.INSTANCE.getAllData().forEach(e -> e.getData(FHSpecialDataTypes.RESEARCH_DATA).resetData(e, this));
             deleteInTree();//clear all reference, hope this could work
             FHResearch.delete(this);
             this.setId(nid);

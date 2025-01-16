@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui;
 
 import java.util.function.Consumer;
 
-import com.teammoeg.chorda.util.CGuiHelper;
+import com.teammoeg.chorda.util.CGuis;
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.chorda.util.client.ClientUtils;
 
@@ -81,7 +81,7 @@ public class FakeSlot extends Widget {
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
         
-        CGuiHelper.drawItem(matrixStack, cur, x, y,100, w / 16F, h / 16F, true, cnt==0?null:String.valueOf(cnt));
+        CGuis.drawItem(matrixStack, cur, x, y,100, w / 16F, h / 16F, true, cnt==0?null:String.valueOf(cnt));
         
         matrixStack.pose().pushPose();
         matrixStack.pose().translate(0, 0, 200);

@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.compat.ftbteams;
 import java.util.UUID;
 
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.chorda.team.FHTeamDataManager;
+import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.network.FHResearchDataSyncPacket;
 
@@ -53,7 +53,7 @@ public class FTBTeamsEvents {
         if (FTBTeamsAPI.api().isManagerLoaded()) {
             Team orig = FTBTeamsAPI.api().getManager().getPlayerTeamForPlayerID(event.getCreator().getUUID()).orElse(null);
 
-            FHTeamDataManager.INSTANCE.transfer(orig.getId(), event.getTeam());
+            CTeamDataManager.INSTANCE.transfer(orig.getId(), event.getTeam());
             for(ServerPlayer p:event.getTeam().getOnlineMembers()) {
 	            FHNetwork.sendPlayer(p,
 	                    new FHResearchDataSyncPacket(ResearchDataAPI.getData(p).get()));
@@ -67,7 +67,7 @@ public class FTBTeamsEvents {
             UUID owner = event.getTeam().getOwner();
             Team orig = FTBTeamsAPI.api().getManager().getPlayerTeamForPlayerID(owner).orElse(null);
 
-            FHTeamDataManager.INSTANCE.transfer(event.getTeam().getId(), orig);
+            CTeamDataManager.INSTANCE.transfer(event.getTeam().getId(), orig);
             for(ServerPlayer p:event.getTeam().getOnlineMembers()) {
 	            FHNetwork.sendPlayer(p,
 	                    new FHResearchDataSyncPacket(ResearchDataAPI.getData(p).get()));
@@ -80,7 +80,7 @@ public class FTBTeamsEvents {
     public static void syncDataWhenTeamTransfer(PlayerTransferredTeamOwnershipEvent event) {
         if (FTBTeamsAPI.api().isManagerLoaded()) {
 
-            FHTeamDataManager.INSTANCE.get(event.getTeam()).setOwnerName(event.getFrom().getGameProfile().getName());
+            CTeamDataManager.INSTANCE.get(event.getTeam()).setOwnerName(event.getFrom().getGameProfile().getName());
         }
 
     }

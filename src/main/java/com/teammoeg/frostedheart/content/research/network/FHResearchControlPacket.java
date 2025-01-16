@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
@@ -33,7 +33,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class FHResearchControlPacket implements FHMessage {
+public class FHResearchControlPacket implements CMessage {
     public enum Operator {
         COMMIT_ITEM,
         START,

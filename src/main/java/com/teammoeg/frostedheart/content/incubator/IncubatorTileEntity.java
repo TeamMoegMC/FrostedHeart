@@ -23,14 +23,14 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.chorda.block.FHBlockInterfaces;
-import com.teammoeg.chorda.block.FHTickableBlockEntity;
-import com.teammoeg.chorda.blockentity.FHBaseTileEntity;
+import com.teammoeg.chorda.block.CBlockInterfaces;
+import com.teammoeg.chorda.block.CTickableBlockEntity;
+import com.teammoeg.chorda.blockentity.CBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
-import com.teammoeg.chorda.util.RegistryUtils;
+import com.teammoeg.chorda.util.CRegistries;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IProcessBE;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
@@ -64,8 +64,8 @@ import net.minecraftforge.fluids.capability.templates.FluidTank;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 
-public class IncubatorTileEntity extends FHBaseTileEntity implements FHTickableBlockEntity,
-        FHBlockInterfaces.IActiveState,  MenuProvider, IProcessBE,IIEInventory {
+public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockEntity,
+        CBlockInterfaces.IActiveState,  MenuProvider, IProcessBE,IIEInventory {
     public static final ResourceLocation food = new ResourceLocation(FHMain.MODID, "food");
     public static final ResourceLocation pr = new ResourceLocation("kubejs", "protein");
     protected NonNullList<ItemStack> inventory;
@@ -143,7 +143,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements FHTickableB
     LazyOptional<IItemHandler> invHandlerDown = LazyOptional.of(() -> new IEInventoryHandler(1, this, 3, false, true));
 
     public static Fluid getProtein() {
-        Fluid f = RegistryUtils.getFluid(pr);
+        Fluid f = CRegistries.getFluid(pr);
         return f == Fluids.EMPTY ? Fluids.WATER : f;
     }
 

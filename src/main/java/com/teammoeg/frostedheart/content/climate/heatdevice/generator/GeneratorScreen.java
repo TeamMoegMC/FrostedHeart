@@ -15,7 +15,7 @@ import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.chorda.util.ie.IngredientUtils;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
-import com.teammoeg.chorda.util.ie.FHMultiblockHelper;
+import com.teammoeg.chorda.util.ie.CMultiblockHelper;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
@@ -146,7 +146,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
     @Override
     public void init() {
         super.init();
-        Optional<IMultiblockBEHelper<?>> ohelper = FHMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.pos.getValue());
+        Optional<IMultiblockBEHelper<?>> ohelper = CMultiblockHelper.getBEHelper(Minecraft.getInstance().level, menu.pos.getValue());
         
        
         this.addRenderableWidget(new MasterGeneratorGuiButtonBoolean(leftPos + 5, topPos + 24, 11, 22, menu.isWorking.asSupplier(), 472, 148,

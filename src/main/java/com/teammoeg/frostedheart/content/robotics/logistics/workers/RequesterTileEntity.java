@@ -7,8 +7,8 @@ import java.util.stream.IntStream;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.block.FHTickableBlockEntity;
-import com.teammoeg.chorda.blockentity.FHBaseTileEntity;
+import com.teammoeg.chorda.block.CTickableBlockEntity;
+import com.teammoeg.chorda.blockentity.CBlockEntity;
 import com.teammoeg.frostedheart.content.robotics.logistics.FilterSlot;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemChangeListener;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemHandlerListener;
@@ -23,7 +23,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.items.ItemStackHandler;
 
-public class RequesterTileEntity extends FHBaseTileEntity implements TaskableLogisticStorage,ItemChangeListener,FHTickableBlockEntity{
+public class RequesterTileEntity extends CBlockEntity implements TaskableLogisticStorage,ItemChangeListener, CTickableBlockEntity {
 	private static class NumCount{
 		public static final Codec<NumCount> CODEC=RecordCodecBuilder.create(t->t.group(
 			CodecUtil.INT_ARRAY_CODEC.fieldOf("slot").forGetter(o->o.slot.stream().mapToInt(n->n).toArray()),

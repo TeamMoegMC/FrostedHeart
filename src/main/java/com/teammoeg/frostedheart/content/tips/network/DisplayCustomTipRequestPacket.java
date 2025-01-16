@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.tips.network;
 
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.tips.ServerTipSender;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import net.minecraft.network.FriendlyByteBuf;
@@ -10,7 +10,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public record DisplayCustomTipRequestPacket(Tip tip) implements FHMessage {
+public record DisplayCustomTipRequestPacket(Tip tip) implements CMessage {
 
     public DisplayCustomTipRequestPacket(FriendlyByteBuf buffer) {
         this(Tip.builder("").fromNBT(buffer.readNbt()).build());

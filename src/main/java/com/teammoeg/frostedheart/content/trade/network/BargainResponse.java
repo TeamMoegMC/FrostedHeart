@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.trade.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.trade.ClientTradeHandler;
 import com.teammoeg.frostedheart.content.trade.RelationList;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
@@ -34,7 +34,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
-public class BargainResponse implements FHMessage {
+public class BargainResponse implements CMessage {
     boolean succeed;
     int discount;
     float rdiscount;

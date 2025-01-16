@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.FHResearch;
@@ -33,7 +33,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when clue progress updated
-public record FHS2CClueProgressSyncPacket(boolean data,int id,int index) implements FHMessage {
+public record FHS2CClueProgressSyncPacket(boolean data,int id,int index) implements CMessage {
 
     public FHS2CClueProgressSyncPacket(FriendlyByteBuf buffer) {
         this(buffer.readBoolean(),buffer.readVarInt(),buffer.readVarInt());

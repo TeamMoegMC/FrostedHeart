@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.content.climate.event;
 
+import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.chorda.capability.CurioCapabilityProvider;
-import com.teammoeg.chorda.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
@@ -262,14 +262,14 @@ public class ClimateCommonEvents {
 
     @SubscribeEvent
     public static void onServerTick(TickEvent.LevelTickEvent event) {
-        if (event.side == LogicalSide.SERVER && event.phase == Phase.START&&FHTeamDataManager.INSTANCE!=null) {
+        if (event.side == LogicalSide.SERVER && event.phase == Phase.START&& CTeamDataManager.INSTANCE!=null) {
             Level world = event.level;
             if (!world.isClientSide && world instanceof ServerLevel) {
                 ServerLevel serverWorld = (ServerLevel) world;
 
                 // Town logic tick
                 int i = 0;
-                for (TeamDataHolder trd : FHTeamDataManager.INSTANCE.getAllData()) {
+                for (TeamDataHolder trd : CTeamDataManager.INSTANCE.getAllData()) {
                     if (serverWorld.dimension().equals(trd.getData(FHSpecialDataTypes.GENERATOR_DATA).dimension)) {
                         if (serverWorld.getGameTime() % 20 == i % 20) {//Split town calculations to multiple seconds
                             if (trd.getTeam().map(t -> t.getOnlineMembers().size()).orElse(0) > 0) {

@@ -2,7 +2,7 @@ package com.teammoeg.chorda.handler;
 
 import org.jetbrains.annotations.NotNull;
 
-import com.teammoeg.chorda.blockentity.SyncableTileEntity;
+import com.teammoeg.chorda.blockentity.SyncableBlockEntity;
 
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -20,7 +20,7 @@ public class ChangeDetectedItemHandler implements IItemHandler{
 		return new ChangeDetectedItemHandler(nested,()->{blockEntity.setChanged();});
 	}
 	
-	public static <T extends BlockEntity&SyncableTileEntity> IItemHandler fromBESynced(T blockEntity,IItemHandler nested) {
+	public static <T extends BlockEntity& SyncableBlockEntity> IItemHandler fromBESynced(T blockEntity, IItemHandler nested) {
 		return new ChangeDetectedItemHandler(nested,()->{blockEntity.setChanged();blockEntity.syncData();});
 	}
 	public int getSlots() {

@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.steamenergy.charger;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
-import com.teammoeg.chorda.block.FHBlockInterfaces;
-import com.teammoeg.chorda.block.FHTickableBlockEntity;
+import com.teammoeg.chorda.block.CBlockInterfaces;
+import com.teammoeg.chorda.block.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
@@ -57,7 +57,7 @@ import java.util.List;
 
 import static net.minecraft.ChatFormatting.GRAY;
 
-public class ChargerTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity, FHBlockInterfaces.IActiveState, IHaveGoggleInformation, HeatNetworkProvider {
+public class ChargerTileEntity extends IEBaseBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState, IHaveGoggleInformation, HeatNetworkProvider {
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 

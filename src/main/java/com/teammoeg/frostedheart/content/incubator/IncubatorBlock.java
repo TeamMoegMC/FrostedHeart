@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.incubator;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.block.FHGuiBlock;
+import com.teammoeg.chorda.block.CGuiBlock;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -40,7 +40,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.registries.RegistryObject;
 
-public class IncubatorBlock extends FHGuiBlock {
+public class IncubatorBlock extends CGuiBlock {
     static DirectionProperty HORIZONTAL_FACING = BlockStateProperties.HORIZONTAL_FACING;
     static BooleanProperty LIT = BlockStateProperties.LIT;
     private RegistryObject<BlockEntityType<?>> type;

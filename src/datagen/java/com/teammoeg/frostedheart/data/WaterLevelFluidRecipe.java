@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.data;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.chorda.util.CRegistries;
 import com.teammoeg.frostedheart.content.water.recipe.WaterLevelAndEffectRecipe;
-import com.teammoeg.chorda.util.RegistryUtils;
 
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.world.level.material.Fluid;
@@ -32,7 +32,7 @@ public class WaterLevelFluidRecipe implements FinishedRecipe {
 		json.add("ingredient",igd.toJson());
 		json.addProperty("waterLevel", wl);
 		json.addProperty("waterSaturationLevel",ws);
-		json.addProperty("fluid", RegistryUtils.getRegistryName(f).toString());
+		json.addProperty("fluid", CRegistries.getRegistryName(f).toString());
 	}
 
 	@Override

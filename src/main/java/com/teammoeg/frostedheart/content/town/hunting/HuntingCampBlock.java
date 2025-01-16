@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.town.hunting;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
@@ -16,7 +16,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.Level;
 
-public class HuntingCampBlock extends AbstractTownWorkerBlock implements FHEntityBlock<HuntingCampBlockEntity>{
+public class HuntingCampBlock extends AbstractTownWorkerBlock implements CEntityBlock<HuntingCampBlockEntity> {
     public HuntingCampBlock(Properties blockProps) {
         super(blockProps);
     }

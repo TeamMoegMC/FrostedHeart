@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.teammoeg.chorda.util.lang.ComponentOptimizer;
-import com.teammoeg.chorda.util.MultipleRoundHelper;
+import com.teammoeg.chorda.util.misc.MultipleRoundHelper;
 
 import com.teammoeg.chorda.util.lang.Components;
 import net.minecraft.network.chat.Component;

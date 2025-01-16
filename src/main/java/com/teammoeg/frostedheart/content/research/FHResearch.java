@@ -33,7 +33,7 @@ import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.chorda.team.FHTeamDataManager;
+import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.data.ClientResearchData;
 import com.teammoeg.frostedheart.content.research.events.ResearchLoadEvent;
@@ -419,7 +419,7 @@ public class FHResearch {
 
 	public static void load() {
 		FHResearch.editor = false;
-		Path local = FHTeamDataManager.getServer().getWorldPath(dataFolder);
+		Path local = CTeamDataManager.getServer().getWorldPath(dataFolder);
 		File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
 		FHResearch.clearAll();
 		if (regfile.exists()) {
@@ -445,7 +445,7 @@ public class FHResearch {
 	}
 
 	public static void save() {
-		Path local = FHTeamDataManager.getServer().getWorldPath(dataFolder);
+		Path local = CTeamDataManager.getServer().getWorldPath(dataFolder);
 		File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
 		File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
 		try {

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.api;
 
-import com.teammoeg.chorda.team.FHClientTeamDataManager;
+import com.teammoeg.chorda.team.CClientTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
@@ -33,7 +33,7 @@ public class ClientResearchDataAPI {
 
     @OnlyIn(Dist.CLIENT)
     public static TeamDataClosure<TeamResearchData> getData() {
-        return FHClientTeamDataManager.INSTANCE.getInstance().getDataHolder(FHSpecialDataTypes.RESEARCH_DATA);
+        return CClientTeamDataManager.INSTANCE.getInstance().getDataHolder(FHSpecialDataTypes.RESEARCH_DATA);
 
     }
 

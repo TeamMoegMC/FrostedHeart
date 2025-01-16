@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchUtils;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
@@ -37,7 +37,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when data update
-public record FHResearchDataUpdatePacket(Object rd,int id) implements FHMessage{
+public record FHResearchDataUpdatePacket(Object rd,int id) implements CMessage {
 
 
     public FHResearchDataUpdatePacket(FriendlyByteBuf buffer) {

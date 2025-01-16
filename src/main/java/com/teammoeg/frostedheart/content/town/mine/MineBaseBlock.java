@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.town.mine;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-public class MineBaseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<MineBaseBlockEntity>{
+public class MineBaseBlock extends AbstractTownWorkerBlock implements CEntityBlock<MineBaseBlockEntity> {
 
     public MineBaseBlock(Properties blockProps) {
         super(blockProps);

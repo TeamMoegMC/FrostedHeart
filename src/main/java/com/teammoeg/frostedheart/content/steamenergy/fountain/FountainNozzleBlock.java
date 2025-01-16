@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
-import com.teammoeg.chorda.block.FHBaseBlock;
+import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
 import net.minecraft.core.BlockPos;
@@ -33,7 +33,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
-public class FountainNozzleBlock extends FHBaseBlock {
+public class FountainNozzleBlock extends CBlock {
     public static final IntegerProperty HEIGHT =
             IntegerProperty.create("height", 0, FountainTileEntity.MAX_HEIGHT);
 

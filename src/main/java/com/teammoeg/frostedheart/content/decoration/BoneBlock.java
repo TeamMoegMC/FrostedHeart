@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.decoration;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.chorda.block.FHBaseBlock;
+import com.teammoeg.chorda.block.CBlock;
 
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.Block;
@@ -20,7 +20,7 @@ import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 
-public class BoneBlock extends FHBaseBlock {
+public class BoneBlock extends CBlock {
     private static IntegerProperty BNT = IntegerProperty.create("bonetype", 0, 4);
     static final VoxelShape shape = Block.box(0, 0, 0, 16, 3, 16);
     static final VoxelShape shape2 = Block.box(0, 0, 0, 16, 15, 16);

@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata;
 
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.chorda.network.FHMessage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.ChunkPos;
@@ -31,7 +31,7 @@ import java.util.*;
 import java.util.function.Supplier;
 
 
-public class FHRequestInfraredViewDataSyncPacket implements FHMessage {
+public class FHRequestInfraredViewDataSyncPacket implements CMessage {
     private final ChunkPos chunkPos;
     private final int chunkRadius;
 

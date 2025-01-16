@@ -24,7 +24,7 @@ package com.teammoeg.chorda.team;
 
 import com.teammoeg.chorda.ChordaNetwork;
 import com.teammoeg.chorda.util.utility.OptionalLazy;
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -93,7 +93,7 @@ public class TeamDataHolder extends BaseDataHolder<TeamDataHolder> {
 	 *
 	 * @param packet the packet
 	 */
-	public void sendToOnline(FHMessage packet) {
+	public void sendToOnline(CMessage packet) {
 		if(team.isPresent())
 	        for (ServerPlayer spe : team.get().getOnlineMembers())
 	        	ChordaNetwork.sendPlayer(spe, packet);

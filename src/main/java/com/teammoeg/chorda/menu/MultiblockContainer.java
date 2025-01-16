@@ -44,7 +44,7 @@ public class MultiblockContainer<S extends IMultiblockState, C extends AbstractC
 	}
 
 	public IMultiblockComponent<S> createComponent(){
-		return new FHMenuComponent<>(this);
+		return new CMenuComponent<>(this);
 	}
 
 

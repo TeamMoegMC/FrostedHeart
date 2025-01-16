@@ -46,7 +46,7 @@ import com.teammoeg.frostedheart.content.climate.particle.SteamParticle;
 import com.teammoeg.frostedheart.content.climate.particle.WetSteamParticle;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
-import com.teammoeg.chorda.util.RegistryUtils;
+import com.teammoeg.chorda.util.CRegistries;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
@@ -156,7 +156,7 @@ public class FHClientEventsMod {
         for (ResourceLocation location : event.getModels().keySet()) {
             // Now find all armors
             ResourceLocation item = new ResourceLocation(location.getNamespace(), location.getPath());
-            if (RegistryUtils.getItem(item) instanceof ArmorItem) {
+            if (CRegistries.getItem(item) instanceof ArmorItem) {
                 ModelResourceLocation itemModelResourceLocation = new ModelResourceLocation(item, "inventory");
                 BakedModel model = event.getModels().get(itemModelResourceLocation);
                 if (model == null) {

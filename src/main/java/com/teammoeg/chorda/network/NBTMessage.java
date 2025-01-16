@@ -3,7 +3,7 @@ package com.teammoeg.chorda.network;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 
-public abstract class NBTMessage implements FHMessage{
+public abstract class NBTMessage implements CMessage {
 	private CompoundTag tag;
 
 	public NBTMessage(FriendlyByteBuf buffer) {

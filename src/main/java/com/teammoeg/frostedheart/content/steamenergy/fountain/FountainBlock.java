@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
-import com.teammoeg.chorda.block.FHBaseBlock;
-import com.teammoeg.chorda.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import net.minecraft.core.BlockPos;
@@ -40,7 +40,7 @@ import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.function.Supplier;
 
-public class FountainBlock extends FHBaseBlock implements FHEntityBlock<FountainTileEntity> {
+public class FountainBlock extends CBlock implements CEntityBlock<FountainTileEntity> {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public FountainBlock(Properties blockProps) {

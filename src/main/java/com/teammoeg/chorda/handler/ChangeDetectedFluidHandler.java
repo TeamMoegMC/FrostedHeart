@@ -21,7 +21,7 @@
 
 package com.teammoeg.chorda.handler;
 
-import com.teammoeg.chorda.blockentity.SyncableTileEntity;
+import com.teammoeg.chorda.blockentity.SyncableBlockEntity;
 
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.fluids.FluidStack;
@@ -40,7 +40,7 @@ public class ChangeDetectedFluidHandler implements IFluidHandler {
 		return new ChangeDetectedFluidHandler(nested,()->{blockEntity.setChanged();});
 	}
 	
-	public static <T extends BlockEntity&SyncableTileEntity> IFluidHandler fromBESynced(T blockEntity,IFluidHandler nested) {
+	public static <T extends BlockEntity& SyncableBlockEntity> IFluidHandler fromBESynced(T blockEntity, IFluidHandler nested) {
 		return new ChangeDetectedFluidHandler(nested,()->{blockEntity.setChanged();blockEntity.syncData();});
 	}
 	@Override

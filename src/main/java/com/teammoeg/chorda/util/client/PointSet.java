@@ -3,7 +3,7 @@ package com.teammoeg.chorda.util.client;
 import java.util.Arrays;
 import java.util.List;
 
-import com.teammoeg.chorda.util.IterateUtils;
+import com.teammoeg.chorda.util.misc.IterateUtils;
 import com.teammoeg.chorda.util.utility.MutablePair;
 
 import net.minecraft.client.gui.GuiGraphics;

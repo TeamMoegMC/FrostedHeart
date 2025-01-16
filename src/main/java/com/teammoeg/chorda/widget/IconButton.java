@@ -1,7 +1,7 @@
 package com.teammoeg.chorda.widget;
 
 import com.teammoeg.chorda.Chorda;
-import com.teammoeg.chorda.util.CGuiHelper;
+import com.teammoeg.chorda.util.CGuis;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.client.ColorHelper;
 import net.minecraft.client.gui.GuiGraphics;
@@ -66,8 +66,8 @@ public class IconButton extends Button {
             }
         }
 
-        CGuiHelper.bindTexture(ICON_LOCATION);
-        CGuiHelper.blitColored(graphics.pose(), getX(), getY(), getWidth(), getHeight(), icon.x*scale, icon.y*scale, getWidth(), getHeight(), TEXTURE_WIDTH*scale, TEXTURE_HEIGHT*scale, color, this.alpha);
+        CGuis.bindTexture(ICON_LOCATION);
+        CGuis.blitColored(graphics.pose(), getX(), getY(), getWidth(), getHeight(), icon.x*scale, icon.y*scale, getWidth(), getHeight(), TEXTURE_WIDTH*scale, TEXTURE_HEIGHT*scale, color, this.alpha);
     }
 
     public void setScale(int scale) {

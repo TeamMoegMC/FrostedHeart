@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.gson.JsonElement;
-import com.teammoeg.chorda.util.CGuiHelper;
+import com.teammoeg.chorda.util.CGuis;
 import com.teammoeg.chorda.util.lang.Components;
 import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.serialization.Codec;
@@ -44,7 +44,7 @@ import com.teammoeg.frostedheart.content.research.gui.editor.NumberBox;
 import com.teammoeg.frostedheart.content.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectDialog;
 import com.teammoeg.frostedheart.content.research.gui.editor.SelectItemStackDialog;
-import com.teammoeg.chorda.util.MathUtils;
+import com.teammoeg.chorda.util.CMath;
 import com.teammoeg.chorda.util.client.ClientUtils;
 import com.teammoeg.chorda.util.io.CodecUtil;
 import com.teammoeg.chorda.util.io.codec.AlternativeCodecBuilder;
@@ -105,7 +105,7 @@ public class FHIcons {
         public void draw(GuiGraphics ms, int x, int y, int w, int h) {
             if (!icons.isEmpty()) {
                 dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
-                MathUtils.selectElementByTime(icons).draw(ms, x, y, w, h);
+                CMath.selectElementByTime(icons).draw(ms, x, y, w, h);
             }
         }
 
@@ -237,7 +237,7 @@ public class FHIcons {
             itemRenderer.renderItemAndEffectIntoGUI(stack, x, y);
             itemRenderer.renderItemOverlayIntoGUI(font, stack, x, y, null);
             itemRenderer.zLevel = 0.0F;*/
-        	CGuiHelper.drawItem(matrixStack, stack, x, y,199, w/16f, h/16f, true, null);
+        	CGuis.drawItem(matrixStack, stack, x, y,199, w/16f, h/16f, true, null);
             /*ClientUtils.mc().getItemRenderer().renderItem(stack, TransformType.GUI,LightTexture., y, matrixStack, null);
             if (stack != null && stack.getCount() > 1) {
                 matrixStack.push();

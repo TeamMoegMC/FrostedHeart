@@ -26,7 +26,7 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.util.ShapeType;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.HeatingLogic;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.chorda.util.ie.FHMultiblockHelper;
+import com.teammoeg.chorda.util.ie.CMultiblockHelper;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -83,7 +83,7 @@ public class RadiatorLogic extends HeatingLogic<RadiatorLogic, RadiatorState> {
     @Override
     public void tickEffects(IMultiblockContext<RadiatorState> ctx, BlockPos master, boolean isActive) {
         Level level = ctx.getLevel().getRawLevel();
-        BlockPos pos = FHMultiblockHelper.getAbsoluteMaster(ctx.getLevel());
+        BlockPos pos = CMultiblockHelper.getAbsoluteMaster(ctx.getLevel());
         if (level != null && level.isClientSide && isActive && level.random.nextFloat() < 0.2) {
             FHClientUtils.spawnSteamParticles(level, pos);
         }

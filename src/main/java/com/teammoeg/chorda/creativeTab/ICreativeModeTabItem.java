@@ -23,7 +23,8 @@ package com.teammoeg.chorda.creativeTab;
 /**
  * Interface for auto creative tab event listeners.
  * Useful for item tab register
- * Implementing in block without using FHBlockItem would take no effect.
+ * Implementing in block without using a proper BlockItem subclass that
+ * implements ICreativeModeTabItem would take no effect.
  * */
 public interface ICreativeModeTabItem {
 	void fillItemCategory(CreativeTabItemHelper helper);

@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
-import com.teammoeg.chorda.block.FHBaseBlock;
+import com.teammoeg.chorda.block.CBlock;
 
-public class FHOreBlock extends FHBaseBlock {
+public class FHOreBlock extends CBlock {
     public FHOreBlock(Properties blockProps) {
         super(blockProps);
     }

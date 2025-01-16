@@ -25,8 +25,9 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import com.teammoeg.chorda.team.CTeamDataManager;
+import com.teammoeg.chorda.util.CRegistries;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.chorda.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.chorda.team.TeamDataHolder;
@@ -45,7 +46,6 @@ import com.teammoeg.frostedheart.content.research.research.clues.KillClue;
 import com.teammoeg.frostedheart.content.research.research.clues.MinigameClue;
 import com.teammoeg.frostedheart.content.research.research.clues.TickListenerClue;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.chorda.util.RegistryUtils;
 import com.teammoeg.chorda.util.utility.OptionalLazy;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
@@ -77,12 +77,12 @@ public class ResearchListeners {
 
         @Override
         public Block getObject(String s) {
-            return RegistryUtils.getBlock(new ResourceLocation(s));
+            return CRegistries.getBlock(new ResourceLocation(s));
         }
 
         @Override
         public String getString(Block item) {
-            return RegistryUtils.getRegistryName(item).toString();
+            return CRegistries.getRegistryName(item).toString();
         }
     }
 
@@ -223,7 +223,7 @@ public class ResearchListeners {
 
         @Override
         public Recipe<?> getObject(String s) {
-            return FHTeamDataManager.getRecipeManager().byKey(new ResourceLocation(s)).orElse(null);
+            return CTeamDataManager.getRecipeManager().byKey(new ResourceLocation(s)).orElse(null);
         }
 
         @Override
@@ -328,7 +328,7 @@ public class ResearchListeners {
     }
 
     public static int fetchGameLevel(ServerPlayer s) {
-    	TeamDataHolder data=FHTeamDataManager.get(s);
+    	TeamDataHolder data= CTeamDataManager.get(s);
         TeamResearchData trd = data.getData(FHSpecialDataTypes.RESEARCH_DATA);
         OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent()) {
@@ -395,12 +395,12 @@ public class ResearchListeners {
     }
 
     public static void ServerReload() {
-        if (FHTeamDataManager.INSTANCE == null) return;
+        if (CTeamDataManager.INSTANCE == null) return;
         FHMain.LOGGER.info("reloading research system");
-        FHTeamDataManager.INSTANCE.save();
-        FHTeamDataManager.INSTANCE.load();
+        CTeamDataManager.INSTANCE.save();
+        CTeamDataManager.INSTANCE.load();
         FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
-        FHTeamDataManager.INSTANCE.forAllData(FHSpecialDataTypes.RESEARCH_DATA,TeamResearchData::sendUpdate);
+        CTeamDataManager.INSTANCE.forAllData(FHSpecialDataTypes.RESEARCH_DATA,TeamResearchData::sendUpdate);
     }
 
     public static ItemStack submitItem(ServerPlayer s, ItemStack i) {

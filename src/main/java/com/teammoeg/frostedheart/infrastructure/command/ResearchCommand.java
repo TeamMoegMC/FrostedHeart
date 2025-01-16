@@ -25,9 +25,9 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.chorda.team.FHTeamDataManager;
 import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
@@ -136,7 +136,7 @@ public class ResearchCommand {
                 .then(Commands.literal("transfer").then(Commands.argument("from", UuidArgument.uuid())
                         .then(Commands.argument("to", UuidArgument.uuid())).executes(ct -> {
                             Team team = FTBTeamsAPI.api().getManager().getTeamByID(UuidArgument.getUuid(ct, "to")).orElse(null);
-                            FHTeamDataManager.INSTANCE.transfer(UuidArgument.getUuid(ct, "from"), team);
+                            CTeamDataManager.INSTANCE.transfer(UuidArgument.getUuid(ct, "from"), team);
                             ct.getSource().sendSuccess(()-> Components.str("Transfered to " + team.getName()).withStyle(ChatFormatting.GREEN), false);
                             return Command.SINGLE_SUCCESS;
                         })))

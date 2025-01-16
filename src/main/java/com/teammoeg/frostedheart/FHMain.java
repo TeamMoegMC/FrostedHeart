@@ -85,7 +85,7 @@ import java.io.File;
 @Mod(FHMain.MODID)
 public class FHMain {
 
-    // Constants
+    // CConstants
     public static final String MODID = "frostedheart";
     public static final String ALIAS = "fh";
     public static final String TWRID = "twr";

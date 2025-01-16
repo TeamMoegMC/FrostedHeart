@@ -21,9 +21,9 @@ package com.teammoeg.frostedheart.content.research.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.chorda.team.FHClientTeamDataManager;
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.team.CClientTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
@@ -36,7 +36,7 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when player join
-public class FHResearchDataSyncPacket implements FHMessage {
+public class FHResearchDataSyncPacket implements CMessage {
 	Object dat;
 
 
@@ -56,7 +56,7 @@ public class FHResearchDataSyncPacket implements FHMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             try {
-                FHClientTeamDataManager.INSTANCE.getInstance().setData(FHSpecialDataTypes.RESEARCH_DATA, FHSpecialDataTypes.RESEARCH_DATA.loadData(DataOps.COMPRESSED, dat));
+                CClientTeamDataManager.INSTANCE.getInstance().setData(FHSpecialDataTypes.RESEARCH_DATA, FHSpecialDataTypes.RESEARCH_DATA.loadData(DataOps.COMPRESSED, dat));
             } catch (Exception e) {
                 FHMain.LOGGER.error("Failed to load data when syncing research data", e);
             }

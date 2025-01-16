@@ -6,7 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.chorda.widget.IconButton;
-import com.teammoeg.chorda.util.CGuiHelper;
+import com.teammoeg.chorda.util.CGuis;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.chorda.util.client.AnimationUtil;
 import com.teammoeg.chorda.util.client.ClientUtils;
@@ -66,7 +66,7 @@ public class Waypoint extends AbstractWaypoint {
         pose.mulPose(new Quaternionf().rotateZ(Mth.PI/4));
         if (focus) {
             pose.scale(1.5F, 1.5F, 1.5F);
-            CGuiHelper.renderIcon(pose, focusIcon, -5, -5, color);
+            CGuis.renderIcon(pose, focusIcon, -5, -5, color);
             //focus的动画效果
             float progress = AnimationUtil.fadeIn(750, "waypoints" + id, false);
             if (progress == 1 && AnimationUtil.progress(750, "waypoint2" + id, false) == 1) {
@@ -77,7 +77,7 @@ public class Waypoint extends AbstractWaypoint {
             pose.scale(progress+0.25F, progress+0.25F, progress+0.25F);
             graphics.fill(-5, -5, 5, 5, fadeColor);
         } else {
-            CGuiHelper.renderIcon(pose, icon, -5, -5, color);
+            CGuis.renderIcon(pose, icon, -5, -5, color);
         }
         pose.popPose();
     }

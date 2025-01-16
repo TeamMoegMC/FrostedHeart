@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.utility.incinerator;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.block.FHBaseBlock;
-import com.teammoeg.chorda.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.chorda.util.client.ClientUtils;
@@ -44,7 +44,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.fluids.FluidUtil;
 
-public class OilBurnerBlock extends FHBaseBlock implements FHEntityBlock<OilBurnerTileEntity>{
+public class OilBurnerBlock extends CBlock implements CEntityBlock<OilBurnerTileEntity> {
 
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 

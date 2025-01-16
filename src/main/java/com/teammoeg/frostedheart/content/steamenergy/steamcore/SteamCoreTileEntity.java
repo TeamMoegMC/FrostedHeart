@@ -2,8 +2,8 @@ package com.teammoeg.frostedheart.content.steamenergy.steamcore;
 
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
-import com.teammoeg.chorda.block.FHBlockInterfaces;
-import com.teammoeg.chorda.block.FHTickableBlockEntity;
+import com.teammoeg.chorda.block.CBlockInterfaces;
+import com.teammoeg.chorda.block.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -20,8 +20,8 @@ import net.minecraftforge.common.util.LazyOptional;
 import java.util.Objects;
 
 public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
-        FHTickableBlockEntity, IHaveGoggleInformation,
-        FHBlockInterfaces.IActiveState {
+        CTickableBlockEntity, IHaveGoggleInformation,
+        CBlockInterfaces.IActiveState {
     HeatEndpoint network = new HeatEndpoint(10, FHConfig.COMMON.steamCoreMaxPower.get().floatValue(), 0, FHConfig.COMMON.steamCorePowerIntake.get().floatValue());
     LazyOptional<HeatEndpoint> heatcap = LazyOptional.of(() -> network);
 

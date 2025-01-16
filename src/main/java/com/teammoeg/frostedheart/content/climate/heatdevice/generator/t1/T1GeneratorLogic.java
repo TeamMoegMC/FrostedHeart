@@ -23,7 +23,7 @@ import java.util.function.Function;
 
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorLogic;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
-import com.teammoeg.chorda.util.ie.FHMultiblockHelper;
+import com.teammoeg.chorda.util.ie.CMultiblockHelper;
 import com.teammoeg.chorda.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
@@ -53,7 +53,7 @@ public final class T1GeneratorLogic extends GeneratorLogic<T1GeneratorLogic, T1G
      * @return
      */
     private boolean findTileEntity(IMultiblockContext<T1GeneratorState> ctx) {
-        Vec3i vec = FHMultiblockHelper.getSize(ctx.getLevel());
+        Vec3i vec = CMultiblockHelper.getSize(ctx.getLevel());
         int xLow = -1, xHigh = vec.getX(), yLow = 0, yHigh = vec.getY(), zLow = -1, zHigh = vec.getZ();
         int blastBlockCount = 0, alloySmelterCount = 0;
         BlockPos.MutableBlockPos blockpos = new BlockPos.MutableBlockPos();
@@ -64,7 +64,7 @@ public final class T1GeneratorLogic extends GeneratorLogic<T1GeneratorLogic, T1G
                     // Enum a seamless NoUpandDown hollow cube
                     if (((z > zLow && z < zHigh) && ((x == xLow) || (x == xHigh))) || ((z == zLow || z == zHigh) && (x > xLow && x < xHigh))) {
                         blockpos.set(x, y, z);
-                        IMultiblockBEHelper<?> te = FHMultiblockHelper.getBEHelper(ctx.getLevel().getRawLevel(), ctx.getLevel().toAbsolute(blockpos)).orElse(null);
+                        IMultiblockBEHelper<?> te = CMultiblockHelper.getBEHelper(ctx.getLevel().getRawLevel(), ctx.getLevel().toAbsolute(blockpos)).orElse(null);
                         IMultiblockState state = te.getContext().getState();
                         if (state instanceof BlastFurnaceLogic.State) {
                             if (++blastBlockCount == 9) {

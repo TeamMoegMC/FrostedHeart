@@ -1,13 +1,13 @@
 package com.teammoeg.frostedheart.content.water.network;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class PlayerWaterLevelSyncPacket implements FHMessage {
+public class PlayerWaterLevelSyncPacket implements CMessage {
     int waterLevel, waterSaturationLevel;
     float waterExhaustionLevel;
 

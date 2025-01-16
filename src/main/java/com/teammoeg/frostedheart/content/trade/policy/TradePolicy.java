@@ -28,7 +28,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
-import com.teammoeg.chorda.util.RegistryUtils;
+import com.teammoeg.chorda.util.CRegistries;
 import com.teammoeg.chorda.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
@@ -76,7 +76,7 @@ public class TradePolicy extends IESerializableRecipe {
             VillagerProfession vp = VillagerProfession.NONE;
             
             if (json.has("profession"))
-                vp = RegistryUtils.getProfess(new ResourceLocation(json.get("profession").getAsString()));
+                vp = CRegistries.getProfess(new ResourceLocation(json.get("profession").getAsString()));
             if (json.has("exps"))
                 expBar = SerializeUtil.parseJsonElmList(json.get("exps"), JsonElement::getAsInt).stream().mapToInt(t -> t).toArray();
             else

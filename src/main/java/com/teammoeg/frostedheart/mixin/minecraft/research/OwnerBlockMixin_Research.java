@@ -21,13 +21,13 @@ package com.teammoeg.frostedheart.mixin.minecraft.research;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.chorda.team.CTeamDataManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlock;
-import com.teammoeg.chorda.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.chorda.util.mixin.IOwnerTile;
 
@@ -63,7 +63,7 @@ public class OwnerBlockMixin_Research extends Block {
     public void fh$use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn,BlockHitResult hit, CallbackInfoReturnable<InteractionResult> r) {
         if (!worldIn.isClientSide && !(player instanceof FakePlayer)) {
             BlockEntity te = Utils.getExistingTileEntity(worldIn, pos);
-            IOwnerTile.trySetOwner(te, FHTeamDataManager.get(player).getId());
+            IOwnerTile.trySetOwner(te, CTeamDataManager.get(player).getId());
         }
     }
 
@@ -73,6 +73,6 @@ public class OwnerBlockMixin_Research extends Block {
         super.setPlacedBy(worldIn, pos, state, placer, stack);
 
         if (placer instanceof ServerPlayer && !(placer instanceof FakePlayer))
-            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(worldIn, pos), FHTeamDataManager.get((Player) placer).getId());
+            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(worldIn, pos), CTeamDataManager.get((Player) placer).getId());
     }
 }

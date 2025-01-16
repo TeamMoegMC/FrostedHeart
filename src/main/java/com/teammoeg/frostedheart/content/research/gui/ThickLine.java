@@ -36,7 +36,7 @@ public class ThickLine {
     		matrixStack.fill(x+this.x-2, y+this.y-2, x+this.x+2, y+this.y2+2, color.rgba());
     	else
     		matrixStack.fill(x+this.x-2, y+this.y-2, x+this.x2+2, y+this.y+2, color.rgba());
-        //CGuiHelper.drawLine(matrixStack, color, x + this.x, y + this.y, x + this.x2, y + this.y2);
+        //CGuis.drawLine(matrixStack, color, x + this.x, y + this.y, x + this.x2, y + this.y2);
 
         // super.draw(matrixStack, theme, x, y, w, h);
     }

@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
-import com.teammoeg.chorda.block.FHBlockInterfaces;
-import com.teammoeg.chorda.block.FHTickableBlockEntity;
+import com.teammoeg.chorda.block.CBlockInterfaces;
+import com.teammoeg.chorda.block.CTickableBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
@@ -44,7 +44,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
-public class FountainTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity, FHBlockInterfaces.IActiveState {
+public class FountainTileEntity extends IEBaseBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState {
 
     public static final int RANGE_PER_NOZZLE = 1;
     public static final int MAX_HEIGHT = 5;

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
-import com.teammoeg.chorda.menu.FHBlockEntityContainer;
+import com.teammoeg.chorda.menu.CBlockEntityContainer;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.research.blocks.DrawingDeskTileEntity;
 
@@ -30,7 +30,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-public class DrawDeskContainer extends FHBlockEntityContainer<DrawingDeskTileEntity> {
+public class DrawDeskContainer extends CBlockEntityContainer<DrawingDeskTileEntity> {
     interface Enabled {
         void setEnabled(boolean enabled);
     }

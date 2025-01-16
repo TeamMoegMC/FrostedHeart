@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.events;
 
+import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.chorda.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import net.minecraftforge.event.level.LevelEvent;
@@ -18,9 +18,9 @@ import net.minecraftforge.fml.common.Mod;
 public class FHServerEvents {
     @SubscribeEvent
     public static void serverLevelSave(final LevelEvent.Save event) {
-        if (FHTeamDataManager.INSTANCE != null) {
+        if (CTeamDataManager.INSTANCE != null) {
             FHResearch.save();
-            FHTeamDataManager.INSTANCE.save();
+            CTeamDataManager.INSTANCE.save();
             //FHScenario.save(); // TODO: Scenrario save
         }
     }
@@ -29,9 +29,9 @@ public class FHServerEvents {
 
     @SubscribeEvent
     public static void serverAboutToStart(final ServerAboutToStartEvent event) {
-        new FHTeamDataManager(event.getServer());
+        new CTeamDataManager(event.getServer());
         FHResearch.load();
-        FHTeamDataManager.INSTANCE.load();
+        CTeamDataManager.INSTANCE.load();
         SurroundingTemperatureSimulator.init();
     }
 
@@ -52,6 +52,6 @@ public class FHServerEvents {
 
     @SubscribeEvent
     public static void serverStopped(final ServerStoppedEvent event) {
-        FHTeamDataManager.INSTANCE = null;
+        CTeamDataManager.INSTANCE = null;
     }
 }

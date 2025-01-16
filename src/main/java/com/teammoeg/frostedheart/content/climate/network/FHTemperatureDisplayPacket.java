@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.climate.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.chorda.util.client.ClientUtils;
@@ -34,7 +34,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
-public class FHTemperatureDisplayPacket implements FHMessage {
+public class FHTemperatureDisplayPacket implements CMessage {
     private final int[] temp;
     private final String langKey;
     private final boolean isStatus;

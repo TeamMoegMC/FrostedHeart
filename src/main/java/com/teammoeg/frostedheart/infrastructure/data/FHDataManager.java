@@ -33,10 +33,10 @@ import com.google.gson.JsonParser;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
+import com.teammoeg.chorda.util.CRegistries;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.*;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
-import com.teammoeg.chorda.util.RegistryUtils;
 import com.teammoeg.chorda.util.io.CodecUtil;
 import com.teammoeg.chorda.util.io.IdDataPair;
 import com.teammoeg.chorda.util.mixin.StructureUtils;
@@ -167,7 +167,7 @@ public class FHDataManager implements ResourceManagerReloadListener {
 	}
 
 	public static ArmorTempData getArmor(ItemStack is) {
-		return FHDataManager.<ArmorTempData>get(Armor).get(RegistryUtils.getRegistryName(is.getItem()));
+		return FHDataManager.<ArmorTempData>get(Armor).get(CRegistries.getRegistryName(is.getItem()));
 	}
 
 	public static ArmorTempData getArmor(String is) {
@@ -177,7 +177,7 @@ public class FHDataManager implements ResourceManagerReloadListener {
 	@Nonnull
 	public static Float getBiomeTemp(Biome b) {
 		if (b == null) return 0f;
-		BiomeTempData data = FHDataManager.get(Biome).get(RegistryUtils.getRegistryName(b));
+		BiomeTempData data = FHDataManager.get(Biome).get(CRegistries.getRegistryName(b));
 		if (data != null)
 			return data.getTemp();
 		return 0F;
@@ -185,19 +185,19 @@ public class FHDataManager implements ResourceManagerReloadListener {
 
 	@Nullable
 	public static PlantTempData getPlantData(Block b) {
-		return FHDataManager.get(Plant).get(RegistryUtils.getRegistryName(b));
+		return FHDataManager.get(Plant).get(CRegistries.getRegistryName(b));
 	}
 
 	public static BlockTempData getBlockData(Block b) {
-		return FHDataManager.get(Block).get(RegistryUtils.getRegistryName(b));
+		return FHDataManager.get(Block).get(CRegistries.getRegistryName(b));
 	}
 
 	public static BlockTempData getBlockData(ItemStack b) {
-		return FHDataManager.get(Block).get(RegistryUtils.getRegistryName(b.getItem()));
+		return FHDataManager.get(Block).get(CRegistries.getRegistryName(b.getItem()));
 	}
 
 	public static float getDrinkHeat(FluidStack f) {
-		DrinkTempData dtd = FHDataManager.get(Drink).get(RegistryUtils.getRegistryName(f.getFluid()));
+		DrinkTempData dtd = FHDataManager.get(Drink).get(CRegistries.getRegistryName(f.getFluid()));
 		if (dtd != null)
 			return dtd.getHeat();
 		return -0.3f;
@@ -220,16 +220,16 @@ public class FHDataManager implements ResourceManagerReloadListener {
 		if (item instanceof ITempAdjustFood) {
 			return (ITempAdjustFood) item;
 		}
-		CupData data = FHDataManager.get(Cup).get(RegistryUtils.getRegistryName(item));
+		CupData data = FHDataManager.get(Cup).get(CRegistries.getRegistryName(item));
 		ResourceMap<FoodTempData> foodData = FHDataManager.get(Food);
 		if (data != null) {
-			return new CupTempAdjustProxy(data.getEfficiency(), foodData.get(RegistryUtils.getRegistryName(item)));
+			return new CupTempAdjustProxy(data.getEfficiency(), foodData.get(CRegistries.getRegistryName(item)));
 		}
-		return foodData.get(RegistryUtils.getRegistryName(item));
+		return foodData.get(CRegistries.getRegistryName(item));
 	}
 
 	public static @Nullable FoodTempData getFoodTemp(Item item) {
-		return FHDataManager.get(Food).get(RegistryUtils.getRegistryName(item));
+		return FHDataManager.get(Food).get(CRegistries.getRegistryName(item));
 	}
 
 	@Nonnull

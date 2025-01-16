@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.simibubi.create.foundation.utility.VoxelShaper;
-import com.teammoeg.chorda.block.FHEntityBlock;
-import com.teammoeg.chorda.block.FHKineticBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.block.CKineticBlock;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import com.teammoeg.chorda.util.lang.Components;
@@ -56,7 +56,7 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.FakePlayer;
 
-public class MechCalcBlock extends FHKineticBlock implements FHEntityBlock<MechCalcTileEntity>,ICreativeModeTabItem{
+public class MechCalcBlock extends CKineticBlock implements CEntityBlock<MechCalcTileEntity>,ICreativeModeTabItem{
     static final VoxelShaper shape = VoxelShaper.forDirectional(Shapes.or(Block.box(0, 0, 0, 16, 9, 16), Block.box(0, 9, 0, 16, 16, 13)), Direction.SOUTH);
 
     public MechCalcBlock( Properties blockProps) {

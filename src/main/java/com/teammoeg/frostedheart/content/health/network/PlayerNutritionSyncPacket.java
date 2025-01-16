@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.health.network;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkDirection;
@@ -8,7 +8,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class PlayerNutritionSyncPacket implements FHMessage {
+public class PlayerNutritionSyncPacket implements CMessage {
     public float fat , carbohydrate, protein,vegetable;
 
     public PlayerNutritionSyncPacket(FriendlyByteBuf buffer) {

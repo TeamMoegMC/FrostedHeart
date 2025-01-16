@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.town.house;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.OccupiedArea;
-import com.teammoeg.chorda.util.RegistryUtils;
+import com.teammoeg.chorda.util.CRegistries;
 import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
@@ -96,7 +96,7 @@ public class HouseBlockScanner extends BlockScanner {
     protected void addDecoration(BlockPos pos) {
         BlockState blockState = getBlockState(pos);
         Block block = blockState.getBlock();
-        if (blockState.is(FHTags.Blocks.TOWN_DECORATIONS.tag) || Objects.requireNonNull(RegistryUtils.getRegistryName(block)).getNamespace().equals("cfm")) {
+        if (blockState.is(FHTags.Blocks.TOWN_DECORATIONS.tag) || Objects.requireNonNull(CRegistries.getRegistryName(block)).getNamespace().equals("cfm")) {
             String name = block.toString();
             decorations.merge(name, 1, Integer::sum);
         }

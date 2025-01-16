@@ -9,9 +9,9 @@ import com.mojang.serialization.*;
 import com.mojang.serialization.codecs.EitherMapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.Chorda;
+import com.teammoeg.chorda.util.CRegistries;
 import com.teammoeg.chorda.util.io.codec.*;
-import com.teammoeg.chorda.util.ConstructorCodec;
-import com.teammoeg.chorda.util.RegistryUtils;
+import com.teammoeg.chorda.util.misc.ConstructorCodec;
 import com.teammoeg.chorda.util.io.codec.BooleansCodec.BooleanCodecBuilder;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
@@ -135,11 +135,11 @@ public class CodecUtil {
 	public static final Codec<ItemStack>  ITEMSTACK_STRING_CODEC = new AlternativeCodecBuilder<>(ItemStack.class)
 			.add(ITEMSTACK_CODEC)
 			.add(ResourceLocation.CODEC.comapFlatMap(t->{
-				Item it=RegistryUtils.getItem(t);
+				Item it= CRegistries.getItem(t);
 				if(it==Items.AIR||it==null)return DataResult.error(()->"Not a item");
 				return DataResult.success(new ItemStack(it,1));
 				
-			}, t->RegistryUtils.getRegistryName(t.getItem()))).build();
+			}, t-> CRegistries.getRegistryName(t.getItem()))).build();
 	public static final Codec<CompoundTag> COMPOUND_TAG_CODEC=CodecUtil.convertSchema(NbtOps.INSTANCE).comapFlatMap(t->{
 		if(t instanceof CompoundTag)
 			return DataResult.success((CompoundTag)t);
@@ -153,7 +153,7 @@ public class CodecUtil {
 			return DataResult.success(Ingredient.fromJson(o));
 		if(o.isJsonPrimitive()) {
 			try {
-			Item i=RegistryUtils.getItem(new ResourceLocation(o.getAsString()));
+			Item i= CRegistries.getItem(new ResourceLocation(o.getAsString()));
 			if(i!=null&&i!=Items.AIR)
 				return DataResult.success(Ingredient.of(i));
 			}catch(ResourceLocationException rle) {

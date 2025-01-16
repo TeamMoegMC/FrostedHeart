@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.climate.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.climate.ClientClimateData;
 import com.teammoeg.frostedheart.content.climate.ClimateType;
 import com.teammoeg.frostedheart.content.climate.TemperatureFrame;
@@ -31,7 +31,7 @@ import com.teammoeg.chorda.util.io.SerializeUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-public class FHClimatePacket implements FHMessage {
+public class FHClimatePacket implements CMessage {
     private final short[] data;
     private final long sec;
     private final ClimateType climate;

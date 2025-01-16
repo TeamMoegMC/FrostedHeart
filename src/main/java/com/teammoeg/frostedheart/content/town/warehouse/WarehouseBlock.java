@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.town.warehouse;
 
-import com.teammoeg.chorda.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.function.Supplier;
 
-public class WarehouseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<WarehouseBlockEntity>{
+public class WarehouseBlock extends AbstractTownWorkerBlock implements CEntityBlock<WarehouseBlockEntity> {
     public WarehouseBlock(Properties blockProps) {
         super(blockProps);
     }

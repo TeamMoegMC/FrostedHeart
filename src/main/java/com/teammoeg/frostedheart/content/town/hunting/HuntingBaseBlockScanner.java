@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.content.town.hunting;
 
+import com.teammoeg.chorda.util.CRegistries;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.house.HouseBlockScanner;
-import com.teammoeg.chorda.util.RegistryUtils;
 import com.teammoeg.frostedheart.content.town.blockscanner.ConfinedSpaceScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
 import net.minecraft.world.level.block.state.BlockState;
@@ -42,7 +42,7 @@ public class HuntingBaseBlockScanner extends HouseBlockScanner {
         addDecoration(pos);
         if(blockState.is(BlockTags.BEDS)) bedNum++;
         if(blockState.is(Tags.Blocks.CHESTS)) chestNum++;
-        if(Objects.requireNonNull(RegistryUtils.getRegistryName(blockState.getBlock())).getPath().equals("tanning_rack") || blockState.getBlock() instanceof CommandBlock) tanningRackNum++;
+        if(Objects.requireNonNull(CRegistries.getRegistryName(blockState.getBlock())).getPath().equals("tanning_rack") || blockState.getBlock() instanceof CommandBlock) tanningRackNum++;
     }
 
     @Override

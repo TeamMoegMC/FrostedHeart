@@ -6,7 +6,7 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 import com.google.common.base.Objects;
-import com.teammoeg.chorda.menu.FHBaseContainer;
+import com.teammoeg.chorda.menu.CContainer;
 import com.teammoeg.chorda.util.io.registry.IdRegistry;
 
 import net.minecraft.core.BlockPos;
@@ -25,7 +25,7 @@ public class CContainerData {
 	public static interface DataSlotConverter<A> extends IntFunction<A>{
 		int apply(A a);
 		A getDefault();
-		default FHDataSlot<A> create(FHBaseContainer container) {
+		default CDataSlot<A> create(CContainer container) {
 			return CContainerData.create(container,this);
 		}
 	}
@@ -34,7 +34,7 @@ public class CContainerData {
 		void write(FriendlyByteBuf network,A data);
 		A copy(A data);
 		A getDefault();
-		default FHDataSlot<A> create(FHBaseContainer container) {
+		default CDataSlot<A> create(CContainer container) {
 			return CContainerData.create(container,this);
 		}
 	}
@@ -43,11 +43,11 @@ public class CContainerData {
 		A decode(int[] values);
 		int getCount();
 		A getDefault();
-		default FHDataSlot<A> create(FHBaseContainer container) {
+		default CDataSlot<A> create(CContainer container) {
 			return CContainerData.create(container,this);
 		}
 	}
-	public interface FHDataSlot<T>{
+	public interface CDataSlot<T>{
 		T getValue();
 		
 		void setValue(T t);
@@ -61,7 +61,7 @@ public class CContainerData {
 			return ()->mapper.apply(getValue());
 		}
 	}
-	private static class SingleDataSlot<T> extends DataSlot implements FHDataSlot<T>{
+	private static class SingleDataSlot<T> extends DataSlot implements CDataSlot<T> {
 		T value;
 		DataSlotConverter<T> conv;
 		Supplier<T> getter;
@@ -115,7 +115,7 @@ public class CContainerData {
 		OtherDataSlotEncoder<T> getConverter();
 		
 	}
-	private static class OtherDataSlot<T> implements FHDataSlot<T>,SyncableDataSlot<T>{
+	private static class OtherDataSlot<T> implements CDataSlot<T>,SyncableDataSlot<T>{
 		T value;
 		T oldValue;
 		OtherDataSlotEncoder<T> conv;
@@ -167,7 +167,7 @@ public class CContainerData {
 		}
 
 	}
-	private static class MultiDataSlot<T> implements ContainerData,FHDataSlot<T>{
+	private static class MultiDataSlot<T> implements ContainerData, CDataSlot<T> {
 		T value;
 		T lastValue;
 		int[] values;
@@ -382,18 +382,18 @@ public class CContainerData {
 	static {
 		encoders.register(SLOT_TANK);
 	}
-	public static <T> FHDataSlot<T> create(FHBaseContainer container,DataSlotConverter<T> type) {
+	public static <T> CDataSlot<T> create(CContainer container, DataSlotConverter<T> type) {
 		SingleDataSlot<T> slot=new SingleDataSlot<>(type);
 		container.addDataSlot(slot);
 		return slot;
 		
 	}
-	public static <T> FHDataSlot<T> create(FHBaseContainer container,MultipleDataSlotConverter<T> type) {
+	public static <T> CDataSlot<T> create(CContainer container, MultipleDataSlotConverter<T> type) {
 		MultiDataSlot<T> slot=new MultiDataSlot<>(type);
 		container.addDataSlots(slot);
 		return slot;
 	}
-	public static <T> FHDataSlot<T> create(FHBaseContainer container,OtherDataSlotEncoder<T> type) {
+	public static <T> CDataSlot<T> create(CContainer container, OtherDataSlotEncoder<T> type) {
 		OtherDataSlot<T> slot=new OtherDataSlot<>(type);
 		container.addDataSlot(slot);
 		return slot;

@@ -4,7 +4,7 @@ import java.util.function.IntFunction;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.util.ConstructorCodec;
+import com.teammoeg.chorda.util.misc.ConstructorCodec;
 import com.teammoeg.chorda.util.io.CodecUtil;
 
 public class LeveledValue {

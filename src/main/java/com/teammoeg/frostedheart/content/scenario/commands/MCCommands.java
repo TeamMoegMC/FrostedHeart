@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.teammoeg.chorda.team.FHTeamDataManager;
+import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.content.scenario.Param;
@@ -14,7 +14,7 @@ import com.teammoeg.frostedheart.content.scenario.runner.trigger.MovementTrigger
 import com.teammoeg.frostedheart.content.scenario.runner.trigger.OrTrigger;
 import com.teammoeg.frostedheart.content.scenario.runner.trigger.VariantTrigger;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.chorda.util.RegistryUtils;
+import com.teammoeg.chorda.util.CRegistries;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -28,7 +28,7 @@ import net.minecraft.core.BlockPos;
 
 public class MCCommands {
 	public void giveItem(ScenarioCommandContext runner, @Param("i") String item, @Param("n") String nbt, @Param("c") int count) throws CommandSyntaxException {
-		Item i = RegistryUtils.getItem(new ResourceLocation(item));
+		Item i = CRegistries.getItem(new ResourceLocation(item));
 		if (count == 0) count = 1;
 		ItemStack is = new ItemStack(i, count);
 		if (nbt != null)
@@ -54,14 +54,14 @@ public class MCCommands {
 		overrides.put("x", pos.getX());
 		overrides.put("y", pos.getY());
 		overrides.put("z", pos.getZ());
-		ServerOpListEntry opent= FHTeamDataManager.getServer().getPlayerList().getOps().get(triggerPlayer.getGameProfile());
+		ServerOpListEntry opent= CTeamDataManager.getServer().getPlayerList().getOps().get(triggerPlayer.getGameProfile());
 		if(op)
 			if(opent==null){
-				FHTeamDataManager.getServer().getPlayerList().op(triggerPlayer.getGameProfile());
+				CTeamDataManager.getServer().getPlayerList().op(triggerPlayer.getGameProfile());
 			}
 		try {
-			Commands cmds = FHTeamDataManager.getServer().getCommands();
-			CommandSourceStack source = asp?triggerPlayer.createCommandSourceStack(): FHTeamDataManager.getServer().createCommandSourceStack();
+			Commands cmds = CTeamDataManager.getServer().getCommands();
+			CommandSourceStack source = asp?triggerPlayer.createCommandSourceStack(): CTeamDataManager.getServer().createCommandSourceStack();
 			for (Map.Entry<String, Object> entry : overrides.entrySet()) {
 				if (entry.getValue() != null) {
 					s = s.replace("@" + entry.getKey(), entry.getValue().toString());
@@ -71,7 +71,7 @@ public class MCCommands {
 		}finally {
 			if(op)
 				if(opent==null){
-					FHTeamDataManager.getServer().getPlayerList().deop(triggerPlayer.getGameProfile());
+					CTeamDataManager.getServer().getPlayerList().deop(triggerPlayer.getGameProfile());
 				}
 		}
 	}

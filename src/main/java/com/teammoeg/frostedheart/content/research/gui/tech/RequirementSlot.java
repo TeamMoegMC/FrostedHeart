@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.gui.TechIcons;
-import com.teammoeg.chorda.util.CGuiHelper;
+import com.teammoeg.chorda.util.CGuis;
 import com.teammoeg.chorda.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -58,7 +58,7 @@ public class RequirementSlot extends Widget {
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         dev.ftb.mods.ftblibrary.ui.GuiHelper.setupDrawing();
         TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
-        CGuiHelper.drawItem(matrixStack,cur, x, y,200, w / 16F, h / 16F, true, cnt!=0?String.valueOf(cnt):null);
+        CGuis.drawItem(matrixStack,cur, x, y,200, w / 16F, h / 16F, true, cnt!=0?String.valueOf(cnt):null);
     }
 
     @Override

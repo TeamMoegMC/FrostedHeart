@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 
-import com.teammoeg.chorda.blockentity.FHBaseTileEntity;
+import com.teammoeg.chorda.blockentity.CBlockEntity;
 import com.teammoeg.frostedheart.content.robotics.logistics.FilterSlot;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemChangeListener;
 import com.teammoeg.frostedheart.content.robotics.logistics.ItemHandlerListener;
@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.items.ItemStackHandler;
 
-public class StorageTileEntity extends FHBaseTileEntity implements ILogisticsStorage,ItemChangeListener{
+public class StorageTileEntity extends CBlockEntity implements ILogisticsStorage,ItemChangeListener{
 	ItemStackHandler container=new ItemStackHandler(27);
 	ItemHandlerListener handler=new ItemHandlerListener(container,this);
 	FilterSlot filter;

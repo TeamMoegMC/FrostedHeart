@@ -22,9 +22,9 @@ package com.teammoeg.frostedheart.content.steamenergy.sauna;
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlockEntity;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import com.teammoeg.chorda.block.FHBlockInterfaces;
-import com.teammoeg.chorda.block.FHTickableBlockEntity;
-import com.teammoeg.chorda.team.FHTeamDataManager;
+import com.teammoeg.chorda.block.CBlockInterfaces;
+import com.teammoeg.chorda.block.CTickableBlockEntity;
+import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
@@ -69,7 +69,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBlockEntity, FHBlockInterfaces.IActiveState, IIEInventory, MenuProvider {
+public class SaunaTileEntity extends IEBaseBlockEntity implements CTickableBlockEntity, CBlockInterfaces.IActiveState, IIEInventory, MenuProvider {
 
     private static final int RANGE = 5;
     private static final int WALL_HEIGHT = 3;
@@ -167,7 +167,7 @@ public class SaunaTileEntity extends IEBaseBlockEntity implements FHTickableBloc
         }
         UUID owner = IOwnerTile.getOwner(this);
         if (owner == null) return;
-        UUID t = FHTeamDataManager.get(p).getId();
+        UUID t = CTeamDataManager.get(p).getId();
         if (t == null || !t.equals(owner)) return;
         // add wet effect
         if (level.getGameTime() % 200L == 0L) {

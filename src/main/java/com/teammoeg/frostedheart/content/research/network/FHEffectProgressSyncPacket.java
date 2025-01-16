@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.chorda.team.TeamDataHolder;
@@ -35,7 +35,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when player join
-public record FHEffectProgressSyncPacket(boolean data,int id,int index) implements FHMessage {
+public record FHEffectProgressSyncPacket(boolean data,int id,int index) implements CMessage {
     
     public FHEffectProgressSyncPacket(FriendlyByteBuf buffer) {
         this(buffer.readBoolean(),buffer.readVarInt(),buffer.readVarInt());
