@@ -29,8 +29,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.chorda.util.evaluator.IEnvironment;
+import com.teammoeg.chorda.util.io.CodecUtil;
 
 public class ResearchData implements IEnvironment {
 

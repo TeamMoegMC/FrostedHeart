@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.content.scenario.client.dialog;
 
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.utility.ReferenceValue;
+import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.util.utility.ReferenceValue;
 
 import net.minecraft.util.FormattedCharSink;
 import net.minecraft.util.FormattedCharSequence;

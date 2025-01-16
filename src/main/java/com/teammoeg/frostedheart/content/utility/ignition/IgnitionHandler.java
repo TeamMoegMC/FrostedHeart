@@ -19,7 +19,43 @@
 
 package com.teammoeg.frostedheart.content.utility.ignition;
 
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.Tags;
+
 public class IgnitionHandler {
+    public static boolean tryIgnition(RandomSource rand, ItemStack handStack, ItemStack offHandStack) {
+        if (handStack.is(Tags.Items.RODS_WOODEN) && offHandStack.is(Tags.Items.RODS_WOODEN)) {
+            if (rand.nextFloat() < FHConfig.COMMON.stickIgnitionChance.get()) {
+                handStack.shrink(1);
+                offHandStack.shrink(1);
+                return true;
+            } else if (rand.nextFloat() < FHConfig.COMMON.consumeChanceWhenIgnited.get()) {
+                handStack.shrink(1);
+                offHandStack.shrink(1);
+                return false;
+            }
+        } else if (handStack.is(FHTags.Items.IGNITION_METAL.tag) && offHandStack.is(FHTags.Items.IGNITION_MATERIAL.tag)) {
+            if (rand.nextFloat() < FHConfig.COMMON.flintIgnitionChance.get()) {
+                offHandStack.shrink(1);
+                if (rand.nextFloat() < FHConfig.COMMON.consumeChanceWhenIgnited.get()) {
+                    handStack.shrink(1);
+                }
+                return true;
+            }
+        } else if (handStack.is(FHTags.Items.IGNITION_MATERIAL.tag) && offHandStack.is(FHTags.Items.IGNITION_METAL.tag)) {
+            if (rand.nextFloat() < FHConfig.COMMON.flintIgnitionChance.get()) {
+                handStack.shrink(1);
+                if (rand.nextFloat() < FHConfig.COMMON.consumeChanceWhenIgnited.get()) {
+                    offHandStack.shrink(1);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
 //    public static void addIgnitionTooltips(ItemStack stack, List<MutableComponent> text) {
 //        if (stack.is(Tags.Items.RODS_WOODEN)) {
 //            text.add(Lang.translateTooltip("double_stick_ignition").withStyle(ChatFormatting.RED));

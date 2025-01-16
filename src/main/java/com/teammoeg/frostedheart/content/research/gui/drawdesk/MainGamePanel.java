@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.research.gui.drawdesk;
 
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardStat;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.CardType;
 import com.teammoeg.frostedheart.content.research.gui.drawdesk.game.ClientResearchGame;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.TextField;

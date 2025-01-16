@@ -22,13 +22,14 @@ package com.teammoeg.frostedheart.content.research.research.clues;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.io.CodecUtil;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.world.item.ItemStack;
@@ -80,7 +81,7 @@ public class ItemClue extends Clue {
         if (stack.hasNoMatchingItems())
             return null;
         return stack.getMatchingStacks()[0].getHoverName().plainCopy()
-                .append(Lang.str(" x" + stack.getCount()));
+                .append(Components.str(" x" + stack.getCount()));
     }
 
     @Override
@@ -102,7 +103,7 @@ public class ItemClue extends Clue {
 
 
     public int test(TeamDataHolder t,Research r, ItemStack stack) {
-    	TeamResearchData trd=t.getData(SpecialDataTypes.RESEARCH_DATA);
+    	TeamResearchData trd=t.getData(FHSpecialDataTypes.RESEARCH_DATA);
         if (!trd.isClueCompleted(r,this))
             if (this.stack.test(stack)) {
             	trd.setClueCompleted(t, r, 0, consume);

@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.mixin.IFeedStore;
+import com.teammoeg.chorda.util.mixin.IFeedStore;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Animal;

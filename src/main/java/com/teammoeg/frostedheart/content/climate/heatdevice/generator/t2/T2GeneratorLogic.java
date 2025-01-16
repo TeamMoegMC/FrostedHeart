@@ -31,12 +31,12 @@ import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorD
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorLogic;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import com.teammoeg.chorda.util.client.ClientUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -75,7 +75,7 @@ public class T2GeneratorLogic extends GeneratorLogic<T2GeneratorLogic, T2Generat
             if (random.nextFloat() < (isOverdrive ? 0.8F : 0.5F)) {
                 ClientUtils.spawnT2FireParticles(level, blockpos);
                 Vec3 wind = new Vec3(0, 0, 0);
-                ClientUtils.spawnInvertedConeSteam(level, blockpos, wind);
+                FHClientUtils.spawnInvertedConeSteam(level, blockpos, wind);
             }
         }
     }

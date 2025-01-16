@@ -27,17 +27,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
-import com.mojang.serialization.Codec;
-import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
-import com.teammoeg.frostedheart.util.utility.OptionalLazy;
+import com.teammoeg.chorda.util.utility.OptionalLazy;
 
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
-import net.minecraft.network.FriendlyByteBuf;
 
 /**
  * Our own registry type to reduce network and storage cost.

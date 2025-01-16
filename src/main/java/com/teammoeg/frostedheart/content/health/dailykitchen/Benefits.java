@@ -24,8 +24,8 @@ import java.util.Random;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.research.inspire.EnergyCore;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.item.Item;
@@ -154,7 +154,7 @@ class Benefits {
         Item foodOrSoupContainer = foodItemStack.getItem();
         if (foodOrSoupContainer instanceof ItemFluidContainer) {
             assert foodItemStack.getTag() != null;
-            Fluid fluid = RegistryUtils.getFluid(new ResourceLocation(foodItemStack.getTag().getCompound("Fluid").getString("FluidName")));
+            Fluid fluid = CRegistries.getFluid(new ResourceLocation(foodItemStack.getTag().getCompound("Fluid").getString("FluidName")));
             //TODO add caupona dependency
             //BowlContainingRecipe recipe = BowlContainingRecipe.recipes.get(fluid);
             //if (recipe != null) {

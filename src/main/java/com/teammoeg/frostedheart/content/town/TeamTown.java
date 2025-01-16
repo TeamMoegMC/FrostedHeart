@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.content.town;
 import java.util.*;
 import java.util.Map.Entry;
 
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.chorda.team.CTeamDataManager;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import com.teammoeg.frostedheart.content.town.resource.TownResourceManager;
@@ -60,7 +60,7 @@ public class TeamTown implements Town, TownWithResident {
      * @return the town
      */
     public static TeamTown from(Player player) {
-        TeamTownData data = FHTeamDataManager.get(player).getData(SpecialDataTypes.TOWN_DATA);
+        TeamTownData data = CTeamDataManager.get(player).getData(FHSpecialDataTypes.TOWN_DATA);
         return new TeamTown(data);
     }
 
@@ -70,7 +70,7 @@ public class TeamTown implements Town, TownWithResident {
      * @return the town
      */
     public static TeamTown from(Team team) {
-        TeamTownData data = FHTeamDataManager.getDataByTeam(team).getData(SpecialDataTypes.TOWN_DATA);
+        TeamTownData data = CTeamDataManager.getDataByTeam(team).getData(FHSpecialDataTypes.TOWN_DATA);
         return new TeamTown(data);
     }
 

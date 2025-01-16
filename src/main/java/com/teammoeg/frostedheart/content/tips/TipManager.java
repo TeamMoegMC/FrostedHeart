@@ -5,8 +5,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.mojang.logging.LogUtils;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.tips.client.gui.widget.TipWidget;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraftforge.api.distmarker.Dist;
@@ -103,7 +104,7 @@ public class TipManager {
                 Tip tip = Tip.fromJsonFile(tipFile);
                 if (loadedTips.containsKey(tip.getId())) {
                     // 重复id
-                    Tip d = Tip.builder("duplicate").error(Tip.ErrorType.LOAD, Lang.str(tip.getId()), Lang.tips("error.load.duplicate_id").component()).build();
+                    Tip d = Tip.builder("duplicate").error(Tip.ErrorType.LOAD, Components.str(tip.getId()), Lang.tips("error.load.duplicate_id").component()).build();
                     display.force(d);
                 } else {
                     loadedTips.put(tip.getId(), tip);
@@ -116,7 +117,7 @@ public class TipManager {
     }
 
     private void displayException(Tip.ErrorType type, String id, Exception e) {
-        Tip exception = Tip.builder("exception").error(type, e, Lang.str("ID: " + id)).build();
+        Tip exception = Tip.builder("exception").error(type, e, Components.str("ID: " + id)).build();
         display.force(exception);
     }
 

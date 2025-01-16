@@ -134,7 +134,7 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe{
 
         json.add("ingredients", jsonarray);
         JsonObject jsonobject = new JsonObject();
-        jsonobject.addProperty("item", RegistryUtils.getRegistryName(this.getResultItem(null).getItem()).toString());
+        jsonobject.addProperty("item", CRegistries.getRegistryName(this.getResultItem(null).getItem()).toString());
         if (this.getResultItem(null).getCount() > 1) {
             jsonobject.addProperty("count", this.getResultItem(null).getCount());
         }

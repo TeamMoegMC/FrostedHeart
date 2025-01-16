@@ -1,8 +1,7 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
@@ -11,7 +10,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class HeatNetworkRequestC2SPacket implements FHMessage {
+public class HeatNetworkRequestC2SPacket implements CMessage {
 
     private final BlockPos pos; // the position of the network constituent (pipe or endpoint) player looking at
 

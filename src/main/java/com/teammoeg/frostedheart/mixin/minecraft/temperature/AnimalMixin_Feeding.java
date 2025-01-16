@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.bootstrap.reference.FHDamageTypes;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.util.mixin.IFeedStore;
+import com.teammoeg.chorda.util.mixin.IFeedStore;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;

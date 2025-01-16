@@ -20,10 +20,10 @@
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
-import com.teammoeg.frostedheart.util.client.Point;
-import com.teammoeg.frostedheart.util.client.TexturedUV;
-import com.teammoeg.frostedheart.util.client.UV.Transition;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.client.Point;
+import com.teammoeg.chorda.util.client.TexturedUV;
+import com.teammoeg.chorda.util.client.UV.Transition;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -33,7 +33,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Inventory;
 
 public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
-    private static final ResourceLocation TEXTURE = Lang.makeTextureLocation("sauna_vent");
+    private static final ResourceLocation TEXTURE = FHClientUtils.makeTextureLocation("sauna_vent");
 
     private static final TexturedUV clock1 = new TexturedUV(TEXTURE, 176, 0, 38, 38);
     private static final TexturedUV clock2 = new TexturedUV(TEXTURE, 214, 0, 38, 38);

@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.util.io.codec.CompressDifferCodec;
+import com.teammoeg.chorda.util.io.codec.CompressDifferCodec;
 
 import net.minecraft.nbt.CompoundTag;
 

@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata;
 
 import com.lowdragmc.lowdraglib.LDLib;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.ChunkPos;
@@ -31,7 +31,7 @@ import java.util.*;
 import java.util.function.Supplier;
 
 
-public class FHResponseInfraredViewDataSyncPacket implements FHMessage {
+public class FHResponseInfraredViewDataSyncPacket implements CMessage {
     private final ChunkPos chunkPos;
     private final int[] data;
 

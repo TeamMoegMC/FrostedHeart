@@ -23,12 +23,12 @@ import java.util.Optional;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.base.team.SpecialData;
-import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.chorda.team.SpecialData;
+import com.teammoeg.chorda.team.SpecialDataHolder;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.io.CodecUtil;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -47,7 +47,7 @@ import net.minecraftforge.items.ItemStackHandler;
  * Generator data and utility functions.
  * Automatically maintained by the special data system,
  * which is shared by the team.
- * See {@link com.teammoeg.frostedheart.base.team.SpecialDataTypes}
+ * See {@link FHSpecialDataTypes}
  */
 public class GeneratorData implements SpecialData {
     public static final int INPUT_SLOT = 0;
@@ -123,7 +123,7 @@ public class GeneratorData implements SpecialData {
         if (stack.isEmpty())
             return false;
         if (slot == INPUT_SLOT) {
-            for (GeneratorRecipe recipet : FHUtils.filterRecipes(w.getRecipeManager(), GeneratorRecipe.TYPE))
+            for (GeneratorRecipe recipet : CUtils.filterRecipes(w.getRecipeManager(), GeneratorRecipe.TYPE))
                 if (recipet.input.test(stack)) {
                     return true;
                 }
@@ -158,14 +158,14 @@ public class GeneratorData implements SpecialData {
     }
 
     protected double getEfficiency(SpecialDataHolder<?> teamData) {
-        return teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
+        return teamData.getData(FHSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
     }
 
     public GeneratorRecipe getRecipe(Level w) {
         if (inventory.getStackInSlot(INPUT_SLOT).isEmpty())
             return null;
         GeneratorRecipe recipe = null;
-        for (GeneratorRecipe recipet : FHUtils.filterRecipes(w.getRecipeManager(), GeneratorRecipe.TYPE))
+        for (GeneratorRecipe recipet : CUtils.filterRecipes(w.getRecipeManager(), GeneratorRecipe.TYPE))
             if (recipet.input.test(inventory.getStackInSlot(INPUT_SLOT))) {
                 recipe = recipet;
                 break;
@@ -235,7 +235,7 @@ public class GeneratorData implements SpecialData {
         if (!isWorking || isBroken)
             return false;
         boolean hasFuel = true;
-        overdriveLevel -= 5 * (teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER) + 1);
+        overdriveLevel -= 5 * (teamData.getData(FHSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER) + 1);
 
         	
         if (isOverdrive) {
@@ -281,7 +281,7 @@ public class GeneratorData implements SpecialData {
 
     protected double getHeatEfficiency(SpecialDataHolder<?> teamData) {
 
-        return 1 + teamData.getData(SpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_HEAT);
+        return 1 + teamData.getData(FHSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_HEAT);
     }
 
     public float getMaxTemperatureLevel() {

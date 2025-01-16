@@ -19,18 +19,15 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.chorda.util.io.SerializeUtil;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.function.Supplier;
 
-public class EndPointDataPacket implements FHMessage {
+public class EndPointDataPacket implements CMessage {
     private final Collection<HeatEndpoint> data;
 
     public EndPointDataPacket(HeatNetwork network) {

@@ -36,8 +36,8 @@ import org.joml.Vector3f;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
-import com.teammoeg.frostedheart.util.client.Point;
-import com.teammoeg.frostedheart.util.client.Rect;
+import com.teammoeg.chorda.util.client.Point;
+import com.teammoeg.chorda.util.client.Rect;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.core.BlockPos;

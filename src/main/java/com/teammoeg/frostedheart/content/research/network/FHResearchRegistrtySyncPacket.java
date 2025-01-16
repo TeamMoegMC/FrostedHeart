@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.NBTMessage;
+import com.teammoeg.chorda.network.NBTMessage;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 
 import net.minecraft.nbt.CompoundTag;

@@ -23,7 +23,7 @@ import com.simibubi.create.foundation.item.ItemDescription;
 import com.simibubi.create.foundation.item.KineticStats;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.client.FHTooltips;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
@@ -54,13 +54,13 @@ import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
 import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
-import com.teammoeg.frostedheart.util.FHRemote;
-import com.teammoeg.frostedheart.util.FHVersion;
 import com.teammoeg.frostedheart.compat.ftbteams.FTBTeamsEvents;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.world.FHBiomeModifiers;
 import com.teammoeg.frostedheart.content.world.FHBiomes;
 import com.teammoeg.frostedheart.content.world.FHFeatures;
+import com.teammoeg.frostedheart.util.FHRemote;
+import com.teammoeg.frostedheart.util.FHVersion;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameRules.IntegerValue;
@@ -85,7 +85,7 @@ import java.io.File;
 @Mod(FHMain.MODID)
 public class FHMain {
 
-    // Constants
+    // CConstants
     public static final String MODID = "frostedheart";
     public static final String ALIAS = "fh";
     public static final String TWRID = "twr";
@@ -168,7 +168,7 @@ public class FHMain {
 
         // Compat init
         LOGGER.info(COMMON_INIT, "Initializing Mod Compatibilities");
-        SpecialDataTypes.init();
+        FHSpecialDataTypes.init();
         if (ModList.get().isLoaded("create"))
             CreateCompat.init();
         if (ModList.get().isLoaded("tetra"))

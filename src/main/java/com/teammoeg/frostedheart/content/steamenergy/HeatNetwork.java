@@ -20,13 +20,12 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.util.io.NBTSerializable;
+import com.teammoeg.chorda.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.client.Lang;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.core.BlockPos;
@@ -34,7 +33,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
@@ -45,8 +43,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.util.LazyOptional;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
@@ -263,7 +259,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
             BlockPos n = fromPos.relative(d);
             d = d.getOpposite();
             
-            BlockEntity be=FHUtils.getExistingTileEntity(l, n);
+            BlockEntity be= CUtils.getExistingTileEntity(l, n);
             //System.out.println("fetching pipeette from"+n+":"+d+"-"+be);
             if(be instanceof NetworkConnector nc) {
             	//System.out.println("trying to connect");
@@ -394,7 +390,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
     public void clearConnection(Level level) {
         // Reset pipes Connection
         for (BlockPos bp : propagated.keySet()) {
-        	NetworkConnector hpte = FHUtils.getExistingTileEntity(level, bp, NetworkConnector.class);
+        	NetworkConnector hpte = CUtils.getExistingTileEntity(level, bp, NetworkConnector.class);
             if (hpte != null) {
                 hpte.setNetwork(null);
             }

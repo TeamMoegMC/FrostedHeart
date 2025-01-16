@@ -20,13 +20,12 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
-import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
-import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
-import com.teammoeg.frostedheart.base.block.PipeTileEntity;
+import com.teammoeg.chorda.block.CTickableBlockEntity;
+import com.teammoeg.chorda.block.CPipeBlock;
+import com.teammoeg.chorda.blockentity.CPipeBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -38,7 +37,7 @@ import java.util.List;
 
 import static net.minecraft.ChatFormatting.GRAY;
 
-public class HeatPipeTileEntity extends PipeTileEntity implements NetworkConnector, IHaveGoggleInformation,FHTickableBlockEntity {
+public class HeatPipeTileEntity extends CPipeBlockEntity implements NetworkConnector, IHaveGoggleInformation, CTickableBlockEntity {
 	ConnectorNetworkRevalidator<HeatPipeTileEntity> networkHandler=new ConnectorNetworkRevalidator<>(this);
     int cnt = 1;
 
@@ -48,7 +47,7 @@ public class HeatPipeTileEntity extends PipeTileEntity implements NetworkConnect
 
     @Override
     public boolean canConnectTo(Direction to) {
-        return this.getState().getValue(FluidPipeBlock.PROPERTY_BY_DIRECTION.get(to));
+        return this.getState().getValue(CPipeBlock.PROPERTY_BY_DIRECTION.get(to));
     }
 	@Override
 	public void setNetwork(HeatNetwork network) {

@@ -23,9 +23,9 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.menu.ClientContainerConstructor;
-import com.teammoeg.frostedheart.base.menu.MultiBlockMenuConstructor;
-import com.teammoeg.frostedheart.base.menu.MultiblockContainer;
+import com.teammoeg.chorda.menu.ClientContainerConstructor;
+import com.teammoeg.chorda.menu.MultiBlockMenuConstructor;
+import com.teammoeg.chorda.menu.MultiblockContainer;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorContainer;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t1.T1GeneratorState;
 import com.teammoeg.frostedheart.content.climate.heatdevice.generator.t2.T2GeneratorContainer;

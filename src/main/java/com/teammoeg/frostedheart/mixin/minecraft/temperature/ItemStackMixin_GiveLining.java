@@ -21,13 +21,13 @@ package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
 import java.util.function.Consumer;
 
+import com.teammoeg.chorda.util.CUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.content.climate.recipe.DismantleInnerRecipe;
-import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -44,6 +44,6 @@ public class ItemStackMixin_GiveLining {
     public void FH$InnerItemBreak(int amount, LivingEntity entityIn, Consumer onBroken, CallbackInfo cbi) {
         ItemStack item = DismantleInnerRecipe.tryDismantle((ItemStack) (Object) this);
         if (!item.isEmpty() && entityIn instanceof Player)
-            FHUtils.giveItem((Player) entityIn, item);
+            CUtils.giveItem((Player) entityIn, item);
     }
 }

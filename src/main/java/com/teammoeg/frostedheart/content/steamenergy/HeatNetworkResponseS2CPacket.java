@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.chorda.util.io.SerializeUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 /**
  * Sends all endpoints and total output and intake of a HeatNetwork to the client.
  */
-public class HeatNetworkResponseS2CPacket implements FHMessage {
+public class HeatNetworkResponseS2CPacket implements CMessage {
     ClientHeatNetworkData data;
 
     public HeatNetworkResponseS2CPacket(ClientHeatNetworkData data) {

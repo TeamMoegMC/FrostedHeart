@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.climate;
 
-import com.teammoeg.frostedheart.util.noise.INoise1D;
+import com.teammoeg.chorda.util.noise.INoise1D;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
@@ -32,7 +32,7 @@ import net.minecraft.world.level.LevelAccessor;
 @Deprecated
 public final class VanillaClimate {
     /**
-     * Constants for temperature calculation. Do not reference these directly, they do not have much meaning outside the context they are used in
+     * CConstants for temperature calculation. Do not reference these directly, they do not have much meaning outside the context they are used in
      */
     public static final float MINIMUM_TEMPERATURE_SCALE = -24f;
     public static final float MAXIMUM_TEMPERATURE_SCALE = 30f;

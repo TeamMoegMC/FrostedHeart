@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.bootstrap.common;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.effect.BaseEffect;
+import com.teammoeg.chorda.effect.BaseEffect;
 import com.teammoeg.frostedheart.content.climate.effect.HyperthermiaEffect;
 import com.teammoeg.frostedheart.content.climate.effect.HypothermiaEffect;
 import com.teammoeg.frostedheart.content.health.effect.AnemiaEffect;

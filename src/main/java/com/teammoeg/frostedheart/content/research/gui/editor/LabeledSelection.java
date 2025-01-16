@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.chorda.util.lang.Components;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
@@ -80,16 +80,16 @@ public class LabeledSelection<R> extends LabeledPane<Button> {
         this.objs = aobjs;
         this.tostr = atostr;
         sel = objs.indexOf(val);
-        obj = new SimpleTextButton(this, Lang.str(tostr.apply(val)), Icon.empty()) {
+        obj = new SimpleTextButton(this, Components.str(tostr.apply(val)), Icon.empty()) {
 
             @Override
             public void addMouseOverText(TooltipList list) {
                 int i = 0;
                 for (R elm : objs) {
                     if (i == sel)
-                        list.add(Lang.str("->" + tostr.apply(elm)));
+                        list.add(Components.str("->" + tostr.apply(elm)));
                     else
-                        list.add(Lang.str(tostr.apply(elm)));
+                        list.add(Components.str(tostr.apply(elm)));
                     i++;
                 }
             }
@@ -104,7 +104,7 @@ public class LabeledSelection<R> extends LabeledPane<Button> {
                     sel = 0;
                 if (sel < 0)
                     sel = objs.size() - 1;
-                this.setTitle(Lang.str(tostr.apply(objs.get(sel))));
+                this.setTitle(Components.str(tostr.apply(objs.get(sel))));
                 refreshWidgets();
                 onChange(objs.get(sel));
             }

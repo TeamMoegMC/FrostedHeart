@@ -2,10 +2,10 @@ package com.teammoeg.frostedheart.content.town.mine;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
-import com.teammoeg.frostedheart.util.lang.Lang;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-public class MineBaseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<MineBaseBlockEntity>{
+public class MineBaseBlock extends AbstractTownWorkerBlock implements CEntityBlock<MineBaseBlockEntity> {
 
     public MineBaseBlock(Properties blockProps) {
         super(blockProps);
@@ -30,13 +30,13 @@ public class MineBaseBlock extends AbstractTownWorkerBlock implements FHEntityBl
             if (te == null) {
                 return InteractionResult.FAIL;
             }
-            player.displayClientMessage(Lang.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.displayClientMessage(Lang.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.displayClientMessage(Lang.str("Area: " + (te.getArea())), false);
-            player.displayClientMessage(Lang.str("Volume: " + (te.getVolume())), false);
-            player.displayClientMessage(Lang.str("Chest: " + (te.getChest())), false);
-            player.displayClientMessage(Lang.str("Rack: " + (te.getRack())), false);
-            player.displayClientMessage(Lang.str("Linked mines: " + (te.linkedMines)), false);
+            player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            player.displayClientMessage(Components.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(Components.str("Area: " + (te.getArea())), false);
+            player.displayClientMessage(Components.str("Volume: " + (te.getVolume())), false);
+            player.displayClientMessage(Components.str("Chest: " + (te.getChest())), false);
+            player.displayClientMessage(Components.str("Rack: " + (te.getRack())), false);
+            player.displayClientMessage(Components.str("Linked mines: " + (te.linkedMines)), false);
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

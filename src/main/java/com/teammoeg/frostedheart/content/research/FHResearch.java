@@ -25,7 +25,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -34,7 +33,7 @@ import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
+import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.data.ClientResearchData;
 import com.teammoeg.frostedheart.content.research.events.ResearchLoadEvent;
@@ -43,17 +42,13 @@ import com.teammoeg.frostedheart.content.research.network.FHResearchSyncEndPacke
 import com.teammoeg.frostedheart.content.research.network.FHResearchSyncPacket;
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.ResearchCategory;
-import com.teammoeg.frostedheart.content.research.research.clues.Clue;
-import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.io.FileUtil;
-import com.teammoeg.frostedheart.util.io.codec.DataOps;
-import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
-import com.teammoeg.frostedheart.util.utility.OptionalLazy;
+import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.chorda.util.io.FileUtil;
+import com.teammoeg.chorda.util.io.codec.DataOps;
+import com.teammoeg.chorda.util.io.codec.ObjectWriter;
+import com.teammoeg.chorda.util.utility.OptionalLazy;
 
 import io.netty.buffer.Unpooled;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.FriendlyByteBuf;
@@ -424,7 +419,7 @@ public class FHResearch {
 
 	public static void load() {
 		FHResearch.editor = false;
-		Path local = FHTeamDataManager.getServer().getWorldPath(dataFolder);
+		Path local = CTeamDataManager.getServer().getWorldPath(dataFolder);
 		File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
 		FHResearch.clearAll();
 		if (regfile.exists()) {
@@ -450,7 +445,7 @@ public class FHResearch {
 	}
 
 	public static void save() {
-		Path local = FHTeamDataManager.getServer().getWorldPath(dataFolder);
+		Path local = CTeamDataManager.getServer().getWorldPath(dataFolder);
 		File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
 		File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
 		try {

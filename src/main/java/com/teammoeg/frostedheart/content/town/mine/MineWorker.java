@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.town.mine;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
-import com.teammoeg.frostedheart.util.MathUtils;
+import com.teammoeg.chorda.util.CMath;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -34,7 +34,7 @@ public class MineWorker implements TownWorker {
                     .toList();
             for(Resident resident : residents){
                 double add = rating * resident.getWorkScore(TownWorkerType.MINE);
-                double randomDouble = MathUtils.RANDOM.nextDouble();
+                double randomDouble = CMath.RANDOM.nextDouble();
                 double counter = 0;
                 for(Map.Entry<ItemResourceType, Double> entry : resources.entrySet()){
                     counter += entry.getValue();

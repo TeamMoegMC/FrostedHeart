@@ -1,13 +1,13 @@
 package com.teammoeg.frostedheart.content.town.warehouse;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.scheduler.SchedulerQueue;
+import com.teammoeg.chorda.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.*;
-import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.TeamManagerImpl;
 import lombok.Getter;

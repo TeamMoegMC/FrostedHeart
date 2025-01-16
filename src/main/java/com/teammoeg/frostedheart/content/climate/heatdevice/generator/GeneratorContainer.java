@@ -21,12 +21,11 @@ package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import java.util.Optional;
 
-import com.teammoeg.frostedheart.base.menu.FHBaseContainer;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.util.FHContainerData;
-import com.teammoeg.frostedheart.util.FHContainerData.FHDataSlot;
-import com.teammoeg.frostedheart.compat.ie.FHMultiblockHelper;
-import com.teammoeg.frostedheart.util.client.Point;
+import com.teammoeg.chorda.menu.CContainer;
+import com.teammoeg.chorda.util.utility.CContainerData;
+import com.teammoeg.chorda.util.utility.CContainerData.CDataSlot;
+import com.teammoeg.chorda.util.ie.CMultiblockHelper;
+import com.teammoeg.chorda.util.client.Point;
 
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
 import blusunrize.immersiveengineering.common.gui.IESlot.NewOutput;
@@ -39,26 +38,26 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 
-public abstract class GeneratorContainer<R extends GeneratorState, T extends GeneratorLogic<T, R>> extends FHBaseContainer {
-    public FHDataSlot<Integer> process = FHContainerData.SLOT_INT.create(this);
-    public FHDataSlot<Integer> processMax = FHContainerData.SLOT_INT.create(this);
-    public FHDataSlot<Float> overdrive = FHContainerData.SLOT_FIXED.create(this);
-    public FHDataSlot<Float> power = FHContainerData.SLOT_FIXED.create(this);
-    public FHDataSlot<Float> tempLevel = FHContainerData.SLOT_FIXED.create(this);
-    public FHDataSlot<Float> rangeLevel = FHContainerData.SLOT_FIXED.create(this);
-    public FHDataSlot<Integer> tempDegree = FHContainerData.SLOT_INT.create(this);
-    public FHDataSlot<Integer> rangeBlock = FHContainerData.SLOT_INT.create(this);
-    public FHDataSlot<Boolean> isBroken = FHContainerData.SLOT_BOOL.create(this);
-    public FHDataSlot<Boolean> isWorking = FHContainerData.SLOT_BOOL.create(this);
-    public FHDataSlot<Boolean> isOverdrive = FHContainerData.SLOT_BOOL.create(this);
-    public FHDataSlot<BlockPos> pos = FHContainerData.SLOT_BLOCKPOS.create(this);
+public abstract class GeneratorContainer<R extends GeneratorState, T extends GeneratorLogic<T, R>> extends CContainer {
+    public CDataSlot<Integer> process = CContainerData.SLOT_INT.create(this);
+    public CDataSlot<Integer> processMax = CContainerData.SLOT_INT.create(this);
+    public CDataSlot<Float> overdrive = CContainerData.SLOT_FIXED.create(this);
+    public CDataSlot<Float> power = CContainerData.SLOT_FIXED.create(this);
+    public CDataSlot<Float> tempLevel = CContainerData.SLOT_FIXED.create(this);
+    public CDataSlot<Float> rangeLevel = CContainerData.SLOT_FIXED.create(this);
+    public CDataSlot<Integer> tempDegree = CContainerData.SLOT_INT.create(this);
+    public CDataSlot<Integer> rangeBlock = CContainerData.SLOT_INT.create(this);
+    public CDataSlot<Boolean> isBroken = CContainerData.SLOT_BOOL.create(this);
+    public CDataSlot<Boolean> isWorking = CContainerData.SLOT_BOOL.create(this);
+    public CDataSlot<Boolean> isOverdrive = CContainerData.SLOT_BOOL.create(this);
+    public CDataSlot<BlockPos> pos = CContainerData.SLOT_BLOCKPOS.create(this);
 
     public GeneratorContainer(MenuType<?> type, int id, Inventory inventoryPlayer, MultiblockMenuContext<R> ctx) {
         super(type, id, inventoryPlayer.player, 2);
         R state = ctx.mbContext().getState();
-        BlockPos master=FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel());
+        BlockPos master= CMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel());
         /*if (state.getOwner() == null) {
-            state.setOwner(FHTeamDataManager.get(inventoryPlayer.player).getId());
+            state.setOwner(CTeamDataManager.get(inventoryPlayer.player).getId());
             state.regist(inventoryPlayer.player.level(),master);
         }*/
         state.tryRegist(inventoryPlayer.player.level(),master);
@@ -80,7 +79,7 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
         //System.out.println(optdata);
         pos.bind(() -> ctx.clickedPos());
         this.validator = new Validator(ctx.clickedPos(), 8).and(ctx.mbContext().isValid());
-        IItemHandler handler = state.getData(FHMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel())).map(t -> t.inventory).orElseGet(() -> null);
+        IItemHandler handler = state.getData(CMultiblockHelper.getAbsoluteMaster(ctx.mbContext().getLevel())).map(t -> t.inventory).orElseGet(() -> null);
         createSlots(handler, inventoryPlayer);
     }
 

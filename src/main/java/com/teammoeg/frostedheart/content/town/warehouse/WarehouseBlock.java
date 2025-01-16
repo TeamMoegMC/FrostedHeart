@@ -1,7 +1,8 @@
 package com.teammoeg.frostedheart.content.town.warehouse;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import com.teammoeg.frostedheart.base.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
@@ -29,7 +30,7 @@ import java.math.RoundingMode;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-public class WarehouseBlock extends AbstractTownWorkerBlock implements FHEntityBlock<WarehouseBlockEntity>{
+public class WarehouseBlock extends AbstractTownWorkerBlock implements CEntityBlock<WarehouseBlockEntity> {
     public WarehouseBlock(Properties blockProps) {
         super(blockProps);
     }
@@ -42,11 +43,11 @@ public class WarehouseBlock extends AbstractTownWorkerBlock implements FHEntityB
             if (te == null) {
                 return InteractionResult.FAIL;
             }
-            player.displayClientMessage(Lang.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
-            player.displayClientMessage(Lang.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
-            player.displayClientMessage(Lang.str("Volume: " + (te.getVolume())), false);
-            player.displayClientMessage(Lang.str("Area: " + (te.getArea())), false);
-            player.displayClientMessage(Lang.str("Capacity: " + BigDecimal.valueOf(te.getCapacity())
+            player.displayClientMessage(Components.str(te.isWorkValid() ? "Valid working environment" : "Invalid working environment"), false);
+            player.displayClientMessage(Components.str(te.isStructureValid() ? "Valid structure" : "Invalid structure"), false);
+            player.displayClientMessage(Components.str("Volume: " + (te.getVolume())), false);
+            player.displayClientMessage(Components.str("Area: " + (te.getArea())), false);
+            player.displayClientMessage(Components.str("Capacity: " + BigDecimal.valueOf(te.getCapacity())
                     .setScale(2, RoundingMode.HALF_UP).doubleValue()), false);
             return InteractionResult.SUCCESS;
         }

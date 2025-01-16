@@ -2,9 +2,9 @@ package com.teammoeg.frostedheart.content.health.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
-import com.teammoeg.frostedheart.util.client.FHGuiHelper;
-import com.teammoeg.frostedheart.util.lang.ComponentOptimizer;
-import com.teammoeg.frostedheart.util.lang.FHTextIcon;
+import com.teammoeg.chorda.util.CGuis;
+import com.teammoeg.chorda.util.lang.ComponentOptimizer;
+import com.teammoeg.frostedheart.util.client.FHTextIcon;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -63,7 +63,7 @@ public class NutritionScreen extends Screen {
         PoseStack pose = pGuiGraphics.pose();
         pose.pushPose();
         pose.translate((float) this.width /2, (float) this.height /2, 0);
-        FHGuiHelper.fillRoundRect(pGuiGraphics,-100, -80, 200, 160, 0.05f,0x40FFFFFF);
+        CGuis.fillRoundRect(pGuiGraphics,-100, -80, 200, 160, 0.05f,0x40FFFFFF);
 
         NutritionCapability.getCapability(localPlayer).ifPresent(nutrition -> renderNutritionBar(pGuiGraphics, 0, 0, nutrition.get()));
         pose.popPose();
@@ -84,8 +84,8 @@ public class NutritionScreen extends Screen {
         pose.scale(2.0f,2.0f,1.0f);
         guiGraphics.drawCenteredString(font, icon, x/2, y/2-font.lineHeight/2, 0xFFFFFF);
         pose.popPose();
-        FHGuiHelper.drawRing(guiGraphics, x,  y, 9, 16, 0,360 * progress, 0x80FFFFFF);
-        FHGuiHelper.drawRing(guiGraphics, x,  y, 10, 15, 0,value *360 * progress, color);
+        CGuis.drawRing(guiGraphics, x,  y, 9, 16, 0,360 * progress, 0x80FFFFFF);
+        CGuis.drawRing(guiGraphics, x,  y, 10, 15, 0,value *360 * progress, color);
         guiGraphics.drawCenteredString(font, desc, x, y+16+font.lineHeight/2, 0xFFFFFF);
     }
 }

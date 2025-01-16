@@ -24,13 +24,13 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
+import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.base.block.FHEntityBlock;
+import com.teammoeg.chorda.block.CBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
+import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -64,7 +64,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
 
-public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvider,FHEntityBlock<DrawingDeskTileEntity> {
+public class DrawingDeskBlock extends CBlock implements IModelOffsetProvider, CEntityBlock<DrawingDeskTileEntity> {
 
     public static final BooleanProperty IS_NOT_MAIN = BooleanProperty.create("not_multi_main");
     public static final DirectionProperty FACING = DirectionProperty.create("facing", Direction.Plane.HORIZONTAL);
@@ -162,7 +162,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
                     pos = pos.relative(getNeighbourDirection(state.getValue(IS_NOT_MAIN), state.getValue(FACING)));
                 }
                 BlockEntity ii = Utils.getExistingTileEntity(worldIn, pos);
-                UUID crid = FHTeamDataManager.get(player).getId();
+                UUID crid = CTeamDataManager.get(player).getId();
                 IOwnerTile.trySetOwner(ii, crid);
                 if (crid != null && crid.equals(IOwnerTile.getOwner(ii)))
                 	NetworkHooks.openScreen((ServerPlayer) player, (MenuProvider)ii,ii.getBlockPos());

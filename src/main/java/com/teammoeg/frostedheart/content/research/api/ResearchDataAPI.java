@@ -22,10 +22,10 @@ package com.teammoeg.frostedheart.content.research.api;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.base.team.TeamDataClosure;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.team.CTeamDataManager;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.chorda.team.TeamDataClosure;
+import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 
@@ -38,17 +38,17 @@ public class ResearchDataAPI {
 
     public static TeamDataClosure<TeamResearchData> getData(Player id) {
         if (id instanceof ServerPlayer)
-            return FHTeamDataManager.INSTANCE.get(FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer) id).get()).getDataHolder(SpecialDataTypes.RESEARCH_DATA);
+            return CTeamDataManager.INSTANCE.get(FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer) id).get()).getDataHolder(FHSpecialDataTypes.RESEARCH_DATA);
        // return TeamResearchData.getClientInstance();
         return ClientResearchDataAPI.getData();
     }
     
     public static Optional<TeamDataClosure<TeamResearchData>> getData(UUID id) {
-        TeamDataHolder holder=FHTeamDataManager.INSTANCE.get(id);
+        TeamDataHolder holder= CTeamDataManager.INSTANCE.get(id);
         if(holder==null)
         	return Optional.empty();
         
-    	return Optional.of(holder.getDataHolder(SpecialDataTypes.RESEARCH_DATA));
+    	return Optional.of(holder.getDataHolder(FHSpecialDataTypes.RESEARCH_DATA));
 
     }
 
@@ -102,7 +102,7 @@ public class ResearchDataAPI {
     
     public static boolean isResearchComplete(Player id, String research) {
         if (id instanceof ServerPlayer)
-            return FHTeamDataManager.INSTANCE.get(FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer) id).get()).getData(SpecialDataTypes.RESEARCH_DATA).getData(research).isCompleted();
+            return CTeamDataManager.INSTANCE.get(FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer) id).get()).getData(FHSpecialDataTypes.RESEARCH_DATA).getData(research).isCompleted();
         return ClientResearchDataAPI.getData().get().getData(research).isCompleted();
     }
 

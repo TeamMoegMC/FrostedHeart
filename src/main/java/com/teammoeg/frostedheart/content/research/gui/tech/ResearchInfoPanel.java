@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.research.gui.tech;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.research.FHResearch;

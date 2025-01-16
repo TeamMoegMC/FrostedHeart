@@ -22,8 +22,9 @@ package com.teammoeg.frostedheart.content.research.inspire;
 import javax.annotation.Nullable;
 
 import com.mojang.serialization.Codec;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.base.team.TeamDataClosure;
+import com.teammoeg.chorda.team.TeamDataClosure;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -31,10 +32,9 @@ import com.teammoeg.frostedheart.content.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.network.FHEnergyDataSyncPacket;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
-import com.teammoeg.frostedheart.util.utility.LeveledValue;
+import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.chorda.util.io.NBTSerializable;
+import com.teammoeg.chorda.util.utility.LeveledValue;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
@@ -156,7 +156,7 @@ public class EnergyCore implements NBTSerializable {
     }
 
     public static void reportEnergy(Player player) {
-    	getCapability(player).ifPresent(data->player.sendSystemMessage(Lang.str("Energy:" + data.level + ",Persist Energy: " + data.persistLevel)));
+    	getCapability(player).ifPresent(data->player.sendSystemMessage(Components.str("Energy:" + data.level + ",Persist Energy: " + data.persistLevel)));
     }
  
 

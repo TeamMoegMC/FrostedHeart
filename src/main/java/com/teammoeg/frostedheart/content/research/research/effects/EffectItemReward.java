@@ -26,13 +26,14 @@ import java.util.List;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.io.CodecUtil;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -89,7 +90,7 @@ public class EffectItemReward extends Effect {
             if (stack.getCount() == 1)
                 tooltip.add(stack.getHoverName());
             else
-                tooltip.add(((MutableComponent) stack.getHoverName()).append(Lang.str(" x " + stack.getCount())));
+                tooltip.add(((MutableComponent) stack.getHoverName()).append(Components.str(" x " + stack.getCount())));
         }
         return tooltip;
     }
@@ -103,7 +104,7 @@ public class EffectItemReward extends Effect {
     public boolean grant(TeamDataHolder team,TeamResearchData trd,  Player triggerPlayer, boolean isload) {
         if (triggerPlayer == null || isload) return false;
         for (ItemStack s : rewards) {
-            FHUtils.giveItem(triggerPlayer, s.copy());
+            CUtils.giveItem(triggerPlayer, s.copy());
 
         }
         return true;

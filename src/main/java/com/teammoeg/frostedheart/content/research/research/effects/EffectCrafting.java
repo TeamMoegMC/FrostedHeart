@@ -33,19 +33,19 @@ import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.research.ResearchListeners;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.MathUtils;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.CMath;
+import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.io.CodecUtil;
 
 import mezz.jei.library.util.RecipeUtil;
 import net.minecraft.world.entity.player.Player;
@@ -92,12 +92,12 @@ public class EffectCrafting extends Effect {
 		super(data);
 		
 		unlocks.ifLeft(t->{this.ingredient=t;});
-		unlocks.ifRight(o->o.stream().map(FHTeamDataManager.getRecipeManager()::byKey).filter(Optional::isPresent).map(Optional::get).forEach(this.unlocks::add));
+		unlocks.ifRight(o->o.stream().map(CTeamDataManager.getRecipeManager()::byKey).filter(Optional::isPresent).map(Optional::get).forEach(this.unlocks::add));
 	}
 
     public EffectCrafting(ResourceLocation recipe) {
         super("@gui." + FHMain.MODID + ".effect.crafting", new ArrayList<>());
-        Optional<? extends Recipe<?>> r = FHTeamDataManager.getRecipeManager().byKey(recipe);
+        Optional<? extends Recipe<?>> r = CTeamDataManager.getRecipeManager().byKey(recipe);
 
         r.ifPresent(iRecipe -> unlocks.add(iRecipe));
     }
@@ -136,7 +136,7 @@ public class EffectCrafting extends Effect {
         List<Component> tooltip = new ArrayList<>();
 
         if (ingredient != null)
-            tooltip.add(MathUtils.selectElementByTime(ingredient.getItems()).getHoverName());
+            tooltip.add(CMath.selectElementByTime(ingredient.getItems()).getHoverName());
         else {
             Set<ItemStack> stacks = new HashSet<>();
             for (Recipe<?> r : unlocks) {
@@ -170,8 +170,8 @@ public class EffectCrafting extends Effect {
 
     private void initItem() {
         unlocks.clear();
-        for (Recipe<?> r : FHTeamDataManager.getRecipeManager().getRecipes()) {
-        	ItemStack result=r.getResultItem(RegistryUtils.getAccess());
+        for (Recipe<?> r : CTeamDataManager.getRecipeManager().getRecipes()) {
+        	ItemStack result=r.getResultItem(CRegistries.getAccess());
         	if(result==null)System.out.println("error null recipe "+r);
             if (result!=null&&ingredient.test(result)) {
                 unlocks.add(r);
@@ -186,7 +186,7 @@ public class EffectCrafting extends Effect {
     public void onClick(ResearchData parent) {
         if (!parent.isEffectGranted(this)) return;
         if (ingredient != null)
-            JEICompat.showJEIFor(MathUtils.selectElementByTime(ingredient.getItems()));
+            JEICompat.showJEIFor(CMath.selectElementByTime(ingredient.getItems()));
     }
 
     @Override
@@ -194,7 +194,7 @@ public class EffectCrafting extends Effect {
         if (ingredient != null) {
             initItem();
         } else {
-            unlocks.replaceAll(o -> FHTeamDataManager.getRecipeManager().byKey(o.getId()).orElse(null));
+            unlocks.replaceAll(o -> CTeamDataManager.getRecipeManager().byKey(o.getId()).orElse(null));
             unlocks.removeIf(Objects::isNull);
         }
     }
@@ -207,7 +207,7 @@ public class EffectCrafting extends Effect {
     public void setList(Collection<String> ls) {
         unlocks.clear();
         for (String s : ls) {
-            Optional<? extends Recipe<?>> r = FHTeamDataManager.getRecipeManager().byKey(new ResourceLocation(s));
+            Optional<? extends Recipe<?>> r = CTeamDataManager.getRecipeManager().byKey(new ResourceLocation(s));
 
             r.ifPresent(iRecipe -> unlocks.add(iRecipe));
         }

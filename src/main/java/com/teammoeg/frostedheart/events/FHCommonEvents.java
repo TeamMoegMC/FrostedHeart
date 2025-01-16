@@ -20,7 +20,9 @@
 package com.teammoeg.frostedheart.events;
 
 import com.google.common.collect.Sets;
-import com.mojang.brigadier.CommandDispatcher;
+import com.teammoeg.chorda.util.CConstants;
+import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
@@ -28,18 +30,17 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
+import com.teammoeg.frostedheart.content.utility.ignition.IgnitionHandler;
 import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.utility.oredetect.ProspectorPick;
-import com.teammoeg.frostedheart.infrastructure.command.*;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeReloadListener;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.util.FUtils;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.ChatFormatting;
-import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -77,7 +78,6 @@ import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AnvilUpdateEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
@@ -133,22 +133,22 @@ public class FHCommonEvents {
         } else {
             nbt.put(Player.PERSISTED_NBT_TAG, (persistent = new CompoundTag()));
         }
-        if (!persistent.contains(FHUtils.FIRST_LOGIN_GIVE_MANUAL)) {
-            persistent.putBoolean(FHUtils.FIRST_LOGIN_GIVE_MANUAL, false);
+        if (!persistent.contains(CConstants.FIRST_LOGIN_GIVE_MANUAL)) {
+            persistent.putBoolean(CConstants.FIRST_LOGIN_GIVE_MANUAL, false);
             event.getEntity().getInventory().add(
-                    new ItemStack(RegistryUtils.getItem(new ResourceLocation("ftbquests", "book"))));
-            event.getEntity().getInventory().armor.set(3, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_HELMET)
+                    new ItemStack(CRegistries.getItem(new ResourceLocation("ftbquests", "book"))));
+            event.getEntity().getInventory().armor.set(3, FUtils.ArmorLiningNBT(new ItemStack(Items.IRON_HELMET)
                     .setHoverName(Lang.translateKey("itemname.frostedheart.start_head"))));
-            event.getEntity().getInventory().armor.set(2, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_CHESTPLATE)
+            event.getEntity().getInventory().armor.set(2, FUtils.ArmorLiningNBT(new ItemStack(Items.IRON_CHESTPLATE)
                     .setHoverName(Lang.translateKey("itemname.frostedheart.start_chest"))));
-            event.getEntity().getInventory().armor.set(1, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_LEGGINGS)
+            event.getEntity().getInventory().armor.set(1, FUtils.ArmorLiningNBT(new ItemStack(Items.IRON_LEGGINGS)
                     .setHoverName(Lang.translateKey("itemname.frostedheart.start_leg"))));
-            event.getEntity().getInventory().armor.set(0, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_BOOTS)
+            event.getEntity().getInventory().armor.set(0, FUtils.ArmorLiningNBT(new ItemStack(Items.IRON_BOOTS)
                     .setHoverName(Lang.translateKey("itemname.frostedheart.start_foot"))));
             if (event.getEntity().getAbilities().instabuild) {
                 event.getEntity().sendSystemMessage(Lang.translateKey("message.frostedheart.creative_help")
                         .setStyle(Style.EMPTY.applyFormat(ChatFormatting.YELLOW)
-                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Lang.str("Click to use command")))
+                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Components.str("Click to use command")))
                                 .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/frostedheart research complete all"))));
             }
 
@@ -200,7 +200,7 @@ public class FHCommonEvents {
                         }
                         level.addParticle(ParticleTypes.FLAME, player.getX() + player.getLookAngle().x() + rand.nextFloat() * 0.25, player.getY() + 0.5f + rand.nextFloat() * 0.25, player.getZ() + player.getLookAngle().z() + rand.nextFloat() * 0.25, 0, 0.01, 0);
                     }
-                    if (FHUtils.tryIgnition(rand, handStack, offHandStack)) {
+                    if (IgnitionHandler.tryIgnition(rand, handStack, offHandStack)) {
                         BlockState blockstate1 = BaseFireBlock.getState(level, blockpos1);
                         level.setBlock(blockpos1, blockstate1, 11);
                         level.gameEvent(player, GameEvent.BLOCK_PLACE, blockpos);
@@ -227,7 +227,7 @@ public class FHCommonEvents {
                     level.addParticle(ParticleTypes.FLAME, player.getX() + player.getLookAngle().x() + rand.nextFloat() * 0.25, player.getY() + 0.5f + rand.nextFloat() * 0.25, player.getZ() + player.getLookAngle().z() + rand.nextFloat() * 0.25, 0, 0.01, 0);
                 }
 
-                if (FHUtils.tryIgnition(rand, handStack, offHandStack)) {
+                if (IgnitionHandler.tryIgnition(rand, handStack, offHandStack)) {
                     level.setBlock(blockpos, blockstate.setValue(BlockStateProperties.LIT, true), 11);
                     level.gameEvent(player, GameEvent.BLOCK_CHANGE, blockpos);
                     event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide()));
@@ -276,11 +276,11 @@ public class FHCommonEvents {
 
     @SubscribeEvent
     public static void death(PlayerEvent.Clone ev) {
-        FHUtils.clonePlayerCapability(FHCapabilities.WANTED_FOOD.capability(),ev.getOriginal(),ev.getEntity());
-        FHUtils.clonePlayerCapability(FHCapabilities.ENERGY,ev.getOriginal(),ev.getEntity());
-        FHUtils.clonePlayerCapability(FHCapabilities.SCENARIO,ev.getOriginal(),ev.getEntity());
-        FHUtils.clonePlayerCapability(FHCapabilities.WAYPOINT,ev.getOriginal(),ev.getEntity());
-        //FHUtils.clonePlayerCapability(PlayerTemperatureData.CAPABILITY,ev.getOriginal(),ev.getEntity());
+        CUtils.clonePlayerCapability(FHCapabilities.WANTED_FOOD.capability(),ev.getOriginal(),ev.getEntity());
+        CUtils.clonePlayerCapability(FHCapabilities.ENERGY,ev.getOriginal(),ev.getEntity());
+        CUtils.clonePlayerCapability(FHCapabilities.SCENARIO,ev.getOriginal(),ev.getEntity());
+        CUtils.clonePlayerCapability(FHCapabilities.WAYPOINT,ev.getOriginal(),ev.getEntity());
+        //CUtils.clonePlayerCapability(PlayerTemperatureData.CAPABILITY,ev.getOriginal(),ev.getEntity());
         //FHMain.LOGGER.info("clone");
         if (!ev.getEntity().level().isClientSide) {
             DeathInventoryData orig = DeathInventoryData.get(ev.getOriginal());
@@ -362,7 +362,7 @@ public class FHCommonEvents {
                     continue;
                 CompoundTag cnbt = cn.getCompound("inner_cover_tag");
                 int crdmg = cnbt.getInt("Damage");
-                if (crdmg > 0 && FHUtils.getEnchantmentLevel(Enchantments.MENDING, cnbt) > 0) {
+                if (crdmg > 0 && CUtils.getEnchantmentLevel(Enchantments.MENDING, cnbt) > 0) {
                     event.setCanceled(true);
                     ExperienceOrb orb = event.getOrb();
                     player.takeXpDelay = 2;

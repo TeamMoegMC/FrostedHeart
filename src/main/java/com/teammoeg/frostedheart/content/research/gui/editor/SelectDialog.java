@@ -25,13 +25,13 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.TechScrollBar;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.chorda.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
@@ -74,7 +74,7 @@ public class SelectDialog<T> extends EditDialog {
 
         @Override
         public void draw(GuiGraphics matrixStack, Theme theme, int x, int y, int w, int h) {
-            //GuiHelper.setupDrawing();
+            //CGuis.setupDrawing();
             if (val == this.obj)
                 theme.drawButton(matrixStack, x, y, w, h, WidgetType.DISABLED);
             else
@@ -145,7 +145,7 @@ public class SelectDialog<T> extends EditDialog {
         ).open();
         
     };
-    public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, RegistryUtils::getEntities, EntityType::getDescription, e -> new String[]{e.getDescription().getString(), RegistryUtils.getRegistryName(e).toString()}
+    public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, CRegistries::getEntities, EntityType::getDescription, e -> new String[]{e.getDescription().getString(), CRegistries.getRegistryName(e).toString()}
     ).open();
     public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new SelectDialog<>(p, l, v, c, () -> ForgeRegistries.ITEMS.tags().getTagNames().map(t->t.location()).map(ResourceLocation::toString).collect(Collectors.toSet())).open();
     String lbl;
@@ -164,10 +164,10 @@ public class SelectDialog<T> extends EditDialog {
     public TextBox searchBox;
 
     public static <R> Function<R, Component> wrap(Function<R, Object> str) {
-        return e -> Lang.str(String.valueOf(str.apply(e)));
+        return e -> Components.str(String.valueOf(str.apply(e)));
     }
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
-        this(panel, lbl, val, cb, fetcher, e -> Lang.str(e.toString()), e -> new String[]{e.toString()}, e -> Icon.empty());
+        this(panel, lbl, val, cb, fetcher, e -> Components.str(e.toString()), e -> new String[]{e.toString()}, e -> Icon.empty());
     }
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
                         Function<T, Component> tostr) {

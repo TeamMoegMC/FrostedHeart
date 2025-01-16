@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.content.climate.heatdevice.generator;
 
 import java.util.Optional;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 
 import net.minecraft.core.BlockPos;
@@ -37,7 +37,7 @@ public class GeneratorState extends HeatingState {
      * @return the GeneratorData from the owned team.
      */
     public final Optional<GeneratorData> getDataNoCheck() {
-        return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA));
+        return getTeamData().map(t -> t.getData(FHSpecialDataTypes.GENERATOR_DATA));
     }
 
     /**
@@ -45,13 +45,13 @@ public class GeneratorState extends HeatingState {
      * @return the GeneratorData from the owned team with the given origin.
      */
     public final Optional<GeneratorData> getData(BlockPos origin) {
-        return getTeamData().map(t -> t.getData(SpecialDataTypes.GENERATOR_DATA)).filter(t -> origin.equals(t.actualPos));
+        return getTeamData().map(t -> t.getData(FHSpecialDataTypes.GENERATOR_DATA)).filter(t -> origin.equals(t.actualPos));
     }
     public final void tickData(Level level,BlockPos origin) {
         Optional<TeamDataHolder> data= getTeamData();
         if(data.isPresent()) {
         	TeamDataHolder teamData=data.get();
-        	GeneratorData dat=teamData.getData(SpecialDataTypes.GENERATOR_DATA);
+        	GeneratorData dat=teamData.getData(FHSpecialDataTypes.GENERATOR_DATA);
         	if(origin.equals(dat.actualPos)) {
         		dat.tick(level, teamData);
         		ep.setHeat(dat.lastPower);

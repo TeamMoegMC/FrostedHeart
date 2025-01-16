@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.climate.data;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
+import com.teammoeg.chorda.util.io.CodecUtil;
 
 public class ArmorTempData {
 	public static final MapCodec<ArmorTempData> CODEC=RecordCodecBuilder.mapCodec(t->t.group(
@@ -58,7 +58,7 @@ public class ArmorTempData {
         else if (pe.isPotionActive(FHMobEffects.WET.get())) {
             base += this.getFloatOrDefault("wet", 0F);
         }
-        if (FHUtils.isRainingAt(pe.getPosition(), pe.world)) {
+        if (CUtils.isRainingAt(pe.getPosition(), pe.world)) {
 //            if (pe.getServerWorld().getBiome(pe.getPosition()).getPrecipitation() == Biome.RainType.SNOW)
             base += this.getFloatOrDefault("snow", 0F);
 //            else

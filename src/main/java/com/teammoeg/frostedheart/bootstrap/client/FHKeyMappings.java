@@ -22,7 +22,4 @@ public class FHKeyMappings {
         return InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_S);
     }
 
-    public static boolean isDown(int key) {
-        return InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), key);
-    }
 }

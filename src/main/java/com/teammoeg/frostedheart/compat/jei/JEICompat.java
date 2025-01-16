@@ -38,6 +38,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
+import com.teammoeg.chorda.util.CRegistries;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
@@ -76,10 +77,9 @@ import com.teammoeg.frostedheart.content.research.research.effects.EffectCraftin
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
 import com.teammoeg.frostedheart.content.utility.handstoves.FuelingRecipe;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.client.Point;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.client.Point;
 
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
@@ -346,11 +346,11 @@ public class JEICompat implements IModPlugin {
         checkNotNull(world, "minecraft world");
         RecipeManager recipeManager = world.getRecipeManager();
 
-        CuttingCategory.matching = RegistryUtils.getItemHolders().filter(t->t.containsTag(CuttingCategory.ktag)).map(t->t.get()).collect(Collectors.toList());
+        CuttingCategory.matching = CRegistries.getItemHolders().filter(t->t.containsTag(CuttingCategory.ktag)).map(t->t.get()).collect(Collectors.toList());
 
-        registration.addRecipes(GeneratorFuelCategory.UID,FHUtils.filterRecipes(recipeManager,GeneratorRecipe.TYPE));
+        registration.addRecipes(GeneratorFuelCategory.UID, CUtils.filterRecipes(recipeManager,GeneratorRecipe.TYPE));
         registration.addRecipes(GeneratorSteamCategory.UID,new ArrayList<>(GeneratorSteamRecipe.recipeList.values()));
-        registration.addRecipes(ChargerCategory.UID,FHUtils.filterRecipes(recipeManager,ChargerRecipe.TYPE));
+        registration.addRecipes(ChargerCategory.UID, CUtils.filterRecipes(recipeManager,ChargerRecipe.TYPE));
         registration.addRecipes(ChargerCookingCategory.UID, recipeManager.getAllRecipesFor(net.minecraft.world.item.crafting.RecipeType.SMOKING));
         registration.addRecipes(CampfireDefrostCategory.UID,new ArrayList<>(CampfireDefrostRecipe.recipeList.values()));
  
@@ -358,12 +358,12 @@ public class JEICompat implements IModPlugin {
             .filter(iRecipe -> iRecipe.getClass() == SmokingDefrostRecipe.class).map(t->(SmokingDefrostRecipe)t).collect(Collectors.toList()));
         registration.addRecipes(ChargerDefrostCategory.UID ,new ArrayList<>(CampfireDefrostRecipe.recipeList.values()));
         registration.addRecipes(CuttingCategory.UID,Arrays.asList(
-                        new CuttingRecipe(FHUtils.Damage(new ItemStack(FHItems.red_mushroombed.get()), 0),
+                        new CuttingRecipe(CUtils.Damage(new ItemStack(FHItems.red_mushroombed.get()), 0),
                                 new ItemStack(Items.RED_MUSHROOM, 10)),
-                        new CuttingRecipe(FHUtils.Damage(new ItemStack(FHItems.brown_mushroombed.get()), 0),
+                        new CuttingRecipe(CUtils.Damage(new ItemStack(FHItems.brown_mushroombed.get()), 0),
                                 new ItemStack(Items.BROWN_MUSHROOM, 10))));
-        registration.addRecipes(SaunaCategory.UID ,FHUtils.filterRecipes(recipeManager,SaunaRecipe.TYPE));
-        List<IncubateRecipe> rcps = new ArrayList<>(FHUtils.filterRecipes(recipeManager,IncubateRecipe.TYPE));
+        registration.addRecipes(SaunaCategory.UID , CUtils.filterRecipes(recipeManager,SaunaRecipe.TYPE));
+        List<IncubateRecipe> rcps = new ArrayList<>(CUtils.filterRecipes(recipeManager,IncubateRecipe.TYPE));
         rcps.add(new IncubateRecipe());
         registration.addRecipes(IncubatorCategory.UID,rcps);
         //todo: add JEI for ItemResourceAmountRecipe

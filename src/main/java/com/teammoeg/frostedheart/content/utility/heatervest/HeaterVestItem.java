@@ -26,14 +26,14 @@ import javax.annotation.Nullable;
 
 import com.mojang.datafixers.util.Either;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.creativeTab.CreativeTabItemHelper;
-import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
+import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.steamenergy.charger.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 
 import net.minecraft.world.item.TooltipFlag;
@@ -55,7 +55,8 @@ import top.theillusivec4.curios.api.type.ISlotType;
  * 加温背心：穿戴抵御寒冷
  */
 public class HeaterVestItem extends FHBaseItem implements IHeatingEquipment, IChargable {
-	private static final String ENERGY_KEY="steam";
+    public static final String NBT_HEATER_VEST = FHMain.MODID + "heater_vest";
+    private static final String ENERGY_KEY="steam";
     public HeaterVestItem(Properties properties) {
         super(properties);
     }

@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.content.utility.incinerator;
 
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
-import com.teammoeg.frostedheart.base.blockentity.FHBaseTileEntity;
+import com.teammoeg.chorda.block.CBlockInterfaces.IActiveState;
+import com.teammoeg.chorda.blockentity.CBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.base.block.FHTickableBlockEntity;
+import com.teammoeg.chorda.block.CTickableBlockEntity;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;
@@ -36,7 +36,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState, FHTickableBlockEntity {
+public class GasVentTileEntity extends CBlockEntity implements IActiveState, CTickableBlockEntity {
     FluidTank input = new FluidTank(10000, s -> s.getFluid().getFluidType().isLighterThanAir());
     private LazyOptional<IFluidHandler> holder = LazyOptional.empty();
 

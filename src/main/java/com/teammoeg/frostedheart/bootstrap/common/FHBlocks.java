@@ -34,7 +34,7 @@ import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.ModelGen;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.item.FHBlockItem;
+import com.teammoeg.frostedheart.item.FHBlockItem;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.reference.FHProps;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;

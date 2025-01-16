@@ -25,9 +25,9 @@ import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockEntity;
 import com.teammoeg.frostedheart.content.town.TownWorkerState;
 import com.teammoeg.frostedheart.content.town.TownWorkerType;
-import com.teammoeg.frostedheart.util.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.util.blockscanner.FloorBlockScanner;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.FHClientUtils;
+import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.tags.BlockTags;
@@ -276,7 +276,7 @@ public class HouseBlockEntity extends AbstractTownWorkerBlockEntity {
                 }
             }
         } else if (getIsActive()) {
-            ClientUtils.spawnSteamParticles(level, worldPosition);
+            FHClientUtils.spawnSteamParticles(level, worldPosition);
         }
         this.addToSchedulerQueue();
     }

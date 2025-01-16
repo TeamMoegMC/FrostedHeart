@@ -21,9 +21,10 @@ package com.teammoeg.frostedheart.content.research.gui.tech;
 
 import java.text.DecimalFormat;
 
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.content.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.client.gui.GuiGraphics;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
@@ -99,7 +100,7 @@ public class ResearchDashboardPanel extends Panel {
         tf.setMaxWidth(140).setMinWidth(140).setMaxLine(2).setColor(TechIcons.text).addFlags(4);
         tf.setText(detailPanel.research.getName());
         if (FHResearch.editor) {
-            Button create = new TechTextButton(this, Lang.str("edit"),
+            Button create = new TechTextButton(this, Components.str("edit"),
                     Icon.empty()) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {

@@ -34,8 +34,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.FHVersion;
-import com.teammoeg.frostedheart.util.io.FileUtil;
-import com.teammoeg.frostedheart.util.io.ZipFile;
+import com.teammoeg.chorda.util.io.FileUtil;
+import com.teammoeg.chorda.util.io.ZipFile;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelResource;

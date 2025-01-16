@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.chorda.util.io.NBTSerializable;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -9,7 +8,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -362,13 +360,13 @@ public class HeatEndpoint implements NBTSerializable, HeatNetworkProvider {
     public void load(CompoundTag nbt, boolean isPacket) {
         heat = nbt.getFloat("net_power");
         //pos = BlockPos.of(nbt.getLong("pos"));
-        //blk = RegistryUtils.getBlock(new ResourceLocation(nbt.getString("block")));
+        //blk = CRegistries.getBlock(new ResourceLocation(nbt.getString("block")));
     }
 
     public void save(CompoundTag nbt, boolean isPacket) {
         nbt.putFloat("net_power", heat);
         //nbt.putLong("pos", pos.asLong());
-       //nbt.putString("block", RegistryUtils.getRegistryName(blk).toString());
+       //nbt.putString("block", CRegistries.getRegistryName(blk).toString());
     }
     @Override
     public HeatNetwork getNetwork() {

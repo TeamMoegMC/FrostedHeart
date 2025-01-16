@@ -19,9 +19,10 @@
 
 package com.teammoeg.frostedheart.events;
 
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FrostedHud;
-import com.teammoeg.frostedheart.base.team.FHClientTeamDataManager;
+import com.teammoeg.chorda.team.CClientTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
@@ -40,10 +41,10 @@ import com.teammoeg.frostedheart.content.tips.TipManager;
 import com.teammoeg.frostedheart.content.waypoint.ClientWaypointManager;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.FHVersion;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.GuiClickedEvent;
-import com.teammoeg.frostedheart.util.client.RenderHelper;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.util.client.GuiClickedEvent;
+import com.teammoeg.chorda.util.client.RenderHelper;
+import com.teammoeg.frostedheart.util.client.Lang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -110,12 +111,12 @@ public class FHClientEvents {
                     int l = 0;
                     for (FormattedCharSequence line : list) {
                         //TODO Uncomment after draw line fixed
-                    	//FHGuiHelper.drawLine(matrixStack, Color4I.rgba(0, 0, 0, 255), 0, gui.height / 2 - 1 + l, 72,gui.height / 2 + 9 + l);
+                    	//CGuis.drawLine(matrixStack, Color4I.rgba(0, 0, 0, 255), 0, gui.height / 2 - 1 + l, 72,gui.height / 2 + 9 + l);
                         matrixStack.drawString(ClientUtils.mc().font, line, 1, gui.height / 2.0F + l, 0xFFFFFF, true);
                         l += 9;
                     }
                     if (isStable) {
-                        MutableComponent itxc = Lang.str("CurseForge")
+                        MutableComponent itxc = Components.str("CurseForge")
                                 .withStyle(ChatFormatting.UNDERLINE).withStyle(ChatFormatting.BOLD)
                                 .withStyle(ChatFormatting.GOLD);
                         boolean needEvents = true;
@@ -170,7 +171,7 @@ public class FHClientEvents {
 
     @SubscribeEvent
     public static void fireLogin(ClientPlayerNetworkEvent.LoggingIn event) {
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> FHClientTeamDataManager.INSTANCE::reset);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> CClientTeamDataManager.INSTANCE::reset);
         // TODO: temporary fix for client not sending ready packet
         ClientScene.INSTANCE = new ClientScene();
         ClientScene.INSTANCE.sendClientReady();
@@ -297,7 +298,7 @@ public class FHClientEvents {
                         .append(stableVersion.getOriginal()).withStyle(ChatFormatting.BOLD), false);
                 if (isStable) {
                     event.getPlayer()
-                            .displayClientMessage(Lang.str("CurseForge")
+                            .displayClientMessage(Components.str("CurseForge")
                                     .setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
                                             "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
                                     .withStyle(ChatFormatting.UNDERLINE).withStyle(ChatFormatting.BOLD)
@@ -323,7 +324,7 @@ public class FHClientEvents {
                         false);
             } else if (FHMain.lastbkf != null) {
                 event.getPlayer().displayClientMessage(Lang.translateGui("save_updated")
-                                .append(Lang.str(FHMain.lastbkf.getName()).setStyle(Style.EMPTY
+                                .append(Components.str(FHMain.lastbkf.getName()).setStyle(Style.EMPTY
                                         .withClickEvent(
                                                 new ClickEvent(ClickEvent.Action.OPEN_FILE, FHMain.lastbkf.getAbsolutePath()))
                                         .applyFormat(ChatFormatting.UNDERLINE))),
@@ -467,7 +468,7 @@ public class FHClientEvents {
     public static void onPlayerLoggedIn(ClientPlayerNetworkEvent.LoggingIn event) {
         // default tip
         if (!TipManager.INSTANCE.hasTip("default")) {
-            Tip.builder("default").line(Lang.str("Default Tip")).image(new ResourceLocation(FHMain.MODID, "textures/item/debug_item.png")).build().saveAsFile();
+            Tip.builder("default").line(Components.str("Default Tip")).image(new ResourceLocation(FHMain.MODID, "textures/item/debug_item.png")).build().saveAsFile();
             TipManager.INSTANCE.loadFromFile();
         }
         TipManager.INSTANCE.display().clearRenderQueue();

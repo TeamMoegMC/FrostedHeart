@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.waypoint.capability;
 
 import com.teammoeg.frostedheart.content.waypoint.WaypointManager;
 import com.teammoeg.frostedheart.content.waypoint.waypoints.AbstractWaypoint;
-import com.teammoeg.frostedheart.util.io.NBTSerializable;
+import com.teammoeg.chorda.util.io.NBTSerializable;
 import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;

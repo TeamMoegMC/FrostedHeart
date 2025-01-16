@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.infrastructure.gen;
 
-import com.simibubi.create.content.logistics.funnel.FunnelItem;
-import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.providers.DataGenContext;
 import com.tterrag.registrate.providers.RegistrateBlockstateProvider;

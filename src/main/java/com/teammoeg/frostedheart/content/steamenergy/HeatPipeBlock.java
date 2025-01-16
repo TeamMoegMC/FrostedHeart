@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.frostedheart.base.block.FHEntityBlock;
-import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
+import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.block.CPipeBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 import net.minecraft.core.BlockPos;
@@ -33,7 +33,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 
 import java.util.function.Supplier;
 
-public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements FHEntityBlock<HeatPipeTileEntity> {
+public class HeatPipeBlock extends CPipeBlock<HeatPipeBlock> implements CEntityBlock<HeatPipeTileEntity> {
 
     public HeatPipeBlock(Properties blockProps) {
         super(HeatPipeBlock.class, blockProps);

@@ -28,12 +28,12 @@ import java.util.Map;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
+import com.teammoeg.chorda.team.CTeamDataManager;
+import com.teammoeg.chorda.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons;
 import com.teammoeg.frostedheart.content.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.lang.Lang;
+import com.teammoeg.frostedheart.util.client.Lang;
 
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.commands.CommandSourceStack;
@@ -101,8 +101,8 @@ public class EffectCommand extends Effect {
         overrides.put("y", pos.getY());
         overrides.put("z", pos.getZ());
         team.getTeam().map(t->t.getId()).ifPresent(t->overrides.put("t", t));
-        Commands cmds = FHTeamDataManager.getServer().getCommands();
-        CommandSourceStack source = FHTeamDataManager.getServer().createCommandSourceStack();
+        Commands cmds = CTeamDataManager.getServer().getCommands();
+        CommandSourceStack source = CTeamDataManager.getServer().createCommandSourceStack();
         for (String s : rewards) {
 
             for (Map.Entry<String, Object> entry : overrides.entrySet()) {

@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.scenario.commands.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.teammoeg.chorda.util.lang.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
@@ -35,10 +36,10 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.Grap
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsLineContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsRectContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.java2d.GraphicsTextContent;
-import com.teammoeg.frostedheart.util.lang.Lang;
-import com.teammoeg.frostedheart.util.client.ClientUtils;
-import com.teammoeg.frostedheart.util.client.Point;
-import com.teammoeg.frostedheart.util.client.Rect;
+import com.teammoeg.frostedheart.util.client.Lang;
+import com.teammoeg.chorda.util.client.ClientUtils;
+import com.teammoeg.chorda.util.client.Point;
+import com.teammoeg.chorda.util.client.Rect;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.util.client.ClientTextComponentUtils;
@@ -130,7 +131,7 @@ public class ClientControl implements IClientControlCommand {
 		if(show!=null) {
 			if(show>0) {
 				if(!(ClientScene.INSTANCE.dialog instanceof ImageScreenDialog)) {
-					id=new ImageScreenDialog(Lang.str(""));
+					id=new ImageScreenDialog(Components.str(""));
 					if(ClientScene.INSTANCE.dialog!=null)
 						ClientScene.INSTANCE.dialog.closeDialog();
 					ClientScene.INSTANCE.dialog=id;

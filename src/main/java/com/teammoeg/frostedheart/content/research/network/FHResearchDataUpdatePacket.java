@@ -21,23 +21,23 @@ package com.teammoeg.frostedheart.content.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.base.network.FHMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchUtils;
 import com.teammoeg.frostedheart.content.research.data.ResearchData;
 import com.teammoeg.frostedheart.content.research.data.ResearchData.ResearchDataPacket;
 import com.teammoeg.frostedheart.content.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.content.research.research.Research;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.io.codec.DataOps;
-import com.teammoeg.frostedheart.util.io.codec.ObjectWriter;
+import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.chorda.util.io.codec.DataOps;
+import com.teammoeg.chorda.util.io.codec.ObjectWriter;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when data update
-public record FHResearchDataUpdatePacket(Object rd,int id) implements FHMessage{
+public record FHResearchDataUpdatePacket(Object rd,int id) implements CMessage {
 
 
     public FHResearchDataUpdatePacket(FriendlyByteBuf buffer) {

@@ -27,10 +27,10 @@ import javax.annotation.Nullable;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.team.SpecialData;
-import com.teammoeg.frostedheart.base.team.SpecialDataHolder;
-import com.teammoeg.frostedheart.base.team.TeamDataHolder;
-import com.teammoeg.frostedheart.compat.ie.IngredientUtils;
+import com.teammoeg.chorda.team.SpecialData;
+import com.teammoeg.chorda.team.SpecialDataHolder;
+import com.teammoeg.chorda.team.TeamDataHolder;
+import com.teammoeg.chorda.util.ie.IngredientUtils;
 import com.teammoeg.frostedheart.content.research.FHResearch;
 import com.teammoeg.frostedheart.content.research.ResearchListeners.BlockUnlockList;
 import com.teammoeg.frostedheart.content.research.ResearchListeners.CategoryUnlockList;
@@ -46,8 +46,8 @@ import com.teammoeg.frostedheart.content.research.network.FHResearchDataUpdatePa
 import com.teammoeg.frostedheart.content.research.research.Research;
 import com.teammoeg.frostedheart.content.research.research.clues.Clue;
 import com.teammoeg.frostedheart.content.research.research.effects.Effect;
-import com.teammoeg.frostedheart.util.io.CodecUtil;
-import com.teammoeg.frostedheart.util.utility.OptionalLazy;
+import com.teammoeg.chorda.util.io.CodecUtil;
+import com.teammoeg.chorda.util.utility.OptionalLazy;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.nbt.CompoundTag;
