@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.util.CRegistries;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 
 import net.minecraft.resources.ResourceLocation;
@@ -83,7 +84,7 @@ public enum FHArmorMaterial implements ArmorMaterial {
 
     @OnlyIn(Dist.CLIENT)
     public String getName() {
-        return Chorda.MODID + ":" + this.name;
+        return FHMain.MODID + ":" + this.name;
     }
 
     public Ingredient getRepairIngredient() {
