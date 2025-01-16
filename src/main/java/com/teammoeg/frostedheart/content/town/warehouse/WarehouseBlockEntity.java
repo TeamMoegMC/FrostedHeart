@@ -1,18 +1,15 @@
 package com.teammoeg.frostedheart.content.town.warehouse;
 
+import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.chorda.scheduler.SchedulerQueue;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
-import com.teammoeg.frostedheart.base.team.SpecialDataTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.blockscanner.FloorBlockScanner;
-import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.data.TeamManagerImpl;
 import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
@@ -117,7 +114,7 @@ public class WarehouseBlockEntity extends AbstractTownWorkerBlockEntity {
             FHMain.LOGGER.error("WareHouseBlockEntity.getTown(): TeamName is null!");
             return null;
         }
-        TeamTownData townData = Objects.requireNonNull(FHTeamDataManager.getDataByResearchID(this.teamID)).getData(SpecialDataTypes.TOWN_DATA);
+        TeamTownData townData = Objects.requireNonNull(CTeamDataManager.getDataByResearchID(this.teamID)).getData(FHSpecialDataTypes.TOWN_DATA);
         return new TeamTown(townData);
     }
 

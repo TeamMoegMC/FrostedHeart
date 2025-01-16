@@ -2,16 +2,12 @@ package com.teammoeg.frostedheart.content.town.warehouse;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.chorda.block.CEntityBlock;
+import com.teammoeg.chorda.team.CTeamDataManager;
 import com.teammoeg.chorda.util.lang.Components;
-import com.teammoeg.frostedheart.base.team.FHTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.climate.heatdevice.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlock;
-import com.teammoeg.frostedheart.content.town.TeamTown;
-import com.teammoeg.frostedheart.content.town.TownBlockEntity;
-import com.teammoeg.frostedheart.util.lang.Lang;
 
-import dev.ftb.mods.ftbteams.api.Team;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -66,7 +62,7 @@ public class WarehouseBlock extends AbstractTownWorkerBlock implements CEntityBl
         if (warehouseBlockEntity != null) {
             if (entity instanceof ServerPlayer) {
                 if (ChunkHeatData.hasAdjust(world, pos)) {
-                    UUID teamFHID = FHTeamDataManager.get((ServerPlayer)entity).getId();
+                    UUID teamFHID = CTeamDataManager.get((ServerPlayer)entity).getId();
                     warehouseBlockEntity.setTeamID(teamFHID);
                 }
             }
